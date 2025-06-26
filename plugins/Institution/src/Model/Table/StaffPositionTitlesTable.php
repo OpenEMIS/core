@@ -8,12 +8,14 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Cake\Network\Session;
-use Cake\Network\Request;
+use Cake\Http\Session;
+use Cake\Http\ServerRequest;
 use Cake\Log\Log;
 use ControllerAction\Model\Traits\UtilityTrait;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\ORM\Table; // POCOR-8128
+use Cake\Utility\Inflector; // POCOR-8128
 
 class StaffPositionTitlesTable extends ControllerActionTable
 {
@@ -25,19 +27,20 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
 	private $positionGradeSelection = [];
 
-	public function initialize(array $config)
+	public function initialize(array $config): void
 	{
-        $this->table('staff_position_titles');
+        $this->setTable('staff_position_titles');
         parent::initialize($config);
         $this->hasMany('TrainingCoursesTargetPopulations', ['className' => 'Training.TrainingCoursesTargetPopulations', 'foreignKey' => 'target_population_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
+        $this->belongsTo('LeavePolicies', ['className' => 'System.LeavePolicies', 'foreignKey' => 'staff_leave_policy_id']); // POCOR-8128
         $this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'dependent' => true, 'cascadeCallbacks' => true]);
-     
+
 		$this->belongsToMany('PositionGrades', [
 			'className' => 'Institution.StaffPositionGrades',
 			'joinTable' => 'staff_position_titles_grades',
-			'foreignKey' => 'staff_position_title_id', 
-			'targetForeignKey' => 'staff_position_grade_id', 
+			'foreignKey' => 'staff_position_title_id',
+			'targetForeignKey' => 'staff_position_grade_id',
 			'through' => 'Institution.StaffPositionTitlesGrades',
 			'dependent' => true,
 			'cascadeCallbacks' => true
@@ -56,16 +59,17 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
 	}
 
-	public function validationDefault(Validator $validator)
+	public function validationDefault(Validator $validator): Validator
 	{
 		$validator = parent::validationDefault($validator);
+		$validator->setProvider('custom', $this);
 		return $validator
 			->requirePresence('position_grades')
 		    ->allowEmpty('file_content')//POCOR-7758
 			->add('position_grades', 'ruleCheckPositionGrades', [
 				'rule' => ['checkPositionGrades'],
 				'provider' => 'table',
-				'on' => function ($context) {  
+				'on' => function ($context) {
 				//trigger validation only when position grade selection is set to 1	 and edit operation
 				return ($context['data']['position_grade_selection'] == self::SELECT_POSITION_GRADES  && !$context['newRecord']);
 			}
@@ -79,7 +83,25 @@ class StaffPositionTitlesTable extends ControllerActionTable
 			'after' => 'name',
 			'onChangeReload' => true
 		]);
-		$this->field('staff_position_categories_id', ['select' => false,'after' => 'type']); //POCOR-6950
+        // POCOR-8128 start
+		$this->field('staff_leave_policy_id', [
+			'visible' => true,
+            'type' => 'select',
+            'select' => false,
+			'options' => $this->getStaffLeavePolicyOptions(),
+			'after' => 'default',
+            'attr' => ['required' => true], // to add red asterisk
+		]);
+		$this->field('staff_position_categories_id', [
+			'visible' => true,
+            'type' => 'select',
+            'select' => false,
+			'options' => $this->getStaffPositionCategoryOptions(),
+			'after' => 'type',
+            'attr' => ['required' => true], // to add red asterisk
+		]);
+        // POCOR-8128 end
+
 		$extra['roleList'] = $this->SecurityRoles->getSystemRolesList();
 		$this->field('security_role_id', ['after' => 'staff_position_categories_id', 'options' => $extra['roleList']]);
 	}
@@ -95,29 +117,33 @@ class StaffPositionTitlesTable extends ControllerActionTable
         $this->field('file_name',['visible'=>false]);//POCOR-7758
 	}
 
-	public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra) 
+	public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
 	{
 		$entity->position_grade_selection = self::SELECT_POSITION_GRADES;
 	}
 
-	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
 		$this->field('file_name', ['visible' => false]);//POCOR-7758
 		$this->field('file_content', ['attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);//POCOR-7758
-       
+
 		$this->setupFields($entity);
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
 	{
-		if (array_key_exists($this->alias(), $requestData)) {
-			if (isset($requestData[$this->alias()]['position_grades']['_ids']) && empty($requestData[$this->alias()]['position_grades']['_ids'])) {
-				$requestData[$this->alias()]['position_grades'] = []; 
+		// POCOR-8777
+		$requestDataArray = $requestData->getArrayCopy();
+
+		if (array_key_exists($this->getAlias(), $requestDataArray)) {
+			if (isset($requestDataArray[$this->getAlias()]['position_grades']['_ids']) && empty($requestDataArray[$this->getAlias()]['position_grades']['_ids'])) {
+				$requestDataArray[$this->getAlias()]['position_grades'] = [];
 			}
 		}
 	}
 
-	public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra) 
+
+	public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
 	{
 		$isSelectAll = $this->checkIsSelectAll($entity);
 
@@ -132,7 +158,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
 		$this->field('file_name', ['visible' => false]);//POCOR-7758
 		$this->field('file_content', ['attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);//POCOR-7758
-       
+
 		$this->setupFields($entity);
 
 		$titleId = $entity->id;
@@ -151,14 +177,14 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		}
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
 		$this->field('file_name', ['visible' => false]);//POCOR-7758
 		$this->field('file_content', ['attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);//POCOR-7758
 		$this->setupFields($entity);
 	}
 
-	public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) 
+	public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
 		$query->contain(['PositionGrades']);
 	}
@@ -169,26 +195,27 @@ class StaffPositionTitlesTable extends ControllerActionTable
      * @author Rahul Singh <rahul.singh@mail.valuecoders.com>
      * @ticket POCOR-6950
      */
-
-	public function onUpdateFieldStaffPositionCategoriesId(Event $event, array $attr, $action, Request $request) 
-	{
-        if ($action == 'add' || $action == 'edit') {
-        	list($levelOptions, $selectedLevel) = array_values($this->getTypeOptions($request, $action));//POCOR-7292 add param action
-        	$attr['options'] = $levelOptions;
-        	if ($action == 'add') {
-        		$attr['default'] = $selectedLevel;
-        	}else if($action == 'edit'){//POCOR-7292 starts
-        		$typeId= $this->paramsDecode($request->params['pass'][1]);
-        		$StaffPositionTitles = TableRegistry::get('staff_position_titles');
-        		$Options = $StaffPositionTitles
-					            ->find()
-					            ->where([$StaffPositionTitles->aliasField('id') => $typeId['id']])
-					            ->first();
-				$attr['value'] = $levelOptions[$Options->staff_position_categories_id];
-        	}//POCOR-7292 ends
-        }
-		return $attr;
-	}
+// // POCOR-8128
+//	public function onUpdateFieldStaffPositionCategoriesId(Event $event, array $attr, $action, ServerRequest $request)
+//	{
+//		$request = $this->request;
+//        if ($action == 'add' || $action == 'edit') {
+//        	list($levelOptions, $selectedLevel) = array_values($this->getTypeOptions($request, $action));//POCOR-7292 add param action
+//        	$attr['options'] = $levelOptions;
+//        	if ($action == 'add') {
+//        		$attr['default'] = $selectedLevel;
+//        	}else if($action == 'edit'){//POCOR-7292 starts
+//        		$typeId= $this->paramsDecode($request->getAttribute('params')['pass'][1]);
+//        		$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+//        		$Options = $StaffPositionTitles
+//					            ->find()
+//					            ->where([$StaffPositionTitles->aliasField('id') => $typeId['id']])
+//					            ->first();
+//				$attr['value'] = $levelOptions[$Options->staff_position_categories_id];
+//        	}//POCOR-7292 ends
+//        }
+//		return $attr;
+//	}
 
 	/**
      * Get all areas ids as key and name as value
@@ -199,28 +226,32 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
 	public function getTypeOptions($request, $action = null)//POCOR-7292 add param $action
     {
-		$type = $request->data['StaffPositionTitles']['type'];
+		$type = $this->request->getData('StaffPositionTitles')['type'];
 		$StaffPositionCategories = TableRegistry::get('Staff.StaffPositionCategories');
+
+		// POCOR-8777
+		$whereCondition = is_null($type) ? [$StaffPositionCategories->aliasField('type') . ' IS NULL'] : [$StaffPositionCategories->aliasField('type') => $type];
+
         //POCOR-7292 starts
         if($action == 'edit'){
-    		$StaffPositionTitlesPass= $this->paramsDecode($request->params['pass'][1]);
-    		$StaffPositionTitles = TableRegistry::get('staff_position_titles');
+    		$StaffPositionTitlesPass= $this->paramsDecode($this->request->getAttribute('params')['pass'][1]);
+    		$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
     		$Options = $StaffPositionTitles
-				            ->find()
-				            ->where([$StaffPositionTitles->aliasField('id') => $StaffPositionTitlesPass['id']])
-				            ->first();
-			$type = !empty($Options) ? $Options->type : '';         
+				->find()
+				->where([$StaffPositionTitles->aliasField('id') => $StaffPositionTitlesPass['id']])
+				->first();
+			$type = !empty($Options) ? $Options->type : '';
 		}//POCOR-7292 ends
 		$levelOptions = $StaffPositionCategories
-            ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-            ->where([ $StaffPositionCategories->aliasField('type') => $type ])
-            ->toArray();
-           
-         $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->where($whereCondition)  // POCOR-8777
+			->toArray();
+
+         $selectedLevel = !is_null($this->request->getQuery('level')) ? $this->request->getQuery('level') : key($levelOptions);
          return compact('levelOptions', 'selectedLevel');
     }
 
-	public function onUpdateFieldPositionGradeSelection(Event $event, array $attr, $action, Request $request) 
+	public function onUpdateFieldPositionGradeSelection(Event $event, array $attr, $action, ServerRequest $request)
 	{
 		if ($action == 'add' || $action == 'edit') {
 			$attr['options'] = $this->positionGradeSelection;
@@ -230,17 +261,17 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		return $attr;
 	}
 
-	public function onUpdateFieldPositionGrades(Event $event, array $attr, $action, Request $request) 
+	public function onUpdateFieldPositionGrades(Event $event, array $attr, $action, ServerRequest $request)
 	{
-		$requestData = $request->data;
+		$requestData = $this->request->getData();
 		$entity = $attr['entity'];
 		$staffPositionGradeOptions = TableRegistry::get('Institution.StaffPositionGrades')->getList()->toArray();
 
 		$positionGradeSelection = null;
-		if (isset($requestData[$this->alias()]['position_grade_selection'])) {
-			$positionGradeSelection = $requestData[$this->alias()]['position_grade_selection'];
+		if (isset($requestData[$this->getAlias()]['position_grade_selection'])) {
+			$positionGradeSelection = $requestData[$this->getAlias()]['position_grade_selection'];
 		} else {
-			$positionGradeSelection = $entity->position_grade_selection; 
+			$positionGradeSelection = $entity->position_grade_selection;
 		}
 
 		if ($positionGradeSelection == self::SELECT_ALL_POSITION_GRADES) {
@@ -254,7 +285,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		return $attr;
 	}
 
-	public function setupFields(Entity $entity) 
+	public function setupFields(Entity $entity)
 	{
 		$this->field('position_grade_selection', [
 			'type' => 'select',
@@ -270,11 +301,12 @@ class StaffPositionTitlesTable extends ControllerActionTable
 			'entity' => $entity,
 			'after' => 'position_grade_selection'
 		]);
-		$this->field('file_content', ['after' => 'position_grades', 'attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true,'index'=>false]]);//POCOR-7758
+		$this->field('file_content', ['after' => 'position_grades',
+            'attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true,'index'=>false]]);//POCOR-7758
 
 	}
 
-    public function onGetPositionGrades(Event $event, Entity $entity) 
+    public function onGetPositionGrades(Event $event, Entity $entity)
     {
         $isSelectAll = $this->checkIsSelectAll($entity);
 
@@ -288,7 +320,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
             return (!empty($list))? implode(', ', $list) : ' ';
         }
     }
-    public function onGetType(Event $event, Entity $entity) 
+    public function onGetType(Event $event, Entity $entity)
 	{
 		$types = $this->getSelectOptions('Staff.position_types');
 		return array_key_exists($entity->type, $types) ? $types[$entity->type] : $entity->type;
@@ -301,7 +333,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
      * @ticket POCOR-6950
      */
 
-	public function onGetStaffPositionCategoriesId(Event $event, Entity $entity) 
+	public function onGetStaffPositionCategoriesId(Event $event, Entity $entity)
 	{
 		$StaffPositionCategories = TableRegistry::get('Staff.StaffPositionCategories');
             $list = $StaffPositionCategories
@@ -313,11 +345,11 @@ class StaffPositionTitlesTable extends ControllerActionTable
             return (!empty($list))? implode(', ', $list) : ' ';
 	}
 
-	public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
 	{
 		$this->setAllPositionGrades($entity);
 
-		if (!$entity->isNew() && $entity->dirty('security_role_id')) {
+		if (!$entity->isNew() && $entity->isDirty('security_role_id')) {
 			$oldRoleId = $entity->getOriginal('security_role_id');
 			$newRoleId = $entity->security_role_id;
 			$titleId = $entity->id;
@@ -326,7 +358,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		}
 	}
 
-	private function setAllPositionGrades($entity) 
+	private function setAllPositionGrades($entity)
 	{
 		if ($entity->has('position_grade_selection') && $entity->position_grade_selection == self::SELECT_ALL_POSITION_GRADES) {
 			$StaffPositionTitlesGrades = TableRegistry::get('Institution.StaffPositionTitlesGrades');
@@ -346,7 +378,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		}
 	}
 
-    public function checkIsSelectAll($entity) 
+    public function checkIsSelectAll($entity)
     {
         $StaffPositionTitlesGrades = TableRegistry::get('Institution.StaffPositionTitlesGrades');
 
@@ -404,7 +436,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		return false;
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$events['Shell.shellRestartUpdateRole'] = 'shellRestartUpdateRole';
 		return $events;
@@ -476,12 +508,49 @@ class StaffPositionTitlesTable extends ControllerActionTable
      * @author Prajakta K
      * @ticket POCOR-8093
      */
+	// public function getPrincipalRoleId()
+    // {
+    //     $principalData = $this->find()
+    //         ->select([$this->getPrimaryKey()])
+    //         ->where([$this->aliasField('name') => 'Principal'])
+    //         ->first();
+
+    //     return (!empty($principalData))? $principalData->id: null;
+    // }
+
+
+	/**
+     * Get the code of Staff according to Position
+     * @usage  Used to fetch principal and vice principal code
+     * @author Ehteram
+     * @ticket POCOR-9208
+	 * Reason to update this code; Principal may have diffrent name in some ENV 
+     */
 	public function getPrincipalRoleId()
     {
         $principalData = $this->find()
-            ->select([$this->primaryKey()])
+            ->select([$this->getPrimaryKey()])
             ->where([$this->aliasField('name') => 'Principal'])
             ->first();
+		if(empty($principalData)){
+			$principalData = $this->find()
+				->select([$this->getPrimaryKey()])
+				->where([$this->aliasField('name') => 'Deputy Principal - Non-Teaching'])
+				->first();
+		}
+		if(empty($principalData)){
+			$principalData = $this->find()
+            ->select([$this->getPrimaryKey()])
+			->where([$this->aliasField('name') => 'Deputy Principal - Teaching'])
+            ->first();
+		}
+
+		if(empty($principalData)){
+			$principalData = $this->find()
+            ->select([$this->getPrimaryKey()])
+			->where([$this->aliasField('name') => 'Principal - teaching'])
+            ->first();
+		}
 
         return (!empty($principalData))? $principalData->id: null;
     }
@@ -489,10 +558,134 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	public function getDeputyPrincipalRoleId()
     {
         $deputyPrincipalData = $this->find()
-            ->select([$this->primaryKey()])
+            ->select([$this->getPrimaryKey()])
             ->where([$this->aliasField('name') => 'Vice Principal'])
             ->first();
 
         return (!empty($deputyPrincipalData))? $deputyPrincipalData->id: null;
+	}
+
+
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'visible':
+                return __('Visible');
+            case 'name':
+                return __('Name');
+            case 'international_code':
+                return __('International Code');
+            case 'national_code':
+                return __('National Code');
+            case 'editable':
+                return __('Editable');
+            case 'default':
+                return __('Default');
+            case 'type':
+                return __('Type');
+            case 'staff_position_categories_id':
+                return __('Staff Position Categories'); // POCOR-8128
+            case 'security_role_id':
+                return __('Security Role');
+            case 'position_grade_selection':
+                return __('Position Grade');
+            case 'position_grades':
+                return __('Position Grades');
+            case 'file_content':
+                return __('Attachment');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    // POCOR-8128 start
+    private function getStaffLeavePolicyOptions(){
+        $StaffLeavePolicyTable = self::getDynamicTableInstance('staff_leave_policies');
+        $staffLeavePolicyOptions = $StaffLeavePolicyTable
+            ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+            ->toArray();
+        return $staffLeavePolicyOptions;
+    }
+
+    private function getStaffPositionCategoryOptions(){
+        $StaffPositionCategoryTable = self::getDynamicTableInstance('staff_position_categories');
+        $staffPositionCategoryOptions = $StaffPositionCategoryTable
+            ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+            ->where(['visible' => 1])
+            ->toArray();
+        return $staffPositionCategoryOptions;
+    }
+
+
+
+    /**
+     * POCOR-8391 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+    // POCOR-8128 end
+
 }

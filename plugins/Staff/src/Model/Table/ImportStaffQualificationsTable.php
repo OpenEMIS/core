@@ -13,9 +13,9 @@ use Cake\Controller\Component;
 
 class ImportStaffQualificationsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config):void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', [
@@ -24,7 +24,7 @@ class ImportStaffQualificationsTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents():array
     {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
@@ -47,9 +47,9 @@ class ImportStaffQualificationsTable extends AppTable
 
     public function beforeAction($event)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
-        if ($this->controller->name == 'Profiles') {
+        if ($this->controller->getName() == 'Profiles') {
             $this->staffId = $session->read('Auth.User.id');
         } else if ($session->check('Staff.Staff.id')) {
             $this->staffId = $session->read('Staff.Staff.id');

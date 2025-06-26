@@ -9,6 +9,7 @@ class AlertComponent extends Component {
 
 	public function __call($name, $args)
 	{
+
 		$types = [
 			'success' => ['class' => 'alert-success'],
 			'error' => ['class' => 'alert-danger'],
@@ -38,7 +39,7 @@ class AlertComponent extends Component {
 			$_options['class'] = $class;
 			$_options['message'] = $message;
 
-			$session = $this->request->session();
+			$session = $this->getController()->getRequest()->getSession();
 			$alerts = [];
 
 			if ($_options['reset'] && $session->check('_alert')) {
@@ -63,9 +64,14 @@ class AlertComponent extends Component {
 		$this->{$alertType}(__($message), $options);
 	}
 
+	// public function success($message)
+	// {
+	// 	return $message;
+	// }
+
 	public function clear()
 	{
-		$session = $this->request->session();
+		$session = $this->getController()->getRequest()->getSession();
 		$session->delete('_alert');
 	}
 }

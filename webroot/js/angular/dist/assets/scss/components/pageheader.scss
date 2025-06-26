@@ -1,0 +1,397 @@
+@charset "UTF-8";
+
+/* Page Header V1.1.0 */
+
+.content .kdx-page-header {
+    margin: $noMargin $noMargin $margin10;
+}
+
+.kdx-page-header {
+    background-color: $whiteColor;
+    border-bottom: $lightGreyBorder;
+    font-size: 0;
+    position: relative;
+    margin: $noMargin $margin15;
+    min-height: 35px;
+
+    .title {
+        background-color: $whiteColor;
+        display: inline-block;
+        position: relative;
+        padding-right: $padding15;
+        z-index: 2;
+
+        @media #{$tabletLandscape} {
+            display: block;
+            width: 100%;
+            padding: $noPadding;
+        }
+
+        h2.page-title {
+            @extend .ellipsis;
+
+            display: inline-block;
+            width: 100%;
+            padding: 6px $noPadding;
+            margin: $noMargin;
+            vertical-align: middle;
+            transform: translateZ(0);
+
+            @media #{$tabletLandscape} {
+                white-space: normal;
+                text-overflow: inherit;
+                width: 100%;
+            }
+
+            &.expand {
+                &+.btn-icon {
+                    margin-left: $noMargin;
+                }
+            }
+        }
+
+        &.collapse-title {
+            cursor: pointer;
+
+            &.animation {
+                transition: 0.5s width ease-in-out;
+            }
+
+            @media #{$tabletLandscape} {
+                width: 100% !important;
+                padding-right: $noPadding !important;
+            }
+
+            .arrow-icon {
+                display: none;
+            }
+
+            &:hover>.arrow-icon {
+                display: block !important;
+
+                &:before {
+                    content: "\f101";
+                }
+
+                @media #{$tabletLandscape} {
+                    display: none !important;
+                }
+            }
+
+            h2.page-title {
+
+                @media #{$tabletLandscape} {
+                    width: 100% !important;
+                    text-overflow: inherit;
+                    white-space: normal;
+                }
+            }
+        }
+
+        &.expend-title {
+            cursor: pointer;
+            width: 100% !important;
+
+            &.animation {
+                transition: 0.5s width ease-in-out;
+            }
+
+            .arrow-icon {
+                display: block !important;
+                right: 0;
+
+                &:before {
+                    content: "\f100";
+                }
+            }
+        }
+
+        &.expend-title+.kdx-toolbar {
+            display: none !important;
+
+            @media #{$tabletLandscape} {
+                display: block !important;
+            }
+        }
+
+        .arrow-icon {
+            display: none;
+            position: absolute;
+            right: 15px;
+            top: 0;
+            width: 100px;
+            height: 34px;
+            background: none;
+            box-shadow: inset -22px 0px 10px 1px rgba(255, 255, 255, 0.9);
+            text-align: right;
+
+            @-webkit-keyframes hvr-icon-hang {
+                0% {
+                    -webkit-transform: translateX(6px);
+                    transform: translateX(6px);
+                }
+
+                50% {
+                    -webkit-transform: translateX(-4px);
+                    transform: translateX(-4px);
+                }
+
+                100% {
+                    -webkit-transform: translateX(6px);
+                    transform: translateX(6px);
+                }
+            }
+
+            @keyframes hvr-icon-hang {
+                0% {
+                    -webkit-transform: translateX(6px);
+                    transform: translateX(6px);
+                }
+
+                50% {
+                    -webkit-transform: translateX(-4px);
+                    transform: translateX(-4px);
+                }
+
+                100% {
+                    -webkit-transform: translateX(6px);
+                    transform: translateX(6px);
+                }
+            }
+
+            @-webkit-keyframes hvr-icon-hang-sink {
+                100% {
+                    -webkit-transform: translateX(6px);
+                    transform: translateX(6px);
+                }
+            }
+
+            @keyframes hvr-icon-hang-sink {
+                100% {
+                    -webkit-transform: translateX(6px);
+                    transform: translateX(6px);
+                }
+            }
+
+            -webkit-animation-name: hvr-icon-hang-sink,
+            hvr-icon-hang;
+            animation-name: hvr-icon-hang-sink,
+            hvr-icon-hang;
+            -webkit-animation-duration: .3s,
+            1.5s;
+            animation-duration: .3s,
+            1.5s;
+            -webkit-animation-delay: 0s,
+            .3s;
+            animation-delay: 0s,
+            .3s;
+            -webkit-animation-timing-function: ease-out,
+            ease-in-out;
+            animation-timing-function: ease-out,
+            ease-in-out;
+            -webkit-animation-iteration-count: 1,
+            infinite;
+            animation-iteration-count: 1,
+            infinite;
+            -webkit-animation-fill-mode: forwards;
+            animation-fill-mode: forwards;
+            -webkit-animation-direction: normal,
+            alternate;
+            animation-direction: normal,
+            alternate;
+
+            @media #{$tabletLandscape} {
+                display: none;
+            }
+
+            &:before {
+                font-family: $fontAwesome;
+                color: $bodyTextColor;
+                font-size: $textSizeM !important;
+                display: block;
+                padding: 6px;
+            }
+        }
+    }
+}
+
+.rtl {
+    .kdx-page-header {
+        .title {
+            padding-right: $noPadding !important;
+            padding-left: $padding15;
+
+            @media #{$tabletLandscape} {
+                padding-left: $noPadding;
+            }
+
+            &.collapse-title {
+                &:hover>.arrow-icon {
+                    &:before {
+                        content: "\f100";
+                    }
+                }
+            }
+
+            &.expend-title {
+                .arrow-icon {
+                    left: 0;
+                    right: auto !important;
+
+                    &:before {
+                        content: "\f101";
+                    }
+                }
+            }
+
+            .arrow-icon {
+                display: none;
+                box-shadow: inset 22px 0px 10px 1px rgba(255, 255, 255, 0.9);
+                text-align: left !important;
+                left: 10px !important;
+                right: auto !important;
+
+                @-webkit-keyframes hvr-icon-hang {
+                    0% {
+                        -webkit-transform: translateX(6px);
+                        transform: translateX(6px);
+                    }
+
+                    50% {
+                        -webkit-transform: translateX(-4px);
+                        transform: translateX(-4px);
+                    }
+
+                    100% {
+                        -webkit-transform: translateX(6px);
+                        transform: translateX(6px);
+                    }
+                }
+
+                @keyframes hvr-icon-hang {
+                    0% {
+                        -webkit-transform: translateX(6px);
+                        transform: translateX(6px);
+                    }
+
+                    50% {
+                        -webkit-transform: translateX(-4px);
+                        transform: translateX(-4px);
+                    }
+
+                    100% {
+                        -webkit-transform: translateX(6px);
+                        transform: translateX(6px);
+                    }
+                }
+
+                @-webkit-keyframes hvr-icon-hang-sink {
+                    100% {
+                        -webkit-transform: translateX(6px);
+                        transform: translateX(6px);
+                    }
+                }
+
+                @keyframes hvr-icon-hang-sink {
+                    100% {
+                        -webkit-transform: translateX(6px);
+                        transform: translateX(6px);
+                    }
+                }
+
+                -webkit-animation-name: hvr-icon-hang-sink,
+                hvr-icon-hang;
+                animation-name: hvr-icon-hang-sink,
+                hvr-icon-hang;
+                -webkit-animation-duration: .3s,
+                1.5s;
+                animation-duration: .3s,
+                1.5s;
+                -webkit-animation-delay: 0s,
+                .3s;
+                animation-delay: 0s,
+                .3s;
+                -webkit-animation-timing-function: ease-out,
+                ease-in-out;
+                animation-timing-function: ease-out,
+                ease-in-out;
+                -webkit-animation-iteration-count: 1,
+                infinite;
+                animation-iteration-count: 1,
+                infinite;
+                -webkit-animation-fill-mode: forwards;
+                animation-fill-mode: forwards;
+                -webkit-animation-direction: normal,
+                alternate;
+                animation-direction: normal,
+                alternate;
+            }
+        }
+    }
+}
+
+
+
+/* Fix width for the page title on webview */
+
+@media #{$webView} {
+    .has-left-btn {
+        .title {
+            width: 200px !important;
+        }
+
+        .page-toolbar {
+            width: calc(100% - 200px) !important;
+        }
+    }
+
+    .has-search-btn.has-more-btn {
+        .title {
+            width: calc(100% - 340px);
+        }
+
+        .page-toolbar {
+            width: 340px;
+        }
+    }
+
+    .has-search-btn {
+        .title {
+            width: calc(100% - 300px);
+        }
+
+        .page-toolbar {
+            width: 300px;
+        }
+    }
+
+    .has-more-btn {
+        .title {
+            width: calc(100% - 40px);
+        }
+
+        .page-toolbar {
+            width: 40px;
+        }
+    }
+
+    .rtl .kdx-page-header {
+        .page-toolbar {
+            right: auto;
+            left: 0;
+        }
+    }
+
+    .kdx-page-header {
+        .title {
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .page-toolbar {
+            position: absolute;
+            right: 0;
+        }
+    }
+}

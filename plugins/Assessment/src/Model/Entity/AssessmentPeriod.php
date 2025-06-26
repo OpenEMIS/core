@@ -3,7 +3,7 @@ namespace Assessment\Model\Entity;
 
 use DateTimeInterface;
 
-use Cake\I18n\Date;
+use Cake\I18n\FrozenDate;
 use Cake\ORM\Entity;
 use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
@@ -14,39 +14,44 @@ class AssessmentPeriod extends Entity
 
     protected function _getEditable()
     {
-        $today = new Date();
+        $today = new FrozenDate();
         $dateEnabled = $this->getOriginal('date_enabled');
         $dateDisabled = $this->getOriginal('date_disabled');
 
         //POCOR-7400 start
         $assessment_period_id=$this->getOriginal('id');
-        $user_id=$_SESSION['Auth']['User']['id'];
-        $SecurityGroupUsersTable=TableRegistry::get('security_group_users');
+        $user_id=$_SESSION['Auth']['User']['id']; // POCOR-8859
+        $super_admin = $_SESSION['Auth']['User']['super_admin'];
+        if($super_admin == 1){
+            return true;
+        }
+//        $user_id= $this->created_user_id;
+        $SecurityGroupUsersTable=TableRegistry::get('Security.SecurityGroupUsers');
         $securityGroupUserData=$SecurityGroupUsersTable->
-                               find('all')->where([$SecurityGroupUsersTable->aliasField('security_user_id') => $user_id])
+                               find('all')->where([$SecurityGroupUsersTable->aliasField('security_user_id IS') => $user_id])
                                ->toArray();
         $ids=[];
+
         foreach( $securityGroupUserData as $key=>$value){
             $ids[]=$value['security_role_id'];
         }
-        if($securityGroupUserData){
-           
-            $ExcludedSecurityRoleTable=TableRegistry::get('assessment_period_excluded_security_roles');
-            $ExcludedSecurityRoleEntity=$ExcludedSecurityRoleTable->find('all')
+        if(!empty($ids)){ // POCOR-8859
+            $ExcludedSecurityRoleTable=TableRegistry::get('Assessment.AssessmentPeriodExcludedSecurityRoles');
+            $ExcludedSecurityRoleCount=$ExcludedSecurityRoleTable->find('all') // POCOR-8859
                                                                ->where([
                                                                 'security_role_id In'=>$ids,
                                                                 'security_role_id IN'=>$ids,
                                                                 'assessment_period_id'=> $assessment_period_id
                                                                ])
-                                                               ->toArray();
-                                                              
+                                                               ->count();
+
         }
-       
-        if($ExcludedSecurityRoleEntity){
-            return true;
+
+        if($ExcludedSecurityRoleCount > 0){ // POCOR-8859
+            return true; // POCOR-8859
         }
-        //POCOR-7400 end 
-        
+        //POCOR-7400 end
+
         if ($dateEnabled instanceof DateTimeInterface && $dateDisabled instanceof DateTimeInterface) {
              return $today->between($dateEnabled, $dateDisabled);
         }
@@ -56,7 +61,7 @@ class AssessmentPeriod extends Entity
     /**
      * concatenate Assessment Period's code and name
      * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
-     * Ticket No - POCOR-6513 
+     * Ticket No - POCOR-6513
      */
     protected function _getCodeName() {
         return $this->code . ' - ' . $this->name;

@@ -11,10 +11,10 @@ use App\Model\Table\AppTable;
 
 class AssessmentItemsGradingTypesTable extends AppTable {
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
         parent::initialize($config);
         $this->belongsTo('AssessmentGradingTypes', ['className' => 'Assessment.AssessmentGradingTypes', 'dependent' => true]);
-        $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments', 'dependent' => true]);
+        $this->belongsTo('AssessmentsAlt', ['className' => 'Assessment.Assessments', 'dependent' => true]); //POCOR-8507 association names are unique
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects', 'dependent' => true]);
         $this->belongsTo('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods', 'dependent' => true]);
 
@@ -24,10 +24,10 @@ class AssessmentItemsGradingTypesTable extends AppTable {
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
         ->requirePresence('assessment_grading_type_id');
        

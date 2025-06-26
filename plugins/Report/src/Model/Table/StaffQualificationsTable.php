@@ -11,8 +11,8 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
 class StaffQualificationsTable extends AppTable  {
-    public function initialize(array $config) {
-        $this->table('staff_qualifications');
+    public function initialize(array $config): void {
+        $this->setTable('staff_qualifications');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -193,9 +193,11 @@ class StaffQualificationsTable extends AppTable  {
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) { 
                 return $results->map(function ($row) { 
                     //For Default ID NO
-                    $identity_typesTable = TableRegistry::get('identity_types');
-                    $identity_types = $identity_typesTable->find()->where(['default'=> '1'])->first();
-                    $identity_type_id = $identity_types->id;
+                    $identity_typesTable = TableRegistry::get('FieldOption.IdentityTypes');
+                    $identity_types = $identity_typesTable->find() //POCOR-8882
+                                        ->where(['`default`' => 1])
+                                        ->first();
+                   $identity_type_id = $identity_types->id;
                     if($row->identity_type_id == $identity_type_id){
                         $row['default_identity_type'] = $row->identity_number;
                     }else{

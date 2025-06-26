@@ -10,7 +10,7 @@ use Cake\ORM\Query;
 use Cake\Log\Log;
 use Cake\I18n\Time;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 
 class InstitutionCommitteesTable extends AppTable
@@ -21,7 +21,7 @@ class InstitutionCommitteesTable extends AppTable
     const ALL_POSITION = 0;
     const POSITION_WITH_STAFF = 1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
@@ -42,7 +42,7 @@ class InstitutionCommitteesTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        $institutions = TableRegistry::get('institutions');
+        $institutions = TableRegistry::get('Institution.Institutions');
         $areaId = $requestData->area_education_id;
         $where = [];
         if($requestData->institution_id == 0){

@@ -21,9 +21,9 @@ class AuditSecuritiesGroupUserRolesTable extends AppTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_group_users');
+        $this->setTable('security_group_users');
         parent::initialize($config);
         // $this->belongsTo('CreatedUser', ['className' => 'User.Users', 'foreignKey'=>'created_user_id']);
         
@@ -69,11 +69,11 @@ class AuditSecuritiesGroupUserRolesTable extends AppTable
                     'security_roles.id = AuditSecuritiesGroupUserRoles.security_role_id',
                 ]
             ])
-            ->innerJoin(['institutions' => 'institutions'], [
+            ->leftJoin(['institutions' => 'institutions'], [
                 [
                     'institutions.security_group_id = AuditSecuritiesGroupUserRoles.security_group_id',
                 ]
-            ])
+            ]) //POCOR-9183
             ->leftJoin(['area_groups' => '(SELECT security_group_areas.security_group_id
             ,GROUP_CONCAT(DISTINCT(areas.name)) area_name FROM security_group_areas INNER JOIN areas ON areas.id = security_group_areas.area_id GROUP BY security_group_areas.security_group_id)'], [
                 [
@@ -88,7 +88,8 @@ class AuditSecuritiesGroupUserRolesTable extends AppTable
             ])
             ->where([
                 $this->aliasField('created >= "') . $reportStartDate . '"',
-                $this->aliasField('created <= "') . $reportEndDate . '"'
+                $this->aliasField('created <= "') . $reportEndDate . '"',
+                'security_users.super_admin' => 0
             ])
             ->group(['AuditSecuritiesGroupUserRoles.security_group_id'
             ,'AuditSecuritiesGroupUserRoles.security_user_id'

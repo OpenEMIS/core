@@ -10,12 +10,13 @@ use Cake\I18n\Time;
 use Cake\I18n\Date;
 use DateTime;
 use Cake\Console\Shell;
+use Cake\I18n\FrozenTime;
 
 class GenerateAllReportCardsShell extends Shell
 {
     private $sleepTime = 5;
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('CustomExcel.ReportCards');
@@ -49,17 +50,17 @@ class GenerateAllReportCardsShell extends Shell
                     $this->ReportCardProcesses->aliasField('created'),
                     $this->ReportCardProcesses->aliasField('student_id')
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->first();
 
             // echo '<pre>';
             // print_r($recordToProcess ); die;
 
             if (!empty($recordToProcess)) {
-                $this->out('Generating report card for Student ' . $recordToProcess['student_id'] . ' (' . Time::now() . ')');
+                $this->out('Generating report card for Student ' . $recordToProcess['student_id'] . ' (' . FrozenTime::now() . ')');
                 try {
-                    $todayDate = Time::now();
-                    $todayDate = Time::parse('now');
+                    $todayDate = FrozenTime::now();
+                    $todayDate = FrozenTime::parse('now');
                     $_now = $todayDate->i18nFormat('yyyy-MM-dd HH:mm:ss');
                     $this->ReportCardProcesses->updateAll(['status' => $this->ReportCardProcesses::RUNNING, 'modified' => $_now], [
                         'report_card_id' => $recordToProcess['report_card_id'],
@@ -78,19 +79,24 @@ class GenerateAllReportCardsShell extends Shell
                 try {
                     $this->ReportCards->renderExcelTemplate($excelParams);
                 } catch (\Exception $e) {
-                    $this->out('Error generating Report Card for Student ' . $recordToProcess['student_id']);
+                    $this->out('Error generating Report Card for Student One ' . $recordToProcess['student_id']);
                     $this->out($e->getMessage());
                 }
 
-                $this->out('End generating report card for Student ' . $recordToProcess['student_id'] . ' (' . Time::now() . ')');
-                $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
+                $this->out('End generating report card for Student Two ' . $recordToProcess['student_id'] . ' (' . FrozenTime::now() . ')');
+                $this->SystemProcesses->updateProcess($systemProcessId, FrozenTime::now(), $this->SystemProcesses::COMPLETED);
                 $this->recursiveCallToMyself($this->args);
             } else {
-                $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
+                $this->SystemProcesses->updateProcess($systemProcessId, FrozenTime::now(), $this->SystemProcesses::COMPLETED);
             }
         }
         try {
-            posix_kill(getmypid(), 9);
+            $pid = getmypid();
+            if (function_exists('posix_kill')) {
+                posix_kill($pid, 9);
+            } else {
+                exec("kill -15 $pid"); // Works on Unix-like systems
+            }
         } catch (\Exception $exception) {
             $this->out($exception->getMessage());
         }

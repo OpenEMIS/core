@@ -17,6 +17,43 @@ class ScheduleController extends Controller
         $this->scheduleService = $scheduleService;
     }
 
+    /**
+     * @OA\Delete(
+     *      path="/api/v4/institutions/{institutionId}/schedules/timetables/lessons/{id}",
+     *      summary="Delete lesson by id",
+     *      description="Delete lesson by id",
+     *      tags={"Institution time table"},
+     *      @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Id of institution",
+     *         @OA\Schema(type="integer", example=6)
+     *      ),
+     *      @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Id of lesson",
+     *         @OA\Schema(type="integer", example=6)
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *                 @OA\Property(property="data", type="array",
+     *                     @OA\Items()
+     *                  ),
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function deleteTimeTableLessonById($institutionId, $id)
     {
         try {
@@ -40,6 +77,119 @@ class ScheduleController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *      path="/api/v4/schedules/timetables/{id}",
+     *      summary="Get detail of time table by id",
+     *      description="Get detail of time table by id",
+     *      tags={"Institution time table"},
+     *      @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Timetable id",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="P1A"),
+     *                     @OA\Property(property="status", type="integer", example=1),
+     *                     @OA\Property(property="academic_period_id", type="integer", example=29),
+     *                     @OA\Property(property="institution_class_id", type="integer", example=129),
+     *                     @OA\Property(property="institution_id", type="integer", example=6),
+     *                     @OA\Property(property="institution_schedule_interval_id", type="integer", example=1),
+     *                     @OA\Property(property="institution_schedule_term_id", type="integer", example=1),
+     *                     @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                     @OA\Property(property="modified", type="string", example="2020-02-11 07:36:56"),
+     *                     @OA\Property(property="created_user_id", type="integer", example=2),
+     *                     @OA\Property(property="created", type="string", example="2020-02-11 07:36:56"),
+     *                     @OA\Property(property="academic_period", type="object",
+     *                         @OA\Property(property="id", type="integer", example=29),
+     *                         @OA\Property(property="code", type="string", example="YR2020"),
+     *                         @OA\Property(property="name", type="string", example="2020"),
+     *                         @OA\Property(property="start_date", type="string", example="2020-01-01"),
+     *                         @OA\Property(property="start_year", type="integer", example=2020),
+     *                         @OA\Property(property="end_date", type="string", example="2020-12-31"),
+     *                         @OA\Property(property="end_year", type="integer", example=2020),
+     *                         @OA\Property(property="school_days", type="integer", example=0),
+     *                         @OA\Property(property="current", type="integer", example=0),
+     *                         @OA\Property(property="editable", type="integer", example=1),
+     *                         @OA\Property(property="parent_id", type="integer", example=9),
+     *                         @OA\Property(property="lft", type="integer", example=26),
+     *                         @OA\Property(property="rght", type="integer", example=27),
+     *                         @OA\Property(property="academic_period_level_id", type="integer", example=1),
+     *                         @OA\Property(property="order", type="integer", example=6),
+     *                         @OA\Property(property="visible", type="integer", example=1),
+     *                         @OA\Property(property="modified_user_id", type="integer", example="null"),
+     *                         @OA\Property(property="modified", type="string", example="null"),
+     *                         @OA\Property(property="created_user_id", type="integer", example=2),
+     *                         @OA\Property(property="created", type="string", example="2020-01-08 01:49:42")
+     *                     ),
+     *                     @OA\Property(property="schedule_term", type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Kindergarten 1-A"),
+     *                         @OA\Property(property="class_number", type="integer", example=1),
+     *                         @OA\Property(property="capacity", type="integer", example=100),
+     *                         @OA\Property(property="total_male_students", type="integer", example=10),
+     *                         @OA\Property(property="total_female_students", type="integer", example=16),
+     *                         @OA\Property(property="staff_id", type="integer", example=0),
+     *                         @OA\Property(property="institution_shift_id", type="integer", example=1),
+     *                         @OA\Property(property="institution_id", type="integer", example=1),
+     *                         @OA\Property(property="institution_unit_id", type="integer", example="null"),
+     *                         @OA\Property(property="institution_course_id", type="integer", example="null"),
+     *                         @OA\Property(property="academic_period_id", type="integer", example=10),
+     *                         @OA\Property(property="modified_user_id", type="integer", example="null"),
+     *                         @OA\Property(property="modified", type="string", example="null"),
+     *                         @OA\Property(property="created_user_id", type="integer", example=2),
+     *                         @OA\Property(property="created", type="string", example="2018-03-28 16:35:19")
+     *                     ),
+     *                     @OA\Property(property="schedule_interval", type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="APS Morning Shift"),
+     *                         @OA\Property(property="academic_period_id", type="integer", example=29),
+     *                         @OA\Property(property="institution_id", type="integer", example=6),
+     *                         @OA\Property(property="institution_shift_id", type="integer", example=172),
+     *                         @OA\Property(property="modified_user_id", type="integer", example=2),
+     *                         @OA\Property(property="modified", type="string", example="2020-02-11 07:34:13"),
+     *                         @OA\Property(property="created_user_id", type="integer", example=2),
+     *                         @OA\Property(property="created", type="string", example="2020-02-11 07:30:53")
+     *                     ),
+     *                     @OA\Property(property="institution_class", type="object",
+     *                         @OA\Property(property="id", type="integer", example=496),
+     *                         @OA\Property(property="name", type="string", example="Primary 1-A"),
+     *                         @OA\Property(property="class_number", type="integer", example=1),
+     *                         @OA\Property(property="capacity", type="integer", example=50),
+     *                         @OA\Property(property="total_male_students", type="integer", example=12),
+     *                         @OA\Property(property="total_female_students", type="integer", example=25),
+     *                         @OA\Property(property="staff_id", type="integer", example=8815),
+     *                         @OA\Property(property="institution_shift_id", type="integer", example=172),
+     *                         @OA\Property(property="institution_id", type="integer", example=6),
+     *                         @OA\Property(property="institution_unit_id", type="integer", example="null"),
+     *                         @OA\Property(property="institution_course_id", type="integer", example="null"),
+     *                         @OA\Property(property="academic_period_id", type="integer", example=29),
+     *                         @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                         @OA\Property(property="modified", type="string", example="2021-08-12 04:48:11"),
+     *                         @OA\Property(property="created_user_id", type="integer", example=8805),
+     *                         @OA\Property(property="created", type="string", example="2020-01-08 02:28:30")
+     *                     )
+     *                 )
+     *             )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getTimeTableById($id)
     {
         try {
@@ -55,10 +205,91 @@ class ScheduleController extends Controller
         }
     }
 
-    public function getLessonsByTimeTableId($id)
+    /**
+     * @OA\Get(
+     *      path="/api/v4/schedules/timetables/{id}/lessons",
+     *      summary="Get list of lesson by timetable id",
+     *      description="Get list of lesson by timetable id",
+     *      tags={"Institution time table"},
+     *      @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Timetable id",
+     *         @OA\Schema(type="integer", example="1")
+     *      ),
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="day_of_week", type="integer", example="1"),
+     *                     @OA\Property(property="institution_schedule_timeslot_id", type="integer", example=1),
+     *                     @OA\Property(property="institution_schedule_timetable_id", type="integer", example=3),
+     *                     @OA\Property(property="modified_user_id", type="integer", example="null"),
+     *                     @OA\Property(property="modified", type="string", example="null"),
+     *                     @OA\Property(property="created_user_id", type="integer", example=2),
+     *                     @OA\Property(property="created", type="string", example="2020-01-08 01:49:42"),
+     *                     @OA\Property(property="schedule_lesson_details", type="object",
+     *                         @OA\Property(property="id", type="integer", example=29),
+     *                         @OA\Property(property="lesson_type", type="integer", example=1),
+     *                         @OA\Property(property="day_of_week", type="integer", example=1),
+     *                         @OA\Property(property="institution_schedule_timeslot_id", type="integer", example=1),
+     *                         @OA\Property(property="institution_schedule_timetable_id", type="integer", example=2),
+     *                         @OA\Property(property="modified_user_id", type="integer", example="null"),
+     *                         @OA\Property(property="modified", type="string", example="null"),
+     *                         @OA\Property(property="created_user_id", type="integer", example=2),
+     *                         @OA\Property(property="created", type="string", example="2020-01-08 01:49:42")
+     *                     ),
+     *                     @OA\Property(property="timeslots", type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="interval", type="integer", example=1),
+     *                         @OA\Property(property="order", type="integer", example=1),
+     *                         @OA\Property(property="institution_schedule_interval_id", type="integer", example=1),
+     *                         @OA\Property(property="start_time", type="string", example="07:00:00"),
+     *                         @OA\Property(property="end_time", type="string", example="07:30:00"),
+     *                     ),
+     *                 )
+     *             )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
+    public function getLessonsByTimeTableId($id, Request $request)
     {
         try {
-            $data = $this->scheduleService->getLessonsByTimeTableId($id);
+            $params = $request->all();
+            $data = $this->scheduleService->getLessonsByTimeTableId($id, $params);
             return $this->sendSuccessResponse("Time table lessons list", $data);
 
         } catch (\Exception $e) {
@@ -70,6 +301,34 @@ class ScheduleController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *      path="/api/v4/schedules/lessons/types",
+     *      summary="Get list of lesson types",
+     *      description="Get list of lesson types",
+     *      tags={"Institution time table"},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Curriculum Lesson"),
+     *                     @OA\Property(property="title", type="string", example="Curriculum"),
+     *                 )
+     *             )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getLessonType()
     {
         $scheduleRepository = new ScheduleRepository();
@@ -78,6 +337,33 @@ class ScheduleController extends Controller
         return $this->sendSuccessResponse("Time table lessons type list", $data);
     }
 
+    /**
+     * @OA\Get(
+     *      path="/api/v4/schedules/timetables/statuses",
+     *      summary="Get list of statuses",
+     *      description="Get list of statuses",
+     *      tags={"Institution time table"},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Draft"),
+     *                 )
+     *             )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getTimeTableStatus()
     {
         $status = [
@@ -94,6 +380,33 @@ class ScheduleController extends Controller
         return $this->sendSuccessResponse("Time table status list", $status);
     }
 
+    /**
+     * @OA\Get(
+     *      path="/api/v4/weekdays",
+     *      summary="Get list of weekdays",
+     *      description="Get list of weekdays",
+     *      tags={"Institution time table"},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="day_of_week", type="integer", example=1),
+     *                     @OA\Property(property="day", type="string", example="monday"),
+     *                 )
+     *             )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function workingDayOfWeek()
     {
         $weekdays = [
@@ -133,10 +446,71 @@ class ScheduleController extends Controller
         return $this->sendSuccessResponse("Working day of weeks", $dayOfWeek);
     }
 
-    public function getTimeSlotsByIntervalId($intervalId)
+
+    /**
+     * @OA\Get(
+     *      path="/api/v4/schedules/timeslots/{intervalId}",
+     *      summary="Get list of time slots by interval id",
+     *      description="Get list of time slots by interval id",
+     *      tags={"Institution time table"},
+     *      @OA\Parameter(
+     *         name="intervalId",
+     *         in="path",
+     *         required=true,
+     *         description="Interval Id",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="institution_schedule_interval_id", type="integer", example=1),
+     *                     @OA\Property(property="interval", type="integer", example=0),
+     *                     @OA\Property(property="order", type="integer", example=1),
+     *                     @OA\Property(property="start_time", type="string", example="07:00:00"),
+     *                     @OA\Property(property="end_time", type="string", example="07:30:00"),
+     *                 )
+     *             )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
+    public function getTimeSlotsByIntervalId($intervalId, Request $request)
     {
         try {
-            $timeSlots = $this->scheduleService->getTimeSlotsByIntervalId($intervalId);
+            $params = $request->all();
+            $timeSlots = $this->scheduleService->getTimeSlotsByIntervalId($intervalId, $params);
             return $this->sendSuccessResponse("Time slots list", $timeSlots);
         } catch (\Exception $e) {
             Log::error(
@@ -148,6 +522,46 @@ class ScheduleController extends Controller
 
     }
 
+    /**
+     * @OA\Post(
+     *      path="/api/v4/schedules/timetables/lessons",
+     *      summary="Add Lesson",
+     *      description="Add Lesson",
+     *      tags={"Institution time table"},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="day_of_week", type="integer", example=1),
+     *              @OA\Property(property="institution_schedule_timeslot_id", type="integer", example=29),
+     *              @OA\Property(property="institution_schedule_timetable_id", type="integer", example=1),
+     *              @OA\Property(property="lesson_type", type="integer", example=2),
+     *              @OA\Property(property="schedule_non_curriculum_lesson", type="object",
+     *                  @OA\Property(property="name", type="string", example="dfg")
+     *              ),
+     *              @OA\Property(property="schedule_lesson_room", type="object",
+     *                  @OA\Property(property="institution_schedule_lesson_detail_id", type="string", example="1"),
+     *                  @OA\Property(property="institution_room_id", type="string", example="656")
+     *              ),
+     *              @OA\Property(property="institution_id", type="integer", example=6)
+     *          )
+     *      ),
+     *      @OA\Response(
+     *           response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *                 @OA\Property(property="data", type="array",
+     *                     @OA\Items()
+     *                  ),
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function addLesson(Request $request)
     {
         try {
@@ -180,7 +594,7 @@ class ScheduleController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/institutions/schedule-timetables",
+     *     path="/api/v4/institutions/schedule-timetables",
      *     summary="Get schedule timetables for institutions",
      *     tags={"Institution time table"},
      *     @OA\Parameter(
@@ -268,7 +682,7 @@ class ScheduleController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/institutions/{institutionId}/schedule-timetables",
+     *     path="/api/v4/institutions/{institutionId}/schedule-timetables",
      *     summary="Get schedule timetables for institutions",
      *     tags={"Institution time table"},
      *     @OA\Parameter(
@@ -277,7 +691,7 @@ class ScheduleController extends Controller
      *         description="Institution Id",
      *         required=true,
      *         @OA\Schema(type="string", example="6")
-     *     )
+     *     ),
      *     @OA\Parameter(
      *         name="order",
      *         in="query",
@@ -363,7 +777,7 @@ class ScheduleController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/institutions/schedule-timetables/{scheduleTimeTableId}",
+     *     path="/api/v4/institutions/schedule-timetables/{scheduleTimeTableId}",
      *     summary="Get schedule timetables data for institutions",
      *     tags={"Institution time table"},
      *     @OA\Parameter(
@@ -372,7 +786,7 @@ class ScheduleController extends Controller
      *         description="Schedule Time Table Id",
      *         required=true,
      *         @OA\Schema(type="string", example="1")
-     *     )
+     *     ),
      *     @OA\Parameter(
      *         name="order",
      *         in="query",

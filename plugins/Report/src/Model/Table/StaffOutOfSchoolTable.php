@@ -11,8 +11,8 @@ use App\Model\Traits\MessagesTrait;
 // POCOR -4827 starts
 class StaffOutOfSchoolTable extends AppTable  {
     use MessagesTrait;
-    public function initialize(array $config) {
-        $this->table('security_users');
+    public function initialize(array $config): void {
+        $this->setTable('security_users');
         parent::initialize($config);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Excel', [

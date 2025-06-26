@@ -10,7 +10,7 @@ use App\Shell\AlertShell;
 
 class AlertAttendanceShell extends AlertShell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
@@ -38,7 +38,7 @@ class AlertAttendanceShell extends AlertShell
                 foreach ($data as $key => $vars) {
                     $vars['threshold'] = $threshold;
 
-                    if (array_key_exists('institution', $vars)) {
+                    if (isset($vars['institution'])) {
                         $institutionId = $vars['institution']['id'];
                     }
 

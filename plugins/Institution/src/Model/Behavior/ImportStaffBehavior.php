@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 class ImportStaffBehavior extends Behavior 
 {
@@ -16,7 +17,7 @@ class ImportStaffBehavior extends Behavior
         'Institution.Institutions.ImportStaffSalaries' => 'Import Staff Salaries'
     ];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.add.beforeAction'] = 'addBeforeAction';
@@ -29,13 +30,13 @@ class ImportStaffBehavior extends Behavior
         $this->_table->ControllerAction->setFieldOrder(['feature', 'select_file']);
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $request = $this->_table->request;
-            $plugin = $request->params['plugin'];
-            $controller = $request->params['controller'];
-            $table = $this->_table->alias();
+            $plugin = $request->getParam('plugin');
+            $controller = $request->getParam('controller');
+            $table = $this->_table->getAlias();
             $selectedFeature =  $plugin . '.' . $controller . '.' . $table;
 
             $options = $this->getFeatureOptions();

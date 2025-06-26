@@ -1,108 +1,202 @@
-angular.module('directory.directoryaddguardian.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'directory.directoryaddguardian.svc', 'kd-angular-tree-dropdown'])
+angular.module('directory.directoryaddguardian.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'kd-angular-tree-dropdown', 'kd.data.svc', 'directory.directoryadd.svc'])
     .controller('DirectoryaddguardianCtrl', DirectoryaddguardianController);
 
-DirectoryaddguardianController.$inject = ['$scope', '$q', '$window', '$http', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DirectoryaddguardianSvc'];
+DirectoryaddguardianController.$inject = ['$scope', '$q', '$window', '$http', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'KdDataSvc',  'DirectoryaddSvc'];
 
-function DirectoryaddguardianController($scope, $q, $window, $http, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, DirectoryaddguardianSvc) {
+function DirectoryaddguardianController($scope, $q, $window, $http, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, KdDataSvc, DirectoryaddSvc) {
     var scope = $scope;
-    scope.step = 'user_details';
-    scope.selectedUserData = {};
-    scope.internalGridOptions = null;
-    scope.externalGridOptions = null;
-    scope.postRespone = null;
-    scope.translateFields = null;
-    scope.genderOptions = [];
-    scope.nationality_class = 'input select error';
-    scope.identity_type_class = 'input select error';
-    scope.identity_class = 'input string';
-    scope.messageClass = '';
-    scope.message = '';
-    scope.nationalitiesOptions = [];
-    scope.identityTypeOptions = [];
-    scope.contactTypeOptions = [];
-    scope.relationTypeOptions = [];
-    scope.addressAreaOption = [];
-    scope.birthplaceAreaOption = [];
-    scope.pageSize = 10;
-    scope.rowsThisPage = [];
-    scope.selectedGuardian;
-    scope.error = {};
-    scope.studentName;
-    scope.isInternalSearchSelected = false;
-    scope.isExternalSearchSelected = false;
-    scope.isIdentityUserExist = false;
-    scope.isExternalSearchEnable = false;
-    scope.externalSearchSourceName = '';
-    scope.disableFields = {
-        username: true,
-        password: true
+    var userCtrl = $scope;
+    userCtrl.studentOpenEmisId = undefined;
+    const directorySvc = DirectoryaddSvc;
+
+    userCtrl.step = 'user_details';
+    userCtrl.selectedUserData = {};
+    userCtrl.internalGridOptions = null;
+    userCtrl.externalGridOptions = null;
+    userCtrl.postRespone = null;
+    userCtrl.translateFields = null;
+    userCtrl.genderOptions = [];
+    userCtrl.nationality_class = 'input select error';
+    userCtrl.identity_type_class = 'input select error';
+    userCtrl.identity_class = 'input string';
+    userCtrl.messageClass = '';
+    userCtrl.message = '';
+    userCtrl.nationalitiesOptions = [];
+    userCtrl.identityTypeOptions = [];
+    userCtrl.contactTypeOptions = [];
+    userCtrl.relationTypeOptions = [];
+    userCtrl.addressAreaOption = [];
+    userCtrl.birthplaceAreaOption = [];
+    userCtrl.pageSize = 10;
+    userCtrl.rowsThisPage = [];
+    userCtrl.selectedGuardian;
+    userCtrl.error = {};
+    userCtrl.studentName;
+    userCtrl.isInternalSearchSelected = false;
+    userCtrl.isExternalSearchSelected = false;
+    userCtrl.isIdentityUserExist = false;
+    userCtrl.isExternalSearchEnable = false;
+    userCtrl.externalSearchSourceName = '';
+    userCtrl.disableFields = {
+        username: false,
+        password: false
     }
-    scope.isSearchResultEmpty = false;
-    scope.datepickerOptions = {
+    userCtrl.isSearchResultEmpty = false;
+    userCtrl.datepickerOptions = {
         minDate: new Date('01/01/1900'),
         maxDate: new Date(),
         showWeeks: false
     };
-    scope.addressAreaId = null;
-    scope.birthplaceAreaId = null;
+    userCtrl.addressAreaId = null;
+    userCtrl.birthplaceAreaId = null;
 
     angular.element(document).ready(function () {
-        UtilsSvc.isAppendLoader(true);
-        DirectoryaddguardianSvc.init(angular.baseUrl);
-        scope.translateFields = {
-            'openemis_no': 'OpenEMIS ID',
-            'name': 'Name',
-            'gender_name': 'Gender',
-            'date_of_birth': 'Date Of Birth',
-            'nationality_name': 'Nationality',
-            'identity_type_name': 'Identity Type',
-            'identity_number': 'Identity Number',
-            'account_type': 'Account Type'
-        };
-        if ($window.localStorage.getItem('address_area')) {
-            $window.localStorage.removeItem('address_area');
-        }
-        if ($window.localStorage.getItem('address_area_id')) {
-            $window.localStorage.removeItem('address_area_id');
-        }
-        if ($window.localStorage.getItem('birthplace_area')) {
-            $window.localStorage.removeItem('birthplace_area');
-        }
-        if ($window.localStorage.getItem('birthplace_area_id')) {
-            $window.localStorage.removeItem('birthplace_area_id');
-        }
-        try { // POCOR-8014-n
-            if (typeof scope.studentOpenEmisId !== "undefined") {
-                //POCOR-7916:start
-                var student_param = {
-                    openemis_no: scope.studentOpenEmisId
-                };
-                DirectoryaddguardianSvc.getInternalSearchData(student_param)
-                    .then(function (response) {
+        function initUserCtrl() {
+            UtilsSvc.isAppendLoader(true);
+            directorySvc.init(angular.baseUrl);
+            userCtrl.institutionId = Number($window.localStorage.getItem("institution_id"));
+            userCtrl.translateFields = {
+                'openemis_no': 'OpenEMIS ID',
+                'name': 'Name',
+                'gender_name': 'Gender',
+                'date_of_birth': 'Date Of Birth',
+                'nationality_name': 'Nationality',
+                'identity_type_name': 'Identity Type',
+                'identity_number': 'Identity Number',
+                'account_type': 'Account Type'
+            };
 
-                        var studentData = response.data.data;
-                        // console.log(studentData);
-                        if (Array.isArray(studentData)) {
-                            var student = studentData[0];
-                            scope.studentName = student.name;
-                        }
+            // Remove specific items from local storage
+            ['address_area', 'address_area_id', 'birthplace_area', 'birthplace_area_id'].forEach(item => {
+                if ($window.localStorage.getItem(item)) {
+                    $window.localStorage.removeItem(item);
+                }
+            });
+            try { // POCOR-8014-n
+                if (typeof userCtrl.studentOpenEmisId !== "undefined") {
+                    //POCOR-7916:start
+                    var student_param = {
+                        openemis_no: userCtrl.studentOpenEmisId
+                    };
+                    directorySvc.getInternalSearchData(student_param)
+                        .then(function (response) {
+                            var studentData = response.data.data;
+                            // console.log(response);
+                            if (Array.isArray(studentData)) {
+                                var student = studentData[0];
+                                userCtrl.studentName = student.name;
+                            }
 
-                    });
-                //POCOR-7916:end
+                        });
+                    //POCOR-7916:end
+                }
+                //POCOR-7231::Start
+                if (userCtrl.institutionId) {
+                    userCtrl.selectedUserData.institution_id = institution_id;
+                }
+            } catch (err) {
+                console.warn(err)
             }
-            //POCOR-7231::Start
-            if (scope.institutionId) {
-                scope.selectedUserData.institution_id = institution_id;
-            }
-            //POCOR-7231::End
-            scope.initGrid();
-            scope.getRelationType();
-            // POCOR-8014-n: end
-        } catch (err) {
-            console.warn(err)
+            // scope.initGrid();
+            loadUserData();
         }
 
+        function getGenders() {
+            return directorySvc.setGenders(userCtrl)
+        }
+
+        function getNationalities() {
+            return directorySvc.setNationalities(userCtrl);
+        }
+
+        function getIdentityTypes() {
+            return directorySvc.setIdentityTypes(userCtrl);
+        }
+
+        function getContactTypes() {
+            return directorySvc.setContactTypes(userCtrl);
+        }
+
+        function getRelationType() {
+            return directorySvc.getRelationType()
+                .then(resp => {
+                    userCtrl.relationTypeOptions = resp.data;
+                });
+        }
+
+        function loadUserData() {
+            getGenders()
+                .then(getRelationType)
+                .then(getNationalities)
+                .then(getIdentityTypes)
+                .then(getContactTypes)
+                .then(() => {
+                    UtilsSvc.isAppendLoader(false);
+                })
+                .catch(error => {
+                    console.error(error);
+                    UtilsSvc.isAppendLoader(false);
+                });
+        }
+
+// Initialize the user controller
+        initUserCtrl();
     });
+
+    // First change
+
+    userCtrl.changeRelationType = function () {
+        directorySvc.changeRelationType($scope);
+    };
+
+    // user_details function
+
+    userCtrl.changeNationality = function() {
+        directorySvc.changeNationality($scope);
+    };
+
+    userCtrl.changeIdentityType = function() {
+        directorySvc.changeIdentityType($scope);
+    };
+
+
+    userCtrl.checkIdentityNumber = function() {
+        directorySvc.checkIdentityNumber($scope);
+    };
+
+    userCtrl.setName = function() {
+        directorySvc.setName($scope);
+    };
+
+    userCtrl.changeGender = function() {
+        directorySvc.changeGender($scope);
+    };
+
+    userCtrl.checkDateOfBirth = function() {
+        directorySvc.checkDateOfBirth($scope);
+    };
+
+    userCtrl.setError = function(field, message) {
+        directorySvc.setError(userCtrl.error, field, message);
+    };
+
+    userCtrl.unsetError = function(field) {
+        directorySvc.unsetError(userCtrl.error, field);
+    };
+
+    userCtrl.unsetAllErrors = function() {
+        userCtrl.error = {};
+    };
+
+    userCtrl.validateUserDetails = function() {
+        directorySvc.validateUserDetails($scope);
+    };
+
+    // end common user details functions
+
+    userCtrl.validateConfirmDetails = function() {
+        directorySvc.validateConfirmDetails($scope);
+    };
 
     function getParameterByName(name, url = window.location.href) {
         name = name.replace(/[\[\]]/g, '\\$&');
@@ -115,1304 +209,235 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
 
     $window.savePhoto = function (event) {
         let photo = event.files[0];
-        scope.selectedUserData.photo = photo;
-        scope.selectedUserData.photo_name = photo.name;
+        userCtrl.selectedUserData.photo = photo;
+        userCtrl.selectedUserData.photo_name = photo.name;
         let fileReader = new FileReader();
         fileReader.readAsDataURL(photo);
         fileReader.onload = () => {
-            scope.selectedUserData.photo_base_64 = fileReader.result;
-        }
-    }
+            const base64String = fileReader.result.split(',')[1];
 
-    scope.getUniqueOpenEmisId = function () {
-        if ((scope.isExternalSearchSelected || scope.isInternalSearchSelected) &&
-            scope.selectedUserData.openemis_no &&
-            !isNaN(Number(scope.selectedUserData.openemis_no.toString()))) {
-            if (!scope.selectedUserData || !scope.selectedUserData.username || scope.selectedUserData.username.trim() === '') {
-                scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
-            }
-            scope.generatePassword();
-
-            return;
-        }
-        UtilsSvc.isAppendLoader(true);
-        DirectoryaddguardianSvc.getUniqueOpenEmisId()
-            .then(function (response) {
-                scope.selectedUserData.openemis_no = response;
-                scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
-                scope.generatePassword();
-            }, function (error) {
-                console.error(error);
-                UtilsSvc.isAppendLoader(false);
+            // POCOR-8917 Manually trigger AngularJS digest cycle
+            $scope.$apply(() => {
+                userCtrl.selectedUserData.photo_base_64 = base64String;
             });
-    }
-
-    scope.getInternalSearchData = function () {
-        var first_name = '';
-        var last_name = '';
-        var openemis_no = null;
-        var date_of_birth = '';
-        var identity_number = '';
-        var nationality_id = '';
-        var nationality_name = '';
-        var identity_type_name = '';
-        var identity_type_id = '';
-        first_name = scope.selectedUserData.first_name;
-        last_name = scope.selectedUserData.last_name;
-        date_of_birth = scope.selectedUserData.date_of_birth;
-        identity_number = scope.selectedUserData.identity_number;
-        openemis_no = scope.selectedUserData.openemis_no;
-        nationality_id = scope.selectedUserData.nationality_id;
-        nationality_name = scope.selectedUserData.nationality_name;
-        identity_type_name = scope.selectedUserData.identity_type_name;
-        identity_type_id = scope.selectedUserData.identity_type_id;
-
-        var dataSource = {
-            pageSize: scope.pageSize,
-            getRows: function (params) {
-                UtilsSvc.isAppendLoader(true);
-                var param = {
-                    page: params.endRow / (params.endRow - params.startRow),
-                    limit: params.endRow - params.startRow,
-                    first_name: first_name,
-                    last_name: last_name,
-                    openemis_no: openemis_no,
-                    date_of_birth: date_of_birth,
-                    identity_number: identity_number,
-                    institution_id: null,
-                    user_type_id: 3,
-                    nationality_id: nationality_id,
-                    nationality_name: nationality_name,
-                    identity_type_name: identity_type_name,
-                    identity_type_id: identity_type_id
-                }
-                DirectoryaddguardianSvc.getInternalSearchData(param)
-                    .then(function (response) {
-                        var gridData = response.data.data;
-                        if (!gridData)
-                            gridData = [];
-                        var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
-                        scope.isSearchResultEmpty = gridData.length === 0;
-                        return scope.processInternalGridUserRecord(gridData, params, totalRowCount);
-                    }, function (error) {
-                        console.error(error);
-                        UtilsSvc.isAppendLoader(false);
-                    });
-            }
         };
-        scope.internalGridOptions.api.setDatasource(dataSource);
-        scope.internalGridOptions.api.sizeColumnsToFit();
     }
 
-    scope.processInternalGridUserRecord = function (userRecords, params, totalRowCount) {
-        if (userRecords.length === 0) {
-            params.failCallback([], totalRowCount);
-            UtilsSvc.isAppendLoader(false);
-            return;
-        }
 
-        var lastRow = totalRowCount;
-        scope.rowsThisPage = userRecords;
-
-        params.successCallback(scope.rowsThisPage, lastRow);
-        // scope.externalDataLoaded = true;
-        UtilsSvc.isAppendLoader(false);
-        return userRecords;
-    }
-
-    scope.getExternalSearchData = function () {
-        var param = {
-            first_name: scope.selectedUserData.first_name,
-            last_name: scope.selectedUserData.last_name,
-            date_of_birth: scope.selectedUserData.date_of_birth,
-            identity_number: scope.selectedUserData.identity_number,
-            openemis_no: scope.selectedUserData.openemis_no,
-            nationality_id: scope.selectedUserData.nationality_id,
-            search_type: scope.externalSearchSourceName,
-        }
-        var dataSource = {
-            pageSize: scope.pageSize,
-            getRows: function (params) {
-                UtilsSvc.isAppendLoader(true);
-                param.limit = params.endRow - params.startRow;
-                param.page = params.endRow / (params.endRow - params.startRow);
-                DirectoryaddguardianSvc.getExternalSearchData(param)
-                    .then(function (response) {
-                        var gridData = response.data.data;
-                        if (!gridData) {
-                            gridData = [];
-                        }
-                        if (scope.externalSearchSourceName === 'UNHCR') {
-                            scope.selectedUserData.identity_number = null;
-                        }
-                        // console.log(gridData);
-                        gridData.forEach((data, idx) => {
-                            if (scope.externalSearchSourceName === 'UNHCR') {
-                                scope.selectedUserData.identity_number = null;
-                                data.name = scope.selectedUserData.name;
-                                data.gender = scope.selectedUserData.gender.name;
-                                data.gender_id = scope.selectedUserData.gender_id;
-                                data.nationality_id = scope.selectedUserData.nationality_id;
-                                data.nationality = scope.selectedUserData.nationality_name;
-                                data.identity_type = scope.selectedUserData.identity_type_name;
-                                data.identity_type_id = scope.selectedUserData.identity_type_id;
-                                data.first_name = scope.selectedUserData.first_name;
-                                data.last_name = scope.selectedUserData.last_name;
-                                data.middle_name = scope.selectedUserData.middle_name;
-                                data.third_name = scope.selectedUserData.third_name;
-                                data.preferred_name = scope.selectedUserData.preferred_name;
-                                data.date_of_birth = scope.selectedUserData.date_of_birth;
-                            } else {
-                                data.gender_id = data['gender.id'];
-                                data.gender = data['gender.name'];
-                                data.nationality_id = data['main_nationality.id'];
-                                data.nationality = data['main_nationality.name'];
-                                data.identity_type = data['main_identity_type.name'];
-                                data.identity_type_id = data['main_identity_type.id'];
-                            }
-                            data.id = idx;
-                        });
-
-                        var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
-                        scope.isSearchResultEmpty = gridData.length === 0;
-                        return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
-                    }, function (error) {
-                        console.error(error);
-                        UtilsSvc.isAppendLoader(false);
-                    });
-            }
-        };
-        scope.externalGridOptions.api.setDatasource(dataSource);
-        scope.externalGridOptions.api.sizeColumnsToFit();
-    }
-
-    scope.processExternalGridUserRecord = function (userRecords, params, totalRowCount) {
-        if (userRecords.length === 0) {
-            params.failCallback([], totalRowCount);
-            UtilsSvc.isAppendLoader(false);
-            return;
-        }
-
-        var lastRow = totalRowCount;
-        scope.rowsThisPage = userRecords;
-
-        params.successCallback(scope.rowsThisPage, lastRow);
-        // scope.externalDataLoaded = true;
-        UtilsSvc.isAppendLoader(false);
-        return userRecords;
-    }
-
-    scope.generatePassword = function () {
-        UtilsSvc.isAppendLoader(true);
-        DirectoryaddguardianSvc.generatePassword()
-            .then(function (response) {
-                scope.selectedUserData.password = response;
-                scope.getContactTypes();
-                UtilsSvc.isAppendLoader(false);
-            }, function (error) {
-                console.error(error);
-                UtilsSvc.isAppendLoader(false);
-            });
-    }
-
-    scope.getGenders = function () {
-        DirectoryaddguardianSvc.getGenders()
-            .then(function (response) {
-                scope.genderOptions = response.data;
-                scope.getNationalities();
-            }, function (error) {
-                console.error(error);
-                scope.getNationalities();
-            });
-    }
-
-    scope.getNationalities = function () {
-        DirectoryaddguardianSvc.getNationalities()
-            .then(function (response) {
-                scope.nationalitiesOptions = response.data;
-                scope.getIdentityTypes();
-            }, function (error) {
-                console.error(error);
-                scope.getIdentityTypes();
-            });
-    }
-
-    scope.getIdentityTypes = function () {
-        DirectoryaddguardianSvc.getIdentityTypes()
-            .then(function (response) {
-                scope.identityTypeOptions = response.data;
-                UtilsSvc.isAppendLoader(false);
-            }, function (error) {
-                console.error(error);
-                UtilsSvc.isAppendLoader(false);
-            });
-    }
-
-    scope.getContactTypes = function () {
-        DirectoryaddguardianSvc.getContactTypes()
-            .then(function (response) {
-                scope.contactTypeOptions = response.data;
-                UtilsSvc.isAppendLoader(false);
-            }, function (error) {
-                console.error(error);
-                UtilsSvc.isAppendLoader(false);
-            });
-    }
-
-    scope.getRelationType = function () {
-        UtilsSvc.isAppendLoader(true);
-        DirectoryaddguardianSvc.getRelationType()
-            .then(function (response) {
-                scope.relationTypeOptions = response.data;
-                scope.getGenders();
-            }, function (error) {
-                console.error(error);
-                scope.getGenders();
-            });
-    }
-
-    scope.setName = function () {
-        var guardianData = scope.selectedUserData;
-        guardianData.name = '';
-        if (guardianData.hasOwnProperty('first_name')) {
-            guardianData.name = guardianData.first_name.trim();
-        }
-        scope.appendName(guardianData, 'middle_name', true);
-        scope.appendName(guardianData, 'third_name', true);
-        scope.appendName(guardianData, 'last_name', true);
-        scope.selectedUserData = guardianData;
-    }
-
-    scope.appendName = function (dataObj, variableName, trim) {
-        if (dataObj.hasOwnProperty(variableName)) {
-            if (trim === true) {
-                dataObj[variableName] = dataObj[variableName].trim();
-            }
-            if (dataObj[variableName] != null && dataObj[variableName] != '') {
-                dataObj.name = dataObj.name + ' ' + dataObj[variableName];
-            }
-        }
-        return dataObj;
-    }
-
-    scope.changeGender = function () {
-        var guardianData = scope.selectedUserData;
-        if (guardianData.hasOwnProperty('gender_id')) {
-            var genderOptions = scope.genderOptions;
-            for (var i = 0; i < genderOptions.length; i++) {
-                if (genderOptions[i].id == guardianData.gender_id) {
-                    guardianData.gender = {
-                        name: genderOptions[i].name
-                    };
-                }
-            }
-            scope.selectedUserData = guardianData;
-        }
-
-    }
-
-    scope.changeNationality = function () {
-        var nationalityId = scope.selectedUserData.nationality_id;
-        var options = scope.nationalitiesOptions;
-        var identityOptions = scope.identityTypeOptions;
-        for (var i = 0; i < options.length; i++) {
-            if (options[i].id == nationalityId) {
-                if (options[i].identity_type_id == null) {
-                    scope.selectedUserData.identity_type_id = identityOptions['0'].id;
-                    scope.selectedUserData.identity_type_name = identityOptions['0'].name;
-                } else {
-                    scope.selectedUserData.identity_type_id = options[i].identity_type_id;
-                    scope.selectedUserData.identity_type_name = options[i].identity_type_name;
-                }
-                scope.selectedUserData.nationality_name = options[i].name;
-                break;
-            }
-        }
-        scope.checkConfigForExternalSearch();
-    }
-
-    scope.changeIdentityType = function () {
-        var identityType = scope.selectedUserData.identity_type_id;
-        if (identityType == null) {
-            scope.selectedUserData.identity_type_id = '';
-            scope.selectedUserData.identity_number = '';
-            scope.selectedUserData.identity_type_name = '';
-        }
-        var options = scope.identityTypeOptions;
-        for (var i = 0; i < options.length; i++) {
-            if (options[i].id == identityType) {
-                scope.selectedUserData.identity_type_name = options[i].name;
-                break;
-            }
-        }
-        scope.checkConfigForExternalSearch();
-
-    }
-
-    scope.changeContactType = function () {
-        var contactTypeId = scope.selectedUserData.contact_type_id;
-        var options = scope.contactTypeOptions;
-        for (var i = 0; i < options.length; i++) {
-            if (options[i].id == contactTypeId) {
-                scope.selectedUserData.contact_type_name = options[i].name;
-                break;
-            }
-        }
-    }
-
-    scope.changeRelationType = function () {
-        var relationType = scope.selectedUserData.relation_type_id;
-        var relationTypeOptions = scope.contactTypeOptions;
-        for (var i = 0; i < relationTypeOptions.length; i++) {
-            if (relationTypeOptions[i].id == relationType) {
-                scope.selectedUserData.relation_type_name = relationTypeOptions[i].name;
-                break;
-            }
-        }
-    }
-
-    scope.goToInternalSearch = function () {
-        UtilsSvc.isAppendLoader(true);
-        AggridLocaleSvc.getTranslatedGridLocale()
-            .then(function (localeText) {
-                scope.internalGridOptions = {
-                    columnDefs: [
-                        {
-                            headerName: scope.translateFields.openemis_no,
-                            field: "openemis_no",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.name,
-                            field: "name",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.gender_name,
-                            field: "gender",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.date_of_birth,
-                            field: "date_of_birth",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.nationality_name,
-                            field: "nationality",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.identity_type_name,
-                            field: "identity_type",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.identity_number,
-                            field: "identity_number",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.account_type,
-                            field: "account_type",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        }
-                    ],
-                    localeText: localeText,
-                    enableColResize: true,
-                    enableFilter: false,
-                    enableServerSideFilter: true,
-                    enableServerSideSorting: true,
-                    enableSorting: false,
-                    headerHeight: 38,
-                    rowData: [],
-                    rowHeight: 38,
-                    rowModelType: 'infinite',
-                    // Removed options - Issues in ag-Grid AG-828
-                    // suppressCellSelection: true,
-
-                    // Added options
-                    suppressContextMenu: true,
-                    stopEditingWhenGridLosesFocus: true,
-                    ensureDomOrder: true,
-                    pagination: true,
-                    paginationPageSize: 10,
-                    maxBlocksInCache: 1,
-                    cacheBlockSize: 10,
-                    // angularCompileRows: true,
-                    onRowSelected: function (_e) {
-                        scope.isInternalSearchSelected = true;
-                        scope.isExternalSearchSelected = false;
-                        scope.selectGuardianFromInternalSearch(_e.node.data.id);
-                        $scope.$apply();
-                    },
-                    onGridSizeChanged: function () {
-                        this.api.sizeColumnsToFit();
-                    },
-                    onGridReady: function () {
-                        if (angular.isDefined(scope.internalGridOptions.api)) {
-                            setTimeout(function () {
-                                scope.setGridData();
-                            })
-                        }
-                    },
-                };
-                setTimeout(function () {
-                    scope.getInternalSearchData();
-                }, 1500);
-            }, function (error) {
-                scope.internalGridOptions = {
-                    columnDefs: [
-                        {
-                            headerName: scope.translateFields.openemis_no,
-                            field: "openemis_no",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.name,
-                            field: "name",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.gender_name,
-                            field: "gender",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.date_of_birth,
-                            field: "date_of_birth",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.nationality_name,
-                            field: "nationality",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.identity_type_name,
-                            field: "identity_type",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.identity_number,
-                            field: "identity_number",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.account_type,
-                            field: "account_type",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        }
-                    ],
-                    localeText: localeText,
-                    enableColResize: true,
-                    enableFilter: false,
-                    enableServerSideFilter: true,
-                    enableServerSideSorting: true,
-                    enableSorting: false,
-                    headerHeight: 38,
-                    rowData: [],
-                    rowHeight: 38,
-                    rowModelType: 'infinite',
-                    // Removed options - Issues in ag-Grid AG-828
-                    // suppressCellSelection: true,
-
-                    // Added options
-                    suppressContextMenu: true,
-                    stopEditingWhenGridLosesFocus: true,
-                    ensureDomOrder: true,
-                    pagination: true,
-                    paginationPageSize: 10,
-                    maxBlocksInCache: 1,
-                    cacheBlockSize: 10,
-                    // angularCompileRows: true,
-                    onRowSelected: function (_e) {
-                        scope.isInternalSearchSelected = true;
-                        scope.isExternalSearchSelected = false;
-                        scope.selectGuardianFromInternalSearch(_e.node.data.id);
-                        $scope.$apply();
-                    },
-                    onGridSizeChanged: function () {
-                        this.api.sizeColumnsToFit();
-                    },
-                    onGridReady: function () {
-                        if (angular.isDefined(scope.internalGridOptions.api)) {
-                            setTimeout(function () {
-                                scope.setGridData();
-                            })
-                        }
-                    },
-                };
-                setTimeout(function () {
-                    scope.getInternalSearchData();
-                }, 1500);
-            });
-    }
-
-    scope.goToExternalSearch = function () {
-        UtilsSvc.isAppendLoader(true);
-        AggridLocaleSvc.getTranslatedGridLocale()
-            .then(function (localeText) {
-                scope.externalGridOptions = {
-                    columnDefs: [
-                        {
-                            headerName: scope.translateFields.name,
-                            field: "name",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.gender_name,
-                            field: "gender",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.date_of_birth,
-                            field: "date_of_birth",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.nationality_name,
-                            field: "nationality",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.identity_type_name,
-                            field: "identity_type",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.identity_number,
-                            field: "identity_number",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        }
-                    ],
-                    localeText: localeText,
-                    enableColResize: true,
-                    enableFilter: false,
-                    enableServerSideFilter: true,
-                    enableServerSideSorting: true,
-                    enableSorting: false,
-                    headerHeight: 38,
-                    rowData: [],
-                    rowHeight: 38,
-                    rowModelType: 'infinite',
-                    // Removed options - Issues in ag-Grid AG-828
-                    // suppressCellSelection: true,
-
-                    // Added options
-                    suppressContextMenu: true,
-                    stopEditingWhenGridLosesFocus: true,
-                    ensureDomOrder: true,
-                    pagination: true,
-                    paginationPageSize: 10,
-                    maxBlocksInCache: 1,
-                    cacheBlockSize: 10,
-                    // angularCompileRows: true,
-                    onRowSelected: function (_e) {
-                        scope.isInternalSearchSelected = false;
-                        scope.isExternalSearchSelected = true;
-                        scope.selectGuardianFromExternalSearch(_e.node.data.id);
-                        $scope.$apply();
-                    },
-                    onGridSizeChanged: function () {
-                        this.api.sizeColumnsToFit();
-                    },
-                    onGridReady: function () {
-                        if (angular.isDefined(scope.externalGridOptions.api)) {
-                            setTimeout(function () {
-                                scope.setGridData();
-                            })
-                        }
-                    },
-                };
-                setTimeout(function () {
-                    // scope.getExternalSearchData();
-                    if (scope.externalSearchSourceName === 'Jordan CSPD') {
-                        scope.getCSPDSearchData();
-                    } else {
-                        scope.getExternalSearchData();
-                    }
-                }, 1500);
-            }, function (error) {
-                scope.externalGridOptions = {
-                    columnDefs: [
-                        {
-                            headerName: scope.translateFields.name,
-                            field: "name",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.gender_name,
-                            field: "gender",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.date_of_birth,
-                            field: "date_of_birth",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.nationality_name,
-                            field: "nationality",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.identity_type_name,
-                            field: "identity_type",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.identity_number,
-                            field: "identity_number",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        }
-                    ],
-                    localeText: localeText,
-                    enableColResize: true,
-                    enableFilter: false,
-                    enableServerSideFilter: true,
-                    enableServerSideSorting: true,
-                    enableSorting: false,
-                    headerHeight: 38,
-                    rowData: [],
-                    rowHeight: 38,
-                    rowModelType: 'infinite',
-                    // Removed options - Issues in ag-Grid AG-828
-                    // suppressCellSelection: true,
-
-                    // Added options
-                    suppressContextMenu: true,
-                    stopEditingWhenGridLosesFocus: true,
-                    ensureDomOrder: true,
-                    pagination: true,
-                    paginationPageSize: 10,
-                    maxBlocksInCache: 1,
-                    cacheBlockSize: 10,
-                    // angularCompileRows: true,
-                    onRowSelected: function (_e) {
-                        scope.isInternalSearchSelected = false;
-                        scope.isExternalSearchSelected = true;
-                        scope.selectGuardianFromExternalSearch(_e.node.data.id);
-                        $scope.$apply();
-                    },
-                    onGridSizeChanged: function () {
-                        this.api.sizeColumnsToFit();
-                    },
-                    onGridReady: function () {
-                        if (angular.isDefined(scope.externalGridOptions.api)) {
-                            setTimeout(function () {
-                                scope.setGridData();
-                            })
-                        }
-                    },
-                };
-                setTimeout(function () {
-                    // scope.getExternalSearchData();
-                    if (scope.externalSearchSourceName === 'Jordan CSPD') {
-                        scope.getCSPDSearchData();
-                    } else {
-                        scope.getExternalSearchData();
-                    }
-                }, 1500);
-            });
-    }
-
-    scope.validateDetails = async function () {
-        scope.error = {}
-        if (!scope.selectedUserData.relation_type_id) {
-            scope.error.relation_type_id = 'This field cannot be left empty';
-            return;
-        }
-        if (scope.step === 'user_details') {
-            const [blockName, hasError] = checkUserDetailValidationBlocksHasError();
-            scope.error.first_name = '';
-            scope.error.last_name = '';
-            scope.error.gender_id = '';
-            scope.error.date_of_birth = '';
-            scope.error.nationality_id = '';
-            scope.error.identity_type_id = '';
-            scope.error.identity_number = '';
-
-            if (blockName === 'Identity' && hasError) {
-                if (!scope.selectedUserData.nationality_id) {
-                    scope.error.nationality_id = 'This field cannot be left empty';
-                }
-                if (!scope.selectedUserData.identity_type_id) {
-                    scope.error.identity_type_id = 'This field cannot be left empty';
-                }
-                if (!scope.selectedUserData.identity_number) {
-                    scope.error.identity_number = 'This field cannot be left empty';
-                }
-            } else if (blockName === 'General_Info' && hasError) {
-                if (!scope.selectedUserData.first_name) {
-                    scope.error.first_name = 'This field cannot be left empty';
-                }
-                if (!scope.selectedUserData.last_name) {
-                    scope.error.last_name = 'This field cannot be left empty';
-                }
-                if (!scope.selectedUserData.gender_id) {
-                    scope.error.gender_id = 'This field cannot be left empty';
-                }
-                if (!scope.selectedUserData.date_of_birth) {
-                    scope.error.date_of_birth = 'This field cannot be left empty';
-                } else {
-                    // let dob = scope.selectedUserData.date_of_birth.toLocaleDateString();
-                    // let dobArray = dob.split('/');
-                    scope.selectedUserData.date_of_birth = $filter('date')(scope.selectedUserData.date_of_birth, 'yyyy-MM-dd');
-                }
-            }
-            if (hasError) {
-                return;
-            }
-            scope.step = 'internal_search';
-            scope.internalGridOptions = null;
-            scope.goToInternalSearch();
-            await checkUserAlreadyExistByIdentity();
-        }
-        if (scope.step === 'confirmation') {
-
-            const result = await scope.checkUserExistByIdentityFromConfiguration();
-            if (result) {
-                return;
-            }
-        }
-
-        if (scope.step === 'confirmation') {
-            if (!scope.selectedUserData.username) {
-                scope.error.username = 'This field cannot be left empty';
-            }
-            if (!scope.selectedUserData.password) {
-                scope.error.password = 'This field cannot be left empty';
-            }
-            if (!scope.selectedUserData.username || !scope.selectedUserData.password) {
-                return;
-            }
-
-            scope.saveGuardianDetails();
-        }
-    }
-
-    scope.goToPrevStep = function () {
-        if (scope.isInternalSearchSelected) {
-            scope.isInternalSearchSelected = false;
-            scope.step = 'user_details';
-            scope.internalGridOptions = null;
-            // scope.goToInternalSearch();
-        } else {
-            switch (scope.step) {
-                case 'internal_search': {
-                    scope.step = 'user_details';
-                    if (scope.isSearchResultEmpty) {
-                        scope.selectedUserData.openemis_no = "";
-                    }
-                    break;
-                }
-                case 'external_search':
-                    scope.step = 'internal_search';
-                    scope.internalGridOptions = null;
-                    scope.goToInternalSearch();
-                    break;
-                case 'confirmation': {
-                    if (scope.isExternalSearchEnable) {
-                        scope.step = 'external_search';
-                        scope.externalGridOptions = null;
-                        scope.goToExternalSearch();
-                    } else {
-                        scope.step = 'internal_search';
-                        scope.internalGridOptions = null;
-                        scope.goToInternalSearch();
-                    }
-                    return;
-                }
-            }
-        }
-    }
-
-    scope.goToNextStep = async function () {
-        if (scope.step === 'confirmation') {
-            const result = await scope.checkUserExistByIdentityFromConfiguration();
+    userCtrl.goToNextStep = async function () {
+        if (userCtrl.step === 'confirmation') {
+            const result = await userCtrl.checkUserExistByIdentityFromConfiguration();
             if (result) return;
         }
-        if (scope.isInternalSearchSelected) {
-            scope.step = 'confirmation';
-            scope.getUniqueOpenEmisId();
+        if (userCtrl.isInternalSearchSelected) {
+            userCtrl.processNewUser();
         } else {
-            switch (scope.step) {
+            switch (userCtrl.step) {
                 case 'user_details':
-                    scope.validateDetails();
+                    scope.internalGridOptions = null;
+                    userCtrl.validateUserDetails();
                     break;
                 case 'internal_search': {
-                    if (scope.isExternalSearchEnable) {
-                        scope.step = 'external_search';
-                        scope.externalGridOptions = null;
+                    if (userCtrl.isExternalSearchEnable) {
+                        userCtrl.step = 'external_search';
+                        userCtrl.externalGridOptions = null;
                         UtilsSvc.isAppendLoader(true);
-                        scope.goToExternalSearch();
+                        userCtrl.goToExternalSearch();
                     } else {
-                        scope.step = 'confirmation';
-                        scope.getUniqueOpenEmisId();
+                        userCtrl.processNewUser();
                     }
                     return;
                 }
                 case 'external_search':
-                    scope.step = 'confirmation';
-                    scope.getUniqueOpenEmisId();
+                    userCtrl.processNewUser();
                     break;
             }
         }
     }
 
-    scope.cancelProcess = function () {
-        $window.history.back();
-    }
+    userCtrl.processNewUser = function () {
+        scope.step = 'confirmation';
+        UtilsSvc.isAppendLoader(true);
 
-    scope.initGrid = function () {
-        AggridLocaleSvc.getTranslatedGridLocale()
-            .then(function (localeText) {
-                scope.internalGridOptions = {
-                    columnDefs: [
-                        {
-                            headerName: scope.translateFields.openemis_no,
-                            field: "openemis_no",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.name,
-                            field: "name",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.gender_name,
-                            field: "gender",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.date_of_birth,
-                            field: "date_of_birth",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.nationality_name,
-                            field: "nationality",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.identity_type_name,
-                            field: "identity_type",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.identity_number,
-                            field: "identity_number",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.account_type,
-                            field: "account_type",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        }
-                    ],
-                    localeText: localeText,
-                    enableColResize: true,
-                    enableFilter: false,
-                    enableServerSideFilter: true,
-                    enableServerSideSorting: true,
-                    enableSorting: false,
-                    headerHeight: 38,
-                    rowData: [],
-                    rowHeight: 38,
-                    rowModelType: 'infinite',
-                    // Removed options - Issues in ag-Grid AG-828
-                    // suppressCellSelection: true,
-
-                    // Added options
-                    suppressContextMenu: true,
-                    stopEditingWhenGridLosesFocus: true,
-                    ensureDomOrder: true,
-                    pagination: true,
-                    paginationPageSize: 10,
-                    maxBlocksInCache: 1,
-                    cacheBlockSize: 10,
-                    // angularCompileRows: true,
-                    onRowSelected: function (_e) {
-                        scope.isInternalSearchSelected = true;
-                        scope.isExternalSearchSelected = false;
-                        scope.selectGuardianFromInternalSearch(_e.node.data.id);
-                        $scope.$apply();
-                    },
-                    onGridSizeChanged: function () {
-                        this.api.sizeColumnsToFit();
-                    },
-                    onGridReady: function () {
-                        if (angular.isDefined(scope.internalGridOptions.api)) {
-                            setTimeout(function () {
-                                scope.setGridData();
-                            })
-                        }
-                    },
-                };
-
-                scope.externalGridOptions = {
-                    columnDefs: [
-                        {
-                            headerName: scope.translateFields.name,
-                            field: "name",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.gender_name,
-                            field: "gender",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.date_of_birth,
-                            field: "date_of_birth",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.nationality_name,
-                            field: "nationality",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.identity_type_name,
-                            field: "identity_type",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.identity_number,
-                            field: "identity_number",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        }
-                    ],
-                    localeText: localeText,
-                    enableColResize: true,
-                    enableFilter: false,
-                    enableServerSideFilter: true,
-                    enableServerSideSorting: true,
-                    enableSorting: false,
-                    headerHeight: 38,
-                    rowData: [],
-                    rowHeight: 38,
-                    rowModelType: 'infinite',
-                    // Removed options - Issues in ag-Grid AG-828
-                    // suppressCellSelection: true,
-
-                    // Added options
-                    suppressContextMenu: true,
-                    stopEditingWhenGridLosesFocus: true,
-                    ensureDomOrder: true,
-                    pagination: true,
-                    paginationPageSize: 10,
-                    maxBlocksInCache: 1,
-                    cacheBlockSize: 10,
-                    // angularCompileRows: true,
-                    onRowSelected: function (_e) {
-                        scope.isInternalSearchSelected = false;
-                        scope.isExternalSearchSelected = true;
-                        scope.selectGuardianFromExternalSearch(_e.node.data.id);
-                        $scope.$apply();
-                    },
-                    onGridSizeChanged: function () {
-                        this.api.sizeColumnsToFit();
-                    },
-                    onGridReady: function () {
-                        if (angular.isDefined(scope.externalGridOptions.api)) {
-                            setTimeout(function () {
-                                scope.setGridData();
-                            })
-                        }
-                    },
-                };
-            }, function (error) {
-                scope.internalGridOptions = {
-                    columnDefs: [
-                        {
-                            headerName: scope.translateFields.openemis_no,
-                            field: "openemis_no",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.name,
-                            field: "name",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.gender_name,
-                            field: "gender",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.date_of_birth,
-                            field: "date_of_birth",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.nationality_name,
-                            field: "nationality",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.identity_type_name,
-                            field: "identity_type",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.identity_number,
-                            field: "identity_number",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.account_type,
-                            field: "account_type",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        }
-                    ],
-                    localeText: localeText,
-                    enableColResize: true,
-                    enableFilter: false,
-                    enableServerSideFilter: true,
-                    enableServerSideSorting: true,
-                    enableSorting: false,
-                    headerHeight: 38,
-                    rowData: [],
-                    rowHeight: 38,
-                    rowModelType: 'infinite',
-                    // Removed options - Issues in ag-Grid AG-828
-                    // suppressCellSelection: true,
-
-                    // Added options
-                    suppressContextMenu: true,
-                    stopEditingWhenGridLosesFocus: true,
-                    ensureDomOrder: true,
-                    pagination: true,
-                    paginationPageSize: 10,
-                    maxBlocksInCache: 1,
-                    cacheBlockSize: 10,
-                    // angularCompileRows: true,
-                    onRowSelected: function (_e) {
-                        scope.isInternalSearchSelected = true;
-                        scope.isExternalSearchSelected = false;
-                        scope.selectGuardianFromInternalSearch(_e.node.data.id);
-                        $scope.$apply();
-                    },
-                    onGridSizeChanged: function () {
-                        this.api.sizeColumnsToFit();
-                    },
-                    onGridReady: function () {
-                        if (angular.isDefined(scope.internalGridOptions.api)) {
-                            setTimeout(function () {
-                                scope.setGridData();
-                            })
-                        }
-                    },
-                };
-
-                scope.externalGridOptions = {
-                    columnDefs: [
-                        {
-                            headerName: scope.translateFields.name,
-                            field: "name",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.gender_name,
-                            field: "gender",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.date_of_birth,
-                            field: "date_of_birth",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.nationality_name,
-                            field: "nationality",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.identity_type_name,
-                            field: "identity_type",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        },
-                        {
-                            headerName: scope.translateFields.identity_number,
-                            field: "identity_number",
-                            suppressMenu: true,
-                            suppressSorting: true
-                        }
-                    ],
-                    localeText: localeText,
-                    enableColResize: true,
-                    enableFilter: false,
-                    enableServerSideFilter: true,
-                    enableServerSideSorting: true,
-                    enableSorting: false,
-                    headerHeight: 38,
-                    rowData: [],
-                    rowHeight: 38,
-                    rowModelType: 'infinite',
-                    // Removed options - Issues in ag-Grid AG-828
-                    // suppressCellSelection: true,
-
-                    // Added options
-                    suppressContextMenu: true,
-                    stopEditingWhenGridLosesFocus: true,
-                    ensureDomOrder: true,
-                    pagination: true,
-                    paginationPageSize: 10,
-                    maxBlocksInCache: 1,
-                    cacheBlockSize: 10,
-                    // angularCompileRows: true,
-                    onRowSelected: function (_e) {
-                        scope.isInternalSearchSelected = false;
-                        scope.isExternalSearchSelected = true;
-                        scope.selectGuardianFromExternalSearch(_e.node.data.id);
-                        $scope.$apply();
-                    },
-                    onGridSizeChanged: function () {
-                        this.api.sizeColumnsToFit();
-                    },
-                    onGridReady: function () {
-                        if (angular.isDefined(scope.externalGridOptions.api)) {
-                            setTimeout(function () {
-                                scope.setGridData();
-                            })
-                        }
-                    },
-                };
+        scope.getUniqueOpenEmisId()
+            .then(() => {
+                return scope.generatePassword();
+            })
+            .catch(error => {
+                UtilsSvc.isAppendLoader(false);
+                scope.messageClass = 'alert-danger';
+                scope.message = error.message || error.toString();
+                console.error(error);
+            })
+            .then(() => {
+                UtilsSvc.isAppendLoader(false);
             });
     };
 
-    scope.selectGuardianFromInternalSearch = function (id) {
-        scope.selectedGuardian = id;
-        scope.isInternalSearchSelected = true;
-        scope.getGuardianData();
-
-        if (scope.isIdentityUserExist) {
-            scope.messageClass = '';
-            scope.message = '';
-            scope.isIdentityUserExist = false;
+    userCtrl.goToPrevStep = function () {
+        userCtrl.error = {};
+        userCtrl.disableFields = {
+            username: false,
+            password: false
         }
-        scope.disableFields = {
+        const relation_type_id = userCtrl.selectedUserData.relation_type_id;
+        const relation_type_name = userCtrl.selectedUserData.relation_type_name;
+        userCtrl.selectedUserData = {};
+        userCtrl.selectedUserData.relation_type_id = relation_type_id;
+        userCtrl.selectedUserData.relation_type_name = relation_type_name;
+        userCtrl.selectedUser = null;
+        userCtrl.selectedGuardian = null;
+
+        if (userCtrl.isInternalSearchSelected) {
+            userCtrl.isInternalSearchSelected = false;
+            userCtrl.step = 'user_details';
+            userCtrl.internalGridOptions = null;
+            // scope.goToInternalSearch();
+        } else {
+            switch (userCtrl.step) {
+                case 'internal_search': {
+                    userCtrl.step = 'user_details';
+                    break;
+                }
+                case 'external_search':
+                    userCtrl.step = 'internal_search';
+                    userCtrl.internalGridOptions = null;
+                    userCtrl.goToInternalSearch();
+                    break;
+                case 'confirmation': {
+                    if (userCtrl.isExternalSearchEnable) {
+                        userCtrl.step = 'external_search';
+                        userCtrl.externalGridOptions = null;
+                        userCtrl.goToExternalSearch();
+                    } else {
+                        userCtrl.step = 'internal_search';
+                        userCtrl.internalGridOptions = null;
+                        userCtrl.goToInternalSearch();
+                    }
+                    return;
+                }
+            }
+        }
+    }
+
+    userCtrl.cancelProcess = function () {
+        $window.history.back();
+    }
+
+
+    userCtrl.goToInternalSearch = function () {
+        directorySvc.goToInternalSearch(userCtrl);
+    };
+
+    userCtrl.goToExternalSearch = function () {
+        directorySvc.goToExternalSearch(userCtrl);
+    }
+
+    userCtrl.processGridUserRecord = function (userRecords, params, totalRowCount) {
+        // console.log(userRecords);
+        if (userRecords.length === 0) {
+            params.failCallback([], totalRowCount);
+            UtilsSvc.isAppendLoader(false);
+            return;
+        }
+        var lastRow = totalRowCount;
+        userCtrl.rowsThisPage = userRecords;
+
+        params.successCallback(userCtrl.rowsThisPage, lastRow);
+        UtilsSvc.isAppendLoader(false);
+        return userRecords;
+    }
+
+    userCtrl.getUniqueOpenEmisId = function () {
+        return directorySvc.setUniqueOpenEmisId(userCtrl);
+    };
+
+    userCtrl.generatePassword = function () {
+        return directorySvc.setPassword(userCtrl);
+    };
+
+    userCtrl.selectUserFromInternalSearch = function (id) {
+        userCtrl.selectedGuardian = id;
+        userCtrl.isInternalSearchSelected = true;
+        userCtrl.getGuardianData();
+
+        if (userCtrl.isIdentityUserExist) {
+            userCtrl.messageClass = '';
+            userCtrl.message = '';
+            userCtrl.isIdentityUserExist = false;
+        }
+        userCtrl.disableFields = {
             username: true,
             password: true
         }
     }
 
-    scope.selectGuardianFromExternalSearch = function (id) {
-        scope.selectedGuardian = id;
-        scope.isInternalSearchSelected = false;
-        scope.getGuardianData();
-        scope.disableFields = {
+    userCtrl.selectUserFromExternalSearch = function (id) {
+        userCtrl.selectedGuardian = id;
+        userCtrl.isInternalSearchSelected = false;
+        userCtrl.getGuardianData();
+        userCtrl.disableFields = {
             username: false,
             password: false
         }
     }
 
-    scope.getGuardianData = function () {
+    userCtrl.getGuardianData = function () {
         var log = [];
-        angular.forEach(scope.rowsThisPage, function (value) {
-            if (value.id == scope.selectedGuardian) {
-                if (scope.isInternalSearchSelected)
-                    scope.setUserData(value);
-                else
-                    scope.setExternalUserData(value);
+        angular.forEach(userCtrl.rowsThisPage, function (value) {
+            if (value.id == userCtrl.selectedGuardian) {
+                // if (userCtrl.isInternalSearchSelected)
+                    userCtrl.setUserData(value);
+                // else
+                //     userCtrl.setExternalUserData(value);
             }
         }, log);
     }
 
-    scope.setUserData = function (selectedData) {
-        scope.selectedUserData.addressArea = {
+    userCtrl.setUserData = function (selectedData) {
+        userCtrl.selectedUserData.addressArea = {
             id: selectedData.address_area_id,
             name: selectedData.area_name,
             code: selectedData.area_code
         };
-        scope.selectedUserData.birthplaceArea = {
+        userCtrl.selectedUserData.birthplaceArea = {
             id: selectedData.birthplace_area_id,
             name: selectedData.birth_area_name,
             code: selectedData.birth_area_code
         };
-        scope.selectedUserData.user_id = selectedData.id;
-        scope.selectedUserData.openemis_no = selectedData.openemis_no;
-        scope.selectedUserData.first_name = selectedData.first_name;
-        scope.selectedUserData.middle_name = selectedData.middle_name;
-        scope.selectedUserData.third_name = selectedData.third_name;
-        scope.selectedUserData.last_name = selectedData.last_name;
-        scope.selectedUserData.preferred_name = selectedData.preferred_name;
-        scope.selectedUserData.date_of_birth = selectedData.date_of_birth;
-        scope.selectedUserData.email = selectedData.email;
-        scope.selectedUserData.gender_id = selectedData.gender_id;
-        scope.selectedUserData.gender = {name: selectedData.gender};
-        scope.selectedUserData.nationality_id = selectedData.nationality_id;
-        scope.selectedUserData.nationality_name = selectedData.nationality;
-        scope.selectedUserData.contact_type_id = selectedData.contact_type_id; // POCOR-8012-n
-        scope.selectedUserData.contact_value = selectedData.contact_value; // POCOR-8012-n
-        scope.selectedUserData.identity_type_id = selectedData.identity_type_id;
-        scope.selectedUserData.identity_type_name = selectedData.identity_type;
-        scope.selectedUserData.identity_number = selectedData.identity_number;
-        scope.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
-        scope.selectedUserData.password = selectedData.password;
-        scope.selectedUserData.address = selectedData.address;
-        scope.selectedUserData.postalCode = selectedData.postal_code;
-        scope.selectedUserData.address_area_id = selectedData.address_area_id;
-        scope.selectedUserData.birthplace_area_id = selectedData.birthplace_area_id;
-        scope.selectedUserData.addressArea = {name: selectedData.area_name};
-        scope.selectedUserData.birthplaceArea = {name: selectedData.birth_area_name};
+        userCtrl.selectedUserData.user_id = selectedData.id;
+        userCtrl.selectedUserData.openemis_no = selectedData.openemis_no;
+        userCtrl.selectedUserData.first_name = selectedData.first_name;
+        userCtrl.selectedUserData.middle_name = selectedData.middle_name;
+        userCtrl.selectedUserData.third_name = selectedData.third_name;
+        userCtrl.selectedUserData.last_name = selectedData.last_name;
+        userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
+        userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
+        userCtrl.selectedUserData.email = selectedData.email;
+        userCtrl.selectedUserData.mobile_number = selectedData.mobile_number;
+        userCtrl.selectedUserData.gender_id = selectedData.gender_id;
+        userCtrl.selectedUserData.gender = {name: selectedData.gender};
+        userCtrl.selectedUserData.nationality_id = selectedData.nationality_id;
+        userCtrl.selectedUserData.nationality_name = selectedData.nationality;
+        userCtrl.selectedUserData.contact_type_id = selectedData.contact_type_id; // POCOR-8012-n
+        userCtrl.selectedUserData.contact_value = selectedData.contact_value; // POCOR-8012-n
+        if (selectedData.identity_number) {
+            userCtrl.canSkipIdentity = true;
+        }
+        if (selectedData.nationality_id) {
+            userCtrl.canSkipNationality = true;
+        }
+        userCtrl.selectedUserData.identity_type_id = selectedData.identity_type_id;
+        userCtrl.selectedUserData.identity_type_name = selectedData.identity_type;
+        userCtrl.selectedUserData.identity_number = selectedData.identity_number;
+        userCtrl.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
+        userCtrl.selectedUserData.password = selectedData.password;
+        userCtrl.selectedUserData.address = selectedData.address;
+        userCtrl.selectedUserData.postalCode = selectedData.postal_code;
+        userCtrl.selectedUserData.address_area_id = selectedData.address_area_id;
+        userCtrl.selectedUserData.birthplace_area_id = selectedData.birthplace_area_id;
+        userCtrl.selectedUserData.addressArea = {name: selectedData.area_name};
+        userCtrl.selectedUserData.birthplaceArea = {name: selectedData.birth_area_name};
         if ($window.localStorage.getItem('birthplace_area_id')) {
             $window.localStorage.removeItem('birthplace_area_id')
         }
@@ -1435,8 +460,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             id: selectedData.address_area_id,
             name: selectedData.area_name
         }));
-        scope.addressAreaId = selectedData.address_area_id;
-        scope.birthplaceAreaId = selectedData.birthplace_area_id;
+        userCtrl.addressAreaId = selectedData.address_area_id;
+        userCtrl.birthplaceAreaId = selectedData.birthplace_area_id;
         if (selectedData.address_area_id > 0) {
             document.getElementById('addressArea_textbox').style.visibility = 'visible';
             document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
@@ -1454,41 +479,42 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         }
     }
 
-    scope.setExternalUserData = function (selectedData) {
+    userCtrl.setExternalUserData = function (selectedData) {
         /* TODO */
-        if (scope.externalSearchSourceName == 'Jordan CSPD') {
-            DirectoryaddguardianSvc.getUniqueOpenEmisId().then((response) => {
+        if (userCtrl.externalSearchSourceName == 'Jordan CSPD') {
+            directorySvc.getUniqueOpenEmisId().then((response) => {
                 const selectedObjectWithOpenemisNo = Object.assign({}, selectedData, {'openemis_no': response})
                 selectedData = selectedObjectWithOpenemisNo;
-                scope.selectedUserData.addressArea = {
+                userCtrl.selectedUserData.addressArea = {
                     id: selectedData.address_area_id,
                     name: selectedData.area_name,
                     code: selectedData.area_code
                 };
-                scope.selectedUserData.birthplaceArea = {
+                userCtrl.selectedUserData.birthplaceArea = {
                     id: selectedData.birthplace_area_id,
                     name: selectedData.birth_area_name,
                     code: selectedData.birth_area_code
                 };
-                scope.selectedUserData.openemis_no = selectedData.openemis_no;
-                scope.selectedUserData.first_name = selectedData.first_name;
-                scope.selectedUserData.middle_name = selectedData.middle_name;
-                scope.selectedUserData.third_name = selectedData.third_name;
-                scope.selectedUserData.last_name = selectedData.last_name;
-                scope.selectedUserData.preferred_name = selectedData.preferred_name;
-                scope.selectedUserData.date_of_birth = selectedData.date_of_birth;
-                scope.selectedUserData.email = selectedData.email;
-                scope.selectedUserData.gender_id = selectedData.gender_id;
-                scope.selectedUserData.gender = {name: selectedData.gender};
-                scope.selectedUserData.nationality_id = selectedData.nationality_id;
-                scope.selectedUserData.nationality_name = selectedData.nationality;
-                scope.selectedUserData.identity_type_id = selectedData.identity_type_id;
-                scope.selectedUserData.identity_type_name = selectedData.identity_type;
-                scope.selectedUserData.identity_number = selectedData.identity_number;
-                scope.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
-                scope.selectedUserData.password = selectedData.password;
-                scope.selectedUserData.address = selectedData.address;
-                scope.selectedUserData.postalCode = selectedData.postal_code;
+                userCtrl.selectedUserData.openemis_no = selectedData.openemis_no;
+                userCtrl.selectedUserData.first_name = selectedData.first_name;
+                userCtrl.selectedUserData.middle_name = selectedData.middle_name;
+                userCtrl.selectedUserData.third_name = selectedData.third_name;
+                userCtrl.selectedUserData.last_name = selectedData.last_name;
+                userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
+                userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
+                userCtrl.selectedUserData.email = selectedData.email;
+                userCtrl.selectedUserData.mobile_number = selectedData.mobile_number;
+                userCtrl.selectedUserData.gender_id = selectedData.gender_id;
+                userCtrl.selectedUserData.gender = {name: selectedData.gender};
+                userCtrl.selectedUserData.nationality_id = selectedData.nationality_id;
+                userCtrl.selectedUserData.nationality_name = selectedData.nationality;
+                userCtrl.selectedUserData.identity_type_id = selectedData.identity_type_id;
+                userCtrl.selectedUserData.identity_type_name = selectedData.identity_type;
+                userCtrl.selectedUserData.identity_number = selectedData.identity_number;
+                userCtrl.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
+                userCtrl.selectedUserData.password = selectedData.password;
+                userCtrl.selectedUserData.address = selectedData.address;
+                userCtrl.selectedUserData.postalCode = selectedData.postal_code;
                 if (selectedData.address_area_id > 0) {
                     document.getElementById('addressArea_textbox').style.visibility = 'visible';
                     document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
@@ -1506,36 +532,37 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 }
             })
         } else {
-            scope.selectedUserData.addressArea = {
+            userCtrl.selectedUserData.addressArea = {
                 id: selectedData.address_area_id,
                 name: selectedData.area_name,
                 code: selectedData.area_code
             };
-            scope.selectedUserData.birthplaceArea = {
+            userCtrl.selectedUserData.birthplaceArea = {
                 id: selectedData.birthplace_area_id,
                 name: selectedData.birth_area_name,
                 code: selectedData.birth_area_code
             };
-            scope.selectedUserData.user_id = selectedData.id;
-            scope.selectedUserData.openemis_no = selectedData.openemis_no;
-            scope.selectedUserData.first_name = selectedData.first_name;
-            scope.selectedUserData.middle_name = selectedData.middle_name;
-            scope.selectedUserData.third_name = selectedData.third_name;
-            scope.selectedUserData.last_name = selectedData.last_name;
-            scope.selectedUserData.preferred_name = selectedData.preferred_name;
-            scope.selectedUserData.date_of_birth = selectedData.date_of_birth;
-            scope.selectedUserData.email = selectedData.email;
-            scope.selectedUserData.gender_id = selectedData.gender_id;
-            scope.selectedUserData.gender = {name: selectedData.gender};
-            scope.selectedUserData.nationality_id = selectedData.nationality_id;
-            scope.selectedUserData.nationality_name = selectedData.nationality;
-            scope.selectedUserData.identity_type_id = selectedData.identity_type_id;
-            scope.selectedUserData.identity_type_name = selectedData.identity_type;
-            scope.selectedUserData.identity_number = selectedData.identity_number;
-            scope.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
-            scope.selectedUserData.password = selectedData.password;
-            scope.selectedUserData.address = selectedData.address;
-            scope.selectedUserData.postalCode = selectedData.postal_code;
+            userCtrl.selectedUserData.user_id = selectedData.id;
+            userCtrl.selectedUserData.openemis_no = selectedData.openemis_no;
+            userCtrl.selectedUserData.first_name = selectedData.first_name;
+            userCtrl.selectedUserData.middle_name = selectedData.middle_name;
+            userCtrl.selectedUserData.third_name = selectedData.third_name;
+            userCtrl.selectedUserData.last_name = selectedData.last_name;
+            userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
+            userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
+            userCtrl.selectedUserData.email = selectedData.email;
+            userCtrl.selectedUserData.mobile_number = selectedData.mobile_number;
+            userCtrl.selectedUserData.gender_id = selectedData.gender_id;
+            userCtrl.selectedUserData.gender = {name: selectedData.gender};
+            userCtrl.selectedUserData.nationality_id = selectedData.nationality_id;
+            userCtrl.selectedUserData.nationality_name = selectedData.nationality;
+            userCtrl.selectedUserData.identity_type_id = selectedData.identity_type_id;
+            userCtrl.selectedUserData.identity_type_name = selectedData.identity_type;
+            userCtrl.selectedUserData.identity_number = selectedData.identity_number;
+            userCtrl.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
+            userCtrl.selectedUserData.password = selectedData.password;
+            userCtrl.selectedUserData.address = selectedData.address;
+            userCtrl.selectedUserData.postalCode = selectedData.postal_code;
             if (selectedData.address_area_id > 0) {
                 document.getElementById('addressArea_textbox').style.visibility = 'visible';
                 document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
@@ -1554,58 +581,62 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         }
     }
 
-    scope.saveGuardianDetails = function () {
-        const addressAreaRef = DirectoryaddguardianSvc.getAddressArea()
-        addressAreaRef && (scope.selectedUserData.addressArea = addressAreaRef);
-        const birthplaceAreaRef = DirectoryaddguardianSvc.getBirthplaceArea();
-        birthplaceAreaRef && (scope.selectedUserData.birthplaceArea = birthplaceAreaRef);
+    userCtrl.saveDetails = function () {
+        const addressAreaRef = directorySvc.getAddressArea()
+        addressAreaRef && (userCtrl.selectedUserData.addressArea = addressAreaRef);
+        const birthplaceAreaRef = directorySvc.getBirthplaceArea();
+        birthplaceAreaRef && (userCtrl.selectedUserData.birthplaceArea = birthplaceAreaRef);
         var params = {
-            guardian_relation_id: scope.selectedUserData.relation_type_id,
-            student_openemis_no: scope.studentOpenEmisId,
-            openemis_no: scope.selectedUserData.openemis_no,
-            first_name: scope.selectedUserData.first_name,
-            middle_name: scope.selectedUserData.middle_name,
-            third_name: scope.selectedUserData.third_name,
-            last_name: scope.selectedUserData.last_name,
-            preferred_name: scope.selectedUserData.preferred_name,
-            gender_id: scope.selectedUserData.gender_id,
-            date_of_birth: scope.selectedUserData.date_of_birth,
-            identity_number: scope.selectedUserData.identity_number,
-            nationality_id: scope.selectedUserData.nationality_id,
-            nationality_name: scope.selectedUserData.nationality_name,
-            username: scope.selectedUserData.username,
-            password: scope.selectedUserData.password,
-            postal_code: scope.selectedUserData.postalCode,
-            address: scope.selectedUserData.address,
-            birthplace_area_id: DirectoryaddguardianSvc.getBirthplaceAreaId(),
-            address_area_id: DirectoryaddguardianSvc.getAddressAreaId(),
-            identity_type_id: scope.selectedUserData.identity_type_id,
-            identity_type_name: scope.selectedUserData.identity_type_name,
-            photo_name: scope.selectedUserData.photo_name,
-            photo_content: scope.selectedUserData.photo_base_64,
-            contact_type: scope.selectedUserData.contact_type_id,
-            contact_value: scope.selectedUserData.contact_value,
+            guardian_relation_id: userCtrl.selectedUserData.relation_type_id,
+            student_openemis_no: userCtrl.studentOpenEmisId,
+            openemis_no: userCtrl.selectedUserData.openemis_no,
+            first_name: userCtrl.selectedUserData.first_name,
+            middle_name: userCtrl.selectedUserData.middle_name,
+            third_name: userCtrl.selectedUserData.third_name,
+            last_name: userCtrl.selectedUserData.last_name,
+            preferred_name: userCtrl.selectedUserData.preferred_name,
+            gender_id: userCtrl.selectedUserData.gender_id,
+            date_of_birth: userCtrl.selectedUserData.date_of_birth,
+            identity_number: userCtrl.selectedUserData.identity_number,
+            nationality_id: userCtrl.selectedUserData.nationality_id,
+            nationality_name: userCtrl.selectedUserData.nationality_name,
+            username: userCtrl.selectedUserData.username,
+            password: userCtrl.selectedUserData.password,
+            postal_code: userCtrl.selectedUserData.postalCode,
+            address: userCtrl.selectedUserData.address,
+            birthplace_area_id: directorySvc.getBirthplaceArea(),
+            address_area_id: directorySvc.getAddressArea(),
+            identity_type_id: userCtrl.selectedUserData.identity_type_id,
+            identity_type_name: userCtrl.selectedUserData.identity_type_name,
+            photo_name: userCtrl.selectedUserData.photo_name,
+            photo_content: userCtrl.selectedUserData.photo_base_64,
+            contact_type: userCtrl.selectedUserData.contact_type_id,
+            contact_value: userCtrl.selectedUserData.contact_value,
+            email: userCtrl.selectedUserData.email,
+            mobile_number: userCtrl.selectedUserData.mobile_number,
+
         };
         UtilsSvc.isAppendLoader(true);
-        DirectoryaddguardianSvc.saveGuardianDetails(params)
+        directorySvc.saveGuardianData(params)
             .then(function (response) {
-                scope.message = (scope.selectedUserData && scope.selectedUserData.relation_type_name ? scope.selectedUserData.relation_type_name : 'Guardian') + ' successfully added.';
-                scope.messageClass = 'alert-success';
-                scope.step = "summary";
+                userCtrl.message = (userCtrl.selectedUserData && userCtrl.selectedUserData.relation_type_name ? userCtrl.selectedUserData.relation_type_name : 'Guardian') + ' successfully added.';
+                userCtrl.messageClass = 'alert-success';
+                userCtrl.step = "summary";
                 var todayDate = new Date();
-                scope.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
+                userCtrl.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
                 UtilsSvc.isAppendLoader(false);
             }, function (error) {
                 console.error(error);
+                userCtrl.message =  error.data.message || error.statusText || error.toString();
+                userCtrl.messageClass = 'alert-danger';
                 UtilsSvc.isAppendLoader(false);
             });
     }
 
 
     async function checkUserAlreadyExistByIdentity() {
-        const userData = scope.selectedUserData;
-        const userSvc = DirectoryaddguardianSvc;
-        const result = await userSvc.checkUserAlreadyExistByIdentity({
+        const userData = userCtrl.selectedUserData;
+        const result = await directorySvc.checkUserAlreadyExistByIdentity({
             'identity_type_id': userData.identity_type_id,
             'identity_number': userData.identity_number,
             'nationality_id': userData.nationality_id,
@@ -1617,29 +648,31 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         });
 
         if (result.data.user_exist === 1) {
-            scope.messageClass = 'alert_warn';
-            scope.message = result.data.message;
-            scope.isIdentityUserExist = true;
+            userCtrl.messageClass = 'alert_warn';
+            userCtrl.message = result.data.message;
+            userCtrl.isIdentityUserExist = true;
         } else {
-            scope.messageClass = '';
-            scope.message = '';
-            scope.isIdentityUserExist = false;
+            userCtrl.messageClass = '';
+            userCtrl.message = '';
+            userCtrl.isIdentityUserExist = false;
         }
         /*  return result.data.user_exist === 1; */
     }
 
-    scope.addGuardian = function addGuardian() {
+    userCtrl.addGuardian = function addGuardian() {
         //POCOR-7231::Start
-        let str1 = document.URL;
-        ;
-        const Arr = str1.split("/");
-        var len = Arr.length - 1;
-        if (window.location.href.indexOf("Institution") > -1) {
-            $window.location.href = angular.baseUrl + '/Institution/Institutions/' + Arr[len];
-        } else {
-            const queryString = getParameterByName('queryString');
-            $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian?queryString=' + queryString;
+        if ($window.localStorage.getItem('studentOpenEmisId')) {
+            $window.localStorage.removeItem('studentOpenEmisId');
         }
+        // console.log("addGuardian");
+        // console.log(StudentController);
+        let params = {
+            openemis_no: userCtrl.studentOpenEmisId
+        };
+
+        var queryString = KdDataSvc.urlsafeB64Encode(JSON.stringify(params));
+        $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian/' + queryString;
+
         //POCOR-7231::End
     }
 
@@ -1660,7 +693,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             nationality_id,
             openemis_no,
             identity_type_name
-        } = scope.selectedUserData;
+        } = userCtrl.selectedUserData;
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
         const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
         const isIdentityHasError = identity_number?.length > 1 && (nationality_id === undefined || nationality_id === "" || nationality_id === null || identity_type_id === "" || identity_type_id === undefined || identity_type_id === null)
@@ -1669,7 +702,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         if (identity_type_name == 'UNHCR') {
             isSkipableForIdentity = false;
         }
-
         if (isIdentityHasError) {
             return ['Identity', true]
         }
@@ -1688,48 +720,75 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         return ["", false];
     }
 
-    scope.checkConfigForExternalSearch = function checkConfigForExternalSearch() {
-        var nationality_id = scope.selectedUserData.nationality_id
-        var identity_type_id = scope.selectedUserData.identity_type_id
+    // userCtrl.checkConfigForExternalSearch = function checkConfigForExternalSearch() {
+    //     var nationality_id = userCtrl.selectedUserData.nationality_id
+    //     var identity_type_id = userCtrl.selectedUserData.identity_type_id
+    //     directorySvc.checkConfigForExternalSearch(nationality_id, identity_type_id).then(function (resp) {
+    //         userCtrl.isExternalSearchEnable = resp.showExternalSearch;
+    //         userCtrl.externalSearchSourceName = resp.value;
+    //         UtilsSvc.isAppendLoader(false);
+    //     }, function (error) {
+    //         userCtrl.isExternalSearchEnable = false;
+    //         console.error(error);
+    //         UtilsSvc.isAppendLoader(false);
+    //     });
+    // }
 
-        DirectoryaddguardianSvc.checkConfigForExternalSearch(nationality_id, identity_type_id).then(function (resp) {
-            scope.isExternalSearchEnable = resp.showExternalSearch;
-            scope.externalSearchSourceName = resp.value;
-            UtilsSvc.isAppendLoader(false);
-        }, function (error) {
-            scope.isExternalSearchEnable = false;
-            console.error(error);
-            UtilsSvc.isAppendLoader(false);
-        });
-    }
+    userCtrl.isNextButtonShouldDisable = function isNextButtonShouldDisable() {
+        const {
+            step,
+            selectedUserData,
+            isIdentityUserExist,
+            externalSearchSourceName,
+            isExternalSearchEnable} = scope;
+        // POCOR-8231 start: change to var
+        const {
+            first_name,
+            last_name,
+            date_of_birth,
+            gender_id,
+            identity_number,
+            openemis_no,
+            user_id
+        } = selectedUserData;
 
-    scope.isNextButtonShouldDisable = function isNextButtonShouldDisable() {
-        const { step, selectedUserData, isIdentityUserExist, externalSearchSourceName } = scope;
-        const { first_name, last_name, date_of_birth, gender_id, identity_number } = selectedUserData;
 
         if (isIdentityUserExist && step === "internal_search") {
             return true;
         }
+        if (openemis_no && !user_id && step === "internal_search") {
+            return true;
+        }
+
+        if (identity_number && !user_id && isExternalSearchEnable !== true && step === "internal_search") {
+            return true;
+        }
+        if (step === 'internal_search' &&
+            isExternalSearchEnable !== true &&
+            (!(first_name && last_name && date_of_birth && gender_id))) {
+            return true;
+        }
+        // POCOR-8231 end
+
         if (step === 'external_search' && externalSearchSourceName === 'UNHCR' && !identity_number) {
             return true;
         }
 
-        if (step === 'external_search' && externalSearchSourceName !== 'UNHCR' && (!first_name || !last_name || !date_of_birth || !gender_id)) {
+        if (step === 'external_search' && (!(first_name && last_name && date_of_birth && gender_id))) {
             return true;
         }
         return false;
-    }
+    };
 
-
-    scope.getCSPDSearchData = function getCSPDSearchData() {
-        var param = scope.selectedUserData; //POCOR-7916
+    userCtrl.getCSPDSearchData = function getCSPDSearchData() {
+        var param = userCtrl.selectedUserData; //POCOR-7916
         var dataSource = {
-            pageSize: scope.pageSize,
+            pageSize: userCtrl.pageSize,
             getRows: function (params) {
                 UtilsSvc.isAppendLoader(true);
                 param.limit = params.endRow - params.startRow;
                 param.page = params.endRow / (params.endRow - params.startRow);
-                DirectoryaddguardianSvc.getCspdData(param)
+                directorySvc.getCspdData(param)
                     .then(function (response) {
                         var gridData = response.data.data; //POCOR-7916
                         if (!gridData) gridData = [];
@@ -1744,73 +803,60 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                             data.identity_type_id = data['identity_type_id'];
                         });
                         var totalRowCount = gridData.length === 0 ? 1 : gridData.length;
-                        scope.isSearchResultEmpty = gridData.length === 0;
-                        return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
+                        userCtrl.isSearchResultEmpty = gridData.length === 0;
+                        return userCtrl.processExternalGridUserRecord(gridData, params, totalRowCount);
                     }, function (error) {
                         console.error(error);
                         UtilsSvc.isAppendLoader(false);
                     });
             }
         };
-        scope.externalGridOptions.api.setDatasource(dataSource);
-        scope.externalGridOptions.api.sizeColumnsToFit();
+        userCtrl.externalGridOptions.api.setDatasource(dataSource);
+        userCtrl.externalGridOptions.api.sizeColumnsToFit();
     }
-    scope.checkUserExistByIdentityFromConfiguration = async function checkUserExistByIdentityFromConfiguration() {
-        userData = scope.selectedUserData;
-        const {identity_type_id, identity_number} = userData;
-        // console.log(scope.selectedUserData);
-        // scope.error.nationality_id = "";
-        scope.error.identity_type_id = ""
-        scope.error.identity_number = "";
 
+    userCtrl.checkUserExistByIdentityFromConfiguration = async function() {
+        const { identity_type_id, identity_number } = userCtrl.selectedUserData;
 
-        /* if (!nationality_id)
-        {
-            scope.error.nationality_id =
-                "This field cannot be left empty";
+        userCtrl.unsetError('identity_type_id');
+        userCtrl.unsetError('identity_number');
 
-                return false;
-        } */
         if (!identity_type_id) {
-            scope.error.identity_type_id =
-                "This field cannot be left empty";
-            return false;
-        }
-        if (!identity_number) {
-            scope.error.identity_number =
-                "This field cannot be left empty";
-
             return false;
         }
 
-        const userSvc = DirectoryaddguardianSvc;
-        const userCtrl = scope;
-
-        const result = await userSvc.checkUserAlreadyExistByIdentity({
-            'identity_type_id': userData.identity_type_id,
-            'identity_number': userData.identity_number,
-            'nationality_id': userData.nationality_id,
-            'first_name': userData.first_name,
-            'last_name': userData.last_name,
-            'gender_id': userData.gender_id,
-            'date_of_birth': userData.date_of_birth,
-            'user_id': userData.user_id,
-        });
-
-        if (result.data.user_exist === 1) {
-            // console.log(result.data);
-            scope.messageClass = 'alert_warn';
-            scope.message = result.data.message;
-            scope.isIdentityUserExist = true;
-            scope.error.identity_number = result.data.message;
-            $window.scrollTo({bottom: 0});
-        } else {
-            scope.messageClass = '';
-            scope.message = '';
-            scope.isIdentityUserExist = false;
-            scope.error.identity_number == ""
+        if (identity_type_id && !identity_number) {
+            userCtrl.error.identity_number = "This field cannot be left empty";
+            return;
         }
-        return result.data.user_exist === 1;
-    }
+
+        try {
+            const result = await directorySvc.checkUserAlreadyExistByIdentity({
+                identity_type_id,
+                identity_number,
+                nationality_id: userCtrl.selectedUserData.nationality_id,
+            });
+
+            if (result.data.user_exist === 1) {
+                userCtrl.messageClass = 'alert_warn';
+                userCtrl.message = result.data.message;
+                userCtrl.isIdentityUserExist = true;
+                // userCtrl.error.identity_number = result.data.message;
+                $window.scrollTo({ bottom: 0 });
+
+            } else {
+                userCtrl.messageClass = '';
+                userCtrl.message = '';
+                userCtrl.isIdentityUserExist = false;
+                userCtrl.unsetError('identity_type_id');
+                userCtrl.unsetError('identity_number');
+
+            }
+            return result.data.user_exist === 1;
+        } catch (error) {
+            console.error('Error checking user existence:', error);
+            return false;
+        }
+    };
 
 }

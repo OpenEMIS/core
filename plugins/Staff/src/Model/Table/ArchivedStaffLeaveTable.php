@@ -371,16 +371,16 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
             $btnAttr = $this->getButtonAttr();
         }
         $customButton = [];
-        if (array_key_exists('_ext', $url)) {
+        if (isset($url['_ext'])) {
             unset($customButton['url']['_ext']);
         }
-        if (array_key_exists('pass', $url)) {
+        if (isset($url['pass'])) {
             unset($customButton['url']['pass']);
         }
-        if (array_key_exists('paging', $url)) {
+        if (isset($url['paging'])) {
             unset($customButton['url']['paging']);
         }
-        if (array_key_exists('filter', $url)) {
+        if (isset($url['filter'])) {
             unset($customButton['url']['filter']);
         }
         $customButton['type'] = 'button';

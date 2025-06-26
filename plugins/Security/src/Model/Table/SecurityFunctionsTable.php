@@ -7,7 +7,7 @@ use Cake\Core\Configure;
 
 class SecurityFunctionsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -69,7 +69,7 @@ class SecurityFunctionsTable extends AppTable
                         unset($result[$key]);
                     } else {
                         $value->name = __($value->name);
-                        $value->description = __($value->description);
+                        $value->description = __((string)$value->description);
                     }
                 }
                 return $result;

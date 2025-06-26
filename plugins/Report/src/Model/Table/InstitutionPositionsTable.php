@@ -25,9 +25,9 @@ class InstitutionPositionsTable extends AppTable
     const ALL_STAFF = -1;
     //POCOR-6614 end
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_positions');
+        $this->setTable('institution_positions');
         parent::initialize($config);
         
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -46,7 +46,7 @@ class InstitutionPositionsTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     { 
         /*POCOR-6534 starts*/
-        $identity_types = TableRegistry::get('identity_types'); //POCOR-6887
+        //$identity_types = TableRegistry::get('FieldOption.IdentityTypes'); //POCOR-6887
         $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
         $IdentityTypesTable    = TableRegistry::get('FieldOption.IdentityTypes');
         $UserIdentitiesTable   = TableRegistry::get('User.Identities');
@@ -56,15 +56,16 @@ class InstitutionPositionsTable extends AppTable
         //$birth_certificate_code_id = !empty($birthCertificateId) ? $birthCertificateId : 0;
         //End POCOR-6605
         //Start POCOR-6887
-        $birth_certificate_code_id = $IdentityTypesTable->find('all')
-                                     ->select('id')   
-                                     ->where(['visible' => 1,'editable' => 1,'default' => 1])
-                                     ->first();
-        //End POCOR-6887
-        // Start POCOR-7203
+        $birth_certificate_code_id = $IdentityTypesTable
+                                    ->find()
+                                    ->select(['id'])
+                                    ->where([$IdentityTypesTable->aliasField('visible') => 1, $IdentityTypesTable->aliasField('default') => 1])
+                                    ->enableHydration(false)
+                                    ->first();
         $identity_id = 0;
         if(!empty($birth_certificate_code_id)){
             $identity_id = $birth_certificate_code_id->id;
+            $identity_id = !empty($identity_id) ? $identity_id : 'NULL';
         }
         // END POCOR-7203
         $requestData = json_decode($settings['process']['params']);
@@ -111,7 +112,7 @@ class InstitutionPositionsTable extends AppTable
                 'staff_firstname' => 'SecurityUsersStaff.first_name',
                 'staff_lastname' => 'SecurityUsersStaff.last_name',
                 'birth_certificate' => 'Identities.number',
-                'identity_types_name' => 'identity_types.name', //POCOR-6887
+                'identity_types_name' => 'IdentityTypes.name', //POCOR-6887
                 'StaffStatuses_name' => 'StaffStatuses.name', //POCOR-6887
                 'InstitutionStaffs_start_date' => 'InstitutionStaffs.start_date ', //POCOR-6887
                 'InstitutionStaffs_end_date' => 'InstitutionStaffs.end_date', //POCOR-6887
@@ -209,19 +210,19 @@ class InstitutionPositionsTable extends AppTable
                     'SecurityUsersGender.id = SecurityUsersStaff.gender_id',
                 ],
             ];  //POCOR-6951
-            $query->join($join)
-            ->leftJoin([$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()], [
-                    $UserIdentitiesTable->aliasField('security_user_id = ') . ' SecurityUsersStaff.id',
-                    //$UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id->id",  //POCOR-6887
-                    $UserIdentitiesTable->aliasField('identity_type_id') . " = $identity_id",  //POCOR-7203
-                ])
-            ->leftJoin(
-                [$identity_types->alias() => $identity_types->table()],
+            $query->join($join)->leftJoin(
+                [$UserIdentitiesTable->getAlias() => $UserIdentitiesTable->getTable()],
                 [
-                    $identity_types->aliasField('id') . ' = '. $UserIdentitiesTable->aliasField('identity_type_id')
+                    $UserIdentitiesTable->aliasField('security_user_id') . ' = SecurityUsersStaff.id',
+                    $UserIdentitiesTable->aliasField('identity_type_id') . ' = ' . ($identity_id === 'NULL' ? 'NULL' : "'$identity_id'") //POCOR-8612
                 ]
             )
-            
+            ->leftJoin(
+                [$IdentityTypesTable->getAlias() => $IdentityTypesTable->getTable()],
+                [
+                    $IdentityTypesTable->aliasField('id') . ' = ' . $UserIdentitiesTable->aliasField('identity_type_id')
+                ]
+            )
             ->where($where)
             ->order(['institution_name', 'position_no']);
        
@@ -237,6 +238,7 @@ class InstitutionPositionsTable extends AppTable
                 return $row;
             });
         });
+        $this->log($query->sql(), 'debug');
         /*POCOR-6534 ends*/
     }
 

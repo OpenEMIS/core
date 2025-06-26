@@ -6,7 +6,7 @@ use ArrayObject;
 
 use Cake\Event\Event;
 use Cake\I18n\Time;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
@@ -16,6 +16,8 @@ use Cake\Validation\Validator;
 use Cake\Chronos\Date;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Core\Configure;
+use Cake\I18n\FrozenDate;
+use Cake\Datasource\ConnectionManager;
 
 use App\Model\Table\ControllerActionTable;
 use Exception;
@@ -24,9 +26,9 @@ use RuntimeException;
 class StudentMealsTable extends ControllerActionTable
 {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_class_students');
+        $this->setTable('institution_class_students');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -91,7 +93,7 @@ class StudentMealsTable extends ControllerActionTable
         if ($day != -1) {
             $query = $query
                 ->leftJoin([
-                    $StudentMealMarkedRecords->alias() => $StudentMealMarkedRecords->table()],
+                    $StudentMealMarkedRecords->getAlias() => $StudentMealMarkedRecords->getTable()],
                     [$StudentMealMarkedRecords->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
                         $StudentMealMarkedRecords->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                         $StudentMealMarkedRecords->aliasField('meal_programmes_id = ') . $mealProgramId,
@@ -103,23 +105,23 @@ class StudentMealsTable extends ControllerActionTable
                     'marked_meal_date' => $StudentMealMarkedRecords->aliasField('date'),
                 ])
                 ->leftJoin([
-                    $InstitutionMealStudents->alias() => $InstitutionMealStudents->table()],
+                    $InstitutionMealStudents->getAlias() => $InstitutionMealStudents->getTable()],
                     [$InstitutionMealStudents->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
                         $InstitutionMealStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                         $InstitutionMealStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                         $InstitutionMealStudents->aliasField('meal_programmes_id = ') . $mealProgramId,
                         $InstitutionMealStudents->aliasField("date = '") . $day . "'",
                     ])
-                ->leftJoin([$MealProgrammes->alias() => $MealProgrammes->table()], [
+                ->leftJoin([$MealProgrammes->getAlias() => $MealProgrammes->getTable()], [
                     $MealProgrammes->aliasField('id =') . $InstitutionMealStudents->aliasField('meal_programmes_id')
                 ])
-                ->leftJoin([$MealReceived->alias() => $MealReceived->table()], [
+                ->leftJoin([$MealReceived->getAlias() => $MealReceived->getTable()], [
                     $MealReceived->aliasField('id =') . $InstitutionMealStudents->aliasField('meal_received_id')
                 ])
-                ->leftJoin([$MealBenefit->alias() => $MealBenefit->table()], [
+                ->leftJoin([$MealBenefit->getAlias() => $MealBenefit->getTable()], [
                     $MealBenefit->aliasField('id =') . $InstitutionMealStudents->aliasField('meal_benefit_id')
                 ])
-                ->leftJoin([$MealBenefit->alias() => $MealBenefit->table()], [
+                ->leftJoin([$MealBenefit->getAlias() => $MealBenefit->getTable()], [
                     $MealBenefit->aliasField('id =') . $InstitutionMealStudents->aliasField('meal_benefit_id')
                 ])
                 ->select([
@@ -134,11 +136,9 @@ class StudentMealsTable extends ControllerActionTable
                     'meal_date' => $InstitutionMealStudents->aliasField('date'),
                 ])
                 ->group([$this->aliasField('student_id')]);
-
             $query = $this->getDailyMealData($query, $default_meal_receive_id);
 
         }
-
         if ($day == -1) {
             $findDay[] = $weekStartDay;
             $findDay[] = $weekEndDay;
@@ -158,7 +158,7 @@ class StudentMealsTable extends ControllerActionTable
                     'keyField' => 'student_id',
                     'valueField' => 'student_id'
                 ])
-                ->matching($this->StudentStatuses->alias(), function ($q) {
+                ->matching($this->StudentStatuses->getAlias(), function ($q) {
                     return $q->where([
                         $this->StudentStatuses->aliasField('code') => 'CURRENT'
                     ]);
@@ -168,7 +168,6 @@ class StudentMealsTable extends ControllerActionTable
                     $this->aliasField('institution_class_id') => $institutionClassId,
                 ])
                 ->all();
-
             if (!$studentListResult->isEmpty()) {
                 $studentList = $studentListResult->toArray();
                 $InstitutionMealStudents = TableRegistry::get('Institution.InstitutionMealStudents');
@@ -196,7 +195,6 @@ class StudentMealsTable extends ControllerActionTable
                         ]
                     ])
                     ->toArray();
-
                 $isMarkedRecords = $StudentMealMarkedRecords
                     ->find()
                     ->contain(['MealBenefit'])
@@ -217,7 +215,6 @@ class StudentMealsTable extends ControllerActionTable
                         ]
                     ])
                     ->toArray();
-
                 $studentMealsData = [];
                 foreach ($studentList as $value) {
                     $studentId = $value;
@@ -256,7 +253,6 @@ class StudentMealsTable extends ControllerActionTable
                         }
                     }
                 }
-
                 $query
                     ->formatResults(function (ResultSetInterface $results) use ($studentMealsData) {
                         return $results->map(function ($row) use ($studentMealsData) {
@@ -284,6 +280,7 @@ class StudentMealsTable extends ControllerActionTable
      */
         public function findClassStudentsWithMealSave(Query $query, array $options)
     {
+        $connection = ConnectionManager::get('default');
         $arrayStudents = $this->find('classStudentsWithMeal', $options)->toArray();
         if (sizeof($arrayStudents) == 0) {
             return $this->findClassStudentsWithMeal($query, $options);
@@ -294,12 +291,10 @@ class StudentMealsTable extends ControllerActionTable
         $institutionClassId = $options['institution_class_id'];
         $academicPeriodId = $options['academic_period_id'];
         $day = $options['day_id'];
-
         $firstStudent = $arrayStudents[0];
         $isMarked = $firstStudent->marked_meal_id;
         $StudentMealMarkedRecords = TableRegistry::get('Meal.StudentMealMarkedRecords');
         $InstitutionMealStudents = TableRegistry::get('Institution.InstitutionMealStudents');
-
         if (empty($isMarked)) {
             $result = $this->markDay($institutionId,
                 $institutionClassId,
@@ -321,12 +316,21 @@ class StudentMealsTable extends ControllerActionTable
                     'academic_period_id' => $academicPeriodId,
                     'meal_received_id' => $defaultMealReceiveId,
                     'student_id' => $studentID,
-                    'date' => $day,
-                    'meal_benefit_id' => null
+                    'date' => date('Y-m-d'),
+                    'meal_benefit_id' => null,
+                    'created_user_id' => 2,
+                    'created' => date('Y-m-d')
                 ];
                 try {
-                    $entity = $InstitutionMealStudents->newEntity($data);
-                    $InstitutionMealStudents->save($entity);
+                    //Version 4[START]
+                    $currentDate = date('Y-m-d');
+                    $connection->execute("INSERT INTO institution_meal_students (student_id, academic_period_id, institution_class_id, institution_id, meal_programmes_id, date, meal_benefit_id, meal_received_id, paid, comment, modified_user_id, modified, created_user_id, created) VALUES ($studentID, $academicPeriodId, $institutionClassId, $institutionId, $mealProgramId, '$currentDate', NULL, $defaultMealReceiveId, NULL, NULL, 2, '$currentDate', 2, '$currentDate');");
+                    //Version 4[END]
+                    
+                    //Version 3[START]
+                    // $entity = $InstitutionMealStudents->newEntity($data);
+                    // $InstitutionMealStudents->save($entity);
+                    //Version 3[START]
                 } catch (\Exception $exception) {
                     $data = ['error' => $exception->getMessage()];
                     echo json_encode($data);
@@ -497,11 +501,11 @@ class StudentMealsTable extends ControllerActionTable
         ini_set("memory_limit", "-1");
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $classId = !empty($this->request->query['institution_class_id']) ? $this->request->query['institution_class_id'] : 0;
-        $weekId = $this->request->query['week_id'];
-        $weekStartDay = $this->request->query['week_start_day'];
-        $weekEndDay = $this->request->query['week_end_day'];
-        $dayId = $this->request->query['day_id'];
+        $classId = !empty($this->request->getQuery('institution_class_id')) ? $this->request->getQuery('institution_class_id') : 0;
+        $weekId = $this->request->getQuery('week_id');
+        $weekStartDay = $this->request->getQuery('week_start_day');
+        $weekEndDay = $this->request->getQuery('week_end_day');
+        $dayId = $this->request->getQuery('day_id');
 
         $InstitutionMealStudents = TableRegistry::get('Institution.InstitutionMealStudents');
 
@@ -544,7 +548,7 @@ class StudentMealsTable extends ControllerActionTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
-        $day_id = $this->request->query('day_id');
+        $day_id = $this->request->getQuery('day_id');
         $newArray[] = [
             'key' => 'StudentMeals.openemis_no',
             'field' => 'openemis_no',
@@ -652,8 +656,8 @@ class StudentMealsTable extends ControllerActionTable
                 $this->Users->aliasField('last_name'),
                 $this->Users->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->alias()])
-            ->matching($this->StudentStatuses->alias(), function ($q) {
+            ->contain([$this->Users->getAlias()])
+            ->matching($this->StudentStatuses->getAlias(), function ($q) {
                 return $q->where([
                     $this->StudentStatuses->aliasField('code') => 'CURRENT'
                 ]);

@@ -62,7 +62,7 @@ class AlertRuleRetirementWarningBehavior extends AlertRuleBehavior
         ]
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -72,7 +72,7 @@ class AlertRuleRetirementWarningBehavior extends AlertRuleBehavior
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
-                $validator = $model->validator();
+                $validator = $model->getValidator('default');//POCOR-8341
                 $validator->add('value', [
                     'ruleRange' => [
                         'rule' => ['range', 50, 75],

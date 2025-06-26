@@ -24,7 +24,7 @@ class StaffAbsencesTable extends ControllerActionTable
     const IN_PROGRESS = 2;
     const DONE = 3;
 
-    public function initialize(array $config)
+    public function initialize(array $config): array
     {
         $this->table('institution_staff_leave');
         parent::initialize($config);
@@ -70,14 +70,14 @@ class StaffAbsencesTable extends ControllerActionTable
         $this->fullDayOptions = $this->getSelectOptions('general.yesno');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
         return $validator;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.InstitutionStaff.afterDelete'] = 'institutionStaffAfterDelete';
@@ -92,7 +92,7 @@ class StaffAbsencesTable extends ControllerActionTable
         $dateFrom = $entity['date_from']->format('Y-m-d');
         $dateTo = $entity['date_to']->format('Y-m-d');
         $entity = $this->getNumberOfDays($entity);
-        
+
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
         $staffData = $InstitutionStaff
             ->find('all')
@@ -104,17 +104,17 @@ class StaffAbsencesTable extends ControllerActionTable
                 $InstitutionStaff->aliasField('staff_id')
             ])
             ->toArray();
-            
+
             $startDate = $staffData[0]['start_date']->format('Y-m-d');
-            
+
         if ($startDate > $dateFrom) {
             $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
             return false;
         }
-        
+
         if (!empty($staffData[0]['end_date'])) {
             $endDate = $staffData[0]['end_date']->format('Y-m-d');
-            
+
             if ($dateFrom > $endDate) {
                 $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDate', ['reset' => true]);
                 return false;
@@ -166,12 +166,12 @@ class StaffAbsencesTable extends ControllerActionTable
 
     public function indexHistoricalBeforeQuery(Event $event, Query $mainQuery, Query $historicalQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         if ($session->check('Staff.Staff.id')) {
             $userId = $session->read('Staff.Staff.id');
-        } elseif (isset($this->request->query['user_id'])) {
-            $userId = $this->request->query['user_id'];
+        } elseif (isset($this->request->getQuery['user_id'])) {
+            $userId = $this->request->getQuery['user_id'];
         }
 
         $extra['auto_contain'] = false;
@@ -437,8 +437,8 @@ class StaffAbsencesTable extends ControllerActionTable
     public function onUpdateFieldStartTime(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            if (isset($request->data[$this->alias()]['full_day'])) {
-                if ($request->data[$this->alias()]['full_day']) {
+            if (isset($request->getData($this->getAlias())['full_day'])) {
+                if ($request->getData($this->getAlias())['full_day']) {
                     $attr['type'] = 'hidden';
                 }
             } else {
@@ -456,8 +456,8 @@ class StaffAbsencesTable extends ControllerActionTable
     public function onUpdateFieldEndTime(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            if (isset($request->data[$this->alias()]['full_day'])) {
-                if ($request->data[$this->alias()]['full_day']) {
+            if (isset($request->getData($this->getAlias())['full_day'])) {
+                if ($request->getData($this->getAlias())['full_day']) {
                     $attr['type'] = 'hidden';
                 }
             } else {
@@ -482,16 +482,16 @@ class StaffAbsencesTable extends ControllerActionTable
 
         $tabElements = $this->controller->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function getUserId()
     {
         $userId = null;
-        if (!is_null($this->request->query('user_id'))) {
-            $userId = $this->request->query('user_id');
+        if (!is_null($this->request->getQuery('user_id'))) {
+            $userId = $this->request->getQuery('user_id');
         } else {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             if ($session->check('Staff.Staff.id')) {
                 $userId = $session->read('Staff.Staff.id');
             }
@@ -517,7 +517,7 @@ class StaffAbsencesTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->request->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -548,8 +548,8 @@ class StaffAbsencesTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->alias(), $this->StaffLeaveTypes->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(),'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->Users->getAlias(), $this->StaffLeaveTypes->getAlias(), $this->Institutions->getAlias(), $this->CreatedUser->getAlias(),'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
@@ -630,7 +630,7 @@ class StaffAbsencesTable extends ControllerActionTable
                 $this->aliasField('date_to') . ' IS NOT NULL',
                 $conditions[$thresholdArray['condition']]
             ])
-            ->hydrate(false)
+            ->disableHydration() // POCOR-8533
             ;
 
         return $licenseData->toArray();
@@ -643,7 +643,7 @@ class StaffAbsencesTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             if ($entity->is_historical) {
                 $rowEntityId = $this->getFieldEntity($entity->is_historical, $entity->id, 'id');
                 $url = [
@@ -654,10 +654,10 @@ class StaffAbsencesTable extends ControllerActionTable
                     $this->paramsEncode(['id' => $rowEntityId])
                 ];
                 $buttons['view']['url'] = $url;
-                if (array_key_exists('edit', $buttons)) {
+                if (isset($buttons['edit'])) {
                     unset($buttons['edit']);
                 }
-                if (array_key_exists('remove', $buttons)) {
+                if (isset($buttons['remove'])) {
                     unset($buttons['remove']);
                 }
             }
@@ -729,10 +729,10 @@ class StaffAbsencesTable extends ControllerActionTable
                                             $CalendarEvents->aliasField('calendar_type_id') => $CalendarTypes->aliasField('id')
                                         ]
                                     ]
-                                ])                                
+                                ])
                                 ->where([
-                                    $CalendarEvents->aliasField('institution_id') => $institutionId])                               
-                                ->orWhere([ 
+                                    $CalendarEvents->aliasField('institution_id') => $institutionId])
+                                ->orWhere([
                                     $CalendarEvents->aliasField('institution_id') => -1
                                 ])
                                 ->andWhere([
@@ -745,7 +745,7 @@ class StaffAbsencesTable extends ControllerActionTable
             return $value['calendar_event_dates'][0]['date']->format('Y-m-d');
         });
         $publicCalendarEventDates = $mapCollection->toArray();
-        
+
         $count = 0;
         $overlap = false;
         foreach ($datePeriod as $key => $date) {

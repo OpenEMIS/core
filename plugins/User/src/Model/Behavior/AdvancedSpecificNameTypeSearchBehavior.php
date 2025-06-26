@@ -11,15 +11,15 @@ use Cake\Utility\Inflector;
 use Cake\Datasource\Exception\MissingModelException;
 
 class AdvancedSpecificNameTypeSearchBehavior extends Behavior {
-	protected $_defaultConfig = [
+	protected $_defaultgetConfig = [
 		'modelToSearch' => '',
 	];
 	private $_keys = ['first_name', 'middle_name', 'third_name', 'last_name'];
 
-	public function initialize(array $config) {
-		$model = $this->config('modelToSearch');
+	public function initialize(array $getConfig): void {
+		$model = $this->getConfig('modelToSearch');
 		if (empty($model)) {
-			$this->config('modelToSearch', $this->_table);
+			$this->setConfig('modelToSearch', $this->_table);
 		} else {
 			if (! $model instanceof Table && ! $model instanceof BelongsTo) {
 				throw new MissingModelException('AdvancedSpecificNameTypeSearchBehavior requires a registered model for "modelToSearch" parameter. <br/>"'.$model.'" defined as "modelToSearch" is not a model object.');
@@ -28,7 +28,7 @@ class AdvancedSpecificNameTypeSearchBehavior extends Behavior {
 		$this->_table->addBehavior('Area.Area');
 	}
 	
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'AdvanceSearch.onSetupFormField' => 'onSetupFormField',
@@ -46,7 +46,7 @@ class AdvancedSpecificNameTypeSearchBehavior extends Behavior {
 			}
 		}
 
-		$model = $this->config('modelToSearch');
+		$model = $this->getConfig('modelToSearch');
 
 		if (!empty($searches)) {
 			$conditions = [];

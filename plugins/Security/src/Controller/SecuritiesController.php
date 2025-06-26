@@ -7,10 +7,11 @@ use App\Controller\AppController;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
+use Cake\Event\EventInterface;
 
 class SecuritiesController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
@@ -28,6 +29,11 @@ class SecuritiesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.SecurityRoles']);
     }
     // end
+
+    public function Users()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.Users']);
+    }
 
     public function Permissions($subaction = 'index', $roleId = null)
     {
@@ -50,7 +56,7 @@ class SecuritiesController extends AppController
                 'controller' => 'Configurations',
                 'action' => 'setAlert'
             ];
-            $moduleKey = is_null($this->request->query('module')) ? '' : $this->request->query('module');
+            $moduleKey = is_null($this->request->getQuery('module')) ? '' : $this->request->getQuery('module'); //POCOR-8074
             $this->set('roleId', $this->ControllerAction->paramsDecode($roleId)['id']);
             $this->set('indexUrl', $indexUrl);
             $this->set('viewUrl', $viewUrl);
@@ -91,12 +97,11 @@ class SecuritiesController extends AppController
 
     private function attachAngularModules()
     {
-        $action = $this->request->action;
-
+        $action = $this->request->getParam('action');
         switch ($action) {
             case 'Permissions':
-                if (isset($this->request->pass[0])) {
-                    if ($this->request->param('pass')[0] == 'edit') {
+                if (isset($this->request->getParam('pass')[0])) {
+                    if ($this->request->getParam('pass')[0] == 'edit') {
                         $this->Angular->addModules([
                             'alert.svc',
                             'security.permission.edit.ctrl',
@@ -108,12 +113,15 @@ class SecuritiesController extends AppController
         }
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
+        if ($this->getPlugin() == 'Security') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
         $header = 'Security';
         $this->Navigation->addCrumb($header, ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'index']);
-        $this->Navigation->addCrumb($this->request->action);
+        $this->Navigation->addCrumb($this->request->getParam('action'));
 
         $this->set('contentHeader', __($header));
     }
@@ -121,23 +129,23 @@ class SecuritiesController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         //change header in POCOR-7175
-        if($model->alias =='SystemGroupsList') {
+        if($model->getAlias() =='SystemGroupsList') {
              $header = __('System Groups');
-            $listId = $this->request->query['userGroupId'];
-            $table= TableRegistry::get('security_groups');
+            $listId = $this->request->getQuery('userGroupId');
+            $table= TableRegistry::get('Security.SecurityGroups');
             $headerName = $table->find()->where(['id' => $listId])->first()->name;
             $header .= ' - ' . __($model->getHeader($headerName));
             $this->set('contentHeader', $header);
-        }elseif($model->alias == 'UserGroupsList') {
+        }elseif($model->getAlias() == 'UserGroupsList') {
             $header = __('User Groups');
-            $listId = $this->request->query['userGroupId'];
-            $table= TableRegistry::get('security_groups');
-            $headerName = $table->find()->where(['id' => $listId])->first()->name;
+            $listId = $this->request->getQuery('userGroupId');
+            $table= TableRegistry::get('Security.UserGroups');
+            $headerName = $table->find()->where(['id IS ' => $listId])->first()->name;
             $header .= ' - ' . __($model->getHeader($headerName));
             $this->set('contentHeader', $header);
         }else {
              $header = __('Security');
-             $header .= ' - ' . __($model->getHeader($model->alias));
+             $header .= ' - ' . __($model->getHeader($model->getAlias()));
              $this->set('contentHeader', $header);
         }
     }
@@ -149,10 +157,10 @@ class SecuritiesController extends AppController
 
     public function getUserTabElements($options = [])
     {
-        $plugin = $this->plugin;
-        $name = $this->name;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
 
-        $id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
+        $id = (isset($options['id']))? $options['id']: $this->request->getSession()->read($name.'.id');
 
         $tabElements = [
             $this->name => [
@@ -167,4 +175,11 @@ class SecuritiesController extends AppController
 
         return $this->TabPermission->checkTabPermission($tabElements);
     }
+
+    public function beforeRender(EventInterface $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+    }
+
 }

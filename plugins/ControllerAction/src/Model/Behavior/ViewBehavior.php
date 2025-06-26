@@ -9,7 +9,7 @@ use Cake\Event\Event;
 
 class ViewBehavior extends Behavior
 {
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.view'] = 'view';
@@ -23,19 +23,19 @@ class ViewBehavior extends Behavior
         $event = $model->dispatchEvent('ControllerAction.Model.view.beforeAction', [$extra], $this);
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();
-            return $event->result;
+            return $event->getResult();
         }
-        if ($event->result instanceof Table) {
-            $model = $event->result;
+        if ($event->getResult() instanceof Table) {
+            $model = $event->getResult();
         }
 
 
-        $sessionKey = $model->registryAlias() . '.primaryKey';
+        $sessionKey = $model->getRegistryAlias() . '.primaryKey';
         $contain = [];
 
         foreach ($model->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
-                $contain[] = $assoc->name();
+                $contain[] = $assoc->getName();
             }
         }
 
@@ -46,7 +46,7 @@ class ViewBehavior extends Behavior
                 $ids = $model->Session->read($sessionKey);
             } elseif (!empty($model->ControllerAction->getQueryString())) {
                 // Query string logic not implemented yet, will require to check if the query string contains the primary key
-                $primaryKey = $model->primaryKey();
+                $primaryKey = $model->getPrimaryKey();
                 $ids = $model->ControllerAction->getQueryString($primaryKey);
             }
         }
@@ -54,7 +54,6 @@ class ViewBehavior extends Behavior
         $idKeys = $model->getIdKeys($model, $ids);
 
         $entity = false;
-
         // need to change this part
         if ($model->exists([$idKeys])) {
             $query = $model->find()->where($idKeys)->contain($contain);
@@ -65,11 +64,10 @@ class ViewBehavior extends Behavior
 
             $entity = $query->first();
         }
-
         $event = $model->dispatchEvent('ControllerAction.Model.view.afterAction', [$entity, $extra], $this);
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();
-            return $event->result;
+            return $event->getResult();
         }
         if (!empty($entity)) {
             $model->Session->write($sessionKey, $ids);

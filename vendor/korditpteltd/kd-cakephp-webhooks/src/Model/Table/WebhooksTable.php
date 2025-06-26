@@ -21,7 +21,7 @@ class WebhooksTable extends Table
         'DELETE' => 'DELETE'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -70,13 +70,13 @@ class WebhooksTable extends Table
         $webhooks = $this->find()
             ->innerJoinWith('WebhookEvents')
             ->where([
-                'WebhookEvents.event_key' => $eventKey,
+                'WebhookEvents.event_key' => trim($eventKey),
                 $this->aliasField('status') => self::ACTIVE
             ])
             ->toArray();
-		
-		if(!empty($body)) { 
-            $body = "'".json_encode($body)."'";
+		if (!empty($body)) {
+            $body = json_encode($body);
+            $body = escapeshellarg($body); // POCOR-8994 <-- wrap & escape properly
         }
 	
         $username = isset($params['username']) ? $params['username'] : null;

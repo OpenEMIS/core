@@ -10,7 +10,7 @@ use Cake\I18n\Time;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\Http\Client;
-use Cake\Network\Exception\NotFoundException;
+use Cake\Http\Exception\NotFoundException;
 use Cake\Log\Log;
 use Cake\Utility\Hash;
 use Cake\Datasource\ConnectionManager;
@@ -35,17 +35,17 @@ class PullBehavior extends Behavior
     private $changes = false;
     private $newValues = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
 
         parent::initialize($config);
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $type = $ConfigItems->value('external_data_source_type');
 
         $this->type = $type;
 
         if ($this->type != 'None') {
-            $ExternalDataSourceAttributesTable = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+            $ExternalDataSourceAttributesTable = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
             $this->attributes = $ExternalDataSourceAttributesTable
                 ->find('list', [
                     'keyField' => 'attribute_field',
@@ -71,7 +71,7 @@ class PullBehavior extends Behavior
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
@@ -120,13 +120,13 @@ class PullBehavior extends Behavior
         $extra['patchEntity'] = true;
 
         $event = $model->dispatchEvent('ControllerAction.Model.pull.beforeAction', [$extra], $this);
-        if ($event->isStopped()) { return $event->result; }
-        if ($event->result instanceof Table) {
-            $model = $event->result;
+        if ($event->isStopped()) { return $event->getResult(); }
+        if ($event->getResult() instanceof Table) {
+            $model = $event->getResult();
         }
 
         $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
-        $sessionKey = $model->registryAlias() . '.primaryKey';
+        $sessionKey = $model->getRegistryAlias() . '.primaryKey';
         $contain = [];
 
         if (empty($ids)) {
@@ -134,7 +134,7 @@ class PullBehavior extends Behavior
                 $ids = $model->Session->read($sessionKey);
             } else if (!empty($model->getQueryString(null, 'data'))) {
                 // Query string logic not implemented yet, will require to check if the query string contains the primary key
-                $primaryKey = $model->primaryKey();
+                $primaryKey = $model->getPrimaryKey();
                 $ids = $model->getQueryString($primaryKey, 'data');
             }
         }
@@ -143,7 +143,7 @@ class PullBehavior extends Behavior
 
         foreach ($model->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
-                $contain[] = $assoc->name();
+                $contain[] = $assoc->getName();
             }
         }
 
@@ -159,42 +159,42 @@ class PullBehavior extends Behavior
         }
 
         $event = $model->dispatchEvent('ControllerAction.Model.pull.afterQuery', [$entity, $extra], $this);
-        if ($event->isStopped()) { return $event->result; }
+        if ($event->isStopped()) { return $event->getResult(); }
 
         if ($entity) {
             if ($request->is(['post', 'put'])) {
-                $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
+                $submit = ($request->getData('submit') != NULL) ? $request->getData('submit') : 'save';
                 $patchOptions = new ArrayObject([]);
                 $queryStringData = new ArrayObject($model->getQueryString(null, 'data'));
                 $params = [$entity, $queryStringData, $patchOptions, $extra];
 
                 if ($submit == 'save') {
                     $event = $model->dispatchEvent('ControllerAction.Model.pull.beforePatch', $params, $this);
-                    if ($event->isStopped()) { return $event->result; }
+                    if ($event->isStopped()) { return $event->getResult(); }
 
                     $patchOptionsArray = $patchOptions->getArrayCopy();
                     $queryString = $queryStringData->getArrayCopy();
                     if ($extra['patchEntity']) {
                         $entity = $model->patchEntity($entity, $queryString, $patchOptionsArray);
                         $event = $model->dispatchEvent('ControllerAction.Model.edit.afterPatch', $params, $this);
-                        if ($event->isStopped()) { return $event->result; }
+                        if ($event->isStopped()) { return $event->getResult(); }
                     }
                     $process = function ($model, $entity) {
                         return $model->save($entity);
                     };
                     $event = $model->dispatchEvent('ControllerAction.Model.pull.beforeSave', [$entity, $queryStringData, $extra], $this);
-                    if ($event->isStopped()) { return $event->result; }
-                    if (is_callable($event->result)) {
-                        $process = $event->result;
+                    if ($event->isStopped()) { return $event->getResult(); }
+                    if (is_callable($event->getResult())) {
+                        $process = $event->getResult();
                     }
                     $result = $process($model, $entity);
 
                     if (!$result) {
-                        Log::write('debug', $entity->errors());
+                        Log::write('debug', $entity->getErrors());
                     }
 
                     $event = $model->dispatchEvent('ControllerAction.Model.pull.afterSave', $params, $this);
-                    if ($event->isStopped()) { return $event->result; }
+                    if ($event->isStopped()) { return $event->getResult(); }
 
                     if ($result) {
                         $mainEvent->stopPropagation();
@@ -206,7 +206,7 @@ class PullBehavior extends Behavior
         }
 
         $event = $model->dispatchEvent('ControllerAction.Model.pull.afterAction', [$entity, $extra], $this);
-        if ($event->isStopped()) { return $event->result; }
+        if ($event->isStopped()) { return $event->getResult(); }
 
         if (!$entity) {
             $mainEvent->stopPropagation();
@@ -223,7 +223,7 @@ class PullBehavior extends Behavior
     public function pullBeforePatch(Event $event, Entity $entity, ArrayObject $queryString, ArrayObject $patchOption, ArrayObject $extra)
     {
     	$model = $this->_table;
-    	$schema = $model->schema();
+    	$schema = $model->getSchema();
     	$dateFields = [];
     	foreach ($schema->columns() as $column) {
     		if ($schema->columnType($column) == 'date' || $schema->columnType($column) == 'time' || $schema->columnType($column) == 'datetime') {
@@ -235,7 +235,7 @@ class PullBehavior extends Behavior
     			$queryString[$key] = new Time($value);
     		}
     	}
-    	$UserNationalitiesTable = TableRegistry::get('User.UserNationalities');
+    	$UserNationalitiesTable = TableRegistry::getTableLocator()->get('User.UserNationalities');
     	$userNationalities = $UserNationalitiesTable->find()->where([
     		$UserNationalitiesTable->aliasField('security_user_id') => $entity->getOriginal('id'),
     		$UserNationalitiesTable->aliasField('nationality_id') => $queryString['nationality_id']
@@ -253,7 +253,7 @@ class PullBehavior extends Behavior
 	    	];
     	}
 
-    	$UserIdentitiesTable = TableRegistry::get('User.Identities');
+    	$UserIdentitiesTable = TableRegistry::getTableLocator()->get('User.Identities');
     	$userIdentity = $UserIdentitiesTable->find()->where([
     		$UserIdentitiesTable->aliasField('security_user_id') => $entity->getOriginal('id'),
     		$UserIdentitiesTable->aliasField('identity_type_id') => $queryString['identity_type_id'],
@@ -281,7 +281,7 @@ class PullBehavior extends Behavior
 
     public function pullAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
         $model = $this->_table;
-        $errors = $entity->errors();
+        $errors = $entity->getErrors();
         if (empty($errors)) {
             $model->Alert->success('general.edit.success');
 
@@ -289,7 +289,7 @@ class PullBehavior extends Behavior
             $nationalityId = $entity->nationality_id;
 
             if (!empty($nationalityId)) {
-                $UserNationalitiesTable = TableRegistry::get('User.UserNationalities');
+                $UserNationalitiesTable = TableRegistry::getTableLocator()->get('User.UserNationalities');
                 //unset all existing record
                 $UserNationalitiesTable->updateAll(
                     ['preferred' => 0],
@@ -329,7 +329,7 @@ class PullBehavior extends Behavior
                 $tokenUri = $this->attributes['token_uri'];
                 $privateKey = $this->attributes['private_key'];
 
-	            $credentialToken = TableRegistry::get('Configuration.ExternalDataSourceAttributes')->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
+	            $credentialToken = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes')->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
 	            $data = [
 	                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
 	                'assertion' => $credentialToken
@@ -372,7 +372,7 @@ class PullBehavior extends Behavior
 	                $this->newValues['date_of_birth'] = $this->setDateChanges($entity->date_of_birth, $this->getValue($body['data'], $this->dateOfBirthMapping), $this->dateOfBirthMapping);
                     $this->newValues['address'] = $this->setChanges($entity->address, $this->getValue($body['data'], $this->addressMapping), $this->addressMapping);
                     $this->newValues['postal_code'] = $this->setChanges($entity->postal_code, $this->getValue($body['data'], $this->postalMapping), $this->postalMapping);
-	                $NationalitiesTable = TableRegistry::get('FieldOption.Nationalities');
+	                $NationalitiesTable = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
 	                $nationalityName = trim($this->getValue($body['data'], $this->nationalityMapping));
 	                $nationalityArr = [
 	                    'id' => null,
@@ -398,7 +398,7 @@ class PullBehavior extends Behavior
 	                }
 	                $this->newValues['nationality_id'] = $this->setChanges($entity->main_nationality, $nationalityArr, $this->nationalityMapping);
 
-	                $IdentityTypesTable = TableRegistry::get('FieldOption.IdentityTypes');
+	                $IdentityTypesTable = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
 	                $identityTypeName = trim($this->getValue($body['data'], $this->identityTypeMapping));
 	                $identityTypeArr = [
 	                    'id' => null,
@@ -423,7 +423,7 @@ class PullBehavior extends Behavior
 	                }
 	                $this->newValues['identity_type_id'] = $this->setChanges($entity->main_identity_type, $identityTypeArr, $this->identityTypeMapping);
 
-	                $genders = TableRegistry::get('User.Genders')->find()->select(['id', 'name'])->hydrate(false)->toArray();
+	                $genders = TableRegistry::getTableLocator()->get('User.Genders')->find()->select(['id', 'name'])->enableHydration(false)->toArray();
 	                $genderName = __(trim($this->getValue($body['data'], $this->genderMapping)));
 	                $genderArr = current($genders);
 	                foreach ($genders as $key => $value) {
@@ -445,9 +445,9 @@ class PullBehavior extends Behavior
     	                        'title' => __('Synchronisation')
     	                    ],
     	                    'url' => [
-    	                        'plugin' => $this->_table->controller->plugin,
-    	                        'controller' => $this->_table->controller->name,
-    	                        'action' => $this->_table->alias(),
+    	                        'plugin' => $this->_table->controller->getPlugin(),
+    	                        'controller' => $this->_table->controller->getName(),
+    	                        'action' => $this->_table->getAlias(),
     	                        '0' => 'pull',
     	                        '1' => $this->_table->paramsEncode(['id' => $entity->getOriginal('id')])
     	                    ]

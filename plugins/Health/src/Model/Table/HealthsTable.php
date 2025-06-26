@@ -9,6 +9,7 @@ use Cake\ORM\ResultSet;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -17,9 +18,9 @@ class HealthsTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_healths');
+        $this->setTable('user_healths');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
@@ -27,6 +28,8 @@ class HealthsTable extends ControllerActionTable
         // $this->addBehavior('ClassExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         
         $this->addBehavior('Health.Health');
+        //$this->addBehavior('User.UserTab');
+        $this->addBehavior('Institution.InstitutionTab');
 
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
@@ -58,17 +61,43 @@ class HealthsTable extends ControllerActionTable
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
+        $userID = $this->getUserID();
+        $institutionID = $this->getInstitutionID();
+        $studentID = $this->getStudentID();
         // always redirect to view page if got record
         if ($data->count() == 1) {
             $entity = $data->first();
             $action = $this->url('view');
-            $action[1] = $this->paramsEncode(['id' => $entity->id]);
+            if($institutionID != '' && $studentID != ''){
+                $action[1] = $this->paramsEncode([
+                    'id' => $entity->id,
+                    'user_id' => $userID,
+                    'student_id' => $studentID,
+                    'institution_id' => $institutionID
+                ]);
+            }else{
+                if($this->request->getParam('plugin') == 'Profile' && $this->request->getParam('controller') == 'Profiles' && $this->request->getParam('action') == 'Healths'){
+                    $action[1] = $this->paramsEncode([
+                        'id' => $entity->id,
+                        'user_id' => $userID,
+                        'staff_id' =>  $userID
+                    ]);
+                }else{
+                    $action[1] = $this->paramsEncode([
+                        'id' => $entity->id,
+                        'user_id' => $userID,
+                        'staff_id' =>  $userID,
+                        'institution_id' => $institutionID
+                    ]);
+                }
+            }
+            
             $event->stopPropagation();
             return $this->controller->redirect($action);
         }
         
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){
+        if($this->request->getParam('controller') == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Institutions','Overview','Staff - Health');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -86,7 +115,7 @@ class HealthsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Students'){
+        }elseif($this->request->getParam('controller') == 'Students'){
             $is_manual_exist = $this->getManualUrl('Institutions','Overview','Students - Health');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -105,7 +134,7 @@ class HealthsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories'){ 
+        }elseif($this->request->getParam('controller') == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Overview','Health');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -124,7 +153,7 @@ class HealthsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Profiles'){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){ 
             $is_manual_exist = $this->getManualUrl('Personal','Overview','Health');       
             if(!empty($is_manual_exist)){ 
                 $btnAttr = [
@@ -167,13 +196,13 @@ class HealthsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldBloodType(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldBloodType(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = $this->getSelectOptions('Health.blood_types');
         return $attr;
     }
 
-    public function onUpdateFieldHealthInsurance(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldHealthInsurance(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = $this->getSelectOptions('general.yesno');
         return $attr;
@@ -184,9 +213,11 @@ class HealthsTable extends ControllerActionTable
         $this->field('blood_type');
         $this->field('health_insurance', ['after' => 'medical_facility']);
         $this->field('file_content', ['after' => 'health_insurance','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $userID = $this->getUserID();
+        $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator->allowEmpty('file_content');
@@ -242,9 +273,7 @@ class HealthsTable extends ControllerActionTable
 
     //POCOR-6131
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-        $session = $this->request->session();
-        // $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $studentUserId = $session->read('Student.Students.id');
+        $userID = $this->getUserID();
 
         $query
         ->select([
@@ -253,7 +282,39 @@ class HealthsTable extends ControllerActionTable
         ])
         ->where([
             // $this->aliasField('security_user_id = ').$staffUserId
-            $this->aliasField('security_user_id') => $studentUserId
+            $this->aliasField('security_user_id') => $userID
         ]);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'blood_type') {
+            return __('Blood Type');
+        } elseif ($field == 'doctor_name') {
+            return __('Doctor Name');
+        }elseif ($field == 'doctor_contact') {
+            return __('Doctor Contact');
+        } elseif ($field == 'medical_facility') {
+            return __('Medical Facility');
+        } elseif ($field == 'health_insurance') {
+            return __('Health Insurance');
+        } elseif ($field == 'file_content') {
+            return __('Attachment');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        }elseif ($field == 'created_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    //POCOR-8293
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+        $userId = $this->getUserID();
+        $query->where([ $this->aliasField('security_user_id') => $userId]);
+        return $query;
     }
 }

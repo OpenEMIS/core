@@ -5,32 +5,35 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Http\Client;
+use Cake\Http\ServerRequest;
 use Page\Traits\EncodingTrait;
+use Cake\Event\EventInterface;
 
 class ConfigurationsController extends AppController
 {
 
     use EncodingTrait;
 
-    public function initialize()
+    public function initialize(): void
     {
-        //print_r('hasi');
         parent::initialize();
-        //print_r('hasasasi');
         $this->loadComponent('Configuration.Configuration');
-        //print_r('hasi123');
         $this->ControllerAction->model('Configuration.ConfigItems', ['index', 'view', 'edit']);
-       // print_r('hasi343243');
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
         $header = 'System Configurations';
 
-        $this->Navigation->addCrumb($header, ['plugin' => null, 'controller' => $this->name, 'action' => 'index']);
+        $this->Navigation->addCrumb($header, ['plugin' => null, 'controller' => $this->getName(), 'action' => 'index']);
 
         $this->set('contentHeader', __($header));
+    }
+
+    public function AutomatedStudentEnrollment() //POCOR-8689
+    { 
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigAutomatedStudentEnrollments']);
     }
 
     public function Webhooks()
@@ -48,7 +51,6 @@ class ConfigurationsController extends AppController
     }
     public function AuthSystemAuthentications()
     {
-        // print_r('hi'); die;
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigSystemAuthentications']);
     }
     public function ExternalDataSource()
@@ -63,9 +65,14 @@ class ConfigurationsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigAdministrativeBoundaries']);
     }
+    public function Theme()
+    {
+        return $this->redirect(['plugin' => 'Theme', 'controller' => 'Themes', 'action' => 'index', 'querystring' => $this->encode($this->request->getQuery())]);
+    }
+
     public function Themes()
     {
-        return $this->redirect(['plugin' => 'Theme', 'controller' => 'Themes', 'action' => 'index', 'querystring' => $this->encode($this->request->query)]);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Theme.Themes']);
     }
     public function StaffTransfers()
     {
@@ -76,7 +83,7 @@ class ConfigurationsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigStaffReleases']);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
@@ -94,6 +101,7 @@ class ConfigurationsController extends AppController
             ])
             ->innerJoin(['ConfigItems' => 'config_items'], [
                 'ConfigItems.code' => 'external_data_source_type',
+                //$ExternalAttributes->aliasField('external_data_source_type').' = ConfigItems.value'
                 $ExternalAttributes->aliasField('external_data_source_type').' = ConfigItems.name' //POCOR-7981
             ])
             ->toArray();
@@ -111,12 +119,12 @@ class ConfigurationsController extends AppController
         ];
 
         $fieldMapping = [
-            '{page}' => $this->request->query('page'),
-            '{limit}' => $this->request->query('limit'),
-            '{first_name}' => $this->request->query('first_name'),
-            '{last_name}' => $this->request->query('last_name'),
-            '{identity_number}' => $this->request->query('identity_number'),
-            '{date_of_birth}' => $this->request->query('date_of_birth')
+            '{page}' => $this->request->getQuery('page'),
+            '{limit}' => $this->request->getQuery('limit'),
+            '{first_name}' => $this->request->getQuery('first_name'),
+            '{last_name}' => $this->request->getQuery('last_name'),
+            '{identity_number}' => $this->request->getQuery('identity_number'),
+            '{date_of_birth}' => $this->request->getQuery('date_of_birth')
         ];
         $http = new Client();
         $response = $http->post($attributes['token_uri'], $data);
@@ -150,7 +158,7 @@ class ConfigurationsController extends AppController
         if (in_array($action, ['generateServerAuthorisationToken', 'getExternalUsers'])) {
             return true;
         }
-        if ($this->request->param('action') == 'setAlert') {
+        if ($this->request->getParam('action') == 'setAlert') {
             return true;
         }
     }
@@ -158,9 +166,9 @@ class ConfigurationsController extends AppController
     public function setAlert()
     {
         $this->autoRender = false;
-        if ($this->request->query('message') && $this->request->query('alertType')) {
-            $alertType = $this->request->query('alertType');
-            $alertMessage = $this->request->query('message');
+        if ($this->request->getQuery('message') && $this->request->getQuery('alertType')) {
+            $alertType = $this->request->getQuery('alertType');
+            $alertMessage = $this->request->getQuery('message');
             $this->Alert->$alertType($alertMessage);
         }
     }
@@ -177,4 +185,24 @@ class ConfigurationsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalDataSourceExam']);
     }
       //POCOR-7531 end
+
+    public function getConfigItemValue()
+    {
+        $requestData = $this->request->input('json_decode', true);
+        $requestDataParams = $requestData['params'];
+        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemsData = $ConfigItemsTable->findByCode($requestDataParams)->first();
+
+        if ($ConfigItemsData) {
+            $configItemValue = !empty($ConfigItemsData->value) ? $ConfigItemsData->value : $ConfigItemsData->default_value;
+            echo json_encode($configItemValue, JSON_PARTIAL_OUTPUT_ON_ERROR); die;
+        } else {
+            throw new NotFoundException('Configuration item not found');
+        }
+    }
+
+    public function ExternalDataSourceLMS()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ExternalDataSourceLMS']);
+    }
 }

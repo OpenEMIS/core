@@ -34,14 +34,9 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         addIdentityType: addIdentityType,
         setExternalSourceUrl: setExternalSourceUrl,
         resetExternalVariable: resetExternalVariable,
-        getGenders: getGenders,
-        getUniqueOpenEmisId: getUniqueOpenEmisId,
         getAddNewStaffConfig: getAddNewStaffConfig,
         getStaffTransfersByTypeConfig: getStaffTransfersByTypeConfig,
         getStaffTransfersByProviderConfig: getStaffTransfersByProviderConfig,
-        getContactTypes: getContactTypes,
-        getIdentityTypes: getIdentityTypes,
-        getNationalities: getNationalities,
         getIdentityTypesExternalSave: getIdentityTypesExternalSave,
         getNationalitiesExternalSave: getNationalitiesExternalSave,
         getSpecialNeedTypes: getSpecialNeedTypes,
@@ -54,27 +49,16 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         getExternalSourceMapping: getExternalSourceMapping,
         getInstitution: getInstitution,
         addStaffTransferRequest: addStaffTransferRequest,
-        generatePassword: generatePassword,
         checkUserAge: checkUserAge,//POCOR-8071
         translate: translate,
         getPositionTypes: getPositionTypes,
         getFtes: getFtes,
         getPositions: getPositions,
         getStaffTypes: getStaffTypes,
-        getStaffPosititonGrades: getStaffPosititonGrades,//POCOR-5069
-        getStaffPosititonGradesids: getStaffPosititonGradesids,//POCOR-8108
+        getStaffPosititonGrades: getStaffPosititonGrades,//POCOR-9037
         getShifts: getShifts,
-        getInternalSearchData: getInternalSearchData,
-        getExternalSearchData: getExternalSearchData,
         saveStaffDetails: saveStaffDetails,
-        getAddressAreaId: getAddressAreaId,
-        getBirthplaceAreaId: getBirthplaceAreaId,
-        getAddressArea: getAddressArea,
-        getBirthplaceArea: getBirthplaceArea,
-        getStaffCustomFields: getStaffCustomFields,
-        checkUserAlreadyExistByIdentity: checkUserAlreadyExistByIdentity,
-        checkConfigForExternalSearch: checkConfigForExternalSearch,
-        getCspdData: getCspdData,
+        getConfigItemValue: getConfigItemValue,
     };
 
     var models = {
@@ -129,38 +113,68 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
 
     function getAddressAreaId () {
         selectedAddressAreaId = $window.localStorage.getItem('address_area_id');
+        if (selectedAddressAreaId !== null) {  // localStorage returns null if the item is not found
+            try {
         return JSON.parse(selectedAddressAreaId);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function getAddressArea () {
         selectedAddressArea = $window.localStorage.getItem('address_area');
+        if (selectedAddressArea !== null) {  // localStorage returns null if the item is not found
+            try {
         return JSON.parse(selectedAddressArea);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function getBirthplaceAreaId () {
-        selectedBirthplcaeAreaId = $window.localStorage.getItem('birthplace_area_id');
-        return JSON.parse(selectedBirthplcaeAreaId);
+        selectedBirthplaceAreaId = $window.localStorage.getItem('birthplace_area_id');
+        if (selectedBirthplaceAreaId !== null) {  // localStorage returns null if the item is not found
+            try {
+                return JSON.parse(selectedBirthplaceAreaId);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function getBirthplaceArea () {
-        selectedBirthplcaeArea = $window.localStorage.getItem('birthplace_area');
-        return JSON.parse(selectedBirthplcaeArea);
+        selectedBirthplaceArea = $window.localStorage.getItem('birthplace_area');
+        if (selectedBirthplaceArea !== null) {  // localStorage returns null if the item is not found
+            try {
+                return JSON.parse(selectedBirthplaceArea);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
-    function getStaffCustomFields(staffId){
-        var params = {
-            staff_id: staffId,
-        };
-        var deferred = $q.defer();
-        let url = angular.baseUrl + '/Institutions/staffCustomFields';
-        $http.post(url, {params: params})
-        .then(function(response){
-            deferred.resolve(response);
-        }, function(error) {
-            deferred.reject(error);
-        });
-        return deferred.promise;
-    }
 
     function translate(data) {
         KdOrmSvc.init({translation: 'translate'});
@@ -260,10 +274,10 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         return deferred.promise;
     }//POCOR-5069 ends
 
-    function getStaffPosititonGrades(){
+    function getStaffPosititonGrades(params){
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Institutions/getStaffPosititonGrades';
-        $http.get(url)
+        $http.post(url, {params: params})
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
@@ -672,6 +686,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
 
     function addStaffTransferRequest(data)
     {
+        // console.log(data);
         return StaffTransferIn.save(data);
     };
 
@@ -827,19 +842,6 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
             });
         return deferred.promise;
     };
-
-    function getGenders()
-    {
-        var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/getGenders/';
-        $http.get(url)
-            .then(function(response){
-                deferred.resolve(response);
-            }, function(error) {
-                deferred.reject(error);
-            });
-        return deferred.promise;
-    }
 
     function postAssignedStaff(data) {
         // console.log(data);
@@ -1004,29 +1006,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         .ajax({defer: true});
     }
 
-    function getUniqueOpenEmisId() {
-        var deferred = $q.defer();
-        var url = angular.baseUrl + '/Institutions/getUniqueOpenemisId/Staff';
-        $http.get(url)
-        .then(function(response){
-            deferred.resolve(response.data.openemis_no);
-        }, function(error) {
-            deferred.reject(error);
-        });
-        return deferred.promise;
-    }
 
-    function generatePassword() {
-        var deferred = $q.defer();
-        var url = angular.baseUrl + '/Institutions/getAutoGeneratedPassword';
-        $http.get(url)
-        .then(function(response){
-            deferred.resolve(response.data.password);
-        }, function(error) {
-            deferred.reject(error);
-        });
-        return deferred.promise;
-    }
 
     function getAddNewStaffConfig() {
         return ConfigItems
@@ -1050,64 +1030,12 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
                     code: 'restrict_staff_transfer_by_provider'})
             .ajax({defer: true});
     }
-
-    function getContactTypes() {
-        var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/getContactType/';
-        $http.get(url)
-            .then(function(response){
-                deferred.resolve(response);
-            }, function(error) {
-                deferred.reject(error);
-            });
-        return deferred.promise;
-    }
-
-    function getIdentityTypes() {
-        return IdentityTypes
-            .select()
-            .ajax({defer: true});
-    }
-
-    function getNationalities() {
-        var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/getNationalities/';
-        $http.get(url)
-            .then(function(response){
-                deferred.resolve(response);
-            }, function(error) {
-                deferred.reject(error);
-            });
-        return deferred.promise;
-    }
     function getSpecialNeedTypes() {
         return SpecialNeedTypes
             .select()
             .ajax({defer: true});
     }
 
-    /**
-     * Parameters are - identity_type_id, identity_number & nationality_id pass as a object
-     * If staff exist then user_exist will be 1 otherwise 0 & show the message as warning
-     * @required {identity_type_id} identity_type_id
-     * @required {identity_number} identity_number
-     * @required {user_id} security_user.id
-     * @returns {[{"user_exist":1,"status_code":2,"message":"User already exist with this nationality, identity type & identity type. Kindly select user from below list."}]}
-     */
-    function checkUserAlreadyExistByIdentity(params)
-    {
-        var deferred = $q.defer();
-        var url = angular.baseUrl + '/Institutions/checkUserAlreadyExistByIdentity';
-        $http.post(url, { params: params })
-            .then(function (response)
-            {
-                deferred.resolve(response);
-            }, function (error)
-            {
-                deferred.reject(error);
-            });
-        return deferred.promise;
-    }
     //POCOR-8071
     function checkUserAge(params)
     {
@@ -1124,30 +1052,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
             });
         return deferred.promise;
     }
-    //POCOR-8071
-    /**
-        * Based on showExternalSearch property need to hide external search step in form wizard
-        * @returns {Case 1: for None  [{"value":"None","showExternalSearch ":false}]}
-       *  @returns {Case 2: for rest values [{"value":"OpenEMIS Identity","showExternalSearch ":true}]}
-        */
-    function checkConfigForExternalSearch(nationality_id, identity_type_id)
-    {
-        var deferred = $q.defer();
-        let url = angular.baseUrl + '/Institutions/checkConfigurationForExternalSearch';
-        let params = {
-            'nationality_id' : nationality_id,
-            'identity_type_id' : identity_type_id
-        };
-        $http.post(url, {params: params})
-            .then(function (response)
-            {
-                deferred.resolve(response.data[0]);
-            }, function (error)
-            {
-                deferred.reject(error);
-            });
-        return deferred.promise;
-    }
+
 
 
     /**
@@ -1157,17 +1062,25 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
      * @returns { "status_code":200,"message":"Get user details successfully.","data":{"third_name":"\u062d\u0633\u0646","nationality_name":"\u0627\u0631\u062f\u0646\u064a","gender_id":1,"gender_name":"Male","date_of_birth":"1979-02-15","address":"\u0627\u0644\u0630\u0631\u0627\u0639\/\u0642\u0635\u0628\u0629 \u0639\u0645\u0627\u0646","identity_type_id":160,"identity_type_name":"Birth Certificate","middle_name":"\u0635\u0627\u0644\u062d","postal_code":"0011101100601","first_name":"\u062d\u0633\u0646","identity_number":"9791048083","last_name":"\u062e\u0644\u064a\u0644","mother_national_no":"9552016857","father_national_no":"9551018573"}}
      */
 
-    function getCspdData(params){
-        var deferred = $q.defer();
-        var url = angular.baseUrl + '/Institutions/getCspdData';
-        $http.post(url, { params: params })
-            .then(function (response)
-            {
-                deferred.resolve(response);
-            }, function (error)
-            {
-                deferred.reject(error);
+    function getConfigItemValue(code) {
+        var success = function(response, deferred) {
+            var results = response.data.data;
+            if (angular.isObject(results) && results.length > 0) {
+                var configItemValue = (results[0].value.length > 0) ? results[0].value : results[0].default_value;
+                deferred.resolve(configItemValue);
+            } else {
+                deferred.reject('There is no ' + code + ' configured');
+            }
+        };
+
+        return ConfigItems
+            .where({
+                code: code
+            })
+            .ajax({
+                success: success,
+                defer: true
             });
-        return deferred.promise;
     }
+
 };

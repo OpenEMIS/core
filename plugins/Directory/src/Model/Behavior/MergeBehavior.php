@@ -7,13 +7,13 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
-
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
+use Cake\ORM\Locator\TableLocator;
 
 /**
  * Class MergeBehavior
@@ -26,7 +26,7 @@ class MergeBehavior extends Behavior
      * @param array $config
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->_table->addBehavior('User.AdvancedNameSearch');
         $this->_table->addBehavior('User.AdvancedNameSearch');
@@ -37,7 +37,7 @@ class MergeBehavior extends Behavior
      * @return array
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.merge'] = 'merge';
@@ -92,10 +92,10 @@ class MergeBehavior extends Behavior
 
         if ($request->is(['post', 'put'])) {
             $entity = $first_entity;
-            $submit = isset($request->data['submit']) ? $request->data['submit'] : 'merge';
+            $submit = ($request->getData('submit') != null) ? $request->getData('submit') : 'merge';
             $patchOptions = new ArrayObject([]);
             $patchOptions['associations'] = $associations;
-            $requestData = new ArrayObject($request->data);
+            $requestData = new ArrayObject($request->getData());
 
             $params = [$entity, $requestData, $extra];
 
@@ -107,20 +107,20 @@ class MergeBehavior extends Behavior
                 $event = $model->dispatchEvent('ControllerAction.Model.merge.beforeSave', [$entity, $requestData, $extra], $this);
                 if ($event->isStopped()) {
                     $mainEvent->stopPropagation();
-                    return $event->result;
+                    return $event->getResult();
                 }
-                if (is_callable($event->result)) {
-                    $process = $event->result;
+                if (is_callable($event->getResult())) {
+                    $process = $event->getResult();
                 }
                 $result = $process($model, $entity);
 
                 if (!$result) {
-                    Log::write('debug', $entity->errors());
+                    Log::write('debug', $entity->getErrors());
                 }
 
                 $event = $model->dispatchEvent('ControllerAction.Model.merge.afterSave', $params, $this);
                 if ($event->isStopped()) {
-                    return $event->result;
+                    return $event->getResult();
                 }
                 if ($result) {
                     $mainEvent->stopPropagation();
@@ -139,7 +139,7 @@ class MergeBehavior extends Behavior
      * @return array
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onUpdateFieldFirstId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFirstId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'merge') {
             $entity = $attr['entity'];
@@ -159,7 +159,7 @@ class MergeBehavior extends Behavior
      * @return array
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onUpdateFieldMergeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldMergeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $model = $this->_table;
         if ($action == 'merge') {
@@ -167,12 +167,12 @@ class MergeBehavior extends Behavior
             $attr['target'] = ['key' => 'merge_id', 'name' => $model->aliasField('merge_id')];
             $attr['noResults'] = __('No Merge User found.');
             $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
-            $urlAction = $model->alias();
-            $attr['url'] = ['controller' => $model->controller->name, 'action' => $urlAction, 'ajaxUserAutocomplete'];
+            $urlAction = $model->getAlias();
+            $attr['url'] = ['controller' => $model->controller->getName(), 'action' => $urlAction, 'ajaxUserAutocomplete'];
             $Users = TableRegistry::get('User.Users');
-            $requestData = $model->request->data;
-            if (isset($requestData) && !empty($requestData[$model->alias()]['merge_id'])) {
-                $mergeId = $requestData[$model->alias()]['merge_id'];
+            $requestData = $model->request->getData();
+            if (isset($requestData) && !empty($requestData[$model->getAlias()]['merge_id'])) {
+                $mergeId = $requestData[$model->getAlias()]['merge_id'];
                 $mergeName = $Users->get($mergeId)->name_with_id;
                 $attr['attr']['value'] = $mergeName;
 
@@ -194,7 +194,7 @@ class MergeBehavior extends Behavior
         $this->_table->ControllerAction->autoRender = false;
 
         if ($this->_table->request->is(['ajax'])) {
-            $term = $this->_table->request->query['term'];
+            $term = $this->_table->request->getQuery('term');
 
             $Users = TableRegistry::get('User.Users');
             $UserIdentitiesTable = TableRegistry::get('User.Identities');
@@ -211,7 +211,7 @@ class MergeBehavior extends Behavior
                     $Users->aliasField('id')
                 ])
                 ->leftJoin(
-                    [$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()],
+                    [$UserIdentitiesTable->getAlias() => $UserIdentitiesTable->getTable()],
                     [
                         $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $Users->aliasField('id')
                     ]
@@ -336,63 +336,71 @@ class MergeBehavior extends Behavior
      */
     public function mergeAfterSave(Event $event, Entity $entity, ArrayObject $options, ArrayObject $extra)
     {
-        /** POCOR-6677 starts- added AND condition to not do anything when model is SecurityRoles*/
+        // POCOR-9015 start
         $model = $this->_table;
-
         $associations = $extra['associations'];
-
-        $base_id = $options[$model->alias()]['first_id'];
-        $merge_id = $options[$model->alias()]['merge_id'];
+        $base_id = $options[$model->getAlias()]['first_id'];
+        $merge_id = $options[$model->getAlias()]['merge_id'];
         $connection = ConnectionManager::get('default'); // Replace 'default' with your connection name
+
         $connection->disableForeignKeys();
-        $success = true;
         $connection->execute("SET FOREIGN_KEY_CHECKS = 0");
 
-        try {
-            foreach ($associations as $key => $association) {
+        $success = true;
+        $connection->transactional(function ($connection) use ($associations, $base_id, $merge_id, $model) {
+            foreach ($associations as $association) {
                 $table_name = $association['table_name'];
                 $column_name = $association['column_name'];
+
                 try {
                     $connection->execute("ALTER TABLE $table_name DISABLE KEYS");
                 } catch (\Exception $exception) {
                     $model->log($exception->getMessage(), 'debug');
                 }
-                $sql = "UPDATE $table_name SET $column_name = $base_id WHERE $column_name = $merge_id";
+
+                $updateSql = "UPDATE $table_name SET $column_name = $base_id WHERE $column_name = $merge_id";
                 try {
-                    $connection->execute($sql);
+                    $connection->execute($updateSql);
                 } catch (\Exception $exception) {
                     $model->log($exception->getMessage(), 'debug');
                 }
+
+                // Delete old records after updating
+                $deleteSql = "DELETE FROM $table_name WHERE $column_name = $merge_id";
+                try {
+                    $connection->execute($deleteSql);
+                } catch (\Exception $exception) {
+                    $model->log($exception->getMessage(), 'debug');
+                }
+
                 try {
                     $connection->execute("ALTER TABLE $table_name ENABLE KEYS");
                 } catch (\Exception $exception) {
                     $model->log($exception->getMessage(), 'debug');
                 }
             }
+
             if ($base_id && $merge_id) {
-                $sql = "UPDATE security_users set `status` = 0 where `id` = $merge_id";
+                $updateStatusSql = "UPDATE security_users SET `status` = 0 WHERE `id` = $merge_id";
                 try {
-                    $connection->execute($sql);
+                    $connection->execute($updateStatusSql);
                 } catch (\Exception $exception) {
                     $model->log($exception->getMessage(), 'debug');
                 }
             }
-            $connection->commit();
-        } catch (Exception $e) {
-            // Handle any exceptions or errors that occur during the operation
-            $connection->rollback();
-            $success = false;
-        }
+        });
+
         $connection->execute("SET FOREIGN_KEY_CHECKS = 1");
-        if ($success) {
-            $model->Alert->success(__('User Accounts Are Merged Successfully'), ['type' => 'string', 'reset' => true]);
-        }
-        if (!$success) {
-            $model->Alert->error(__('User Accounts Were Not Merged'), ['type' => 'string', 'reset' => true]);
-        }
         $connection->enableForeignKeys();
 
+        if ($success) {
+            $model->Alert->success(__('User Accounts Are Merged Successfully'), ['type' => 'string', 'reset' => true]);
+        } else {
+            $model->Alert->error(__('User Accounts Were Not Merged'), ['type' => 'string', 'reset' => true]);
+        }
+        // POCOR-9015 end
     }
+
 
     /**
      * @param $model
@@ -402,13 +410,13 @@ class MergeBehavior extends Behavior
      */
     private function getUserEntity($model, $user_field)
     {
-        $requestData = $model->request->data;
+        $requestData = $model->request->getData();
 //        Log::write('debug', $requestData);
         if ($user_field == 'first_id') {
-            $encodedParam = $model->request->params['pass'][1];
+            $encodedParam = $model->request->getAttribute('params')['pass'][1];
             $user_id = $model->ControllerAction->paramsDecode($encodedParam)['id'];
         } else {
-            $user_id = $requestData[$model->alias()][$user_field];
+            $user_id = $requestData[$model->getAlias()][$user_field];
         }
         $user_entity = null;
         $user_ids = empty($user_id) ? ['id' => -1] : ['id' => $user_id];
@@ -448,11 +456,10 @@ class MergeBehavior extends Behavior
         $results = $query->execute();
         $i = 0;
         foreach ($results as $result) {
-
-
             $column_name = $result['COLUMN_NAME'];
             $table_name = $result['TABLE_NAME'];
-            $table = TableRegistry::get($table_name);
+            $tableLocator = new TableLocator();
+            $table = $tableLocator->get($table_name);
             $count = 0;
             try {
                 $count = $table->find()
@@ -608,7 +615,8 @@ class MergeBehavior extends Behavior
         if (!$relatedField) {
             return null;
         }
-        $Table = TableRegistry::get($tableName);
+        $tableLocator = new TableLocator();
+        $Table = $tableLocator->get($tableName);
         try {
             $related = $Table->get($relatedField);
             return $related->name;

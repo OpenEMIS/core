@@ -19,9 +19,9 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
     private $workingDays = [];
     private $schoolClosedDays = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_classes');
+        $this->setTable('institution_classes');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -80,12 +80,22 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         $schoolClosedDays = $this->schoolClosedDays;
         $institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
+        $selectedArea = $requestData->area_education_id;
         $where = [];
+        //POCOR-8825 start
+        if ($areaId != -1 && $areaId != '') {
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }
+                $where['Institutions.area_id IN'] = $allselectedAreas;
+        } //POCOR-8825 end
         if ($institution_id != 0) {
             $where['Institutions.id'] = $institution_id;
-        }
-        if ($areaId != -1) {
-            $where['Institutions.area_id'] = $areaId;
         }
         $query
             ->find('byGrades', [
@@ -220,17 +230,17 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                 });
             })
         ;
-         
+
     }
 
 
-    
+
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $sheetData = $settings['sheet']['sheetData'];
         $newFields = $this->getClassFields();
-        
+
         $year = $sheetData['year'];
         $month = $sheetData['month'];
         $startDay = $sheetData['startDay'];
@@ -274,7 +284,7 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
 
     public function findByGrades(Query $query, array $options)
     {
-        $sortable = array_key_exists('sort', $options) ? $options['sort'] : false;
+        $sortable = isset($options['sort']) ? $options['sort'] : false;
 
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $EducationStages = TableRegistry::get('Education.EducationStages');
@@ -284,7 +294,8 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             'table' => 'institution_class_grades',
             'alias' => 'InstitutionClassGrades',
             'conditions' => [
-                'InstitutionClassGrades.institution_class_id = ' . $this->aliasField('id')
+                // 'InstitutionClassGrades.institution_class_id IS = ' . $this->aliasField('id')
+                'InstitutionClassGrades.institution_class_id = ' . $this->aliasField('id') //POCOR-8902 
             ]
         ];
 
@@ -296,11 +307,11 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             ->join([$join])
 
             ->innerJoin(
-                [$EducationGrades->alias() => $EducationGrades->table()],
+                [$EducationGrades->getAlias() => $EducationGrades->getTable()],
                 [$EducationGrades->aliasField('id = ') . 'InstitutionClassGrades.education_grade_id']
             )
             ->innerJoin(
-                [$EducationStages->alias() => $EducationStages->table()],
+                [$EducationStages->getAlias() => $EducationStages->getTable()],
                 [$EducationStages->aliasField('id = ') . 'EducationGrades.education_stage_id']
             );
 
@@ -373,8 +384,8 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         //     'field' => 'total_unmark',
         //     'type' => 'string',
         //     'label' => 'Unmarked'
-        // ]; 
-                     
+        // ];
+
         //End of POCOR-7039
         $newFields[] = [
             'key' => 'InstitutionClasses.staff_id',
@@ -401,12 +412,20 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                 'institution_field_alias' => $this->aliasField($this->association('Institutions')->foreignKey())
             ]);
         }
-            
-        $institutionList = $query
-            ->group('institution_id')
-            ->extract('institution_id')
-            ->toArray();
 
+        $institutionListData = $query
+                    ->select(['institution_id'])
+                    ->distinct(['institution_id']);
+
+        $institutionList =  $institutionListData->all()->toList();
+        //POCOR-8803 start
+        if($institutionList)
+        {
+            $institutionList = array_map(function($entity) {
+                return $entity->institution_id;
+            }, $institutionList);
+        }  
+        //POCOR-8803 end
         return $this->getInstitutionClosedDates($startDate, $endDate, $institutionList);
     }
 
@@ -453,5 +472,26 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             ];
         }
         return $sheets;
+    }
+
+    /**
+     * POCOR-8825
+     * Recursively retrieves all child areas of a given area ID.
+     *
+     * This function is used to build a hierarchical list of child areas
+     * @param int $id The parent area ID to fetch children for.
+     * @param array $idArray An array of IDs to track already retrieved areas.
+     * @return array Updated list of area IDs including the children.
+    */
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                        ->where([$Areas->aliasField('parent_id') => $id
+                            ])->toArray();
+       foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
     }
 }

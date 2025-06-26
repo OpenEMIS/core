@@ -5,7 +5,7 @@ use Cake\Validation\Validator;
 
 class CompetencyGradingOptionsTable extends CompetenciesAppTable {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('GradingTypes', ['className' => 'Competency.CompetencyGradingTypes', 'foreignKey' => 'competency_grading_type_id']);
@@ -24,7 +24,7 @@ class CompetencyGradingOptionsTable extends CompetenciesAppTable {
         }
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
 
         $validator

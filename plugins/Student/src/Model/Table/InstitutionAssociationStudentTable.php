@@ -8,13 +8,13 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\ORM\ResultSet;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
 class InstitutionAssociationStudentTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         //$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -33,15 +33,17 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('view', false);
         $this->toggle('remove', false);
+
+        $this->addBehavior('Institution.InstitutionTab');
     }
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
-		$session = $this->request->session();
-		if ($this->controller->name == 'Profiles') {
+		$session = $this->request->getSession();
+		if ($this->controller->getName() == 'Profiles') {
             if ($session->read('Auth.User.is_guardian') == 1) {
                 $sId = $session->read('Student.ExaminationResults.student_id');
             } else {
-                 $sId = $session->read('Student.Students.id');
+                 $sId = $this->getUserID();
             }
 			if (!empty($sId)) {
 				$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
@@ -49,7 +51,7 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
 				$studentId = $session->read('Auth.User.id');
 			}
 		} else {
-				$studentId = $session->read('Student.Students.id');
+				$studentId = $this->getStudentID();
 		}
 		
 		// end POCOR-1893
@@ -60,7 +62,7 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
         }
         $extra['options']['sortWhitelist'] = $sortList;
 
-        $query->where([$this->aliasField('security_user_id') => $studentId]);
+        $query->where([$this->aliasField('security_user_id IS') => $studentId]);
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
 	}
 
@@ -100,6 +102,12 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
     {
         if ($field == 'institution_association_id') {
             return __('Name');
+        } elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        } elseif ($field == 'student_status_id') {
+            return __('Student Status');
         }
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
@@ -107,7 +115,11 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
     private function setupTabElements()
     {
         $options['type'] = 'student';
-        $tabElements = $this->controller->getAcademicTabElements($options);
+        //$tabElements = $this->controller->getAcademicTabElements($options);
+        $tabElements = $this->getAcademicTabElements($options);
+        if($this->controller->getName() == 'GuardianNavs' || $this->controller->getName() == 'Directories') {
+			$tabElements = $this->controller->getAcademicTabElements($options);
+		}
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Associations');
     }
@@ -162,4 +174,38 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
     //     $countFemale = $this->getFemaleCountByAssociations($id);
     //     $this->InstitutionAssociations->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
     // }
+
+    //POCOR-8414 start
+    public function afterAction(Event $event, ArrayObject $options)
+    {
+        $plugin = __($this->controller->getPlugin());
+        if($plugin != 'Profile' && $plugin != 'GuardianNav'){
+            $id = $this->request->getAttribute('params')['pass'][1];
+            //POCOR-8489 --Start
+            if(isset($id)) {
+				$DecodedQueryString = $this->paramsDecode($id);
+				$userId = $DecodedQueryString['user_id'] ?? $DecodedQueryString['student_id'];
+			}else {
+				$queryString = $this->getQueryString();
+				$userId = $queryString['student_id'];
+			}
+            //POCOR-8489 --End
+            $Users = TableRegistry::get('User.Users');
+            $result = $Users
+                ->find()
+                ->select(['first_name','last_name'])
+                ->where(['id' =>  $userId])
+                ->first();
+
+            $fullName = $result->first_name.' '.$result->last_name;
+            try {
+                
+                $gettabName = 'Houses';
+                $this->controller->set('contentHeader', $fullName . ' - ' . $gettabName);
+                //$this->controller->set('contentHeader', $plugin);
+            } catch (RecordNotFoundException $e) {
+                Log::write('error', $e->getMessage());
+            }
+        }
+    }
 }

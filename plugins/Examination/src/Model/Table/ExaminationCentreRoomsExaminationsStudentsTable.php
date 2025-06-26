@@ -12,7 +12,7 @@ use Cake\ORM\Entity;
 
 class ExaminationCentreRoomsExaminationsStudentsTable extends ControllerActionTable {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('ExaminationCentreRooms', ['className' => 'Examination.ExaminationCentreRooms']);

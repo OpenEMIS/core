@@ -131,7 +131,7 @@ function InstitutionsResultsController($q,
 
             var promise;
 
-            $scope.editPermission = result[0].is_editable;
+             $scope.editPermission = result[0].is_editable;
             $scope.subjects = result;
 
             promise = InstitutionsResultsSvc.getStudentStatusId("CURRENT");
@@ -250,7 +250,7 @@ function InstitutionsResultsController($q,
                         });
                     }, function (error) {
                         params.data.save_error[params.colDef.field] = true;
-                        console.log(error);
+                        console.error(error);
                         AlertSvc.error($scope, 'There was an error when saving the result');
                         params.api.refreshCells({
                             rowNodes: [params.node],
@@ -265,8 +265,8 @@ function InstitutionsResultsController($q,
             .then(handleSuccessGetTranslatedGridLocale, handleErrorGetTranslatedGridLocale);
 
         function handleErrorGetTranslatedGridLocale(error) {
-            console.log('handleErrorGetTranslatedGridLocale');
-            console.log(JSON.stringify(error));
+            console.error('handleErrorGetTranslatedGridLocale');
+            console.error(JSON.stringify(error));
 
         }
 
@@ -288,6 +288,9 @@ function InstitutionsResultsController($q,
             if ($scope.gridOptions != null) {
                 var textToTranslate = [];
                 angular.forEach(response.data, function (value, key) {
+                    if (value.headerName == 'Total Mark' && $scope.dynamicTotalMarkHeader) { //POCOR-8146
+                        value.headerName = $scope.dynamicTotalMarkHeader;
+                    }
                     textToTranslate.push(value.headerName);
                 });
                 InstitutionsResultsSvc.translate(textToTranslate)
@@ -300,7 +303,7 @@ function InstitutionsResultsController($q,
                             $scope.gridOptions.api.sizeColumnsToFit();
                         }
                     }, function (error) {
-                        console.log(error);
+                        console.error(error);
                     });
             }
             return true;
@@ -384,6 +387,7 @@ function InstitutionsResultsController($q,
             promise = InstitutionsResultsSvc.getNewRowData(
                 options);
             return promise.then(function (result) {
+                // console.log(result);
                 return result;
             });
         }
@@ -411,7 +415,7 @@ function InstitutionsResultsController($q,
         function handleGetSubjectEditPermissionSetPeriods(result) {
             // console.log('handleGetSubjectEditPermissionSetPeriods');
             // console.log(JSON.stringify(result));
-            var promise;
+             var promise;
             $scope.editPermissionForSelectedSubject = result;
             promise = InstitutionsResultsSvc.getPeriods(
                 $scope.assessment_id,
@@ -479,7 +483,7 @@ function InstitutionsResultsController($q,
                     AlertSvc.warning($scope, 'You have no permission for this subject.');
                 }
             }, function (error) {
-                console.log(error);
+                console.error(error);
             });
     };
 

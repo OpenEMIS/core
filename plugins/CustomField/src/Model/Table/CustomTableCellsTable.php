@@ -6,16 +6,17 @@ use App\Model\Table\AppTable;
 
 class CustomTableCellsTable extends AppTable
 {
-	public function initialize(array $config)
+	public function initialize(array $config): void
     {
 		parent::initialize($config);
 		$this->belongsTo('CustomFields', ['className' => 'CustomField.CustomFields']);
 		$this->belongsTo('CustomRecords', ['className' => 'CustomField.CustomRecords']);
 	}
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         $validator
             // TEXT validation
             ->allowEmpty('text_value')

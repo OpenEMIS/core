@@ -10,12 +10,12 @@ use Cake\Event\Event;
 
 class OpenEmisBehavior extends Behavior
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 4];
@@ -30,8 +30,9 @@ class OpenEmisBehavior extends Behavior
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(Event $event, ArrayObject $extra = null)
     {
+        $extra = $extra ?? new ArrayObject(); //POCOR-8486
         $action = $this->_table->action;
         switch ($action) {
             case 'index':
@@ -65,10 +66,10 @@ class OpenEmisBehavior extends Behavior
         $model = $this->_table;
         if ($model->action == 'index' || $model->action == 'view') {
             $modal = [];
-            if($model->getHeader($model->alias()) == 'Immunizations') {
+            if($model->getHeader($model->getAlias()) == 'Immunizations') {
                 $title = 'Vaccinations';
             }else {
-                $title = $model->getHeader($model->alias());
+                $title = $model->getHeader($model->getAlias());
             }
             $modal['title'] = $title; //$modal['title'] = $model->alias();
             $modal['content'] = __('All associated information related to this record will also be removed.');
@@ -85,11 +86,11 @@ class OpenEmisBehavior extends Behavior
                 '<button type="submit" class="btn btn-default">' . __('Delete') . '</button>'
             ];
             $modal['cancelButton'] = true;
-
-            if (!isset($model->controller->viewVars['modals'])) {
+            $modelViewVar = $model->controller->viewBuilder()->getVars()['modals'];
+            if (!isset($modelViewVar)) {
                 $model->controller->set('modals', ['delete-modal' => $modal]);
             } else {
-                $modals = array_merge($model->controller->viewVars['modals'], ['delete-modal' => $modal]);
+                $modals = array_merge($modelViewVar, ['delete-modal' => $modal]);
                 $model->controller->set('modals', $modals);
             }
         }
@@ -101,19 +102,22 @@ class OpenEmisBehavior extends Behavior
 
         $access = $model->AccessControl;
         $toolbarButtons = $extra['toolbarButtons'];
-        foreach ($toolbarButtons->getArrayCopy() as $key => $buttons) {
-            if (array_key_exists('url', $buttons)) {
-                if ($buttons['url'] != '#' && !$access->check($buttons['url'])) {
-                    $toolbarButtons->offsetUnset($key);
+        if(!empty($toolbarButtons)) { //POCOR-8486
+            foreach ($toolbarButtons->getArrayCopy() as $key => $buttons) {
+                if (isset($buttons['url'])) {
+                    if ($buttons['url'] != '#' && !$access->check($buttons['url'])) {
+                        $toolbarButtons->offsetUnset($key);
+                    }
                 }
             }
         }
-
         $indexButtons = $extra['indexButtons'];
-        foreach ($indexButtons->getArrayCopy() as $key => $buttons) {
-            if ($buttons['url'] != '#' && array_key_exists('url', $buttons)) {
-                if (!$access->check($buttons['url'])) {
-                    $indexButtons->offsetUnset($key);
+        if(!empty($indexButtons))  { //POCOR-8486
+            foreach ($indexButtons->getArrayCopy() as $key => $buttons) {
+                if ($buttons['url'] != '#' && isset($buttons['url'])) {
+                    if (!$access->check($buttons['url'])) {
+                        $indexButtons->offsetUnset($key);
+                    }
                 }
             }
         }
@@ -128,7 +132,7 @@ class OpenEmisBehavior extends Behavior
         if ($extra->offsetExists('indexButtons')) {
             $model->controller->set('indexButtons', $extra['indexButtons']);
         }
-        if ($extra['toolbarButtons']->offsetExists('back')) {
+        if (isset($extra['toolbarButtons']['back'])) {
             $model->controller->set('backButton', $extra['toolbarButtons']['back']);
         }
     }
@@ -146,7 +150,7 @@ class OpenEmisBehavior extends Behavior
                 $isDeleteButtonEnabled = $toolbarButtons->offsetExists('remove');
                 $isNotTransferOperation = $model->actions('remove') != 'transfer';
                 $isNotRestrictOperation = $model->actions('remove') != 'restrict';
-                $primaryKey = $model->primaryKey();
+                $primaryKey = $model->getPrimaryKey();
 
                 $ids = [];
                 if (is_array($primaryKey)) {
@@ -162,7 +166,8 @@ class OpenEmisBehavior extends Behavior
                 if ($isDeleteButtonEnabled && $isNotTransferOperation && $isNotRestrictOperation) {
                     // not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
                     // to attach primary key to the button attributes for delete operation
-                    if (array_key_exists('remove', $toolbarButtons)) {
+
+                    if ( $toolbarButtons->offsetExists('remove')) {
                         $toolbarButtons['remove']['attr']['field-value'] = $encodedIds;
                     }
                 }
@@ -198,15 +203,15 @@ class OpenEmisBehavior extends Behavior
         }
     }
 
-    public function indexAfterAction(Event $event, Query $query, $resultSet, ArrayObject $extra)
+    public function indexAfterAction(Event $event, Query|ResultSet $query = null, $resultSet = null, ArrayObject $extra =null)
     {
-        if (count($resultSet) == 0) {
-            $this->_table->Alert->info('general.noData');
+        if ($resultSet == null || count($resultSet) == 0) {
+            //$this->_table->Alert->info('general.noData'); //POCOR-8486
         }
         $extra['config']['form'] = ['class' => ''];
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(Event $event, Entity|bool $entity, ArrayObject $extra)
     {
         if (!$entity) {
             $this->_table->Alert->warning('general.notExists');
@@ -216,7 +221,7 @@ class OpenEmisBehavior extends Behavior
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         $model = $this->_table;
-        $errors = $entity->errors();
+        $errors = $entity->getErrors();
         if (empty($errors)) {
             $model->Alert->success('general.add.success');
         } else {
@@ -227,7 +232,7 @@ class OpenEmisBehavior extends Behavior
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $model = $this->_table;
-        $errors = $entity->errors();
+        $errors = $entity->getErrors();
         if (empty($errors)) {
             $model->Alert->success('general.edit.success');
         } else {
@@ -281,7 +286,7 @@ class OpenEmisBehavior extends Behavior
 
     private function initializeButtons(ArrayObject $extra)
     {
-        $model = $this->_table;
+        $model = $this->table();
         $controller = $model->controller;
 
         $toolbarButtons = new ArrayObject([]);
@@ -321,7 +326,7 @@ class OpenEmisBehavior extends Behavior
             if ($model->actions('add')) {
                 $toolbarButtons['add']['url'] = $model->url('add');
                 $toolbarButtons['add']['type'] = 'button';
-                $toolbarButtons['add']['label'] = '<i class="fa kd-add"></i>';
+                $toolbarButtons['add']['label'] = "<i class='fa kd-add'></i>";
                 $toolbarButtons['add']['attr'] = $toolbarAttr;
                 $toolbarButtons['add']['attr']['title'] = __('Add');
             }
@@ -347,7 +352,18 @@ class OpenEmisBehavior extends Behavior
             // edit button
             $toolbarButtons['back']['url'] = $model->url($backAction, 'QUERY');
             if ($model->actions('edit')) {
-                $toolbarButtons['edit']['url'] = $model->url('edit');
+                // echo "<pre>";print_r($model->url($backAction, 'QUERY')['action']);die;
+                //POCOR-8549 start
+                $toolbarButtons['edit']['url'] = $model->url('index');
+                if($model->url($backAction, 'QUERY')['action'] == 'InstitutionStatus' ){
+                    $toolbarButtons['edit']['url']['action'] = 'Institutions';
+                }else{
+                    $toolbarButtons['edit']['url']['action'] = $model->url($backAction, 'QUERY')['action'];
+                }
+                // $toolbarButtons['edit']['url']['action'] = $model->url($backAction, 'QUERY')['action'];
+
+                $toolbarButtons['edit']['url'][0] = 'edit';
+                //POCOR-8549 end
                 $toolbarButtons['edit']['type'] = 'button';
                 $toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
                 $toolbarButtons['edit']['attr'] = $toolbarAttr;
@@ -398,6 +414,7 @@ class OpenEmisBehavior extends Behavior
         }
 
         if ($model->actions('remove')) {
+            //$model->actions('remove')
             $indexButtons['remove']['strategy'] = $model->actions('remove');
             $removeUrl = 'remove';
             if ($model->actions('remove') == 'transfer') {

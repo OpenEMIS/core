@@ -11,7 +11,7 @@ class RuleBehavior extends Behavior
         'rule' => []
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -19,11 +19,11 @@ class RuleBehavior extends Behavior
         $class = str_replace('Rule', '', $class);
         $class = str_replace('Behavior', '', $class);
 
-        $this->_table->addRuleType($class, $this->config());
+        $this->_table->addRuleType($class, $this->getConfig());
         $this->rule = $class;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $eventMap = [

@@ -62,3 +62,24 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+## Larave Core API Setup Steps
+
+Steps to configure Exams Laravel V8:
+
+Requirements:
+PHP Version > 7.3
+
+
+Once taking pull of this V8 repo, the below commands needs to be followed:
+1. Run "cd api" command to get into api folder.
+2. Run "composer install" command to generate vendor folder.
+3. Copy .env.example and create .env file in api folder and setup the DB connections.
+4. Copy constants_default.php and save it as constants.php in api/config folder.
+5. Copy generateOtp.blade_default.php and save it as generateOtp.blade.php in api/resources/views folder.
+6. Copy registrationSuccess.blade_default.php and save it as registrationSuccess.blade.blade.php in api/resources/views folder.
+7. Run "php artisan key:generate".
+8. Run "php artisan jwt:secret".
+9. Run "php artisan config:cache".
+10. Go into environment.ts file and change baseUrl according to api.

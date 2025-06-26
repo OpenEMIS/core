@@ -17,9 +17,9 @@ class ArchivedAssessmentsTable extends ControllerActionTable
     private $institutionId = null;
     private $studentId = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('assessment_item_results_archived');
+        $this->setTable('assessment_item_results_archived');
         parent::initialize($config);
 
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
@@ -38,6 +38,7 @@ class ArchivedAssessmentsTable extends ControllerActionTable
         $this->toggle('search', false);
 
         $this->addBehavior('Restful.RestfulAccessControl');
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -48,11 +49,12 @@ class ArchivedAssessmentsTable extends ControllerActionTable
         $contentHeader = $studentName . ' - ' . $module;
         $this->controller->set('contentHeader', $contentHeader);
         $this->controller->Navigation->substituteCrumb(__('Student Assessment Archived'), $module);
-        $session = $this->controller->request->session();
+        $session = $this->controller->request->getSession();
+        $institutionId = $this->getInstitutionID();
         if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
         }
-        $studentId = $this->Session->read('Student.Students.id');
+        $studentId = $this->getStudentID();
         $this->institutionId = $institutionId;
         $this->studentId = $studentId;
     }
@@ -82,8 +84,8 @@ class ArchivedAssessmentsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         //POCOR-7201[START]
-        $institutionId = $this->institutionId;
-        $studentId = $this->studentId;
+        $institutionId = $this->getInstitutionID();
+        $studentId = $this->getStudentID();
         //POCOR-7201[END]
         $query->contain('Assessments');
         $query->contain('AssessmentPeriods');
@@ -109,21 +111,21 @@ class ArchivedAssessmentsTable extends ControllerActionTable
             ]
         ]);
         $selectedAcademicPeriod = !is_null(
-            $this->request->query('academic_period_id'))
+            $this->request->getQuery('academic_period_id'))
             ?
-            $this->request->query('academic_period_id')
+            $this->request->getQuery('academic_period_id')
             :
             $this->AcademicPeriods->getCurrent();
         $selectedAssessment = !is_null(
-            $this->request->query('assessment_id'))
+            $this->request->getQuery('assessment_id'))
             ?
-            $this->request->query('assessment_id')
+            $this->request->getQuery('assessment_id')
             :
             null;
         $selectedAssessmentPeriod = !is_null(
-            $this->request->query('assessment_period_id'))
+            $this->request->getQuery('assessment_period_id'))
             ?
-            $this->request->query('assessment_period_id')
+            $this->request->getQuery('assessment_period_id')
             :
             null;
         $selectedAcademicPeriod = $this->setAcademicPeriodOptions($institutionId, $studentId, $selectedAcademicPeriod);
@@ -177,7 +179,7 @@ class ArchivedAssessmentsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $institutionId = $entity->institution_class->institution_id;
             $url = [
                 'plugin' => 'Institution',
@@ -188,7 +190,7 @@ class ArchivedAssessmentsTable extends ControllerActionTable
                 'institution_id' => $institutionId,
             ];
 
-            if ($this->controller->name == 'Directories') {
+            if ($this->controller->getName() == 'Directories') {
                 $url = [
                     'plugin' => 'Directory',
                     'controller' => 'Directories',
@@ -222,20 +224,22 @@ class ArchivedAssessmentsTable extends ControllerActionTable
 
     private function generateButton(ArrayObject $toolbarButtons, $name, $title, $label, $url, $btnAttr = null)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         if (!$btnAttr) {
             $btnAttr = $this->getButtonAttr();
         }
         $customButton = [];
-        if (array_key_exists('_ext', $url)) {
+        if (isset($url['_ext'])) {
             unset($customButton['url']['_ext']);
         }
-        if (array_key_exists('pass', $url)) {
+        if (isset($url['pass'])) {
             unset($customButton['url']['pass']);
         }
-        if (array_key_exists('paging', $url)) {
+        if (isset($url['paging'])) {
             unset($customButton['url']['paging']);
         }
-        if (array_key_exists('filter', $url)) {
+        if (isset($url['filter'])) {
             unset($customButton['url']['filter']);
         }
         $customButton['type'] = 'button';
@@ -243,6 +247,7 @@ class ArchivedAssessmentsTable extends ControllerActionTable
         $customButton['attr']['title'] = $title;
         $customButton['label'] = $label;
         $customButton['url'] = $url;
+        $customButton[0] = $encodedQueryString;
         $name = 'archive';
         $toolbarButtons[$name] = $customButton;
     }

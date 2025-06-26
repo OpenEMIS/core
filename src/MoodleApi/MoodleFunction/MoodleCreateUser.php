@@ -12,12 +12,13 @@
  */
 namespace App\MoodleApi\MoodleFunction;
 use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
 
 class MoodleCreateUser extends MoodleFunction
 {
     protected static $functionParam = "core_user_create_users";
 
-    protected static $userAllowedParams
+    protected static $allowedParams  //POCOR-8706
         = [
             "username",
             "password",
@@ -41,7 +42,7 @@ class MoodleCreateUser extends MoodleFunction
             "alternatename"
         ];
 
-    protected static $userMandatoryParams
+    protected static $mandatoryParams //POCOR-8706
         = [
             "username",
             "firstname",
@@ -100,15 +101,35 @@ class MoodleCreateUser extends MoodleFunction
         return $this->openemis_no . "_Moodle";
     }
 
+    //change in POCOR-8381
     public function linkMoodletoOpenEmis($moodleId, $moodleUsername)
     {
         $MoodleApiCreatedUsers = TableRegistry::get("MoodleApi.MoodleApiCreatedUsers");
-        $instance = $MoodleApiCreatedUsers->newEntity();
+        $SecurityUsers = TableRegistry::get("Security.Users");
 
-        $instance->moodle_user_id = $moodleId;
-        $instance->moodle_username = $moodleUsername;
-        $instance->core_user_id = $this->openemis_no;
+        // Assuming $this->openemis_no is the value for core_user_id
+        $coreUserId = $this->openemis_no;
 
-        $MoodleApiCreatedUsers->save($instance);
+        // Check if the core_user_id exists in the security_users table
+        if (!$SecurityUsers->exists(['id' => $coreUserId])) {
+            // Handle the case where the core_user_id does not exist
+            Log::write('debug', "The core_user_id $coreUserId does not exist in the security_users table.");
+            return false;
+        }
+
+        $instance = $MoodleApiCreatedUsers->newEntity([
+            'moodle_user_id' => $moodleId,
+            'moodle_username' => $moodleUsername,
+            'core_user_id' => $coreUserId
+        ]);
+
+        if ($MoodleApiCreatedUsers->save($instance)) {
+            Log::write('debug', "Successfully linked Moodle user $moodleUsername with OpenEmis user ID $coreUserId.");
+            return true;
+        } else {
+            Log::write('debug', "Failed to link Moodle user $moodleUsername with OpenEmis user ID $coreUserId.");
+            return false;
+        }
     }
+
 }

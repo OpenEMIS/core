@@ -16,10 +16,10 @@ class ScholarshipRecipientsTable extends AppTable  {
 
     private $interestRateOptions = [];
 
-    public function initialize(array $config) 
+    public function initialize(array $config): void 
     {
         
-        $this->table('scholarship_recipients');
+        $this->setTable('scholarship_recipients');
         parent::initialize($config);
 
         $this->belongsTo('Recipients', ['className' => 'User.Users', 'foreignKey' => 'recipient_id']);
@@ -227,19 +227,19 @@ class ScholarshipRecipientsTable extends AppTable  {
                     ]
                 ],
             ])
-            ->leftJoin([$ApplicationInstitutionChoices->alias() => $ApplicationInstitutionChoices->table()], [
+            ->leftJoin([$ApplicationInstitutionChoices->getAlias() => $ApplicationInstitutionChoices->getTable()], [
                 $ApplicationInstitutionChoices->aliasField('is_selected = 1'),$this->aliasField('recipient_id =') . $ApplicationInstitutionChoices->aliasField('applicant_id')
             ])
-            ->leftJoin([$InstitutionChoiceTypes->alias() => $InstitutionChoiceTypes->table()], [
+            ->leftJoin([$InstitutionChoiceTypes->getAlias() => $InstitutionChoiceTypes->getTable()], [
                 $InstitutionChoiceTypes->aliasField('id =') . $ApplicationInstitutionChoices->aliasField('scholarship_institution_choice_type_id'),
             ])
-            ->leftJoin([$Country->alias() => $Country->table()], [
+            ->leftJoin([$Country->getAlias() => $Country->getTable()], [
                 $Country->aliasField('id =') . $ApplicationInstitutionChoices->aliasField('country_id'),
             ])
-            ->leftJoin([$EducationFieldOfStudies->alias() => $EducationFieldOfStudies->table()], [
+            ->leftJoin([$EducationFieldOfStudies->getAlias() => $EducationFieldOfStudies->getTable()], [
                 $EducationFieldOfStudies->aliasField('id =') . $ApplicationInstitutionChoices->aliasField('education_field_of_study_id'),
             ])
-            ->leftJoin([$QualificationLevels->alias() => $QualificationLevels->table()], [
+            ->leftJoin([$QualificationLevels->getAlias() => $QualificationLevels->getTable()], [
                 $QualificationLevels->aliasField('id =') . $ApplicationInstitutionChoices->aliasField('qualification_level_id'),
             ])
             ->select([

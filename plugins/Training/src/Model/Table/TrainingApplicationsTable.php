@@ -13,6 +13,7 @@ use Cake\Event\Event;
 use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
 use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 class TrainingApplicationsTable extends ControllerActionTable
 {
@@ -21,9 +22,9 @@ class TrainingApplicationsTable extends ControllerActionTable
     const IN_PROGRESS = 2;
     const DONE = 3;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_training_applications');
+        $this->setTable('staff_training_applications');
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
@@ -65,8 +66,7 @@ class TrainingApplicationsTable extends ControllerActionTable
         }
     }
 
-    public function implementedEvents()
-    {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
         foreach ($this->workflowEvents as $event) {
@@ -165,6 +165,7 @@ class TrainingApplicationsTable extends ControllerActionTable
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
         $extra['options']['sortWhitelist'] = $sortList;
+        $extra['options']['limit'] = 20; //add limit as per need POCOR-7485
         // POCOR-8033:end
     }
 
@@ -219,7 +220,7 @@ class TrainingApplicationsTable extends ControllerActionTable
     {
         $controller = $options['_controller'];
         $controller->loadComponent('AccessControl');
-        $session = $controller->request->session();
+        $session = $controller->getRequest()->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -254,8 +255,8 @@ class TrainingApplicationsTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Staff->alias(), 'Sessions.Courses', $this->Institutions->alias(), $this->CreatedUser->alias(), 'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->Staff->getAlias(), 'Sessions.Courses', $this->Institutions->getAlias(), $this->CreatedUser->getAlias(), 'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
@@ -313,7 +314,7 @@ class TrainingApplicationsTable extends ControllerActionTable
      * @return array
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action != 'add' && $action != 'edit') {
             return $attr;
@@ -325,8 +326,9 @@ class TrainingApplicationsTable extends ControllerActionTable
             $attr['attr']['value'] = $entity->assignee->name_with_id;
         }
         if ($action == 'add') {
-            $alias = $this->alias();
-            $areaList = isset($request->data) ? $request->data[$alias]['area_id']['_ids'] : null;
+            $alias = $this->getAlias();
+            $requestData = $request->getData($alias);
+            $areaList = isset($requestData) ? $requestData['area_id']['_ids'] : null;
             $institutionList = $this->getInstitutionOptions($areaList);
             $keysArray = array_keys($institutionList);
             $institution_id = $keysArray[0];
@@ -345,12 +347,14 @@ class TrainingApplicationsTable extends ControllerActionTable
      * @param $institutionId
      * @return array
      */
-    private function getAssigneesOptions(Request $request, $institutionId)
+    private function getAssigneesOptions(ServerRequest $request, $institutionId)
     {
-        $alias = $this->alias();
-        $filter_id = isset($request['data'][$alias]['training_application_type_id']) ? $request['data'][$alias]['training_application_type_id'] : 0;
+        $alias = $this->getAlias();
+        $requestTrainingApplicationData = $request->getData('training_application_type_id');
+        $filter_id = isset($requestTrainingApplicationData) ? $requestTrainingApplicationData : 0;
         if ($institutionId == 0) {
-            $institutionId = isset($request['data'][$alias]['institution_id']) ? $request['data'][$alias]['institution_id'] : 0;
+            $requestInstitutionData = $request->getData('institution_id');
+            $institutionId = isset($requestInstitutionData) ? $requestInstitutionData : 0;
         }
         $assignees_all = $this->findAssigneeOptions(0, $institutionId);
         $assignees_filtered = $this->findAssigneeOptions($filter_id, $institutionId);
@@ -368,12 +372,12 @@ class TrainingApplicationsTable extends ControllerActionTable
      * @return array
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $alias = $this->alias();
+        $alias = $this->getAlias();
 //        $this->log($request['data'][$alias], 'debug');
-
-        $areaList = isset($request->data) ? $request->data[$alias]['area_id']['_ids'] : null;
+        $requestData = $request->getData($alias);
+        $areaList = isset($requestData) ? $requestData['area_id']['_ids'] : null;
         if ($action == 'edit') {
             $entity = $attr['entity'];
             $attr['type'] = 'readonly';
@@ -391,7 +395,7 @@ class TrainingApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
         if ($action == 'add') {
@@ -413,13 +417,13 @@ class TrainingApplicationsTable extends ControllerActionTable
     private function getInstitutionOptions($areaList = null)
     {
         $Institutions = TableRegistry::get('Institution.Institutions');
-        $InstitutionStatuses = TableRegistry::get('institution_statuses');
+        $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
         $institutionQuery = $Institutions
             ->find('list', [
                 'keyField' => 'id',
                 'valueField' => 'code_name'
             ])
-            ->innerJoin([$InstitutionStatuses->alias() => $InstitutionStatuses->table()],
+            ->innerJoin([$InstitutionStatuses->getAlias() => $InstitutionStatuses->getTable()],
                 [$InstitutionStatuses->aliasField('id = ')
                     . $Institutions->aliasField('institution_status_id')])
             ->where([$InstitutionStatuses->aliasField('code') => 'ACTIVE'])
@@ -473,9 +477,9 @@ class TrainingApplicationsTable extends ControllerActionTable
     private function findAssigneeOptions($filter_id, $institutionId = 0)
     {
         $workflowModel = 'Administration > Training > Applications';
-        $workflowModelsTable = TableRegistry::get('workflow_models');
-        $workflowStepsTable = TableRegistry::get('workflow_steps');
-        $workflowFiltersTable = TableRegistry::get('workflows_filters');
+        $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+        $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+        $workflowFiltersTable = TableRegistry::get('Workflow.WorkflowsFilters');
         $Workflows = TableRegistry::get('Workflow.Workflows');
 
 
@@ -484,13 +488,13 @@ class TrainingApplicationsTable extends ControllerActionTable
             ->select(['id' => $workflowModelsTable->aliasField('id'),
                 'workflow_id' => $Workflows->aliasField('id'),
                 'is_school_based' => $workflowModelsTable->aliasField('is_school_based')])
-            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                 [
                     $workflowModelsTable->aliasField('id') . ' = ' . $Workflows->aliasField('workflow_model_id')
                 ])
             ->where([$workflowModelsTable->aliasField('name') => $workflowModel]);
         if ($filter_id != 0) {
-            $workModels = $workModels->innerJoin([$workflowFiltersTable->alias() => $workflowFiltersTable->table()],
+            $workModels = $workModels->innerJoin([$workflowFiltersTable->getAlias() => $workflowFiltersTable->getTable()],
                 [$workflowFiltersTable->aliasField('workflow_id') . ' = ' . $Workflows->aliasField('id'),
                     $workflowFiltersTable->aliasField('filter_id') . ' = ' . $filter_id
                 ]);
@@ -563,4 +567,29 @@ class TrainingApplicationsTable extends ControllerActionTable
             ]);
     }
     //POCOR-8033: end
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        if ($field == 'status_id') {
+            return __('Status');
+        } else if ($field == 'assignee_id') {
+            return __('Assignee');
+        } else if ($field == 'staff_id') {
+            return __('Staff');
+        } else if ($field == 'institution_id') {
+            return __('Institution');
+        } else if ($field == 'training_session_id') {
+            return __('Training Session');
+        } else if ($field == 'modified') {
+            return __('Modified');
+        } else if ($field == 'modified_user_id') {
+            return __('Modified By');
+        } else if ($field == 'created') {
+            return __('Created');
+        } else if ($field == 'created_user_id') {
+            return __('Created By');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

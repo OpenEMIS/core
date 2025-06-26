@@ -3,7 +3,7 @@ namespace Configuration\Model\Table;
 
 use ArrayObject;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
@@ -17,10 +17,10 @@ class ConfigAuthenticationTable extends ControllerActionTable
     public $authenticationType;
     private $options = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         //print_r('hi'); die;
-        $this->table('config_items');
+        $this->setTable('config_items');
         parent::initialize($config);
         $this->addBehavior('Configuration.Authentication');
         $this->toggle('remove', false);
@@ -38,8 +38,10 @@ class ConfigAuthenticationTable extends ControllerActionTable
 
     }
 
-    public function validationDefault(Validator $validator)
-    {
+    public function validationDefault(Validator $validator): Validator
+    {  
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator->add('value', 'ruleLocalLogin', [
                     'rule' => 'checkLocalLogin'
                 ]);
@@ -71,30 +73,30 @@ class ConfigAuthenticationTable extends ControllerActionTable
         $this->checkController();
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Authentication','System Configurations');
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Administration','Authentication','System Configurations');
+        if(!empty($is_manual_exist)){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
     }
 
-    public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
     {   //POCOR-7156 starts
         if (in_array($action, ['edit', 'add'])) {
-            $id= $this->paramsDecode($request->params['pass'][1]);
+            $id= $this->paramsDecode($request->getParam('pass')[1]); //POCOR-8680
             if (!empty($id)) {
                 $entity = $this->get($id);
                 $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
@@ -156,7 +158,7 @@ class ConfigAuthenticationTable extends ControllerActionTable
                 return __('Disable');
             }
         }else{//POCOR-7156 ends
-            return __($this->options[$entity->value]);
+            return $this->options[$entity->value];
         }
     }
 

@@ -1,51 +1,50 @@
 <?php
+
 namespace Institution\Model\Table;
 
+use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
-use Cake\Utility\Text;
-use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
-use App\Model\Table\AppTable;
-use Cake\Network\Session;
-use App\Model\Table\ControllerActionTable;
 
 class StaffUserTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
-        $this->entityClass('User.User');
+        ini_set('memory_limit', '-1');
+        $this->setTable('security_users');
+        $this->setEntityClass('User.User');
         parent::initialize($config);
         self::handleAssociations($this);
         // Behaviors
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
-        $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts']]);
+        $this->addBehavior('User.Mandatory',
+            ['userRole' => 'Staff',
+                'roleFields' => ['Identities', 'Nationalities']]); // POCOR-9123
         $this->addBehavior('AdvanceSearch');
 
-        $this->addBehavior('CustomField.Record', [
-            'model' => 'Staff.Staff',
-            'behavior' => 'Staff',
-            'fieldKey' => 'staff_custom_field_id',
-            'tableColumnKey' => 'staff_custom_table_column_id',
-            'tableRowKey' => 'staff_custom_table_row_id',
-            'fieldClass' => ['className' => 'StaffCustomField.StaffCustomFields'],
-            'formKey' => 'staff_custom_form_id',
-            'filterKey' => 'staff_custom_filter_id',
-            'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
+       $this->addBehavior('CustomField.Record', [
+           'model' => 'Staff.Staff',
+           'behavior' => 'Staff',
+           'fieldKey' => 'staff_custom_field_id',
+           'tableColumnKey' => 'staff_custom_table_column_id',
+           'tableRowKey' => 'staff_custom_table_row_id',
+           'fieldClass' => ['className' => 'StaffCustomField.StaffCustomFields'],
+           'formKey' => 'staff_custom_form_id',
+           'filterKey' => 'staff_custom_filter_id',
+           'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
             'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
-            'recordKey' => 'staff_id',
-            'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
-            'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
-        ]);
+           'recordKey' => 'staff_id',
+           'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
+           'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+       ]);
 
         $this->addBehavior('Excel', [
-            'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian', 'super_admin', 'date_of_death' ],
+            'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian', 'super_admin', 'date_of_death'],
             'filename' => 'Staff',
             'pages' => ['view']
         ]);
@@ -55,7 +54,8 @@ class StaffUserTable extends ControllerActionTable
                 '_function' => 'getNumberOfStaffByGender'
             ]
         ]);
-        $this->addBehavior('Configuration.Pull');
+//        POCOR-8334 @todo further
+//        $this->addBehavior('Configuration.Pull'); // POCOR-8039
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Staff' => ['index', 'add', 'edit'],
@@ -64,6 +64,16 @@ class StaffUserTable extends ControllerActionTable
         $this->toggle('index', false);
         $this->toggle('add', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab',
+            ['appliedAction' => ['Staff' =>
+                ['staff_status_id', 'academic_period_id', 'staff_id'],
+                'StaffUser' =>
+                    ['id', 'staff_status_id',
+                        'academic_period_id',
+                        ]
+            ]
+            ]
+        );
     }
 
     public static function handleAssociations($model)
@@ -74,16 +84,16 @@ class StaffUserTable extends ControllerActionTable
         $model->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
         $model->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
-        $model->hasMany('Identities', ['className' => 'User.Identities',      'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $model->hasMany('Nationalities', ['className' => 'User.UserNationalities',   'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $model->hasMany('Contacts', ['className' => 'User.Contacts',        'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $model->hasMany('Attachments', ['className' => 'User.Attachments',     'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $model->hasMany('BankAccounts', ['className' => 'User.BankAccounts',    'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $model->hasMany('Comments', ['className' => 'User.Comments',        'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $model->hasMany('Languages', ['className' => 'User.UserLanguages',   'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $model->hasMany('Awards', ['className' => 'User.Awards',          'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Nationalities', ['className' => 'User.UserNationalities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Attachments', ['className' => 'User.Attachments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('BankAccounts', ['className' => 'User.BankAccounts', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Comments', ['className' => 'User.Comments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Languages', ['className' => 'User.UserLanguages', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Awards', ['className' => 'User.Awards', 'foreignKey' => 'security_user_id', 'dependent' => true]);
 
-        $model->hasMany('SpecialNeeds', ['className' => 'SpecialNeeds.SpecialNeedsAssessments',    'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('SpecialNeeds', ['className' => 'SpecialNeeds.SpecialNeedsAssessments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
 
         $model->belongsToMany('SecurityRoles', [
             'className' => 'Security.SecurityRoles',
@@ -104,8 +114,8 @@ class StaffUserTable extends ControllerActionTable
 
         // class should never cascade delete
         $model->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'staff_id']);
-        $model->hasMany('InstitutionStudents', ['className' => 'Institution.Students',    'foreignKey' => 'student_id', 'dependent' => true]);
-        $model->hasMany('InstitutionStaff', ['className' => 'Institution.Staff',    'foreignKey' => 'staff_id', 'dependent' => true]);
+        $model->hasMany('InstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $model->hasMany('InstitutionStaff', ['className' => 'Institution.Staff', 'foreignKey' => 'staff_id', 'dependent' => true]);
 
         $model->belongsToMany('Subjects', [
             'className' => 'Institution.InstitutionSubject',
@@ -120,7 +130,7 @@ class StaffUserTable extends ControllerActionTable
         $model->hasMany('InstitutionRubrics', ['className' => 'Institution.InstitutionRubrics', 'foreignKey' => 'staff_id', 'dependent' => true]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Staff.afterSave'] = 'staffAfterSave';
@@ -139,10 +149,12 @@ class StaffUserTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $id = $this->getQueryString('id');
+
         $this->field('username', ['visible' => false]);
         $toolbarButtons = $extra['toolbarButtons'];
         if ($this->action == 'view') {
-            $id = $this->request->query('id');
+            // $id = $this->request->getQuery('id');
             $this->Session->write('Institution.Staff.id', $id);
             if ($toolbarButtons->offsetExists('back')) {
                 $toolbarButtons['back']['url']['action'] = 'Staff';
@@ -157,10 +169,10 @@ class StaffUserTable extends ControllerActionTable
     //POCOR-7982
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if(!empty($entity->date_of_death)){ //POCOR-8059
-            if(isset($entity->dod_range)){
+        if (!empty($entity->date_of_death)) { //POCOR-8059
+            if (isset($entity->dod_range)) {
                 $event->stopPropagation();
-                $this->Alert->warning('general.dodmsg' , ['reset' => true]);
+                $this->Alert->warning('general.dodmsg', ['reset' => true]);
                 $url = $this->url('edit');
                 return $this->controller->redirect($url);
             }
@@ -169,36 +181,37 @@ class StaffUserTable extends ControllerActionTable
     //POCOR-7982
 
     // POCOR-5684
-    public function onGetIdentityNumber(Event $event, Entity $entity){
+    public function onGetIdentityNumber(Event $event, Entity $entity)
+    {
 
         // Case 1: if user has only one identity, show the same,
         // Case 2: if user has more than one identity and also has more than one nationality, and no one is linked to any nationality, then, check, if any nationality has default identity, then show that identity else show the first identity.
         // Case 3: if user has more than one identity (no one is linked to nationality), show the first
 
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.UserIdentities');
         $user_identities = $users_ids->find()
-        ->select(['number','nationality_id'])
-        ->where([
-            $users_ids->aliasField('security_user_id') => $entity->id,
-        ])
-        ->all();
+            ->select(['number', 'nationality_id'])
+            ->where([
+                $users_ids->aliasField('security_user_id') => $entity->id,
+            ])
+            ->all();
 
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.UserIdentities');
         $user_id_data = $users_ids->find()
-        ->select(['number'])
-        ->where([
-            $users_ids->aliasField('security_user_id') => $entity->id,
-        ])
-        ->first();
+            ->select(['number'])
+            ->where([
+                $users_ids->aliasField('security_user_id') => $entity->id,
+            ])
+            ->first();
 
-        if(count($user_identities) == 1){
+        if (count($user_identities) == 1) {
             // Case 1
             return $entity->identity_number = $user_id_data->number;
-        }else{
+        } else {
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('nationalities');
+            $nationalities = TableRegistry::get('FieldOption.Nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -219,23 +232,23 @@ class StaffUserTable extends ControllerActionTable
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('user_identities');
+                $users_ids = TableRegistry::get('User.UserIdentities');
                 $user_id_data_nat = $users_ids->find()
-                ->select(['number'])
-                ->where([
-                    $users_ids->aliasField('security_user_id') => $entity->id,
-                    $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
-                ])
-                ->first();
-                if($user_id_data_nat != null){
+                    ->select(['number'])
+                    ->where([
+                        $users_ids->aliasField('security_user_id') => $entity->id,
+                        $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
+                    ])
+                    ->first();
+                if ($user_id_data_nat != null) {
                     array_push($nationality_based_ids, $user_id_data_nat);
                 }
             }
 
-            if(count($nationality_based_ids) > 0){
+            if (count($nationality_based_ids) > 0) {
                 // Case 2 - returning value
                 return $entity->identity_number = $nationality_based_ids[0]['number'];
-            }else{
+            } else {
                 // Case 3 - returning value, return again from Case 1
                 return $entity->identity_number = $user_id_data->number;
             }
@@ -245,33 +258,33 @@ class StaffUserTable extends ControllerActionTable
     // POCOR-5684
     public function onGetIdentityTypeID(Event $event, Entity $entity)
     {
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.UserIdentities');
         $user_identities = $users_ids->find()
-        ->select(['number','nationality_id'])
-        ->where([
-            $users_ids->aliasField('security_user_id') => $entity->id,
-        ])
-        ->all();
-
-        $users_ids = TableRegistry::get('user_identities');
-        $user_id_data = $users_ids->find()
-        ->select(['number', 'identity_type_id'])
-        ->where([
-            $users_ids->aliasField('security_user_id') => $entity->id,
-        ])
-        ->first();
-
-        if(count($user_identities) == 1){
-            // Case 1
-            $users_id_type = TableRegistry::get('identity_types');
-            $user_id_name = $users_id_type->find()
-            ->select(['name'])
+            ->select(['number', 'nationality_id'])
             ->where([
-                $users_id_type->aliasField('id') => $user_id_data->identity_type_id,
+                $users_ids->aliasField('security_user_id') => $entity->id,
+            ])
+            ->all();
+
+        $users_ids = TableRegistry::get('User.UserIdentities');
+        $user_id_data = $users_ids->find()
+            ->select(['number', 'identity_type_id'])
+            ->where([
+                $users_ids->aliasField('security_user_id') => $entity->id,
             ])
             ->first();
+
+        if (count($user_identities) == 1) {
+            // Case 1
+            $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
+            $user_id_name = $users_id_type->find()
+                ->select(['name'])
+                ->where([
+                    $users_id_type->aliasField('id') => $user_id_data->identity_type_id,
+                ])
+                ->first();
             return $entity->identity_type_id = $user_id_name->name;
-        }else{
+        } else {
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
@@ -296,44 +309,44 @@ class StaffUserTable extends ControllerActionTable
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('user_identities');
+                $users_ids = TableRegistry::get('User.UserIdentities');
                 $user_id_data_nat = $users_ids->find()
-                ->select(['number','identity_type_id'])
-                ->where([
-                    $users_ids->aliasField('security_user_id') => $entity->id,
-                    $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
-                ])
-                ->first();
-                if($user_id_data_nat != null){
+                    ->select(['number', 'identity_type_id'])
+                    ->where([
+                        $users_ids->aliasField('security_user_id') => $entity->id,
+                        $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
+                    ])
+                    ->first();
+                if ($user_id_data_nat != null) {
                     array_push($nationality_based_ids, $user_id_data_nat);
                 }
             }
-            if(count($nationality_based_ids) > 0){
+            if (count($nationality_based_ids) > 0) {
                 // Case 2 - returning value
-                $users_id_type = TableRegistry::get('identity_types');
+                $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
                 $user_id_name = $users_id_type->find()
-                ->select(['name'])
-                ->where([
-                    $users_id_type->aliasField('id') => $nationality_based_ids[0]['identity_type_id'],
-                ])
-                ->first();
+                    ->select(['name'])
+                    ->where([
+                        $users_id_type->aliasField('id') => $nationality_based_ids[0]['identity_type_id'],
+                    ])
+                    ->first();
                 return $entity->identity_type_id = $user_id_name->name;
-            }else{
+            } else {
                 // Case 3 - returning value, return again from Case 1
-                $users_id_type = TableRegistry::get('identity_types');
+                $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
                 $user_id_name = $users_id_type->find()
-                ->select(['name'])
-                ->where([
-                    $users_id_type->aliasField('id') => $user_id_data->identity_type_id,
-                ])
-                ->first();
+                    ->select(['name'])
+                    ->where([
+                        $users_id_type->aliasField('id') => $user_id_data->identity_type_id,
+                    ])
+                    ->first();
                 return $entity->identity_type_id = $user_id_name->name;
             }
         }
     }
 
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $BaseUsers = TableRegistry::get('User.Users');
@@ -370,15 +383,14 @@ class StaffUserTable extends ControllerActionTable
             ->notEmpty('start_date', null, 'create')
             ->requirePresence('start_date', 'create')
             ->notEmpty('staff_shifts_id', null, 'create')
-            ->requirePresence('staff_shifts_id', 'create')
-           /* ->add('start_date', 'ruleInAcademicPeriod', [
+            ->requirePresence('staff_shifts_id', 'create')/* ->add('start_date', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id', []],
                 'on' => function ($context) {
                     // check for staff add wizard on create operations - where academic_period_id exist in the context data - POCOR-4576
                     return ($context['newRecord'] && array_key_exists('academic_period_id', $context['data']));
                 }
             ])*/
-            ;
+        ;
         return $validator;
     }
 
@@ -403,62 +415,28 @@ class StaffUserTable extends ControllerActionTable
         $this->addReleaseButton($entity, $extra);
     }
 
-    private function addReleaseButton(Entity $entity, ArrayObject $extra)
+    private function setupTabElements($entity)
     {
-        if($this->AccessControl->check([$this->controller->name, 'StaffRelease', 'add'])) {
-
-            $session = $this->request->session();
-            $toolbarButtons = $extra['toolbarButtons'];
-            $StaffTable = TableRegistry::get('Institution.Staff');
-            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-            $ConfigStaffReleaseTable = TableRegistry::get('Configuration.ConfigStaffReleases');
-
-            $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
-            $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
-            $userId = $entity->id;
-
-            $enableStaffRelease = $ConfigStaffReleaseTable->checkIfReleaseEnabled($institutionId);
-
-            $assignedStaffRecords = $StaffTable->find()
-                ->where([
-                    $StaffTable->aliasField('staff_id') => $userId,
-                    $StaffTable->aliasField('institution_id') => $institutionId,
-                    $StaffTable->aliasField('staff_status_id') => $assignedStatus
-                ])
-                ->count();
-
-            if ($enableStaffRelease && $assignedStaffRecords > 0) {
-                $url = [
-                    'plugin' => $this->controller->plugin,
-                    'controller' => $this->controller->name,
-                    'institutionId' => $this->paramsEncode(['id' => $institutionId]),
-                    'action' => 'StaffRelease',
-                    'add'
-                ];
-
-                $releaseButton = $toolbarButtons['back'];
-                $releaseButton['type'] = 'button';
-                $releaseButton['label'] = '<i class="fa kd-release"></i>';
-                $releaseButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-                $releaseButton['attr']['title'] = __('Release');
-                $releaseButton['url'] = $this->setQueryString($url, ['user_id' => $userId]);
-
-                $toolbarButtons['release'] = $releaseButton;
-            }
-        }
+        $options = [
+            'userRole' => 'Staff',
+        ];
+        $tabElements = $this->setUserTabElements($options);
     }
 
     private function addTransferButton(Entity $entity, ArrayObject $extra)
     {
-        if ($this->AccessControl->check([$this->controller->name, 'StaffTransferOut', 'add'])) {
-            $session = $this->request->session();
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+        if ($this->AccessControl->check([$this->controller->getName(), 'StaffTransferOut', 'add'])) {
+            $session = $this->request->getSession();
             $toolbarButtons = $extra['toolbarButtons'];
             $StaffTable = TableRegistry::get('Institution.Staff');
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
             $ConfigStaffTransfersTable = TableRegistry::get('Configuration.ConfigStaffTransfers');
 
             $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
-            $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+            $institutionId = !is_null($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
             $userId = $entity->id;
 
             $enableStaffTransfer = $ConfigStaffTransfersTable->checkIfTransferEnabled($institutionId);
@@ -473,11 +451,12 @@ class StaffUserTable extends ControllerActionTable
 
             if ($enableStaffTransfer && $assignedStaffRecords > 0) {
                 $url = [
-                    'plugin' => $this->controller->plugin,
-                    'controller' => $this->controller->name,
-                    'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    'plugin' => $this->controller->getPlugin(),
+                    'controller' => $this->controller->getName(),
+                    //'institutionId' => $this->paramsEncode(['id' => $institutionId]),
                     'action' => 'StaffTransferOut',
-                    'add'
+                    '0' => 'add',
+                    '1' => $encodedQueryString
                 ];
 
                 $transferButton = $toolbarButtons['back'];
@@ -485,20 +464,70 @@ class StaffUserTable extends ControllerActionTable
                 $transferButton['label'] = '<i class="fa kd-transfer"></i>';
                 $transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
                 $transferButton['attr']['title'] = __('Transfer');
-                $transferButton['url'] = $this->setQueryString($url, ['user_id' => $userId]);
+                $transferButton['url'] = $this->setQueryString($url, ['user_id' => $userId, 'institution_id' => $institutionId]);
 
+                //echo "<pre>"; print_r($transferButton); die;
                 $toolbarButtons['transfer'] = $transferButton;
             }
         }
     }
 
+    private function addReleaseButton(Entity $entity, ArrayObject $extra)
+    {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        if ($this->AccessControl->check([$this->controller->getName(), 'StaffRelease', 'add'])) {
+
+            $toolbarButtons = $extra['toolbarButtons'];
+            $StaffTable = TableRegistry::get('Institution.Staff');
+            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+            $ConfigStaffReleaseTable = TableRegistry::get('Configuration.ConfigStaffReleases');
+
+            $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+            $institutionId = $this->getInstitutionID();
+            $userId = $entity->id;
+
+            $enableStaffRelease = $ConfigStaffReleaseTable->checkIfReleaseEnabled($institutionId);
+
+            $assignedStaffRecords = $StaffTable->find()
+                ->where([
+                    $StaffTable->aliasField('staff_id') => $userId,
+                    $StaffTable->aliasField('institution_id') => $institutionId,
+                    $StaffTable->aliasField('staff_status_id') => $assignedStatus
+                ])
+                ->count();
+
+            if ($enableStaffRelease && $assignedStaffRecords > 0) {
+                $url = [
+                    'plugin' => $this->controller->getPlugin(),
+                    'controller' => $this->controller->getName(),
+                    //'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    'action' => 'StaffRelease',
+                    0 =>'add',
+                    1 => $encodedQueryString
+                ];
+                $getInstitutionId = $this->getQueryString('institution_id');
+                $releaseButton = $toolbarButtons['back'];
+                $releaseButton['type'] = 'button';
+                $releaseButton['label'] = '<i class="fa kd-release"></i>';
+                $releaseButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+                $releaseButton['attr']['title'] = __('Release');
+                $releaseButton['url'] = $this->setQueryString($url, ['user_id' => $userId, 'institution_id' => $getInstitutionId, 'staff_id' => $userId]);
+
+                $toolbarButtons['release'] = $releaseButton;
+            }
+        }
+    }
+
+    //POCOR-5070:Start
+
     public function editAfterAction(Event $event, Entity $entity)
     {
         //POCOR-5070:Start
-        if($entity->id){
+        if ($entity->id) {
             $staff = TableRegistry::get('Institution.Staff');
-            $staffIsHomeroom = $staff->find('all',['conditions'=>['staff_id'=>$entity->id]])->first();
-            $entity->is_homeroom =$staffIsHomeroom->is_homeroom;
+            $staffIsHomeroom = $staff->find('all', ['conditions' => ['staff_id' => $entity->id]])->first();
+            $entity->is_homeroom = $staffIsHomeroom->is_homeroom;
         }
         //POCOR-5070:end
         $this->Session->write('Staff.Staff.id', $entity->id);
@@ -507,10 +536,10 @@ class StaffUserTable extends ControllerActionTable
 
         $this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
         //POCOR-5070:start
-        $this->field('is_homeroom',[
-            'type'=>'select'
+        $this->field('is_homeroom', [
+            'type' => 'select'
         ]);
-        $this->fields['is_homeroom']['options'] = [0=>'No',1=>'Yes'];
+        $this->fields['is_homeroom']['options'] = [0 => 'No', 1 => 'Yes'];
         $this->fields['is_homeroom']['value'] = $entity->is_homeroom;
         //POCOR-5070:end
 
@@ -520,47 +549,50 @@ class StaffUserTable extends ControllerActionTable
         $this->fields['identity_type_id']['type'] = 'readonly';
         $this->fields['identity_type_id']['attr']['value'] = $entity->has('main_identity_type') ? $entity->main_identity_type->name : '';
     }
-    //POCOR-5070:Start
+
     public function onGetIsHomeroom(Event $event, Entity $entity)
     {
         return ($entity->is_homeroom) ? __('Yes') : __('No');
     }
+
+    //POCOR-5070:end
+
     public function addAfterAction(Event $event, Entity $entity)
     {
-        $this->field('is_homeroom',[
-            'type'=>'select'
+        $this->field('is_homeroom', [
+            'type' => 'select'
         ]);
-        $this->fields['is_homeroom']['options'] = [0=>'No',1=>'Yes'];
+        $this->fields['is_homeroom']['options'] = [0 => 'No', 1 => 'Yes'];
     }
-    //POCOR-5070:end
+
     public function editAfterSave(Event $event, Entity $entity)
     {
         //POCOR-5070:start
-        $staffT = TableRegistry::get('institution_staff');
-        $entityData = $staffT->find('all',['conditions'=>['staff_id'=>$entity->id]])->first();
+        $staffT = TableRegistry::get('Institution.Staff');//POCOR-8364
+        $entityData = $staffT->find('all', ['conditions' => ['staff_id' => $entity->id]])->first();
         $entityData->is_homeroom = $entity->is_homeroom;
         $saveData = $staffT->save($entityData);
         //POCOR-5070:end
         if ($this->action == 'edit') {
             $staff = TableRegistry::get('Institution.Staff');
             $bodyData = $staff->find('all',
-                                [ 'contain' => [
-                                    'Institutions',
-                                    'StaffTypes',
-                                    'StaffPositionProfiles',
-                                    'Positions',
-                                    'Positions.StaffPositionTitles',
-                                    'Users',
-                                    'Users.Genders',
-                                    'Users.MainNationalities',
-                                    'Users.Identities.IdentityTypes',
-                                    'Users.AddressAreas',
-                                    'Users.BirthplaceAreas',
-                                    'Users.Contacts.ContactTypes'
-                                ],
-                    ])->where([
-                        $staff->aliasField('staff_id') => $entity->id
-                    ]);
+                ['contain' => [
+                    'Institutions',
+                    'StaffTypes',
+                    'StaffPositionProfiles',
+                    'Positions',
+                    'Positions.StaffPositionTitles',
+                    'Users',
+                    'Users.Genders',
+                    'Users.MainNationalities',
+                    'Users.Identities.IdentityTypes',
+                    'Users.AddressAreas',
+                    'Users.BirthplaceAreas',
+                    'Users.Contacts.ContactTypes'
+                ],
+                ])->where([
+                $staff->aliasField('staff_id') => $entity->id
+            ]);
 
 
             if (!empty($bodyData)) {
@@ -583,7 +615,7 @@ class StaffUserTable extends ControllerActionTable
                     $role = $value->user->is_staff;
                     $contactValue = [];
                     $contactType = [];
-                    if(!empty($value->user['contacts'])) {
+                    if (!empty($value->user['contacts'])) {
                         foreach ($value->user['contacts'] as $key => $contact) {
                             $contactValue[] = $contact->value;
                             $contactType[] = $contact->contact_type->name;
@@ -592,7 +624,7 @@ class StaffUserTable extends ControllerActionTable
 
                     $identityNumber = [];
                     $identityType = [];
-                    if(!empty($value->user['identities'])) {
+                    if (!empty($value->user['identities'])) {
                         foreach ($value->user['identities'] as $key => $identity) {
                             $identityNumber[] = $identity->number;
                             $identityType[] = $identity->identity_type->name;
@@ -608,8 +640,8 @@ class StaffUserTable extends ControllerActionTable
                     $staff_position_titles_type = $value->position->staff_position_title->type;
                     $staff_types_name = $value->staff_type->name;
 
-                    if($staff_position_titles_type == 1 ){
-                        $class= 'Teaching';
+                    if ($staff_position_titles_type == 1) {
+                        $class = 'Teaching';
                     } else {
                         $class = 'Non-Teaching';
                     }
@@ -620,33 +652,33 @@ class StaffUserTable extends ControllerActionTable
 
                 }
             }
-       $institutionShifts = TableRegistry::get('institution_shifts');
-       $shiftOptions = TableRegistry::get('shift_options'); 
-       $institutionStaffShifts = TableRegistry::get('institution_staff_shifts');
-       $res=$institutionShifts->find()->select(['name'=> 'shift_options.name' ])
-                                ->leftJoin(
-                                        [$shiftOptions->alias() => $shiftOptions->table()],
-                                        [
-                                            $shiftOptions->aliasField('id = ') . $institutionShifts->aliasField('shift_option_id')
-                                        ]
-                                    )
-                                    ->leftJoin(
-                                        [$institutionStaffShifts->alias() => $institutionStaffShifts->table()],
-                                        [
-                                            $institutionStaffShifts->aliasField('shift_id = ') . $institutionShifts->aliasField('id')
-                                        ]
-                                    )
-                              
-                               
-                                ->where([$institutionStaffShifts->aliasField('staff_id')=> $entity->id])->order($institutionShifts->aliasField('id'))->group('shift_options.name')->order('shift_options.name')->toArray();
-                                $shift='';
-                                foreach ($res as $key => $value) {
-                                    $shift.=$value['name'].','; 
-                                }
-                               $shiftName=rtrim($shift,',');    
+            //POCOR-8364
+            $institutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+            $shiftOptions = TableRegistry::get('Institution.ShiftOptions');
+            $institutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
+            //POCOR-8364
+            $res = $institutionShifts->find()->select(['name' => 'name'])
+                ->leftJoin(
+                    [$shiftOptions->getAlias() => $shiftOptions->getTable()],
+                    [
+                        $shiftOptions->aliasField('id = ') . $institutionShifts->aliasField('shift_option_id')
+                    ]
+                )
+                ->leftJoin(
+                    [$institutionStaffShifts->getAlias() => $institutionStaffShifts->getTable()],
+                    [
+                        $institutionStaffShifts->aliasField('shift_id = ') . $institutionShifts->aliasField('id')
+                    ]
+                )
+                ->where([$institutionStaffShifts->aliasField('staff_id') => $entity->id])->order($institutionShifts->aliasField('id'))->group('name')->order('name')->toArray();
+            $shift = '';
+            foreach ($res as $key => $value) {
+                $shift .= $value['name'] . ',';
+            }
+            $shiftName = rtrim($shift, ',');
             if (!empty($shiftData)) {
                 foreach ($shiftData as $k => $val) {
-                    $shiftName =  $val->shift_option->name;
+                    $shiftName = $val->shift_option->name;
                 }
             }
             $bodys = array();
@@ -654,7 +686,7 @@ class StaffUserTable extends ControllerActionTable
             $bodys = [
                 'security_users_id' => !empty($user_id) ? $user_id : NULL,
                 'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
-                'security_users_first_name' =>  !empty($first_name) ? $first_name : NULL,
+                'security_users_first_name' => !empty($first_name) ? $first_name : NULL,
                 'security_users_middle_name' => !empty($middle_name) ? $middle_name : NULL,
                 'security_users_third_name' => !empty($third_name) ? $third_name : NULL,
                 'security_users_last_name' => !empty($last_name) ? $last_name : NULL,
@@ -677,98 +709,89 @@ class StaffUserTable extends ControllerActionTable
                 //'institution_staff_id' => !empty($institutionStaffId) ? $institutionStaffId : NULL,
                 'institution_staff_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
                 'institution_staff_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
-                'institution_positions_position_no'=>!empty($position_no) ? $position_no : NULL,
-                'staff_position_titles_type'=>!empty($class) ? $class : NULL,
-                'staff_position_titles_name'=>!empty($staff_position_titles_name) ? $staff_position_titles_name : NULL,
-                'staff_types_name'=>!empty($staff_types_name) ? $staff_types_name : NULL,
+                'institution_positions_position_no' => !empty($position_no) ? $position_no : NULL,
+                'staff_position_titles_type' => !empty($class) ? $class : NULL,
+                'staff_position_titles_name' => !empty($staff_position_titles_name) ? $staff_position_titles_name : NULL,
+                'staff_types_name' => !empty($staff_types_name) ? $staff_types_name : NULL,
                 'shift_options_name' => !empty($shiftName) ? $shiftName : NULL,
                 'role_name' => ($role == 1) ? 'staff' : NULL
             ];
             //POCOR-6805 start
-            $Guardians = TableRegistry::get('staff_custom_field_values');
-            $staffCustomFieldOptions = TableRegistry::get('staff_custom_field_options');
-            $staffCustomFields = TableRegistry::get('staff_custom_fields');
-            $staffCustomFormsFields = TableRegistry::get('staff_custom_forms_fields');
+            //POCOR-8364
+            $Guardians = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
+            $staffCustomFieldOptions = TableRegistry::get('StaffCustomField.StaffCustomFieldOptions');
+            $staffCustomFields = TableRegistry::get('StaffCustomField.StaffCustomFields');
+            $staffCustomFormsFields = TableRegistry::get('StaffCustomField.StaffCustomFormsFields');
+            //POCOR-8364
             //POCOR-6805 start
+
             $guardianData = $Guardians->find()
-            ->select([
-                'id'                             => $Guardians->aliasField('id'),
-                'staff_id'                     => $Guardians->aliasField('staff_id'),
-                'staff_custom_field_id'        => $Guardians->aliasField('staff_custom_field_id'),
-                'text_value'                     => $Guardians->aliasField('text_value'),
-                'number_value'                   => $Guardians->aliasField('number_value'),
-                'decimal_value'                  => $Guardians->aliasField('decimal_value'),
-                'textarea_value'                 => $Guardians->aliasField('textarea_value'),
-                'date_value'                     => $Guardians->aliasField('date_value'),
-                'time_value'                     => $Guardians->aliasField('time_value'),
-                'checkbox_value_text'            => 'staffCustomFieldOptions.name',
-                'name'                           => 'staffCustomField.name',
-                'staff_custom_id'                => 'staffCustomField.id',
-                'field_type'                     => 'staffCustomField.field_type',
-            ])->leftJoin(
-                ['staffCustomField' => 'staff_custom_fields'],
-                [
-                    'staffCustomField.id = '.$Guardians->aliasField('staff_custom_field_id')
-                ]
-            )->leftJoin(
-                ['staffCustomFieldOptions' => 'staff_custom_field_options'],
-                [
-                    'staffCustomFieldOptions.id = '.$Guardians->aliasField('number_value')
-                ]
-            )
-            ->where([
-                $Guardians->aliasField('staff_id') => $user_id,
-            ])->hydrate(false)->toArray();
-        $custom_field = array();
-        $count = 0;
-        if(!empty($guardianData)){
-            foreach ($guardianData as $val) {
-                $custom_field['custom_field'][$count]["id"] = (!empty($val['staff_custom_id']) ? $val['staff_custom_id'] : '');
-                $custom_field['custom_field'][$count]["name"]= (!empty($val['name']) ? $val['name'] : '');
-                $fieldTypes[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
-                $fieldType = $fieldTypes[$count];
-                if($fieldType == 'TEXT'){
-                    $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
-                }else if ($fieldType == 'CHECKBOX') {
-                    $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['checkbox_value_text']) ? $val['checkbox_value_text'] : '');
-                }else if ($fieldType == 'NUMBER') {
-                    $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
-                }else if ($fieldType == 'DECIMAL') {
-                    $custom_field['custom_field'][$count]["decimal_value"] = (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
-                }else if ($fieldType == 'TEXTAREA') {
-                    $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
-                }else if ($fieldType == 'DROPDOWN') {
-                    $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['checkbox_value_text']) ? $val['checkbox_value_text'] : '');
-                }else if ($fieldType == 'DATE') {
-                    $custom_field['custom_field'][$count]["date_value"] = date('Y-m-d', strtotime($val->date_value));
-                }else if ($fieldType == 'TIME') {
-                    $custom_field['custom_field'][$count]["time_value"] = date('h:i A', strtotime($val->time_value));
-                }else if ($fieldType == 'COORDINATES') {
-                    $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                ->select([
+                    'id' => $Guardians->aliasField('id'),
+                    'staff_id' => $Guardians->aliasField('staff_id'),
+                    'staff_custom_field_id' => $Guardians->aliasField('staff_custom_field_id'),
+                    'text_value' => $Guardians->aliasField('text_value'),
+                    'number_value' => $Guardians->aliasField('number_value'),
+                    'decimal_value' => $Guardians->aliasField('decimal_value'),
+                    'textarea_value' => $Guardians->aliasField('textarea_value'),
+                    'date_value' => $Guardians->aliasField('date_value'),
+                    'time_value' => $Guardians->aliasField('time_value'),
+                    'checkbox_value_text' => 'staffCustomFieldOptions.name',
+                    'name' => 'staffCustomField.name',
+                    'staff_custom_id' => 'staffCustomField.id',
+                    'field_type' => 'staffCustomField.field_type',
+                ])
+                ->leftJoin(
+                    ['staffCustomField' => 'staff_custom_fields'],
+                    [
+                        'staffCustomField.id = ' . $Guardians->aliasField('staff_custom_field_id')
+                    ]
+                )
+                ->leftJoin(
+                    ['staffCustomFieldOptions' => 'staff_custom_field_options'],
+                    [
+                        'staffCustomFieldOptions.id = ' . $Guardians->aliasField('number_value')
+                    ]
+                )
+                ->where([
+                    $Guardians->aliasField('staff_id') => $user_id,
+                ])
+                ->toArray();
+
+            $custom_field = array();
+            $count = 0;
+            if (!empty($guardianData)) {
+                foreach ($guardianData as $val) {
+                    $custom_field['custom_field'][$count]["id"] = (!empty($val['staff_custom_id']) ? $val['staff_custom_id'] : '');
+                    $custom_field['custom_field'][$count]["name"] = (!empty($val['name']) ? $val['name'] : '');
+                    $fieldTypes[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
+                    $fieldType = $fieldTypes[$count];
+                    if ($fieldType == 'TEXT') {
+                        $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                    } else if ($fieldType == 'CHECKBOX') {
+                        $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['checkbox_value_text']) ? $val['checkbox_value_text'] : '');
+                    } else if ($fieldType == 'NUMBER') {
+                        $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
+                    } else if ($fieldType == 'DECIMAL') {
+                        $custom_field['custom_field'][$count]["decimal_value"] = (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
+                    } else if ($fieldType == 'TEXTAREA') {
+                        $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
+                    } else if ($fieldType == 'DROPDOWN') {
+                        $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['checkbox_value_text']) ? $val['checkbox_value_text'] : '');
+                    } else if ($fieldType == 'DATE') {
+                        $custom_field['custom_field'][$count]["date_value"] = date('Y-m-d', strtotime($val->date_value));
+                    } else if ($fieldType == 'TIME') {
+                        $custom_field['custom_field'][$count]["time_value"] = date('h:i A', strtotime($val->time_value));
+                    } else if ($fieldType == 'COORDINATES') {
+                        $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                    }
+                    $count++;
                 }
-                $count++;
             }
+            $body = array_merge($bodys, $custom_field); //POCOR-6805 end
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            $Webhooks->triggerShell('staff_update', ['username' => ''], $body);
         }
-          $body = array_merge($bodys, $custom_field); //POCOR-6805 end
-          $Webhooks = TableRegistry::get('Webhook.Webhooks');
-          $Webhooks->triggerShell('staff_update', ['username' => ''], $body);
-        }
-    }
-
-    private function setupTabElements($entity)
-    {
-        $id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
-        $options = [
-            'userRole' => 'Staff',
-            'action' => $this->action,
-            'id' => $id,
-            'userId' => $entity->id
-        ];
-
-        $tabElements = $this->controller->getUserTabElements($options);
-
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
     }
 
     public function staffAfterSave(Event $event, $staff)
@@ -931,104 +954,106 @@ class StaffUserTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-        $session = $this->request->session();
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->getSession();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $userNationalities = TableRegistry::get('StaffUser.userNationalities');
-        $userContacts = TableRegistry::get('StaffUser.userContacts');
-        $contactTypes = TableRegistry::get('StaffUser.ContactTypes  ');
-        $contactOptions = TableRegistry::get('StaffUser.contactOptions  ');
-        $institutionStaff = TableRegistry::get('StaffUser.InstitutionStaff');
+        $userNationalities = TableRegistry::get('User.userNationalities');
+        $userContacts = TableRegistry::get('UserContacts');
+        $contactTypes = TableRegistry::get('User.ContactTypes');
+        $contactOptions = TableRegistry::get('User.ContactOptions');
+        $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
 
 
         $query
-        ->select([
-            'staff_id' => $this->aliasField('id'),
-        ])
-        ->leftjoin(
-            [$institutionStaff->alias() => $institutionStaff->table()],
-            [$institutionStaff->aliasField('staff_id = ').$this->aliasField('id')]
-        )
-        ->where([
-            $this->aliasField('id = ').$staffUserId
-        ]);
+            ->select([
+                'staff_id' => $this->aliasField('id'),
+            ])
+            ->leftjoin(
+                [$institutionStaff->getAlias() => $institutionStaff->getTable()],
+                [$institutionStaff->aliasField('staff_id = ') . $this->aliasField('id')]
+            )
+            ->where([
+                $this->aliasField('id = ') . $staffUserId
+            ]);
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $userContacts = TableRegistry::get('StaffUser.userContacts');
-                $contactTypes = TableRegistry::get('StaffUser.ContactTypes ');
-                $contactOptions = TableRegistry::get('StaffUser.contactOptions');
+                $userContacts = TableRegistry::get('UserContacts');
+                $contactTypes = TableRegistry::get('User.ContactTypes');
+                $contactOptions = TableRegistry::get('User.ContactOptions');
 
-                $InstitutionStudents = TableRegistry::get('InstitutionStudents');
+                $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
 
                 $userContactsData = $userContacts
-                ->find()
-                ->select([
-                    'contact_number' => 'userContacts.value','userContacts.preferred','userContacts.contact_type_id',
-                ])
-                ->leftjoin(
-                    [$contactTypes->alias() => $contactTypes->table()],
-                    [$contactTypes->aliasField('id=').$userContacts->aliasField('contact_type_id')]
-                )
-                ->leftjoin(
-                    [$contactOptions->alias() => $contactOptions->table()],
-                    [$contactOptions->aliasField('id=').$contactTypes->aliasField('contact_option_id')]
-                )
-                ->where([
-                    $userContacts->aliasField('security_user_id') => $row->staff_id,'userContacts.preferred' => 1
-                ]);
+                    ->find()
+                    ->select([
+                        'contact_number' => 'userContacts.value', 'userContacts.preferred', 'userContacts.contact_type_id',
+                    ])
+                    ->leftjoin(
+                        [$contactTypes->getAlias() => $contactTypes->getTable()],
+                        [$contactTypes->aliasField('id=') . $userContacts->aliasField('contact_type_id')]
+                    )
+                    ->leftjoin(
+                        [$contactOptions->getAlias() => $contactOptions->getTable()],
+                        [$contactOptions->aliasField('id=') . $contactTypes->aliasField('contact_option_id')]
+                    )
+                    ->where([
+                        $userContacts->aliasField('security_user_id') => $row->staff_id, 'userContacts.preferred' => 1
+                    ]);
 
                 $arr = $userContactsData->toArray();
 
-                $contacct = array_filter($arr, function ($var){
+                $contacct = array_filter($arr, function ($var) {
                     return ($var['preferred'] == 1);
                 });
 
                 $row['contact_number'] = '';
-                if($contacct){
-                    $d = implode(', ',array_column($contacct, 'contact_number'));
-                    
+                if ($contacct) {
+                    $d = implode(', ', array_column($contacct, 'contact_number'));
+
                     $row['contact_number'] = $d;
                 }
 
-                $userIdentities = TableRegistry::get('StaffUser.userIdentities');
-                $identityType = TableRegistry::get('StaffUser.IdentityTypes  ');
-                $nationalities = TableRegistry::get('StaffUser.Nationalities');
+                $userIdentities = TableRegistry::get('User.Identities');
+                $identityType = TableRegistry::get('FieldOption.IdentityTypes');
+                $nationalities = TableRegistry::get('FieldOption.Nationalities');
 
                 $userIdentitiesData = $userIdentities
-                ->find()
-                ->select([
-                    'identity_type' => 'IdentityTypes.name',
-                    'nationality' => 'Nationalities.name',
-                    'number' => 'userIdentities.number',
-                    'issue_date' => 'userIdentities.issue_date',
-                    'expiry_date' => 'userIdentities.expiry_date',
-                    'issuer' => 'userIdentities.issue_location',
-                ])
-                ->leftjoin(
-                    [$identityType->alias() => $identityType->table()],
-                    [$identityType->aliasField('id = ').$userIdentities->aliasField('identity_type_id')]
-                )
-                ->leftjoin(
-                    [$nationalities->alias() => $nationalities->table()],
-                    [$userIdentities->aliasField('nationality_id = ').$nationalities->aliasField('id')]
-                )
-                ->where([
-                    $userIdentities->aliasField('security_user_id') => $row->staff_id,
-                ]);
+                    ->find()
+                    ->select([
+                        'identity_type' => 'IdentityTypes.name',
+                        'nationality' => 'Nationalities.name',
+                        'number' => 'Identities.number',
+                        'issue_date' => 'Identities.issue_date',
+                        'expiry_date' => 'Identities.expiry_date',
+                        'issuer' => 'Identities.issue_location',
+                    ])
+                    ->leftjoin(
+                        [$identityType->getAlias() => $identityType->getTable()],
+                        [$identityType->aliasField('id = ') . $userIdentities->aliasField('identity_type_id')]
+                    )
+                    ->leftjoin(
+                        [$nationalities->getAlias() => $nationalities->getTable()],
+                        [$userIdentities->aliasField('nationality_id = ') . $nationalities->aliasField('id')]
+                    )
+                    ->where([
+                        $userIdentities->aliasField('security_user_id') => $row->staff_id,
+                    ]);
 
                 $arr1 = $userIdentitiesData->toArray();
 
-                $identy_num = array_filter($arr1, function ($var){
+                $identy_num = array_filter($arr1, function ($var) {
                     return ($var['identity_type'] == 'Birth Certificate');
                 });
 
                 $row['number'] = '';
-                if($identy_num){
-                    $d = array_shift(array_values($identy_num));
-                    
+                if ($identy_num) {
+                    $array_nums = array_values($identy_num); // POCOR-9123
+                    $d = array_shift($array_nums);
+
                     $row['number'] = $d->number;
-                }else{
+                } else {
                     $row['number'] = $arr1[0]->number;
                 }
                 return $row;
@@ -1039,17 +1064,17 @@ class StaffUserTable extends ControllerActionTable
 
     public function findStaff(Query $query, array $options = [])
     {
-        $query->where([$this->aliasField('super_admin').' <> ' => 1]);
+        $query->where([$this->aliasField('super_admin') . ' <> ' => 1]);
 
-        $limit = (array_key_exists('limit', $options))? $options['limit']: null;
-        $page = (array_key_exists('page', $options))? $options['page']: null;
+        $limit = (isset($options['limit'])) ? $options['limit'] : null;
+        $page = (isset($options['page'])) ? $options['page'] : null;
 
         // conditions
-        $firstName = (array_key_exists('first_name', $options))? $options['first_name']: null;
-        $lastName = (array_key_exists('last_name', $options))? $options['last_name']: null;
-        $openemisNo = (array_key_exists('openemis_no', $options))? $options['openemis_no']: null;
-        $identityNumber = (array_key_exists('identity_number', $options))? $options['identity_number']: null;
-        $dateOfBirth = (array_key_exists('date_of_birth', $options))? $options['date_of_birth']: null;
+        $firstName = (isset($options['first_name'])) ? $options['first_name'] : null;
+        $lastName = (isset($options['last_name'])) ? $options['last_name'] : null;
+        $openemisNo = (isset($options['openemis_no'])) ? $options['openemis_no'] : null;
+        $identityNumber = (isset($options['identity_number'])) ? $options['identity_number'] : null;
+        $dateOfBirth = (isset($options['date_of_birth'])) ? $options['date_of_birth'] : null;
 
         if (is_null($firstName) && is_null($lastName) && is_null($openemisNo) && is_null($identityNumber) && is_null($dateOfBirth)) {
             return $query->where(['1 = 0']);
@@ -1074,15 +1099,15 @@ class StaffUserTable extends ControllerActionTable
             $identityConditions['Identities.number LIKE'] = $identityNumber . '%';
         }
 
-        $identityJoinType = (empty($identityNumber))? 'LEFT': 'INNER';
+        $identityJoinType = (empty($identityNumber)) ? 'LEFT' : 'INNER';
         $query->join([
             [
                 'type' => $identityJoinType,
                 'table' => 'user_identities',
                 'alias' => 'Identities',
                 'conditions' => array_merge([
-                        'Identities.security_user_id = ' . $this->aliasField('id')
-                    ], $identityConditions)
+                    'Identities.security_user_id = ' . $this->aliasField('id')
+                ], $identityConditions)
             ]
         ]);
 
@@ -1106,7 +1131,7 @@ class StaffUserTable extends ControllerActionTable
         $institutionId = $options['institution_id'];
         $startDate = $options['start_date'];
         //POCOR-6704 add code_name, id
-       // $query->select(['code_name'=>'InstitutionStaff.Institution.code','id'=>'InstitutionStaff.Institution.id'])->contain([
+        // $query->select(['code_name'=>'InstitutionStaff.Institution.code','id'=>'InstitutionStaff.Institution.id'])->contain([
         //POCOR-6901 remove the select
         $query->contain([
             'InstitutionStaff' => function ($q) use ($institutionId, $startDate) {
@@ -1118,10 +1143,29 @@ class StaffUserTable extends ControllerActionTable
                         ['InstitutionStaff.end_date IS NULL']
                     ]
                 ])
-                ->order(['InstitutionStaff.created' => 'desc']);
+                    ->order(['InstitutionStaff.created' => 'desc']);
             },
             'InstitutionStaff.Institutions.Areas'
         ]);
         return $query;
     }
+
+    public function afterAction(Event $event, ArrayObject $options)
+    {
+        $users = TableRegistry::get('Security.Users');
+        $plugin = __($this->controller->getPlugin());
+        $id = $this->request->getAttribute('params')['pass'][1];
+        $DecodedQueryString = $this->paramsDecode($id);
+        $staffId = $DecodedQueryString['staff_id'];
+        $data = $users->find()->select(['first_name'=>$users->aliasField('first_name'),'middle_name'=>$users->aliasField('middle_name'),'third_name'=>$users->aliasField('third_name'),'last_name'=>$users->aliasField('last_name')])
+                ->where([$users->aliasField('id') => $staffId ])->first();
+        $StaffName = $data->first_name.' '.$data->middle_name.' '.$data->third_name.' '.$data->last_name;
+        try {
+
+            $this->controller->set('contentHeader', $StaffName . ' - ' . 'Overview');
+        } catch (RecordNotFoundException $e) {
+            Log::write('error', $e->getMessage());
+        }
+    }
+
 }

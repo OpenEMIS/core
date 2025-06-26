@@ -9,14 +9,15 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use Cake\Http\ServerRequest;
 
 class TrainingTrainersTable extends AppTable
 {
     private $trainingSessionResults = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('training_session_trainers');
+        $this->setTable('training_session_trainers');
         parent::initialize($config);
         $this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
         $this->belongsTo('Trainers', ['className' => 'User.Users', 'foreignKey' => 'trainer_id']);
@@ -28,7 +29,7 @@ class TrainingTrainersTable extends AppTable
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -43,10 +44,10 @@ class TrainingTrainersTable extends AppTable
 
         //POCOR-6829 Start
         $academicPeriodId = $requestData->academic_period_id;
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $startDate = $periodEntity->start_date->format('Y-m-d');
-        $endDate = $periodEntity->end_date->format('Y-m-d'); 
+        $endDate = $periodEntity->end_date->format('Y-m-d');
         $conditions = [];
 
         if (!empty($academicPeriodId)) {
@@ -94,7 +95,7 @@ class TrainingTrainersTable extends AppTable
                     ]
                 ],
             ])
-            ->where([$conditions]) //POCOR-6829 
+            ->where([$conditions]) //POCOR-6829
             //->where(['Courses.id' => $trainingCourseId])
             ->order([$this->aliasField('name')]);
         if (!empty($trainingCourseId) && $trainingCourseId != -1) { //POCOR-6595 one condition add
@@ -105,10 +106,10 @@ class TrainingTrainersTable extends AppTable
             $query->where([$this->aliasField('training_session_id') => $trainingSessionId]);
         }
         //POCOR-6829 Start
-        // $query->formatResults(function (\Cake\Collection\CollectionInterface $results) { 
-        //     return $results->map(function ($row) { 
+        // $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+        //     return $results->map(function ($row) {
         //            //Staff Area Name**
-        //            $AreaT = TableRegistry::get('areas');
+        //            $AreaT = TableRegistry::getTableLocator()->get('areas');
         //            $AreaData = $AreaT->find()->where(['id' => $row->area_id])->first();
         //            $row['area_name'] = $AreaData->name;
 
@@ -204,11 +205,11 @@ class TrainingTrainersTable extends AppTable
             return ' ';
         }
     }
-   
+
     // start POCOR-6595
     public function onExcelGetIdentityType(Event $event, Entity $entity)
     {
-        $userIdentities = TableRegistry::get('user_identities');
+        $userIdentities = TableRegistry::getTableLocator()->get('User.UserIdentities');
         $userIdentitiesResult = $userIdentities->find()
                 ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
                 ->select([
@@ -217,7 +218,8 @@ class TrainingTrainersTable extends AppTable
                 ])
                 ->where([$userIdentities->aliasField('security_user_id') => $entity->trainer_id])
                 ->order([$userIdentities->aliasField('id DESC')])
-                ->hydrate(false)->toArray();
+                ->disableHydration() // POCOR-8533
+            ->toArray();
                 $entity->custom_identity_number = '';
                 $other_identity_array = [];
                 if (!empty($userIdentitiesResult)) {
@@ -248,20 +250,20 @@ class TrainingTrainersTable extends AppTable
     public function onExcelGetAreaName(Event $event, Entity $entity)
     {
         if (!empty($entity->trainer_id)) {
-            $InstitutionStaff = TableRegistry::get('Institution.Staff');
-            $Institution = TableRegistry::get('Institution.Institutions');
-            $AreaTable = TableRegistry::get('Area.Areas');
+            $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
+            $Institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
+            $AreaTable = TableRegistry::getTableLocator()->get('Area.Areas');
 
             $data = $InstitutionStaff->find()
                     ->select([
                         'area_name' => $AreaTable->aliasField('name')
                     ])
                     ->leftjoin(
-                        [$Institution->alias() => $Institution->table()],
+                        [$Institution->getAlias() => $Institution->getTable()],
                         [$Institution->aliasField('id = ').$InstitutionStaff->aliasField('institution_id')]
                     )
                     ->leftjoin(
-                        [$AreaTable->alias() => $AreaTable->table()],
+                        [$AreaTable->getAlias() => $AreaTable->getTable()],
                         [$AreaTable->aliasField('id = ').$Institution->aliasField('area_id')]
                     )
                     ->where([
@@ -270,10 +272,10 @@ class TrainingTrainersTable extends AppTable
                     ])->first();
 
                 if (!empty($data)) {
-                    return $data->area_name;                    
+                    return $data->area_name;
                 } else {
                     return ' - ';
-                }            
+                }
         }
     }
     // END POCOR-6595

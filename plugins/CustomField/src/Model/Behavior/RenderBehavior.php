@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\Utility\Inflector;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
 
 class RenderBehavior extends Behavior {
 	protected $fieldTypeCode;
@@ -13,7 +14,7 @@ class RenderBehavior extends Behavior {
     private $surveyRules = null;
     private $SurveyRulesTable;
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
         parent::initialize($config);
 
         $class = basename(str_replace('\\', '/', get_class($this)));
@@ -23,10 +24,10 @@ class RenderBehavior extends Behavior {
 		$code = strtoupper(Inflector::underscore($class));
 		$this->fieldTypeCode = $code;
 		$this->fieldType = $class;
-        $this->SurveyRulesTable = TableRegistry::get('Survey.SurveyRules');
+        $this->SurveyRulesTable = TableRegistry::getTableLocator()->get('Survey.SurveyRules');
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
     	$events = parent::implementedEvents();
     	$eventMap = [
             'Render.on'.$this->fieldType.'Initialize' => 'on'.$this->fieldType.'Initialize',
@@ -65,20 +66,49 @@ class RenderBehavior extends Behavior {
     }
 
     protected function processRelevancyDisabled($entity, $html, $fieldId, &$formHelper, $unlockFields) {
+        // POCOR-9105 start
+        // POCOR-9147 start
+        try {
+            // $entity_array = $entity->toArray();
+            $entity_array = $entity;
+        } catch (\Throwable $e) {
+            try {
+                $arrentity = $entity;
+                $arrentity->unsetProperty('_joinData'); // if exists
+                $arrentity->clean(); // resets dirty tracking, optional
+                $entity_array = $arrentity->extract($arrentity->visibleProperties());
+            } catch (\Throwable $e) {
+                $entity_array = [];
+            }
+        }
+        // POCOR-9147 end
+        $survey_form_id = $entity_array['survey_form_id'];
+        if($survey_form_id == null) {
+            $survey_form_id = $entity->survey_form_id;
+        }
+        if($survey_form_id == null) {
+            $survey_form_id = $entity->getOriginal('survey_form_id');
+        }
+        if(!isset($survey_form_id)) {
+            $this->surveyRules = null;
+            return $html;
+        }
         if (is_null($this->surveyRules)) {
             $rules = $this->SurveyRulesTable
                 ->find()
                 ->where([
-                    $this->SurveyRulesTable->aliasField('survey_form_id') => $entity->survey_form_id,
+                    $this->SurveyRulesTable->aliasField('survey_form_id') => $survey_form_id,
                     $this->SurveyRulesTable->aliasField('enabled') => 1
                 ])
                 ->select([
+                    $this->SurveyRulesTable->aliasField('survey_form_id'),
                     $this->SurveyRulesTable->aliasField('survey_question_id'),
                     $this->SurveyRulesTable->aliasField('dependent_question_id'),
                     $this->SurveyRulesTable->aliasField('show_options')
                 ])
-                ->hydrate(false)
+                ->disableHydration()
                 ->toArray();
+            // POCOR-9105 end
             foreach ($rules as $rule) {
                 $showOptionsJsonArray = str_replace('"', '', $rule['show_options']);
                 $this->surveyRules[$rule['survey_question_id']] = [
@@ -103,7 +133,7 @@ class RenderBehavior extends Behavior {
     }
 
     protected function getStepFromParams($params=[]) {
-        if (array_key_exists('precision', $params) && ($params['precision'] > 0)) {
+        if (isset($params['precision']) && ($params['precision'] > 0)) {
             $step = '0.';
 
             for ($i=1; $i <= $params['precision']; $i++) {

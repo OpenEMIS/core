@@ -46,7 +46,7 @@ class DirectoryRepository extends Controller
 
                 $c++;
             }
-            
+
             return $list;
         } catch (\Exception $e) {
             Log::error(
@@ -182,7 +182,7 @@ class DirectoryRepository extends Controller
             $resp['password'] = $out;
 
             return $resp;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to generate Password.',
@@ -197,19 +197,32 @@ class DirectoryRepository extends Controller
     public function getContactTypes($params)
     {
         try {
-            $contactTypes = ContactType::select('id', 'name')->get();
+            $contactTypes = ContactType::select('id', 'name');
 
-            $list = [];
-            foreach ($contactTypes as $key => $contactType) {
-                $list[$key]['id'] = $contactType['id'];
-                $list[$key]['name'] = $contactType['name'];
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $contactTypes = $contactTypes->orderBy($col, $orderBy);
             }
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $contactTypes->paginate($limit)->toArray();
+            } else {
+                $list = $contactTypes->get()->toArray();
+
+            }
+            //For POCOR-8215/8216 end...
             return $list;
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Contact Type List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
+
             return $this->sendErrorResponse('Contact Type List Not Found');
         }
     }
@@ -243,14 +256,24 @@ class DirectoryRepository extends Controller
     public function getFieldOptions($params)
     {
         try {
-            $list = FieldOption::get()->toArray();
+            $fieldOptions = new FieldOption();
 
-            $total = count($list);
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $fieldOptions = $fieldOptions->orderBy($col, $orderBy);
+            }
 
-            $resp['list'] = $list;
-            $resp['total'] = $total;
-            
-            return $resp;
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $fieldOptions->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $fieldOptions->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+            return $list;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Field Options List from DB',
@@ -270,10 +293,10 @@ class DirectoryRepository extends Controller
             if($data){
                 $resp['data'] = $data;
             }
-            
+
 
             return $resp;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Field Option Data from DB',
@@ -302,17 +325,31 @@ class DirectoryRepository extends Controller
                 $checkUser = $checkUser->where('nationality_id', $nationality_id);
             }
 
-            $checkUser = $checkUser->get();
-            
-            if($checkUser){
-                $checkUser = $checkUser->toArray();
-                $resp['user_exist'] = 1;
-                $resp['data'] = $checkUser;
-            } else {
-                $resp['user_exist'] = 0;
-                $resp['data'] = $checkUser;
+            //$checkUser = $checkUser->get();
+
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $checkUser = $checkUser->orderBy($col, $orderBy);
             }
-            return $resp;
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $checkUser->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $checkUser->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+            if($list){
+                $list['user_exist'] = 1;
+            } else {
+                $list['user_exist'] = 0;
+            }
+
+            return $list;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch User Data from DB',
@@ -354,18 +391,18 @@ class DirectoryRepository extends Controller
                     ->leftJoin('area_administratives', 'area_administratives.id', '=', 'security_users.address_area_id')
                     ->leftJoin('area_administratives as birthAreaAdministratives', 'birthAreaAdministratives.id', '=', 'security_users.birthplace_area_id')
                     ->where('security_users.super_admin', '!=', 1)
-                    ->select('security_users.*', 
-                        'genders.id as Genders_id', 
-                        'genders.name as Genders_name', 
-                        'identity_types.id as MainIdentityTypes_id', 
-                        'identity_types.name as MainIdentityTypes_name', 
-                        'nationalities.id as MainNationalities_id', 
-                        'nationalities.name as MainNationalities_name', 
-                        'area_administratives.name as area_name', 
-                        'area_administratives.code as area_code', 
-                        'birthAreaAdministratives.name as birth_area_name', 
-                        'birthAreaAdministratives.code as birth_area_code', 
-                        'user_identities.number as MainIdentityTypes_number', 
+                    ->select('security_users.*',
+                        'genders.id as Genders_id',
+                        'genders.name as Genders_name',
+                        'identity_types.id as MainIdentityTypes_id',
+                        'identity_types.name as MainIdentityTypes_name',
+                        'nationalities.id as MainNationalities_id',
+                        'nationalities.name as MainNationalities_name',
+                        'area_administratives.name as area_name',
+                        'area_administratives.code as area_code',
+                        'birthAreaAdministratives.name as birth_area_name',
+                        'birthAreaAdministratives.code as birth_area_code',
+                        'user_identities.number as MainIdentityTypes_number',
                     );
 
                 if (!empty($firstName)) {
@@ -421,18 +458,18 @@ class DirectoryRepository extends Controller
                     ->leftJoin('area_administratives', 'area_administratives.id', '=', 'security_users.address_area_id')
                     ->leftJoin('area_administratives as birthAreaAdministratives', 'birthAreaAdministratives.id', '=', 'security_users.birthplace_area_id')
                     ->where('security_users.super_admin', '!=', 1)
-                    ->select('security_users.*', 
-                        'genders.id as Genders_id', 
-                        'genders.name as Genders_name', 
-                        'identity_types.id as MainIdentityTypes_id', 
-                        'identity_types.name as MainIdentityTypes_name', 
-                        'nationalities.id as MainNationalities_id', 
-                        'nationalities.name as MainNationalities_name', 
-                        'area_administratives.name as area_name', 
-                        'area_administratives.code as area_code', 
-                        'birthAreaAdministratives.name as birth_area_name', 
-                        'birthAreaAdministratives.code as birth_area_code', 
-                        'user_identities.number as MainIdentityTypes_number', 
+                    ->select('security_users.*',
+                        'genders.id as Genders_id',
+                        'genders.name as Genders_name',
+                        'identity_types.id as MainIdentityTypes_id',
+                        'identity_types.name as MainIdentityTypes_name',
+                        'nationalities.id as MainNationalities_id',
+                        'nationalities.name as MainNationalities_name',
+                        'area_administratives.name as area_name',
+                        'area_administratives.code as area_code',
+                        'birthAreaAdministratives.name as birth_area_name',
+                        'birthAreaAdministratives.code as birth_area_code',
+                        'user_identities.number as MainIdentityTypes_number',
                     )
                     ->groupBy('security_users.id')
                     ->get()
@@ -462,18 +499,18 @@ class DirectoryRepository extends Controller
                     ->leftJoin('area_administratives', 'area_administratives.id', '=', 'security_users.address_area_id')
                     ->leftJoin('area_administratives as birthAreaAdministratives', 'birthAreaAdministratives.id', '=', 'security_users.birthplace_area_id')
                     ->where('security_users.super_admin', '!=', 1)
-                    ->select('security_users.*', 
-                        'genders.id as Genders_id', 
-                        'genders.name as Genders_name', 
-                        'identity_types.id as MainIdentityTypes_id', 
-                        'identity_types.name as MainIdentityTypes_name', 
-                        'nationalities.id as MainNationalities_id', 
-                        'nationalities.name as MainNationalities_name', 
-                        'area_administratives.name as area_name', 
-                        'area_administratives.code as area_code', 
-                        'birthAreaAdministratives.name as birth_area_name', 
-                        'birthAreaAdministratives.code as birth_area_code', 
-                        'user_identities.number as MainIdentityTypes_number', 
+                    ->select('security_users.*',
+                        'genders.id as Genders_id',
+                        'genders.name as Genders_name',
+                        'identity_types.id as MainIdentityTypes_id',
+                        'identity_types.name as MainIdentityTypes_name',
+                        'nationalities.id as MainNationalities_id',
+                        'nationalities.name as MainNationalities_name',
+                        'area_administratives.name as area_name',
+                        'area_administratives.code as area_code',
+                        'birthAreaAdministratives.name as birth_area_name',
+                        'birthAreaAdministratives.code as birth_area_code',
+                        'user_identities.number as MainIdentityTypes_number',
                     );
 
                     if (!empty($firstName)) {
@@ -507,7 +544,7 @@ class DirectoryRepository extends Controller
                     $security_users_result = $get_result_by_identity_users_result;
                 }
 
-                $totalCount = count($security_users_result);  
+                $totalCount = count($security_users_result);
 
             }
 
@@ -668,7 +705,7 @@ class DirectoryRepository extends Controller
                 $user_internal_search_result[] = [
                     'id' => $security_user_id,
                     'username' => $security_user['username'],
-                    'password' => $security_user['password'],
+//                    'password' => $security_user['password'], // POCOR-9053
                     'openemis_no' => $security_user['openemis_no'],
                     'first_name' => $security_user['first_name'],
                     'middle_name' => $security_user['middle_name'],
@@ -881,7 +918,7 @@ class DirectoryRepository extends Controller
                     $count++;
                 }
             }
-            
+
             return $custom_field;
         } catch (\Exception $e) {
             return false;
@@ -915,7 +952,7 @@ class DirectoryRepository extends Controller
                     )
                     ->get()
                     ->toArray();
-            
+
             $custom_field = array();
             $count = 0;
 
@@ -958,14 +995,32 @@ class DirectoryRepository extends Controller
     public function getRelationshipTypes($params)
     {
         try {
-            $list = GuardianRelation::where('visible', 1)->orderBy('order', 'ASC')->get()->toArray();
-            
+            $relations = GuardianRelation::where('visible', 1)->orderBy('order', 'ASC');
+            $list = [];
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $relations = $relations->orderBy($col, $orderBy);
+            }
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $relations->paginate($limit)->toArray();
+            } else {
+                $list = $relations->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+
             return $list;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Relationship Types from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
+
             return $this->sendErrorResponse('Relationship Types Not Found');
         }
     }
@@ -974,17 +1029,32 @@ class DirectoryRepository extends Controller
     public function getStaffType($params)
     {
         try {
-            $list = StaffTypes::where("visible", 1)->get()->toArray();
-            $total = count($list);
-            $resp['list'] = $list;
-            $resp['total'] = $total;
+            $staffTypes = StaffTypes::where("visible", 1);
+            $list = [];
 
-            return $resp;
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $staffTypes = $staffTypes->orderBy($col, $orderBy);
+            }
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $staffTypes->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $staffTypes->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+
+            return $list;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Staff Types from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
+
             return $this->sendErrorResponse('Staff Types Not Found');
         }
     }
@@ -997,6 +1067,8 @@ class DirectoryRepository extends Controller
     {
         try {
             $result_array = [];
+            $list = [];
+
             if(isset($params['id'])){
                 $id = $params['id'];
 
@@ -1009,24 +1081,37 @@ class DirectoryRepository extends Controller
                     $id_arr[$key] = $data['staff_position_grade_id'];
                 }
 
-                
+
 
                 if(count($id_arr) > 0){
                     if($id_arr[0] == '-1'){
-                        $staff_position_grades_result = StaffPositionGrades::select('id', 'name')->where('visible', 1)->get()->toArray();
+                        $staff_position_grades_result = StaffPositionGrades::select('id', 'name')->where('visible', 1);
                     } else {
-                        $staff_position_grades_result = StaffPositionGrades::select('id', 'name')->where('visible', 1)->whereIn('id', $id_arr)->get()->toArray();
+                        $staff_position_grades_result = StaffPositionGrades::select('id', 'name')->where('visible', 1)->whereIn('id', $id_arr);
                     }
 
-                    foreach ($staff_position_grades_result AS $result) {
-                        $result_array[] = array("id" => $result['id'], "name" => $result['name']);
+
+                    //For POCOR-8215/8216 start...
+                    if(isset($params['order'])){
+                        $orderBy = $params['order_by']??"ASC";
+                        $col = $params['order'];
+                        $staff_position_grades_result = $staff_position_grades_result->orderBy($col, $orderBy);
                     }
+
+                    if(isset($params['limit'])){
+                        $limit = $params['limit'];
+                        $list = $staff_position_grades_result->paginate($limit)->toArray();
+                    } else {
+                        $list = $staff_position_grades_result->get()->toArray();
+                    }
+                    //For POCOR-8215/8216 end...
+
                 }
-                
+
             }
 
-            return $result_array;
-            
+            return $list;
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Staff position grades.',
@@ -1040,4 +1125,4 @@ class DirectoryRepository extends Controller
 }
 
 
-        
+

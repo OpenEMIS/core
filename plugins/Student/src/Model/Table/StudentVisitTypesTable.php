@@ -8,9 +8,9 @@ class StudentVisitTypesTable extends AppTable
     const INSTITUTION_VISIT = 1;
     const HOME_VISIT = 2;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('student_visit_types');
+        $this->setTable('student_visit_types');
         parent::initialize($config);
 
         $this->hasMany('StudentVisitRequests', ['className' => 'Student.StudentVisitRequests', 'dependent' => true, 'cascadeCallbacks' => true]);

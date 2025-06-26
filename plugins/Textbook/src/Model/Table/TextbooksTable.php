@@ -17,13 +17,14 @@ use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
+use Cake\Http\ServerRequest;
 
 class TextbooksTable extends ControllerActionTable {
     use MessagesTrait;
     use HtmlTrait;
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -31,9 +32,9 @@ class TextbooksTable extends ControllerActionTable {
         $this->belongsTo('EducationGrades',     ['className' => 'Education.EducationGrades']);
         $this->belongsTo('EducationSubjects',   ['className' => 'Education.EducationSubjects']);
 
-        // $this->belongsTo('TextbookDimensions',   ['className' => 'Textbook.TextbookDimensions']); //POCOR-7362
+        $this->belongsTo('TextbookDimensions',   ['className' => 'Textbook.TextbookDimensions']); //POCOR-7362
 
-        $this->hasMany('TextbookDimensions', ['className' => 'Textbook.TextbookDimensions', 'foreignKey' => ['textbook_id', 'textbook_dimension_id'], 'dependent' => true, 'cascadeCallBack' => true]); //POCOR-7362
+        // $this->hasMany('TextbookDimensions', ['className' => 'Textbook.TextbookDimensions', 'foreignKey' => ['textbook_id', 'textbook_dimension_id'], 'dependent' => true, 'cascadeCallBack' => true]); //POCOR-7362
 
         $this->hasMany('InstitutionTextbooks', ['className' => 'Institution.InstitutionTextbooks', 'foreignKey' => ['textbook_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallBack' => true]);
 
@@ -44,7 +45,7 @@ class TextbooksTable extends ControllerActionTable {
         $this->EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
 
         return $validator
@@ -61,7 +62,8 @@ class TextbooksTable extends ControllerActionTable {
         $request = $this->request;
 
         //academic period filter
-        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+        $request = $this->request;
+        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($request->getQuery('period')));
 
         $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noTextbooks')),
@@ -79,13 +81,13 @@ class TextbooksTable extends ControllerActionTable {
 
         //education level filter
         $levelOptions = $this->EducationLevels->getEducationLevelOptions($selectedPeriod);
-					
+
         if ($levelOptions) {
             $levelOptions = array(-1 => __('-- Select Education Level --')) + $levelOptions;
         }
 
-        if ($request->query('level')) {
-            $selectedLevel = $request->query('level');
+        if ($request->getQuery('level')) {
+            $selectedLevel =  $request->getQuery('level');
         } else {
             $selectedLevel = -1;
         }
@@ -111,8 +113,8 @@ class TextbooksTable extends ControllerActionTable {
 
             $programmeOptions = array(-1 => __('-- Please Select Education Programme --')) + $programmeOptions;
 
-            if ($request->query('programme')) {
-                $selectedProgramme = $request->query('programme');
+            if ($request->getQuery('programme')) {
+                $selectedProgramme = $request->getQuery('programme');
             } else {
                 $selectedProgramme = -1;
             }
@@ -146,8 +148,8 @@ class TextbooksTable extends ControllerActionTable {
 
             $subjectOptions = array(-1 => __('-- All Education Subject --')) + $subjectOptions;
 
-            if ($request->query('subject')) {
-                $selectedSubject = $request->query('subject');
+            if ($request->getQuery('subject')) {
+                $selectedSubject = $request->getQuery('subject');
             } else {
                 $selectedSubject = -1;
             }
@@ -178,7 +180,7 @@ class TextbooksTable extends ControllerActionTable {
         ]);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Textbooks','Textbooks');       
+		$is_manual_exist = $this->getManualUrl('Administration','Textbooks','Textbooks');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -200,19 +202,19 @@ class TextbooksTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $hasSearchKey = $this->request->session()->read($this->registryAlias().'.search.key');
+        $hasSearchKey = $this->request->getSession()->read($this->getRegistryAlias().'.search.key');
 
         $conditions = [];
 
         if (!$hasSearchKey) {
             //filter
-            if (array_key_exists('selectedPeriod', $extra)) {
+            if (isset($extra['selectedPeriod'])) {
                 if ($extra['selectedPeriod']) {
                     $conditions[] = $this->aliasField('academic_period_id = ') . $extra['selectedPeriod'];
                 }
             }
 
-            if (array_key_exists('selectedProgramme', $extra)) {
+            if (isset($extra['selectedProgramme'])) {
                 if ($extra['selectedProgramme']) {
                     $query->innerJoinWith('EducationGrades.EducationProgrammes');
                     // pr($query);
@@ -220,13 +222,13 @@ class TextbooksTable extends ControllerActionTable {
                 }
             }
 
-            if (array_key_exists('selectedGrade', $extra)) {
+            if (isset($extra['selectedGrade'])) {
                 if ($extra['selectedGrade'] > 0) {
                     $conditions[] = $this->aliasField('education_grade_id = ') . $extra['selectedGrade'];
                 }
             }
 
-            if (array_key_exists('selectedSubject', $extra)) {
+            if (isset($extra['selectedSubject'])) {
                 if ($extra['selectedSubject'] && $extra['selectedSubject'] > 0) {
                     $gradeSubject = explode('-', $extra['selectedSubject']);
                     $conditions[] = $this->aliasField('education_grade_id = ') . $gradeSubject[0];
@@ -286,14 +288,17 @@ class TextbooksTable extends ControllerActionTable {
     // POCOR-7362
     public function onGetTextbookDimensionId(Event $event, Entity $entity)
     {
-        
-        $textbookdimensions = TableRegistry::get('textbook_dimensions');
+        $textbookdimensions = TableRegistry::get('Textbook.TextbookDimensions');
         $query = $textbookdimensions->find()
-                ->select('name')
-                ->where([
-                    'id' => $entity->textbook_dimension_id
-                ])
-                ->hydrate(false);
+                ->select(['name'])
+                ->where(function ($exp, $q) use ($entity) {
+                    if ($entity->textbook_dimension_id !== null) {
+                        return $exp->eq('id', $entity->textbook_dimension_id);
+                    } else {
+                        return $exp->isNull('id');
+                    }
+                })->enableHydration(false);
+
 
         $result = $query->toArray();
         if ($this->action == 'view') {
@@ -302,10 +307,10 @@ class TextbooksTable extends ControllerActionTable {
     }
     // POCOR-7362
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
 
             $attr['options'] = $periodOptions;
 			$attr['onChangeReload'] = true;
@@ -320,19 +325,19 @@ class TextbooksTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldEducationLevelId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
             if ($action == 'add') {
 				$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-				if(!empty($this->request->query('period')) && empty($request->data($this->aliasField('academic_period_id')))) {
-					$academicPeriodId = $this->request->query('period');
+				if(!empty($this->request->getQuery('period')) && empty($request->getData($this->aliasField('academic_period_id')))) {
+					$academicPeriodId = $this->request->getQuery('period');
 				} else {
-					$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();					
+					$academicPeriodId = !is_null($this->request->getData($this->aliasField('academic_period_id'))) ? $this->request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
 				}
                 $educationLevelOptions = $this->EducationLevels->getEducationLevelOptions($academicPeriodId);
-					
+
                 $attr['options'] = $educationLevelOptions;
                 $attr['onChangeReload'] = 'changeEducationLevel';
 
@@ -351,26 +356,29 @@ class TextbooksTable extends ControllerActionTable {
     public function addEditOnChangeEducationLevel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        $request->query['programme'] = -1;
-        $request->query['grade'] = -1;
-        $request->query['subject'] = -1;
+        $request->getQuery['programme'] = -1;
+        $request->getQuery['grade'] = -1;
+        $request->getQuery['subject'] = -1;
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_level_id', $request->data[$this->alias()])) {
-                    $request->query['level'] = $request->data[$this->alias()]['education_level_id'];
+            $data = $request->getData();  // POCOR-8697
+            
+            if (is_array($data) && array_key_exists($this->getAlias(), $data)) {
+                if (array_key_exists('education_level_id', $data[$this->getAlias()])) {
+                    $request = $request->withQueryParams(['level' => $data[$this->getAlias()]['education_level_id']]);
                 }
             }
         }
+         
     }
 
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
             if ($action == 'add') {
-
-                $selectedLevel = $request->query('level');
+                // $selectedLevel = $this->request->getQuery('level'); //POCOR-7485
+                $selectedLevel = $this->request->getData('Textbooks')['education_level_id'];
 
                 $programmeOptions = [];
                 if ($selectedLevel) {
@@ -393,25 +401,26 @@ class TextbooksTable extends ControllerActionTable {
     public function addEditOnChangeEducationProgramme(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        $request->query['grade'] = -1;
-        $request->query['subject'] = -1;
+        $request->getQuery['grade'] = -1;
+        $request->getQuery['subject'] = -1;
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
-                    $request->query['programme'] = $request->data[$this->alias()]['education_programme_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('education_programme_id', $request->getData()[$this->getAlias()])) {
+                    $request->getQuery['programme'] = $request->getData()[$this->getAlias()]['education_programme_id'];
                 }
             }
         }
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
             if ($action == 'add') {
 
-                $selectedProgramme = $request->query('programme');
+                // $selectedProgramme = $request->getQuery('programme'); //POCOR-7485
+                $selectedProgramme = $request->getData('Textbooks')['education_programme_id'];
                 $gradeOptions = [];
                 if ($selectedProgramme) {
                     $gradeOptions = $this->EducationGrades->getEducationGradesByProgrammes($selectedProgramme);
@@ -435,28 +444,29 @@ class TextbooksTable extends ControllerActionTable {
     public function addEditOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        $request->query['subject'] = -1;
+        $request->getQuery['subject'] = -1;
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
-                    $request->query['programme'] = $request->data[$this->alias()]['education_programme_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('education_programme_id', $request->getData()[$this->getAlias()])) {
+                    $request->getQuery['programme'] = $request->getData()[$this->getAlias()]['education_programme_id'];
                 }
 
-                if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
-                    $request->query['grade'] = $request->data[$this->alias()]['education_grade_id'];
+                if (array_key_exists('education_grade_id', $request->getData()[$this->getAlias()])) {
+                    $request->getQuery['grade'] = $request->getData()[$this->getAlias()]['education_grade_id'];
                 }
             }
         }
     }
 
-    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
             if ($action == 'add') {
 
-                $selectedGrade = $request->query('grade');
+                // $selectedGrade = $request->getQuery('grade'); //POCOR-7485
+                $selectedGrade = $request->getData('Textbooks')['education_grade_id'];
                 $subjectOptions = [];
                 if ($selectedGrade) {
                     $subjectOptions = $this->EducationSubjects->getEducationSubjectsByGrades($selectedGrade);
@@ -476,7 +486,7 @@ class TextbooksTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCode(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
 
@@ -489,16 +499,18 @@ class TextbooksTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldExpiryDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldExpiryDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['default_date'] = false;
         return $attr;
     }
 
-    public function onUpdateFieldYearPublished(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldYearPublished(Event $event, array $attr, $action, ServerRequest $request)
     {
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $lowestYear = $ConfigItems->value('lowest_year');
+
+        $lowestYear = $ConfigItems->value('lowest_year') ?? '1950';
 
         if ($action == 'add' || $action == 'edit') {
             $now = Time::now();
@@ -511,20 +523,21 @@ class TextbooksTable extends ControllerActionTable {
 
         return $attr;
     }
+    
 
     // POCOR-7362
 
-    public function onUpdateFieldTextbookDimensionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTextbookDimensionId(Event $event, array $attr, $action, ServerRequest $request)
     {
-         $textbookdimensions = TableRegistry::get('textbook_dimensions');
+         $textbookdimensions = TableRegistry::get('Textbook.TextbookDimensions');
          if ($action == 'add' || $action == 'edit') {
          $dimension = $textbookdimensions->find('list')->toArray();
-         
+
          $attr['options'] = $dimension;
          }
 
          return $attr;
-               
+
     }
 
     // POCOR-7362 ends
@@ -614,6 +627,46 @@ class TextbooksTable extends ControllerActionTable {
     {
         if ($field == 'textbook_dimension_id') {
             return __('Dimension');
+        } elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'education_level_id') {
+            return __('Education Level');
+        } elseif ($field == 'education_subject_id') {
+            return __('Education Subject');
+        } elseif ($field == 'title') {
+            return __('Title');
+        } elseif ($field == 'author') {
+            return __('Auther');
+        } elseif ($field == 'publisher') {
+            return __('Publisher');
+        } elseif ($field == 'year_published') {
+            return __('Year Published');
+        } elseif ($field == 'ISBN') {
+            return __('ISBN');
+        } elseif ($field == 'expiry_date') {
+            return __('Expiry Date');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'education_programme_id') {
+            return __('Education Programme');
+        } elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        }elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'modified') {
+            return __('Modified On');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

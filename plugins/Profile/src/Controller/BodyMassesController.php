@@ -4,11 +4,11 @@ namespace Profile\Controller;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use App\Controller\PageController;
-use Page\Model\Entity\PageElement;//POCOR-6255
+use Page\Model\Entity\PageElement; //POCOR-6255
 
 class BodyMassesController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('AcademicPeriod.AcademicPeriods');
@@ -16,6 +16,7 @@ class BodyMassesController extends PageController
         $this->Page->loadElementsFromTable($this->UserBodyMasses);
         $this->Page->disable(['search']); // to disable the search function
         $this->Page->enable(['download']);
+
     }
 
     public function index()
@@ -23,8 +24,8 @@ class BodyMassesController extends PageController
         $page = $this->Page;
         $page->exclude(['comment', 'security_user_id', 'file_name', 'file_content']);//POCOR-6255
 
-        $requestQuery = $this->request->query;
-        if (array_key_exists('sort', $requestQuery)) {
+        $requestQuery = $this->request->getQuery();
+        if (isset($requestQuery['sort'])) {
             $page->setQueryOption('sort', $requestQuery['sort']);
             $page->setQueryOption('direction', $requestQuery['direction']);
         }
@@ -32,7 +33,7 @@ class BodyMassesController extends PageController
         parent::index();
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         parent::beforeFilter($event);
@@ -92,17 +93,17 @@ class BodyMassesController extends PageController
     public function setBreadCrumb($options)
     {
         $page = $this->Page;
-        $plugin = $this->plugin;
+        $plugin = $this->getPlugin();
 
-        $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
-        $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
+        $userId = isset($options['userId']) ? $options['userId'] : 0;
+        $userName = isset($options['userName']) ? $options['userName'] : '';
         $encodedUserId = $this->paramsEncode(['id' => $userId]);
 
         // for Institution Staff and Institution Students
         if ($plugin == 'Institution') {
-            $userRole = array_key_exists('userRole', $options) ? $options['userRole'] : '';
-            $encodedInstitutionId = array_key_exists('institutionId', $options) ? $options['institutionId'] : 0;
-            $institutionName = array_key_exists('institutionName', $options) ? $options['institutionName'] : '';
+            $userRole = isset($options['userRole']) ? $options['userRole'] : '';
+            $encodedInstitutionId = isset($options['institutionId']) ? $options['institutionId'] : 0;
+            $institutionName = isset($options['institutionName']) ? $options['institutionName'] : '';
             $pluralUserRole = Inflector::pluralize($userRole);
 
             $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
@@ -127,9 +128,9 @@ class BodyMassesController extends PageController
     public function setupTabElements($options)
     {
         $page = $this->Page;
-        $plugin = $this->plugin;
-        $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
-        $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
+        $plugin = $this->getPlugin();
+        $userId = isset($options['userId']) ? $options['userId'] : 0;
+        $userName = isset($options['userName']) ? $options['userName'] : '';
 
         $encodedUserId = $this->paramsEncode(['security_user_id' => $userId]);
         $pluralPlugin = Inflector::pluralize($plugin);
@@ -181,11 +182,11 @@ class BodyMassesController extends PageController
     public function setupInstitutionTabElements($options)
     {
         $page = $this->Page;
-        $plugin = $this->plugin;
-        $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
-        $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
-        $userRole = array_key_exists('userRole', $options) ? $options['userRole'] : '';
-        $encodedInstitutionId = array_key_exists('institutionId', $options) ? $options['institutionId'] : 0;
+        $plugin = $this->getPlugin();
+        $userId = isset($options['userId']) ? $options['userId'] : 0;
+        $userName = isset($options['userName']) ? $options['userName'] : '';
+        $userRole = isset($options['userRole']) ? $options['userRole'] : '';
+        $encodedInstitutionId = isset($options['institutionId']) ? $options['institutionId'] : 0;
 
         $encodedUserId = $this->paramsEncode(['security_user_id' => $userId]);
         $pluralUserRole = Inflector::pluralize($userRole);
@@ -240,7 +241,7 @@ class BodyMassesController extends PageController
     {
         $page = $this->Page;
         $action = ['add', 'edit', 'view'];
-        if (in_array($this->request->params['action'], $action)) {
+        if (in_array($this->request->getParam('action'), $action)) {
             $page->get('height')->setLabel([
                 'escape' => false,
                 'class' => 'tooltip-desc',
@@ -267,5 +268,23 @@ class BodyMassesController extends PageController
         $tooltipMessage = '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
 
         return $tooltipMessage;
+    }
+
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    {
+        // if (!array_key_exists('_serialize', $this->viewVars) &&
+        //     in_array($this->response->type(), ['application/json', 'application/xml'])
+        // ) {
+        //     $this->set('_serialize', true);
+        // }
+        $this->set('_serialize', true);
+        $this->viewBuilder()->addHelper('Label');
+        $this->viewBuilder()->addHelper('Text');
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+        $this->viewBuilder()->addHelper('ControllerAction.HtmlField');
+        $this->viewBuilder()->addHelper('OpenEmis.Navigation');
+        $this->viewBuilder()->addHelper('OpenEmis.Resource');
+        $this->viewBuilder()->addHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);
+
     }
 }

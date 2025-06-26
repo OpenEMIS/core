@@ -6,7 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
@@ -15,10 +15,10 @@ class StaffTable extends AppTable
 {
     public $InstitutionStaff;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
-        $this->entityClass('User.User');
+        $this->setTable('security_users');
+        $this->setEntityClass('User.User');
         parent::initialize($config);
 
         // Associations
@@ -29,7 +29,7 @@ class StaffTable extends AppTable
         // Behaviors
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
-        $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts']]);
+        $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities']]); // POCOR-9123
         $this->addBehavior('AdvanceSearch');
 
         $this->addBehavior('CustomField.Record', [
@@ -42,7 +42,7 @@ class StaffTable extends AppTable
             'formKey' => 'staff_custom_form_id',
             'filterKey' => 'staff_custom_filter_id',
             'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
-            'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
+             'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
             'recordKey' => 'staff_id',
             'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
             'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
@@ -64,6 +64,8 @@ class StaffTable extends AppTable
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
 
         $this->InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Staff.StaffTab', ['controller' => $controller]);
     }
 
     public static function handleAssociations($model)
@@ -96,7 +98,7 @@ class StaffTable extends AppTable
     }
 
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $BaseUsers = TableRegistry::get('User.Users');
@@ -150,7 +152,7 @@ class StaffTable extends AppTable
         $query->innerJoin(
             ['InstitutionStaff' => 'institution_site_staff'],
             [
-                'InstitutionStaff.security_user_id = ' . $this->aliasField($this->primaryKey()),
+                'InstitutionStaff.security_user_id = ' . $this->aliasField($this->getPrimaryKey()),
                 'InstitutionStaff.institution_site_id IN ' => $institutionIds
             ]
         );
@@ -192,7 +194,7 @@ class StaffTable extends AppTable
         // need to find out order values because recordbehavior changes it
         $allOrderValues = [];
         foreach ($this->fields as $key => $value) {
-            $allOrderValues[] = (array_key_exists('order', $value) && !empty($value['order']))? $value['order']: 0;
+            $allOrderValues[] = (isset($value['order']) && !empty($value['order']))? $value['order']: 0;
         }
         $highestOrder = max($allOrderValues);
 
@@ -263,8 +265,8 @@ class StaffTable extends AppTable
 
     private function setupTabElements($options)
     {
-        $this->controller->set('selectedAction', $this->alias);
-        $this->controller->set('tabElements', $this->controller->getUserTabElements($options));
+        $this->controller->set('selectedAction', $this->getAlias());
+        $this->controller->set('tabElements', $this->controller->getCareerTabElements($options));
     }
 
     // Function use by the mini dashboard (For Staff.Staff)
@@ -273,7 +275,7 @@ class StaffTable extends AppTable
         $searchConditions = isset($params['searchConditions']) ? $params['searchConditions'] : [];
         $query = $this->find();
         $query
-            ->select(['gender_id', 'count' => $query->func()->count('DISTINCT '.$this->aliasField($this->primaryKey()))])
+            ->select(['gender_id', 'count' => $query->func()->count('DISTINCT '.$this->aliasField($this->getPrimaryKey()))])
             ->where([$this->aliasField('is_staff') => 1])
             ->where($searchConditions)
             ->group('gender_id')
@@ -295,61 +297,11 @@ class StaffTable extends AppTable
         return $params;
     }
 
-    public function getCareerTabElements($options = [])
-    {
-        //POCOR-8056
-        $labels_tbl = TableRegistry::get('labels');   
-        $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();
-        if(empty($curricular_label_Data->name)){
-            $curricular_label_Data->name = "Institution Curriculars";
-        }   
-        //POCOR-8056
-        //POCOR-7486-HINDOL minor logical typo
-        $tabElements = [];
-        $staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
-        $staffTabElements = [
-            'EmploymentStatuses' => ['text' => __('Statuses')],
-            'Positions' => ['text' => __('Positions')],
-            'Classes' => ['text' => __('Classes')],
-            'Subjects' => ['text' => __('Subjects')],
-            'StaffLeave' => ['text' => __('Leave')],
-            'StaffAttendances' => ['text' => __('Attendances')],
-            'Behaviours' => ['text' => __('Behaviours')],
-            'StaffAppraisals' => ['text' => __('Appraisals')],
-            'Duties' => ['text' => __('Duties')],
-            'StaffAssociations' => ['text' => __('Houses')], //POCOR-7938
-            'StaffCurriculars' => ['text' => $curricular_label_Data->name] //POCOR-6673 staff career tab section //POCOR-8056:dynamic label
-        ];
-
-        // unset classes and subjects if institution is non-academic
-        if (array_key_exists('institution_id', $options)) {
-            $institutionId = $options['institution_id'];
-            $InstitutionTable = TableRegistry::get('Institution.Institutions');
-            $classification = $InstitutionTable->get($institutionId)->classification;
-            if ($classification == $InstitutionTable::NON_ACADEMIC) {
-                unset($staffTabElements['Classes']);
-                unset($staffTabElements['Subjects']);
-            }
-        }
-
-        $tabElements = array_merge($tabElements, $staffTabElements);
-
-        foreach ($staffTabElements as $key => $tab) {
-            if ($key == 'StaffLeave' || $key == 'StaffAppraisals' ) {
-                $staffUrl = array_key_exists('url', $options) ? $options['url'] : $staffUrl;
-                $staffId = array_key_exists('user_id', $options) ? $options['user_id'] : 0;
-
-                $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', 'user_id' => $staffId]);
-            } else {
-                $staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
-                $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index']);
-            }
-        }
-        return $tabElements;
-    }
 
     public function getProfessionalTabElements($options = [])
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         //POCOR-7486-HINDOL minor logical typo
         $tabElements = [];
         $staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
@@ -366,7 +318,7 @@ class StaffTable extends AppTable
         $tabElements = array_merge($tabElements, $staffTabElements);
 
         foreach ($staffTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index']);
+            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
         }
         return $tabElements;
     }

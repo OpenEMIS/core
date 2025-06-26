@@ -1,0 +1,113 @@
+.content button.btn.btn-text {
+    flex: 0 0 auto;
+    align-self: flex-start;
+}
+
+@media only screen and (min-width: 1025px) {
+    .workbench-table-data {
+        position: unset !important;
+        height: 100vh !important;
+    }
+    ::ng-deep .kdx-table.full-grid .kdx-ag-grid-wrapper {
+        top: 45px !important;
+        margin: 15px;
+    }
+    
+}
+
+.workbench-notices{
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: #f9f9f9;
+}
+
+.workbench-notices-data{
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: #f9f9f9;
+    max-height: 275px;
+}
+
+.workbench-sub-notices{
+    margin: 10px;
+    border: 1px solid #CCC;
+    background: #FFF;
+    cursor: pointer;
+}
+
+.workbench-sub-notices-data{
+    margin: 10px;
+    border: 1px solid #CCC;
+    background: #FFF;
+    cursor: pointer;
+    max-height: 250px;
+    overflow: auto;
+}
+
+.no-notices{
+    padding: 10px 15px;
+}
+
+::ng-deep .menu-btn.mb-2 {
+    display: none !important;
+}
+li.list-group-item{
+    font-size: 15px;
+}
+
+    .list-group-item .list-icon i {
+        font-size: 30px;
+        opacity: 0.5;
+        margin: 10px;
+        text-shadow: -1px 1px 1px rgba(255,255,255,0.8);
+    }
+
+.list-icon{
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    background-color: #F9F9F9;
+    border-right: 1px solid #DDD;
+    text-align: center;
+    position: relative;
+}
+.list-icon .badge.badge-right {
+    top: auto!important;
+    bottom: -1px;
+    right: -1px;
+    width: 30px;
+    border-radius: 0;
+    border-top-left-radius: 3px;
+    font-size: 12px;
+    padding: 3px 0;
+    position: absolute;
+}
+.btn-red {
+    background-color: #CC5C5C!important;
+    border-color: #AF3737!important;
+    z-index: 3!important;
+    color: #fff !important;
+}
+.list-group-item {
+    position: relative;
+    display: flex;
+    padding: 2px 15px;
+    margin-bottom: -1px;
+    align-items: center;
+    background-color: #fff;
+    border: 1px solid #ddd !important;
+}
+.list-text p.ng-binding.m-0 {
+    margin-left: 15px !important;
+}
+
+.workbench-header {
+    padding: 0 15px;
+    background-color: #FFF;
+}
+
+.home-header {
+    border-bottom: 1px solid #DDD;
+}

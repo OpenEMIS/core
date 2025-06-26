@@ -29,9 +29,9 @@ class RubricsReportBehavior extends Behavior {
 	private $_rubricCriteriaOptions = [];
 	private $_rubricTemplateOptions = [];
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
     	$events = parent::implementedEvents();
-    	$events = array_merge($events, $this->config('events'));
+    	$events = array_merge($events, $this->getConfig('events'));
     	return $events;
 	}
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -83,7 +83,7 @@ class RubricsReportBehavior extends Behavior {
 		$condition = array_merge($condtitions, $statusCondition);
 
 		$sheets[] = [
-    		'name' => $this->_table->alias(),
+    		'name' => $this->_table->getAlias(),
 			'table' => $this->_table,
 			'query' => $this->_table->find()->where($condition),
 			'orientation' => 'landscape',
@@ -106,17 +106,17 @@ class RubricsReportBehavior extends Behavior {
 				'valueField' => 'points',
 			])
 			->select([
-				'id' => $RubricTemplateOptionTable->aliasField('id'), 
+				'id' => $RubricTemplateOptionTable->aliasField('id'),
 				'points' => $RubricTemplateOptionTable->aliasField('weighting')])
 			->where([$RubricTemplateOptionTable->aliasField('rubric_template_id') => $templateId])
 			->toArray();
 
 		// Getting the section and the critieras
 		$rubricSection = $this->getRubricTemplateSectionCriteria($templateId);
-		
+
 		// Get Maxiumum point for the template
 		$maximumPoint = $this->getRubricTemplateOptionMaxWeighting($templateId);
-		
+
 		$totalPoints = 0;
 		$sectionCounter = 0;
 		foreach ($rubricSection as $section) {
@@ -213,7 +213,7 @@ class RubricsReportBehavior extends Behavior {
 			}
 		} else {
 			return '';
-		}	
+		}
 	}
 
 	// Function to get the rubric template section and criteria
@@ -224,7 +224,7 @@ class RubricsReportBehavior extends Behavior {
 			->find('order')
 			->contain(['RubricCriterias'])
 			->where([$RubricSectionTable->aliasField('rubric_template_id') => $templateId])
-			->hydrate(false)
+			->disableHydration() // POCOR-8533
 			->toArray();
 		return $rubricSection;
 	}
@@ -246,7 +246,7 @@ class RubricsReportBehavior extends Behavior {
 		$sectionAnswer = $RubricCriteriaOptionsTable->find()
 			->contain(['RubricCriteriaOptions'])
 			->where([$RubricCriteriaOptionsTable->aliasField('institution_quality_rubric_id') => $rubricId])
-			->hydrate(false)
+			->disableHydration() // POCOR-8533
 			->toArray();
 
 		$newData = [];
@@ -290,7 +290,7 @@ class RubricsReportBehavior extends Behavior {
 			$this->_rubricCriteriaOptions = $this->getRubricCriteriaOptions($rubricId);
 		}
 		$templateOptions = $this->_rubricTemplateOptions;
-		
+
 		// Points for the criteria
 		if (isset($criteriaOptions[$rubricId][$criteriaId]['rubric_template_option_id'])) {
 			$templateOptionId = $criteriaOptions[$rubricId][$criteriaId]['rubric_template_option_id'];

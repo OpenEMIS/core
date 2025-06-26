@@ -7,6 +7,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use Cake\Http\ServerRequest;
 
 class AdvancedPositionSearchBehavior extends Behavior {
 
@@ -17,7 +18,7 @@ class AdvancedPositionSearchBehavior extends Behavior {
 			$search = '';
 		}
 
-		$alias = $this->_table->alias();
+		$alias = $this->_table->getAlias();
 
 		if (!empty($search)) {
 			$searchString = '%' . $search . '%';
@@ -55,7 +56,7 @@ class AdvancedPositionSearchBehavior extends Behavior {
 		return $query;
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'AdvanceSearch.onSetupFormField' => 'onSetupFormField',
@@ -67,7 +68,7 @@ class AdvancedPositionSearchBehavior extends Behavior {
 
 	public function onSetupFormField(Event $event, ArrayObject $searchables, $advanceSearchModelData) {
 		$turnOn = false;
-		$userType = $this->_table->request->query('user_type');
+		$userType = $this->_table->request->getQuery('user_type');
 		if (!is_null($userType)) {
 			$tableClass = get_class($this->_table);
 			switch($userType) {

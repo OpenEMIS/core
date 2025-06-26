@@ -1,0 +1,230 @@
+@charset "UTF-8";
+
+/* Tabs V1.1.0 */
+
+.kdx-tabs {
+    position: relative;
+
+
+    &>.nav-bar{
+        position: relative;
+        width: 100%;
+        height: 35px;
+
+        @media #{$tabletLandscape} {
+            height: 40px;
+        }
+
+        ul.nav-tabs {
+            position: absolute;
+            overflow: hidden;
+            white-space: nowrap;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            display: inline-flex;
+            flex-wrap: nowrap;
+        }
+
+        &>button:first-child+ul.nav-tabs {
+            left: 25px;
+        }
+
+        &>ul.nav-tabs:nth-child(2) {
+            right: 25px;
+        }
+    }
+
+    &.bottom-divider{
+        .tab-bottom-divider{
+            display: block;
+        }
+    }
+    
+
+    .scroll-left,
+    .scroll-right {
+        position: absolute;
+        width: 25px;
+        height: 35px;
+        font-size: 0;
+        border: $greyCBorder;
+        z-index: 1;
+        background-color: #F8F8F8;
+        border-color: $lightGreyColor;
+        border-bottom-width: 0 !important;
+
+        &:hover {
+            transition: all 0.3s ease-in;
+            color: $whiteColor;
+        }
+
+        @media #{$tabletLandscape} {
+            height: 40px;
+        }
+
+        &[disabled],
+        &[disabled]:hover {
+            height: 36px;
+            background-color: #F8F8F8 !important;
+            border-color: $lightGreyColor !important;
+            color: #C9C9C9 !important;
+            border-bottom-width: 1px !important;
+
+            @media #{$tabletLandscape} {
+                height: 41px;
+            }
+        }
+
+        &:before {
+            font-family: $fontAwesome;
+            font-size: $textSizeM;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        &:focus {
+            outline: none !important;
+        }
+    }
+
+    .scroll-left {
+        left: 0;
+        border-top-left-radius: 3px;
+
+        &:before {
+            content: "\f0d9";
+        }
+    }
+
+    .scroll-right {
+        right: 0;
+        border-top-right-radius: 3px;
+
+        &:before {
+            content: "\f0da";
+        }
+    }
+
+    .nav-tabs {
+        position: relative;
+
+        .nav-item {
+            font-family: $bodyFont;
+            font-size: $bodyTextSize;
+            position: relative;
+            transition: 0.3s left ease;
+            margin: $noMargin $noMargin $noMargin 3px;
+            flex-shrink: 0;
+            list-style: none;
+
+            &:first-child {
+                margin-left: $noMargin;
+            }
+
+            &:last-child {
+                margin-right: $noMargin;
+            }
+
+            &.tab-selected {
+                background-color: $whiteColor;
+                position: relative;
+
+                &:after {
+                    display: block;
+                    content: "";
+                    height: 4px;
+                    width: 100%;
+                    background-color: #F2F2F2;
+                    border-left: $lightGreyBorder;
+                    border-right: $lightGreyBorder;
+                    position: absolute;
+                    left: 0;
+                    bottom: 2px;
+                    margin: $noMargin;
+                    z-index: 1;
+                }
+
+                a {
+                    color: $bodyTextColor !important;
+                    background-color: #F2F2F2 !important;
+
+                    &:hover,
+                    &:focus,
+                    &:active {
+                        color: $bodyTextColor !important;
+                        border-color: $lightGreyColor !important;
+
+                        &:before {
+                            display: none;
+                        }
+                    }
+                }
+            }
+
+            a.nav-link,
+            a:hover,
+            a:focus,
+            a:active {
+                border: $lightGreyBorder;
+                color: $bodyTextColor;
+                cursor: pointer;
+
+                @media #{$tabletLandscape} {
+                    font-size: $textSizeS;
+                    height: 38px;
+                    line-height: 22px;
+                }
+            }
+        }
+    }
+
+    .tab-divider,
+    .tab-bottom-divider {
+        display: block;
+        width: 100%;
+        height: 5px;
+        background: #F2F2F2;
+        position: absolute;
+        bottom: -1px;
+        text-align: center;
+        border: $lightGreyBorder;
+    }
+
+
+    .tab-bottom-divider{
+        margin-top:10px;
+        display:none;
+        position:relative;
+
+    }
+
+    .tab-content {
+        padding: $padding10 $noPadding;
+
+        .tab-pane {
+            font-size: $bodyTextSize;
+        }
+    }
+}
+
+.rtl {
+    .kdx-tabs {
+        .nav-tabs {
+            .nav-item {
+                margin: $noMargin 3px $noMargin $noMargin;
+
+                &:first-child {
+                    margin-right: $noMargin;
+                }
+
+                &:last-child {
+                    margin-left: $noMargin;
+                }
+            }
+        }
+    }
+}

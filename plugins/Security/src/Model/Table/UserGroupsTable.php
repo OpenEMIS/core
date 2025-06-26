@@ -14,15 +14,16 @@ use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
 use Cake\I18n\Time;
+use Cake\Http\ServerRequest;
 
 class UserGroupsTable extends ControllerActionTable
 {
     use MessagesTrait;
     use HtmlTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_groups');
+        $this->setTable('security_groups');
         parent::initialize($config);
 
         $this->belongsToMany('Users', [
@@ -64,7 +65,7 @@ class UserGroupsTable extends ControllerActionTable
         // $this->setDeleteStrategy('restrict');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -79,18 +80,18 @@ class UserGroupsTable extends ControllerActionTable
     {
         $controller = $this->controller;
         $tabElements = [
-            $this->alias() => [
-                'url' => ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => $this->alias()],
+            $this->getAlias() => [
+                'url' => ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => $this->getAlias()],
                 'text' => $this->getMessage($this->aliasField('tabTitle'))
             ],
             'SystemGroups' => [
-                'url' => ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => 'SystemGroups'],
+                'url' => ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => 'SystemGroups'],
                 'text' => $this->getMessage('SystemGroups.tabTitle')
             ]
         ];
         $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
 
         $this->field('area_id', [
             'title' => __('Area Education'),
@@ -165,7 +166,7 @@ class UserGroupsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $queryParams = $this->request->query;
+        $queryParams = $this->request->getQuery();
         $query->find('notInInstitutions');
         // filter groups by users permission
         if ($this->Auth->user('super_admin') != 1) {
@@ -191,7 +192,7 @@ class UserGroupsTable extends ControllerActionTable
     //POCOR-7168
     public function findByInstitutionAreaNameCode(Query $query, array $options)
     {
-        if (array_key_exists('search', $options)) {
+        if (isset($options['search'])) {
             $search = $options['search'];
             $query
                 ->join([
@@ -255,7 +256,8 @@ class UserGroupsTable extends ControllerActionTable
     }
 
 
-    public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAreaId(Event $event, array $attr, $action)
     {
         $areaId = isset($request->data) ? $request->data['UserGroups']['area_id']['_ids'] : 0;
 //        $this->log($attr, 'debug');
@@ -304,8 +306,8 @@ class UserGroupsTable extends ControllerActionTable
     public function onGetInstitutionId(Event $event, Entity $entity)
     {
 
-        $SecurityGroupInstitutions = TableRegistry::get('security_group_institutions');
-        $InstitutionsTable = TableRegistry::get('institutions');
+        $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+        $InstitutionsTable = TableRegistry::get('Institution.institutions');
         //POCOR-7331 start
         $SecurityGroupInstitutionsData = $SecurityGroupInstitutions
             ->find()
@@ -319,7 +321,7 @@ class UserGroupsTable extends ControllerActionTable
             $record = $InstitutionsTable
                 ->find()
                 ->select($InstitutionsTable->aliasField('name'))
-                ->where(['id' => $value['institution_id']])
+                ->where(['id IS' => $value['institution_id']])
                 ->first();
             $InstitutionsTableData[] = $record;
         }
@@ -337,11 +339,11 @@ class UserGroupsTable extends ControllerActionTable
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      * @return array
      */
-     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $areaList = isset($request->data) ? $request->data['UserGroups']['area_id']['_ids'] : null;
+        $areaList = !is_null($request->getData()) ? $request->getData()['UserGroups']['area_id']['_ids'] : null;
         if ($action == 'edit') {
-            $institutionsValuesList = isset($request->data) ? $request->data['UserGroups']['institution_id']['_ids'] : 0;
+            $institutionsValuesList = !is_null($request->getData()) ? $request->getData()['UserGroups']['institution_id']['_ids'] : 0;
             if ($action == 'edit') {
                 $entity = $attr['entity'];
                 if ($entity) {
@@ -365,7 +367,6 @@ class UserGroupsTable extends ControllerActionTable
         return $attr;
     }
 
-    public
     function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
@@ -455,7 +456,7 @@ class UserGroupsTable extends ControllerActionTable
             ->where(['security_group_id' => $query->toArray()[0]->id])
             ->first();
         if (!empty($SecurityGroupInstitutionsData)) { //POCOR-7187[END]
-            $SecurityGroupId = $this->paramsDecode($this->request->params['pass'][1]);
+            $SecurityGroupId = $this->paramsDecode($this->request->getAttribute('params')['pass'][1]);
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
                     $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
@@ -600,7 +601,7 @@ class UserGroupsTable extends ControllerActionTable
     {
         $areaArr = [];
         if ($entity) {
-            $SecurityGroupAreas = TableRegistry::get('security_group_areas');
+            $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
             $result = $SecurityGroupAreas
                 ->find()
                 ->select([$SecurityGroupAreas->aliasField('area_id')])
@@ -630,7 +631,7 @@ class UserGroupsTable extends ControllerActionTable
     {
         $institutionArr = [];
         if ($entity) {
-            $SecurityGroupInstitutions = TableRegistry::get('security_group_institutions');
+            $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
             $result = $SecurityGroupInstitutions
                 ->find()
                 ->select([$SecurityGroupInstitutions->aliasField('institution_id')])
@@ -673,13 +674,13 @@ class UserGroupsTable extends ControllerActionTable
     private function getInstitutionOptions($areaList = null)
     {
         $Institutions = TableRegistry::get('Institution.Institutions');
-        $InstitutionStatuses = TableRegistry::get('institution_statuses');
+        $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
         $institutionQuery = $Institutions
             ->find('list', [
                 'keyField' => 'id',
                 'valueField' => 'code_name'
             ])
-            ->innerJoin([$InstitutionStatuses->alias() => $InstitutionStatuses->table()],
+            ->innerJoin([$InstitutionStatuses->getAlias() => $InstitutionStatuses->getTable()],
                 [$InstitutionStatuses->aliasField('id = ')
                     . $Institutions->aliasField('institution_status_id')])
             ->where([$InstitutionStatuses->aliasField('code') => 'ACTIVE'])
@@ -700,4 +701,26 @@ class UserGroupsTable extends ControllerActionTable
 
         return $institutionList;
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'custom_module_id') {
+            return __('Custom Module');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'institution_id') {
+            return __('Instittution');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

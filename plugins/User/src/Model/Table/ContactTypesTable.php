@@ -6,23 +6,25 @@ use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
 
 class ContactTypesTable extends ControllerActionTable
 {
-	public function initialize(array $config)
+	public function initialize(array $config): void
 	{
-		$this->table('contact_types');
+		$this->setTable('contact_types');
 		parent::initialize($config);
 
 		$this->belongsTo('ContactOptions', ['className' => 'User.ContactOptions']);
 		$this->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'contact_type_id'])
 		;
 		if ($this->behaviors()->has('Reorder')) {
-			$this->behaviors()->get('Reorder')->config([
-				'filter' => 'contact_option_id',
-			]);
+			// $this->behaviors()->get('Reorder')->config([
+			// 	'filter' => 'contact_option_id',
+			// ]);
+			$reorderBehavior = $this->behaviors()->get('Reorder');
+			$reorderBehavior->setConfig('filter', 'contact_option_id');
 		}
 
 		$this->addBehavior('FieldOption.FieldOption');
@@ -38,7 +40,7 @@ class ContactTypesTable extends ControllerActionTable
 			->contain(['ContactOptions']);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 		return $validator;
 	}
@@ -69,7 +71,7 @@ class ContactTypesTable extends ControllerActionTable
 		$this->field('contact_option_id');
 	}
 
-	public function onUpdateFieldContactOptionId(Event $event, array $attr, $action, Request $request)
+	public function onUpdateFieldContactOptionId(Event $event, array $attr, $action, ServerRequest $request)
 	{
 		if ($action == 'add' || $action == 'edit') {
 			$parentFieldOptions = $this->ContactOptions->find('list')->toArray();
@@ -81,4 +83,44 @@ class ContactTypesTable extends ControllerActionTable
 		}
 		return $attr;
 	}
+
+	public function beforeSave(Event $event)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'visible':
+                return __('Visible');
+            case 'name':
+                return __('Name');
+            case 'international_code':
+                return __('International Code');
+            case 'national_code':
+                return __('National Code');
+            case 'editable':
+                return __('Editable');
+            case 'default':
+                return __('Default');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

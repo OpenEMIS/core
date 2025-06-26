@@ -11,4 +11,5 @@ class UserSpecialNeedsAssessment extends Model
 
     public $timestamps = false;
     protected $table = "user_special_needs_assessments";
+
 }

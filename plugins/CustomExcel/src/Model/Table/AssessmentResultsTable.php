@@ -8,22 +8,28 @@ use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Utility\Inflector;
+//use Cake\Utility\Inflector;
+use Cake\Utility\Text;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\ORM\Table; // POCOR-8578
+use Cake\Utility\Inflector; // POCOR-8578
 
 class AssessmentResultsTable extends AppTable
 {
     use OptionsTrait;
     private $groupAssessmentPeriodCount = 0;
+    private $groupAssessmentItemsGradingTypes = []; // POCOR-8224 to excape double calculation
+    private $groupAssessmentItems = []; // POCOR-8224 to excape double calculation
+
     const STUDENT_ENROLLED_STATUS = 1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_class_students');
+        $this->setTable('institution_class_students');
         parent::initialize($config);
 
-        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Users', ['className' => 'API.Students', 'foreignKey' => 'student_id']); // POCOR-8578
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
@@ -50,10 +56,10 @@ class AssessmentResultsTable extends AppTable
             'variables' => [
                 'Assessments',
                 'EducationGrades',
-                // 'AssessmentItems',
-                // 'AssessmentItemsGradingTypes',
-                // 'AssessmentPeriods',
-                // 'AssessmentItemResults',
+//                // 'AssessmentItems',
+//                // 'AssessmentItemsGradingTypes',
+//                // 'AssessmentPeriods',
+//                // 'AssessmentItemResults',
                 'GroupAssessmentPeriods',
                 'GroupAssessmentPeriodsWithTerms',
                 'GroupAssessmentItems',
@@ -67,7 +73,7 @@ class AssessmentResultsTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseEducationGrades'] = 'onExcelTemplateInitialiseEducationGrades';
@@ -118,13 +124,13 @@ class AssessmentResultsTable extends AppTable
             && isset($params['assessment_id'])
             && isset($params['institution_id'])) {
 
-            $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+            $AssessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults'); // POCOR-8578
             $institution_class_id = $params['class_id'];
             $assessment_id = $params['assessment_id'];
             $institution_id = $params['institution_id'];
             $results = $AssessmentItemResults->find()
                 ->innerJoin(
-                    [$this->alias() => $this->table()],
+                    [$this->getAlias() => $this->getTable()],
                     [
                         $this->aliasField('institution_id = ') . $AssessmentItemResults->aliasField('institution_id'),
                         $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
@@ -164,170 +170,52 @@ class AssessmentResultsTable extends AppTable
                         return $row;
                     });
                 })
-                ->hydrate(false)
+                ->disableHydration() // POCOR-8578
                 ->all();
 
             return $results->toArray();
         }
     }
 
+    /**
+     * POCOR-8224 refactured
+     * @param Event $event
+     * @param array $params
+     * @param ArrayObject $extra
+     * @return array|null
+     */
     public function onExcelTemplateInitialiseGroupAssessmentItems(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['assessment_id']) && isset($params['class_id'])) {
-//            $start_time = microtime(true);
-            $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
-            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-            $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-
-            $query = $AssessmentItems->find();
-            $selectedColumns = [
-                'subject_classification' => '(
-                    CASE
-                    WHEN ' . $AssessmentItems->aliasField('classification <> \'\'') . ' THEN ' . $AssessmentItems->aliasField('classification') . '
-                        ELSE ' . $EducationSubjects->aliasField('name') . '
-                        END
-                    )',
-                'subject_order' => $query->func()->min($EducationSubjects->aliasField('order')),
-                'total_subject_weight' => $query->func()->sum($AssessmentItems->aliasField('weight'))
-            ];
-
-            $results = $AssessmentItems->find()
-                ->select($selectedColumns)
-                ->contain([$EducationSubjects->alias()])
-                ->innerJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
-                    $InstitutionSubjects->aliasField('education_subject_id = ') . $AssessmentItems->aliasField('education_subject_id')
-                ])
-                ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
-                    $InstitutionSubjects->aliasField('id = ') . $ClassSubjects->aliasField('institution_subject_id'),
-                    $ClassSubjects->aliasField('institution_class_id') => $params['class_id']
-                ])
-                ->where([$AssessmentItems->aliasField('assessment_id') => $params['assessment_id']])
-                ->order(['subject_order', 'subject_classification', $EducationSubjects->aliasField('code'), $EducationSubjects->aliasField('name')])
-                ->group(['subject_classification'])
-                ->hydrate(false)
-                ->all();
-//            $functionName = __FUNCTION__;
-//            $end_time = microtime(true);
-//            $executionTimeMs = ($end_time - $start_time) * 1000;
-//            $this->log("{$functionName}\n
-//            Function execution time: {$executionTimeMs} ms", 'debug');
-
-            return $results->toArray();
+        $groupAssessmentItems = $this->groupAssessmentItems;
+        if(empty($groupAssessmentItems)){
+            $groupAssessmentItems = $this->getGroupAssessmentItems($params);
         }
+        $this->groupAssessmentItems = [];
+        return $groupAssessmentItems;
     }
 
+    /**
+     * @param Event $event
+     * @param array $params
+     * @param ArrayObject $extra
+     * @return array|null
+     *  POCOR-8224 refactured
+     */
     public function onExcelTemplateInitialiseGroupAssessmentItemsGradingTypes(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['assessment_id'])) {
-//            $start_time = microtime(true);
-            $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
-            $AssessmentGradingTypes = TableRegistry::get('Assessment.AssessmentGradingTypes');
-            $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
-            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-            $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
 
-            $query = $AssessmentItemsGradingTypes->find();
-
-            $withoutTerm = $query
-                ->select([
-                    'subject_classification' => '(
-                    CASE
-                    WHEN ' . $AssessmentItems->aliasField('classification <> \'\'') . ' THEN ' . $AssessmentItems->aliasField('classification') . '
-                        ELSE ' . $EducationSubjects->aliasField('name') . '
-                        END
-                    )',
-                    'academic_term_value' => $AssessmentPeriods->aliasField('name'),
-                    'academic_term_total_weighted_max' => $query->func()->sum($AssessmentGradingTypes->aliasField('max * ') . $AssessmentPeriods->aliasField('weight'))
-                ])
-                ->contain([$AssessmentGradingTypes->alias(), $AssessmentPeriods->alias(), $EducationSubjects->alias()])
-                ->leftJoin(
-                    [$AssessmentItems->alias() => $AssessmentItems->table()],
-                    [
-                        $AssessmentItems->aliasField('assessment_id = ') . $AssessmentItemsGradingTypes->aliasField('assessment_id'),
-                        $AssessmentItems->aliasField('education_subject_id = ') . $AssessmentItemsGradingTypes->aliasField('education_subject_id')
-                    ]
-                )
-                ->where([$AssessmentItemsGradingTypes->aliasField('assessment_id') => $params['assessment_id']])
-                ->group(['subject_classification', 'academic_term_value'])
-                ->hydrate(false)
-                ->all();
-
-            $withTerm = $query
-                ->select([
-                    'subject_classification' => '(
-                    CASE
-                    WHEN ' . $AssessmentItems->aliasField('classification <> \'\'') . ' THEN ' . $AssessmentItems->aliasField('classification') . '
-                        ELSE ' . $EducationSubjects->aliasField('name') . '
-                        END
-                    )',
-                    'academic_term_value' => $AssessmentPeriods->aliasField('academic_term'),
-                    'academic_term_total_weighted_max' => $query->func()->sum($AssessmentGradingTypes->aliasField('max * ') . $AssessmentPeriods->aliasField('weight'))
-                ])
-                ->contain([$AssessmentGradingTypes->alias(), $AssessmentPeriods->alias(), $EducationSubjects->alias()])
-                ->leftJoin(
-                    [$AssessmentItems->alias() => $AssessmentItems->table()],
-                    [
-                        $AssessmentItems->aliasField('assessment_id = ') . $AssessmentItemsGradingTypes->aliasField('assessment_id'),
-                        $AssessmentItems->aliasField('education_subject_id = ') . $AssessmentItemsGradingTypes->aliasField('education_subject_id')
-                    ]
-                )
-                ->where([
-                    $AssessmentItemsGradingTypes->aliasField('assessment_id') => $params['assessment_id'],
-                    $AssessmentPeriods->aliasField('academic_term <> ') => ""
-                ])
-                ->group(['subject_classification'])
-                ->hydrate(false)
-                ->all();
-
-            if (!$withTerm->isEmpty()) { // If academic_term is setup, to use the academic_term to calculate the average
-                $recordsToUse = $withTerm->toArray();
-            } else { // else, to calculate the average by subject_classification
-                $recordsToUse = $withoutTerm->toArray();
-            }
-
-            $sumRecordBySubjects = [];
-            foreach ($recordsToUse as $record) {
-                $subjectClassification = $record['subject_classification'];
-
-                if (!isset($sumRecordBySubjects[$subjectClassification])) {
-                    $sumRecordBySubjects[$subjectClassification] = [
-                        'subject_classification' => $record['subject_classification'],
-                        'total_weight' => $record['academic_term_total_weighted_max'],
-                        'count' => 1
-                    ];
-                } else {
-                    $sumRecordBySubjects[$subjectClassification]['total_weight'] += $record['academic_term_total_weighted_max'];
-                    ++$sumRecordBySubjects[$subjectClassification]['count'];
-                }
-            }
-
-            $averageRecords = [];
-            foreach ($sumRecordBySubjects as $subjectClassification => $subjectObj) {
-
-                $averageRecords[] = [
-                    'subject_classification' => $subjectClassification,
-                    'academic_term_value' =>  __('Average'), // POCOR-8066
-                    'academic_term_total_weighted_max' => ($this->groupAssessmentPeriodCount > 0) ? $subjectObj['total_weight'] / $this->groupAssessmentPeriodCount : ''
-                ];
-            }
-
-            $groupAssessmentItemsGradingTypes = array_merge($withoutTerm->toArray(), $withTerm->toArray(), $averageRecords);
-//            $functionName = __FUNCTION__;
-//            $end_time = microtime(true);
-//            $executionTimeMs = ($end_time - $start_time) * 1000;
-//            $this->log("{$functionName}\n
-//            Function execution time: {$executionTimeMs} ms", 'debug');
-
-            return $groupAssessmentItemsGradingTypes;
+        $groupAssessmentItemsGradingTypes = $this->groupAssessmentItemsGradingTypes;
+        if(empty($groupAssessmentItemsGradingTypes)){
+            $groupAssessmentItemsGradingTypes = $this->getGroupAssessmentItemsGradingTypes($params);
         }
+        return $groupAssessmentItemsGradingTypes;
     }
 
     public function onExcelTemplateInitialiseGroupAssessmentPeriods(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['assessment_id'])) {
 //            $start_time = microtime(true);
-            $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods'); // POCOR-8578
             $query = $AssessmentPeriods->find();
             $selectedColumns = [
                 'academic_term_value' => '(
@@ -343,7 +231,7 @@ class AssessmentResultsTable extends AppTable
                 ->select($selectedColumns)
                 ->where([$AssessmentPeriods->aliasField('assessment_id') => $params['assessment_id']])
                 ->group(['academic_term_value'])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
 
             $academicTermResults = $results->toArray();
@@ -380,7 +268,7 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['assessment_id'])) {
 //            $start_time = microtime(true);
-            $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods'); // POCOR-8578
             $query = $AssessmentPeriods->find();
 
             $withoutTerm = $query
@@ -390,7 +278,7 @@ class AssessmentResultsTable extends AppTable
                     'total_period_weight' => $AssessmentPeriods->aliasField('weight')
                 ])
                 ->where([$AssessmentPeriods->aliasField('assessment_id') => $params['assessment_id']])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
 
             $withTerm = $query
@@ -403,7 +291,7 @@ class AssessmentResultsTable extends AppTable
                     $AssessmentPeriods->aliasField('academic_term <> ') => ""
                 ])
                 ->group(['academic_term_value'])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
 
             $periodsWithTermOrders = [];
@@ -445,7 +333,7 @@ class AssessmentResultsTable extends AppTable
     {
 
 //        $this->log('onExcelTemplateInitialiseGroupAssessmentItemResults', 'debug');
-        $archive = false;
+
         if (isset($params['class_id'])
             && isset($params['assessment_id'])
             && isset($params['institution_id'])) {
@@ -460,15 +348,9 @@ class AssessmentResultsTable extends AppTable
             if(isset( $params['grade_id'])){
                 $options['grade_id'] = $params['grade_id'];
             }
-            $groupAssessmentItemResults = self::getGroupAssessmentItemResults($options, $archive);
-            
-//            $functionName = __FUNCTION__;
-//            $end_time = microtime(true);
-//            $executionTimeMs = ($end_time - $start_time) * 1000;
-//            Log::write('debug', "{$functionName}\n
-//            Function execution time: {$executionTimeMs} ms");
-            return $groupAssessmentItemResults;
+            $groupAssessmentItemResults = $this->getGroupAssessmentItemResults($options);
         }
+        return $groupAssessmentItemResults;
     }
 
     public function onExcelTemplateInitialiseClassStudents(Event $event, array $params, ArrayObject $extra)
@@ -492,7 +374,8 @@ class AssessmentResultsTable extends AppTable
 //            $start_time = microtime(true);
             $entity = $this->find()
                 ->contain([
-                    'Users' => [
+                    'Users'
+                    => [
                         'fields' => [
                             'id',
                             'username',
@@ -565,9 +448,11 @@ class AssessmentResultsTable extends AppTable
                     $this->aliasField('institution_class_id') => $params['class_id'],
                     $where
                 ])
+                ->enableAutoFields() // POCOR-8578
                 ->order(['Users.first_name', 'Users.last_name'])
-                // ->hydrate(false)
+//                ->disableHydration() // POCOR-8578
                 ->all();
+//            dd($entity);
 //            $functionName = __FUNCTION__;
 //            $end_time = microtime(true);
 //            $executionTimeMs = ($end_time - $start_time) * 1000;
@@ -581,7 +466,7 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['institution_id'])) {
 //            $start_time = microtime(true);
-            $Institutions = TableRegistry::get('Institution.Institutions');
+            $Institutions = self::getDynamicTableInstance('Institution.Institutions'); // POCOR-8578
             $entity = $Institutions->get($params['institution_id'], [
                 'contain' => ['Areas', 'AreaAdministratives']
             ]);
@@ -598,7 +483,7 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['class_id'])) {
 //            $start_time = microtime(true);
-            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $InstitutionClasses = self::getDynamicTableInstance('Institution.InstitutionClasses'); // POCOR-8578
             $entity = $InstitutionClasses->get($params['class_id']);
 //            $functionName = __FUNCTION__;
 //            $end_time = microtime(true);
@@ -612,16 +497,16 @@ class AssessmentResultsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionStudentAbsences(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['class_id']) && 
-            isset($params['assessment_id']) && 
+        if (isset($params['class_id']) &&
+            isset($params['assessment_id']) &&
             isset($params['institution_id']) &&
             isset($params['institution_id'])) {
 //            $start_time = microtime(true);
-            $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+            $InstitutionStudentAbsences = self::getDynamicTableInstance('Institution.InstitutionStudentAbsences'); // POCOR-8578
             $studentAbsenceResults = $InstitutionStudentAbsences
                 ->find()
                 ->innerJoin(
-                    [$this->alias() => $this->table()],
+                    [$this->getAlias() => $this->getTable()],
                     [
                         $this->aliasField('institution_id = ') . $InstitutionStudentAbsences->aliasField('institution_id'),
                         $this->aliasField('student_id = ') . $InstitutionStudentAbsences->aliasField('student_id'),
@@ -632,7 +517,7 @@ class AssessmentResultsTable extends AppTable
                     $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
                     $InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id']
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
 
             $results = [];
@@ -664,7 +549,7 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['grade_id'])) {
 //            $start_time = microtime(true);
-            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $EducationGrades = self::getDynamicTableInstance('Education.EducationGrades'); // POCOR-8578
             $entity = $EducationGrades->get($params['grade_id']);
 //            $functionName = __FUNCTION__;
 //            $end_time = microtime(true);
@@ -692,10 +577,8 @@ class AssessmentResultsTable extends AppTable
      * @return array
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private static function getMarksForClass(array $params, $archive=false)
+    private static function getMarksForClass(array $params)
     {
-
-        $start_time = microtime(true);
         $academic_period_id = self::getFromArray($params, 'academic_period_id');
         $institution_id = self::getFromArray($params, 'institution_id');
         $institution_class_id = self::getFromArray($params, 'institution_class_id');
@@ -703,7 +586,7 @@ class AssessmentResultsTable extends AppTable
         $education_grade_id = self::getFromArray($params, 'grade_id');
         $student_id = self::getFromArray($params, 'student_id');
 //        $student_ids = self::getDistinctStudents($institution_class_id);
-        $Results = TableRegistry::get('Assessment.AssessmentItemResults');
+        $Results = self::getDynamicTableInstance('Assessment.AssessmentItemResults'); // POCOR-8578
         $marks = [];
 //        foreach ($student_ids as $student_id) {
         $education_subject_id = -1;
@@ -735,37 +618,161 @@ class AssessmentResultsTable extends AppTable
             'assessment_grading_option_id' => $assessment_grading_option_id,
             "assessment_period_id" => $assessment_period_id,
             'assessment_id' => $assessment_id];
-//        $functionName = __FUNCTION__;
-//        Log::write('debug', "{$functionName}");
-//        Log::write('debug', $options);
-        $marks = $Results::getLastMark($options, $archive);
-//        $end_time = microtime(true);
-//        $executionTimeMs = ($end_time - $start_time) * 1000;
-//        Log::write('debug', "{$functionName}\n
-//            Function execution time: {$executionTimeMs} ms");
+
+        $marks = $Results::getLastMark($options);
         return $marks;
     }
 
     /**
-     * @param array $marks
+     * @param array $params
      * @return array
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private static function getMarksWithSubjectClassificationWeight(array $marks)
+    private static function getExemptsForClass(array $params)
+    {
+
+        $start_time = microtime(true);
+        $academic_period_id = self::getFromArray($params, 'academic_period_id');
+        $institution_id = self::getFromArray($params, 'institution_id');
+        $institution_class_id = self::getFromArray($params, 'institution_class_id');
+        $assessment_id = self::getFromArray($params, 'assessment_id');
+        $education_grade_id = self::getFromArray($params, 'grade_id');
+        $student_id = self::getFromArray($params, 'student_id');
+//        $student_ids = self::getDistinctStudents($institution_class_id);
+        $Results = self::getDynamicTableInstance('Assessment.AssessmentItemResults');
+        $exemptions = [];
+//        foreach ($student_ids as $student_id) {
+        $education_subject_id = -1;
+        $assessment_period_id = -1;
+        $assessment_grading_option_id = -1;
+        if ($education_grade_id == null) {
+            $education_grade_id = -1;
+        }
+        if ($academic_period_id == null) {
+            $academic_period_id = -1;
+        }
+        if ($institution_id == null) {
+            $institution_id = -1;
+        }
+        if ($assessment_id == null) {
+            $assessment_id = -1;
+        }
+        if ($student_id == null) {
+            $student_id = -1;
+        }
+        $id = -1;
+        $options = ["student_id" => $student_id,
+            "institution_id" => $institution_id,
+            "institution_class_id" => $institution_class_id,
+            "academic_period_id" => $academic_period_id,
+            "education_grade_id" => $education_grade_id,
+            "education_subject_id" => $education_subject_id,
+            "id" => $id,
+            'assessment_grading_option_id' => $assessment_grading_option_id,
+            "assessment_period_id" => $assessment_period_id,
+            'assessment_id' => $assessment_id];
+        $exemptions = $Results::getLastExemptions($options);
+        return $exemptions;
+    }
+    // POCOR-8618 end
+
+    /**
+     * POCOR-8618 refactured
+     * @param array $marks
+     * @param array $exempt
+     * @return array
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getMarksWithSubjectClassificationWeight(array $marks, array $exempts = [])
     {
 //        $start_time = microtime(true);
+        $exemptions = [];
+        foreach ($exempts as $exempt){
+            $exempt['exemption'] = 'EXEMPT';
+            $exemptions[] = $exempt;
+        }
         $new_marks = [];
-        foreach ($marks as $mark) {
+        // POCOR-8330 START
+        $uniqueCombinations = [];
+        $marks_exempts = array_merge($marks, $exemptions);
+        foreach ($marks_exempts as $mark) {
+            $combination = [
+                'assessment_id' => $mark['assessment_id'],
+                'education_subject_id' => $mark['education_subject_id'],
+            ];
+            $assessment_ids = $mark['assessment_id'];
+            $assessment_period_ids[] = $mark['assessment_period_id'];
+            $education_subject_ids[] = $mark['education_subject_id'];
+            $uniqueCombinations[] = $combination;
+            $student_ids[] = $mark['student_id'];
+        }
+        $uniqueCombinations = array_unique($uniqueCombinations, SORT_REGULAR);
+        $assessment_period_ids = array_unique($assessment_period_ids, SORT_REGULAR);
+        $education_subject_ids = array_unique($education_subject_ids, SORT_REGULAR);
+        $student_ids = array_unique($student_ids, SORT_REGULAR);
+
+        $assessmentItems = [];
+        $educationSubjects = [];
+        $assessmentPeriods = [];
+
+
+// Remove duplicate combinations
+        foreach ($uniqueCombinations as $combination) {
+            $where = [
+                'education_subject_id' => $combination['education_subject_id'],
+                'assessment_id' => $combination['assessment_id']
+            ];
+            $assessmentItems[$combination['assessment_id']][$combination['education_subject_id']] = self::getRecordByOptions('assessment_items', $where);
+        }
+        foreach ($assessment_period_ids as $assessment_period_id) {
+            $assessmentPeriods[$assessment_period_id] = self::getRelatedRecord('assessment_periods', $assessment_period_id);
+        }
+        foreach ($education_subject_ids as $education_subject_id) {
+            $educationSubjects[$education_subject_id] = self::getRelatedRecord('education_subjects', $education_subject_id);
+        }
+        $marks_absents = [];
+        $sep = [];
+        foreach ($marks_exempts as $mark) {
+            $sep[$mark['student_id']]
+            [$mark['education_subject_id']]
+            [$mark['assessment_period_id']] = 1;
+        }
+
+        foreach ($assessmentItems as $assessment_id => $subjects) {
+            foreach ($subjects as $education_subject_id => $assessment_item) {
+                foreach ($assessmentPeriods as $assessment_period_id => $assessment_period) {
+                    foreach ($student_ids as $student_id) {
+                        if (!isset($sep[$student_id][$education_subject_id][$assessment_period_id])) {
+                            //POCOR-9239 -- Commenting $missingMark code as it substituted 0 for missing values
+                            // $missingMark = [
+                            //     'student_id' => $student_id,
+                            //     'assessment_id' => $assessment_id,
+                            //     'education_subject_id' => $education_subject_id,
+                            //     'assessment_period_id' => $assessment_period_id,
+                            // ];
+                            // $marks_exempts[] = $missingMark;
+                            continue;
+                        }
+                    }
+                }
+
+            }
+        }
+        foreach ($marks_exempts as $mark) {
             $assessment_id = $mark['assessment_id'];
             $education_subject_id = $mark['education_subject_id'];
             $assessment_period_id = $mark['assessment_period_id'];
-            $where = ['education_subject_id' => $education_subject_id,
-                'assessment_id' => $assessment_id];
-            $assessment_item = self::getRecordByOptions('assessment_items', $where);
-            $education_subject = self::getRelatedRecord('education_subjects', $education_subject_id);
-            $assessment_period = self::getRelatedRecord('assessment_periods', $assessment_period_id);
+
+            // Use pre-fetched records
+            $assessment_item = $assessmentItems[$assessment_id][$education_subject_id];
+            $education_subject = $educationSubjects[$education_subject_id];
+            $assessment_period = $assessmentPeriods[$assessment_period_id];
+            $simple_mark = 0;
+            if (isset($mark['marks'])) {
+                $simple_mark = floatval($mark['marks']);
+            }
             $weight = floatval($assessment_period['weight']);
-            $simple_mark = floatval($mark['marks']);
+            // POCOR-8330 END
             $weighted_mark = $simple_mark * $weight;
             $assessment_period_name = $assessment_period['name'];
             $academic_term = trim($assessment_period['academic_term']);
@@ -785,12 +792,6 @@ class AssessmentResultsTable extends AppTable
             $mark['assessment_period_name'] = $assessment_period_name;
             $new_marks[] = $mark;
         }
-//        }
-//        $functionName = __FUNCTION__;
-//        $end_time = microtime(true);
-//        $executionTimeMs = ($end_time - $start_time) * 1000;
-//        Log::write('debug', "{$functionName}\n
-//            Function execution time: {$executionTimeMs} ms");
         return $new_marks;
     }
 
@@ -801,29 +802,42 @@ class AssessmentResultsTable extends AppTable
      */
     private static function getMarksPerStudentPerTermArray(array $marksWithSubjectClassificationWeight)
     {
-//        $start_time = microtime(true);
         $marksPerStudent = [];
         foreach ($marksWithSubjectClassificationWeight as $record) {
             $studentId = $record['student_id'];
             $academic_term = $record['academic_term'];
-            $subjectClassification = Inflector::slug($record['subject_classification']);
-            $marksPerStudent[$studentId][$subjectClassification][$academic_term][] = $record;
+            $education_subject_id = $record['education_subject_id'];
+            $assessment_period_id = $record['assessment_period_id'];
+            $subjectClassification = Text::slug($record['subject_classification']);
+            $key = $education_subject_id . '_' . $assessment_period_id;
+            if(!isset($marksPerStudent[$studentId][$subjectClassification][$academic_term][$key])){
+                if($record['exemption'] == 'EXEMPT'){
+                    $marksPerStudent[$studentId][$subjectClassification][$academic_term][$key] = $record;
+                }
+            }
         }
-//        $functionName = __FUNCTION__;
-//        $end_time = microtime(true);
-//        $executionTimeMs = ($end_time - $start_time) * 1000;
-//        Log::write('debug', "{$functionName}\n
-//            Function execution time: {$executionTimeMs} ms");
+        foreach ($marksWithSubjectClassificationWeight as $record) {
+            $studentId = $record['student_id'];
+            $academic_term = $record['academic_term'];
+            $education_subject_id = $record['education_subject_id'];
+            $assessment_period_id = $record['assessment_period_id'];
+            $subjectClassification = Text::slug($record['subject_classification']);
+            $key = $education_subject_id . '_' . $assessment_period_id;
+            if(!isset($marksPerStudent[$studentId][$subjectClassification][$academic_term][$key])){
+                $marksPerStudent[$studentId][$subjectClassification][$academic_term][$key] = $record;
+            }
+        }
 
         return $marksPerStudent;
     }
 
     /**
      * @param array $marksPerStudent
+     * @param array $assessmentItemsTotalMarks
      * @return array
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private static function getTotalMarksPerStudent(array $marksPerStudent)
+    private static function getTotalMarksPerStudent(array $marksPerStudent, array $assessmentItemsTotalMarks): array
     {
 //        $start_time = microtime(true);
         $totalMarksPerStudent = [];
@@ -835,18 +849,63 @@ class AssessmentResultsTable extends AppTable
                 foreach ($student_marks as $subject_classification => $subject_classification_marks) {
                     $totalMarksPerStudent[$assessmentI][$student_id][$subject_classification] = $subject_classification_marks;
                     $halfArr = [];
+                    $terms = 0;
+                    $weighted_marks_term_sum = 0;
+                    $weighted_marks_term = 0;
                     foreach ($subject_classification_marks as $academic_term => $academic_term_marks) {
+                        $terms = $terms + 1;
+                        $total_weight = intval($assessmentItemsTotalMarks[$subject_classification][$academic_term]);
+//                        Log::debug(print_r(["assessmentItemsTotalMarks[$subject_classification][$academic_term]" => $total_weight], true));
 //                        $totalMarksPerStudent[$assessmentI][$student_id][$subject_classification][$academic_term] = $academic_term_marks;
                         $simple_marks_sum = 0;
                         $weighted_marks_sum = 0;
+                        $weight_sum = 0;
+
                         foreach ($academic_term_marks as $markkey => $markval) {
+                            $weighted_marks_term = 0;
                             $totalMarksPerStudent[$assessmentI] = $markval;
                             $totalMarksPerStudent[$assessmentI]['academic_term_value'] = $markval['assessment_period_name'];
-                            $totalMarksPerStudent[$assessmentI]['marks'] = $markval['simple_mark'];
-                            $totalMarksPerStudent[$assessmentI]['academic_term_total_marks'] = $markval['simple_mark'];
-                            $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = $markval['weighted_mark'];
-                            $simple_marks_sum = $simple_marks_sum + $markval['simple_mark'];
-                            $weighted_marks_sum = $weighted_marks_sum + $markval['weighted_mark'];
+
+                            if(!isset($markval['exemption'])) {
+
+                                $totalMarksPerStudent[$assessmentI]['marks'] = $markval['simple_mark'];
+                                $totalMarksPerStudent[$assessmentI]['academic_term_total_marks'] = $markval['simple_mark'];
+                                $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = $markval['weighted_mark'];
+                                if (is_numeric($markval['simple_mark'])) {
+                                    if(!is_numeric($simple_marks_sum)){
+                                        $simple_marks_sum = 0;
+                                    }
+                                    $simple_marks_sum = $simple_marks_sum + $markval['simple_mark'];
+                                }
+                                if (is_numeric($markval['weighted_mark'])) {
+                                    if(!is_numeric($weighted_marks_sum)){
+                                        $weighted_marks_sum = 0;
+                                    }
+                                    $weighted_marks_sum = $weighted_marks_sum + $markval['weighted_mark'];
+                                }
+                                if (is_numeric($markval['weight'])) {
+                                    if(!is_numeric($weight_sum)){
+                                        $weight_sum = 0;
+                                    }
+                                    $weight_sum = $weight_sum + $markval['weight'];
+                                }
+                                if(isset($markval['absence'])) {
+
+                                }
+                            }else{
+                                //POCOR-9042 starts
+                                if($totalMarksPerStudent[$assessmentI]['type'] == 2){
+                                    $totalMarksPerStudent[$assessmentI]['simple_mark'] = 'UNASSIGN';
+                                    $totalMarksPerStudent[$assessmentI]['marks'] = 'UNASSIGN';
+                                    $totalMarksPerStudent[$assessmentI]['academic_term_total_marks'] = 'UNASSIGN';
+                                    $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = 'UNASSIGN';
+                                }else{//POCOR-9042 ends
+                                    $totalMarksPerStudent[$assessmentI]['simple_mark'] = 'EXEMPT';
+                                    $totalMarksPerStudent[$assessmentI]['marks'] = 'EXEMPT';
+                                    $totalMarksPerStudent[$assessmentI]['academic_term_total_marks'] = 'EXEMPT';
+                                    $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = 'EXEMPT';
+                                }                                
+                            }
 //                            $totalMarksPerStudent[$assessmentI][$markkey] = $markval;
                             $assessmentI++;
                         }
@@ -854,24 +913,42 @@ class AssessmentResultsTable extends AppTable
                         $totalMarksPerStudent[$assessmentI]['academic_term_value'] = $academic_term;
                         $totalMarksPerStudent[$assessmentI]['marks'] = $simple_marks_sum;
                         $totalMarksPerStudent[$assessmentI]['academic_term_total_marks'] = $simple_marks_sum;
-                        $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = $weighted_marks_sum;
-//                        unset($totalMarksPerStudent[$i]['simple_mark']);
-//                        unset($totalMarksPerStudent[$i]['weighted_mark']);
-//                        unset($totalMarksPerStudent[$i]['academic_term']);
+                        // Setting Total Weighted Mark;
+                        if ($weight_sum > 0) {
+                            $weighted_marks_term = ($weighted_marks_sum / ($weight_sum * 100)) * $total_weight;
+                            $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = $weighted_marks_term;
+                        } else {
+                            $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = $simple_marks_sum;
+                        }
                         $assessmentI++;
+                        if(is_numeric($weighted_marks_term)) {
+                            if(!is_numeric($weighted_marks_term_sum)){
+                                $weighted_marks_term_sum = 0;
+                            }
+                            $weighted_marks_term_sum = $weighted_marks_term_sum + $weighted_marks_term;
+                        }
                     }
+                    // Setting Average;
+                    $totalMarksPerStudent[$assessmentI] = $markval;
+                    $totalMarksPerStudent[$assessmentI]['academic_term_value'] = __('Average');
+                    if ($terms > 0) {
+                        if (is_numeric($weighted_marks_term_sum)) {
+                            $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = $weighted_marks_term_sum / $terms;
+                        } else {
+                            $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = 0;
+                        }
+                    } else {
+                        $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = "";
+                    }
+
+                    $assessmentI++;
                 }
             }
         }
-//        POCOR-8010:end
-//        $functionName = __FUNCTION__;
-//        $end_time = microtime(true);
-//        $executionTimeMs = ($end_time - $start_time) * 1000;
-//        Log::write('debug', "{$functionName}\n
-//            Function execution time: {$executionTimeMs} ms");
 
         return $totalMarksPerStudent;
     }
+
 
     /**
      * @param array $marks
@@ -882,7 +959,7 @@ class AssessmentResultsTable extends AppTable
     {
 //        $start_time = microtime(true);
         $assessment_ids = array_unique(array_column($marks, 'assessment_id'));
-        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+        $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods'); // POCOR-8578
         $query = $AssessmentPeriods->find();
         $selectedColumns = [
             'academic_term_value' => '(
@@ -898,7 +975,7 @@ class AssessmentResultsTable extends AppTable
             ->select($selectedColumns)
             ->where([$AssessmentPeriods->aliasField('assessment_id IN') => $assessment_ids])
             ->group(['academic_term_value'])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->all();
         }
 
@@ -967,7 +1044,7 @@ class AssessmentResultsTable extends AppTable
 
         foreach ($marksWithSubjectClassificationWeight as $record) {
             $studentId = $record['student_id'];
-            $subjectClassification = Inflector::slug($record['subject_classification']);
+            $subjectClassification = Text::slug($record['subject_classification']);//Text::slug($record['subject_classification']);
             $academicTermTotalWeightedMarks = $record['weighted_mark'];
 
             if (isset($averageStudentSubjectResults[$studentId])
@@ -994,29 +1071,30 @@ class AssessmentResultsTable extends AppTable
 
     /**
      * @param array $params
-     * @param bool $archive
      * @return array
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public static function getGroupAssessmentItemResults(array $params,$archive=false)
+    public function getGroupAssessmentItemResults(array $params)
     {
-//        $start_time = microtime(true);
-        $marks = self::getMarksForClass($params, $archive);
-        $marksWithSubjectClassificationWeight = self::getMarksWithSubjectClassificationWeight($marks);
+        $groupAssessmentItemsGradingTypes = $this->groupAssessmentItemsGradingTypes;
+        if(empty($groupAssessmentItemsGradingTypes)){
+            $groupAssessmentItemsGradingTypes = $this->getGroupAssessmentItemsGradingTypes($params);
+        }
+        $assessmentItemsTotalMarks = [];
+        foreach ($groupAssessmentItemsGradingTypes as $groupAssessmentItemsGradingType){
+            $subject_classification = Text::slug($groupAssessmentItemsGradingType['subject_classification']);
+            $academic_term_value = $groupAssessmentItemsGradingType['academic_term_value'];
+            $assessmentItemsTotalMarks[$subject_classification][$academic_term_value] = $groupAssessmentItemsGradingType['academic_term_total_weighted_max'];
+        }
+        $marks = self::getMarksForClass($params);
+        $exempts = self::getExemptsForClass($params);
+//        Log::debug(print_r($marks, true));
+//        Log::debug(print_r($exempts, true));
+        $marksWithSubjectClassificationWeight = self::getMarksWithSubjectClassificationWeight($marks, $exempts);
+
         $marksPerStudent = self::getMarksPerStudentPerTermArray($marksWithSubjectClassificationWeight);
-        $totalMarksPerStudent = self::getTotalMarksPerStudent($marksPerStudent);
-        $averageStudentSubjectResults = self::getAverageStudentSubjectResults($marksWithSubjectClassificationWeight);
-//        print_r($averageStudentSubjectResults);
-        $groupAssessmentPeriodCount = self::getGroupAssessmentPeriodCount($marks);
-        $averageRecords = self::getAverageRecords($averageStudentSubjectResults, $groupAssessmentPeriodCount);
-//        print_r($averageRecords);
-        $studentsSubjectResults = array_merge($totalMarksPerStudent, $averageRecords);
-//        $functionName = __FUNCTION__;
-//        $end_time = microtime(true);
-//        $executionTimeMs = ($end_time - $start_time) * 1000;
-//        Log::write('debug', "{$functionName}\n
-//            Function execution time: {$executionTimeMs} ms");
-        return $studentsSubjectResults;
+        $totalMarksPerStudent = self::getTotalMarksPerStudent($marksPerStudent, $assessmentItemsTotalMarks);
+        return $totalMarksPerStudent;
     }
 
     /**
@@ -1030,7 +1108,7 @@ class AssessmentResultsTable extends AppTable
         if (!$relatedField) {
             return null;
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = self::getDynamicTableInstance($tableName); // POCOR-8578
         try {
             $related = $Table->get($relatedField);
             return $related->toArray();
@@ -1051,10 +1129,13 @@ class AssessmentResultsTable extends AppTable
         if (!$where) {
             return null;
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = self::getDynamicTableInstance($tableName);
         try {
             $related = $Table->find()->where($where)->first();
-            return $related->toArray();
+            //POCOR-8483[START]
+            // return $related->toArray();
+            return $related;
+            //POCOR-8483[END]
         } catch (RecordNotFoundException $e) {
             return null;
         }
@@ -1083,7 +1164,7 @@ class AssessmentResultsTable extends AppTable
     private function initialiseAssessments(array $params)
     {
         if (isset($params['assessment_id'])) {
-            $Assessments = TableRegistry::get('Assessment.Assessments');
+            $Assessments = self::getDynamicTableInstance('Assessment.Assessments'); // POCOR-8578
             $assessment_id = $params['assessment_id'];
             $entity = $Assessments->get($assessment_id, [
                 'contain' => ['AcademicPeriods', 'EducationGrades']
@@ -1101,13 +1182,13 @@ class AssessmentResultsTable extends AppTable
     private function initialiseAssessmentItems(array $params)
     {
         if (isset($params['assessment_id'])) {
-            $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems'); // POCOR-8578
             $assessment_id = $params['assessment_id'];
             $results = $AssessmentItems->find()
                 ->contain(['EducationSubjects'])
                 ->where([$AssessmentItems->aliasField('assessment_id') => $assessment_id])
                 ->order(['EducationSubjects.order', 'EducationSubjects.code', 'EducationSubjects.name'])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
             return $results->toArray();
         }
@@ -1121,7 +1202,7 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['assessment_id'])) {
 //            $start_time = microtime(true);
-            $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
+            $AssessmentItemsGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentItemsGradingTypes'); // POCOR-8578
             $assessment_id = $params['assessment_id'];
             $results = $AssessmentItemsGradingTypes->find()
                 ->contain(['AssessmentGradingTypes', 'AssessmentPeriods', 'EducationSubjects'])
@@ -1150,7 +1231,7 @@ class AssessmentResultsTable extends AppTable
                         return $row;
                     });
                 })
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
 //            $functionName = __FUNCTION__;
 //            $end_time = microtime(true);
@@ -1170,12 +1251,224 @@ class AssessmentResultsTable extends AppTable
     private function initialiseAssessmentPeriods(array $params)
     {
         if (isset($params['assessment_id'])) {
-            $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods'); // POCOR-8578
             $assessment_id = $params['assessment_id'];
             $results = $AssessmentPeriods->find()
                 ->where([$AssessmentPeriods->aliasField('assessment_id') => $assessment_id])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
+            return $results->toArray();
+        }
+    }
+    /**
+     * POCOR-8391 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
+
+    /**
+     * POCOR-8618
+     * @param array $params
+     * @return array|void
+     */
+    private function getGroupAssessmentItemsGradingTypes(array $params)
+    {
+        if (isset($params['assessment_id'])) {
+//            $start_time = microtime(true);
+            $AssessmentItemsGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentItemsGradingTypes');
+            $AssessmentGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentGradingTypes');
+            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods');
+            $EducationSubjects = self::getDynamicTableInstance('Education.EducationSubjects');
+            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems');
+
+            $query = $AssessmentItemsGradingTypes->find();
+
+            $withoutTerm = $query
+                ->select([
+                    'subject_classification' => '(
+                    CASE
+                    WHEN ' . $AssessmentItems->aliasField('classification <> \'\'') . ' THEN ' . $AssessmentItems->aliasField('classification') . '
+                        ELSE ' . $EducationSubjects->aliasField('name') . '
+                        END
+                    )',
+                    'academic_term_value' => $AssessmentPeriods->aliasField('name'),
+                    'academic_term_type' => '"period"',
+                    'academic_term_total_weighted_max' => $query->func()->sum($AssessmentGradingTypes->aliasField('max * ') . $AssessmentPeriods->aliasField('weight'))
+                ])
+                ->contain([$AssessmentGradingTypes->getAlias(), $AssessmentPeriods->getAlias(), $EducationSubjects->getAlias()])
+                ->leftJoin(
+                    [$AssessmentItems->getAlias() => $AssessmentItems->getTable()],
+                    [
+                        $AssessmentItems->aliasField('assessment_id = ') . $AssessmentItemsGradingTypes->aliasField('assessment_id'),
+                        $AssessmentItems->aliasField('education_subject_id = ') . $AssessmentItemsGradingTypes->aliasField('education_subject_id')
+                    ]
+                )
+                ->where([$AssessmentItemsGradingTypes->aliasField('assessment_id') => $params['assessment_id']])
+                ->group(['subject_classification', 'academic_term_value'])
+                ->disableHydration()
+                ->all();
+
+            $withTerm = $query
+                ->select([
+                    'subject_classification' => '(
+                    CASE
+                    WHEN ' . $AssessmentItems->aliasField('classification <> \'\'') . ' THEN ' . $AssessmentItems->aliasField('classification') . '
+                        ELSE ' . $EducationSubjects->aliasField('name') . '
+                        END
+                    )',
+                    'academic_term_value' => $AssessmentPeriods->aliasField('academic_term'),
+                    'academic_term_type' => '"term"',
+                    'academic_term_total_weighted_max' => $query->func()->sum($AssessmentGradingTypes->aliasField('max * ') . $AssessmentPeriods->aliasField('weight'))
+                ])
+                ->contain([$AssessmentGradingTypes->getAlias(), $AssessmentPeriods->getAlias(), $EducationSubjects->getAlias()])
+                ->leftJoin(
+                    [$AssessmentItems->getAlias() => $AssessmentItems->getTable()],
+                    [
+                        $AssessmentItems->aliasField('assessment_id = ') . $AssessmentItemsGradingTypes->aliasField('assessment_id'),
+                        $AssessmentItems->aliasField('education_subject_id = ') . $AssessmentItemsGradingTypes->aliasField('education_subject_id')
+                    ]
+                )
+                ->where([
+                    $AssessmentItemsGradingTypes->aliasField('assessment_id') => $params['assessment_id'],
+                    $AssessmentPeriods->aliasField('academic_term <> ') => ""
+                ])
+                ->group(['subject_classification'])
+                ->disableHydration()
+                ->all();
+
+            if (!$withTerm->isEmpty()) { // If academic_term is setup, to use the academic_term to calculate the average
+                $recordsToUse = $withTerm->toArray();
+            } else { // else, to calculate the average by subject_classification
+                $recordsToUse = $withoutTerm->toArray();
+            }
+
+            $sumRecordBySubjects = [];
+            foreach ($recordsToUse as $record) {
+                $subjectClassification = $record['subject_classification'];
+
+                if (!isset($sumRecordBySubjects[$subjectClassification])) {
+                    $sumRecordBySubjects[$subjectClassification] = [
+                        'subject_classification' => $record['subject_classification'],
+                        'total_weight' => $record['academic_term_total_weighted_max'],
+                        'count' => 1
+                    ];
+                } else {
+                    $sumRecordBySubjects[$subjectClassification]['total_weight'] += $record['academic_term_total_weighted_max'];
+                    ++$sumRecordBySubjects[$subjectClassification]['count'];
+                }
+            }
+
+            $averageRecords = [];
+            foreach ($sumRecordBySubjects as $subjectClassification => $subjectObj) {
+                $averageRecords[] = [
+                    'subject_classification' => $subjectClassification,
+                    'academic_term_value' => __('Average'), // POCOR-8066
+                    'academic_term_type' => 'average',
+                    'academic_term_total_weighted_max' => ($this->groupAssessmentPeriodCount > 0) ? $subjectObj['total_weight'] / $this->groupAssessmentPeriodCount : ''
+                ];
+            }
+
+            $groupAssessmentItemsGradingTypes = array_merge($withoutTerm->toArray(), $withTerm->toArray(), $averageRecords);
+//            $functionName = __FUNCTION__;
+//            $end_time = microtime(true);
+//            $executionTimeMs = ($end_time - $start_time) * 1000;
+//            $this->log("{$functionName}\n
+//            Function execution time: {$executionTimeMs} ms", 'debug');
+
+            return $groupAssessmentItemsGradingTypes;
+        }
+    }
+
+    /**
+     * @param $params
+     * @return array|void
+     */
+    private function getGroupAssessmentItems($params)
+    {
+        if (isset($params['assessment_id']) && isset($params['class_id'])) {
+//            $start_time = microtime(true);
+            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems');
+            $EducationSubjects = self::getDynamicTableInstance('Education.EducationSubjects');
+            $ClassSubjects = self::getDynamicTableInstance('Institution.InstitutionClassSubjects');
+            $InstitutionSubjects = self::getDynamicTableInstance('Institution.InstitutionSubjects');
+
+            $query = $AssessmentItems->find();
+            $selectedColumns = [
+                'subject_classification' => '(
+                    CASE
+                    WHEN ' . $AssessmentItems->aliasField('classification <> \'\'') . ' THEN ' . $AssessmentItems->aliasField('classification') . '
+                        ELSE ' . $EducationSubjects->aliasField('name') . '
+                        END
+                    )',
+                'subject_order' => $query->func()->min($EducationSubjects->aliasField('order')),
+                'total_subject_weight' => $query->func()->sum($AssessmentItems->aliasField('weight'))
+            ];
+
+            $results = $AssessmentItems->find()
+                ->select($selectedColumns)
+                ->contain([$EducationSubjects->getAlias()])
+                ->innerJoin([$InstitutionSubjects->getAlias() => $InstitutionSubjects->getTable()], [
+                    $InstitutionSubjects->aliasField('education_subject_id = ') . $AssessmentItems->aliasField('education_subject_id')
+                ])
+                ->innerJoin([$ClassSubjects->getAlias() => $ClassSubjects->getTable()], [
+                    $InstitutionSubjects->aliasField('id = ') . $ClassSubjects->aliasField('institution_subject_id'),
+                    $ClassSubjects->aliasField('institution_class_id') => $params['class_id']
+                ])
+                ->where([$AssessmentItems->aliasField('assessment_id') => $params['assessment_id']])
+                ->order(['subject_order', 'subject_classification', $EducationSubjects->aliasField('code'), $EducationSubjects->aliasField('name')])
+                ->group(['subject_classification'])
+                ->disableHydration()
+                ->all();
+//            $functionName = __FUNCTION__;
+//            $end_time = microtime(true);
+//            $executionTimeMs = ($end_time - $start_time) * 1000;
+//            $this->log("{$functionName}\n
+//            Function execution time: {$executionTimeMs} ms", 'debug');
+
             return $results->toArray();
         }
     }

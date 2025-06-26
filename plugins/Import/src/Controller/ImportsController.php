@@ -12,18 +12,18 @@ class ImportsController extends AppController {
 		parent::initialize();
 	}
 
-	// public function beforeFilter(Event $event) {
+	// public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
 	// 	parent::beforeFilter($event);
 	// 	$header = 'Field Options';
-		
+
 	// 	$this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'index']);
 	// 	$session = $this->request->session();
 	// 	$action = $this->request->params['action'];
-		
+
 	// 	$this->set('contentHeader', __($header));
 	// }
 
 	// public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
-		
+
 	// }
 }

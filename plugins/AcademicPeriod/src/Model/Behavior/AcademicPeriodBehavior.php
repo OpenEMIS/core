@@ -11,7 +11,7 @@ use Cake\ORM\Entity;
 
 class AcademicPeriodBehavior extends Behavior {
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'ControllerAction.Model.edit.afterAction' => 'editAfterAction',
@@ -26,7 +26,7 @@ class AcademicPeriodBehavior extends Behavior {
 			$newEvent['ControllerAction.Model.afterAction'] = 'afterAction';
 		}
 
-		$tableAlias = $this->_table->alias();
+		$tableAlias = $this->_table->getAlias();
 
 		switch ($tableAlias) {
 			case 'InstitutionAssessments':
@@ -47,8 +47,8 @@ class AcademicPeriodBehavior extends Behavior {
 	}
 
 	public function indexBeforeAction(Event $event) {
-		if(isset($this->_table->request->query['mode'])) {
-			$academicPeriodId = $this->_table->request->query['academic_period_id'];
+		if(!is_null($this->_table->request->getQuery('mode'))) {
+			$academicPeriodId = $this->_table->request->getQuery('academic_period_id');
 			$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getEditable($academicPeriodId);
 			if (!$editable) {
 				if ($this->isCAv4()) {
@@ -82,9 +82,17 @@ class AcademicPeriodBehavior extends Behavior {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		//dd($entity);
 		if ($entity->has('academic_period_id')) {
-			$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$this->request->data[$this->_table->alias()]['editable'] = $AcademicPeriodTable->getEditable($entity->academic_period_id);
+			$AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+			$requestData = $this->_table->request->getData();
+			$alias = $this->_table->getAlias();
+			//$this->request->data[$this->_table->getAlias()]['editable'] = $AcademicPeriodTable->getEditable($entity->academic_period_id);
+			if(isset($requestData[$alias])) {
+				$requestData[$this->_table->getAlias()]['editable'] = $AcademicPeriodTable->getEditable($entity->academic_period_id);
+				$requestData->withData($requestData);
+				$this->_table->request = $requestData;
+			}
 		}
 	}
 
@@ -98,8 +106,8 @@ class AcademicPeriodBehavior extends Behavior {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		switch ($action) {
 			case 'view':
-				if (isset($this->request->data[$this->_table->alias()]['editable'])) {
-					$isEditable = $this->request->data[$this->_table->alias()]['editable'];
+				if (isset($this->_table->request->getData()[$this->_table->getAlias()]['editable'])) {//POCOR-8671
+					$isEditable = $this->_table->request->getData()[$this->_table->getAlias()]['editable'];//POCOR-8671
 					if (!$isEditable) {
 						if(isset($toolbarButtons['edit'])) {
 							unset($toolbarButtons['edit']);
@@ -111,16 +119,16 @@ class AcademicPeriodBehavior extends Behavior {
 				}
 				break;
 			case 'index':
-				$tableAlias = $this->_table->alias();
+				$tableAlias = $this->_table->getAlias();
 				if ($tableAlias == 'StudentAttendances' || $tableAlias == 'StaffAttendances') {
 					if ($this->_table->AccessControl->check(['Institutions', $tableAlias, 'indexEdit'])) {
-						if (isset($this->_table->request->query['academic_period_id'])) {
-							$academicPeriodId = $this->_table->request->query['academic_period_id'];
+						if (!is_null($this->_table->request->getQuery('academic_period_id'))) {
+							$academicPeriodId = $this->_table->request->getQuery('academic_period_id');
 							$editable = 1;
 							if ($academicPeriodId != 0 || !empty($academicPeriodId)) {
 								$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getEditable($academicPeriodId);
 							}
-							if (!isset($this->_table->request->query['mode'])) {
+							if (!is_null($this->_table->request->getQuery('mode'))) {
 								if ($editable) {
 									if ($tableAlias == 'StudentAttendances') {
 										$toolbarButtons['edit'] = $buttons['index'];
@@ -153,17 +161,17 @@ class AcademicPeriodBehavior extends Behavior {
 		$isEditable = 1;
 		if ($entity->has('academic_period_id')) {
 			$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
-		} else if (isset($this->_table->request->query['academic_period_id'])) {
-			$academicPeriodId = $this->_table->request->query['academic_period_id'];
+		} else if (!is_null($this->_table->request->getQuery('academic_period_id'))) {
+			$academicPeriodId = $this->_table->request->getQuery('academic_period_id');
 			if(!empty($academicPeriodId) || $academicPeriodId > 0) {
 				$isEditable = $AcademicPeriodTable->get($academicPeriodId)->editable;
 			}
 		}
 		if (! $isEditable) {
-			if (isset($buttons['edit'])) {
+			if (!is_null($buttons['edit'])) {
 				unset($buttons['edit']);
 			}
-			if (isset($buttons['remove'])) {
+			if (!is_null($buttons['remove'])) {
 				unset($buttons['remove']);
 			}
 			return $buttons;
@@ -178,8 +186,8 @@ class AcademicPeriodBehavior extends Behavior {
 			if (!empty($entity->academic_period_id)) {
 				$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
 			}
-		} else if (isset($data[$this->_table->alias()]['academic_period_id']) && !empty($data[$this->_table->alias()]['academic_period_id'])) {
-			$academicPeriodId = $data[$this->_table->alias()]['academic_period_id'];
+		} else if (isset($data[$this->_table->getAlias()]['academic_period_id']) && !empty($data[$this->_table->getAlias()]['academic_period_id'])) {
+			$academicPeriodId = $data[$this->_table->getAlias()]['academic_period_id'];
 			if (!empty($academicPeriodId)) {
 				$isEditable = $AcademicPeriodTable->get($academicPeriodId)->editable;
 			}

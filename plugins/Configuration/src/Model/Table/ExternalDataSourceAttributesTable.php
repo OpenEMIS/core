@@ -12,7 +12,7 @@ use Cake\Core\Configure;
 
 class ExternalDataSourceAttributesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -42,7 +42,7 @@ class ExternalDataSourceAttributesTable extends ControllerActionTable
 
     public function findAttributes(Query $query, array $options = [])
     {
-        $ConfigItemTable = TableRegistry::get('ConfigItems');
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
         $externalSourceType = $ConfigItemTable
             ->find()
             ->select([$ConfigItemTable->aliasField('name')]) // POCOR-7981
@@ -89,7 +89,7 @@ class ExternalDataSourceAttributesTable extends ControllerActionTable
 
     public function findUri(Query $query, array $options = [])
     {
-        $ConfigItemTable = TableRegistry::get('ConfigItems');
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
         $externalSourceType = $ConfigItemTable
             ->find()
             ->select([$ConfigItemTable->aliasField('name')]) // POCOR-7981

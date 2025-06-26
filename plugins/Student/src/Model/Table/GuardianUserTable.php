@@ -6,19 +6,23 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use Directory\Model\Table\DirectoriesTable as UserTable;
 
 class GuardianUserTable extends UserTable {
-    public function initialize(array $config)
+    public function initialize(array $config):void
     {
         parent::initialize($config);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Guardians' =>['student_id', 'institution_id']
+            ]
+        ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Guardian.afterSave'] = 'guardianAfterSave';
@@ -35,11 +39,10 @@ class GuardianUserTable extends UserTable {
     public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
         $sessionKey = 'Student.Guardians.new';
-
         if ($this->Session->check($sessionKey)) {
             $guardianData = $this->Session->read($sessionKey);
 
-            if (array_key_exists('guardian_relation_id', $guardianData)) {
+            if (isset($guardianData['guardian_relation_id'])) {
                 $entity->guardian_relation_id = $guardianData['guardian_relation_id'];
             }
         }
@@ -59,14 +62,14 @@ class GuardianUserTable extends UserTable {
             }
             $event->stopPropagation();
 
-            $controller = $this->controller->name;
+            $controller = $this->controller->getName();
             $action = 'Guardians';
 
             if ($controller == 'Directories') { //this is for Directories/StudentGuardians/ (adding guardian for student through directories)
                 $action = 'StudentGuardians';
             }
 
-            $redirect = ['plugin' => $this->controller->plugin, 'controller' => $controller, 'action' => $action, 'index'];
+            $redirect = ['plugin' => $this->controller->getPlugin(), 'controller' => $controller, 'action' => $action, 'index'];
 
             return $this->controller->redirect($redirect);
         }
@@ -100,26 +103,29 @@ class GuardianUserTable extends UserTable {
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         // MUST set user_type to request query before call parent's beforeAction
-        $this->request->query['user_type'] = UserTable::GUARDIAN;
+       // $this->request->query['user_type'] = UserTable::GUARDIAN;
+        $this->request = $this->request->withQueryParams(
+            array_merge($this->request->getQueryParams(), ['user_type' => UserTable::GUARDIAN])
+        );
         parent::beforeAction($event, $extra);
-        //parent::hideOtherInformationSection($this->controller->name, $this->action);
+        //parent::hideOtherInformationSection($this->controller->getName(), $this->action);
     }
 
     // POCOR-5684
     public function onGetIdentityNumber(Event $event, Entity $entity){
 
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_identities = $users_ids->find()
         ->select(['number','nationality_id'])
         ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->all();
-        
-        $users_ids = TableRegistry::get('user_identities');
+
+        $users_ids = TableRegistry::get('User.Identities');
         $user_id_data = $users_ids->find()
         ->select(['number'])
-        ->where([                
+        ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->first();
@@ -148,14 +154,14 @@ class GuardianUserTable extends UserTable {
             $nat_ids = [];
             foreach ($nationalities_ids as $item) {
                 array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
-            }     
+            }
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
                 $users_ids = TableRegistry::get('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number'])
-                ->where([                
+                ->where([
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
@@ -164,7 +170,7 @@ class GuardianUserTable extends UserTable {
                     array_push($nationality_based_ids, $user_id_data_nat);
                 }
             }
-            
+
             if(count($nationality_based_ids) > 0){
                 // Case 2 - returning value
                 return $entity->identity_number = $nationality_based_ids[0]['number'];
@@ -185,11 +191,11 @@ class GuardianUserTable extends UserTable {
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->all();
-        
+
         $users_ids = TableRegistry::get('user_identities');
         $user_id_data = $users_ids->find()
         ->select(['number', 'identity_type_id'])
-        ->where([                
+        ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->first();
@@ -225,14 +231,14 @@ class GuardianUserTable extends UserTable {
             $nat_ids = [];
             foreach ($nationalities_ids as $item) {
                 array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
-            }     
+            }
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
                 $users_ids = TableRegistry::get('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number','identity_type_id'])
-                ->where([                
+                ->where([
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
@@ -335,14 +341,14 @@ class GuardianUserTable extends UserTable {
 
     private function setupTabElements($entity)
     {
-        $session = $this->request->session();
-        $guardianId = $session->read('Guardian.Guardians.id');
-        if ($this->controller->name == 'Directories') {
+        $guardianId = $entity->id;
+
+        if ($this->controller->getName() == 'Directories') {
             $tabElements = $this->controller->getUserTabElements(['id' => $guardianId, 'userRole' => 'Guardians']);
-        } elseif ($this->controller->name == 'Students') {
-            $tabElements = $this->controller->getGuardianTabElements(['id' => $guardianId, 'userRole' => 'Guardians']);
+        } elseif ($this->controller->getName() == 'Students') {
+            $tabElements = $this->getGuardianTabElements(['id' => $guardianId, 'userRole' => 'Guardians']);
         }
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 }

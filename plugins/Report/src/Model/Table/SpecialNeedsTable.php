@@ -16,9 +16,9 @@ class SpecialNeedsTable extends AppTable
 {
 	use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_class_students');
+        $this->setTable('institution_class_students');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
@@ -40,7 +40,7 @@ class SpecialNeedsTable extends AppTable
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -110,67 +110,67 @@ class SpecialNeedsTable extends AppTable
     //             'referred_staff_id' => $UserSpecialNeedsReferrals->aliasField('referrer_id'),
     //         ])
     //         ->leftJoin(
-    //                 [$Users->alias() => $Users->table()],
+    //                 [$Users->getAlias() => $Users->getTable()],
     //                 [
     //                     $Users->aliasField('id = ') . $this->aliasField('student_id')
     //                 ]
     //             )
     //         ->leftJoin(
-    //                 [$UserIdentities->alias() => $UserIdentities->table()],
+    //                 [$UserIdentities->getAlias() => $UserIdentities->getTable()],
     //                 [
     //                     $UserIdentities->aliasField('security_user_id = ') . $Users->aliasField('id')
     //                 ]
     //             )
     //         ->leftJoin(
-    //                 [$IdentityTypes->alias() => $IdentityTypes->table()],
+    //                 [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
     //                 [
     //                     $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
     //                 ]
     //             )
     //         ->innerJoin(
-    //                 [$SpecialNeedsAssessments->alias() => $SpecialNeedsAssessments->table()],
+    //                 [$SpecialNeedsAssessments->getAlias() => $SpecialNeedsAssessments->getTable()],
     //                 [
     //                     $SpecialNeedsAssessments->aliasField('security_user_id = ') . $this->aliasField('student_id')
     //                 ]
     //             )
     //         ->leftJoin(
-    //                 [$SpecialNeedsTypes->alias() => $SpecialNeedsTypes->table()],
+    //                 [$SpecialNeedsTypes->getAlias() => $SpecialNeedsTypes->getTable()],
     //                 [
     //                     $SpecialNeedsTypes->aliasField('id = ') . $SpecialNeedsAssessments->aliasField('special_need_type_id')
     //                 ]
     //             )
     //         ->leftJoin(
-    //                 [$SpecialNeedsDifficulties->alias() => $SpecialNeedsDifficulties->table()],
+    //                 [$SpecialNeedsDifficulties->getAlias() => $SpecialNeedsDifficulties->getTable()],
     //                 [
     //                     $SpecialNeedsDifficulties->aliasField('id = ') . $SpecialNeedsAssessments->aliasField('special_need_difficulty_id')
     //                 ]
     //             )
     //         ->innerJoin(
-    //                 [$SpecialNeedsServices->alias() => $SpecialNeedsServices->table()],
+    //                 [$SpecialNeedsServices->getAlias() => $SpecialNeedsServices->getTable()],
     //                 [
     //                     $SpecialNeedsServices->aliasField('security_user_id = ') . $this->aliasField('student_id')
     //                 ]
     //             )
     //         ->leftJoin(
-    //                 [$SpecialNeedsServiceTypes->alias() => $SpecialNeedsServiceTypes->table()],
+    //                 [$SpecialNeedsServiceTypes->getAlias() => $SpecialNeedsServiceTypes->getTable()],
     //                 [
     //                     $SpecialNeedsServiceTypes->aliasField('id = ') . $SpecialNeedsServices->aliasField('special_needs_service_type_id')
     //                 ]
     //             )
     //         ->leftJoin(
-    //                 [$StudentGuardians->alias() => $StudentGuardians->table()],
+    //                 [$StudentGuardians->getAlias() => $StudentGuardians->getTable()],
     //                 [
     //                     $StudentGuardians->aliasField('student_id = ') . $this->aliasField('student_id')
     //                 ]
     //             )
     //         ->leftJoin(
-    //                 [$GuardianRelations->alias() => $GuardianRelations->table()],
+    //                 [$GuardianRelations->getAlias() => $GuardianRelations->getTable()],
     //                 [
     //                     $GuardianRelations->aliasField('id = ') . $StudentGuardians->aliasField('guardian_relation_id')
     //                 ]
     //             )
     //         ->leftJoin(
-    //                 [$InstitutionStudentRisks->alias() => $InstitutionStudentRisks->table()],
+    //                 [$InstitutionStudentRisks->getAlias() => $InstitutionStudentRisks->getTable()],
     //                 [
     //                     $InstitutionStudentRisks->aliasField('student_id = ') . $this->aliasField('student_id')
     //                 ]
@@ -178,10 +178,10 @@ class SpecialNeedsTable extends AppTable
     //         ->leftJoin(['GuardianUser' => 'security_users'], [
     //                     'GuardianUser.id = '.$StudentGuardians->aliasField('guardian_id')
     //                 ])
-    //         ->leftJoin([$UserContact->alias() => $UserContact->table()], [
+    //         ->leftJoin([$UserContact->getAlias() => $UserContact->getTable()], [
     //             $UserContact->aliasField('security_user_id = ') . 'GuardianUser.id'
     //         ])
-    //         ->leftJoin([$UserSpecialNeedsReferrals->alias() => $UserSpecialNeedsReferrals->table()], [
+    //         ->leftJoin([$UserSpecialNeedsReferrals->getAlias() => $UserSpecialNeedsReferrals->getTable()], [
     //             $UserSpecialNeedsReferrals->aliasField('security_user_id = ') . $this->aliasField('student_id')
     //         ])
     //         ->contain([
@@ -330,28 +330,28 @@ class SpecialNeedsTable extends AppTable
 
 
             ])
-            ->leftJoin([$UserSpecialNeedsReferrals->alias() => $UserSpecialNeedsReferrals->table()], [
+            ->leftJoin([$UserSpecialNeedsReferrals->getAlias() => $UserSpecialNeedsReferrals->getTable()], [
                 $UserSpecialNeedsReferrals->aliasField('security_user_id = ') . $this->aliasField('student_id')
             ])
-            ->leftJoin(['SecurityUser' => $security_users->table()], [
+            ->leftJoin(['SecurityUser' => $security_users->getTable()], [
                 'SecurityUser.id = '.$UserSpecialNeedsReferrals->aliasField('security_user_id')
             ])
-            ->leftJoin(['Gender' => $genders->table()], [
+            ->leftJoin(['Gender' => $genders->getTable()], [
                 'Gender.id = '.'SecurityUser.gender_id'
             ])
-            ->leftJoin(['IdentityType' => $identity_types->table()], [
+            ->leftJoin(['IdentityType' => $identity_types->getTable()], [
                 'IdentityType.id = '.'SecurityUser.identity_type_id'
             ])
-            ->leftJoin(['Referrer' => $security_users->table()], [
+            ->leftJoin(['Referrer' => $security_users->getTable()], [
                 'Referrer.id = '.$UserSpecialNeedsReferrals->aliasField('referrer_id')
             ])
-            ->leftJoin(['SpecialNeedReferrer' => $special_needs_referrer_types->table()], [
+            ->leftJoin(['SpecialNeedReferrer' => $special_needs_referrer_types->getTable()], [
                 'SpecialNeedReferrer.id = '.$UserSpecialNeedsReferrals->aliasField('special_needs_referrer_type_id')
             ])
-            ->leftJoin(['SpecialNeedType' => $special_need_types->table()], [
+            ->leftJoin(['SpecialNeedType' => $special_need_types->getTable()], [
                 'SpecialNeedType.id = '.$UserSpecialNeedsReferrals->aliasField('reason_type_id')
             ])
-            ->leftJoin(['AcademicPeriods' => $academic_periods->table()], [
+            ->leftJoin(['AcademicPeriods' => $academic_periods->getTable()], [
                 'AcademicPeriods.id = '.$UserSpecialNeedsReferrals->aliasField('academic_period_id')
             ])
             ->contain([
@@ -417,25 +417,25 @@ class SpecialNeedsTable extends AppTable
                                 'Assessor.last_name' => 'literal'
                                 ]),
             ])
-            ->leftJoin([$user_special_needs_assessments->alias() => $user_special_needs_assessments->table()], [
+            ->leftJoin([$user_special_needs_assessments->getAlias() => $user_special_needs_assessments->getTable()], [
                 $user_special_needs_assessments->aliasField('security_user_id = ') . $this->aliasField('student_id')
             ])
-            ->leftJoin(['SpecialNeedType' => $special_need_types->table()], [
+            ->leftJoin(['SpecialNeedType' => $special_need_types->getTable()], [
                 'SpecialNeedType.id = '.$user_special_needs_assessments->aliasField('special_need_type_id')
             ])
-            ->leftJoin(['SecurityUser' => $security_users->table()], [
+            ->leftJoin(['SecurityUser' => $security_users->getTable()], [
                 'SecurityUser.id = '.$user_special_needs_assessments->aliasField('security_user_id')
             ])
-            ->leftJoin(['Gender' => $genders->table()], [
+            ->leftJoin(['Gender' => $genders->getTable()], [
                 'Gender.id = '.'SecurityUser.gender_id'
             ])
-            ->leftJoin(['IdentityType' => $identity_types->table()], [
+            ->leftJoin(['IdentityType' => $identity_types->getTable()], [
                 'IdentityType.id = '.'SecurityUser.identity_type_id'
             ])
-            ->leftJoin(['Assessor' => $security_users->table()], [
+            ->leftJoin(['Assessor' => $security_users->getTable()], [
                 'Assessor.id = '.$user_special_needs_assessments->aliasField('assessor_id')
             ])
-            ->leftJoin(['SpecialNeedDifficulty' => $special_need_difficulties->table()], [
+            ->leftJoin(['SpecialNeedDifficulty' => $special_need_difficulties->getTable()], [
                 'SpecialNeedDifficulty.id = '.$user_special_needs_assessments->aliasField('special_need_difficulty_id')
             ])
             ->contain([
@@ -494,25 +494,25 @@ class SpecialNeedsTable extends AppTable
 
 
                     ])
-                    ->leftJoin([$user_special_needs_services->alias() => $user_special_needs_services->table()], [
+                    ->leftJoin([$user_special_needs_services->getAlias() => $user_special_needs_services->getTable()], [
                         $user_special_needs_services->aliasField('security_user_id = ') . $this->aliasField('student_id')
                     ])
-                    ->leftJoin(['SecurityUser' => $security_users->table()], [
+                    ->leftJoin(['SecurityUser' => $security_users->getTable()], [
                         'SecurityUser.id = '.$user_special_needs_services->aliasField('security_user_id')
                     ])
-                    ->leftJoin(['Gender' => $genders->table()], [
+                    ->leftJoin(['Gender' => $genders->getTable()], [
                         'Gender.id = '.'SecurityUser.gender_id'
                     ])
-                    ->leftJoin(['IdentityType' => $identity_types->table()], [
+                    ->leftJoin(['IdentityType' => $identity_types->getTable()], [
                         'IdentityType.id = '.'SecurityUser.identity_type_id'
                     ])
-                    ->leftJoin(['SpecialNeedServiceType' => $special_needs_service_types->table()], [
+                    ->leftJoin(['SpecialNeedServiceType' => $special_needs_service_types->getTable()], [
                         'SpecialNeedServiceType.id = '.$user_special_needs_services->aliasField('special_needs_service_type_id')
                     ])
-                    ->leftJoin(['SpecialNeedServiceClassification' => $special_needs_service_classification->table()], [
+                    ->leftJoin(['SpecialNeedServiceClassification' => $special_needs_service_classification->getTable()], [
                         'SpecialNeedServiceClassification.id = '.$user_special_needs_services->aliasField('special_needs_service_classification_id')
                     ])
-                    ->leftJoin(['AcademicPeriods' => $academic_periods->table()], [
+                    ->leftJoin(['AcademicPeriods' => $academic_periods->getTable()], [
                         'AcademicPeriods.id = '.$user_special_needs_services->aliasField('academic_period_id')
                     ])
                     ->contain([
@@ -566,19 +566,19 @@ class SpecialNeedsTable extends AppTable
 
 
                     ])
-                    ->leftJoin([$user_special_needs_devices->alias() => $user_special_needs_devices->table()], [
+                    ->leftJoin([$user_special_needs_devices->getAlias() => $user_special_needs_devices->getTable()], [
                         $user_special_needs_devices->aliasField('security_user_id = ') . $this->aliasField('student_id')
                     ])
-                    ->leftJoin(['SecurityUser' => $security_users->table()], [
+                    ->leftJoin(['SecurityUser' => $security_users->getTable()], [
                         'SecurityUser.id = '.$user_special_needs_devices->aliasField('security_user_id')
                     ])
-                    ->leftJoin(['SpecialNeedDeviceType' => $special_needs_device_types->table()], [
+                    ->leftJoin(['SpecialNeedDeviceType' => $special_needs_device_types->getTable()], [
                         'SpecialNeedDeviceType.id = '.$user_special_needs_devices->aliasField('special_needs_device_type_id')
                     ])
-                    ->leftJoin(['Gender' => $genders->table()], [
+                    ->leftJoin(['Gender' => $genders->getTable()], [
                         'Gender.id = '.'SecurityUser.gender_id'
                     ])
-                    ->leftJoin(['IdentityType' => $identity_types->table()], [
+                    ->leftJoin(['IdentityType' => $identity_types->getTable()], [
                         'IdentityType.id = '.'SecurityUser.identity_type_id'
                     ])
                     ->contain([
@@ -634,22 +634,22 @@ class SpecialNeedsTable extends AppTable
                         'special_need_plan_type'=>'SpecialNeedPlanType.name',
 
                     ])
-                    ->leftJoin([$user_special_needs_plans->alias() => $user_special_needs_plans->table()], [
+                    ->leftJoin([$user_special_needs_plans->getAlias() => $user_special_needs_plans->getTable()], [
                         $user_special_needs_plans->aliasField('security_user_id = ') . $this->aliasField('student_id')
                     ])
-                    ->leftJoin(['SecurityUser' => $security_users->table()], [
+                    ->leftJoin(['SecurityUser' => $security_users->getTable()], [
                         'SecurityUser.id = '.$user_special_needs_plans->aliasField('security_user_id')
                     ])
-                    ->leftJoin(['SpecialNeedPlanType' => $special_needs_plan_types->table()], [
+                    ->leftJoin(['SpecialNeedPlanType' => $special_needs_plan_types->getTable()], [
                         'SpecialNeedPlanType.id = '.$user_special_needs_plans->aliasField('special_needs_plan_types_id')
                     ])
-                    ->leftJoin(['AcademicPeriods' => $academic_periods->table()], [
+                    ->leftJoin(['AcademicPeriods' => $academic_periods->getTable()], [
                         'AcademicPeriods.id = '.$user_special_needs_plans->aliasField('academic_period_id')
                     ])
-                    ->leftJoin(['Gender' => $genders->table()], [
+                    ->leftJoin(['Gender' => $genders->getTable()], [
                         'Gender.id = '.'SecurityUser.gender_id'
                     ])
-                    ->leftJoin(['IdentityType' => $identity_types->table()], [
+                    ->leftJoin(['IdentityType' => $identity_types->getTable()], [
                         'IdentityType.id = '.'SecurityUser.identity_type_id'
                     ])
                     ->contain([
@@ -706,22 +706,22 @@ class SpecialNeedsTable extends AppTable
 
 
                 ])
-                ->leftJoin([$user_special_needs_diagnostics->alias() => $user_special_needs_diagnostics->table()], [
+                ->leftJoin([$user_special_needs_diagnostics->getAlias() => $user_special_needs_diagnostics->getTable()], [
                     $user_special_needs_diagnostics->aliasField('security_user_id = ') . $this->aliasField('student_id')
                 ])
-                ->leftJoin(['SecurityUser' => $security_users->table()], [
+                ->leftJoin(['SecurityUser' => $security_users->getTable()], [
                     'SecurityUser.id = '.$user_special_needs_diagnostics->aliasField('security_user_id')
                 ])
-                ->leftJoin(['SpecialNeedDiagnosticType' => $special_needs_diagnostics_types->table()], [
+                ->leftJoin(['SpecialNeedDiagnosticType' => $special_needs_diagnostics_types->getTable()], [
                     'SpecialNeedDiagnosticType.id = '.$user_special_needs_diagnostics->aliasField('special_needs_diagnostics_type_id')
                 ])
-                ->leftJoin(['SpecialNeedDiagnosticDegree' => $special_needs_diagnostics_degree->table()], [
+                ->leftJoin(['SpecialNeedDiagnosticDegree' => $special_needs_diagnostics_degree->getTable()], [
                     'SpecialNeedDiagnosticDegree.id = '.$user_special_needs_diagnostics->aliasField('special_needs_diagnostics_degree_id')
                 ])
-                ->leftJoin(['Gender' => $genders->table()], [
+                ->leftJoin(['Gender' => $genders->getTable()], [
                     'Gender.id = '.'SecurityUser.gender_id'
                 ])
-                ->leftJoin(['IdentityType' => $identity_types->table()], [
+                ->leftJoin(['IdentityType' => $identity_types->getTable()], [
                     'IdentityType.id = '.'SecurityUser.identity_type_id'
                 ])
                 ->contain([

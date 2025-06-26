@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\Log\Log;
 
 class RefreshTokensTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
 	}

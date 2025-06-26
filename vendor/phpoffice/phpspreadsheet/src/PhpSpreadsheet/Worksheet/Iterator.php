@@ -4,6 +4,9 @@ namespace PhpOffice\PhpSpreadsheet\Worksheet;
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
+/**
+ * @implements \Iterator<int, Worksheet>
+ */
 class Iterator implements \Iterator
 {
     /**
@@ -22,47 +25,33 @@ class Iterator implements \Iterator
 
     /**
      * Create a new worksheet iterator.
-     *
-     * @param Spreadsheet $subject
      */
-    public function __construct(Spreadsheet $subject = null)
+    public function __construct(Spreadsheet $subject)
     {
         // Set subject
         $this->subject = $subject;
     }
 
     /**
-     * Destructor.
-     */
-    public function __destruct()
-    {
-        unset($this->subject);
-    }
-
-    /**
      * Rewind iterator.
      */
-    public function rewind()
+    public function rewind(): void
     {
         $this->position = 0;
     }
 
     /**
      * Current Worksheet.
-     *
-     * @return Worksheet
      */
-    public function current()
+    public function current(): Worksheet
     {
         return $this->subject->getSheet($this->position);
     }
 
     /**
      * Current key.
-     *
-     * @return int
      */
-    public function key()
+    public function key(): int
     {
         return $this->position;
     }
@@ -70,18 +59,16 @@ class Iterator implements \Iterator
     /**
      * Next value.
      */
-    public function next()
+    public function next(): void
     {
         ++$this->position;
     }
 
     /**
      * Are there more Worksheet instances available?
-     *
-     * @return bool
      */
-    public function valid()
+    public function valid(): bool
     {
-        return $this->position < $this->subject->getSheetCount();
+        return $this->position < $this->subject->getSheetCount() && $this->position >= 0;
     }
 }

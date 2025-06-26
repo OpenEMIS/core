@@ -13,9 +13,9 @@ class CounsellingsTable extends AppTable
 {
     const ASSIGNED = 1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('counsellings');
+        $this->setTable('counsellings');
         parent::initialize($config);
 
         $this->belongsTo('GuidanceTypes', ['className' => 'Student.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
@@ -78,7 +78,7 @@ class CounsellingsTable extends AppTable
                 'valueField' => 'name_with_id'
             ])
             ->innerJoin(
-                    [$InstitutionStaff->alias() => $InstitutionStaff->table()],
+                    [$InstitutionStaff->getAlias() => $InstitutionStaff->getTable()],
                     [
                         $InstitutionStaff->aliasField('staff_id = ') . $this->Counselors->aliasField('id'),
                         $InstitutionStaff->aliasField('institution_id') => $institutionId,
@@ -116,7 +116,7 @@ class CounsellingsTable extends AppTable
                     //POCOR-7044 add select condition
             ])
             ->leftJoin(
-                    [$InstitutionStaff->alias() => $InstitutionStaff->table()],
+                    [$InstitutionStaff->getAlias() => $InstitutionStaff->getTable()],
                     [
                         $InstitutionStaff->aliasField('staff_id = ') . $UserData->aliasField('id'),
                         $InstitutionStaff->aliasField('institution_id') => $institutionId,
@@ -124,7 +124,7 @@ class CounsellingsTable extends AppTable
                     ]
                 )
             ->leftJoin(
-                    [$InstitutionStudents->alias() => $InstitutionStudents->table()],
+                    [$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],
                     [
                         $InstitutionStudents->aliasField('student_id = ') . $UserData->aliasField('id'),
                         $InstitutionStudents->aliasField('institution_id') => $institutionId

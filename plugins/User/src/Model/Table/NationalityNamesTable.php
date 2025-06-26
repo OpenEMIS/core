@@ -6,8 +6,8 @@ use Cake\Validation\Validator;
 use Cake\Event\Event;
 
 class NationalityNamesTable extends AppTable {
-    public function initialize(array $config) {
-            $this->table('nationalities');
+    public function initialize(array $config):void {
+            $this->setTable('nationalities');
             parent::initialize($config);
     }
 }

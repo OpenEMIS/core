@@ -4,7 +4,7 @@ namespace Workflow\Model\Table;
 use App\Model\Table\AppTable;
 
 class WorkflowStepsRolesTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 
 		$this->belongsTo('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps']);
@@ -15,7 +15,7 @@ class WorkflowStepsRolesTable extends AppTable {
 		$roleList = $this
 			->find('list', ['keyField' => 'security_role_id', 'valueField' => 'security_role_id'])
 			->order([$this->aliasField('security_role_id') => 'DESC'])
-			->where([$this->aliasField('workflow_step_id') => $stepId])
+			->where([$this->aliasField('workflow_step_id IS') => $stepId])
 			->toArray();
 
 		return $roleList;

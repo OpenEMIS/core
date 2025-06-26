@@ -7,7 +7,7 @@ use Cake\Console\Shell;
 
 class RiskShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
     }

@@ -17,7 +17,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 	use MessagesTrait;
 	use OptionsTrait;
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 
 		$this->hasMany('GradingOptions', ['className' => 'Assessment.AssessmentGradingOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -59,7 +59,8 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		$this->setDeleteStrategy('restrict');
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
+		$validator->setProvider('custom', $this);
 		$validator = parent::validationDefault($validator);
 
 		return $validator
@@ -86,6 +87,8 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
                     'rule' => ['range', 0, 9999.99]
                 ]
             ])
+			->requirePresence('name')
+			->requirePresence('result_type')
 			->requirePresence('grading_options');
 	}
 
@@ -107,7 +110,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		$this->setFieldOrder(['visible', 'code', 'name', 'result_type', 'max', 'pass_mark']);
 
 		// Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Grading Types','Assessments');       
+		$is_manual_exist = $this->getManualUrl('Administration','Grading Types','Assessments');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -134,6 +137,8 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+		$connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
 		if ($this->action=='edit') {
 			$this->fields['visible']['visible'] = false;
 		}
@@ -153,19 +158,19 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 			foreach ($entity->grading_options as $key => $gradingOption) {
 				$gradingOptionId = $gradingOption->id;
 				$gradingOptions[$gradingOptionId] = 0;
-				if ($this->hasAssociatedRecords($AssessmentGradingOptions, $gradingOption, $extra)) {
+				if (!empty($gradingOptionId) && $this->hasAssociatedRecords($AssessmentGradingOptions, $gradingOption, $extra)) {
 					$gradingOptions[$gradingOptionId] = 1;
 				}
 			}
 		}
 
-		// to passed the array of the association to the view (grading_options.ctp).
+		// to passed the array of the association to the view (grading_options.php).
 		$this->controller->set('gradingOptions', $gradingOptions);
 	}
 
    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        if (!isset($data[$this->alias()]['grading_options']) || empty($data[$this->alias()]['grading_options'])) {
+        if (!isset($data[$this->getAlias()]['grading_options']) || empty($data[$this->getAlias()]['grading_options'])) {
             $this->Alert->warning($this->aliasField('noGradingOptions'));
         }
     }
@@ -175,9 +180,9 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		if (!empty($entity->id)) {
 			$groupOptionData['assessment_grading_type_id'] = $entity->id;
 		}
-		$newGroupOption = $this->GradingOptions->newEntity($groupOptionData);
-		$requestData[$this->alias()]['grading_options'][] = $newGroupOption->toArray();
-		$newOptions = [$this->GradingOptions->alias() => ['validate'=>false]];
+		$newGroupOption = $this->GradingOptions->newEmptyEntity($groupOptionData);
+		$requestData[$this->getAlias()]['grading_options'][] = $newGroupOption->toArray();
+		$newOptions = [$this->GradingOptions->getAlias() => ['validate'=>false]];
 		if (isset($patchOptions['associated'])) {
 			$patchOptions['associated'] = array_merge($patchOptions['associated'], $newOptions);
 		} else {
@@ -193,7 +198,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 ******************************************************************************************************************/
 	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        if (!isset($data[$this->alias()]['grading_options']) || empty($data[$this->alias()]['grading_options'])) {
+        if (!isset($data[$this->getAlias()]['grading_options']) || empty($data[$this->getAlias()]['grading_options'])) {
             $this->Alert->warning($this->aliasField('noGradingOptions'));
         }
     }
@@ -202,7 +207,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
     public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
         $extra['excludedModels'] = [ //this will exclude checking during remove restrict
-            $this->GradingOptions->alias()
+            $this->GradingOptions->getAlias()
         ]; // POCOR 8009
         if ($this->hasAssociatedRecords($this, $entity, $extra)) {
             $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
@@ -233,8 +238,8 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 			// it will check if there are any in-used gradeOption, can't delete all the gradeOptions.
 			$allowedDeleteAll = max($gradingOptions);
 
-			$currentGradingOptionIds = (new Collection($entity->grading_options))->extract($this->GradingOptions->primaryKey())->toArray();
-			$originalGradingOptionIds = (new Collection($entity->getOriginal('grading_options')))->extract($this->GradingOptions->primaryKey())->toArray();
+			$currentGradingOptionIds = (new Collection($entity->grading_options))->extract($this->GradingOptions->getPrimaryKey())->toArray();
+			$originalGradingOptionIds = (new Collection($entity->getOriginal('grading_options')))->extract($this->GradingOptions->getPrimaryKey())->toArray();
 			$tempRemovedGradingOptionIds = array_diff($originalGradingOptionIds, $currentGradingOptionIds);
 
 			// get the array of gradeOption that will be deleted, if the gradeOption was in-used it will be excluded from this array.
@@ -249,7 +254,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 			// remove all the gradeOptions if no in-use gradeOption.
 			if (!empty($removedGradingOptionIds)) {
 				$this->GradingOptions->deleteAll([
-					$this->GradingOptions->aliasField($this->GradingOptions->primaryKey()) . ' IN ' => $removedGradingOptionIds
+					$this->GradingOptions->aliasField($this->GradingOptions->getPrimaryKey()) . ' IN ' => $removedGradingOptionIds
 				]);
 			} else if ((!array_key_exists('grading_options', $requestData['AssessmentGradingTypes'])) && (!$allowedDeleteAll)){
 				$this->GradingOptions->deleteAll([
@@ -280,7 +285,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 ******************************************************************************************************************/
 	public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$query->contain([
-			$this->GradingOptions->alias()
+			$this->GradingOptions->getAlias()
 		]);
 	}
 
@@ -292,7 +297,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->GradingOptions->alias()
+            $this->GradingOptions->getAlias()
         ];
     }
 
@@ -303,17 +308,73 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 	public function getCustomList($params = []) {
-		if (array_key_exists('keyField', $params)) {
+		if (isset($params['keyField'])) {
 			$keyField = $params['keyField'];
 		} else {
 			$keyField = 'id';
 		}
-		if (array_key_exists('valueField', $params)) {
+		if (isset($params['valueField'])) {
 			$valueField = $params['valueField'];
 		} else {
 			$valueField = 'name';
 		}
  		$query = $this->find('list', ['keyField' => $keyField, 'valueField' => $valueField]);
 		return $this->getList($query);
+	}
+
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'outcome_template_id') {
+            return __('Outcome Template');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'pass_mark') {
+            return __('Pass Mark');
+        }elseif ($field == 'max') {
+            return __('Max');
+        }elseif ($field == 'result_type') {
+            return __('Result Type');
+        }elseif ($field == 'grading_options') {
+            return __('Grading Options');
+        }elseif ($field == 'visible') {
+            return __('visible');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    //POCOR-8554
+	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+	{
+	    $checkRecord = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemsGradingTypes');
+	    $data = $checkRecord->find()
+	        ->where(['assessment_grading_type_id' => $entity->id])
+	        ->toArray();
+
+	    $associatedRecordsExist = 
+	        $this->GradingOptions->exists(['assessment_grading_type_id' => $entity->id]);
+
+	    if ($associatedRecordsExist && !empty($data)) {
+	        $message = __('Delete operation is not allowed as there are other information linked to this record.');
+	        $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+	        
+	        // Redirect to the referring URL
+	        $url = $this->request->referer();
+	        $event->stopPropagation();
+	        return $this->controller->redirect($url);
+	    }
+
 	}
 }

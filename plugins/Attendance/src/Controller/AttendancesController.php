@@ -10,9 +10,9 @@ use Cake\ORM\TableRegistry;
 
 class AttendancesController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
-        parent::initialize();        
+        parent::initialize();
         $this->loadComponent('Paginator');
     }
 
@@ -26,10 +26,14 @@ class AttendancesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Attendance.StudentMarkTypeStatuses']);
     }
 
-    public function beforeFilter(Event $event) {
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
+
+        if ($this->getPlugin() == 'Attendance') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
-        $selectedAction = $this->request->action;
-        
+        $selectedAction = $this->request->getParam('action');
+
         if ($selectedAction == 'StudentMarkTypes') {
             $setupTab = 'Attendances';
         } else if ($selectedAction == 'StudentMarkTypeStatuses') {
@@ -43,7 +47,7 @@ class AttendancesController extends AppController
             'Status' => [
                 'url' => ['plugin' => 'Attendance', 'controller' => 'Attendances', 'action' => 'StudentMarkTypeStatuses'],
                 'text' => __('Status')
-            ] 
+            ]
         ];
 
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
@@ -58,10 +62,16 @@ class AttendancesController extends AppController
         } else if ($model->alias == 'StudentMarkTypeStatuses') {
             $header = 'Status';
         }
-        
+
         $this->Navigation->addCrumb('Attendances', ['plugin' => 'Education', 'controller' => 'Educations', 'action' => $model->alias]);
         $this->Navigation->addCrumb($model->getHeader($model->alias));
 
         $this->set('contentHeader', $header);
+    }
+
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 }

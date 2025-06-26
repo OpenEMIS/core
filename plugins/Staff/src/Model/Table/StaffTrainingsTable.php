@@ -8,12 +8,13 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\Datasource\ConnectionManager;
 
 use App\Model\Table\ControllerActionTable;
 
 class StaffTrainingsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -34,9 +35,10 @@ class StaffTrainingsTable extends ControllerActionTable
             'excludes' => ['description','file_name','staff_id'],
             'pages' => ['index'],
         ]);
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -55,7 +57,32 @@ class StaffTrainingsTable extends ControllerActionTable
     {
         if ($field == 'training_field_of_study_id') {
             return __('Field of Study');
-        } else {
+        }elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'completed_date') {
+            return __('Completed Date');
+        } elseif ($field == 'staff_training_category_id') {
+            return __('Staff Training Categories');
+        } elseif ($field == 'credit_hours') {
+            return __('Credit Hours');
+        }elseif ($field == 'description') {
+            return __('Description');
+        }elseif ($field == 'credit_hours') {
+            return __('Credit Hours');
+        }elseif ($field == 'file_content') {
+            return __('Attachment');
+        }elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }else {
+
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
@@ -65,10 +92,11 @@ class StaffTrainingsTable extends ControllerActionTable
         $this->field('description', ['visible' => false]);
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
+        $this->field('staff_id', ['visible' => false]); //POCOR-9018
 
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){ 
-            $is_manual_exist = $this->getManualUrl('Institutions','Courses','Staff - Training');       
+        if($this->request->getParam('controller') == 'Staff'){
+            $is_manual_exist = $this->getManualUrl('Institutions','Courses','Staff - Training');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -85,8 +113,8 @@ class StaffTrainingsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Courses','Staff - Training');       
+        }elseif($this->request->getParam('controller') == 'Directories'){
+            $is_manual_exist = $this->getManualUrl('Directory','Courses','Staff - Training');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -120,7 +148,7 @@ class StaffTrainingsTable extends ControllerActionTable
 
     private function setupTabElements()
     {
-        if ($this->controller->name == 'Staff') {
+        if ($this->controller->getName() == 'Staff') {
             $tabElements = $this->controller->getInstitutionTrainingTabElements(); // Staff controller
         } else {
             $tabElements = $this->controller->getTrainingTabElements(); // Directories controller
@@ -128,6 +156,14 @@ class StaffTrainingsTable extends ControllerActionTable
         $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Courses');
+    }
+
+    //POCOR-9018, 9049
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $connection = ConnectionManager::get('default');
+        $connection->execute('SET foreign_key_checks = 0');
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $this->getStaffID()]);
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -151,6 +187,7 @@ class StaffTrainingsTable extends ControllerActionTable
         $this->field('training_field_of_study_id', ['type' => 'select']);
         $this->field('credit_hours', ['attr' => ['min' => 0, 'max' => 99]]);
         $this->field('completed_date');
+        $this->field('staff_id', ['type' => 'hidden']); //POCOR-9018
 
         // Attachment field
         $this->field('file_name', [
@@ -161,6 +198,7 @@ class StaffTrainingsTable extends ControllerActionTable
             'visible' => ['view' => true, 'edit' => true],
             'attr' => ['label' => __('Attachment')]
         ]);
+
     }
 
     public function getModelAlertData($threshold)
@@ -200,7 +238,7 @@ class StaffTrainingsTable extends ControllerActionTable
                 $Licenses->aliasField('expiry_date') . ' IS NOT NULL',
                 $conditions[$thresholdArray['condition']]
             ])
-            ->hydrate(false)
+            ->disableHydration() // POCOR-8533
             ;
 
         // get the records of staff training within licence period
@@ -252,13 +290,17 @@ class StaffTrainingsTable extends ControllerActionTable
     // POCOR-6137 start
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $staffId = $session->read('Staff.Staff.id');
+        $session = $this->request->getSession();
+        $staffId = $this->getStaffID();
 
         $query
         ->where([
             $this->aliasField('staff_id') => $staffId
         ]);
     }
-    // POCOR-6137 end
+
+
+
+
+
 }

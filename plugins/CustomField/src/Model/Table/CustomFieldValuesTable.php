@@ -2,24 +2,25 @@
 namespace CustomField\Model\Table;
 
 use Cake\Validation\Validator;
+use Cake\Log\Log;
 use App\Model\Table\AppTable;
 
 class CustomFieldValuesTable extends AppTable
 {
 	protected $extra = ['scope' => 'custom_field_id'];
 
-	public function initialize(array $config)
+	public function initialize(array $config): void
 	{
 		parent::initialize($config);
 		$this->belongsTo('CustomFields', ['className' => 'CustomField.CustomFields']);
 		$this->belongsTo('CustomRecords', ['className' => 'CustomField.CustomRecords']);
 	}
 
-	public function validationDefault(Validator $validator)
+	public function validationDefault(Validator $validator): Validator
 	{
 		$validator = parent::validationDefault($validator);
 		$scope = $this->extra['scope'];
-
+		$validator->setProvider('custom', $this);
 		$validator
 			// TEXT validation
 			->allowEmpty('text_value', function ($context) {
@@ -32,7 +33,8 @@ class CustomFieldValuesTable extends AppTable
 			->add('text_value', 'ruleUnique', [
 		        'rule' => function ($value, $context) {
 		            // POCOR-8202.Check if uniqueness is required
-		            $unique = isset($context['data']['unique']) ? (bool)$context['data']['unique'] : true;
+                    // POCOR-8332 fixed
+		            $unique = isset($context['data']['unique']) ? (bool)$context['data']['unique'] : false;
 		            // If uniqueness is not required (unique = 0), return true
 		            if (!$unique) {
 		                return true;
@@ -66,7 +68,7 @@ class CustomFieldValuesTable extends AppTable
 				'on' => function ($context) {
 					if (array_key_exists('params', $context['data']) && !empty($context['data']['params'])) {
 						$params = json_decode($context['data']['params'], true);
-						return array_key_exists('url', $params);
+						return isset($params['url']);
 					}
 				}
 			])
@@ -81,9 +83,9 @@ class CustomFieldValuesTable extends AppTable
 			->add('number_value', 'ruleUnique', [
 			    'rule' => function ($value, $context) {
 			        // Check if uniqueness is required
-			        //POCOR-8232
-			        $unique = isset($context['data']['unique']) ? (bool) $context['data']['unique'] : true;
-			        
+                    // POCOR-8332 fixed
+			        $unique = isset($context['data']['unique']) ? (bool) $context['data']['unique'] : false;
+
 			        // If uniqueness is not required, return true
 			        if (!$unique) {
 			            return true;
@@ -95,7 +97,7 @@ class CustomFieldValuesTable extends AppTable
 			            if (!empty($context['data']['id'])) {
 			                $query->andWhere(['id !=' => $context['data']['id']]);
 			            }
-			            
+
 			            // If any value is not unique, return false
 			            if ($query->count() !== 0) {
 			                return false;

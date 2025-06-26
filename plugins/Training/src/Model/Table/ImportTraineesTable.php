@@ -14,9 +14,9 @@ class ImportTraineesTable extends AppTable
 {
     private $trainingSessionId;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', [
@@ -26,7 +26,7 @@ class ImportTraineesTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -38,7 +38,7 @@ class ImportTraineesTable extends AppTable
 
     public function beforeAction($event) 
     {
-        $trainingId = $this->request->params['trainingId'];
+        $trainingId = $this->request->getQuery('trainingId');
         $this->trainingSessionId = $this->paramsDecode($trainingId)['id'];
     }
 
@@ -50,7 +50,7 @@ class ImportTraineesTable extends AppTable
                 'controller' => 'Trainings',
                 'action' => 'Sessions',
                 0 => 'edit',
-                1 => $this->request->params['trainingId']
+                1 => $this->request->getQuery('trainingId')
             ];
             $toolbarButtons['back']['url'] = $backUrl;
         }

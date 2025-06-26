@@ -9,7 +9,7 @@ use App\Model\Table\ControllerActionTable;
 
 class InstitutionOutcomeSubjectCommentsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'student_id']);

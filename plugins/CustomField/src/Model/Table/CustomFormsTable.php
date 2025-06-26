@@ -5,13 +5,14 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Log\Log; // POCOR-8542
 
 class CustomFormsTable extends ControllerActionTable
 {
@@ -37,9 +38,9 @@ class CustomFormsTable extends ControllerActionTable
     ];
     private $hasFilter = false;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        if (array_key_exists('extra', $config)) {
+        if (isset($config['extra'])) {
             $this->extra = array_merge($this->extra, $config['extra']);
         }
         parent::initialize($config);
@@ -58,7 +59,7 @@ class CustomFormsTable extends ControllerActionTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator;
@@ -94,7 +95,7 @@ class CustomFormsTable extends ControllerActionTable
 
                 if ($CustomFormsFilters->save($filterEntity)) {
                 } else {
-                    $CustomFormsFilters->log($filterEntity->errors(), 'debug');
+                    $CustomFormsFilters->log($filterEntity->getErrors(), 'debug');
                 }
             } else {
                 $this->log('customFormIds is empty ...', 'debug');
@@ -166,7 +167,7 @@ class CustomFormsTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        if (array_key_exists('remove', $buttons) && !$entity->is_deletable) {
+        if (isset($buttons['remove']) && !$entity->is_deletable) {
             unset($buttons['remove']);    // remove delete action from the action button
         }
 
@@ -184,27 +185,34 @@ class CustomFormsTable extends ControllerActionTable
         $CustomFields = TableRegistry::get($this->extra['fieldClass']['className']);
         $formKey = $this->extra['fieldClass']['foreignKey'];
         $fieldKey = $this->extra['fieldClass']['targetForeignKey'];
-
+// POCOR-8542 Start
+        $selectFields = [
+            'name' => $CustomFields->aliasField('name'),
+            'field_type' => $CustomFields->aliasField('field_type'),
+            $fieldKey => $CustomFormsFields->aliasField($fieldKey),
+            $formKey => $CustomFormsFields->aliasField($formKey),
+            'id' => $CustomFormsFields->aliasField('id')
+        ];
+        try{
+            $selectFields['section'] = $CustomFormsFields->aliasField('section'); //comment cakephp4 not found column // Again change for this POCOR-8419
+        }catch (\Exception $exception){
+            Log::debug('No Custom Field Section');
+        }
         return $CustomFormsFields
             ->find('all')
-            ->select([
-                'name' => $CustomFields->aliasField('name'),
-                'field_type' => $CustomFields->aliasField('field_type'),
-                $fieldKey => $CustomFormsFields->aliasField($fieldKey),
-                $formKey => $CustomFormsFields->aliasField($formKey),
-                'section' => $CustomFormsFields->aliasField('section'),
-                'id' => $CustomFormsFields->aliasField('id')
-            ])
+            ->select($selectFields)
             ->innerJoin(
-                [$CustomFields->alias() => $CustomFields->table()],
+                [$CustomFields->getAlias() => $CustomFields->getTable()],
                 [
                     $CustomFields->aliasField('id = ') . $CustomFormsFields->aliasField($fieldKey),
                 ]
             )
             ->order([$CustomFormsFields->aliasField('order')])
             ->where([$CustomFormsFields->aliasField($formKey) => $formId])
+            ->enableAutoFields()
             ->toArray();
     }
+    // POCOR-8542 End
 
     public function onGetCustomOrderFieldElement(Event $event, $action, $entity, $attr, $options = [])
     {
@@ -217,9 +225,10 @@ class CustomFormsTable extends ControllerActionTable
             $customFormId = $entity->id;
             $customFields = $this->getCustomFormsFields($customFormId);
 
-            $sectionName = "";
+            $sectionName = "__section"; // POCOR-8542
             $printSection = false;
             foreach ($customFields as $key => $obj) {
+
                 if (!empty($obj['section']) && $obj['section'] != $sectionName) {
                     $sectionName = $obj['section'];
                     $printSection = true;
@@ -240,7 +249,7 @@ class CustomFormsTable extends ControllerActionTable
             $attr['tableHeaders'] = $tableHeaders;
             $attr['tableCells'] = $tableCells;
         } elseif ($action == 'add' || $action == 'edit') {
-            $form = $event->subject()->Form;
+            $form = $event->getSubject()->Form;
             $form->unlockField($attr['model'] . '.custom_fields');
             $formKey = $this->extra['fieldClass']['foreignKey'];
             $fieldKey = $this->extra['fieldClass']['targetForeignKey'];
@@ -248,11 +257,12 @@ class CustomFormsTable extends ControllerActionTable
             // Build Questions options
             $moduleQuery = $this->getModuleQuery();
             $moduleOptions = $moduleQuery->toArray();
-            $selectedModule = isset($this->request->query['module']) ? $this->request->query['module'] : key($moduleOptions);
+            $selectedModule = ($this->request->getQuery('module')!=null) ? $this->request->getQuery('module') : key($moduleOptions);
             $customModule = $this->CustomModules->get($selectedModule);
             $supportedFieldTypes = $customModule->supported_field_types;
 
             $Fields = TableRegistry::get($this->extra['fieldClass']['className']);
+             //$this->CustomFields =  TableRegistry::get('Infrastructure.InfrastructureCustomFieldsTable');
             $customFieldOptions = $this->CustomFields
                 ->find('list', [
                     'keyField' => 'id',
@@ -286,10 +296,10 @@ class CustomFormsTable extends ControllerActionTable
                     }
                 }
             } elseif ($this->request->is(['post', 'put'])) {
-                $requestData = $this->request->data;
+                $requestData = $this->request->getData();
                 $arraySection = [];
-                if (array_key_exists('custom_fields', $requestData[$this->alias()])) {
-                    foreach ($requestData[$this->alias()]['custom_fields'] as $key => $obj) {
+                if (array_key_exists('custom_fields', $requestData[$this->getAlias()])) {
+                    foreach ($requestData[$this->getAlias()]['custom_fields'] as $key => $obj) {
                         $arrayData = [
                             'name' => $obj['_joinData']['name'],
                             'field_type' => $obj['_joinData']['field_type'],
@@ -305,8 +315,8 @@ class CustomFormsTable extends ControllerActionTable
                     }
                 }
 
-                if (array_key_exists('selected_custom_field', $requestData[$this->alias()])) {
-                    $fieldId = $requestData[$this->alias()]['selected_custom_field'];
+                if (array_key_exists('selected_custom_field', $requestData[$this->getAlias()])) {
+                    $fieldId = $requestData[$this->getAlias()]['selected_custom_field'];
                     if (!empty($fieldId)) {
                         $fieldObj = $Fields->get($fieldId);
                         $sectionName = $entity->section;
@@ -386,7 +396,7 @@ class CustomFormsTable extends ControllerActionTable
                     $rowData[] = '<div class="section-header">'.$sectionName.'</div>';
                     $rowData[] = ''; // Field Type
                     $rowData[] = '<button onclick="jsTable.doRemove(this);CustomForm.updateSection();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
-                    $rowData[] = [$event->subject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
+                    $rowData[] = [$event->getSubject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
                     $printSection = false;
                     $tableCells[] = $rowData;
                 }
@@ -394,7 +404,7 @@ class CustomFormsTable extends ControllerActionTable
                 $rowData[] = $customFieldName.$cellData;
                 $rowData[] = $customFieldType;
                 $rowData[] = '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
-                $rowData[] = [$event->subject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
+                $rowData[] = [$event->getSubject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
                 $tableCells[] = $rowData;
 
                 unset($customFieldOptions[$obj[$fieldKey]]);
@@ -415,7 +425,7 @@ class CustomFormsTable extends ControllerActionTable
                         return 1;
                     } else {
                         $fieldType = $Fields->get($id)->field_type;
-                        if (in_array($fieldType, $supportedFieldTypes)) {
+                        if (in_array($fieldType, (array) $supportedFieldTypes)) {//POCOR-8434 add (array) before $supportedFieldTypes
                             return 1;
                         } else {
                             // field type not support for this module
@@ -428,7 +438,7 @@ class CustomFormsTable extends ControllerActionTable
             $attr['options'] = $customFieldOptions;
         }
 
-        return $event->subject()->renderElement('CustomField.form_fields', ['attr' => $attr]);
+        return $event->getSubject()->renderElement('CustomField.form_fields', ['attr' => $attr]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -480,23 +490,32 @@ class CustomFormsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->query['module'] = $entity->custom_module_id;
-        $this->request->query['apply_all'] = $this->getApplyToAll($entity);
+        $moduleId = $entity->custom_module_id;
+        $applyAll = $this->getApplyToAll($entity);
+        $queryParams = $this->request->getQueryParams();
+        $queryParams['module'] = $moduleId;
+        $queryParams['apply_all'] = $applyAll;
+        $requestWithParams = $this->request->withQueryParams($queryParams);
+        // Now you can use the updated request object as needed
+        $this->setupFields($entity, $requestWithParams);
 
-        $this->setupFields($entity);
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->query['module'] = $entity->custom_module_id;
-        $this->request->query['apply_all'] = $this->getApplyToAll($entity);
+        $moduleId = $entity->custom_module_id;
+        $applyAll = $this->getApplyToAll($entity);
+        $queryParams = $this->request->getQueryParams();
+        $queryParams['module'] = $moduleId;
+        $queryParams['apply_all'] = $applyAll;
+        $requestWithParams = $this->request->withQueryParams($queryParams);
     }
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         // To handle when delete all subjects
-        if (!array_key_exists('custom_fields', $data[$this->alias()])) {
-            $data[$this->alias()]['custom_fields'] = [];
+        if (!array_key_exists('custom_fields', $data[$this->getAlias()])) {
+            $data[$this->getAlias()]['custom_fields'] = [];
         }
 
         // Required by patchEntity for associated data
@@ -517,8 +536,7 @@ class CustomFormsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request)
-    {
+    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, ServerRequest $request){
         $moduleQuery = $this->getModuleQuery();
         $moduleOptions = $moduleQuery->toArray();
         $selectedModule = $this->queryString('module', $moduleOptions);
@@ -532,8 +550,7 @@ class CustomFormsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldApplyToAll(Event $event, array $attr, $action, Request $request)
-    {
+    public function onUpdateFieldApplyToAll(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'view') {
             $applyToAllOptions = $attr['options'];
             $attr['value'] = $applyToAllOptions[$attr['value']];
@@ -542,8 +559,7 @@ class CustomFormsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCustomFilters(Event $event, array $attr, $action, Request $request)
-    {
+   public function onUpdateFieldCustomFilters(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'view') {
             $customModule = $attr['attr']['customModule'];
             $filter = $customModule->filter;
@@ -556,7 +572,6 @@ class CustomFormsTable extends ControllerActionTable
             $selectedModule = $customModule->id;
             $filter = $customModule->filter;
             $entity = $attr['attr']['entity'];
-
             list($plugin, $modelAlias) = explode('.', $filter, 2);
             $labelText = Inflector::underscore(Inflector::singularize($modelAlias));
             $filterOptions = TableRegistry::get($filter)->getList()->toArray();
@@ -602,31 +617,41 @@ class CustomFormsTable extends ControllerActionTable
     public function addEditOnChangeModule(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['module']);
-        unset($request->query['apply_all']);
+        $queryParams = $request->getQueryParams();
+
+        // Unset the 'module' and 'apply_all' query parameters
+        unset($queryParams['module']);
+        unset($queryParams['apply_all']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('custom_module_id', $request->data[$this->alias()])) {
-                    $this->request->query['module'] = $request->data[$this->alias()]['custom_module_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('custom_module_id', $request->getData()[$this->getAlias()])) {
+                    // Set the 'module' query parameter
+                    $queryParams['module'] = $request->getData()[$this->getAlias()]['custom_module_id'];
                 }
             }
         }
+        $this->request = $request->withQueryParams($queryParams);
+
     }
 
     public function addEditOnChangeApplyAll(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['apply_all']);
+        $queryParams = $request->getQueryParams();
+        unset($queryParams['apply_all']);
+        $request = $request->withQueryParams($queryParams);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('apply_to_all', $request->data[$this->alias()])) {
-                    $this->request->query['apply_all'] = $request->data[$this->alias()]['apply_to_all'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('apply_to_all', $request->getData()[$this->getAlias()])) {
+                    $queryParams['apply_all'] = $request->getData()[$this->getAlias()]['apply_to_all'];
+                    $request = $request->withQueryParams($queryParams);
                 }
             }
         }
     }
+
 
     public function getModuleQuery()
     {
@@ -637,8 +662,10 @@ class CustomFormsTable extends ControllerActionTable
 
     private function setupFields(Entity $entity)
     {
-        $selectedModule = $this->request->query('module');
-        $customModule = $this->CustomModules->get($selectedModule);
+        $selectedModule = $this->request->getQuery('module');
+        if(!empty($selectedModule)){
+            $customModule = $this->CustomModules->get($selectedModule);
+        }
 
         $this->setFieldOrder(['custom_module_id', 'name', 'description', 'custom_fields']);
         $this->field('custom_module_id');
@@ -649,8 +676,11 @@ class CustomFormsTable extends ControllerActionTable
 
         if ($this->hasFilter) {
             $showFilters = false;
-
-            $where = [$this->aliasField('custom_module_id') => $selectedModule];
+            if(!empty($selectedModule)){
+                $where = [$this->aliasField('custom_module_id') => $selectedModule];
+            }else{
+                $where = [];
+            }
             if (isset($entity->id)) {
                 $where[$this->aliasField('id <>')] = $entity->id;
             }

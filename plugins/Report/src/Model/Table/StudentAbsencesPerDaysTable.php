@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
@@ -16,9 +16,9 @@ use Cake\ORM\TableRegistry;
  */
 class StudentAbsencesPerDaysTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_absence_details'); 
+        $this->setTable('institution_student_absence_details'); 
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
@@ -50,9 +50,9 @@ class StudentAbsencesPerDaysTable extends AppTable
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+        $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
         return $attr;
     }
 
@@ -62,10 +62,10 @@ class StudentAbsencesPerDaysTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
-        $InstitutionSubjects = TableRegistry::get('institution_subjects');
-        $grades = TableRegistry::get('education_grades');
-        $academicPeriod = TableRegistry::get('academic_periods');
-        $securityUsers = TableRegistry::get('security_users');
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $grades = TableRegistry::get('Education.EducationGrades');
+        $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $securityUsers = TableRegistry::get('User.Users');
         $selectedArea = $requestData->area_education_id;
         $conditions = [];
 

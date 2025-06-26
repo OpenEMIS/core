@@ -19,8 +19,8 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
 {
     private $institutionId = false;
 
-    public function initialize(array $config) {
-        $this->table('import_mapping');
+    public function initialize(array $config): void {
+        $this->setTable('import_mapping');
         parent::initialize($config);
         $this->addBehavior('Import.Import', [
             'plugin'=>'Training', 
@@ -34,11 +34,11 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
     }
 
     public function beforeAction($event) {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $this->systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
     }
 
-    public function implementedEvents() { 
+    public function implementedEvents(): array { 
         $events = parent::implementedEvents();
         $newEvent = [
             'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
@@ -61,7 +61,7 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
         $Navigation->addCrumb($crumbTitle);
     }
 
-    public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
+    public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
         $tempRow['entity'] = $this->TrainingSessionTraineeResults->newEntity();  
     }
 

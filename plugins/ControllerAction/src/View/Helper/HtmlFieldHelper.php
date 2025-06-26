@@ -13,8 +13,10 @@ use Cake\I18n\Date;
 use Cake\I18n\I18n;
 use Cake\View\Helper\IdGeneratorTrait;
 use Cake\View\NumberHelper;
-use Cake\Network\Session;
+use Cake\Http\Session;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Hash;
+use Laminas\Diactoros\UploadedFile;
 
 use Cake\Log\Log;
 
@@ -71,12 +73,13 @@ class HtmlFieldHelper extends Helper
     private function patchInvalidFields($data, $field, $options)
     {
         if (!is_null($data)) {
-            $invalid = $data->invalid();
+
+            $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $options['value'] = $data->invalid($field);
+                $options['value'] = $invalid[$field];
             }
         }
-        if (array_key_exists('label', $options)) {
+        if (isset($options['label'])) {
             if (!is_array($options['label'])) {
                 $options['label'] = ['escape' => false, 'text' => $options['label']];
             }
@@ -91,32 +94,35 @@ class HtmlFieldHelper extends Helper
 
         if (!array_key_exists($eventKey, $eventMap) && !is_null($method)) {
             if (method_exists($subject, $method) || $subject->behaviors()->hasMethod($method)) {
-                $subject->eventManager()->on($eventKey, [], [$subject, $method]);
+                $subject->getEventManager()->on($eventKey, [], [$subject, $method]);
             }
         }
-        return $subject->eventManager()->dispatch($event);
+        return $subject->getEventManager()->dispatch($event);
     }
 
     public function render($type, $action, Entity $data, array $attr, array $options = [])
     {
         $html = '';
 
-        if (is_null($this->table)) {
-            $this->table = TableRegistry::get($attr['className']);
+        if (is_null($this->table) && isset($attr['className'])) { // POCOR-9227
+            $this->table = TableRegistry::getTableLocator()->get($attr['className']);
         }
 
         // trigger event for custom field types
         $method = 'onGet' . Inflector::camelize($type) . 'Element';
-        $eventKey = 'ControllerAction.Model.' . $method;
-        $event = $this->dispatchEvent($this->table, $eventKey, $method, ['action' => $action, 'entity' => $data, 'attr' => $attr, 'options' => $options]);
-
-        if (isset($event->result)) {
-            $html = $event->result;
-        } else {
-            if (method_exists($this, $type)) {
-                $html = $this->$type($action, $data, $attr, $options);
+        $html = $this->$type($action, $data, $attr, $options); // POCOR-9227
+        if ($this->table) { // POCOR-9227
+            $eventKey = 'ControllerAction.Model.' . $method;
+            $event = $this->dispatchEvent($this->table, $eventKey, $method, ['action' => $action, 'entity' => $data, 'attr' => $attr, 'options' => $options]);
+            //echo "<pre>";print_r($attr);die;
+            if ($event->getResult()) {
+                $html = $event->getResult();
+            } else {
+                if (method_exists($this, $type)) {
+                    $html = $this->$type($action, $data, $attr, $options);
+                }
             }
-        }
+        } // POCOR-9227
         return $html;
     }
 
@@ -132,7 +138,7 @@ class HtmlFieldHelper extends Helper
 
         foreach ($includes as $include) {
             if ($include['include']) {
-                if (array_key_exists('css', $include)) {
+                if (isset($include['css'])) {
                     if (is_array($include['css'])) {
                         foreach ($include['css'] as $css) {
                             echo $this->Html->css($css, ['block' => true]);
@@ -141,7 +147,7 @@ class HtmlFieldHelper extends Helper
                         echo $this->Html->css($include['css'], ['block' => true]);
                     }
                 }
-                if (array_key_exists('js', $include)) {
+                if (isset($include['js'])) {
                     if (is_array($include['js'])) {
                         foreach ($include['js'] as $js) {
                             echo $this->Html->script($js, ['block' => true]);
@@ -150,7 +156,7 @@ class HtmlFieldHelper extends Helper
                         echo $this->Html->script($include['js'], ['block' => true]);
                     }
                 }
-                if (array_key_exists('element', $include)) {
+                if (isset($include['element'])) {
                     echo $this->_View->element($include['element']);
                 }
             }
@@ -163,20 +169,22 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $fieldName = array_key_exists('fieldName', $attr) ? $attr['fieldName'] : $attr['field'];
+            $fieldName = isset($attr['fieldName']) ? $attr['fieldName'] : $attr['field'];
             $value = Hash::get($data, $fieldName, '');
         } elseif ($action == 'edit') {
             $options['type'] = 'string';
-            if (array_key_exists('length', $attr)) {
+            if (isset($attr['length'])) {
                 $options['maxlength'] = $attr['length'];
             }
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $options = $this->patchInvalidFields($data, $attr['field'], $options);
-            $value = $this->Form->input($fieldName, $options);
-        }
+            if ($attr['field'] && $options) { // POCOR-9227
+                $value = $this->Form->input($fieldName, $options);
+            }
+        } // POCOR-9227
         return $value;
     }
 
@@ -203,7 +211,7 @@ class HtmlFieldHelper extends Helper
         } elseif ($action == 'edit') {
             $options['type'] = 'number';
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $options = $this->patchInvalidFields($data, $attr['field'], $options);
@@ -216,12 +224,12 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $fieldName = array_key_exists('fieldName', $attr) ? $attr['fieldName'] : $attr['field'];
+            $fieldName = isset($attr['fieldName']) ? $attr['fieldName'] : $attr['field'];
             $value = Hash::get($data, $fieldName, '');
         } elseif ($action == 'edit') {
             $options['type'] = 'number';
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $options = $this->patchInvalidFields($data, $attr['field'], $options);
@@ -240,7 +248,7 @@ class HtmlFieldHelper extends Helper
         } elseif ($action == 'edit') {
             $options['type'] = 'password';
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $options = $this->patchInvalidFields($data, $attr['field'], $options);
@@ -253,7 +261,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $fieldName = array_key_exists('fieldName', $attr) ? $attr['fieldName'] : $attr['field'];
+            $fieldName = isset($attr['fieldName']) ? $attr['fieldName'] : $attr['field'];
             $selectedOption = Hash::get($data, $fieldName, '');
 
             if (!empty($attr['options'])) {
@@ -277,10 +285,10 @@ class HtmlFieldHelper extends Helper
             }
 
             if (!isset($attr['translate']) || (isset($attr['translate']) && $attr['translate'])) {
-                $value = __($value);
+                $value = __((string)$value);
             }
         } elseif ($action == 'edit') {
-            if (array_key_exists('empty', $attr)) {
+            if (isset($attr['empty'])) {
                 if ($attr['empty'] === true) {
                     $options['empty'] = '-- ' . __('Select') . ' --';
                 } else {
@@ -300,7 +308,7 @@ class HtmlFieldHelper extends Helper
             }
 
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $value = $this->secureSelect($fieldName, $options, $attr);
@@ -355,7 +363,7 @@ class HtmlFieldHelper extends Helper
                 $arrayKeys = array_merge($arrayKeys, array_keys($subList));
             } else {
                 if (!isset($attr['translate']) || (isset($attr['translate']) && $attr['translate'])) {
-                    $list[$key] = __($opt);
+                    $list[$key] = __((string) $opt);
                 } else {
                     $list[$key] = $opt;
                 }
@@ -366,7 +374,8 @@ class HtmlFieldHelper extends Helper
         if (isset($options['empty'])) {
             $arrayKeys[] = '';
         }
-        $session = $this->request->session();
+
+        $session = $this->_View->getRequest()->getSession();
         $session->write('FormTampering.'.$fieldName, $arrayKeys);
         $options['type'] = 'select';
         $value = $this->Form->input($fieldName, $options);
@@ -377,7 +386,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $fieldName = array_key_exists('fieldName', $attr) ? $attr['fieldName'] : $attr['field'];
+            $fieldName = isset($attr['fieldName']) ? $attr['fieldName'] : $attr['field'];
             $value = Hash::get($data, $fieldName, 0);
         } else {
             if (!isset($attr['min'])) {
@@ -392,7 +401,7 @@ class HtmlFieldHelper extends Helper
             $attr['rating'] = Hash::get($data, $attr['field'], $attr['min']);
 
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $attr['fieldName'] = $fieldName;
@@ -405,12 +414,12 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $fieldName = array_key_exists('fieldName', $attr) ? $attr['fieldName'] : $attr['field'];
+            $fieldName = isset($attr['fieldName']) ? $attr['fieldName'] : $attr['field'];
             $value = nl2br(Hash::get($data, $fieldName, ''));
         } elseif ($action == 'edit') {
             $options['type'] = 'textarea';
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $options = $this->patchInvalidFields($data, $attr['field'], $options);
@@ -426,11 +435,11 @@ class HtmlFieldHelper extends Helper
             // no logic required
         } elseif ($action == 'edit') {
             $options['type'] = 'hidden';
-            if (array_key_exists('value', $attr)) {
+            if (isset($attr['value'])) {
                 $options['value'] = $attr['value'];
             }
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $options = $this->patchInvalidFields($data, $attr['field'], $options);
@@ -443,7 +452,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'view' || $action == 'index') {
-            if (array_key_exists('value', $attr)) {
+            if (isset($attr['value'])) {
                 $value = $attr['value'];
             } else {
                 $value = $data->{$attr['field']};
@@ -461,7 +470,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            if (array_key_exists('value', $attr)) {
+            if (isset($attr['value'])) {
                 $value = $attr['value'];
             } else {
                 $value = $data->{$attr['field']};
@@ -470,11 +479,12 @@ class HtmlFieldHelper extends Helper
             $options['type'] = 'text';
             $options['disabled'] = 'disabled';
             $field = $attr['field'];
-            $invalid = $data->invalid();
+
+            $invalid = $data->getInvalid();
 
             if (isset($attr['options']) && !isset($attr['attr']['value'])) {
                 if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                    $options['value'] = $attr['options'][$data->invalid($field)];
+                    $options['value'] = $attr['options'][$invalid[$field]];
                 } else {
                     $options['value'] = $attr['options'][$data->{$field}];
                 }
@@ -482,13 +492,13 @@ class HtmlFieldHelper extends Helper
                 $options['value'] = $attr['attr']['value'];
             } else {
                 if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                    $options['value'] = $data->invalid($field);
+                    $options['value'] = $invalid[$field];
                 } else {
                     $options['value'] = $data->{$field};
                 }
             }
             $fieldName = $attr['model'] . '.' . $field;
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $value = $this->Form->input($fieldName, $options);
@@ -511,14 +521,24 @@ class HtmlFieldHelper extends Helper
                 $src = $data[$attr['field']];
             }
 
-            if (array_key_exists('ajaxLoad', $attr) && $attr['ajaxLoad']) {
+            if (isset($attr['ajaxLoad']) && $attr['ajaxLoad']) {
                 $imageUrl = '';
-                if (array_key_exists('imageUrl', $attr) && $attr['imageUrl']) {
-                    $imageUrl = $this->Url->build($attr['imageUrl'], true);
+                if (isset($attr['imageUrl']) && $attr['imageUrl']) {
+                    $imageUrl = $this->Url->build($attr['imageUrl'], []);
+                    //$imageUrl = $this->Url->build($attr['imageUrl'], true);
                     $imageUrl = str_replace('http','https',$imageUrl); //POCOR-7041 change http request to https..
-                    
+
                 }
-                $imageDefault = (array_key_exists('imageDefault', $attr) && $attr['imageDefault'])? '<i class='.$attr['imageDefault'].'></i>': '';
+                $imageDefault = (isset($attr['imageDefault']) && $attr['imageDefault'])? '<i class='.$attr['imageDefault'].'></i>': '';
+                    // $value= '<div class="table-thumb"
+					// data-load-image=true
+					// data-image-width='.$maxImageWidth.'
+					// data-image-url='.$imageUrl.'
+					// >
+					// <div class="profile-image-thumbnail">
+					// '.$imageDefault.'
+					// </div>
+					// </div>';
                 $value = (base64_decode($src, true)) ? '<div class="table-thumb"
                     data-load-image=true
                     data-image-width=' . $maxImageWidth . '
@@ -546,13 +566,14 @@ class HtmlFieldHelper extends Helper
             $defaultImgView = $this->table->getDefaultImgView();
 
             $showRemoveButton = false;
-            if (isset($data[$attr['field']]['tmp_name'])) {
-                $tmp_file = ((is_array($data[$attr['field']])) && (file_exists($data[$attr['field']]['tmp_name']))) ? $data[$attr['field']]['tmp_name'] : "";
-                $tmp_file_read = (!empty($tmp_file)) ? file_get_contents($tmp_file) : "";
-            } else {
-                $tmp_file = true;
-                $tmp_file_read = $data[$attr['field']];
-            }
+            $tmp_file_read = null; // POCOR-9227
+            // if (isset($data[$attr['field']]['tmp_name'])) {
+            //     $tmp_file = ((is_array($data[$attr['field']])) && (file_exists($data[$attr['field']]['tmp_name']))) ? $data[$attr['field']]['tmp_name'] : "";
+            //     $tmp_file_read = (!empty($tmp_file)) ? file_get_contents($tmp_file) : "";
+            // } else {
+            //     $tmp_file = true;
+            //     $tmp_file_read = $data[$attr['field']];
+            // }
 
             if (!is_resource($tmp_file_read)) {
                 $src = (!empty($tmp_file_read)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode($tmp_file_read).'"/>' : $defaultImgView;
@@ -572,12 +593,13 @@ class HtmlFieldHelper extends Helper
             }
 
             $this->includes['jasny']['include'] = true;
-            $value = $this->_View->element('ControllerAction.bootstrap-jasny/image_uploader', ['attr' => $attr, 'src' => $src,
-                                                                                            'defaultWidth' => $defaultWidth,
-                                                                                            'defaultHeight' => $defaultHeight,
-                                                                                            'showRemoveButton' => $showRemoveButton,
-                                                                                            'defaultImgMsg' => $defaultImgMsg,
-                                                                                            'defaultImgView' => $defaultImgView]);
+            $value = $this->_View->element('ControllerAction.bootstrap-jasny/image_uploader', ['attr' => $attr,
+                'src' => $src,
+                'defaultWidth' => $defaultWidth,
+                'defaultHeight' => $defaultHeight,
+                'showRemoveButton' => $showRemoveButton,
+                'defaultImgMsg' => $defaultImgMsg,
+                'defaultImgView' => $defaultImgView]);
         }
 
         return $value;
@@ -600,7 +622,7 @@ class HtmlFieldHelper extends Helper
         $element = $attr['element'];
 
         $attr['id'] = $attr['model'] . '_' . $attr['field'];
-        $attr['label'] = array_key_exists('label', $options) ? $options['label'] : Inflector::humanize($attr['field']);
+        $attr['label'] = isset($options['label']) ? $options['label'] : Inflector::humanize($attr['field']);
         $value = $this->_View->element($element, ['entity' => $data, 'attr' => $attr]);
         return $value;
     }
@@ -620,9 +642,10 @@ class HtmlFieldHelper extends Helper
 
         $field = $attr['field'];
         if (!is_null($data)) {
-            $invalid = $data->invalid();
+
+            $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $value = $data->invalid($field);
+                $value = $invalid[$field];
             } else {
                 $value = $data->{$field};
             }
@@ -630,11 +653,11 @@ class HtmlFieldHelper extends Helper
 
         if ($action == 'index' || $action == 'view') {
             if (!is_null($value)) {
-                $table = TableRegistry::get($attr['className']);
+                $table = TableRegistry::getTableLocator()->get($attr['className']);
                 $event = new Event('ControllerAction.Model.onFormatDateTime', $this, compact('value'));
-                $event = $table->eventManager()->dispatch($event);
-                if (strlen($event->result) > 0) {
-                    $value = $event->result;
+                $event = $table->getEventManager()->dispatch($event);
+                if (strlen($event->getResult()) > 0) {
+                    $value = $event->getResult();
                 }
             }
         }
@@ -655,9 +678,9 @@ class HtmlFieldHelper extends Helper
         $defaultDate = true;
 
         if (isset($attr['className'])) {
-            $table = TableRegistry::get($attr['className']);
-            $schema = $table->schema();
-            $columnAttr = $schema->column($field);
+            $table = TableRegistry::getTableLocator()->get($attr['className']);
+            $schema = $table->getSchema();
+            $columnAttr = $schema->getColumn($field);
             if ($columnAttr['null'] == true) {
                 $defaultDate = date('d-m-Y');
             }
@@ -672,9 +695,9 @@ class HtmlFieldHelper extends Helper
         }
 
         if (!is_null($data)) {
-            $invalid = $data->invalid();
+            $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $value = $data->invalid($field);
+                $value = $invalid[$field];
             } else {
                 $value = $data->{$field};
             }
@@ -683,21 +706,21 @@ class HtmlFieldHelper extends Helper
         if ($action == 'index' || $action == 'view') {
             if (!is_null($value)) {
                 $event = new Event('ControllerAction.Model.onFormatDate', $this, compact('value'));
-                $event = $table->eventManager()->dispatch($event);
-                if (strlen($event->result) > 0) {
-                    $value = $event->result;
+                $event = $table->getEventManager()->dispatch($event);
+                if (strlen($event->getResult()) > 0) {
+                    $value = $event->getResult();
                 }
             }
         } elseif ($action == 'edit') {
-            if (!array_key_exists('id', $attr)) {
+            if (!isset($attr['id'])) {
                 $attr['id'] = $attr['model'] . '_' . $field;
-                if (array_key_exists('fieldName', $attr)) {
+                if (isset($attr['fieldName'])) {
                     $attr['id'] = $this->_domId($attr['fieldName']);
                 }
             }
 
             $attr['date_options'] = array_merge($_options, $attr['date_options']);
-            if (!array_key_exists('value', $attr)) {
+            if (!isset($attr['value'])) {
                 if (!empty($value)) {
                     if (is_object($value)) {
                         $attr['value'] = $value->format('d-m-Y');
@@ -710,7 +733,7 @@ class HtmlFieldHelper extends Helper
             } else {
                 if (is_object($attr['value'])) {
                     $attr['value'] = $attr['value']->format('d-m-Y');
-                } elseif (!array_key_exists('special_value', $attr)) {
+                } elseif (!isset($attr['special_value'])) {
                     $attr['value'] = date('d-m-Y', strtotime($attr['value']));
                 }
                 // else $attr['value'] will be what was set before calling this function when $attr['special_value'] was set to true.
@@ -747,9 +770,10 @@ class HtmlFieldHelper extends Helper
         $field = $attr['field'];
 
         if (!is_null($data)) {
-            $invalid = $data->invalid();
+
+            $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $value = $data->invalid($field);
+                $value = $invalid[$field];
             } else {
                 $value = $data->{$field};
             }
@@ -757,11 +781,12 @@ class HtmlFieldHelper extends Helper
 
         if ($action == 'index' || $action == 'view') {
             if (!is_null($value)) {
-                $table = TableRegistry::get($attr['className']);
+                $table = TableRegistry::getTableLocator()->get($attr['className']);
                 $event = new Event('ControllerAction.Model.onFormatTime', $this, compact('value'));
-                $event = $table->eventManager()->dispatch($event);
-                if (strlen($event->result) > 0) {
-                    $value = $event->result;
+                $event = $table->getEventManager()->dispatch($event);
+
+                if (strlen($event->getResult()) > 0) {
+                    $value = $event->getResult();
                 }
             }
         } elseif ($action == 'edit') {
@@ -769,12 +794,12 @@ class HtmlFieldHelper extends Helper
                 $attr['id'] = $attr['model'] . '_' . $field;
             }
 
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $attr['id'] = $this->_domId($attr['fieldName']);
             }
             $attr['time_options'] = array_merge($_options, $attr['time_options']);
 
-            if (!array_key_exists('value', $attr)) {
+            if (!isset($attr['value'])) {
                 if (!is_null($value)) {
                     $attr['value'] = date('h:i A', strtotime($value));
                     $attr['time_options']['defaultTime'] = $attr['value'];
@@ -834,14 +859,14 @@ class HtmlFieldHelper extends Helper
             'multiple' => 'true',
             'type' => 'select'
         ];
-        
-        $Locales = TableRegistry::get('Locales');
-        $langDir = $Locales->getLangDir(I18n::locale());
+
+        $Locales = TableRegistry::getTableLocator()->get('Locales');
+        $langDir = $Locales->getLangDir(I18n::getLocale());
 
         if ($langDir == 'rtl') {
             $_options['class'] = 'chosen-select chosen-rtl';
         }
-        
+
         $_options['options'] = isset($attr['options']) ? $attr['options'] : [];
         $_options['data-placeholder'] = isset($attr['placeholder']) ? $attr['placeholder'] : '';
         $options = array_merge($_options, $options);
@@ -849,7 +874,7 @@ class HtmlFieldHelper extends Helper
         $this->includes['chosen']['include'] = true;
 
         $fieldName = $attr['model'] . '.' . $attr['field'];
-        if (array_key_exists('fieldName', $attr)) {
+        if (isset($attr['fieldName'])) {
             $fieldName = $attr['fieldName'];
         } else {
             if ($options['multiple']) {
@@ -874,41 +899,55 @@ class HtmlFieldHelper extends Helper
         return $this->Form->input($fieldName, $options);
     }
 
-    public function binary($action, Entity $data, $attr, $options = [])
+    public function binary($action, Entity $entity, $attr, $options = [])
     {
         $value = '';
         $table = TableRegistry::get($attr['className']);
-        $fileUpload = $table->behaviors()->get('FileUpload');
+        //this is comment becuase of facing error in Personal > General > Account edit by superrole.POCOR-7485 Starts cakephp-4
+        /*$fileUpload = $table->behaviors()->get('FileUpload');
         $name = '&nbsp;';
         if (!empty($fileUpload)) {
-            $name = $fileUpload->config('name');
-        }
-
+            $name = $fileUpload->getConfig('name');
+        }*/
+        //POCOR-7485 Ends
         if ($action == 'index' || $action == 'view') {
             // Modified logic
             // $buttons = $this->_View->get('_buttons');
             $buttons = $this->_View->get('ControllerAction');
-            if (array_key_exists('buttons', $buttons)) { // for CAv3
+            if (isset($buttons['buttons'])) { // for CAv3
                 $action = $buttons['buttons']['download']['url'];
             } else { // for CAv4
                 $action = $buttons['table']->url('download', false);
             }
 
-            // New logic from master
-            // $buttons = $this->_View->get('ControllerAction');
-            // $buttons = $buttons['buttons'];
-            // $action = $buttons['download']['url'];
-            $request = $this->request;
-            $ids = $this->ControllerAction->getIdKeys($table, $data, false);
-            $action = ['action' => $request->action, 'download', $this->ControllerAction->paramsEncode($ids)];
-            $value = $this->link($data->{$name}, $action);
-        } elseif ($action == 'edit') {
-            $this->includes['jasny']['include'] = true;
-            if (isset($data->{$name})) {
-                $attr['value'] = $data->{$name};
+            // POCOR-8074-6 start: fixed file upload
+            $request = $this->_View->getRequest();
+            $ids = $this->ControllerAction->getIdKeys($table, $entity, false);
+            $params = $request->getAttribute('params');
+            $action = $params['action'];
+            if($request->getParam('controller') == 'Directories'){
+                if (isset($entity['security_user_id']) && ! empty($entity['security_user_id'])) {
+                    $ids['security_user_id'] = $entity['security_user_id'];
+                }
+                if(empty($ids['security_user_id']) && isset($params['pass'][1]) && isset($this->ControllerAction->paramsDecode($params['pass'][1])['security_user_id'])) {
+                    $ids['security_user_id'] =  $this->ControllerAction->paramsDecode($params['pass'][1])['security_user_id'];
+                }
+                if(empty($ids['security_user_id']) && isset($params['pass'][1]) && isset($this->ControllerAction->paramsDecode($params['pass'][1])['user_id'])) {
+                    $ids['security_user_id'] =  $this->ControllerAction->paramsDecode($params['pass'][1])['user_id'];
+                }
             }
+            $action = ['action' => $action, 'download', $this->ControllerAction->paramsEncode($ids)];
+            $value = $this->link($entity->file_name, $action);
+
+        } elseif ($action == 'edit' || $action == 'add' ) {
+            $this->includes['jasny']['include'] = true;
+            $attr['value'] = $entity->file_name;
             $value = $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
+            $fieldName = $attr['model'] . '.' . $attr['field'];
+            //POCOR-8074-6 Ends
+            //POCOR-7485 Ends
         }
+        //die('<pre>'.print_r($value,true));
         return $value;
     }
 
@@ -921,7 +960,7 @@ class HtmlFieldHelper extends Helper
             $options['type'] = 'color';
             $options['onchange'] = 'clickColor(0, -1, -1, 5);';
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $value = $this->Form->input($fieldName, $options);
@@ -937,17 +976,27 @@ class HtmlFieldHelper extends Helper
         } elseif ($action == 'edit') {
             $options['type'] = 'string';
             $options['class'] = "form-control autocomplete form-error ui-autocomplete-input";
-            if (array_key_exists('length', $attr)) {
+            if (isset($attr['length'])) {
                 $options['maxlength'] = $attr['length'];
             }
-            if (array_key_exists('placeholder', $attr)) {
+            if (isset($attr['placeholder'])) {
                 $options['placeholder'] = $attr['placeholder'];
             }
-            if (array_key_exists('url', $attr)) {
-                $options['url'] = $this->Url->build($attr['url'], true);
+            // POCOR-8128 start
+
+                // Attempt to use the old version
+            if (isset($attr['url'])) {
+                try {
+                    $options['url'] = $this->Url->build($attr['url'], true);
+                } catch (\TypeError $e) {
+                    // Fallback to the new version if an error occurs
+                    $options['url'] = $this->Url->build($attr['url']);
+                }
             }
+
+            // POCOR-8128 end
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
 

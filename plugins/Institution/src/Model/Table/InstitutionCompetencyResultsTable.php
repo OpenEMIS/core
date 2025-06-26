@@ -9,7 +9,7 @@ use App\Model\Table\AppTable;
 
 class InstitutionCompetencyResultsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'student_id']);

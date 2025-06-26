@@ -8,11 +8,14 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\NumericId;
 
 class SecurityUsers extends Authenticatable implements JWTSubject
 {
-    //use HasFactory;
+    use HasFactory;
     use Notifiable;
+    use NumericId;
 
     public $timestamps = false;
     protected $casts = [
@@ -23,27 +26,52 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     protected $appends = ['full_name', 'name_with_id'];
 
 
+    protected $fillable = [
+        'id', 'username', 'password',
+        'openemis_no', 'first_name',
+        'middle_name', 'third_name',
+        'last_name', 'preferred_name', 'email',
+        'mobile_number', 'address', 'postal_code',
+        'address_area_id', 'birthplace_area',
+        'gender_id', 'date_of_birth',
+        'date_of_death', 'nationality_id',  'identity_type_id',
+        'identity_number', 'external_reference',
+        'super_admin', 'status', 'last_login',
+        'failed_logins', 'photo_name',
+        'photo_content', 'preferred_language',
+        'is_student', 'is_staff', 'is_guardian',
+        'modified_user_id', 'modified',
+        'created_user_id', 'created'
+    ];
+    protected $hidden = [
+        'password', 'remember_token',
+    ];
 
-    /**
-     * Get the identifier that will be stored in the subject claim of the JWT.
-     *
-     * @return mixed
-     */
+    protected $primaryKey = 'id';
+    public $incrementing = false;
+
+    protected static function boot(): void
+    {
+        parent::boot();
+        self::bootNumericId();
+    }
+
+
+
+
+
+
+
+
     public function getJWTIdentifier()
     {
         return $this->getKey();
     }
 
-    /**
-     * Return a key value array, containing any custom claims to be added to the JWT.
-     *
-     * @return array
-     */
     public function getJWTCustomClaims()
     {
         return [];
     }
-
 
 
     public function nationalities()
@@ -79,20 +107,84 @@ class SecurityUsers extends Authenticatable implements JWTSubject
         return $this->belongsTo(IdentityTypes::class, 'identity_type_id', 'id');
     }
 
+    public function getFullName()
+    {
+        $nameParts = [
+            $this->attributes['first_name'] ?? '',
+            isset($this->attributes['middle_name']) ? $this->attributes['middle_name'] : '',
+            isset($this->attributes['third_name']) ? $this->attributes['third_name'] : '',
+            $this->attributes['last_name'] ?? '',
+        ];
+
+        // Filter out empty parts and join with a single space
+        return implode(' ', array_filter($nameParts));
+    }
+
     public function getFullNameAttribute()
     {
-        return $this->attributes['first_name'] . ' ' . $this->attributes['middle_name'] . $this->attributes['third_name']  . ' ' . $this->attributes['last_name'];
+        $nameParts = [
+            $this->attributes['first_name'] ?? '',
+            isset($this->attributes['middle_name']) ? $this->attributes['middle_name'] : '',
+            isset($this->attributes['third_name']) ? $this->attributes['third_name'] : '',
+            $this->attributes['last_name'] ?? '',
+        ];
+
+        // Filter out empty parts and join with a single space
+        return implode(' ', array_filter($nameParts));
     }
 
 
     public function getNameWithIdAttribute()
     {
-        return $this->attributes['openemis_no']. ' - ' .$this->attributes['first_name'] . ' ' . $this->attributes['middle_name'] . $this->attributes['third_name']  . ' ' . $this->attributes['last_name'];
+        $nameParts = [
+            $this->attributes['openemis_no'] ?? '',
+            $this->attributes['first_name'] ?? '',
+            isset($this->attributes['middle_name']) ? $this->attributes['middle_name'] : '',
+            isset($this->attributes['third_name']) ? $this->attributes['third_name'] : '',
+            $this->attributes['last_name'] ?? '',
+        ];
+
+        // Filter out empty parts and join with a single space
+        return implode(' ', array_filter($nameParts));
     }
 
+
+    public function specialNeed()
+    {
+        return $this->hasOne(UserSpecialNeedsAssessment::class, 'security_user_id', 'id');
+
+    }
 
     public function institutionStaff()
     {
         return $this->belongsTo(InstitutionStaff::class, 'id', 'staff_id');
+
     }
+
+
+    //For POCOR-8536 Start...
+    public function institutionStudents()
+    {
+        return $this->hasMany(InstitutionStudent::class, 'student_id', 'id')->orderBy('created', 'DESC');
+    }
+
+    public function institutionStaffs()
+    {
+        return $this->hasMany(InstitutionStaff::class, 'staff_id', 'id');
+    }
+    //For POCOR-8536 End...
+
+
+    //POCOR-8639
+    public function userContacts()
+    {
+        return $this->hasMany(UserContacts::class, 'security_user_id'); // Use 'security_user_id' as the foreign key
+    }
+
+    // Scope to include gender details
+    public function scopeWithGender($query)
+    {
+        return $query->with('gender:id,name');
+    }
+
 }

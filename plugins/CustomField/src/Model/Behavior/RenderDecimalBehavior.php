@@ -10,7 +10,7 @@ use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderDecimalBehavior extends RenderBehavior
 {
-	public function initialize(array $config)
+	public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -40,7 +40,7 @@ class RenderDecimalBehavior extends RenderBehavior
                 $value = $savedValue;
             }
         } else if ($action == 'edit') {
-            $form = $event->subject()->Form;
+            $form = $event->getSubject()->Form;
             $unlockFields = [];
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 

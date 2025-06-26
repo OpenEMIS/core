@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 use App\Model\Table\AppTable;
 
 class InstitutionActivitiesTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
         parent::initialize($config);
 
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey'=>'institution_id']);

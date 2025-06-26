@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Table\ControllerActionTable;
@@ -19,8 +19,8 @@ class StudentFeesTable extends ControllerActionTable {
 	public $studentId;
 	private $_conditions = [];
 
-	public function initialize(array $config) {
-		$this->table('institution_fees');
+	public function initialize(array $config): void {
+		$this->setTable('institution_fees');
 		parent::initialize($config);
 
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -31,7 +31,7 @@ class StudentFeesTable extends ControllerActionTable {
 		$this->hasMany('StudentFeesAbstract', ['className' => 'Institution.StudentFeesAbstract', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		if ($this->behaviors()->has('ControllerAction')) {
-            $this->behaviors()->get('ControllerAction')->config([
+            $this->behaviors()->get('ControllerAction')->setConfig([
                 'actions' => [
 					'index' => true,
 					'view' => true,
@@ -43,22 +43,33 @@ class StudentFeesTable extends ControllerActionTable {
 				],
             ]);
         }
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['StudentFees' =>
+                ['id'],
+                
+            ]
+        ]);
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$session = $this->Session;
-		if ($this->controller->name == 'Directories') {
-			$this->studentId = $session->read('Directory.Directories.id');
-		} else if ($this->controller->name == 'Profiles') {
+		$queryString = $this->getQueryString();
+        $userID = $this->getStudentID();
+        $queryString['user_id'] = $userID;
+			
+		if ($this->controller->getName() == 'Directories') {
+			$this->studentId =  $this->getStudentID();
+		} else if ($this->controller->getName() == 'Profiles') {
 			$this->studentId = $session->read('Auth.User.id');
 		} else {
-			$this->studentId = $session->read('Student.Students.id');
+			//$this->studentId = $session->read('Student.Students.id');
+			$this->studentId = $this->getStudentID();
 		}
 
 		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
     	$this->currency = $ConfigItems->value('currency');
 
-		$InstitutionStudents = TableRegistry::get('Institutions.InstitutionStudents');
+		$InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
 		$buffer = $InstitutionStudents->find()->where([$InstitutionStudents->aliasField('student_id') => $this->studentId])->toArray();
 		$this->_conditions['institutionIds'] = [];
 		$this->_conditions['academicPeriodIds'] = [];
@@ -88,7 +99,7 @@ class StudentFeesTable extends ControllerActionTable {
 
 
 		// Start POCOR-5188
-		if($this->request->params['controller'] == 'Students'){
+		if($this->request->getParam('controller') == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Fees','Students - Finance');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -106,7 +117,7 @@ class StudentFeesTable extends ControllerActionTable {
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Fees','Students - Finance');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -179,7 +190,7 @@ class StudentFeesTable extends ControllerActionTable {
 		$options = ['type' => 'student'];
 		$tabElements = $this->controller->getFinanceTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
+		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
 
@@ -189,7 +200,7 @@ class StudentFeesTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 	public function viewBeforeQuery(Event $event, Query $query) {
-		if (isset($this->request->pass[1])) {
+		if (isset($this->request->getParam('pass')[1])) {
 			$query
 			->contain([
 				'EducationGrades.EducationProgrammes',
@@ -298,4 +309,43 @@ class StudentFeesTable extends ControllerActionTable {
 		return $entityRecords;
 	}
 
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'institution_id':
+                return __('Institution');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'education_grade_id':
+                return __('Education Grade');
+            case 'amount_paid':
+                return __('Amount paid');
+            case 'description':
+                    return __('Description');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public
+    function getStudentID($debugString = "")
+    {
+        // POCOR-8115;
+        // student_id should always be in query string, if not, die as an error
+        $student_id = $this->getQueryString('student_id');
+        if (!$student_id) {
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put student_id into query string first');
+            }
+        }
+        return $student_id;
+    }
 }

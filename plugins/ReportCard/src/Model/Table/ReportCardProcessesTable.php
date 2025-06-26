@@ -11,6 +11,7 @@ use Cake\ORM\TableRegistry;
 use Cake\I18n\Time;//POCOR-6841
 use Cake\I18n\Date;//POCOR-6841
 use DateTime;//POCOR-6785
+use Cake\Http\ServerRequest;
 
 class ReportCardProcessesTable extends ControllerActionTable
 {
@@ -26,7 +27,7 @@ class ReportCardProcessesTable extends ControllerActionTable
     //POCOR-7989 end
 
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -46,10 +47,19 @@ class ReportCardProcessesTable extends ControllerActionTable
             return __('Class');
         } else if ($field == 'student_id') {
             return __('OpenEMIS ID');
-        } else if ($field == 'education_grade_id') {//POCOR-7319
+        } else if($field == 'institution_id') {
+            return __('Institution');
+        } else if($field == 'status') {
+            return __('Status');
+        }else if($field == 'academic_period_id') {
+            return __('Academic Period');
+        }elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }else if($field=='education_grade_id'){//POCOR-7319
             return __('Education Grades');
-
-        } else {
+        }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
@@ -70,8 +80,8 @@ class ReportCardProcessesTable extends ControllerActionTable
         //AcademicPeriodd Filter //POCOR-7958::Start
         $AcademicPeriodd = $this->AcademicPeriods->getYearList();
         $academicPeriodOptions = ['-1' => __(' All Academic Periods ')] + $AcademicPeriodd;
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : -1;
-        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') :-1 ;
+        $this->controller->set(compact( 'academicPeriodOptions','selectedAcademicPeriod'));
 
         foreach ($academicPeriodOptions AS $key => $academicPeriodOptionsData) {
             $AcademicPerioddKey[$key] = $key;
@@ -80,11 +90,11 @@ class ReportCardProcessesTable extends ControllerActionTable
             $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         }
         //End //POCOR-7958::End
-
+        $serverRequest = $this->request;
         //Status Filter
         $ReportStatus = $this->getStatusList();
         $reportCardStatusOptions = ['0' => __(' All Status ')] + $ReportStatus; //POCOR-7989 start
-        $selectedReportStatus = !is_null($this->request->query('status')) ? $this->request->query('status') : 0; //POCOR-7989 start
+        $selectedReportStatus = !is_null($serverRequest->getQuery('status')) ? $serverRequest->getQuery('status') :0 ; 
         $this->controller->set(compact('reportCardStatusOptions', 'selectedReportStatus'));
 
         foreach ($reportCardStatusOptions AS $key => $reportCardSatusOptionsData) {
@@ -104,7 +114,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         $areaOptions = $Areas->find('list')
             ->toArray();
         $areaOptions = ['-1' => __(' All Areas ')] + $areaOptions;
-        $selectedArea = !is_null($this->request->query('area_id')) ? $this->request->query('area_id') : -1;
+        $selectedArea = !is_null($serverRequest->getQuery('area_id')) ? $serverRequest->getQuery('area_id') : -1;
         $this->controller->set(compact('areaOptions', 'selectedArea'));
 
         foreach ($areaOptions AS $key => $areaOptionsData) {
@@ -113,7 +123,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         //End
 
         //Institution Filter
-        $Institutions = TableRegistry::get('Institutions');
+        $Institutions = TableRegistry::get('Institution.Institutions');
         $institutionOptions = [];
         if ($selectedArea == -1) {
             $institutionOptions = $Institutions->find('list')
@@ -143,7 +153,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         }
 
         $institutionOptions = ['-1' => __('All Institution')] + $institutionOptions;
-        $selectedInstitution = !is_null($this->request->query('institution_id')) ? $this->request->query('institution_id') : -1;
+        $selectedInstitution = !is_null($serverRequest->getQuery('institution_id')) ? $serverRequest->getQuery('institution_id') : -1;
         $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
 
 
@@ -155,43 +165,40 @@ class ReportCardProcessesTable extends ControllerActionTable
         }
 
         //End
-
         //Education grade Filter
-        $InstitutionGrades = TableRegistry::get('institution_grades');
-        $EducationGrades = TableRegistry::get('education_grades');
-        $EducationGradeOptions = [];
-        $educationGradeList = [];
-        if ($selectedInstitution == -1) {
-            $EducationGradeOptions = $EducationGrades->find('list')
-                //  ->distinct([$EducationGrades->aliasField('name')])
-                ->toArray();
-
-
-        } else {
-            $EducationGradeOptions = $EducationGrades
-                ->find('list')
-                ->select([
-                    'education_grade_id' => $EducationGrades->aliasField('id'),
-                    'education_grade' => $EducationGrades->aliasField('name')])
-                ->InnerJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()], [
-                    $EducationGrades->aliasField('id = ') . $InstitutionGrades->aliasField('education_grade_id')
-                ])
-                ->where([$InstitutionGrades->aliasField('institution_id') => $selectedInstitution])
-                ->hydrate(false)
-                ->toArray();
-        }
+         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+         $EducationGrades=TableRegistry::get('Education.EducationGrades');
+         $EducationGradeOptions = [];
+         $educationGradeList = [];
+         if($selectedInstitution == -1){
+            $EducationGradeOptions  = $EducationGrades->find('list')
+                                    //  ->distinct([$EducationGrades->aliasField('name')])
+                                    ->toArray();
+         }else{
+             $EducationGradeOptions = $EducationGrades
+                                ->find('list')
+                                ->select([
+                                    'education_grade_id' => $EducationGrades->aliasField('id'),
+                                    'education_grade' => $EducationGrades->aliasField('name')])
+                                ->InnerJoin([$InstitutionGrades->getAlias() => $InstitutionGrades->getTable()], [
+                                   $EducationGrades->aliasField('id = ') . $InstitutionGrades->aliasField('education_grade_id')
+                                ])
+                                ->where([$InstitutionGrades->aliasField('institution_id') => $selectedInstitution])
+                                ->enableHydration(false)
+                                ->toArray();
+           }
         $EducationGradeOptionsKey = [];
-        $EducationGradeOptionsList = $EducationGradeOptions;
-        $list = [];
-        if (!empty($EducationGradeOptions)) {
-            foreach ($EducationGradeOptions AS $key => $value) {
-                $EducationGradeOptionsKey[$key] = $key;
+        $EducationGradeOptionsList=$EducationGradeOptions;
+        $list=[];
+        if(!empty($EducationGradeOptions)){
+            foreach($EducationGradeOptions AS $key => $value){
+                $EducationGradeOptionsKey[$key] = $key ;
 
             }
         }
 
         $EducationGradeOptions = ['-1' => __('All Education Grades')] + $EducationGradeOptions;
-        $selectedEducationGrade = !is_null($this->request->query('education_grade_id')) ? $this->request->query('education_grade_id') : -1;
+        $selectedEducationGrade = !is_null($this->request->getQuery('education_grade_id')) ? $this->request->getQuery('education_grade_id') : -1;
         $EducationGradeOptions = array_unique($EducationGradeOptions);
         $this->controller->set(compact('EducationGradeOptions', 'selectedEducationGrade'));
 
@@ -214,8 +221,8 @@ class ReportCardProcessesTable extends ControllerActionTable
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $timeZone = $ConfigItems->value("time_zone");
         date_default_timezone_set($timeZone);//POCOR-7067 Ends
-        //Start:POCOR-6785 need to convert this custom query to cake query
-        $ReportCardProcessesTable = TableRegistry::get('report_card_processes');
+
+        $ReportCardProcessesTable = TableRegistry::get('ReportCard.ReportCardProcesses');
         $entitydata = $ReportCardProcessesTable->find('all', ['conditions' => [
             'status' => '2' //POCOR-7989 start
         ]])->where([$ReportCardProcessesTable->aliasField('modified IS NOT NULL')])->toArray();
@@ -225,7 +232,7 @@ class ReportCardProcessesTable extends ControllerActionTable
             $now = new DateTime();
             $currentDateTime = $now->format('Y-m-d H:i:s');
             $c_timestap = strtotime($currentDateTime);
-            $modifiedDate = $entity->modified;
+            $modifiedDate = $entity->modified->format('Y-m-d H:i:s');
             //POCOR-6841 starts
             if ($entity->status == 2) {
                 $currentTimeZone = new DateTime();
@@ -314,8 +321,6 @@ class ReportCardProcessesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        //   print_r($extra);
-        //   exit;
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('class_name', ['sort' => ['field' => 'InstitutionClasses.name']]);
         $this->field('institution_id', ['sort' => ['field' => 'Institutions.name']]);
@@ -352,12 +357,12 @@ class ReportCardProcessesTable extends ControllerActionTable
 
     public function getStatusList()
     {
-//POCOR-7989 start
+        //POCOR-7989 start
         $status = [
             self::NEW_REPORT => __('New'),
             self::IN_PROGRESS => __('In Progress'),
             self::GENERATED => __('Generated'),
-//            self::PUBLISHED => __('Published'),
+            self::PUBLISHED => __('Published'),
             self::ERROR => __('Error') //POCOR-6788
         ];
         //POCOR-7989 end

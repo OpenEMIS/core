@@ -16,11 +16,13 @@ namespace Cake\Controller\Component;
 
 use Cake\Controller\Component;
 use Cake\I18n\Time;
-use Cake\Network\Request;
-use Cake\Network\Response;
+use Cake\Http\ServerRequest;
+use Cake\Http\Response;
 use Cake\Utility\CookieCryptTrait;
 use Cake\Utility\Hash;
 use Cake\Utility\Security;
+use Cake\Http\Cookie\Cookie;
+use DateTime;
 
 /**
  * Cookie Component.
@@ -113,16 +115,16 @@ class CookieComponent extends Component
      * @param array $config The config data.
      * @return void
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         if (!$this->_config['key']) {
-            $this->config('key', Security::salt());
+            $this->setConfig('key', Security::getSalt());
         }
 
         $controller = $this->_registry->getController();
 
         if ($controller !== null) {
-            $this->_response =& $controller->response;
+            $this->_response =& $controller->getResponse();
         }
 
         if ($controller === null) {
@@ -131,7 +133,7 @@ class CookieComponent extends Component
         }
 
         if (empty($this->_config['path'])) {
-            $this->config('path', $this->request->webroot);
+            $this->setConfig('path', $this->request->webroot);
         }
     }
 
@@ -182,7 +184,7 @@ class CookieComponent extends Component
      *
      * @return array
      */
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         return [];
     }
@@ -310,17 +312,29 @@ class CookieComponent extends Component
     protected function _write($name, $value)
     {
         $config = $this->configKey($name);
-        $expires = new Time($config['expires']);
+        $expires = new DateTime('+1 day');
+        $cookie = new Cookie(
+            $name,       // Cookie name
+            $this->_encrypt($value, $config['encryption'], $config['key']),       // Cookie value
+            $expires,     // Expiration time (optional)
+            $config['path'],                      // Path (optional, defaults to '/')
+            $config['domain'],           // Domain (optional, defaults to current domain)
+            $config['secure'],                   // Secure (optional, defaults to false)
+            $config['httpOnly']                      // HTTP only (optional, defaults to true)
+        );
+        // Write the cookie to the client's browser
+        $response = new Response();
+        $this->response = $response->withCookie($cookie);
 
-        $this->_response->cookie([
-            'name' => $name,
-            'value' => $this->_encrypt($value, $config['encryption'], $config['key']),
-            'expire' => $expires->format('U'),
-            'path' => $config['path'],
-            'domain' => $config['domain'],
-            'secure' => $config['secure'],
-            'httpOnly' => $config['httpOnly']
-        ]);
+        // $this->_response->cookie([
+        //     'name' => $name,
+        //     'value' => $this->_encrypt($value, $config['encryption'], $config['key']),
+        //     'expire' => $expires->format('U'),
+        //     'path' => $config['path'],
+        //     'domain' => $config['domain'],
+        //     'secure' => $config['secure'],
+        //     'httpOnly' => $config['httpOnly']
+        // ]);
     }
 
     /**
@@ -353,8 +367,8 @@ class CookieComponent extends Component
      *
      * @return string
      */
-    protected function _getCookieEncryptionKey()
+    protected function _getCookieEncryptionKey(): string
     {
-        return $this->_config['key'];
+        return (string) $this->_config['key'];
     }
 }

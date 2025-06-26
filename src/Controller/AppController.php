@@ -1,16 +1,19 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link      http://cakephp.org CakePHP(tm) Project
- * @since    0.2.9
- * @license   http://www.opensource.org/licenses/mit-license.php MIT License
+ * @copyright Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link      https://cakephp.org CakePHP(tm) Project
+ * @since     0.2.9
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
  */
 
 namespace App\Controller;
@@ -26,6 +29,11 @@ use Cake\Utility\Inflector;
 use Cake\Cache\Cache;
 use Cake\Filesystem\File;
 use Cake\Filesystem\Folder;
+use Cake\ORM\Table;
+use Cake\Http\ServerRequest;
+use Cake\Event\EventInterface;
+use Cake\Log\Log;
+
 
 /**
  * Application Controller
@@ -33,7 +41,7 @@ use Cake\Filesystem\Folder;
  * Add your application-wide methods in the class below, your controllers
  * will inherit them.
  *
- * @link http://book.cakephp.org/3.0/en/controllers.html#the-app-controller
+ * @link https://book.cakephp.org/4/en/controllers.html#the-app-controller
  */
 class AppController extends Controller
 {
@@ -41,31 +49,32 @@ class AppController extends Controller
     use SecurityTrait;
 
     private $productName = 'OpenEMIS Core';
-    public $helpers = [
+    /*public $helpers = [
         'Text',
 
         // Custom Helper
         'ControllerAction.ControllerAction',
         'OpenEmis.Navigation',
         'OpenEmis.Resource'
-    ];
+    ];*/
 
     private $webhookListUrl = [
         'plugin' => 'Webhook',
         'controller' => 'Webhooks',
         'action' => 'listWebhooks'
     ];
-
     /**
      * Initialization hook method.
      *
      * Use this method to add common initialization code like loading components.
      *
+     * e.g. `$this->loadComponent('FormProtection');`
+     *
      * @return void
      */
-    public function initialize()
+    public function initialize(): void
     {
-        if (!file_exists(CONFIG . 'datasource.php')) {
+        if (!file_exists(CONFIG . 'app_local.php')) {
             $url = Router::url(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'index'], true);
             header('Location: ' . $url);
             die;
@@ -97,7 +106,8 @@ class AppController extends Controller
                     'finder' => 'auth',
                     'passwordHasher' => [
                         'className' => 'Fallback',
-                        'hashers' => ['Default', 'Legacy']
+                        //'hashers' => ['Default', 'Legacy']
+                        'hashers' => ['Default']
                     ]
                 ],
             ],
@@ -115,14 +125,15 @@ class AppController extends Controller
 
         $this->loadComponent('Paginator');
 
-        $this->Auth->config('authorize', ['Security']);
+        $this->Auth->SetConfig('authorize', ['Security']);
 
         // Custom Components
         $this->loadComponent('Navigation');
-        $this->productName = $this->getTheme()['application_name'];
+        $this->productName = 'OpenEMIS Core';
         $this->loadComponent('Localization.Localization', [
             'productName' => $this->productName
         ]);
+        $themeData = $this->getTheme(); // POCOR-8951
         $this->loadComponent('OpenEmis.OpenEmis', [
             'homeUrl' => ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'],
             'headerMenu' => [
@@ -133,22 +144,39 @@ class AppController extends Controller
                     'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout']
                 ]
             ],
-            'productName' => $this->productName,
-            'productLogo' => $this->getTheme()['logo'],
-            'footerText' => $this->getTheme()['copyright_notice_in_footer'],
-            'theme' => $theme,
-            'lastModified' => $this->getTheme()['timestamp']
-        ]);
+            // POCOR-8951 start
+            'productName' => $themeData['application_name'] ?? 'OpenEMIS',
+            'productLogo' => $themeData['logo'] ?? null,
+            'footerText' => $themeData['copyright_notice_in_footer'] ?? '',
+            'theme' => $theme ?? null,
+            'lastModified' => $themeData['timestamp'] ?? time(),
+            // POCOR-8951 end
+            ]);
 
         $this->loadComponent('OpenEmis.ApplicationSwitcher', [
             'productName' => $this->productName
         ]);
+        //
+
 
         // Angular initialization
         $this->loadComponent('Angular.Angular', [
             'app' => 'OE_Core',
             'modules' => [
-                'bgDirectives', 'ui.bootstrap', 'ui.bootstrap-slider', 'ui.tab.scroll', 'agGrid', 'app.ctrl', 'advanced.search.ctrl', 'kd-elem-sizes', 'kd-angular-checkbox-radio', 'multi-select-tree', 'kd-angular-tree-dropdown', 'kd-angular-ag-grid', 'sg.tree.ctrl', 'sg.tree.svc'
+                'bgDirectives',
+                'ui.bootstrap',
+                'ui.bootstrap-slider',
+                'ui.tab.scroll',
+                'agGrid',
+                'app.ctrl',
+                'advanced.search.ctrl',
+                'kd-elem-sizes',
+                'kd-angular-checkbox-radio',
+                'multi-select-tree',
+                'kd-angular-tree-dropdown',
+                'kd-angular-ag-grid',
+                'sg.tree.ctrl',
+                'sg.tree.svc'
             ]
         ]);
 
@@ -176,12 +204,12 @@ class AppController extends Controller
         ]);
 
         $this->loadComponent('Csrf');
-        if ($this->request->action == 'postLogin') {
-            $this->eventManager()->off($this->Csrf);
+        if ($this->getRequest()->getParam('action') == 'postLogin') {
+            $this->getEventManager()->off($this->Csrf);
         }
         $this->loadComponent('TabPermission');
         // START: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
-        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItem = $ConfigItemTable
             ->find()
             ->select(['zonevalue' => 'ConfigItems.value'])
@@ -194,16 +222,23 @@ class AppController extends Controller
             date_default_timezone_set($timezone);
         }
         $this->checkAccessControl();
-        // END: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>    
+        // END: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
     }
 
     private function darkenColour($rgb, $darker = 2)
     {
+        // Ensure $rgb is a string and not null
+        if (!is_string($rgb) || empty($rgb)) {
+            return '#000000'; // Return a default color if $rgb is invalid
+        }
+
         $hash = (strpos($rgb, '#') !== false) ? '#' : '';
         $rgb = (strlen($rgb) == 7) ? str_replace('#', '', $rgb) : ((strlen($rgb) == 6) ? $rgb : false);
-        if (strlen($rgb) != 6) {
-            return $hash . '000000';
+
+        if ($rgb === false || strlen($rgb) != 6) {
+            return $hash . '000000'; // Return black if the format is invalid
         }
+
         $darker = ($darker > 1) ? $darker : 1;
 
         list($R16, $G16, $B16) = str_split($rgb, 2);
@@ -215,53 +250,93 @@ class AppController extends Controller
         return $hash . $R . $G . $B;
     }
 
+
     public function getTheme()
     {
+        // POCOR-8951 start
+
         $themes = Cache::read('themes');
-        if (!$themes) {
-            $folder = new Folder();
-            $folder->delete(WWW_ROOT . 'img' . DS . 'themes');
-            $themes = TableRegistry::get('Themes')->find()
-                ->formatResults(function ($results) {
-                    $res = [];
-                    foreach ($results as $r) {
-                        if ($r->content) {
-                            $file = new File(WWW_ROOT . 'img' . DS . 'themes' . DS . $r->value, true);
-                            $file->write(stream_get_contents($r->content));
-                            $file->close();
-                        }
-                        $code = Inflector::underscore(str_replace(' ', '', $r->name));
-                        if ($code == 'login_page_image' || $code == 'favicon') {
-                            $res[$code] = !empty($r->value) ? 'themes/' . $r->value : 'default_images/' . $r->default_value;
-                        } elseif ($code == 'copyright_notice_in_footer' || $code == 'logo') {
-                            $res[$code] = !empty($r->value) ? 'themes/' . $r->value : null;
-                        } else {
-                            $res[$code] = !empty($r->value) ? $r->value : $r->default_value;
-                        }
-                    }
-                    return $res;
-                })
-                ->toArray();
-            $colour = $themes['colour'];
-            $secondaryColour = $this->darkenColour($colour);
-            $customPath = ROOT . DS . 'plugins' . DS . 'OpenEmis' . DS . 'webroot' . DS . 'css' . DS . 'themes' . DS . 'custom' . DS;
-            $basePath = Router::url(['controller' => false, 'action' => 'index', 'plugin' => false]) === '/' ? '/' : Router::url(['controller' => false, 'action' => 'index', 'plugin' => false]) . '/';
-            $loginBackground = $basePath . Configure::read('App.imageBaseUrl') . $themes['login_page_image'];
-            $file = new File($customPath . 'layout.core.template.css');
-            $template = $file->read();
-            $file->close();
-            $template = str_replace('${bgImg}', "'$loginBackground'", $template);
-            $template = str_replace('${secondColor}', $secondaryColour, $template);
-            $template = str_replace('${prodColor}', "#$colour", $template);
-            $customPath = WWW_ROOT . 'css' . DS . 'themes' . DS;
-            $file = new File($customPath . 'layout.min.css', true);
-            $file->write($template);
-            $file->close();
-            $themes['timestamp'] = TableRegistry::get('Configuration.ConfigItems')->value('themes');
-            Cache::write('themes', $themes);
+        if($themes){
+            return $themes;
         }
+        $configItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $coreConfig = $configItems->find()
+            ->select(['id'])
+            ->where(['code' => 'openemis_core', 'type' => 'Online Services'])
+            ->first();
+
+        if (!$coreConfig) {
+            return []; // Return empty if no core config found
+        }
+
+        // Delete old theme images
+        $folder = new Folder();
+        $folder->delete(WWW_ROOT . 'img' . DS . 'themes');
+
+        // Get only themes with the correct config_item_id
+        $themeTable = TableRegistry::getTableLocator()->get('Theme.Themes');
+        $themeQuery = $themeTable->find()
+            ->where(['config_item_id' => $coreConfig->id]);
+
+        $themes = [];
+
+        foreach ($themeQuery as $r) {
+            // Handle file content writing
+            if ($r->content) {
+                $file = new File(WWW_ROOT . 'img' . DS . 'themes' . DS . $r->value, true);
+                $file->write(stream_get_contents($r->content));
+                $file->close();
+            }
+
+            // Create code-friendly key
+            $code = Inflector::underscore(str_replace(' ', '', $r->name));
+
+            // Apply specific rules per theme item type
+            if (in_array($code, ['login_page_image', 'favicon'])) {
+                $themes[$code] = !empty($r->value) ? 'themes/' . $r->value : 'default_images/' . $r->default_value;
+            } elseif (in_array($code, ['copyright_notice_in_footer', 'logo'])) {
+                $themes[$code] = !empty($r->value) ? 'themes/' . $r->value : null;
+            } else {
+                $themes[$code] = !empty($r->value) ? $r->value : $r->default_value;
+            }
+        }
+
+// Return an empty array if no results found
+        if (empty($themes)) {
+            return [];
+        }
+        Log::write('debug', 'Theme data: ' . print_r($themes, true));
+        // Modify CSS template
+        $colour = $themes['colour'] ?? '000000';
+        $secondaryColour = $this->darkenColour($colour);
+
+        $customPath = ROOT . DS . 'plugins' . DS . 'OpenEmis' . DS . 'webroot' . DS . 'css' . DS . 'themes' . DS . 'custom' . DS;
+        $basePath = Router::url(['controller' => '', 'action' => 'index', 'plugin' => false]) . '/';
+
+        $loginBackground = $basePath . Configure::read('App.imageBaseUrl') . $themes['login_page_image'];
+
+        $templateFile = new File($customPath . 'layout.core.template.css');
+        $template = $templateFile->read();
+        $templateFile->close();
+
+        $template = str_replace('${bgImg}', "'$loginBackground'", $template);
+        $template = str_replace('${secondColor}', $secondaryColour, $template);
+        $template = str_replace('${prodColor}', "#$colour", $template);
+
+        // Write final CSS
+        $finalCssPath = WWW_ROOT . 'css' . DS . 'themes' . DS . 'layout.min.css';
+        $file = new File($finalCssPath, true);
+        $file->write($template);
+        $file->close();
+
+        // Add timestamp and cache
+        $themes['timestamp'] = $configItems->value('themes');
+        Cache::write('themes', $themes);
+        Cache::write('cake_themes', $themes);
         return $themes;
+    // POCOR-8951 end
     }
+
 
     /**
      * Before render callback.
@@ -269,24 +344,32 @@ class AppController extends Controller
      * @param \Cake\Event\Event $event The beforeRender event.
      * @return void
      */
-    public function beforeRender(Event $event)
+    public function beforeRender(EventInterface $event)
     {
-        if (!array_key_exists('_serialize', $this->viewVars) &&
-            in_array($this->response->type(), ['application/json', 'application/xml'])
-        ) {
-            $this->set('_serialize', true);
-        }
+        // if (!array_key_exists('_serialize', $this->viewVars) &&
+        //     in_array($this->response->type(), ['application/json', 'application/xml'])
+        // ) {
+        //     $this->set('_serialize', true);
+        // }
+        $this->set('_serialize', true);
+        $this->viewBuilder()->addHelper('Label');
+        $this->viewBuilder()->addHelper('Text');
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+        $this->viewBuilder()->addHelper('ControllerAction.HtmlField');
+        $this->viewBuilder()->addHelper('OpenEmis.Navigation');
+        $this->viewBuilder()->addHelper('OpenEmis.Resource');
+        $this->viewBuilder()->addHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);
     }
 
     // Triggered from LocalizationComponent
     // Controller.Localization.getLanguageOptions
     public function getLanguageOptions(Event $event)
     {
-        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemsTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $languageArr = $ConfigItemsTable->getSystemLanguageOptions();
         $systemLanguage = $languageArr['language'];
         $showLanguage = $languageArr['language_menu'];
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if (!$session->check('System.language_menu')) {
             $session->write('System.language', $systemLanguage);
             $session->write('System.language_menu', $showLanguage);
@@ -298,54 +381,54 @@ class AppController extends Controller
     // Controller.Localization.updateLoginLanguage
     public function updateLoginLanguage(Event $event, $user, $lang)
     {
-        $UsersTable = TableRegistry::get('User.Users');
+        $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
         $UsersTable->dispatchEvent('Model.Users.updateLoginLanguage', [$user, $lang], $this);
     }
 
     //POCOR-7534 Starts
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
+        try {
+            if ($this->getPlugin() == $this->getPlugin()) { // POCOR-8080-1
+                $this->Security->setConfig('validatePost', false);
+            }
+        } catch (\Exception $exception) {
+            // if no plugin, skip it
+        }
         parent::beforeFilter($event);
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $superAdmin = $session->read('Auth.User.super_admin');
+        //POCOR-8595 starts
+        if (!is_null($_COOKIE['Restful'])) {
+            return true;
+        } //POCOR-8595 ends
         if ($superAdmin == 0) {
-
-
             $UserData = $session->read('Auth.User')['id'];
-            $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
-            $userRole = $GroupRoles->find()
-                ->contain('SecurityRoles')
-                ->order(['SecurityRoles.order'])
-                ->where([
-                    $GroupRoles->aliasField('security_user_id') => $UserData
-                ])
-                ->group([$GroupRoles->aliasField('security_role_id')])
-                ->toArray();
-
-            if (!empty($this->request->params['controller']) && !empty($userRole)) {
-                $RoleIds = [];
-                foreach ($userRole as $Role_key => $Role_val) {
-                    $RoleIds[] = $Role_val->security_role_id;
-                }
-                $SecurityFunctionIds = $this->getIdBySecurityFunctionName($this->request->params['action'],
-                    $this->request->params['controller']);
-                if (!empty($SecurityFunctionIds)) {
-                    $result = $this->checkAuthrizationForRoles($SecurityFunctionIds, $RoleIds);
-                    if ($result == 0) {
-                        $event->stopPropagation();
-                        $this->Alert->warning('general.notAccess');
-                        $this->redirect($this->referer());
-                    }
-                }
+            // POCOR-8534 start
+            if (!$UserData) {
+                return;
+            }
+            $hasPermission = $this->oldSecurityCheck($session, $event);
+            if ($hasPermission == 0) {
+                $event->stopPropagation();
+                $this->Alert->warning('general.notAccess');
+                $this->redirect($this->referer());
+            }
+            $hasPermission = $this->newSecurityCheck($event);
+            if ($hasPermission == 0) {
+                $event->stopPropagation();
+                $this->Alert->warning('general.notAccess');
+                $this->redirect($this->referer());
             }
         }
+        // POCOR-8534 End
 
     }
 
     public function getIdBySecurityFunctionName($actionParam, $controllerParam)
     {
         //POCOR-7562 start
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $superAdmin = $session->read('Auth.User.super_admin');
         //POCOR-7562 end
         $name = '';
@@ -355,7 +438,7 @@ class AppController extends Controller
             } else if (($actionParam == 'UserGroups' || $actionParam == 'SystemGroups')) {
                 $name = 'Groups';
             } else if ($actionParam == 'Roles') {
-                $name = ($this->request->query['type'] == 'system') ? 'System Roles' : 'User Roles';
+                $name = ($this->request->getQuery['type'] == 'system') ? 'System Roles' : 'User Roles';
             } else if ($actionParam == 'Accounts') {
                 $name = 'Accounts';
             } else if ($actionParam == 'UserGroupsList') {
@@ -396,7 +479,7 @@ class AppController extends Controller
                 $name = 'Attendances';
             }
         } else if ($controllerParam == 'FieldOptions') {
-            $actionParam = $this->request->params['pass'][0];
+            $actionParam = $this->request->getParam('pass')[0];
             if (($actionParam == '' || $actionParam == 'index') || $actionParam == 'view' || $actionParam == 'edit' || $actionParam == 'add' || $actionParam == 'remove' || $actionParam == 'transfer') {
                 $name = 'Setup';
             }
@@ -672,7 +755,7 @@ class AppController extends Controller
             }
         }
         $module = 'Administration';
-        $SecurityFunctionsTbl = TableRegistry::get('security_functions');
+        $SecurityFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
         $SecurityFunctionsData = $SecurityFunctionsTbl->find()->where([
             $SecurityFunctionsTbl->aliasField('name') => $name,
             $SecurityFunctionsTbl->aliasField('controller') => $controllerParam,
@@ -687,9 +770,9 @@ class AppController extends Controller
         return $SecurityFunctionIds;
     }
 
-    public function checkAuthrizationForRoles($securityFunctionsId, $roleId)
+    public function checkAuthorizationForRoles($securityFunctionsId, $roleId) // POCOR-8534
     {
-        $SecurityRoleFunctionsTbl = TableRegistry::get('security_role_functions');
+        $SecurityRoleFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $SecurityRoleFunctionsTblData = $SecurityRoleFunctionsTbl->find()->where([
             $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $roleId,
             $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $securityFunctionsId,
@@ -704,7 +787,7 @@ class AppController extends Controller
             }
         }
         return count($dataArray);
-    }//POCOR-7534 ends
+    } //POCOR-7534 ends
 
 
     private function skipCheckAccessControl($params)
@@ -724,9 +807,10 @@ class AppController extends Controller
             return $skip;
         }
         //POCOR-7910 end
-        
-// POCOR-7841 BIT CLEANER CODE
-        if ($params['controller'] == 'Users' &&
+
+        // POCOR-7841 BIT CLEANER CODE
+        if (
+            $params['controller'] == 'Users' &&
             in_array($params['action'], [
                 'login',
                 'logout',
@@ -735,82 +819,93 @@ class AppController extends Controller
                 'forgotUsername',
                 'postForgotUsername',
                 'forgotPassword',
-                'postForgotPassword'
-            ])) {
+                'postForgotPassword',
+                'resetPassword', //POCOR-8806
+                'postResetPassword',
+                'verifyOtp'
+            ])
+        ) {
             return $skip;
         }
-//        if ($params['controller'] == 'Users' &&
-//            $params['action'] == 'logout') {
-//            return $skip;
-//        }
-//        if ($params['controller'] == 'Users' &&
-//            $params['action'] == 'forgotUsername') {
-//            return $skip;
-//        }
-//        if ($params['controller'] == 'Users' &&
-//            $params['action'] == 'postForgotUsername') {
-//            return $skip;
-//        }
-//        if ($params['controller'] == 'Users' &&
-//            $params['action'] == 'forgotPassword') {
-//            return $skip;
-//        }
-//        if ($params['controller'] == 'Users' &&
-//            $params['action'] == 'postForgotPassword') {
-//            return $skip;
-//        }
-//        if ($params['controller'] == 'Users' &&
-//            $params['action'] == 'login') {
-//            return $skip;
-//        }
-//        if ($params['controller'] == 'Users' &&
-//            $params['action'] == 'postLogin') {
-//            return $skip;
-//        }
-// END POCOR-7841
+        //        if ($params['controller'] == 'Users' &&
+        //            $params['action'] == 'logout') {
+        //            return $skip;
+        //        }
+        //        if ($params['controller'] == 'Users' &&
+        //            $params['action'] == 'forgotUsername') {
+        //            return $skip;
+        //        }
+        //        if ($params['controller'] == 'Users' &&
+        //            $params['action'] == 'postForgotUsername') {
+        //            return $skip;
+        //        }
+        //        if ($params['controller'] == 'Users' &&
+        //            $params['action'] == 'forgotPassword') {
+        //            return $skip;
+        //        }
+        //        if ($params['controller'] == 'Users' &&
+        //            $params['action'] == 'postForgotPassword') {
+        //            return $skip;
+        //        }
+        //        if ($params['controller'] == 'Users' &&
+        //            $params['action'] == 'login') {
+        //            return $skip;
+        //        }
+        //        if ($params['controller'] == 'Users' &&
+        //            $params['action'] == 'postLogin') {
+        //            return $skip;
+        //        }
+        // END POCOR-7841
 
-        if ($params['controller'] == 'Dashboard' &&
-            $params['action'] == 'index') {
+        if (
+            $params['controller'] == 'Dashboard' &&
+            $params['action'] == 'index'
+        ) {
             return $skip;
         }
-        if ($params['controller'] == 'Translations' &&
-            $params['action'] == 'translate') {
+        if (
+            $params['controller'] == 'Translations' &&
+            $params['action'] == 'translate'
+        ) {
             return $skip;
         }
 
-// POCOR-7841 IF NO USER, EXIT
-        $session = $this->request->session();
+        // POCOR-7841 IF NO USER, EXIT
+        $session = $this->request->getSession();
         $user_id = $session->read('Auth.User')['id'];
-        if(empty($user_id)){
+        if (empty($user_id)) {
             $skip = false;
             return $skip;
         }
-// POCOR-7841
+        // POCOR-7841
 
 
-// POCOR-7833 SKIP WORKFLOW AJAX REQUESTS
-// POCOR-7841 BIT CLEANER CODE
-        if ($params['controller'] == 'Workflows' &&
+        // POCOR-7833 SKIP WORKFLOW AJAX REQUESTS
+        // POCOR-7841 BIT CLEANER CODE
+        if (
+            $params['controller'] == 'Workflows' &&
             in_array($params['action'], [
                 'ajaxGetCases',
                 'ajaxGetAssignees'
-            ])) {
+            ])
+        ) {
             return $skip;
         }
-//        if ($params['controller'] == 'Workflows' &&
-//            $params['action'] == 'ajaxGetCases') {
-//            return $skip;
-//        }
-//
-//        if ($params['controller'] == 'Workflows' &&
-//            $params['action'] == 'ajaxGetAssignees') {
-//            return $skip;
-//        }
-// END POCOR-7841
-// POCOR-7833
+        //        if ($params['controller'] == 'Workflows' &&
+        //            $params['action'] == 'ajaxGetCases') {
+        //            return $skip;
+        //        }
+        //
+        //        if ($params['controller'] == 'Workflows' &&
+        //            $params['action'] == 'ajaxGetAssignees') {
+        //            return $skip;
+        //        }
+        // END POCOR-7841
+        // POCOR-7833
 
-// POCOR-7841 SKIP INSTITUTION AND DIRECTORY REQUESTS
-        if ($params['controller'] == 'Institutions' &&
+        // POCOR-7841 SKIP INSTITUTION AND DIRECTORY REQUESTS
+        if (
+            $params['controller'] == 'Institutions' &&
             in_array($params['action'], [
                 'Addguardian',
                 'checkConfigurationForExternalSearch',
@@ -818,7 +913,6 @@ class AppController extends Controller
                 'saveGuardianData',
                 'getEducationGrade',
                 'getClassOptions',
-                'getClassCapacity',
                 'getPositionType',
                 'getFTE',
                 'getShifts',
@@ -827,6 +921,7 @@ class AppController extends Controller
                 'studentCustomFields',
                 'staffCustomFields',
                 'saveStudentData',
+                'saveAssessmentItemExemptions', // POCOR-8224
                 'saveStaffData',
                 'saveGuardianData',
                 'saveDirectoryData',
@@ -838,13 +933,15 @@ class AppController extends Controller
                 'getStaffPosititonGrades',
                 'getCspdData',
                 'getConfigurationForExternalSourceData', //POCOR-7716
-                'getStudentAdmissionStatus'//POCOR-7716
-            ])) {
+                'getStudentAdmissionStatus' //POCOR-7716
+            ])
+        ) {
             return $skip;
         }
 
 
-        if ($params['controller'] == 'Directories' &&
+        if (
+            $params['controller'] == 'Directories' &&
             in_array($params['action'], [
                 'Addguardian',
                 'getContactType',
@@ -857,69 +954,189 @@ class AppController extends Controller
                 'getContactType',
                 'getAutoGeneratedPassword',
                 'getUniqueOpenemisId',
-                'getRedirectToGuardian'
-            ])) {
+                'getRedirectToGuardian',
+                'getUserType' // POCOR-8998
+            ])
+        ) {
             return $skip;
         }
-// POCOR-7841
+        // POCOR-7841
 
         $skip = false;
         return $skip;
-
     }
 
     private function checkAccessControl()
     {
 
-        $params = $this->request->params;
-
-// POCOR-7833 REMOVE UNNECESSARY LOGGING
-//        $this->log($params, 'debug');
-// END
-
+        $params = $this->request->getAttribute('params');
         // POCOR-7833 MOVE ALL SKIP ACCESS TO ONE FUNCTION
         if ($this->skipCheckAccessControl($params)) {
             return;
         }
         // END
         // POCOR-7895 ARCHIVE RIGHTS CHANGE
-        if ($params['controller'] == 'Institutions' &&
-            $params['action'] == 'InstitutionStudentAbsencesArchived') {
+        if (
+            $params['controller'] == 'Institutions' &&
+            $params['action'] == 'InstitutionStudentAbsencesArchived'
+        ) {
             $params['action'] = 'StudentAttendances';
         }
 
-        if ($params['controller'] == 'Institutions' &&
-            $params['action'] == 'StaffAttendancesArchived') {
+        if (
+            $params['controller'] == 'Institutions' &&
+            $params['action'] == 'StaffAttendancesArchived'
+        ) {
             $params['action'] = 'InstitutionStaffAttendances';
         }
+        // POCOR-8985 start
+        if (
+            $params['controller'] == 'Institutions' &&
+            $params['action'] == 'ScheduleTimetable'
+        ) {
+            $params['action'] = 'ScheduleTimetableOverview';
+        }
+        // POCOR-8985 end
+
 
         // POCOR-7895 END
 
         //POCOR-7731 start
-        if ($params['controller'] == 'ApiSecurities' &&
-            $params['action'] == 'index') {
+        if (
+            $params['controller'] == 'ApiSecurities' &&
+            $params['action'] == 'index'
+        ) {
             return $this->redirect(['controller' => 'Errors', 'action' => 'error404']);
         }
         //POCOR-7731 end
 
         $check = $this->AccessControl->check($params);
-
-// POCOR-7833 REMOVE UNNECESSARY LOGGING
-//        $this->log($check, 'debug');
-// POCOR-7833 END
-
-        if (!$check) {
-
-// POCOR-7833 ADD CHECKING LOGGING
+        if (!$check && $params['plugin'] != 'GuardianNav') { //POCOR-8596
             $this->log(__FUNCTION__, 'debug');
-            $this->log($params, 'debug');
-// POCOR-7833 END
+            if ($params !== null) {
+                $this->log(print_r($params,true), 'debug');
+            }
+            //$this->Alert->warning('general.notAccess'); //tmp solution
+            return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
+        }
+    }
 
-// POCOR-7833 REDIRECT TO DASHBOARD
+    /**
+     * // POCOR-8534
+     * @param \Cake\Http\Session $session
+     * @param EventInterface $event
+     */
+    private function oldSecurityCheck(\Cake\Http\Session $session, EventInterface $event)
+    {
+        $UserData = $session->read('Auth.User')['id'];
+        if (!$UserData) {
+            return 0;
+        }
+        $GroupRoles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $userRole = $GroupRoles->find()
+            ->contain('SecurityRoles')
+            ->order(['SecurityRoles.order'])
+            ->where([
+                $GroupRoles->aliasField('security_user_id') => $UserData
+            ])
+            ->group([$GroupRoles->aliasField('security_role_id')])
+            ->toArray();
+
+        if (!empty($this->request->getParam('controller')) && !empty($userRole)) {
+            $RoleIds = [];
+            foreach ($userRole as $Role_key => $Role_val) {
+                $RoleIds[] = $Role_val->security_role_id;
+            }
+            $SecurityFunctionIds = $this->getIdBySecurityFunctionName(
+                $this->request->getParam('action'),
+                $this->request->getParam('controller')
+            );
+            if (!empty($SecurityFunctionIds)) {
+                $request = $this->request;
+                $controllerName = $request->getParam('controller');
+                $plugin = $request->getParam('plugin');
+                $action = $request->getParam('action');
+                $subAction = 'view';
+                $crudActions = ['add', 'delete', 'edit', 'view'];
+                if (in_array($action, $crudActions)) {
+                    $subAction = $action;
+                }
+                $passes = $request->getParam('pass');
+                if (isset($passes) && isset($passes[0])) {
+                    $pass = $passes[0];
+                    if (in_array($pass, $crudActions)) {
+                        $subAction = $action;
+                    }
+                }
+                $result = $this->checkAuthorizationForRoles($SecurityFunctionIds, $RoleIds, $subAction);
+                if ($result == 0) {
+                    return 0;
+                }
+            }
+        }
+        return 1;
+    }
+
+    /**
+     * POCOR=8534
+     * @param $event
+     * @return \Cake\Http\Response|int|null
+     */
+    private function newSecurityCheck($event)
+    {
+
+        $request = $this->request;
+        $extra['patchEntity'] = true;
+        // POCOR-8543 START
+        $editAccess = $this->getEditAccess($request);
+        if (!$editAccess) {
             $this->Alert->warning('general.notAccess');
             return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
-// POCOR-7833 END
-//            throw new \Exception("No Rights for $class!");
         }
+
+        return 1;
+    }
+
+    /**
+     * POCOR=8534
+     * @param $request
+     * @return int
+     */
+    private function getEditAccess($request)
+    {
+        $controllerName = $request->getParam('controller');
+        $plugin = $request->getParam('plugin');
+        $action = $request->getParam('action');
+        $passes = $request->getParam('pass');
+        $subAction = 'view';
+        $crudActions = ['add', 'delete', 'edit', 'view'];
+        if (in_array($action, $crudActions)) {
+            $subAction = $action;
+        }
+        if (isset($passes) && isset($passes[0])) {
+            $pass = $passes[0];
+            if (in_array($pass, $crudActions)) {
+                $subAction = $pass;
+            }
+        }
+
+        if (!in_array($subAction, ['add', 'edit'])) {
+            return 1;
+        }
+        $toCheck = [
+            'controller' => $controllerName,
+            'plugin' => $plugin,
+            'action' => $action,
+            $subAction
+        ];
+        if ($action == $subAction) {
+            unset($toCheck[$subAction]);
+        }
+        if (!$action) {
+            unset($toCheck['action']);
+        }
+        $editAccess = $this->AccessControl->check($toCheck);
+        //        die(print_r([$toCheck, $editAccess], true));
+        return $editAccess;
     }
 }

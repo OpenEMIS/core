@@ -9,16 +9,19 @@ use Cake\ORM\Table;
 
 class EducationsController extends AppController {
 
-    public function initialize() {
+    public function initialize(): void {
         parent::initialize();
         $this->loadComponent('Paginator');
     }
 
-    public function beforeFilter(Event $event) {
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
+        if ($this->getPlugin() == 'Education') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
 
-        if($this->request->action != 'CopySystems'){
-            $selectedAction = $this->request->action;
+        if($this->request->getParam('action') != 'CopySystems'){
+            $selectedAction = $this->request->getParam('action');
             $setupTab = 'Stages';
             if (in_array($selectedAction, ['Stages', 'Subjects', 'Certifications', 'ProgrammeOrientations', 'FieldOfStudies'])) {
                 $setupTab = $selectedAction;
@@ -51,7 +54,7 @@ class EducationsController extends AppController {
                 ],
                 $setupTab => [
                     'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => $setupTab],
-                    'text' => __('Setup')
+                    'text' => __('Others')//POCOR-8644
                 ]
             ];
             $tabElements = $this->TabPermission->checkTabPermission($tabElements);
@@ -63,7 +66,7 @@ class EducationsController extends AppController {
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
         $header = __('Education');
         //POCOR-5696 start
-        if($this->request->action == 'CopySystems'){
+        if($this->request->getParam('action') == 'CopySystems'){
             $model->alias = 'Systems';
             $header .= ' - ' . $model->getHeader('SystemsCopy');
         }else{
@@ -123,5 +126,6 @@ class EducationsController extends AppController {
     public function Stages() {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationStages']);
     }
+
 
 }

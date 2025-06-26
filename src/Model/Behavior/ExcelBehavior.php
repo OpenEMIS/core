@@ -38,32 +38,32 @@ class ExcelBehavior extends Behavior
         'autoFields' => true,
         'orientation' => 'landscape', // or portrait
         'sheet_limit' =>  1000000, // 1 mil rows and header row
-        'auto_contain' => true
+        'auto_contain' => true  
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->config('excludes', array_merge($this->config('default_excludes'), $this->config('excludes')));
+        $this->setConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
         if (!isset($config['filename'])) {
-            $this->config('filename', $this->_table->alias());
+            $this->setConfig('filename', $this->_table->getAlias());
         }
-        $folder = WWW_ROOT . $this->config('folder');
+        $folder = WWW_ROOT . $this->getConfig('folder');
 
         if (!file_exists($folder)) {
             umask(0);
             mkdir($folder, 0777);
         } else {
             // $delete = true;
-            // if (array_key_exists('delete', $settings) &&  $settings['delete'] == false) {
+            // if (isset($settings['delete']) &&  $settings['delete'] == false) {
             //  $delete = false;
             // }
             // if ($delete) {
             //  $this->deleteOldFiles($folder, $format);
             // }
         }
-        $pages = $this->config('pages');
+        $pages = $this->getConfig('pages');
         if ($pages !== false && empty($pages)) {
-            $this->config('pages', ['index', 'view']);
+            $this->setConfig('pages', ['index', 'view']);
         }
     }
 
@@ -89,7 +89,7 @@ class ExcelBehavior extends Behavior
         $id = 0;
         $break = false;
         $action = $this->_table->action;
-        $pass = $this->_table->request->pass;
+        $pass = $this->_table->request->getParam('pass');
         if (in_array($action, $pass)) {
             unset($pass[array_search($action, $pass)]);
             $pass = array_values($pass);
@@ -110,11 +110,11 @@ class ExcelBehavior extends Behavior
     public function generateXLXS($settings = [])
     {
         set_time_limit(0); //POCOR-7268 starts
-        ini_set('memory_limit', '-1'); 
+        ini_set('memory_limit', '-1');
         ini_set('max_execution_time', '9600'); //POCOR-7268 ends
         $_settings = [
-            'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
-            'path' => WWW_ROOT . $this->config('folder') . DS,
+            'file' => $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
+            'path' => WWW_ROOT . $this->getConfig('folder') . DS,
             'download' => true,
             'purge' => true
         ];
@@ -133,10 +133,10 @@ class ExcelBehavior extends Behavior
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (is_callable($event->result)) {
-            $generate = $event->result;
+        if (is_callable($event->getResult())) {
+            $generate = $event->getResult();
         }
 
         $generate($_settings);
@@ -159,7 +159,7 @@ class ExcelBehavior extends Behavior
     public function generate($settings = [])
     {
         set_time_limit(0); //POCOR-7268 starts
-        ini_set('memory_limit', '-1'); 
+        ini_set('memory_limit', '-1');
         ini_set('max_execution_time', '9600'); //POCOR-7268 ends
         $writer = $settings['writer'];
         $sheets = new ArrayObject();
@@ -168,14 +168,13 @@ class ExcelBehavior extends Behavior
 
         if (count($sheets->getArrayCopy())==0) {
             $sheets[] = [
-                'name' => $this->_table->alias(),
+                'name' => $this->_table->getAlias(),
                 'table' => $this->_table,
                 'query' => $this->_table->find(),
             ];
         }
 
         $sheetNameArr = [];
-
         foreach ($sheets as $sheet) {
             $table = $sheet['table'];
             // sheet info added to settings to avoid adding more parameters to event
@@ -185,7 +184,7 @@ class ExcelBehavior extends Behavior
 
             $footer = $this->getFooter();
             $query = $sheet['query'];
-            
+
             $this->dispatchEvent($table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query], true);
             $sheetName = $sheet['name'];
 
@@ -211,24 +210,46 @@ class ExcelBehavior extends Behavior
             $baseSheetName = $sheetName;
 
             // if the primary key of the record is given, only generate that record
-            if (isset($settings['id'])) {
-                $id = $settings['id'];
-                if ($id != 0) {
-                    $primaryKey = $table->primaryKey();
+            //POCOR-8484 starts
+            if(isset($this->_table->action) && !empty($this->_table->action)){
+                $action = $this->_table->action;
+                if($action != 'excel') {
+                    if (isset($settings['id'])) {
+                        $id = $settings['id'];
+                        if ($id != 0) {
+                            $primaryKey = $table->getPrimaryKey();
+                            $query->where([$table->aliasField($primaryKey) => $id]);
+                        }
+                    }
+                }//POCOR-8484 ends
+                //POCOR-8627 Start
+                if($settings['sheet']['name'] == 'StaffAppraisals' && $action == 'excel' && isset($settings['id']) && !empty(isset($settings['id']))) {
+                    $id = $settings['id'];
+                    $primaryKey = $table->getPrimaryKey();
                     $query->where([$table->aliasField($primaryKey) => $id]);
                 }
-            }
-
-            if ($this->config('auto_contain')) {
+                //POCOR-8627 End
+            //POCOR-8515 starts    
+            }else{
+                if (isset($settings['id'])) {
+                    $id = $settings['id'];
+                    if ($id != 0) {
+                        $primaryKey = $table->getPrimaryKey();
+                        $query->where([$table->aliasField($primaryKey) => $id]);
+                    }
+                }
+            }//POCOR-8515 ends
+            
+            if ($this->getConfig('auto_contain')) {
                 $this->contain($query, $fields, $table);
             }
 
             // To auto include the default fields. Using select will turn off autoFields by default
             // This is set so that the containable data will still be in the array.
-            $autoFields = $this->config('autoFields');
+            $autoFields = $this->getConfig('autoFields');
 
             if (!isset($autoFields) || $autoFields == true) {
-                $query->autoFields(true);
+                $query->enableAutoFields(true);
             }
 
             $count = $query->count();
@@ -236,24 +257,24 @@ class ExcelBehavior extends Behavior
             $sheetCount = 1;
             $sheetRowCount = 0;
             $percentCount = intval($count / 100);
-            $pages = ceil($count / $this->config('limit'));
+            $pages = ceil($count / $this->getConfig('limit'));
 
-            // Debugging 
-            $pages = 1;
+            // Debugging
+            //$pages = 1; //comment this in POCOR-8755
 
             if (isset($sheet['orientation'])) {
                 if ($sheet['orientation'] == 'landscape') {
-                    $this->config('orientation', 'landscape');
+                    $this->setConfig('orientation', 'landscape');
                 } else {
-                    $this->config('orientation', 'portrait');
+                    $this->setConfig('orientation', 'portrait');
                 }
             } elseif ($count == 1) {
-                $this->config('orientation', 'portrait');
+                $this->setConfig('orientation', 'portrait');
             }
 
             $this->dispatchEvent($table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count], true);
             $this->onEvent($table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
-            if ($this->config('orientation') == 'landscape') {
+            if ($this->getConfig('orientation') == 'landscape') {
                 $headerRow = [];
                 $headerStyle = [];
                 $headerFormat = [];
@@ -321,7 +342,7 @@ class ExcelBehavior extends Behavior
                 // process every page based on the limit
                 for ($pageNo=0; $pageNo<$pages; $pageNo++) {
                     $resultSet = $query
-                    ->limit($this->config('limit'))
+                    ->limit($this->getConfig('limit'))
                     ->page($pageNo+1)
                     ->all();
 
@@ -333,7 +354,7 @@ class ExcelBehavior extends Behavior
 
                     // process each row based on the result set
                     foreach ($resultSet as $entity) {
-                        if ($sheetRowCount >= $this->config('sheet_limit')) {
+                        if ($sheetRowCount >= $this->getConfig('sheet_limit')) {
                             $sheetCount++;
                             $sheetName = $baseSheetName . '_' . $sheetCount;
 
@@ -356,7 +377,7 @@ class ExcelBehavior extends Behavior
                         $sheetRowCount++;
                         $rowCount++;
                         $event = $this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
-                        if (!$event->result) {
+                        if (!$event->getResult()) {
                             $writer->writeSheetRow($sheetName, $row, $rowStyle);
                         }
                     }
@@ -399,28 +420,28 @@ class ExcelBehavior extends Behavior
 
     private function getFields($table, $settings)
     {
-        $schema = $table->schema();
+        $schema = $table->getSchema();
         $columns = $schema->columns();
-        $excludes = $this->config('excludes');
+        $excludes = $this->getConfig('excludes');
 
-        if (!is_array($table->primaryKey())) { //if not composite key
-            $excludes[] = $table->primaryKey();
+        if (!is_array($table->getPrimaryKey())) { //if not composite key
+            $excludes[] = $table->getPrimaryKey();
         }
 
         $fields = new ArrayObject();
-        $module = $table->alias();
-        $language = I18n::locale();
+        $module = $table->getAlias();
+        $language = I18n::getLocale();
         $excludedTypes = ['binary'];
         $columns = array_diff($columns, $excludes);
 
         foreach ($columns as $col) {
-            $field = $schema->column($col);
+            $field = $schema->getColumn($col);
             if (!in_array($field['type'], $excludedTypes)) {
                 $label = $table->aliasField($col);
 
                 $event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $col, $language], true);
-                if (strlen($event->result)) {
-                    $label = $event->result;
+                if (strlen($event->getResult())) {
+                    $label = $event->getResult();
                 }
 
                 $fields[] = [
@@ -444,8 +465,8 @@ class ExcelBehavior extends Behavior
                 $column = $key[1];
                 // Redispatch get label
                 $event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $column, $language], true);
-                if (strlen($event->result)) {
-                    $field['label'] = $event->result;
+                if (strlen($event->getResult())) {
+                    $field['label'] = $event->getResult();
                 }
             }
             $newFields[] = $field;
@@ -460,7 +481,7 @@ class ExcelBehavior extends Behavior
 
     private function getFooter()
     {   // START: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
-        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItem =   $ConfigItemTable
                             ->find()
                             ->select(['zonevalue' => 'ConfigItems.value'])
@@ -470,14 +491,14 @@ class ExcelBehavior extends Behavior
                             //->first();
         foreach ($ConfigItem->toArray() as $value) {
             if (!empty($value['zonevalue'])) {
-                $timezone =  $value['zonevalue']; 
+                $timezone =  $value['zonevalue'];
                 date_default_timezone_set($timezone);
             }
             else{
                 date_default_timezone_set('Europe/London');  //POCOR-6819
             }
-        }      
-        // END: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>              
+        }
+        // END: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
         $footer = [__("Report Generated") . ": "  . date("Y-m-d H:i:s")];
         return $footer;
     }
@@ -497,8 +518,8 @@ class ExcelBehavior extends Behavior
                 } else {
                     $event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr]);
                 }
-                if ($event->result) {
-                    $returnedResult = $event->result;
+                if ($event->getResult()) {
+                    $returnedResult = $event->getResult();
                     if (is_array($returnedResult)) {
                         $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                         $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
@@ -509,42 +530,44 @@ class ExcelBehavior extends Behavior
             } else {
                 $method = 'onExcelGet' . Inflector::camelize($field);
                 $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity], true);
-                if ($event->result) {
-                    $returnedResult = $event->result;
+                if ($event->getResult()) {
+                    $returnedResult = $event->getResult();
                     if (is_array($returnedResult)) {
                         $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                         $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
                     } else {
                         $value = $returnedResult;
                     }
-                } elseif ($entity->has($field)) {
-                    if ($this->isForeignKey($table, $field)) {
-                        $associatedField = $this->getAssociatedKey($table, $field);
+                } elseif ($entity->has((string)$field)) {//POCOR-7485 add (string) becuase of custom fields excel on Infrastructure land
+                    if ($this->isForeignKey($table, (string)$field)) {
+                        $associatedField = $this->getAssociatedKey($table, (string)$field);
                         if ($entity->has($associatedField)) {
                             $value = $entity->{$associatedField}->name;
                         }
                     } else {
-                        $value = $entity->{$field};
+                        $value = $entity->{(string)$field};
                     }
                 }
             }
         }
 
         $specialCharacters = ['=', '@'];
-        $firstCharacter = substr($value, 0, 1);
-        if (in_array($firstCharacter, $specialCharacters)) {
-            // append single quote to escape special characters
-            $value = "'" . $value;
-        }
+        //POCOR-8515 commented this code because of getting error to generate report starts 
+        //$firstCharacter = substr($value, 0, 1);
+        // if (in_array($firstCharacter, $specialCharacters)) {
+        //     // append single quote to escape special characters
+        //     $value = "'" . $value;
+        // }//POCOR-8515 ends
 
-        return ['rowData' => __($value), 'style' => $style];
+        //return ['rowData' => __($value), 'style' => $style];
+        return ['rowData' => $value, 'style' => $style];//POCOR-8515 
     }
 
     private function isForeignKey($table, $field)
     {
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     return true;
                 }
             }
@@ -558,7 +581,7 @@ class ExcelBehavior extends Behavior
 
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     $relatedModel = $assoc;
                     break;
                 }
@@ -572,7 +595,7 @@ class ExcelBehavior extends Behavior
         $tableObj = $this->getAssociatedTable($table, $field);
         $key = null;
         if (is_object($tableObj)) {
-            $key = Inflector::underscore(Inflector::singularize($tableObj->alias()));
+            $key = Inflector::underscore(Inflector::singularize($tableObj->getAlias()));
         }
         return $key;
     }
@@ -583,7 +606,7 @@ class ExcelBehavior extends Behavior
         foreach ($fields as $attr) {
             $field = $attr['field'];
             if ($this->isForeignKey($table, $field)) {
-                $contain[] = $this->getAssociatedTable($table, $field)->alias();
+                $contain[] = $this->getAssociatedTable($table, $field)->getAlias();
             }
         }
         $query->contain($contain);
@@ -613,7 +636,7 @@ class ExcelBehavior extends Behavior
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 0];
@@ -633,7 +656,8 @@ class ExcelBehavior extends Behavior
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $action = $this->_table->action;
-        if (in_array($action, $this->config('pages'))) {
+
+        if (in_array($action, $this->getConfig('pages'))) {
             $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
             $toolbarAttr = [
                 'class' => 'btn btn-xs btn-default',
@@ -672,7 +696,7 @@ class ExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if (in_array($action, $pages)) {
                 $toolbarButtons['export'] = $export;
             }
@@ -689,7 +713,7 @@ class ExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if ($pages != false) {
                 if (in_array($action, $pages)) {
                     $toolbarButtons['export'] = $export;

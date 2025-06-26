@@ -28,12 +28,11 @@ class FieldOptionComponent extends Component
     private $controller;
     private $fieldOptions = [];
 
-    
 
     public $components = ['AccessControl'];
 
     // Is called before the controller's beforeFilter method.
-    public function initialize(array $config)   
+    public function initialize(array $config): void
     {
         foreach ($this->fieldOptions as $key => $className) {
             $this->AccessControl->addAccessMap($key);
@@ -42,166 +41,149 @@ class FieldOptionComponent extends Component
 
     public function getFieldOptions()
     {
-        $FieldOptionTable = TableRegistry::get('field_options');
+        $FieldOptionTable = TableRegistry::get('FieldOption.FieldOptions');
         $FieldOptions = $FieldOptionTable->find('all')->toArray();
-        $session=$this->request->session();//POCOR-7396
-        $FieldOptionPermissions= $session->read('Permissions.FieldOptions');//POCOR-7396
+        $session = $this->getController()->getRequest()->getSession(); //POCOR-7396
+        $FieldOptionPermissions = $session->read('Permissions.FieldOptions'); //POCOR-7396
         $option = [];
-        foreach($FieldOptions as $key => $FieldOption1 ){
+        foreach ($FieldOptions as $key => $FieldOption1) {
             $a = $FieldOption1->name;
             $search = 'Wash';
-            if(preg_match("/{$search}/i", $a)) {
-                $title = str_replace('Wash','WASH',$FieldOption1->name);
-                $option[str_replace(' ','',$FieldOption1->name)] = [
+            if (preg_match("/{$search}/i", $a)) {
+                $title = str_replace('Wash', 'WASH', $FieldOption1->name);
+                $option[str_replace(' ', '', $FieldOption1->name)] = [
                     "title" => $title,
-                    "className"=> str_replace('_', '', ucwords($FieldOption1->table_name, '_')),
+                    "className" => str_replace('_', '', ucwords($FieldOption1->table_name, '_')),
                     "parent" => $FieldOption1->category
                 ];
-                if($option["InfrastructureWashHygieneSoapashAvailabilities"]){
+                if ($option["InfrastructureWashHygieneSoapashAvailabilities"]) {
                     $option['InfrastructureWashHygieneSoapashAvailabilities']['title'] = "Infrastructure WASH Hygiene Soap/Ash Availabilities";
                 }
-            }else{
-                $option[str_replace(' ','',$FieldOption1->name)] = [
-                    "className"=> str_replace('_', '', ucwords($FieldOption1->table_name, '_')),
+            } else {
+                $option[str_replace(' ', '', $FieldOption1->name)] = [
+                    "className" => str_replace('_', '', ucwords($FieldOption1->table_name, '_')),
                     "parent" => $FieldOption1->category
                 ];
             }
             //POCOR-7396 start
-            $permissionName=str_replace(' ','', $FieldOption1->name);
-            if(!$session->check('Permissions.FieldOptions.'.$permissionName)) {
-               $session->write('Permissions.FieldOptions.'.$permissionName, $FieldOptionPermissions);
+            $permissionName = str_replace(' ', '', $FieldOption1->name);
+            if (!$session->check('Permissions.FieldOptions.' . $permissionName)) {
+                $session->write('Permissions.FieldOptions.' . $permissionName, $FieldOptionPermissions);
             }
             //POCOR-7396 end
         }
-        if($option["ImmunizationTypes"]){
+        if ($option["ImmunizationTypes"]) {
             $option['ImmunizationTypes']['title'] = "Vaccinations";
         }
-       return $option;
+        return $option;
     }
 
     public function getClassName($key)
-    {  
-        $FieldOptionTable = TableRegistry::get('field_options');
+    {
+        $FieldOptionTable = TableRegistry::get('FieldOption.FieldOptions');
         $Words = trim(preg_replace('/(?<!\ )[A-Z]/', ' $0', $key));
-        //echo $key;die;
-        $FieldOptions = $FieldOptionTable->find('all',['conditions'=>['name' => $Words]])->first();
-        if( $FieldOptions->category == "Finance"){
-            $FieldOptions->category = "FieldOption";
-        }elseif( $FieldOptions->category == "Qualification"){
-            $FieldOptions->category = "FieldOption";
-        }elseif( $FieldOptions->category == "Quality"){
-            $FieldOptions->category = "FieldOption";
-        }elseif( $FieldOptions->category == "Others"){
-            $FieldOptions->category = "FieldOption";
-        }elseif( $FieldOptions->category == "Infrastructure"){
-            $FieldOptions->category = "Institution";
+// echo $key;die;
+        $FieldOptions = $FieldOptionTable->find('all', ['conditions' => ['name' => $Words]])->first();
+
+// POCOR-8995 start
+        $category = $FieldOptions->category ?? null;
+// Normalize category
+        $fieldOptionCategories = ["Finance",
+            "Qualification",
+            "Quality",
+            "Others",
+            "InfrastructureOwnerships",
+            "InfrastructureConditions",
+            "AssetMakes",
+            "AssetModels",
+            "ItemTypes",
+            "StockUnits"
+        ];
+        if (in_array($key, $fieldOptionCategories)) { // POOCR_9074
+            $category = "FieldOption";
+        } elseif (in_array($category, $fieldOptionCategories)) {
+            $category = "FieldOption";
+        } elseif ($category === "Infrastructure") {
+            $category = "Institution";
+        } elseif ($category === "Special Needs") {
+            $category = "SpecialNeeds";
         }
 
-        if($key == "Duties"){
-            return "Institution.StaffDuties";
-        }elseif($key== "TextbookConditions" ){
-            return "Textbook.TextbookConditions";
+// Predefined key-to-class mappings
+        $keyMappings = [
+            // Cases
+            "CasePriorities" => "Cases.CasePriorities",
+            "CaseTypes" => "Cases.CaseTypes",
 
-        }elseif($key== "TextbookDimensions" ){
-            return "Textbook.TextbookDimensions";  // POCOR 7362
+            // FieldOption
+            "DemographicWealthQuantileTypes" => "FieldOption.DemographicTypes",
 
-        }elseif($key== "TextbookStatuses" ){
-            return "Textbook.TextbookStatuses";  // POCOR 7362
+            // Institution
+            "Duties" => "Institution.StaffDuties",
+            "InfrastructureWashSewageFunctionalities" => "Institution.InfrastructureWashSewageFunctionalities",
+            "StaffPositionGrades" => "Institution.StaffPositionGrades",
+            "StaffPositionTitles" => "Institution.StaffPositionTitles",
+            "StudentAbsenceReasons" => "Institution.StudentAbsenceReasons",
 
-        }elseif($key== "ReportCardCommentCodes" ){
-            return "ReportCard.ReportCardCommentCodes";
-        }elseif($key== "StudentAbsenceReasons" ){
-            return "Institution.StudentAbsenceReasons";
-        }elseif($key== "VisitPurposeTypes" ){
-            return "Student.StudentVisitPurposeTypes";
-        }elseif($key== "MealTypes" ){
-            return "Meal.MealType";
-        }elseif($key== "MealTargets" ){
-            return "Meal.MealTarget";
-        //POCOR-7363 start
-        }elseif($key== "FoodTypes"){
-            return "Meal.FoodTypes";
-        }elseif($key== "MealRatings" ){
-            return "Meal.MealRatings";
-         //POCOR-7363 end
-        }elseif($key== "MealNutritions" ){
-            return "Meal.MealNutritions";
-        }elseif($key== "MealImplementers" ){
-            return "Meal.MealImplementer";
-        }elseif($key== "MealBenefitTypes" ){
-            return "Meal.MealBenefit";
-        }elseif($key== "GuardianRelations" ){
-            return "Student.GuardianRelations";
-        }elseif($key== "StaffPositionGrades" ){
-            return "Institution.StaffPositionGrades";
-        }elseif($key== "StaffPositionTitles" ){
-            return "Institution.StaffPositionTitles";
-        }elseif($key== "SalaryAdditionTypes" ){
-            return "Staff.SalaryAdditionTypes";
-        }elseif($key== "SalaryDeductionTypes" ){
-            return "Staff.SalaryDeductionTypes";
-        }elseif($key== "ContactTypes" ){
-            return "User.ContactTypes";
-        }elseif($key== "Languages" ){
-            return "Languages";
-        }elseif($key== "LanguageProficiencies" ){
-            return "User.LanguageProficiencies";
-        }elseif($key== "CommentTypes" ){
-            return "User.CommentTypes";
-        }elseif($key== "BehaviourClassifications" ){
-            return "Student.BehaviourClassifications";
-        }elseif($key== "DemographicWealthQuantileTypes" ){
-            return "FieldOption.DemographicTypes";
+            // Meal
+            "FoodTypes" => "Meal.FoodTypes",
+            "MealBenefitTypes" => "Meal.MealBenefit",
+            "MealImplementers" => "Meal.MealImplementer",
+            "MealNutritions" => "Meal.MealNutritions",
+            "MealRatings" => "Meal.MealRatings",
+            "MealTargets" => "Meal.MealTarget",
+            "MealTypes" => "Meal.MealType",
 
-        }elseif($key== "ScholarshipFundingSources" ){
-            return "Scholarship.FundingSources";
-        }elseif($key== "ScholarshipAttachmentTypes" ){
-            return "Scholarship.AttachmentTypes";
-        }elseif($key== "ScholarshipPaymentFrequencies" ){
-            return "Scholarship.PaymentFrequencies";
-        }elseif($key== "ScholarshipRecipientActivityStatuses" ){
-            return "Scholarship.RecipientActivityStatuses";
-        }elseif($key== "InfrastructureWashSewageFunctionalities" ){
-            return "Institution.InfrastructureWashSewageFunctionalities";
-        }elseif($key== "ScholarshipFundingSources" ){
-            return "Scholarship.FundingSources";
-        }elseif($key== "ScholarshipAttachmentTypes" ){
-            return "Scholarship.AttachmentTypes";
-        }elseif($key== "ScholarshipPaymentFrequencies" ){
-            return "Scholarship.PaymentFrequencies";
-        }elseif($key== "ScholarshipRecipientActivityStatuses" ){
-            return "Scholarship.RecipientActivityStatuses";
-        }elseif($key== "ScholarshipDisbursementCategories" ){
-            return "Scholarship.DisbursementCategories";
-        }elseif($key== "ScholarshipSemesters" ){
-            return "Scholarship.Semesters";
-        }elseif($key== "ScholarshipInstitutionChoices" ){
-            return "Scholarship.InstitutionChoiceTypes";
-        }elseif($key== "InfrastructureOwnerships" ){
-            return "FieldOption.InfrastructureOwnerships";
-        }elseif($key== "InfrastructureConditions" ){
-            return "FieldOption.InfrastructureConditions";
-        }elseif($key== "PlanTypes" ){
-            return "SpecialNeeds.SpecialNeedsPlanTypes";
-        }elseif($key== "DiagnosticTypeOfDisability" ){
-            return "SpecialNeeds.SpecialNeedsDiagnosticsTypes";
-        }elseif($key== "DiagnosticDisabilityDegree" ){
-            return "SpecialNeeds.SpecialNeedsDiagnosticsDegree";
-        }elseif($key== "AssetMakes" ){
-            return "FieldOption.AssetMakes";
-        }elseif($key== "AssetModels" ){
-            return "FieldOption.AssetModels";
-        //POCOR-7613 start
-        }elseif($key== "CaseTypes"){
-            return "Cases.CaseTypes";
-        }elseif($key== "CasePriorities" ){
-            return "Cases.CasePriorities";
+            // ReportCard
+            "ReportCardCommentCodes" => "ReportCard.ReportCardCommentCodes",
+
+            // Scholarship
+            "ScholarshipAttachmentTypes" => "Scholarship.AttachmentTypes",
+            "ScholarshipDisbursementCategories" => "Scholarship.DisbursementCategories",
+            "ScholarshipFundingSources" => "Scholarship.FundingSources",
+            "ScholarshipInstitutionChoices" => "Scholarship.InstitutionChoiceTypes",
+            "ScholarshipPaymentFrequencies" => "Scholarship.PaymentFrequencies",
+            "ScholarshipRecipientActivityStatuses" => "Scholarship.RecipientActivityStatuses",
+            "ScholarshipSemesters" => "Scholarship.Semesters",
+
+            // SpecialNeeds
+            "DiagnosticDisabilityDegree" => "SpecialNeeds.SpecialNeedsDiagnosticsDegree",
+            "DiagnosticTypeOfDisability" => "SpecialNeeds.SpecialNeedsDiagnosticsTypes",
+            "PlanTypes" => "SpecialNeeds.SpecialNeedsPlanTypes",
+
+            // Staff
+            "SalaryAdditionTypes" => "Staff.SalaryAdditionTypes",
+            "SalaryDeductionTypes" => "Staff.SalaryDeductionTypes",
+
+            // Student
+            "BehaviourClassifications" => "Student.BehaviourClassifications",
+            "GuardianRelations" => "Student.GuardianRelations",
+            "VisitPurposeTypes" => "Student.StudentVisitPurposeTypes",
+
+            // Textbook
+            "TextbookConditions" => "Textbook.TextbookConditions",
+            "TextbookDimensions" => "Textbook.TextbookDimensions",
+            "TextbookStatuses" => "Textbook.TextbookStatuses",
+
+            // User
+            "CommentTypes" => "User.CommentTypes",
+            "ContactTypes" => "User.ContactTypes",
+            "LanguageProficiencies" => "User.LanguageProficiencies",
+
+            // Ungrouped or Core
+            "Languages" => "Languages",
+        ];
+
+// Return mapped value if it exists
+        if (isset($keyMappings[$key])) {
+            return $keyMappings[$key];
         }
-        //POCOR-7613 end
-        else{
-           $className =  $FieldOptions->category.".".$key;
-           return $className;
-         }
-        return $this->fieldOptions[$key]['className'];
+
+// Log fallback
+        // Log::write('debug', "{$category}.{$key}");
+
+// Default fallback
+        return "{$category}.{$key}";
+// POCOR-8995 end
     }
 }

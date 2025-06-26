@@ -8,10 +8,11 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use Cake\Http\ServerRequest;
 
 class StudentIdentitiesTable extends AppTable  {
-	public function initialize(array $config) {
-		$this->table('user_identities');
+	public function initialize(array $config): void {
+		$this->setTable('user_identities');
 		parent::initialize($config);
 		
 		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
@@ -31,8 +32,8 @@ class StudentIdentitiesTable extends AppTable  {
 		$this->ControllerAction->field('format');
 	}
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
-		$attr['options'] = $this->controller->getFeatureOptions($this->alias());
+	public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request) {
+		$attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
 		return $attr;
 	}
 
@@ -41,10 +42,10 @@ class StudentIdentitiesTable extends AppTable  {
         $academicPeriodId = $requestData->academic_period_id;
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-        $Users = TableRegistry::get('Security.Users');
-        $InstitutionTable = TableRegistry::get('Institution.Institutions');
-        $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+        $Users = TableRegistry::getTableLocator()->get('Security.Users');
+        $InstitutionTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $InstitutionStudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
         $conditions = [];
         if ($areaId != -1) {
@@ -73,13 +74,13 @@ class StudentIdentitiesTable extends AppTable  {
                 'student_last_name' => 'Users.last_name'
             ])
             ->contain(['IdentityTypes', 'Users'])
-            ->leftJoin([$Users->alias() => $Users->table()], [
+            ->leftJoin([$Users->getAlias() => $Users->getTable()], [
                 $Users->aliasField('id = ') . $this->aliasField('security_user_id')
             ])
-            ->leftJoin([$InstitutionStudentsTable->alias() => $InstitutionStudentsTable->table()], [
+            ->leftJoin([$InstitutionStudentsTable->getAlias() => $InstitutionStudentsTable->getTable()], [
                 $InstitutionStudentsTable->aliasField('student_id = ') . $Users->aliasField('id')
             ])
-            ->leftJoin([$InstitutionTable->alias() => $InstitutionTable->table()], [
+            ->leftJoin([$InstitutionTable->getAlias() => $InstitutionTable->getTable()], [
                 $InstitutionTable->aliasField('id = ') . $InstitutionStudentsTable->aliasField('institution_id')
             ])
 			->where(['Users.is_student' => 1, $conditions]);

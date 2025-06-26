@@ -14,7 +14,7 @@ use App\Model\Table\AppTable;
 
 class ExaminationStudentSubjectResultsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -35,6 +35,7 @@ class ExaminationStudentSubjectResultsTable extends AppTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+
         $this->getExamGrading($entity);
     }
 
@@ -55,7 +56,7 @@ class ExaminationStudentSubjectResultsTable extends AppTable
     public function findResults(Query $query, array $options) {
         $academicPeriodId = $options['academic_period_id'];
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->getRequest()->getSession();
 
         $studentId = -1;
         if ($session->check('Student.ExaminationResults.student_id')) {
@@ -111,7 +112,62 @@ class ExaminationStudentSubjectResultsTable extends AppTable
 
     private function getExamGrading(Entity $entity)
     {
-        $ExaminationSubjects = TableRegistry::get('Examination.ExaminationSubjects');
+        // POCOR-9021 start
+        $this->setAcademicPeriodId($entity);
+        $this->setGradingOptionAndTotalMark($entity);
+        // POCOR-9021 end
+    }
+
+    public function getExaminationStudentSubjectResults($academicPeriodId, $examinationId, $studentId) {
+        $results = $this
+            ->find()
+            ->contain(['ExaminationGradingOptions'])
+            ->where([
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('examination_id') => $examinationId,
+                $this->aliasField('student_id') => $studentId
+            ])
+            ->select(['grade_name' => 'ExaminationGradingOptions.name', 'grade_code' => 'ExaminationGradingOptions.code', 'examination_subject_id' => $this->aliasField('examination_subject_id')])
+            ->enableAutoFields() //POCOR-8533
+            ->disableHydration() // POCOR-8533
+            ->toArray();
+
+        $returnArray = [];
+        foreach ($results as $result) {
+            $returnArray[$studentId][$result['examination_subject_id']] = [
+                'marks' => $result['marks'],
+                'grade_name' => $result['grade_name'],
+                'grade_code' => $result['grade_code']
+            ];
+        }
+        return $returnArray;
+    }
+
+    /**
+     * @param Entity $entity
+     * @return void
+     * POCOR-9021
+     */
+    private function setAcademicPeriodId(Entity $entity): void
+    {
+        $Examinations = $this->Examinations;
+        $examEntity = $Examinations
+            ->find()
+            ->where([
+                ('id') => $entity->examination_id
+            ])
+            ->first();
+        $entity->academic_period_id = $examEntity->academic_period_id;
+    }
+
+    /**
+     * @param Entity $entity
+     * @return void
+     * POCOR-9021
+     */
+    private function setGradingOptionAndTotalMark(Entity $entity): void
+    {
+        $ExaminationSubjects = $this->ExaminationSubjects;
         $examItemEntity = $ExaminationSubjects
             ->find()
             ->contain(['ExaminationGradingTypes.GradingOptions'])
@@ -120,7 +176,6 @@ class ExaminationStudentSubjectResultsTable extends AppTable
                 $ExaminationSubjects->aliasField('id') => $entity->examination_subject_id
             ])
             ->first();
-
         if ($examItemEntity->has('examination_grading_type')) {
             $resultType = $examItemEntity->examination_grading_type->result_type;
             if ($resultType == 'MARKS') {
@@ -136,30 +191,5 @@ class ExaminationStudentSubjectResultsTable extends AppTable
                 $entity->total_mark = NULL;
             }
         }
-    }
-
-    public function getExaminationStudentSubjectResults($academicPeriodId, $examinationId, $studentId) {
-        $results = $this
-            ->find()
-            ->contain(['ExaminationGradingOptions'])
-            ->where([
-                $this->aliasField('academic_period_id') => $academicPeriodId,
-                $this->aliasField('examination_id') => $examinationId,
-                $this->aliasField('student_id') => $studentId
-            ])
-            ->select(['grade_name' => 'ExaminationGradingOptions.name', 'grade_code' => 'ExaminationGradingOptions.code', 'examination_subject_id' => $this->aliasField('examination_subject_id')])
-            ->autoFields(true)
-            ->hydrate(false)
-            ->toArray();
-
-        $returnArray = [];
-        foreach ($results as $result) {
-            $returnArray[$studentId][$result['examination_subject_id']] = [
-                'marks' => $result['marks'],
-                'grade_name' => $result['grade_name'],
-                'grade_code' => $result['grade_code']
-            ];
-        }
-        return $returnArray;
     }
 }

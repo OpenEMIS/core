@@ -1,32 +1,32 @@
 <?php
 namespace App\Controller;
 
-use App\Controller\PageController;
 use Cake\Event\Event;
+use Cake\Utility\Inflector;
 
-class NoticesController extends PageController
+class NoticesController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
-
-        $this->Page->loadElementsFromTable($this->Notices);
+        $this->loadComponent('Paginator');
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeFilter($event);
-        $this->Page->addCrumb('Notices', ['plugin' => false, 'controller' => 'Notices', 'action' => 'index']);
+        $name = $this->name;
+        $action  = $this->request->getParam('action');
+        $actionName = __(Inflector::humanize($action));
+        $header = $name .' - '.$actionName;
+        $this->Navigation->addCrumb(__($name), ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $action]);
+        $this->Navigation->addCrumb($actionName);
+        $this->set('contentHeader', $header);
+        $this->set('selectedAction', $this->request->action);
     }
 
-    public function index()
+    public function Notices()
     {
-        $page = $this->Page;
-        parent::index();
-
-        // created_on
-        $page->addNew('created_on');
-        $page->get('created_on')->setDisplayFrom('created');
-        $page->move('created_on')->first();
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.Notices']);
     }
 }

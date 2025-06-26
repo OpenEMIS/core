@@ -21,18 +21,18 @@ class AlertsTable extends ControllerActionTable
 
     private $statusTypes = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
         $this->statusTypes = $this->getSelectOptions('Alert.status_types');
 
         $this->toggle('add', false);
-        $this->toggle('edit', true); //POCOR-7558 
+        $this->toggle('edit', true); //POCOR-7558
         $this->toggle('remove', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.process'] = 'process';
@@ -44,11 +44,11 @@ class AlertsTable extends ControllerActionTable
         $this->field('name', ['sort' => false]);
         $this->field('process_name', ['visible' => false]);
         $this->field('process_id', ['visible' => false]);
-        $this->field('frequency',['sort'=>false,'after'=>'process_name']); //POCOR-7558 
-        $this->field('last_run_date'); //POCOR-7558 
-        // // $this->field('status', ['after' => 'name']); //POCOR-7558 
+        $this->field('frequency',['sort'=>false,'after'=>'process_name']); //POCOR-7558
+        $this->field('last_run_date'); //POCOR-7558
+        // // $this->field('status', ['after' => 'name']); //POCOR-7558
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Alerts','Communications');       
+		$is_manual_exist = $this->getManualUrl('Administration','Alerts','Communications');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -71,7 +71,7 @@ class AlertsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
          //POCOR-7558 start
-        $systemProcess=TableRegistry::get('system_processes');
+        $systemProcess=TableRegistry::get('SystemProcesses');
         $query->select([
             $this->aliasField('id'),
             $this->aliasField('name'),
@@ -82,9 +82,9 @@ class AlertsTable extends ControllerActionTable
             $this->aliasField('modified'),
             $this->aliasField('created_user_id'),
             $this->aliasField('created'),
-            "last_run_date"=>$systemProcess->aliasField('end_date'),]) 
+            "last_run_date"=>$systemProcess->aliasField('end_date'),])
         ->leftJoin(
-            [ $systemProcess->alias() => $systemProcess->table()],
+            [ $systemProcess->getAlias() => $systemProcess->getTable()],
             [
                 $systemProcess->aliasField('name = ') . $this->aliasField('name'),
             ])
@@ -134,7 +134,7 @@ class AlertsTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $shellName = $entity->process_name;
          //POCOR-7558 start
-        // if (array_key_exists('view', $buttons)) {
+        // if (isset($buttons['view'])) {
         //     if ($this->AccessControl->check(['Alerts', 'Alerts', 'process'])) { // to check execute permission
         //         // if ($this->isShellStopExist($shellName)) {
         //         //     $icon = '<i class="fa fa-play"></i>';
@@ -165,9 +165,9 @@ class AlertsTable extends ControllerActionTable
 
     public function process(Event $event, ArrayObject $extra)
     {
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $params = [];
-        if (array_key_exists('queryString', $requestQuery)) {
+        if (isset($requestQuery['queryString'])) {
             $params = $this->paramsDecode($requestQuery['queryString']);
         }
 
@@ -230,31 +230,90 @@ class AlertsTable extends ControllerActionTable
         exec($shellCmd);
         Log::write('debug', $shellCmd);
     }
+
+    public function triggerSystemUpdateAlertFeatureShell($shellName, $params)
+    {
+        $args = '';
+        $args .= !is_null($params) ? ' '.$params : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
+    }
+
+        //POCOR-8869[START]
+        public function triggerStudentAdmissionFeatureShell($shellName, $school_name, $student_name, $academic_year, $grade_name, $gaurdiand_data)
+        {
+            $args = '';
+            $args .= !is_null($school_name) ? ' "'.$school_name.'"' : '';
+            $args .= !is_null($student_name) ? ' "'.$student_name.'"' : '';
+            $args .= !is_null($academic_year) ? ' "'.$academic_year.'"' : '';
+            $args .= !is_null($grade_name) ? ' "'.$grade_name.'"' : '';
+            // Ensure $gaurdiand_data is properly formatted
+            if (!empty($gaurdiand_data)) {
+                if (is_array($gaurdiand_data)) {
+                    $args .= " '".json_encode($gaurdiand_data)."'";
+                } else {
+                    $args .= " '".$gaurdiand_data."'";
+                }
+            }
     
+            $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$args;
+            $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+            $shellCmd = $cmd . ' >> ' . $logs;
+            exec($shellCmd);
+            Log::write('debug', $shellCmd);
+        }
+        //POCOR-8869[START]
+    
+
    //POCOR-7558 start
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'last_run_date':
                 return __('Last Run');
-       default:
+            case 'frequency':
+                return __('Frequency');
+            case 'name':
+                return __('Name');
+            case 'last_run_date':
+                return __('Last Run');
+            case 'last_run_date':
+                return __('Last Run');
+            case 'created_user_id':
+                return __('Created By');
+            case 'created':
+                return __('Created On');
+            case 'modified':
+                return __('Modified By');
+            case 'modified_user_id':
+                return __('Modified On');
+        default:
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-    
+
     public function onUpdateFieldFrequency(Event $event, array $attr, $action)
     {
-        $freqOptions=["Daily"=>"Daily",
-                         "Weekly"=>"Weekly",
-                         "Monthly"=>"Monthly",
-                         "Yearly"=>"Yearly"];
+        $freqOptions=[
+            "Never" => __("Never"), // POCOR-8533
+            "Daily" => __("Daily"),
+            "Weekly" => __("Weekly"),
+            "Monthly" => __("Monthly"),
+            "Yearly" => __("Yearly"),
+            "Once" => __("Once")
+        ];
         $attr['type'] = 'select';
         $attr['attr']['options'] = $freqOptions;
 	    $attr['onChangeReload'] = true;
         return $attr;
     }
+
     public function editBeforeAction(Event $event)
-    {   
+    {
         $this->field('name',['type' => 'readonly']);
         $this->field('frequency',['after' => 'name']);
         $this->field('last_run_date', ['visible' => false]);

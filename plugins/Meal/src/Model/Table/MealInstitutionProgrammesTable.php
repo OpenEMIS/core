@@ -27,7 +27,7 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
      * @param array $config The configuration for the Table.
      * @return void
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('MealProgrammeTypes', ['className' => 'Meal.MealProgrammeTypes', 'foreignKey' => 'type']);
@@ -128,14 +128,14 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
         $MealPrograms = TableRegistry::get('Meal.MealProgrammes');
-        $query
+        return $query
             ->select([
                 $this->aliasField('meal_programme_id'),
                 'name' => $MealPrograms->aliasField('name'),
                 'id' => $MealPrograms->aliasField('id')
             ])
             ->innerJoin(
-                [$MealPrograms->alias() => $MealPrograms->table()], [
+                [$MealPrograms->getAlias() => $MealPrograms->getTable()], [
                     $this->aliasField('meal_programme_id = ') . $MealPrograms->aliasField('id')
                 ]
             )
@@ -144,6 +144,7 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
                 $MealPrograms->aliasField('academic_period_id') => $academicPeriodId,
             ])
                 ->orderAsc($MealPrograms->aliasField('code'));
+        
     }
 
     public function findMealReceivedOptions(Query $query, array $options)

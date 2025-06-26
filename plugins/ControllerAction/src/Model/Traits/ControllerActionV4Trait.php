@@ -6,8 +6,10 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
-use Cake\Network\Response;
+use Cake\Http\Response;
 use Cake\Controller\Exception\MissingActionException;
+use Cake\Http\Session;
+use Cake\Http\ServerRequest;
 
 //use ControllerAction\Model\Traits\ControllerActionV4Trait;
 //use ControllerActionV4Trait; // extended functionality from v4
@@ -18,8 +20,8 @@ trait ControllerActionV4Trait {
 
 	private function _initComponents($model) {
 		$model->controller = $this->controller;
-		$model->request = $this->request;
-		$model->Session = $this->request->session();
+		$model->request = $this->controller->getRequest();
+		$model->Session =  $this->controller->getRequest()->getSession();
 
 		// Copy all component objects from Controller to Model
 		$components = $this->controller->components()->loaded();
@@ -29,17 +31,18 @@ trait ControllerActionV4Trait {
 	}
 
 	private function _render($model) {
-		list($plugin, $alias) = pluginSplit($model->registryAlias());
 
+		list($plugin, $alias) = pluginSplit($model->getRegistryAlias());
 		if (empty($plugin)) {
-			$path = APP . 'Template' . DS . $this->controller->name . DS;
+			$path = APP . 'Template' . DS . $this->controller->getName() . DS;
 		} else {
-			$path = ROOT . DS . 'plugins' . DS . $plugin . DS . 'src' . DS . 'Template' . DS;
+			//$path = ROOT . DS . 'plugins' . DS . $plugin . DS . 'src' . DS . 'Template' . DS;
+			$path = ROOT . DS . 'plugins' . DS . $plugin . DS . 'templates' . DS;
 		}
-		$this->ctpFolder = $model->alias();
-		$ctp = $this->ctpFolder . DS . $model->action;
 
-		if (file_exists($path . DS . $ctp . '.ctp')) {
+		$this->ctpFolder = $model->getAlias();
+		$ctp = $this->ctpFolder . DS . $model->action;
+		if (file_exists($path . DS . $ctp . '.php')) {
 			if ($this->autoRender) {
 				$this->autoRender = false;
 				$this->controller->render($ctp);
@@ -48,7 +51,7 @@ trait ControllerActionV4Trait {
 			if ($this->autoRender) {
 				if (empty($this->view)) {
 					$view = $model->action == 'add' ? 'edit' : $model->action;
-					// $this->controller->render($this->templatePath . $view);
+					//$this->controller->render($this->templatePath . $view);
 					$this->controller->render($this->templatePath . 'template');
 				} else {
 					$this->controller->render($this->view);
@@ -62,12 +65,12 @@ trait ControllerActionV4Trait {
 			if ($key == $this->orderField) {
 				$model->fields[$this->orderField]['visible'] = ['view' => false];
 			}
-			if (array_key_exists('options', $attr)) {
+			if (isset($attr['options'])) {
 				if (in_array($attr['type'], ['string', 'integer'])) {
 					$model->fields[$key]['type'] = 'select';
 				}
 				if (empty($attr['options']) && empty($attr['attr']['empty'])) {
-					if (!array_key_exists('empty', $attr)) {
+					if (!isset($attr['empty'])) {
 						$model->fields[$key]['attr']['empty'] = $this->Alert->getMessage('general.select.noOptions');
 					}
 				}
@@ -78,7 +81,7 @@ trait ControllerActionV4Trait {
                     $addSelect = false;
                 }
 
-				if (array_key_exists('select', $attr)) {
+				if (isset($attr['select'])) {
 					if ($attr['select'] === false) {
 						$addSelect = false;
 					} else {
@@ -102,14 +105,14 @@ trait ControllerActionV4Trait {
 			}
 
 			// make field sortable by default if it is a string data-type
-			if (!array_key_exists('type', $attr)) {
+			if (!isset($attr['type'])) {
 				pr('Please set a data type for ' . $key);
 			}
 
 			$sortableTypes = ['string', 'date', 'time', 'datetime'];
-			if (in_array($attr['type'], $sortableTypes) && !array_key_exists('sort', $attr) && $model->hasField($key)) {
+			if (in_array($attr['type'], $sortableTypes) && !isset($attr['sort']) && $model->hasField($key)) {
 				$model->fields[$key]['sort'] = true;
-			} else if ($attr['type'] == 'select' && !array_key_exists('options', $attr)) {
+			} else if ($attr['type'] == 'select' && !isset($attr['options'])) {
 				if ($model->isForeignKey($key)) {
 					$associatedObject = $model->getAssociatedModel($key);
 
@@ -117,10 +120,10 @@ trait ControllerActionV4Trait {
 
 					// need to include associated object
 					$event = new Event('ControllerAction.Model.onPopulateSelectOptions', $this, [$query]);
-					$event = $associatedObject->eventManager()->dispatch($event);
-					if ($event->isStopped()) { return $event->result; }
-					if (!empty($event->result)) {
-						$query = $event->result;
+					$event = $associatedObject->getEventManager()->dispatch($event);
+					if ($event->isStopped()) { return $event->getResult(); }
+					if (!empty($event->getResult())) {
+						$query = $event->getResult();
 					}
 
 					if ($model->action != 'index') { // should not populate options for index page
@@ -157,7 +160,7 @@ trait ControllerActionV4Trait {
 				}
 			}
 
-			if (array_key_exists('onChangeReload', $attr)) {
+			if (isset($attr['onChangeReload'])) {
 
 				if (!array_key_exists('attr', $model->fields[$key])) {
 					$model->fields[$key]['attr'] = [];
@@ -181,18 +184,22 @@ trait ControllerActionV4Trait {
  		} else if (isset($a['order']) && !isset($b['order'])) {
  			return false;
  		} else {
- 			return $a["order"] - $b["order"];
- 		}
+			//POCOR-8488 starts
+ 			//return $a["order"] - $b["order"];
+			$aOrder = isset($a['order']) ? (int)$a['order'] : PHP_INT_MAX;
+			$bOrder = isset($b['order']) ? (int)$b['order'] : PHP_INT_MAX;
+			return $aOrder - $bOrder;
+			//POCOR-8488 ends
+		}
 	}
 
 	private function _validateOptions($options) {
-		if (!array_key_exists('alias', $options)) {
-			pr('There is no alias set for ' . $this->request->action);
+		if (!isset($options['alias'])) {
+			pr('There is no alias set for ' . $this->request->getAttribute('action'));
 			die;
 		}
-
-		if (!array_key_exists('className', $options)) {
-			pr('There is no className set for ' . $this->request->action);
+		if (!isset($options['className'])) {
+			pr('There is no className set for ' . $this->request->getAttribute('action'));
 			die;
 		}
 
@@ -200,7 +207,6 @@ trait ControllerActionV4Trait {
 		$alias = $options['alias'];
 		$model = $this->controller->loadModel($className);
 		$model->alias = $alias;
-
 		return $model;
 	}
 
@@ -209,7 +215,6 @@ trait ControllerActionV4Trait {
 		$controller = $this->controller;
 
 		$model = $this->_validateOptions($options);
-
 		$this->_initComponents($model);
 
 		$extra = new ArrayObject([
@@ -217,7 +222,7 @@ trait ControllerActionV4Trait {
 			'config' => ['form' => false]
 		]);
 
-		$paramsPass = $request->params['pass'];
+		$paramsPass = $this->controller->getRequest()->getParam('pass');
 		$action = 'index';
 
 		if (count($paramsPass) > 0) {
@@ -227,49 +232,46 @@ trait ControllerActionV4Trait {
 		}
 
 		$model->action = $action;
-		$entity = null;
 
+		$entity = null;
 		$event = $controller->dispatchEvent('ControllerAction.Controller.onInitialize', [$model, $extra], $this);
-		if ($event->isStopped()) { return $event->result; }
+		if ($event->isStopped()) { return $event->getResult(); }
 
 		$event = $model->dispatchEvent('ControllerAction.Model.beforeAction', [$extra], $this);
-		if ($event->isStopped()) { return $event->result; }
 
+		if ($event->isStopped()) { return $event->getResult(); }
 		// dispatch event for specific action
 		$event = $model->dispatchEvent("ControllerAction.Model.$action", [$extra], $this);
-		if ($event->isStopped()) { return $event->result; }
-		if ($event->result instanceof Entity) {
-			$entity = $event->result;
-		} else if ($event->result instanceof Response) {
-			return $event->result;
-		} else if (is_null($event->result)) {
+		if ($event->isStopped()) { return $event->getResult(); }
+		if ($event->getResult() instanceof Entity) {
+			$entity = $event->getResult();
+		} else if ($event->getResult() instanceof Response) {
+			return $event->getResult();
+		} else if (is_null($event->getResult())) {
 			throw new MissingActionException([
-                'controller' => $controller->name . "Controller",
+                'controller' => $controller->getName() . "Controller",
                 'action' => $action,
                 'prefix' => '',
-                'plugin' => $request->params['plugin'],
+                'plugin' => $this->controller->getRequest()->getParam('plugin')
             ]);
 		}
 
 		$extra['entity'] = $entity;
 		$event = $model->dispatchEvent('ControllerAction.Model.afterAction', [$extra], $this);
-		if ($event->isStopped()) { return $event->result; }
-
+		if ($event->isStopped()) { return $event->getResult(); }
 		$elements = $extra['elements'];
 		uasort($elements, [$this, '_sortByOrder']);
-
 		$this->_renderFields($model);
 		uasort($model->fields, [$this, '_sortByOrder']);
 
 		$extra['config']['action'] = $model->action;
 		$extra['config']['table'] = $model;
 		$extra['config']['fields'] = $model->fields;
-
-		$this->deprecatedFunctions(['model' => $model->alias()]);
-
+		$this->deprecatedFunctions(['model' => $model->getAlias()]);
 		$controller->set('ControllerAction', $extra['config']);
 		$controller->set('elements', $elements);
 		$this->_render($model);
+
 	}
 
 	private function deprecatedFunctions($params) {

@@ -17,7 +17,7 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
     private $_contain = ['EducationGrades'];
 
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -32,7 +32,7 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator) {
+    /*public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
         $validator
             ->add('date_enabled', [
@@ -50,7 +50,7 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
             ]);
 
         return $validator;
-    } 
+    }*/ 
 
     public function beforeAction(Event $event)
     {
@@ -123,7 +123,8 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
         $this->fields['education_grades']['options'] = $educationGradeOptions;
     }
 	
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action)
     {
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $periodOptions = $AcademicPeriods->getYearList();
@@ -136,7 +137,8 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStudentAttendanceMarkTypeId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldStudentAttendanceMarkTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStudentAttendanceMarkTypeId(Event $event, array $attr, $action)
     {
         $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
         $studentAttendanceMarkTypesOptions = $StudentAttendanceMarkTypes
@@ -167,5 +169,33 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
 			->toArray();
         $selectedEducationGrade = key($educationGradeOptions);
         return compact('educationGradeOptions', 'selectedEducationGrade');
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+        if ($field == 'student_attendance_mark_type_id') {
+            return __('Student Attendance Mark Types');
+        }elseif ($field == 'date_disabled') {
+            return __('Date Disabled');
+        }elseif ($field == 'date_enabled') {
+            return __('Date Enabled');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
+        }elseif ($field == 'education_grades') {
+            return __('Education Grade');
+        }elseif ($field == 'periods') {
+            return __('Periods');
+        }elseif ($field == 'student_attendance_type_id') {
+            return __('Student Attendance Type');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

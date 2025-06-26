@@ -11,7 +11,7 @@ use App\Controller\AppController;
 
 class CustomExcelsController extends AppController
 {
-	public function initialize()
+	public function initialize():void
 	{
         parent::initialize();
         $this->loadComponent('CustomExcel.ExcelReport');
@@ -27,7 +27,7 @@ class CustomExcelsController extends AppController
     	$this->set('contentHeader', $header);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';

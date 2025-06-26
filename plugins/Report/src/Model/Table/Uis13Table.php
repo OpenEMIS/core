@@ -17,9 +17,9 @@ use LDAP\Result;
 class Uis13Table extends AppTable
 {
     private $uisTabsData = [0 => "UIS-A13"];
-    public function initialize(array $config)       
+    public function initialize(array $config): void    
     {
-        $this->table('summary_isced_sectors');
+        $this->setTable('summary_isced_sectors');
         parent::initialize($config);
 
         $this->addBehavior('Excel', [
@@ -81,9 +81,9 @@ class Uis13Table extends AppTable
     {
         $sheetData = $settings['sheet']['sheetData'];
         $uisType = $sheetData['uis_tabs_type'];
-        $areaAdministratives = TableRegistry::get('area_administratives');
-        $institutions = TableRegistry::get('institutions');
-        $area = TableRegistry::get('areas');
+        $areaAdministratives = TableRegistry::get('Area.AreaAdministrativesTable');
+        $institutions = TableRegistry::get('Instituion.Institutions');
+        $area = TableRegistry::get('Area.Areas');
         $reqData = json_decode($settings['process']['params'], true);
         $academic_period_id = $reqData['academic_period_id'];
         

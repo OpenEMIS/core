@@ -8,9 +8,9 @@ use Cake\Event\Event;
 use ArrayObject;
 
 class QualificationsSpecialisationsTable extends AppTable {
-	public function initialize(array $config) 
+	public function initialize(array $config) : void
 	{
-		$this->table('staff_qualifications_specialisations');
+		$this->setTable('staff_qualifications_specialisations');
 		parent::initialize($config);
 		$this->belongsTo('StaffQualifications', ['className' => 'Staff.Qualifications']);
 		$this->belongsTo('QualificationSpecialisations', ['className' => 'FieldOption.QualificationSpecialisations']);

@@ -1,0 +1,89 @@
+@charset "UTF-8";
+
+
+
+
+/* Button V1.0.0 */
+
+.kdx-button-group {
+    .btn-group {
+        flex-wrap: wrap;
+
+
+        &.btn-group-toggle {
+            .btn {
+                &:first-child {
+                    border-radius: .25rem 0 0 .25rem;
+                    .rtl & {
+                        border-radius: 0 .25rem .25rem 0;
+                    }
+                }
+
+                &:not(:first-child) {
+                    border-radius: 0;
+                }
+
+                &:last-child {
+                    border-radius: 0 .25rem .25rem 0;
+
+                    .rtl & {
+                        border-radius: .25rem 0 0 .25rem;
+                    }
+                }
+            }
+        }
+
+        &.btn-group-checkbox {
+            .btn {
+                border-radius: 0.25rem !important;
+                margin-right: $margin5;
+
+                &:last-child {
+                    margin-right: $noMargin;
+
+                    .rtl & {
+                        margin-left: $noMargin;
+                        margin-right: unset;
+                    }
+                }
+
+                &.btn-icon {
+                    padding: $padding30 $padding30 $noPadding $noPadding;
+
+                    i {
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                    }
+                }
+                .rtl & {
+                    margin-left: $margin5;
+                    margin-right: unset;
+                }
+
+                @media #{$tabletPortrait} {
+                    margin-top: $margin5;
+                }
+            }
+        }
+    }
+
+    .btn {
+        margin: $noMargin;
+
+        &.focus {
+            box-shadow: none;
+        }
+        &:not(:disabled):not(.disabled).active,
+        .btn-primary:not(:disabled):not(.disabled):active {}
+        &>input {
+            top: 0;
+            left: 0;
+        }
+    }
+
+    .btn-group>label.btn {
+        width: auto !important;
+    }
+}

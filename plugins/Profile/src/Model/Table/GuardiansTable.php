@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
@@ -17,9 +17,9 @@ class GuardiansTable extends ControllerActionTable
 {
     private $editButtonAction = 'GuardianUser';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('student_guardians');
+        $this->setTable('student_guardians');
         parent::initialize($config);
 
         $this->belongsTo('StudentUser', ['className' => 'Institution.StudentUser', 'foreignKey' => 'student_id']);
@@ -36,7 +36,7 @@ class GuardiansTable extends ControllerActionTable
         $this->addBehavior('ControllerAction.Image');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -48,7 +48,7 @@ class GuardiansTable extends ControllerActionTable
         ;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';
@@ -71,9 +71,9 @@ class GuardiansTable extends ControllerActionTable
 
     public function beforeAction(Event $event)
     {
-        if ($this->controller->name == 'Directories') {
+        if ($this->controller->getName() == 'Directories') {
             $studentId = $this->Session->read('Directory.Directories.id');
-        } else if ($this->controller->name == 'Profiles') {
+        } else if ($this->controller->getName() == 'Profiles') {
             $studentId = $this->Session->read('Auth.User.id');
         } else {
             $studentId = $this->Session->read('Student.Students.id');
@@ -87,8 +87,8 @@ class GuardiansTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         //POCOR-5881 starts
-        $studentId = '';
-        if ($this->controller->name == 'Profiles') {
+
+        if ($this->controller->getName() == 'Profiles') {
             $studentId = $this->Session->read('Auth.User.id');
         }
         //POCOR-5881 ends
@@ -102,7 +102,7 @@ class GuardiansTable extends ControllerActionTable
             $query->where(['Guardians.student_id'=>$studentId]);
         }
         //POCOR-5881 ends
-        if (!isset($this->request->query['sort'])) {
+        if (is_null($this->request->getQuery('sort'))) {
             $orders = [
                 $this->Users->aliasField('first_name'),
                 $this->Users->aliasField('last_name')
@@ -114,7 +114,7 @@ class GuardiansTable extends ControllerActionTable
 
     public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $errors = $entity->errors();
+        $errors = $entity->getErrors();
         if (!empty($errors)) {
             $entity->unsetProperty('guardian_id');
             unset($data[$this->alias()]['guardian_id']);
@@ -146,7 +146,7 @@ class GuardiansTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldGuardianId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldGuardianId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['type'] = 'autocomplete';
@@ -154,10 +154,10 @@ class GuardiansTable extends ControllerActionTable
             $attr['noResults'] = __('No Guardian found.');
             $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
             $action = 'Guardians';
-            if ($this->controller->name == 'Profiles') {
+            if ($this->controller->getName() == 'Profiles') {
                 $action = 'ProfileGuardians';
             }
-            $attr['url'] = ['controller' => $this->controller->name, 'action' => $action, 'ajaxUserAutocomplete'];
+            $attr['url'] = ['controller' => $this->controller->getName(), 'action' => $action, 'ajaxUserAutocomplete'];
 
             $iconSave = '<i class="fa fa-check"></i> ' . __('Save');
             $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
@@ -178,16 +178,16 @@ class GuardiansTable extends ControllerActionTable
     {
         $options['validate']=true;
         $patch = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
-        $errorCount = count($patch->errors());
+        $errorCount = count($patch->getErrors());
 
-        if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('guardian_id', $patch->errors()))) {
-            $this->Session->write('Student.Guardians.new', $data[$this->alias()]);
+        if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('guardian_id', $patch->getErrors()))) {
+            $this->Session->write('Student.Guardians.new', $data[$this->getAlias()]);
             $event->stopPropagation();
 
-            $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'GuardianUser', 'add'];
-            if ($this->controller->name == 'Profiles') {
+            $action = ['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'GuardianUser', 'add'];
+            if ($this->controller->getName() == 'Profiles') {
                 $guardianRelationId = $entity->guardian_relation_id;
-                $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'ProfileGuardianUser', 'add', $this->paramsEncode(['guardian_relation_id' => $guardianRelationId])];
+                $action = ['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'ProfileGuardianUser', 'add', $this->paramsEncode(['guardian_relation_id' => $guardianRelationId])];
             }
             return $this->controller->redirect($action);
         } else {
@@ -201,7 +201,7 @@ class GuardiansTable extends ControllerActionTable
         $this->ControllerAction->autoRender = false;
 
         if ($this->request->is(['ajax'])) {
-            $term = $this->request->query['term'];
+            $term = $this->request->getQuery('term');
             // only search for guardian
             $query = $this->Users->find()
                 ->select([
@@ -238,18 +238,18 @@ class GuardiansTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
         $urlButtons = [
-            'plugin' => $this->controller->plugin,
-            'controller' => $this->controller->name,
+            'plugin' => $this->controller->getPlugin(),
+            'controller' => $this->controller->getName(),
             'action' => 'ProfileGuardianUser'
         ];
 
-        if (array_key_exists('view', $buttons) && $entity->has('_matchingData')) {
+        if (isset($buttons['view']) && $entity->has('_matchingData')) {
             $buttons['view']['url'] = $urlButtons;
             $buttons['view']['url'][0] = 'view';
             $buttons['view']['url'][1] = $this->paramsEncode(['id' =>  $entity->_matchingData['Users']->id, 'ProfileGuardians.id' => $entity->id]);
         }
 
-        if (array_key_exists('edit', $buttons) && $entity->has('_matchingData')) {
+        if (isset($buttons['edit']) && $entity->has('_matchingData')) {
             $buttons['edit']['url'] = $urlButtons;
             $buttons['edit']['url'][0] = 'edit';
             $buttons['edit']['url'][1] = $this->paramsEncode(['id' =>  $entity->_matchingData['Users']->id, 'ProfileGuardians.id' => $entity->id]);
@@ -264,5 +264,32 @@ class GuardiansTable extends ControllerActionTable
             return $this->editButtonAction;
         }
         $this->editButtonAction = $action;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'guardian_id') {
+            return __('Guardian');
+        } elseif ($field == 'guardian_relation_id') {
+            return __(' Guardian Relations');
+        } elseif ($field == 'account_name') {
+            return __('Account Name');
+        } elseif ($field == 'account_number') {
+            return __('Account Number');
+        } elseif ($field == 'active') {
+            return __('Active');
+        } elseif ($field == 'validation_rule') {
+            return __('Validation Rule');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

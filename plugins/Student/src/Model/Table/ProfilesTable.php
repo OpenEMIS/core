@@ -39,9 +39,9 @@ class ProfilesTable extends ControllerActionTable
         'zip'   => 'application/zip'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('student_report_cards');
+        $this->setTable('student_report_cards');
 
         parent::initialize($config);
 		
@@ -50,9 +50,10 @@ class ProfilesTable extends ControllerActionTable
         $this->toggle('remove', false);
 		
 		$this->InstitutionStudentsProfileTemplates = TableRegistry::get('Institution.InstitutionStudentsProfileTemplates');
+        $this->addBehavior('Institution.InstitutionTab');
     }
 	
-	public function implementedEvents()
+	public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.downloadExcel'] = 'downloadExcel';
@@ -104,9 +105,7 @@ class ProfilesTable extends ControllerActionTable
 	
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        //echo "<pre>";print_r($extra);die;
-        //echo "Institutions> Students > Profiles";die;
-		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$institutionId = $this->getInstitutionID();
 
 		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$StudentTemplates = TableRegistry::get('ProfileTemplate.StudentTemplates');
@@ -120,17 +119,17 @@ class ProfilesTable extends ControllerActionTable
                 'academic_period' => $AcademicPeriods->aliasField('name'),
                 'profile_name' => $StudentTemplates->aliasField('name'),
             ])
-			->innerJoin([$AcademicPeriods->alias() => $AcademicPeriods->table()],
+			->innerJoin([$AcademicPeriods->getAlias() => $AcademicPeriods->getTable()],
                 [
                     $AcademicPeriods->aliasField('id = ') . $this->aliasField('academic_period_id'),
                 ]
             )
-			->innerJoin([$StudentTemplates->alias() => $StudentTemplates->table()],
+			->innerJoin([$StudentTemplates->getAlias() => $StudentTemplates->getTable()],
                 [
                     $StudentTemplates->aliasField('id = ') . $this->aliasField('student_profile_template_id'),
                 ]
             )
-            ->autoFields(true)
+            ->enableAutoFields(true)
 			->order([
                 $this->aliasField('file_name'),
             ])
@@ -150,12 +149,12 @@ class ProfilesTable extends ControllerActionTable
                 'academic_period' => $AcademicPeriods->aliasField('name'),
                 'profile_name' => $StudentTemplates->aliasField('name'),
             ])
-			->innerJoin([$AcademicPeriods->alias() => $AcademicPeriods->table()],
+			->innerJoin([$AcademicPeriods->getAlias() => $AcademicPeriods->getTable()],
                 [
                     $AcademicPeriods->aliasField('id = ') . $this->aliasField('academic_period_id'),
                 ]
             )
-			->innerJoin([$StudentTemplates->alias() => $StudentTemplates->table()],
+			->innerJoin([$StudentTemplates->getAlias() => $StudentTemplates->getTable()],
                 [
                     $StudentTemplates->aliasField('id = ') . $this->aliasField('student_profile_template_id'),
                 ]
@@ -215,13 +214,14 @@ class ProfilesTable extends ControllerActionTable
 			'url' => $downloadUrl
 		];
         //POCOR-5191::Start
-        $student_profile_security_roles_table = TableRegistry::get('student_profile_security_roles');
-        $instituttionnTable = TableRegistry::get('institutions');
-        $securitygroupusersTable = TableRegistry::get('security_group_users');
-        $insData = $instituttionnTable->get($this->Session->read('Institution.Institutions.id'));
+        $student_profile_security_roles_table = TableRegistry::get('Student.StudentProfileSecurityRoles');
+        $instituttionnTable = TableRegistry::get('Institution.Institutions');
+        $securitygroupusersTable = TableRegistry::get('Security.SecurityGroupUsers');
+        $institutionId = $this->getInstitutionID();
+        $insData = $instituttionnTable->get($institutionId);
         $security_group_id = $insData->security_group_id;
         $user_id = $this->Session->read('Auth.User.id');
-        $roles = $student_profile_security_roles_table->find()->where(['student_profile_template_id'=> $this->request->query('student_profile_template_id')])->toArray();
+        $roles = $student_profile_security_roles_table->find()->where(['student_profile_template_id'=> $this->request->getQuery('student_profile_template_id')])->toArray();
         $curr_u_roles = $securitygroupusersTable->find()->where(['security_group_id'=> $security_group_id, 'security_user_id'=>$user_id])->toArray();
         $rolArr = [];
         $rolArrrr = [];
@@ -357,6 +357,18 @@ class ProfilesTable extends ControllerActionTable
         fclose($phpResourceFile);
 
         return $file;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'academic_period':
+                return __('Academic Period');
+            case 'file_name':
+                return __('File Name');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 	
 }

@@ -17,10 +17,10 @@ abstract class MoodleFunction
 {
     protected static $functionParam = "";
 
-    protected static $userAllowedParams
+    protected static $allowedParams //POCOR-8706
         = [];
 
-    protected static $userMandatoryParams
+    protected static $mandatoryParams  //POCOR-8706
         = [];
 
     protected $data = [];
@@ -48,11 +48,11 @@ abstract class MoodleFunction
      */
     abstract protected function convertDataToParam();
 
-    private function checkData()
+    protected function checkData() //POCOR-8706
     {
         $data = $this->data;
-        $mandatoryParams = static::$userMandatoryParams;
-        $allowedParams = static::$userAllowedParams;
+        $mandatoryParams = static::$mandatoryParams;
+        $allowedParams = static::$allowedParams;
         $mandatoryFieldCount = 0;
 
         foreach ($data as $param => $value) {

@@ -17,14 +17,14 @@ class AppraisalScoreAnswersTable extends AppraisalAnswersTable
     const FORMULA_SUM = "SUM";
     const FORMULA_AVG = "AVG";
 
-    public function implementedEvents()
+    public function implementedEvents(): array
    	{
         $events = parent::implementedEvents();
         $events['Model.Appraisal.edit.beforePatch'] = 'appraisalEditBeforePatch';
         return $events;
    	}
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -136,9 +136,9 @@ class AppraisalScoreAnswersTable extends AppraisalAnswersTable
                         $scoreEntityParams = $scoreEntity->appraisal_forms_criteria->appraisal_forms_criterias_score->params;
                         $scoreEntityParams = json_decode($scoreEntityParams, true);
 
-                        if (!is_null($scoreEntityParams) && array_key_exists('formula', $scoreEntityParams)) {
+                        if (!is_null($scoreEntityParams) && isset($scoreEntityParams['formula'])) {
                             $formula = $scoreEntityParams['formula'];
-                            
+
                             switch ($formula) {
                                 case self::FORMULA_AVG:
                                     if ($noOfChildInTheScoreEntity != 0) {
@@ -167,7 +167,7 @@ class AppraisalScoreAnswersTable extends AppraisalAnswersTable
                     }
                 }else {
                     array_shift($criteriaScoreIds);
-                } 
+                }
             }
         }
 
@@ -257,9 +257,9 @@ class AppraisalScoreAnswersTable extends AppraisalAnswersTable
    //                      $scoreEntityParams = $scoreEntity->appraisal_forms_criteria->appraisal_forms_criterias_score->params;
    //                      $scoreEntityParams = json_decode($scoreEntityParams, true);
 
-   //                      if (!is_null($scoreEntityParams) && array_key_exists('formula', $scoreEntityParams)) {
+   //                      if (!is_null($scoreEntityParams) && isset($scoreEntityParams['formula'])) {
    //                          $formula = $scoreEntityParams['formula'];
-                            
+
    //                          switch ($formula) {
    //                              case self::FORMULA_AVG:
    //                                  if ($noOfChildInTheScoreEntity != 0) {
@@ -288,7 +288,7 @@ class AppraisalScoreAnswersTable extends AppraisalAnswersTable
    //                  }
    //              }else {
    //                  array_shift($criteriaScoreIds);
-   //              } 
+   //              }
 	  //       }
    //      }
 
@@ -380,9 +380,9 @@ class AppraisalScoreAnswersTable extends AppraisalAnswersTable
     //                 $scoreEntityParams = $scoreEntity->appraisal_forms_criteria->appraisal_forms_criterias_score->params;
     //                 $scoreEntityParams = json_decode($scoreEntityParams, true);
 
-    //                 if (!is_null($scoreEntityParams) && array_key_exists('formula', $scoreEntityParams)) {
+    //                 if (!is_null($scoreEntityParams) && isset($scoreEntityParams['formula'])) {
     //                     $formula = $scoreEntityParams['formula'];
-                        
+
     //                     switch ($formula) {
     //                         case self::FORMULA_AVG:
     //                             if ($noOfChildInTheScoreEntity != 0) {
@@ -417,7 +417,7 @@ class AppraisalScoreAnswersTable extends AppraisalAnswersTable
 
     private function updateScoreAnswerBackToScoreCriteria(ArrayObject $requestData, $alias, $proccessedCriteriaScore)
     {
-    	if (array_key_exists('appraisal_score_answers', $requestData[$alias])) {
+    	if (isset($requestData[$alias]['appraisal_score_answers'])) {
     		foreach ($requestData[$alias]['appraisal_score_answers'] as $key => $scoreAnswersEntity) {
     			foreach ($proccessedCriteriaScore as $indexKey => $scoreAnswer) {
     				if ($scoreAnswersEntity['appraisal_criteria_id'] == $indexKey) {

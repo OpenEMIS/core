@@ -7,14 +7,15 @@ use Cake\ORM\Entity;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 
 class InstitutionExaminationsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
    
-        $this->table('examinations');
+        $this->setTable('examinations');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -44,11 +45,20 @@ class InstitutionExaminationsTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->addBehavior('Excel', ['pages' => ['index']]);
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Exams' =>['academic_period_id']
+            ]
+        ]);
+
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $extra['elements']['controls'] = ['name' => 'Institution.Examinations/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+        $extra['elements']['controls'] = ['name' => 'Institution.Examinations/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
 
         $this->field('description', ['visible' => 'hidden']);
         $this->setFieldOrder(['academic_period_id', 'code', 'name', 'education_grade_id']);
@@ -76,11 +86,11 @@ class InstitutionExaminationsTable extends ControllerActionTable
 
      public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
      {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         // Academic Periods filter
         $periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
-        $selectedPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
 
         $where[$this->aliasField('academic_period_id')] = $selectedPeriod;
@@ -172,18 +182,18 @@ class InstitutionExaminationsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-
-        $academicPeriod = $this->request->query['academic_period_id']; 
+        $academicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('                 academic_period_id') : $this->AcademicPeriods->getCurrent();
         
             $query
             ->select(['code' => 'InstitutionExaminations.code', 'name' => 'InstitutionExaminations.name', 'grade' => 'EducationGrades.code', '	registration_start_date' => 'InstitutionExaminations.registration_start_date',  'registration_end_date' => 'InstitutionExaminations.registration_end_date', 'academic_period' => 'AcademicPeriods.name'])
-            ->LeftJoin([$this->EducationGrades->alias() => $this->EducationGrades->table()],[
+            ->LeftJoin([$this->EducationGrades->getAlias() => $this->EducationGrades->getTable()],[
                 $this->EducationGrades->aliasField('id').' = ' . 'InstitutionExaminations.education_grade_id'
             ])
-            ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
+            ->LeftJoin([$this->AcademicPeriods->getAlias() => $this->AcademicPeriods->getTable()],[
                 $this->AcademicPeriods->aliasField('id').' = ' . 'InstitutionExaminations.academic_period_id'
             ])
             ->where(['InstitutionExaminations.academic_period_id' =>  $academicPeriod]);
      
     }
+
 }

@@ -11,7 +11,7 @@ use App\Shell\AlertShell;
 
 class AlertRetirementWarningShell extends AlertShell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
     }
@@ -25,10 +25,8 @@ class AlertRetirementWarningShell extends AlertShell
         $this->Alerts->updateAll(['process_id' => getmypid(), 'modified' => Time::now()], ['process_name' => $processName]);
 
         $dir = new Folder(ROOT . DS . 'tmp'); // path to tmp folder
-
-        do {
+        // do {
             $rules = $this->getAlertRules($feature);
-
             foreach ($rules as $rule) {
                 $threshold = $rule->threshold;
                 $thresholdArray = json_decode($threshold, true);
@@ -46,7 +44,7 @@ class AlertRetirementWarningShell extends AlertShell
                             $this->Staff->aliasField('staff_id') => $vars['id'],
                             $this->Staff->StaffStatuses->aliasField('code') => 'ASSIGNED'
                         ])
-                        ->hydrate(false)
+                        ->disableHydration() // POCOR-8533
                         ->all();
 
                     if (!empty($institutionStaffRecords)) {
@@ -61,9 +59,11 @@ class AlertRetirementWarningShell extends AlertShell
 
                             $vars['age'] = $age;
                             // end of adding age to $vars
-
                             if (!empty($rule['security_roles']) && !empty($institutionId)) { //check if the alertRule have security role and institution id
-                                $emailList = $this->getEmailList($rule['security_roles'], $institutionId);
+                                //POCOR-8341[START]
+                                // $emailList = $this->getEmailList($rule['security_roles'], $institutionId);
+                                $emailList = $this->getRoleAssociatedEmailList($rule['security_roles']);
+                                //POCOR-8341[END]
 
                                 $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
 
@@ -81,7 +81,7 @@ class AlertRetirementWarningShell extends AlertShell
             sleep(10);
 
             $filesArray = $dir->find($processName . '.stop');
-        } while (empty($filesArray));
+        // } while (empty($filesArray));
 
         $this->Alerts->updateAll(['process_id' => NULL, 'modified' => Time::now()], ['process_name' => $processName]);
     }

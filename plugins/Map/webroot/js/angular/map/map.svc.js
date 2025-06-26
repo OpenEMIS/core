@@ -2,9 +2,9 @@ angular
     .module('map.svc', ['kd.data.svc', 'kd.session.svc'])
     .service('MapSvc', MapSvc);
 
-MapSvc.$inject = ['$q', 'KdDataSvc', 'KdSessionSvc'];
+MapSvc.$inject = ['$http', '$q', 'KdDataSvc', 'KdSessionSvc'];
 
-function MapSvc($q, KdDataSvc, KdSessionSvc) {
+function MapSvc($http, $q, KdDataSvc, KdSessionSvc) {
     var service = {
         init: init,
         translate: translate,
@@ -56,6 +56,20 @@ function MapSvc($q, KdDataSvc, KdSessionSvc) {
             .ajax({success: success, defer: true});
     };
 
+    // function getMapData($query = null) {
+    //     var deferred = $q.defer();
+    //     var url = '/Institutions/getInstitutionData';
+    //     $http.get(url)
+    //     .then(function(response){
+    //         console.log('Institutions')
+    //         console.log(response)
+    //         deferred.resolve(response);
+    //     }, function(error) {
+    //         deferred.reject('No Institutions');
+    //     });
+    //     return deferred.promise;
+    // };
+
     function getConfigItemValue(code) {
         var success = function(response, deferred) {
             var results = response.data.data;
@@ -72,4 +86,19 @@ function MapSvc($q, KdDataSvc, KdSessionSvc) {
             .where({code: code})
             .ajax({success: success, defer: true});
     };
+
+    // function getConfigItemValue(code) {
+    //     var params = code;
+    //     var deferred = $q.defer();
+    //     var url = '/Configurations/getConfigItemValue';
+    //     $http.post(url, {params: params})
+    //     .then(function(response){
+    //         // var configItemValue = (response.length > 0) ? response.value : response.default_value;
+    //         var parsedData = parseFloat(response.data.replace(/"/g, ''));
+    //         deferred.resolve(parsedData);
+    //     }, function(error) {
+    //         deferred.reject(error);
+    //     });
+    //     return deferred.promise;
+    // };
 }

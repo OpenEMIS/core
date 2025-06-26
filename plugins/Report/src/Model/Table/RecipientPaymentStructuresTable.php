@@ -12,9 +12,9 @@ use App\Model\Traits\OptionsTrait;
 
 class RecipientPaymentStructuresTable extends AppTable  {
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
         
-        $this->table('scholarship_recipient_payment_structures');
+        $this->SetTable('scholarship_recipient_payment_structures');
         parent::initialize($config);
        
         $this->belongsTo('ScholarshipRecipients', ['className' => 'Scholarship.ScholarshipRecipients', 'foreignKey' => ['recipient_id', 'scholarship_id']]);

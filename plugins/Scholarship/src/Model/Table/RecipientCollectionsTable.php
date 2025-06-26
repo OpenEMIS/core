@@ -8,9 +8,9 @@ use App\Model\Table\ControllerActionTable;
 
 class RecipientCollectionsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('scholarship_recipient_collections');
+        $this->setTable('scholarship_recipient_collections');
         parent::initialize($config);
 
 		$this->belongsTo('ScholarshipRecipients', ['className' => 'Scholarship.ScholarshipRecipients', 'foreignKey' => ['recipient_id', 'scholarship_id']]);
@@ -19,7 +19,7 @@ class RecipientCollectionsTable extends ControllerActionTable
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

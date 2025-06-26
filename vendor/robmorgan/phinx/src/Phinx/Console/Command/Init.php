@@ -1,47 +1,55 @@
 <?php
+
 /**
- * Phinx
- *
- * (The MIT license)
- * Copyright (c) 2015 Rob Morgan
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated * documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- *
- * @package    Phinx
- * @subpackage Phinx\Console
+ * MIT License
+ * For full license information, please view the LICENSE file that was distributed with this source code.
  */
+
 namespace Phinx\Console\Command;
 
+use InvalidArgumentException;
+use RuntimeException;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(name: 'init')]
 class Init extends Command
 {
+    protected const FILE_NAME = 'phinx';
+
     /**
-     * {@inheritdoc}
+     * @var string[]
      */
-    protected function configure()
+    protected static $supportedFormats = [
+        AbstractCommand::FORMAT_JSON,
+        AbstractCommand::FORMAT_YML_ALIAS,
+        AbstractCommand::FORMAT_YML,
+        AbstractCommand::FORMAT_PHP,
+    ];
+
+    /**
+     * @var string|null
+     */
+    protected static $defaultName = 'init';
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return void
+     */
+    protected function configure(): void
     {
-        $this->setName('init')
-            ->setDescription('Initialize the application for Phinx')
+        $this->setDescription('Initialize the application for Phinx')
+            ->addOption(
+                '--format',
+                '-f',
+                InputArgument::OPTIONAL,
+                'What format should we use to initialize?',
+                AbstractCommand::FORMAT_DEFAULT
+            )
             ->addArgument('path', InputArgument::OPTIONAL, 'Which path should we initialize for Phinx?')
             ->setHelp(sprintf(
                 '%sInitializes the application for Phinx%s',
@@ -53,55 +61,111 @@ class Init extends Command
     /**
      * Initializes the application.
      *
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     * @throws \RuntimeException
-     * @throws \InvalidArgumentException
-     * @return void
+     * @param \Symfony\Component\Console\Input\InputInterface $input Interface implemented by all input classes.
+     * @param \Symfony\Component\Console\Output\OutputInterface $output Interface implemented by all output classes.
+     * @return int 0 on success
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $format = strtolower($input->getOption('format'));
+        $path = $this->resolvePath($input, $format);
+        $this->writeConfig($path, $format);
+
+        $output->writeln("<info>created</info> {$path}");
+
+        return AbstractCommand::CODE_SUCCESS;
+    }
+
+    /**
+     * Return valid $path for Phinx's config file.
+     *
+     * @param \Symfony\Component\Console\Input\InputInterface $input Interface implemented by all input classes.
+     * @param string $format Format to resolve for
+     * @throws \InvalidArgumentException
+     * @return string
+     */
+    protected function resolvePath(InputInterface $input, string $format): string
     {
         // get the migration path from the config
-        $path = $input->getArgument('path');
+        $path = (string)$input->getArgument('path');
 
-        if (null === $path) {
-            $path = getcwd();
+        if (!in_array($format, static::$supportedFormats, true)) {
+            throw new InvalidArgumentException(sprintf(
+                'Invalid format "%s". Format must be either ' . implode(', ', static::$supportedFormats) . '.',
+                $format
+            ));
         }
 
-        $path = realpath($path);
+        // Fallback
+        if (!$path) {
+            $path = getcwd() . DIRECTORY_SEPARATOR . self::FILE_NAME . '.' . $format;
+        }
 
-        if (!is_writable($path)) {
-            throw new \InvalidArgumentException(sprintf(
-                'The directory "%s" is not writable',
+        // Adding file name if necessary
+        if (is_dir($path)) {
+            $path .= DIRECTORY_SEPARATOR . self::FILE_NAME . '.' . $format;
+        }
+
+        // Check if path is available
+        $dirname = dirname($path);
+        if (is_dir($dirname) && !is_file($path)) {
+            return $path;
+        }
+
+        // Path is valid, but file already exists
+        if (is_file($path)) {
+            throw new InvalidArgumentException(sprintf(
+                'Config file "%s" already exists.',
                 $path
             ));
         }
 
-        // Compute the file path
-        $fileName = 'phinx.yml'; // TODO - maybe in the future we allow custom config names.
-        $filePath = $path . DIRECTORY_SEPARATOR . $fileName;
+        // Dir is invalid
+        throw new InvalidArgumentException(sprintf(
+            'Invalid path "%s" for config file.',
+            $path
+        ));
+    }
 
-        if (file_exists($filePath)) {
-            throw new \InvalidArgumentException(sprintf(
-                'The file "%s" already exists',
-                $filePath
+    /**
+     * Writes Phinx's config in provided $path
+     *
+     * @param string $path Config file's path.
+     * @param string $format Format to use for config file
+     * @throws \InvalidArgumentException
+     * @throws \RuntimeException
+     * @return void
+     */
+    protected function writeConfig(string $path, string $format = AbstractCommand::FORMAT_DEFAULT): void
+    {
+        // Check if dir is writable
+        $dirname = dirname($path);
+        if (!is_writable($dirname)) {
+            throw new InvalidArgumentException(sprintf(
+                'The directory "%s" is not writable',
+                $dirname
             ));
         }
 
-        // load the config template
-        if (is_dir(__DIR__ . '/../../../data/Phinx')) {
-            $contents = file_get_contents(__DIR__ . '/../../../data/Phinx/phinx.yml');
-        } else {
-            $contents = file_get_contents(__DIR__ . '/../../../../phinx.yml');
+        if ($format === AbstractCommand::FORMAT_YML_ALIAS) {
+            $format = AbstractCommand::FORMAT_YML;
         }
 
-        if (false === file_put_contents($filePath, $contents)) {
-            throw new \RuntimeException(sprintf(
+        // load the config template
+        if (is_dir(__DIR__ . '/../../../../data')) {
+            $contents = file_get_contents(__DIR__ . '/../../../../data/' . self::FILE_NAME . '.' . $format . '.dist');
+        } else {
+            throw new RuntimeException(sprintf(
+                'Could not find template for format "%s".',
+                $format
+            ));
+        }
+
+        if (file_put_contents($path, $contents) === false) {
+            throw new RuntimeException(sprintf(
                 'The file "%s" could not be written to',
                 $path
             ));
         }
-
-        $output->writeln('<info>created</info> .' . str_replace(getcwd(), '', $filePath));
     }
 }

@@ -7,10 +7,9 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\Datasource\EntityInterface;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Log\Log;
@@ -18,6 +17,7 @@ use Cake\Routing\Router;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
+use Cake\http\ServerRequest;
 
 class WorkflowBehavior extends Behavior
 {
@@ -100,25 +100,25 @@ class WorkflowBehavior extends Behavior
 
     private $workflowSetup = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
-        $models = $this->config('models');
-        if (is_null($this->config('model'))) {
-            $this->_config['model'] = $this->_table->registryAlias();
+        $models = $this->getConfig('models');
+        if (is_null($this->getConfig('model'))) {
+            $this->_config['model'] = $this->_table->getRegistryAlias();
         }
 
         foreach ($models as $key => $model) {
             if (!is_null($model)) {
                 $this->{$key} = TableRegistry::get($model);
-                $this->{lcfirst($key).'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->alias())) . '_id';
+                $this->{lcfirst($key).'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->getAlias())) . '_id';
             } else {
                 $this->{$key} = null;
             }
         }
 
         if ($this->isCAv4()) {
-            $actions = $this->config('actions');
+            $actions = $this->getConfig('actions');
             $model = $this->_table;
             foreach ($actions as $key => $value) {
                 $model->toggle($key, $value);
@@ -131,7 +131,7 @@ class WorkflowBehavior extends Behavior
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
 
         $events = parent::implementedEvents();
@@ -149,6 +149,7 @@ class WorkflowBehavior extends Behavior
         }
         $events['ControllerAction.Model.index.afterAction']     = ['callable' => 'indexAfterAction', 'priority' => 1000];
         $events['ControllerAction.Model.view.afterAction']      = ['callable' => 'viewAfterAction', 'priority' => 1000];
+        $events['ControllerAction.Model.view.beforeAction']      = ['callable' => 'viewBeforeAction', 'priority' => 1000];//POCOR-8434
         $events['ControllerAction.Model.addEdit.afterAction']   = ['callable' => 'addEditAfterAction', 'priority' => 1000];
         $events['ControllerAction.Model.addEdit.beforeAction']  = ['callable' => 'addEditBeforeAction', 'priority' => 1];
         $events['ControllerAction.Model.edit.beforePatch']      = ['callable' => 'editBeforePatch', 'priority' => 1];
@@ -225,7 +226,7 @@ class WorkflowBehavior extends Behavior
             Log::write('error', '---------------------------------------------------------');
             Log::write('error', 'WorkflowBehavior.php >> onAssignBack() : $result is empty');
             Log::write('error', 'WorkflowBehavior.php >> onAssignBack() : model : '.$model);
-            Log::write('error', 'WorkflowBehavior.php >> onAssignBack() : model alias : '.$model->alias());
+            Log::write('error', 'WorkflowBehavior.php >> onAssignBack() : model alias : '.$model->getAlias());
             Log::write('error', '---------------------------------------------------------');
         }
     }
@@ -249,7 +250,7 @@ class WorkflowBehavior extends Behavior
             Log::write('error', '---------------------------------------------------------');
             Log::write('error', 'WorkflowBehavior.php >> onAssignBackToScholarshipApplicant() : $result is empty');
             Log::write('error', 'WorkflowBehavior.php >> onAssignBackToScholarshipApplicant() : model : '.$model);
-            Log::write('error', 'WorkflowBehavior.php >> onAssignBackToScholarshipApplicant() : model alias : '.$model->alias());
+            Log::write('error', 'WorkflowBehavior.php >> onAssignBackToScholarshipApplicant() : model alias : '.$model->getAlias());
             Log::write('error', '---------------------------------------------------------');
         }
     }
@@ -280,7 +281,7 @@ class WorkflowBehavior extends Behavior
             Log::write('error', '---------------------------------------------------------');
             Log::write('error', 'WorkflowBehavior.php >> onApprovalofStudentTransfer() : $result is empty');
             Log::write('error', 'WorkflowBehavior.php >> onApprovalofStudentTransfer() : model : '.$model);
-            Log::write('error', 'WorkflowBehavior.php >> onApprovalofStudentTransfer() : model alias : '.$model->alias());
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofStudentTransfer() : model alias : '.$model->getAlias());
             Log::write('error', '---------------------------------------------------------');
         }
     }
@@ -319,8 +320,8 @@ class WorkflowBehavior extends Behavior
 
         $workflowModelEntity = $entity->_matchingData['WorkflowModels'];
         // only trigger update assignee shell where the workflow step belongs to
-        if ($workflowModelEntity->model == $this->config('model')) {
-            $this->triggerUpdateAssigneeShell($this->config('model'), $id, $statusId);
+        if ($workflowModelEntity->model == $this->getConfig('model')) {
+            $this->triggerUpdateAssigneeShell($this->getConfig('model'), $id, $statusId);
         }
     }
 
@@ -360,6 +361,23 @@ class WorkflowBehavior extends Behavior
 
     public function onGetWorkflowStatus(Event $event, Entity $entity)
     {
+        //POCOR-8434 Starts
+        if($this->_table->getRegistryAlias() == 'Institution.StudentAdmission'){
+            if(($entity->status->name == 'Approved')){
+                $WorkflowActionsTable = TableRegistry::get('Workflow.WorkflowActions');
+                $WorkflowActions = $WorkflowActionsTable->find()
+                    ->where([
+                        $WorkflowActionsTable->aliasField('next_workflow_step_id') => $entity->status->id
+                    ])->first();
+                if($WorkflowActions->event_key == 'Workflow.onTriggerPendingEnrolment'){
+                    $entity->workflow_status = 'Admitted';
+                }
+            }
+        }else if($this->_table->getRegistryAlias() == 'Institution.StudentEnrolment'){
+            if(($entity->status->name == 'Approved')){
+                $entity->workflow_status = 'Enrolled';
+            }
+        }//POCOR-8434 Ends
         return '<span class="status highlight">' . $entity->workflow_status . '</span>';
     }
 
@@ -418,12 +436,12 @@ class WorkflowBehavior extends Behavior
         if ($entity->isNew()) {
             $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
             $WorkflowTransitions->dispatchEvent('Model.Workflow.add.afterSave', [$entity], $this->_table);
-        } elseif (!$entity->isNew() && $entity->dirty('assignee_id')) {
+        } elseif (!$entity->isNew() && $entity->isDirty('assignee_id')) {
             // Trigger event on the alert log model (status and assignee transition triggered here)
             $AlertLogs = TableRegistry::get('Alert.AlertLogs');
             $event = $AlertLogs->dispatchEvent('Model.Workflow.afterSave', [$entity], $this->_table);
             if ($event->isStopped()) {
-                return $event->result;
+                return $event->getResult();
             }
             // End
         }
@@ -440,7 +458,7 @@ class WorkflowBehavior extends Behavior
     public function indexBeforeAction(Event $event)
     {
         $WorkflowModels = $this->WorkflowModels;
-        $registryAlias = $this->config('model');
+        $registryAlias = $this->getConfig('model');
 
         // Find from workflows table
         $results = $this->Workflows
@@ -477,7 +495,7 @@ class WorkflowBehavior extends Behavior
 
             $filter = $workflowModel->filter;
             $model = $workflowModel->model;
-            $filterConfig = $this->config('filter');
+            $filterConfig = $this->getConfig('filter');
 
             if ($filterConfig['type'] && !empty($filter)) {
                 // Wofkflow Filter Options
@@ -488,20 +506,33 @@ class WorkflowBehavior extends Behavior
 
                 $params = [];
                 if ($workflowModel->is_school_based) {
-                    $session = $this->controller->request->session();
-                    if ($session->check('Institution.Institutions.id')) {
+                    $table = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+                    //POCOR-8401,POCOR-8402 starts
+                    if($this->controller->getName() != 'Profiles'){
+                        try {
+                            $institutionId = $table->getQueryString('institution_id');
+                        } catch (\Exception $exception) {
+                            Log::debug($exception->getMessage() . __CLASS__ . __FUNCTION__);
+                            $institutionId = $table->paramsDecode($this->_table->request->getAttribute('params')['pass'][1]);
+                        }
                         $params = [
-                            'institution_id' => $session->read('Institution.Institutions.id')
+                            'institution_id' => $institutionId
                         ];
-                    }
+                    }//POCOR-8401,POCOR-8402 ends
+                    //$session = $this->controller->request->session();
+                    // if ($session->check('Institution.Institutions.id')) {
+                        // $params = [
+                        //     'institution_id' => $institutionId
+                        // ];
+                    // }
                 }
 
                 $newEvent = $subject->dispatchEvent('Workflow.getFilterOptions', [$params], $subject);
                 if ($newEvent->isStopped()) {
-                    return $newEvent->result;
+                    return $newEvent->getResult();
                 }
-                if (!empty($newEvent->result)) {
-                    $filterOptions = $newEvent->result;
+                if (!empty($newEvent->getResult())) {
+                    $filterOptions = $newEvent->getResult();
                 }
                 // End
                 //POCOR-7263::Start
@@ -509,7 +540,7 @@ class WorkflowBehavior extends Behavior
                 $url = $_SERVER['QUERY_STRING'];
                 $data = explode('=', $url);
                 $filterOne = $data[1];
-                $filterTwo = $data[2];
+                // $filterTwo = $data[2];
                 $firstVal = preg_replace('/\D/', '', $filterOne);
                 $selectedFilter = $firstVal;
                 //POCOR-7263::End
@@ -533,8 +564,9 @@ class WorkflowBehavior extends Behavior
                 $levelOptions = $Level->find('list')->toArray();
                 $levelOptions = ['-1' => '-- '.__('Select Area Level').' --'] + $levelOptions;
                 $selectedLevel = $this->_table->queryString('level', $levelOptions);
-                if (isset($this->controller->request->query['level'])) {
-                    $selectedLevel = $this->controller->request->query['level'];
+                $queryLevel = $this->controller->getRequest()->getQuery['level'];
+                if (isset($queryLevel)) {
+                    $selectedLevel = $queryLevel;
                 }
                 $this->_table->advancedSelectOptions($levelOptions, $selectedLevel);
                 $this->_table->controller->set(compact('levelOptions','selectedLevel'));
@@ -547,7 +579,7 @@ class WorkflowBehavior extends Behavior
                 $areaOptions = $Areas
                             ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                             ->order([$Areas->aliasField('order')]);
-                $areaOptions = ['-1' => '-- ' . __('All Areas') . ' --'] + $areaOptions->toArray();            
+                $areaOptions = ['-1' => '-- ' . __('All Areas') . ' --'] + $areaOptions->toArray();
                 */
                 if (in_array($registryAlias, ['Training.TrainingSessions','Training.TrainingSessionResults'])) {
                     if($selectedLevel != -1){
@@ -568,11 +600,11 @@ class WorkflowBehavior extends Behavior
 
             if ($filterConfig['period']) {
                 // Year Options
-                $AcademicPeriods = TableRegistry::get('academic_periods');
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $periodsOptions = $AcademicPeriods
                             ->find('list', ['keyField' => 'start_year', 'valueField' => 'start_year'])
                             ->order([$AcademicPeriods->aliasField('start_year') => 'DESC']);
-                $periodsOptions = ['-1' => '-- ' . __('Select Period') . ' --'] + $periodsOptions->toArray();            
+                $periodsOptions = ['-1' => '-- ' . __('Select Period') . ' --'] + $periodsOptions->toArray();
                 $selectedPeriods = $this->_table->queryString('period', $periodsOptions);
                 $this->_table->advancedSelectOptions($periodsOptions, $selectedPeriods);
                 $this->_table->controller->set(compact('periodsOptions','selectedPeriods'));
@@ -582,12 +614,13 @@ class WorkflowBehavior extends Behavior
             if ($filterConfig['month']) {
                 // Month Options
                 $monthOptions = ['1'=> '1', '2'=> '2','3'=> '3','4'=> '4', '5'=> '5', '6'=> '6','7'=> '7','8'=> '8','9'=> '9','10'=> '10', '11'=>'11', '12'=> '12'];
-                $monthOptions = ['-1' => '-- ' . __('Select Month') . ' --'] + $monthOptions;            
+                $monthOptions = ['-1' => '-- ' . __('Select Month') . ' --'] + $monthOptions;
                 $selectedMonth = $this->_table->queryString('month', $monthOptions);
                 $this->_table->advancedSelectOptions($monthOptions, $selectedMonth);
                 $this->_table->controller->set(compact('monthOptions','selectedMonth'));
                 // End
             }
+            // echo "<pre>";print_r($selectedFilter);die;
             //POCOR-5695 ends
         }
     }
@@ -596,19 +629,17 @@ class WorkflowBehavior extends Behavior
     {
         $options = $this->isCAv4() ? $extra['options'] : $extra;
 
-        $registryAlias = $this->config('model');
+        $registryAlias = $this->getConfig('model');
         $workflowModel = $this->getWorkflowSetup($registryAlias);
-        $filterConfig = $this->config('filter');
+        $filterConfig = $this->getConfig('filter');
 
         $filter = $workflowModel->filter;
         if ($filterConfig['type'] && !empty($filter)) {
             $selectedFilter = $this->_table->ControllerAction->getVar('selectedFilter');
-
             // Filter key
             list(, $base) = pluginSplit($filter);
             $filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
-
-            if ($selectedFilter != -1) {
+            if (($selectedFilter != -1 && !empty($selectedFilter))) { // POCOR-7485
                 $query->where([
                     $this->_table->aliasField($filterKey) => $selectedFilter
                 ]);
@@ -624,13 +655,13 @@ class WorkflowBehavior extends Behavior
                     });
             }
         }
-        
+
         //POCOR-5695 starts
-        if(($this->_table->alias == 'Results') || ($this->_table->alias == 'Sessions')){
-            $TrainingSessions = TableRegistry::get('training_sessions');
-            if($this->_table->alias == 'Results'){
+        if(($this->_table->getAlias() == 'Results') || ($this->_table->getAlias() == 'Sessions')){
+            $TrainingSessions = TableRegistry::get('Training.TrainingSessions');
+            if($this->_table->getAlias() == 'Results'){
                 $query->leftJoin(
-                        [$TrainingSessions->alias() => $TrainingSessions->table()],
+                        [$TrainingSessions->getAlias() => $TrainingSessions->getTable()],
                         [
                             $this->_table->aliasField('training_session_id = ') . $TrainingSessions->aliasField('id'),
                         ]
@@ -639,13 +670,13 @@ class WorkflowBehavior extends Behavior
             if ($filterConfig['area']) {
                 $selectedArea = $this->_table->ControllerAction->getVar('selectedArea');
                 if (!is_null($selectedArea) && $selectedArea != -1) {
-                    $areaIds= []; 
+                    $areaIds= [];
                     $Areas = TableRegistry::get('Area.Areas');
                     $AreasOptions = $Areas
                                     ->find()
                                     ->where([$Areas->aliasField('parent_id') => $selectedArea])
-                                    ->all();    
-                    $areaIds[] =  $selectedArea;              
+                                    ->all();
+                    $areaIds[] =  $selectedArea;
                     if(!empty($AreasOptions)){
                         foreach ($AreasOptions as $AreasOption) {
                             $areaIds[] = $AreasOption->id;
@@ -661,31 +692,31 @@ class WorkflowBehavior extends Behavior
                             }
                         }
                     }
-                    $selectedArea = $areaIds;      
-                    if($this->_table->alias == 'Results'){
+                    $selectedArea = $areaIds;
+                    if($this->_table->getAlias() == 'Results'){
                         $query->where([$TrainingSessions->aliasField('area_id IN') => $selectedArea]);
                     }else{
                         $query->where([$this->_table->aliasField('area_id IN') => $selectedArea]);
                     }
                 }
             }
-            if ($filterConfig['period'] && $filterConfig['month']) { 
+            if ($filterConfig['period'] && $filterConfig['month']) {
                 $selectedPeriods = $this->_table->ControllerAction->getVar('selectedPeriods');
                 $selectedMonth = $this->_table->ControllerAction->getVar('selectedMonth');
                 $checkFlag = 0;
                 if ((!is_null($selectedPeriods) && $selectedPeriods != -1) && ($selectedMonth == -1)) {
                     $compare_start_date = $selectedPeriods .'-01-01';
-                    $compare_end_date = $selectedPeriods .'-12-31';   
+                    $compare_end_date = $selectedPeriods .'-12-31';
                     $checkFlag =1;
                 }else if ((!is_null($selectedPeriods) && $selectedPeriods != -1) && (!is_null($selectedMonth) && $selectedMonth != -1)) {
 
                     $cal_date_in_month = cal_days_in_month(CAL_GREGORIAN, $selectedMonth, $selectedPeriods); //calcualte days in given month in given year
                     $compare_start_date = $selectedPeriods .'-'. $selectedMonth.'-'.'01';
-                    $compare_end_date = $selectedPeriods .'-'. $selectedMonth.'-'.$cal_date_in_month;   
+                    $compare_end_date = $selectedPeriods .'-'. $selectedMonth.'-'.$cal_date_in_month;
                     $checkFlag =1;
                 }
                 if($checkFlag == 1){
-                    if($this->_table->alias == 'Results'){
+                    if($this->_table->getAlias() == 'Results'){
                         $query->where([
                             'OR'=>[
                                     [$TrainingSessions->aliasField('start_date >=') => $compare_start_date, $TrainingSessions->aliasField('end_date <=') => $compare_end_date],
@@ -710,11 +741,11 @@ class WorkflowBehavior extends Behavior
         }
 
         //POCOR-5695 starts
-        if(($this->_table->alias == 'Results') || ($this->_table->alias == 'Sessions')){
-            $TrainingSessions = TableRegistry::get('training_sessions');
-            if($this->_table->alias == 'Results'){
+        if(($this->_table->getAlias() == 'Results') || ($this->_table->getAlias() == 'Sessions')){
+            $TrainingSessions = TableRegistry::get('Training.TrainingSessions');
+            if($this->_table->getAlias() == 'Results'){
                 $query->leftJoin(
-                        [$TrainingSessions->alias() => $TrainingSessions->table()],
+                        [$TrainingSessions->getAlias() => $TrainingSessions->getTable()],
                         [
                             $this->_table->aliasField('training_session_id = ') . $TrainingSessions->aliasField('id'),
                         ]
@@ -723,13 +754,13 @@ class WorkflowBehavior extends Behavior
             if ($filterConfig['area']) {
                 $selectedArea = $this->_table->ControllerAction->getVar('selectedArea');
                 if (!is_null($selectedArea) && $selectedArea != -1) {
-                    $areaIds= []; 
+                    $areaIds= [];
                     $Areas = TableRegistry::get('Area.Areas');
                     $AreasOptions = $Areas
                                     ->find()
                                     ->where([$Areas->aliasField('parent_id') => $selectedArea])
-                                    ->all();    
-                    $areaIds[] =  $selectedArea;              
+                                    ->all();
+                    $areaIds[] =  $selectedArea;
                     if(!empty($AreasOptions)){
                         foreach ($AreasOptions as $AreasOption) {
                             $areaIds[] = $AreasOption->id;
@@ -745,31 +776,31 @@ class WorkflowBehavior extends Behavior
                             }
                         }
                     }
-                    $selectedArea = $areaIds;      
-                    if($this->_table->alias == 'Results'){
+                    $selectedArea = $areaIds;
+                    if($this->_table->getAlias() == 'Results'){
                         $query->where([$TrainingSessions->aliasField('area_id IN') => $selectedArea]);
                     }else{
                         $query->where([$this->_table->aliasField('area_id IN') => $selectedArea]);
                     }
                 }
             }
-            if ($filterConfig['period'] && $filterConfig['month']) { 
+            if ($filterConfig['period'] && $filterConfig['month']) {
                 $selectedPeriods = $this->_table->ControllerAction->getVar('selectedPeriods');
                 $selectedMonth = $this->_table->ControllerAction->getVar('selectedMonth');
                 $checkFlag = 0;
                 if ((!is_null($selectedPeriods) && $selectedPeriods != -1) && ($selectedMonth == -1)) {
                     $compare_start_date = $selectedPeriods .'-01-01';
-                    $compare_end_date = $selectedPeriods .'-12-31';   
+                    $compare_end_date = $selectedPeriods .'-12-31';
                     $checkFlag =1;
                 }else if ((!is_null($selectedPeriods) && $selectedPeriods != -1) && (!is_null($selectedMonth) && $selectedMonth != -1)) {
 
                     $cal_date_in_month = cal_days_in_month(CAL_GREGORIAN, $selectedMonth, $selectedPeriods); //calcualte days in given month in given year
                     $compare_start_date = $selectedPeriods .'-'. $selectedMonth.'-'.'01';
-                    $compare_end_date = $selectedPeriods .'-'. $selectedMonth.'-'.$cal_date_in_month;   
+                    $compare_end_date = $selectedPeriods .'-'. $selectedMonth.'-'.$cal_date_in_month;
                     $checkFlag =1;
                 }
                 if($checkFlag == 1){
-                    if($this->_table->alias == 'Results'){
+                    if($this->_table->getAlias() == 'Results'){
                         $query->where([
                             'OR'=>[
                                     [$TrainingSessions->aliasField('start_date >=') => $compare_start_date, $TrainingSessions->aliasField('end_date <=') => $compare_end_date],
@@ -822,7 +853,6 @@ class WorkflowBehavior extends Behavior
     {
         $ControllerAction = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
         $model = $this->_table;
-
         // setup workflow
         if ($this->attachWorkflow) {
             $workflowStep = $this->getWorkflowStep($entity);
@@ -831,7 +861,7 @@ class WorkflowBehavior extends Behavior
                 $modelName = $workflowStep->_matchingData['WorkflowModels']->model;
             }
 
-            $workflowModel = isset($modelName) ? $modelName : $this->config('model');
+            $workflowModel = isset($modelName) ? $modelName : $this->getConfig('model');
             $workflow = $this->getWorkflow($workflowModel, $entity);
 
             if (!empty($workflow)) {
@@ -873,6 +903,19 @@ class WorkflowBehavior extends Behavior
                         $transitionDisplay = '<span class="status past">' . __($transition->prev_workflow_step_name) . '</span>';
                         $transitionDisplay .= '<span class="transition-arrow"></span>';
                         if (count($transitions) - 1 == $key) {
+                            //POCOR-8434 Starts
+                            if(($workflowStep->name == 'Approved') && ($transition->workflow_step_name == $workflowStep->name) && ($workflowModel == 'Institution.StudentAdmission')){
+                                $WorkflowActionsTable = TableRegistry::get('Workflow.WorkflowActions');
+                                $WorkflowActions = $WorkflowActionsTable->find()
+                                    ->where([
+                                        $WorkflowActionsTable->aliasField('next_workflow_step_id') => $workflowStep->id
+                                    ])->first();
+                                if($WorkflowActions->event_key == 'Workflow.onTriggerPendingEnrolment'){
+                                    $transition->workflow_step_name = 'Admitted';
+                                }
+                            }else if(($workflowStep->name == 'Approved') && ($transition->workflow_step_name == $workflowStep->name) && $workflowModel == 'Institution.StudentEnrolment'){
+                                $transition->workflow_step_name = 'Enrolled';
+                            }//POCOR-8434 Ends
                             $transitionDisplay .= '<span class="status highlight">' . __($transition->workflow_step_name) . '</span>';
                         } else {
                             $transitionDisplay .= '<span class="status past">' . __($transition->workflow_step_name) . '</span>';
@@ -889,6 +932,7 @@ class WorkflowBehavior extends Behavior
                     }
                 }
 
+
                 $ControllerAction->field('workflow_transitions', [
                     'type' => 'element',
                     'element' => 'Workflow.transitions',
@@ -898,18 +942,43 @@ class WorkflowBehavior extends Behavior
                     'tableCells' => $tableCells
                 ]);
                 // End
-
+                //POCOR-8434 starts
+                if($model->getAlias() == 'StudentAdmission'){
+                    if($entity->has('test_score') && $entity->has('interview_score')){
+                        $tableHeaders1[] = __('Shortlisting');
+                        $ControllerAction->field('shortlist', [
+                            'type' => 'element',
+                            'element' => 'Workflow.shortlist',
+                            'override' => true,
+                            'rowClass' => 'section-header',
+                            'tableHeaders' => $tableHeaders1
+                        ]);
+                    }
+                }                 
+                //POCOR-8434 ends
                 // Reorder fields
                 $fieldOrder = [];
                 $fields = $model->fields;
+                //POCOR-8434 starts
+                $excludeFields = $model->getAlias() == 'StudentAdmission' 
+                                ? ['workflow_status', 'assignee_id', 'shortlist', 'workflow_transitions'] 
+                                : ['workflow_status', 'assignee_id', 'workflow_transitions'];
                 foreach ($fields as $fieldKey => $fieldAttr) {
-                    if (!in_array($fieldKey, ['workflow_status', 'assignee_id', 'workflow_transitions'])) {
+                    if (!in_array($fieldKey, $excludeFields)) {
                         $fieldOrder[$fieldAttr['order']] = $fieldKey;
                     }
-                }
+                }//POCOR-8434 ends
                 ksort($fieldOrder);
                 array_unshift($fieldOrder, 'assignee_id');  // Set workflow_status to second
                 array_unshift($fieldOrder, 'workflow_status');  // Set workflow_status to first
+                //POCOR-8434 starts
+                if($model->getAlias() == 'StudentAdmission'){
+                    $fieldOrder[] = 'shortlist'; // Place 'shortlist' just after 'institution_id'
+                    // Remove "shortlist"
+                    $shortlist = array_splice($fieldOrder, array_search('shortlist', $fieldOrder), 1);
+                    // Insert "shortlist" after "institution_id"
+                    array_splice($fieldOrder, array_search('institution_id', $fieldOrder) + 1, 0, $shortlist);
+                } //POCOR-8434 ends               
                 $fieldOrder[] = 'workflow_transitions'; // Set workflow_transitions to last
                 $ControllerAction->setFieldOrder($fieldOrder);
                 // End
@@ -918,6 +987,23 @@ class WorkflowBehavior extends Behavior
             }
         }
     }
+    //POCOR-8434 starts
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $ControllerAction = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+        $model = $this->_table;
+        if($model->getAlias() == 'StudentAdmission'){
+            $tableHeaders1[] = __('Shortlisting');
+            $ControllerAction->field('shortlist', [
+                'type' => 'element',
+                'element' => 'Workflow.shortlist',
+                'override' => true,
+                'rowClass' => 'section-header',
+                'tableHeaders' => $tableHeaders1
+            ]);
+        } 
+         
+    }//POCOR-8434 ends
 
     public function addEditBeforeAction(Event $event)
     {
@@ -948,10 +1034,10 @@ class WorkflowBehavior extends Behavior
                 $entity = null;
                 $event = $model->dispatchEvent('ControllerAction.Model.edit', [$extra], $this);
                 if ($event->isStopped()) {
-                    return $event->result;
+                    return $event->getResult();
                 }
-                if ($event->result instanceof Entity) {
-                    $entity = $event->result;
+                if ($event->getResult() instanceof Entity) {
+                    $entity = $event->getResult();
                 }
 
                 // workflow fields
@@ -1010,7 +1096,7 @@ class WorkflowBehavior extends Behavior
     public function setupWorkflowTransitionFields(Entity $entity, array $actionAttr)
     {
         $model = $this->_table;
-        $alias = $this->WorkflowTransitions->alias();
+        $alias = $this->WorkflowTransitions->getAlias();
 
         // show postEvent description
         if (!empty($actionAttr['event_description'])) {
@@ -1094,8 +1180,8 @@ class WorkflowBehavior extends Behavior
         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
 
         // for approve action
-        if (isset($data[$model->alias()]['validate_approve'])) {
-            if (isset($data[$model->alias()]['workflow_assignee_id']) && !empty($data[$model->alias()]['workflow_assignee_id'])) {
+        if (isset($data[$model->getAlias()]['validate_approve'])) {
+            if (isset($data[$model->getAlias()]['workflow_assignee_id']) && !empty($data[$model->getAlias()]['workflow_assignee_id'])) {
                 //$data['WorkflowTransitions']['assignee_id'] = $data[$model->alias()]['workflow_assignee_id'];
                 $data['WorkflowTransitions']['assignee_id'] = $model->Auth->user('id');//POCOR-7301 and POCOR-7311
             }
@@ -1113,10 +1199,10 @@ class WorkflowBehavior extends Behavior
         if ($this->attachWorkflow) {
             $model = $this->_table;
             //POCOR-7669
-            if( $model->alias() == "InstitutionPositions"){
+            if( $model->getAlias() == "InstitutionPositions"){
                 if (!$model->AccessControl->isAdmin()) {
                     $buttons = $model->onUpdateActionButtons($event, $entity, $buttons);
-    
+
                     $workflowStep = $this->getWorkflowStep($entity);
                     $isEditable = false;
                     $isDeletable = false;
@@ -1124,28 +1210,24 @@ class WorkflowBehavior extends Behavior
                         $isEditable = $workflowStep->is_editable == 1 ? true : false;
                         $isDeletable = $workflowStep->is_removable == 1 ? true : false;
                     }
-    
+
                     return $buttons;
                 }
             }else{
-                if (!$model->AccessControl->isAdmin()) {
+                if ($model->AccessControl->isAdmin()) {
+               
+
                     $buttons = $model->onUpdateActionButtons($event, $entity, $buttons);
 
                     $workflowStep = $this->getWorkflowStep($entity);
                     $isEditable = false;
                     $isDeletable = false;
                     if (!empty($workflowStep)) {
-                        $isEditable = $workflowStep->is_editable == 1 ? true : false;
-                        $isDeletable = $workflowStep->is_removable == 1 ? true : false;
+                        $isEditable = $workflowStep->is_editable == 1 ? true : true;
+                        $isDeletable = $workflowStep->is_removable == 1 ? true : true;
                     }
 
-                    if (array_key_exists('edit', $buttons) && !$isEditable) {
-                        unset($buttons['edit']);
-                    }
-
-                    if (array_key_exists('remove', $buttons) && !$isDeletable) {
-                        unset($buttons['remove']);
-                    }
+                    
 
                     return $buttons;
                 }
@@ -1154,7 +1236,7 @@ class WorkflowBehavior extends Behavior
         }
     }
 
-    public function onUpdateFieldStatusId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStatusId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'index') {
             $attr['type'] = 'select';
@@ -1168,14 +1250,14 @@ class WorkflowBehavior extends Behavior
         return $attr;
     }
 
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
             $attr['type'] = 'string';
         } elseif ($action == 'add') {
             $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
             $entity = $attr['entity'];
-            $registryAlias = $this->config('model');
+            $registryAlias = $this->getConfig('model');
             $workflowModelEntity = $this->getWorkflowSetup($registryAlias);
             // find the filter type column key
             $filterKey = null;
@@ -1214,14 +1296,14 @@ class WorkflowBehavior extends Behavior
                 $attr['type'] = 'readonly';
                 $attr['value'] = $userEntity->id;
                 $attr['attr']['value'] = $userEntity->name_with_id;
-              
-            } 
-            else if($request->data['StaffPositionProfiles']['staff_change_type_id'] == 1 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 2 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 3 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 4){
+
+            }
+            else if($request->getData('StaffPositionProfiles')['staff_change_type_id'] == 1 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 2 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 3 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 4){
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
                 $attr['options'] = $assigneeOptions;
             }
-            else if($model->alias() == 'InstitutionCases'){
+            else if($model->getAlias() == 'InstitutionCases'){
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
                 $attr['options'] = $assigneeOptions;
@@ -1252,7 +1334,7 @@ class WorkflowBehavior extends Behavior
         return $attr;
     }
 
-    public function getFirstStepAssigneeOptions(Entity $entity, $isSchoolBased, $stepId, Request $request)
+    public function getFirstStepAssigneeOptions(Entity $entity, $isSchoolBased, $stepId, ServerRequest $request)
     {
         $params = [
             'is_school_based' => $isSchoolBased,
@@ -1263,17 +1345,26 @@ class WorkflowBehavior extends Behavior
             if ($entity->has('institution_id')) {
                 $params['institution_id'] = $entity->institution_id;
             } else {
-                $session = $request->session();
-                if ($session->check('Institution.Institutions.id')) {
-                    $institutionId = $session->read('Institution.Institutions.id');
-                    $params['institution_id'] = $institutionId;
+                $table = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+                //POCOR-8401,POCOR-8402 starts
+                if ($this->controller->getName() != 'Profiles') {
+                    try {
+                        $institutionId = $table->getQueryString('institution_id');
+                    } catch (\Exception $exception) {
+                        Log::debug($exception->getMessage() . __CLASS__ . __FUNCTION__);
+                        $institutionId = $table->paramsDecode($this->_table->request->getAttribute('params')['pass'][1]);
+                    }
+                    $params = [
+                        'institution_id' => $institutionId
+                    ];
                 }
+                $params['institution_id'] = $institutionId;
             }
         }
-
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
         return $assigneeOptions;
+
     }
 
     public function getFirstWorkflowStep($registryAlias, Entity $entity)
@@ -1305,10 +1396,13 @@ class WorkflowBehavior extends Behavior
                 $assigneeOptions = [self::AUTO_ASSIGN => __('Auto Assign')];
                 $attr['select'] = false;
             } else {
-                $model = $this->_table;
-                $session = $model->request->session();
-                $institutionId = isset($model->request->params['institutionId']) ? $model->paramsDecode($model->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
-
+                $table = $this->_table;
+                try {
+                    $institutionId = $table->getQueryString('institution_id');
+                } catch (\Exception $exception) {
+                    Log::debug($exception->getMessage() . __CLASS__ . __FUNCTION__);
+                    $institutionId = $table->paramsDecode('institution_id');
+                }
                 $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
                 $params = [
                     'is_school_based' => $actionAttr['is_school_based'],
@@ -1495,8 +1589,16 @@ class WorkflowBehavior extends Behavior
     public function getWorkflowStep($entity = null)
     {
         if (!is_null($entity)) {
-            $workflowStepId = $entity->has('status') ? $entity->status->id : $entity->status_id;
-
+            // $workflowStepId = $entity->has('status_id') ? $entity->status_id : $entity->status_id;
+            //POCOR-8561 -- Start
+            $workflowStep = $entity->status;
+            $workflowStepId = $workflowStep ? $workflowStep->id : null;
+            //POCOR-8561 -- End
+            //POCOR-8411 -- Start
+            if(empty($workflowStepId)){
+                $workflowStepId = $entity->has('status_id') ? $entity->status_id : -1;
+            }
+            //POCOR-8411 -- End
             $model = $this->_table;
             $userId = $model->Auth->user('id');
             $assigneeId = $entity->assignee_id;
@@ -1504,8 +1606,8 @@ class WorkflowBehavior extends Behavior
             // user roles
             $roleIds = [];
             $event = $model->dispatchEvent('Workflow.onUpdateRoles', null, $this);
-            if ($event->result) {
-                $roleIds = $event->result;
+            if ($event->getResult()) {
+                $roleIds = $event->getResult();
             } else {
                 $roles = $model->AccessControl->getRolesByUser()->toArray();
                 foreach ($roles as $key => $role) {
@@ -1580,7 +1682,7 @@ class WorkflowBehavior extends Behavior
                                 $this->WorkflowSteps->aliasField('id') => $workflowStepId // Latest Workflow Step
                             ])
                             ->innerJoin(
-                                [$this->WorkflowStepsRoles->alias() => $this->WorkflowStepsRoles->table()],
+                                [$this->WorkflowStepsRoles->getAlias() => $this->WorkflowStepsRoles->getTable()],
                                 [
                                     $this->WorkflowStepsRoles->aliasField('workflow_step_id = ') . $this->WorkflowSteps->aliasField('id'),
                                     $this->WorkflowStepsRoles->aliasField('security_role_id IN') => $roleIds
@@ -1707,7 +1809,7 @@ class WorkflowBehavior extends Behavior
         if (!is_null($step)) {
             $workflow = $step->_matchingData['Workflows'];
 
-            $alias = $this->WorkflowTransitions->alias();
+            $alias = $this->WorkflowTransitions->getAlias();
             // workflow_step_id is needed for afterSave logic in WorkflowTransitions
             $fields = [
                 $alias.'.prev_workflow_step_id' => [
@@ -1868,7 +1970,7 @@ class WorkflowBehavior extends Behavior
     {
         // Unset edit buttons and add action buttons
         // POCOR-4529: Added disableWorkflow for view/index of features to view workflow pages without action buttons
-        if ($this->attachWorkflow && !$this->config('disableWorkflow')) {
+        if ($this->attachWorkflow && !$this->getConfig('disableWorkflow')) {
             if ($action == 'index') {
                 if ($this->hasWorkflow == false && $toolbarButtons->offsetExists('add')) {
                     unset($toolbarButtons['add']);
@@ -1879,8 +1981,9 @@ class WorkflowBehavior extends Behavior
 
                 $entity = $this->getRecord();
                 $workflowStep = $this->getWorkflowStep($entity);
-              //  echo "<pre>";print_r($workflowStep);die;
+
                 $actionButtons = [];
+                $model = $this->_table;
                 if (!empty($workflowStep)) {
                     $isSchoolBased = $workflowStep->_matchingData['WorkflowModels']->is_school_based;
 
@@ -1898,7 +2001,7 @@ class WorkflowBehavior extends Behavior
 
                     if ($canAddButtons) {
                         // reassign button - only super admin and login user is the assignee of the workflow
-                        $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+                        $model = $this->isCAv4() ? $model : $model->ControllerAction;
 
                         $userId = $model->Auth->user('id');
                         $isSuperAdmin = $model->Auth->user('super_admin');
@@ -1931,11 +2034,12 @@ class WorkflowBehavior extends Behavior
 
                             $modal = $this->getReassignModalOptions($entity);
                             if (!empty($modal)) {
-                                if (!isset($this->_table->controller->viewVars['modals'])) {
-                                    $this->_table->controller->set('modals', ['workflowReassign' => $modal]);
+                                $getVarModel = $model->controller->viewBuilder()->getVars()['modals'];
+                                if (!isset($getVarModel)) {
+                                    $model->controller->set('modals', ['workflowReassign' => $modal]);
                                 } else {
-                                    $modals = array_merge($this->_table->controller->viewVars['modals'], ['workflowReassign' => $modal]);
-                                    $this->_table->controller->set('modals', $modals);
+                                    $modals = array_merge($model->controller->viewBuilder()->getVars()['modals'], ['workflowReassign' => $modal]);
+                                    $model->controller->set('modals', $modals);
                                 }
                             }
                         }
@@ -1945,15 +2049,16 @@ class WorkflowBehavior extends Behavior
 
                             $eventKeys = $actionObj->event_key;
                             $eventsObject = new ArrayObject();
-                            $subjectEvent = $this->_table->dispatchEvent('Workflow.getEvents', [$eventsObject], $this->_table);
+                            $subjectEvent = $model->dispatchEvent('Workflow.getEvents', [$eventsObject], $model);
                             if ($subjectEvent->isStopped()) {
-                                return $subjectEvent->result;
+                                return $subjectEvent->getResult();
                             }
                             $eventArray = $eventsObject->getArrayCopy();
 
                             $eventDescription = '';
                             $events = explode(",", $eventKeys);
                             $actionObj->assignee_required = 1;
+
                             foreach ($events as $eventKey) {
                                 // assignee is required by default unless onAssignBack event is added
                                 if ($eventKey == 'Workflow.onAssignBack' || $eventKey == 'Workflow.onAssignBackToScholarshipApplicant') {
@@ -1969,15 +2074,16 @@ class WorkflowBehavior extends Behavior
                             }
 
                             $visibleField = [];
-                            $actionEvent = $this->_table->dispatchEvent('Workflow.setVisibleCustomModalField', [$eventKeys], $this->_table);
-                            if ($actionEvent->result) {
-                                $visibleField[] = $actionEvent->result;
+                            $actionEvent = $model->dispatchEvent('Workflow.setVisibleCustomModalField', [$eventKeys], $model);
+
+                            if ($actionEvent->getResult()) {
+                                $visibleField[] = $actionEvent->getResult();
                             }
 
                             $autoAssignAssignee = 0;
-                            $event = $this->_table->dispatchEvent('Workflow.setAutoAssignAssigneeFlag', [$actionObj], $this->_table);
-                            if (is_int($event->result)) {
-                                $autoAssignAssignee = $event->result;
+                            $event = $model->dispatchEvent('Workflow.setAutoAssignAssigneeFlag', [$actionObj], $model);
+                            if (is_int($event->getResult())) {
+                                $autoAssignAssignee = $event->getResult();
                             }
                             $actionType = $actionObj->action;
                             $button = [
@@ -2007,7 +2113,7 @@ class WorkflowBehavior extends Behavior
                             $buttonAttr = array_merge($attr, $buttonAttr);
 
                             if (is_null($actionType)) {
-                                if (array_key_exists('class', $buttonAttr)) {
+                                if (isset($buttonAttr['class'])) {
                                     unset($buttonAttr['class']);
                                 }
 
@@ -2031,7 +2137,13 @@ class WorkflowBehavior extends Behavior
                                         $approveButton['attr'] = $buttonAttr;
                                     } else {
                                         // approve function
-                                        $approveButton['url'] = $this->_table->setQueryString($this->_table->url('approve'), ['action_attr' => $json]);
+                                        $params = $model->getQueryString();
+                                        $params['action_attr'] = $json;
+                                        $encodedQueryString = $model->paramsEncode($params);
+                                        $url = $model->url('approve');
+                                        $url['0'] = 'approve';
+                                        $url['1'] = $encodedQueryString;
+                                        $approveButton['url'] = $url;
                                         $approveButton['attr'] = $attr;
                                     }
 
@@ -2052,11 +2164,11 @@ class WorkflowBehavior extends Behavior
                     }
                 }
 
-                if (!$this->_table->AccessControl->isAdmin() && $toolbarButtons->offsetExists('edit') && !$isEditable) {
+                if (!$model->AccessControl->isAdmin() && $toolbarButtons->offsetExists('edit') && !$isEditable) {
                     unset($toolbarButtons['edit']);
                 }
 
-                if (!$this->_table->AccessControl->isAdmin() && $toolbarButtons->offsetExists('remove') && !$isDeletable) {
+                if (!$model->AccessControl->isAdmin() && $toolbarButtons->offsetExists('remove') && !$isDeletable) {
                     unset($toolbarButtons['remove']);
                 }
 
@@ -2085,17 +2197,18 @@ class WorkflowBehavior extends Behavior
 
                     $toolbarButtons['more'] = $moreButton;
                 }
-                $this->_table->controller->set(compact('moreButtonLink', 'actionButtons'));
+                $model->controller->set(compact('moreButtonLink', 'actionButtons'));
                 // End
 
                 // Modal
                 $modal = $this->getModalOptions($entity);
                 if (!empty($modal)) {
-                    if (!isset($this->_table->controller->viewVars['modals'])) {
-                        $this->_table->controller->set('modals', ['workflowTransition' => $modal]);
+                    $modelVal = $model->controller->viewBuilder()->getVars()['modals'];
+                    if (!isset($modelVal)) {
+                        $model->controller->set('modals', ['workflowTransition' => $modal]);
                     } else {
-                        $modals = array_merge($this->_table->controller->viewVars['modals'], ['workflowTransition' => $modal]);
-                        $this->_table->controller->set('modals', $modals);
+                        $modals = array_merge($model->controller->viewBuilder()->getVars()['modals'], ['workflowTransition' => $modal]);
+                        $model->controller->set('modals', $modals);
                     }
                 }
                 // End
@@ -2136,7 +2249,7 @@ class WorkflowBehavior extends Behavior
         $model = $this->_table;
 
         if ($model->hasBehavior('Workflow')) {
-            $workflow = $this->getWorkflow($this->config('model'), $entity);
+            $workflow = $this->getWorkflow($this->getConfig('model'), $entity);
             if (!empty($workflow)) {
                 $workflowId = $workflow->id;
                 $workflowStep = $this->WorkflowSteps
@@ -2180,8 +2293,8 @@ class WorkflowBehavior extends Behavior
         }
 
         $event = $this->_table->dispatchEvent('Workflow.onSetCustomAssigneeParams', [$entity, $params], $this);
-        if ($event->result) {
-            $params = $event->result;
+        if ($event->getResult()) {
+            $params = $event->getResult();
         }
 
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
@@ -2198,9 +2311,9 @@ class WorkflowBehavior extends Behavior
     {
         $model = $this->_table;
         if ($model->hasBehavior('Workflow')) {
-            if (array_key_exists($this->WorkflowTransitions->alias(), $requestData)) {
-                if (array_key_exists('assignee_id', $requestData[$this->WorkflowTransitions->alias()]) && !empty($requestData[$this->WorkflowTransitions->alias()]['assignee_id'])) {
-                    $assigneeId = $requestData[$this->WorkflowTransitions->alias()]['assignee_id'];
+            if (array_key_exists($this->WorkflowTransitions->getAlias(), $requestData)) {
+                if (array_key_exists('assignee_id', $requestData[$this->WorkflowTransitions->getAlias()]) && !empty($requestData[$this->WorkflowTransitions->getAlias()]['assignee_id'])) {
+                    $assigneeId = $requestData[$this->WorkflowTransitions->getAlias()]['assignee_id'];
                     /**POCOR-7274 :: Start*/
                     if(!empty($requestData['StudentTransferIn']['assignee_id'])){
                         $assigneeId = $requestData['StudentTransferIn']['assignee_id'];
@@ -2225,9 +2338,9 @@ class WorkflowBehavior extends Behavior
     {
         $model = $this->_table;
         if ($model->hasBehavior('Workflow')) {
-            if (array_key_exists($this->WorkflowTransitions->alias(), $requestData)) {
-                if (array_key_exists('workflow_step_id', $requestData[$this->WorkflowTransitions->alias()])) {
-                    $statusId = $requestData[$this->WorkflowTransitions->alias()]['workflow_step_id'];
+            if (array_key_exists($this->WorkflowTransitions->getAlias(), $requestData)) {
+                if (array_key_exists('workflow_step_id', $requestData[$this->WorkflowTransitions->getAlias()])) {
+                    $statusId = $requestData[$this->WorkflowTransitions->getAlias()]['workflow_step_id'];
                     if ($entity->has('status_id')) {
                         // change to save instead of update all to trigger after save function.
                         $entity->status_id = $statusId;
@@ -2240,7 +2353,7 @@ class WorkflowBehavior extends Behavior
             //POCOR-5677 & POCOR-6028 starts
             if ($entity->has('status_id') && $entity->status_id == 95) {
                 // update in institution_student_transfers table start and end date after change status open to pending approval
-                $AcademicPeriods = TableRegistry::get('academic_periods');
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $AcademicData = $AcademicPeriods
                             ->find()
                             ->where([$AcademicPeriods->aliasField('id') => $entity->academic_period_id])
@@ -2263,7 +2376,7 @@ class WorkflowBehavior extends Behavior
             // used to get correct workflow model for StaffTransferIn and StaffTransferOut
             $workflowModel = $workflowStep->_matchingData['WorkflowModels'];
         } else {
-            $workflowModel = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $this->config('model')])->first();
+            $workflowModel = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $this->getConfig('model')])->first();
         }
 
         $this->WorkflowTransitions->deleteAll([
@@ -2277,14 +2390,14 @@ class WorkflowBehavior extends Behavior
         // use find instead of get to cater for models with composite keys using a hash id
         $model = $this->_table;
         //Start POCOR-6722
-        if ($model->alias() == 'Applications') {
+        if ($model->getAlias() == 'Applications') {
             $entity = $model->find()->where([$model->aliasField('id') => $id])->first();
             $this->setStatusId($entity, $requestData);
         }
         else{
             $id = $requestData['WorkflowTransitions']['model_reference']; //POCOR-6588
             $entity = $model->get($id);
-            $this->setStatusId($entity, $requestData);            
+            $this->setStatusId($entity, $requestData);
         }
         //End POCOR-6722
 
@@ -2297,15 +2410,16 @@ class WorkflowBehavior extends Behavior
     {
         ini_set('memory_limit', '-1');
         ini_set('max_execution_time', 360);
-        $request = $this->_table->controller->request;
-        if ($request->is(['post', 'put'])) {
-            $requestData = $request->data;
+        $request = $this->_table->controller->getRequest();
 
-            $subject = $this->config('model') == null ? $this->_table : TableRegistry::get($this->config('model'));
+        if ($request->is(['post', 'put'])) {
+            $requestData = $request->getData();
+
+            $subject = $this->getConfig('model') == null ? $this->_table : TableRegistry::get($this->getConfig('model'));
             // Trigger workflow before save event here
             $event = $subject->dispatchEvent('Workflow.beforeTransition', [$requestData], $subject);
             if ($event->isStopped()) {
-                return $event->result;
+                return $event->getResult();
             }
             // End
 
@@ -2316,11 +2430,11 @@ class WorkflowBehavior extends Behavior
             if ($this->WorkflowTransitions->save($entity)) {
                 //POCOR-6500 starts
                 //remove user's data from `security_group_users` table
-                $WorkflowStepsTable = TableRegistry::get('workflow_steps');
-                $WorkflowsTable = TableRegistry::get('workflows');
+                $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+                $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
                 $WithdrawStudents = $WorkflowStepsTable
                                     ->find()
-                                    ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
+                                    ->leftJoin([$WorkflowsTable->getAlias() => $WorkflowsTable->getTable()],
                                         [ $WorkflowsTable->aliasField('id').'='.$WorkflowStepsTable->aliasField('workflow_id') ]
                                     )
                                     ->where([
@@ -2328,7 +2442,7 @@ class WorkflowBehavior extends Behavior
                                         $WorkflowStepsTable->aliasField('name') => 'Withdrawn'
                                     ])
                                     ->first();
-                
+
                 if($entity->workflow_step_id == $WithdrawStudents->id){
                     //get user's data from `institution_student_withdraw` table
                     $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
@@ -2340,21 +2454,21 @@ class WorkflowBehavior extends Behavior
                                         ->first();
                     if(!empty($StudentWithdrawData)){
                         //get student role
-                        $securityRolesTbl = TableRegistry::get('security_roles');
+                        $securityRolesTbl = TableRegistry::get('Security.SecurityRoles');
                         $securityRoles = $securityRolesTbl->find()
                                                 ->where([
                                                     $securityRolesTbl->aliasField('code') => 'STUDENT',
                                                 ])
                                                 ->first();
                         //get student institution
-                        $institutionTbl = TableRegistry::get('institutions');
+                        $institutionTbl = TableRegistry::get('Institution.Institutions');
                         $institutions = $institutionTbl->find()
                                                 ->where([
                                                     $institutionTbl->aliasField('id') => $StudentWithdrawData->institution_id
                                                 ])
                                                 ->first();
                         if(!empty($institutions) && $institutions->security_group_id !=''){
-                            $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+                            $securityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
                             $securityGroupUsers = $securityGroupUsersTbl->find()
                                                     ->where([
                                                         $securityGroupUsersTbl->aliasField('security_group_id') => $institutions->security_group_id,
@@ -2367,7 +2481,7 @@ class WorkflowBehavior extends Behavior
                                     $SecurityGroupUsersTable->deleteAll(['id' => $id ]);
                             }
                         }
-                    }                    
+                    }
                 }//POCOR-6500 ends
 
 
@@ -2376,7 +2490,7 @@ class WorkflowBehavior extends Behavior
                 // Trigger workflow after save event here
                 $event = $subject->dispatchEvent('Workflow.afterTransition', [$id, $requestData], $subject);
                 if ($event->isStopped()) {
-                    return $event->result;
+                    return $event->getResult();
                 }
                 // End
 
@@ -2389,17 +2503,16 @@ class WorkflowBehavior extends Behavior
                     foreach ($eventKeys as $eventKey) {
                         $event = $subject->dispatchEvent($eventKey, [$id, $entity], $subject);
                         if ($event->isStopped()) {
-                            return $event->result;
+                            return $event->getResult();
                         }
                     }
                 }
                 // End
             } else {
-                $this->_table->controller->log($entity->errors(), 'debug');
+                $this->_table->controller->log($entity->getErrors(), 'debug');
                 $this->_table->controller->Alert->error('general.edit.failed', ['reset' => true]);
             }
             // End
-
             // Redirect
             if ($this->isCAv4()) {
                 $url = $this->_table->url('view');
@@ -2407,6 +2520,14 @@ class WorkflowBehavior extends Behavior
                 $url = $this->_table->ControllerAction->url('view');
             }
 
+            $params = $this->_table->getQueryString();
+            if(!isset($params['id'])){
+                if(isset($entity->id)){
+                    $params['id'] = $entity->id;
+                }
+            }
+            $encodedQueryString = $this->_table->paramsEncode($params);
+            $url['1'] = $encodedQueryString;
             return $this->_table->controller->redirect($url);
             // End
         }
@@ -2415,12 +2536,12 @@ class WorkflowBehavior extends Behavior
     public function processReassign()
     {
         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-        $request = $model->controller->request;
+        $request = $model->controller->getRequest();
 
         if ($request->is(['post', 'put'])) {
-            $requestData = $request->data;
+            $requestData = $request->getData();
 
-            $workflowModelEntity = $this->getWorkflowSetup($this->config('model'));
+            $workflowModelEntity = $this->getWorkflowSetup($this->getConfig('model'));
 
             $assigneeId = $requestData['assignee_id'];
             $entity = $model
@@ -2437,9 +2558,22 @@ class WorkflowBehavior extends Behavior
             $this->WorkflowTransitions->trackChanges($workflowModelEntity, $entity, $assigneeId, $requestDataComment);
 
             $entity->assignee_id = $assigneeId;
-            $model->save($entity);
+            $entity = $model->save($entity);
 
             $url = $model->url('view');
+            $params = $this->_table->getQueryString();
+            $params = $this->_table->getQueryString();
+            if(!isset($params['id'])){
+                if(isset($entity->id)){
+                    $params['id'] = $entity->id;
+                }
+            }
+            $encodedQueryString = $this->_table->paramsEncode($params);
+            $url['1'] = $encodedQueryString;
+
+            $encodedQueryString = $this->_table->paramsEncode($params);
+            $url['1'] = $encodedQueryString;
+
             return $this->_table->controller->redirect($url);
         }
     }
@@ -2473,14 +2607,14 @@ class WorkflowBehavior extends Behavior
             $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
             $results = $WorkflowModels
                 ->find()
-                ->where([$WorkflowModels->aliasField('model') => $this->config('model')])
+                ->where([$WorkflowModels->aliasField('model') => $this->getConfig('model')])
                 ->first();
 
             if (!empty($results) && !empty($results->filter)) {
                 $filterAlias = $results->filter;
-                $modelAlias = $this->config('model');
+                $modelAlias = $this->getConfig('model');
 
-                $filterKey = $this->getFilterKey($filterAlias, $this->config('model'));
+                $filterKey = $this->getFilterKey($filterAlias, $this->getConfig('model'));
                 if (empty($filterKey)) {
                     list($modelplugin, $modelAlias) = explode('.', $filterAlias, 2);
                     $filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
@@ -2501,8 +2635,8 @@ class WorkflowBehavior extends Behavior
         $filterKey = '';
         $associations = TableRegistry::get($filterAlias)->associations();
         foreach ($associations as $assoc) {
-            if ($assoc->registryAlias() == $modelAlias) {
-                $filterKey = $assoc->foreignKey();
+            if ($assoc->getRegistryAlias() == $modelAlias) {
+                $filterKey = $assoc->getForeignKey();
                 return $filterKey;
             }
         }
@@ -2511,7 +2645,7 @@ class WorkflowBehavior extends Behavior
 
     public function getPendingRecords(Event $event, $params = [])
     {
-        $institutionKey = $this->config('institution_key');
+        $institutionKey = $this->getConfig('institution_key');
         $model = $this->_table;
         $doneStatus = WorkflowSteps::DONE;
         $institutionId = $params['institution_id'];
@@ -2548,8 +2682,8 @@ class WorkflowBehavior extends Behavior
 
         // check additional conditions to show buttons
         $event = $this->_table->dispatchEvent('Workflow.checkIfCanAddButtons', [$entity], $this);
-        if (is_bool($event->result)) {
-            $canAddButtons = $event->result;
+        if (is_bool($event->getResult())) {
+            $canAddButtons = $event->getResult();
         }
 
         return $canAddButtons;
@@ -2591,7 +2725,7 @@ class WorkflowBehavior extends Behavior
             Log::write('error', '---------------------------------------------------------');
             Log::write('error', 'WorkflowBehavior.php >> onApprovalofEnableStaffAssignment() : $result is empty');
             Log::write('error', 'WorkflowBehavior.php >> onApprovalofEnableStaffAssignment() : model : '.$model);
-            Log::write('error', 'WorkflowBehavior.php >> onApprovalofEnableStaffAssignment() : model alias : '.$model->alias());
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofEnableStaffAssignment() : model alias : '.$model->getAlias());
             Log::write('error', '---------------------------------------------------------');
         }
     }
@@ -2620,7 +2754,7 @@ class WorkflowBehavior extends Behavior
             Log::write('error', '---------------------------------------------------------');
             Log::write('error', 'WorkflowBehavior.php >> onApprovalofDisableStaffAssignment() : $result is empty');
             Log::write('error', 'WorkflowBehavior.php >> onApprovalofDisableStaffAssignment() : model : '.$model);
-            Log::write('error', 'WorkflowBehavior.php >> onApprovalofDisableStaffAssignment() : model alias : '.$model->alias());
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofDisableStaffAssignment() : model alias : '.$model->getAlias());
             Log::write('error', '---------------------------------------------------------');
         }
     }

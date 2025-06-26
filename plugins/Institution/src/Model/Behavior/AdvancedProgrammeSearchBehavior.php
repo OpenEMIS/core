@@ -14,15 +14,15 @@ class AdvancedProgrammeSearchBehavior extends Behavior
         'associatedKey' => '',
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $associatedKey = $this->config('associatedKey');
+        $associatedKey = $this->getConfig('associatedKey');
         if (empty($associatedKey)) {
-            $this->config('associatedKey', $this->_table->aliasField('id'));
+            $this->setConfig('associatedKey', $this->_table->aliasField('id'));
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -190,10 +190,22 @@ class AdvancedProgrammeSearchBehavior extends Behavior
                 'EducationCycles.order' => 'ASC',
                 'EducationProgrammes.order' => 'ASC',
                 'EducationGrades.order' => 'ASC'
-            ]) //POCOR-8165 - Update order by fields for sorting
-            ->toArray();
+            ]);//POCOR-8165 - Update order by fields for sorting
+            
+            //POCOR-8300- Add a where condition to filter out empty records
+            $query->where([
+                'EducationProgrammes.id IS NOT NULL',
+                'EducationProgrammes.name IS NOT NULL',
+                'EducationLevels.id IS NOT NULL',
+                'EducationLevels.name IS NOT NULL',
+                'EducationSystems.id IS NOT NULL',
+                'EducationSystems.name IS NOT NULL',
+                'AcademicPeriods.name IS NOT NULL'
+            ]);
 
-        foreach ($query as $key => $value) {
+            $results = $query->toArray();
+
+        foreach ($results as $key => $value) {
             $value['education_system_name'] = __($value['education_system_name']) . ': ' . $value['academic_period_name'];
             $value['education_level_name'] = __($value['education_level_name']) . ': ' . $value['academic_period_name'];
             $value['education_program_name'] = __($value['education_program_name'] . ': ' . $value['academic_period_name']);

@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use App\Model\Table\AppTable;
 
 class CustomRecordsTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 		$this->addBehavior('CustomField.Record', [
 			'moduleKey' => null
@@ -15,12 +15,15 @@ class CustomRecordsTable extends AppTable {
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
-		$this->request->query['form'] = $entity->custom_form_id;
+		//$this->request->getQuery('form') = $entity->custom_form_id;
+		$queryParams = $this->request->getQueryParams();
+		$queryParams['form'] = $entity->custom_form_id;
+		$this->request = $this->request->withQueryParams($queryParams);
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
 		$this->setupFields($entity);
-		$entity->custom_form_id = $this->request->query('form');
+		$entity->custom_form_id = $this->request->getQuery('form');
 	}
 
 	public function onUpdateFieldCustomFormId(Event $event, array $attr, $action, $request) {
@@ -28,14 +31,14 @@ class CustomRecordsTable extends AppTable {
 			$formOptions = $this->CustomForms
 				->find('list')
 				->toArray();
-			$selectedForm = $this->queryString('form', $formOptions);
+			$selectedForm = $this->setQueryString('form', $formOptions);
 			$this->advancedSelectOptions($formOptions, $selectedForm);
 
 			$attr['type'] = 'select';
 			$attr['options'] = $formOptions;
 			$attr['onChangeReload'] = 'changeForm';
 		} else if ($action == 'edit') {
-			$selectedForm = $this->request->query('form');
+			$selectedForm = $this->request->getQuery('form');
 
 			$attr['type'] = 'readonly';
 			$attr['value'] = $selectedForm;
@@ -47,15 +50,19 @@ class CustomRecordsTable extends AppTable {
 
 	public function addEditOnChangeForm(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$request = $this->request;
-		unset($request->query['form']);
-
+		//unset($request->getQuery('form'));
+		$queryParams = $this->request->getQueryParams();
+		unset($queryParams['form']);
+		$this->request = $this->request->withQueryParams($queryParams);
 		if ($request->is(['post', 'put'])) {
-			if (array_key_exists($this->alias(), $request->data)) {
-				if (array_key_exists('custom_form_id', $request->data[$this->alias()])) {
-					$this->request->query['form'] = $request->data[$this->alias()]['custom_form_id'];
+			if (array_key_exists($this->getAlias(), $request->getData())) {
+				if (array_key_exists('custom_form_id', $request->getData()[$this->getAlias()])) {
+					//$this->request->getQuery('form') = $request->getData()[$this->getAlias()]['custom_form_id'];
+					$queryParams['form'] = $requestData[$alias]['custom_form_id'];
 				}
 			}
 		}
+		$this->request = $this->request->withQueryParams($queryParams);
 	}
 
 	private function setupFields(Entity $entity) {

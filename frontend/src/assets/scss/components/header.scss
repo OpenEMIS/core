@@ -1,0 +1,581 @@
+@charset "UTF-8";
+
+/* Header V1.1.0 */
+
+.kdx-navbar {
+    display: flex;
+    height: 50px;
+    color: $whiteColor;
+    padding: $noPadding;
+    margin: $noMargin;
+    justify-content: space-between;
+    flex-direction: row;
+
+    @media #{$tabletLandscape} {
+        flex-direction: column;
+    }
+
+    .kdx-navbar-left {
+        flex: 0 1 auto;
+        max-width: 60%;
+
+        @media #{$tabletLandscape} {
+            max-width: 100%;
+        }
+
+        &,
+        .kdx-navbar-right {
+            height: inherit;
+        }
+
+        .kdx-menu-handler {
+            display: none !important;
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: block;
+            height: 48px;
+            width: 48px;
+
+            .kdx-menu-toggle,
+            .kdx-menu-toggle:focus,
+            .kdx-menu-toggle:active,
+            .kdx-menu-toggle:hover {
+                background-color: transparent;
+                font-size: $textSizeXL;
+                color: $whiteColor;
+                border: 0;
+                outline: none;
+                padding: $noPadding;
+                margin: $noMargin;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                // -webkit-transform: translate(-50%, -50%);
+                // -moz-transform: translate(-50%, -50%);
+                // -ms-transform: translate(-50%, -50%);
+                // -o-transform: translate(-50%, -50%);
+                transform: translate(-50%, -50%);
+            }
+
+            @media #{$tabletLandscape} {
+                display: block !important;
+            }
+        }
+
+        .kdx-brand-logo {
+            display: flex;
+            height: inherit;
+            color: $whiteColor !important;
+            box-sizing: border-box;
+            cursor: pointer;
+
+            @media #{$tabletLandscape} {
+                justify-content: center;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                margin-left: 50px;
+                margin-right: 50px;
+            }
+
+            i {
+                margin: 9px;
+                font-size: $iconSizeL;
+
+                &,
+                img {
+                    flex: 0 0 auto;
+                }
+            }
+
+            img {
+                margin-right: $margin5;
+            }
+
+            h1 {
+                @extend .ellipsis;
+
+                flex: 0 1 auto;
+                font-size: $textSizeXL;
+                margin: $noMargin;
+                padding: $padding15 $noPadding;
+            }
+        }
+    }
+
+    .kdx-navbar-right {
+        flex: 0 1 auto;
+        max-width: 40%;
+        margin-left: auto;
+
+        @media #{$tabletLandscape} {
+            height: 40px !important;
+            max-width: 100%;
+            margin-left: $noMargin;
+            background-color: #F9F9F9;
+            border-bottom: $lightGreyBorder;
+        }
+
+        .kdx-header-navigation {
+            display: flex;
+            height: inherit;
+
+            @media #{$tabletLandscape} {
+                justify-content: space-between;
+            }
+
+            .kdx-username-wrapper {
+                flex: 0 1 auto;
+                height: inherit;
+                position: relative;
+
+                @media #{$tabletLandscape} {
+                    // overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    min-width: 50px;
+                }
+                .kdx-username {
+                    height: inherit;
+                    display: flex;
+                    color: $whiteColor !important;
+                    box-sizing: border-box;
+                    cursor: pointer;
+                    text-decoration: none;
+
+                    @media #{$tabletLandscape} {
+                        color: $bodyTextColor !important;
+                    }
+
+                    &:after {
+                        display: none;
+                    }
+
+                    span {
+                        display: inline-block;
+                        flex: 1 1 auto;
+                        margin: $noMargin $margin10 $noMargin $noMargin;
+                        padding: 16px $noPadding;
+                        height: inherit;
+                        font-size: $bodyTextSize;
+                        line-height: 20px;
+                        max-width: 150px;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+
+                        @media #{$tabletLandscape} {
+                            padding: 14px $noPadding 14px $padding10;
+                            line-height: 14px;
+                            max-width: none;
+                        }
+
+                        @media #{$mobilePortrait} {
+                            display: none;
+                        }
+                    }
+
+                    .kdx-user-thumbnail {
+                        flex: 0 0 auto;
+                        background: $whiteColor;
+                        border: $lightGreyBorder;
+                        -webkit-border-radius: 50%;
+                        border-radius: 50%;
+                        margin: $margin10;
+                        width: 30px;
+                        height: 30px;
+                        box-shadow: none !important;
+                        box-sizing: border-box;
+                        position: relative;
+
+                        @media #{$tabletLandscape} {
+                            margin: $margin5 $margin10;
+                        }
+
+                        img {
+                            width: inherit;
+                            height: inherit;
+                            border-radius: 50%;
+                            vertical-align: top;
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                        }
+
+                        i {
+                            font-size: $textSizeXL;
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+
+                            @media #{$tabletLandscape} {
+                                font-size: $textSizeL;
+                            }
+                        }
+                    }
+                }
+
+                .kdx-user-profile {
+                    margin-top: -3px;
+                    width: 220px;
+                    left: auto !important;
+                    right: 0;
+
+                    @media #{$tabletLandscape} {
+                        left: 0 !important;
+                        right: auto !important;
+                    }
+
+                    .dropdown-arrow {
+                        position: absolute;
+                        right: 15px;
+                        top: -28px;
+                        font-size: $iconSizeL;
+                        text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
+
+                        @media #{$tabletLandscape} {
+                            left: 110px;
+                            right: auto;
+                        }
+
+                        @media #{$mobilePortrait} {
+                            left: 15px;
+                            right: auto;
+                        }
+
+                        i {
+                            color: $whiteColor !important;
+                        }
+                    }
+                    .dropdown-item {
+                        padding: $padding5 $padding10 !important;
+
+                        &:hover {
+                            background-color: $whiteColor !important;
+                            color: $bodyTextColor !important;
+                        }
+
+                        .kdx-user-thumbnail {
+                            text-align: center;
+                            width: 120px;
+                            height: 120px;
+                            border: $lightGreyBorder;
+                            border-radius: 50%;
+                            margin: $noMargin auto;
+                            position: relative;
+
+                            i,
+                            img {
+                                width: 120px;
+                                height: 120px;
+                                border-radius: 50%;
+                                font-size: $logoSizeL;
+                            }
+
+                            i {
+                                position: absolute;
+                                left: 50%;
+                                top: 50%;
+                                transform: translate(-50%, -50%);
+                                padding: 12px;
+                            }
+                        }
+                    }
+
+                    ul {
+                        margin: $margin5 $noMargin !important;
+
+                        li {
+                            white-space: normal;
+                            font-size: $textSizeXS;
+                            text-align: center;
+                            padding: 2px $noPadding;
+                        }
+
+                        li:last-child {
+                            color: #666;
+                        }
+                    }
+
+                    .btn {
+                        color: $whiteColor;
+                        font-size: $textSizeS;
+                        width: 100%;
+
+                        i {
+                            margin-right: $margin5;
+                        }
+                    }
+                }
+            }
+
+            .kdx-btn-group-wrapper { 
+                flex: 0 0 auto;
+                height: inherit;
+                max-width: 252px;
+
+                .btn-group {
+                    height: inherit;
+
+                    &:hover {
+                        @media #{$tabletLandscape} {
+                            background-color: #EEE !important;
+                        }
+                    }
+
+                    &:first-child {
+                        border-left: 1px solid rgba(225, 225, 225, 0.3);
+                    }
+
+                    &>div {
+                        height: inherit;
+                    }
+
+                    .btn {
+                        color: $whiteColor !important;
+                        height: inherit;
+                        margin: $noMargin;
+                        line-height: 32px;
+                        border-radius: 0;
+                        font-size: $textSizeS;
+                        -webkit-appearance: none !important;
+                        cursor: pointer;
+
+                        @media #{$tabletLandscape} {
+                            color: $bodyTextColor !important;
+                            line-height: 24px !important;
+                            padding: 6px 12px !important;
+                            -webkit-box-shadow: none !important;
+                            -moz-box-shadow: none !important;
+                            box-shadow: none !important;
+                            background-color: transparent;
+                        }
+
+                        i {
+                            pointer-events: none;
+                        }
+
+                        &:hover {
+                            @media #{$tabletLandscape} {
+                                background-color: #EEE !important;
+                            }
+                        }
+
+                        .notification-dot {
+                            position: relative;
+                        }
+
+                        .notification-dot::after {
+                            content: '\2022'; /* Unicode character for a bullet, you can change it if needed */
+                            position: absolute;
+                            top: -8px; /* Adjust the positioning as needed */
+                            right: -3px; /* Adjust the positioning as needed */
+                            color: red; /* Color of the notification dot */
+                            font-size: 40px; /* Adjust the font size as needed */
+                            width: 16px; /* Adjust the size of the dot */
+                            height: 16px; /* Adjust the size of the dot */
+                          }
+                    }
+
+                    .kdx-dropdown-toggle::after {
+                        display: none;
+                    }
+
+                    .dropdown-menu {
+                        padding: $padding20 $padding10;
+                        top: 45px;
+                        right: 0;
+                        left: auto !important;
+
+                        @media #{$tabletLandscape} {
+                            top: 35px;
+                        }
+
+                        li {
+                            display: block;
+                            padding: $padding10;
+                            font-size: $textSizeXS;
+                            color: $bodyTextColor;
+                            cursor: pointer;
+
+                            i {
+                                margin-right: $margin5;
+                            }
+
+                            &:hover {
+                                color: $whiteColor;
+                                transition: all 0.3s ease;
+                                -webkit-border-radius: 5px;
+                                border-radius: 5px;
+                            }
+                        }
+
+                        .dropdown-arrow {
+                            position: absolute;
+                            right: 15px;
+                            top: -28px;
+                            font-size: $iconSizeL;
+                            text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
+                            color: $whiteColor !important;
+
+                            @media #{$tabletLandscape} {
+                                right: 10px;
+                            }
+                        }
+                    }
+
+                    .kdx-grid-layout {
+                        color: $bodyTextColor;
+                        width: 320px;
+                        right: 0 !important;
+                        left: auto !important;
+
+                        .kdx-grid-item {
+                            text-align: center;
+                            display: inline-block;
+                            width: 80px;
+                            margin: $margin5 9px;
+                            padding: $padding5 $noPadding;
+                            vertical-align: top;
+                            line-height: 15px;
+                            cursor: pointer;
+
+                            &:hover {
+                                background-color: #F5F5F5 !important;
+                                color: $bodyTextColor !important;
+                                transition: all 0.8s ease;
+                                border-radius: 5px;
+                            }
+
+                            img, i {
+                                display: block;
+                                margin: $noMargin auto !important;
+                                padding: 3px;
+                                color: $bodyTextColor;
+                                font-size: $iconSizeL;
+                                width: 40px;
+                                height: 40px;
+                                border-radius: 5px;
+                            }
+
+                            span {
+                                font-size: $bodyTextSize;
+                                white-space: normal;
+                            }
+                        }
+                    }
+
+                    .kdx-list-layout {
+                        padding: $padding10 $noPadding;
+
+                        .kdx-list-item {
+                            padding: $padding5 $padding10;
+                            cursor: pointer;
+
+                            i {
+                                margin: $noMargin $margin10;
+                            }
+
+                            span {
+                                font-size: $textSizeXS;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .dropdown-menu {
+        box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.1);
+    }
+}
+
+.rtl {
+    .kdx-menu-handler {
+        right: 0;
+        left: auto !important;
+    }
+
+    .kdx-navbar-right {
+        margin: $noMargin;
+        margin-right: auto;
+
+        @media #{$tabletLandscape} {
+            margin-right: $noMargin;
+        }
+
+        .kdx-header-navigation {
+            .kdx-username-wrapper {
+                .kdx-user-profile {
+                    right: auto !important;
+                    left: 0 !important;
+
+                    @media #{$tabletLandscape} {
+                        right: 0 !important;
+                        left: auto !important;
+                    }
+
+                    .dropdown-arrow {
+                        right: auto !important;
+                        left: 20px;
+
+                        @media #{$tabletLandscape} {
+                            left: auto !important;
+                            right: 5px !important;
+                        }
+                    }
+
+                    .btn {
+                        i {
+                            margin-right: $noMargin;
+                            margin-left: $margin5;
+                        }
+                    }
+                }
+            }
+            .kdx-btn-group-wrapper {
+                .btn-group {
+                    &:first-child {
+                        border-left: 0;
+                        border-right: 1px solid rgba(225, 225, 225, 0.3);
+                    }
+
+                    .kdx-list-layout {
+                        .kdx-list-item {
+                            text-align: right;
+                        }
+                    }
+
+                    .dropdown-menu {
+                        right: auto !important;
+                        left: 0 !important;
+
+                        li {
+                            text-align: right;
+                        }
+
+                        .dropdown-arrow {
+                            left: 10px;
+                            right: auto !important;
+                        }
+                    }
+
+                    .kdx-grid-layout {
+                        .dropdown-arrow {
+                            left: 12px;
+                            right: auto !important;
+                        }
+
+                        i {
+                            margin: $noMargin auto !important;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

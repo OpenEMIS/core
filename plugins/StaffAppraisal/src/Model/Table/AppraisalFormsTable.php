@@ -15,7 +15,7 @@ class AppraisalFormsTable extends ControllerActionTable
     // Added
     const FIELD_TYPE_SCORE = "SCORE";
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsToMany('AppraisalCriterias', [
@@ -32,48 +32,55 @@ class AppraisalFormsTable extends ControllerActionTable
         $this->hasMany('StaffAppraisals', ['className' => 'Institution.StaffAppraisals', 'foreignKey' => 'appraisal_form_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->hasMany('AppraisalFormsCriteriasScores', ['className' => 'StaffAppraisal.AppraisalFormsCriteriasScores', 'foreignKey' => 'appraisal_form_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-
+        if ($this->behaviors()->has('Reorder')) {
+            $reorderBehavior = $this->behaviors()->get('Reorder');
+            $reorderBehavior->setConfig('filter', 'parent_id');
+        }
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        return $validator
+        $validator->setProvider('custom', $this);
+
+        $validator
+            ->notEmptyString('code')
+            ->notEmptyString('name')
             ->add('appraisal_criterias', 'checkAppraisalFormSection', [
                 'rule' => function ($value, $context) {
-                    $hasNoSectionCriteriasKey = [];
-                    $hasSection = true;
-                    $hasEnteredfirstCriteria = false;
-                    
-                    foreach ($value as $appraisalCriteriasKey => $criteria) {
-                        $criteria = $criteria['_joinData'];
-                        if (!$hasEnteredfirstCriteria) {
-                            if (empty($criteria['section'])) {
-                                $hasSection = false;
-                                $hasNoSectionCriteriasKey[$appraisalCriteriasKey] = $appraisalCriteriasKey;
-                            } else {
-                                $hasSection = true;
-                            }
-                            $hasEnteredfirstCriteria = true;
-                        } else {
-                            if (empty($criteria['section'])) {
-                                $hasNoSectionCriteriasKey[$appraisalCriteriasKey] = $appraisalCriteriasKey;
-                            }
+                    $hasSection = false;
+                    $missingSections = [];
+
+                    foreach ($value as $key => $criteria) {
+                        $joinData = $criteria['_joinData'] ?? [];
+                        $sectionExists = !empty($joinData['section']);
+
+                        if (!$sectionExists) {
+                            $missingSections[] = $key;
                         }
 
-                        // Form exists a has section but this criteria don't have section
-                        if ($hasSection && empty($criteria['section'])) {
-                            $this->request->data[$this->alias()]['appraisal_criterias_section_error'] = $hasNoSectionCriteriasKey;
-                            return false;
-                        } elseif (!$hasSection && !empty($criteria['section'])) {   // Form does not exist a section but this criteria have have section
-                            $this->request->data[$this->alias()]['appraisal_criterias_section_error'] = $hasNoSectionCriteriasKey;
+                        if (!$hasSection && $sectionExists) {
+                            $hasSection = true;
+                        }
+
+                        // Inconsistent section assignment check
+                        if (($hasSection && !$sectionExists) || (!$hasSection && $sectionExists)) {
                             return false;
                         }
                     }
+
+                    // If needed, add errors to the context for use elsewhere
+                    if (!empty($missingSections)) {
+                        $context['errors']['appraisal_criterias_section_error'] = $missingSections;
+                    }
+
                     return true;
                 },
+                'message' => 'Inconsistent section assignment in appraisal criterias.',
             ]);
+
+        return $validator;
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -123,8 +130,8 @@ class AppraisalFormsTable extends ControllerActionTable
             $attr['tableHeaders'] = $tableHeaders;
             $attr['tableCells'] = $tableCells;
         } elseif ($action == 'add' || $action == 'edit') {
-            $form = $event->subject()->Form;
-            $form->unlockField($this->alias() . '.appraisal_criterias');
+            $form = $event->getSubject()->Form;
+            $form->unlockField($this->getAlias() . '.appraisal_criterias');
             $attr = [];
 
             // Showing the list of the questions that are already added
@@ -150,10 +157,10 @@ class AppraisalFormsTable extends ControllerActionTable
                     ];
                 }
             } elseif ($this->request->is(['post', 'put'])) {
-                $requestData = $this->request->data;
-                if (array_key_exists('appraisal_criterias', $requestData[$this->alias()])) {                    
-                    foreach ($requestData[$this->alias()]['appraisal_criterias'] as $key => $obj) {
-                        if (array_key_exists('appraisal_criterias_section_error', $requestData[$this->alias()]) && array_key_exists($key, $requestData[$this->alias()]['appraisal_criterias_section_error'])) {
+                $requestData = $this->request->getData();
+                if (array_key_exists('appraisal_criterias', $requestData[$this->getAlias()])) {
+                    foreach ($requestData[$this->getAlias()]['appraisal_criterias'] as $key => $obj) {
+                        if (array_key_exists('appraisal_criterias_section_error', $requestData[$this->getAlias()]) && array_key_exists($key, $requestData[$this->getAlias()]['appraisal_criterias_section_error'])) {
 
                             $message = 'Criteria have to be in a section';
                             $tooltipMessage = '&nbsp&nbsp;<i class="fa fa-exclamation-circle fa-lg fa-right table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
@@ -183,14 +190,14 @@ class AppraisalFormsTable extends ControllerActionTable
                             ];
                             if (!empty($obj['_joinData']['id'])) {
                                 $arrayData['id'] = $obj['_joinData']['id'];
-                            } 
+                            }
                         }
-                       
+
                         $arrayFields[] = $arrayData;
                     }
                 }
-                if (array_key_exists('selected_custom_field', $requestData[$this->alias()])) {
-                    $fieldId = $requestData[$this->alias()]['selected_custom_field'];
+                if (array_key_exists('selected_custom_field', $requestData[$this->getAlias()])) {
+                    $fieldId = $requestData[$this->getAlias()]['selected_custom_field'];
                     if (!empty($fieldId)) {
                         $fieldObj = $this->AppraisalCriterias->get($fieldId, ['contain' => ['FieldTypes']]);
                         $arrayFields[] = [
@@ -212,8 +219,8 @@ class AppraisalFormsTable extends ControllerActionTable
             $order = 0;
             $sectionName = "";
             $printSection = false;
-            foreach ($arrayFields as $key => $obj) {                
-                $fieldPrefix = $this->alias() . '.appraisal_criterias.' . $cellCount++;
+            foreach ($arrayFields as $key => $obj) {
+                $fieldPrefix = $this->getAlias() . '.appraisal_criterias.' . $cellCount++;
                 $joinDataPrefix = $fieldPrefix . '._joinData';
                 $customFieldName = $obj['name'];
                 $customFieldType = $obj['field_type'];
@@ -221,7 +228,7 @@ class AppraisalFormsTable extends ControllerActionTable
                 $customFieldId = $obj['appraisal_criteria_id'];
                 $customFormId = $obj['appraisal_form_id'];
                 $customTooltip = "";
-                if (array_key_exists('tooltip', $obj)) {
+                if (isset($obj['tooltip'])) {
                     $customTooltip = $obj['tooltip'];
                 }
                 $customSection = "";
@@ -254,7 +261,7 @@ class AppraisalFormsTable extends ControllerActionTable
                     $rowData[] = ''; // Field Type
                     $rowData[] = ''; // Is Mandatory
                     $rowData[] = '<button onclick="jsTable.doRemove(this);CustomForm.updateSection();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
-                    $rowData[] = [$event->subject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
+                    $rowData[] = [$event->getSubject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
                     $printSection = false;
                     $tableCells[] = $rowData;
                 }
@@ -262,14 +269,14 @@ class AppraisalFormsTable extends ControllerActionTable
                 $rowData[] = $customFieldName.$cellData.$customTooltip;
                 $rowData[] = $customFieldType;
 
-                if(array_key_exists('field_type', $obj) && !is_null($obj['field_type']) && strtoupper($obj['field_type']) != self::FIELD_TYPE_SCORE) {
+                if(isset($obj['field_type']) && !is_null($obj['field_type']) && strtoupper($obj['field_type']) != self::FIELD_TYPE_SCORE) {
                     $rowData[] = $form->checkbox("$joinDataPrefix.is_mandatory", ['checked' => $obj['is_mandatory'], 'class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
                 }else {
                     $rowData[] = $form->hidden("$joinDataPrefix.is_mandatory", ['value' => 0]);
                 }
 
                 $rowData[] = '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
-                $rowData[] = [$event->subject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
+                $rowData[] = [$event->getSubject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
                 $tableCells[] = $rowData;
 
                 unset($criteriaList[$obj['appraisal_criteria_id']]);
@@ -282,7 +289,7 @@ class AppraisalFormsTable extends ControllerActionTable
             ksort($criteriaList);
             $attr['options'] = $criteriaList;
             $attr['chosenSelectInput'] = [
-                'model' => $this->alias(),
+                'model' => $this->getAlias(),
                 'field' => 'selected_custom_field',
                 'multiple' => false,
                 'options' => $criteriaList,
@@ -290,31 +297,84 @@ class AppraisalFormsTable extends ControllerActionTable
             ];
         }
 
-        return $event->subject()->renderElement('StaffAppraisal.form_criterias', ['attr' => $attr]);
+        return $event->getSubject()->renderElement('StaffAppraisal.form_criterias', ['attr' => $attr]);
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->AppraisalCriterias->alias()
+            $this->AppraisalCriterias->getAlias()
         ];
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
         $appraisalScore = $this->AppraisalCriterias->AppraisalScores;
-        $appraisalScore->dispatchEvent('Model.Appraisal.add.afterSave', [$entity, $requestData, $this->alias()], $appraisalScore);
+        $appraisalScore->dispatchEvent('Model.Appraisal.add.afterSave', [$entity, $requestData, $this->getAlias()], $appraisalScore);
     }
 
+    /*public function editBeforeSave(Event $event, $entity, $requestData, $extra)
+    {
+        echo "<pre>"; print_r($requestData); die;
+        $appraisalScore = $this->AppraisalCriterias->AppraisalScores;
+        $appraisalScore->dispatchEvent('Model.Appraisal.edit.beforeSave', [$entity, $requestData, $this->getAlias()], $appraisalScore);
+    }*/
+
+    /**
+     * POCOR-8848
+     * This method is triggered before saving the Form.
+     * It processes the new sections added in the request and ensures they are properly added 
+     * to the existing appraisal criterias while avoiding duplicates.
+     * @param array $requestData The request data containing appraisal form details
+     * @param array $extra Additional data passed to the event
+     */
     public function editBeforeSave(Event $event, $entity, $requestData, $extra)
     {
+        // Extract appraisal criterias and new sections data
+        $appraisalCriterias = $requestData['AppraisalForms']['appraisal_criterias'] ?? [];
+        $newSections = $requestData['AppraisalFormssectionTxt'] ?? null;
+        if (!is_array($newSections)) {
+            $newSections = [$newSections];
+        }
+        $existingSections = [];
+        foreach ($appraisalCriterias as $criteria) {
+            $joinData = $criteria['_joinData'] ?? [];
+            if (!empty($joinData['section'])) {
+                $existingSections[] = $joinData['section'];
+            }
+        }
+        foreach ($newSections as $newSection) {
+            if ($newSection && !in_array($newSection, $existingSections, true)) {
+                $newSectionData = [
+                    'id' => null, 
+                    '_joinData' => [
+                        'name' => $newSection,
+                        'field_type' => null,
+                        'field_type_id' => null,
+                        'appraisal_form_id' => $entity->id,
+                        'appraisal_criteria_id' => null,
+                        'order' => count($appraisalCriterias) + 1, 
+                        'section' => $newSection,
+                        'is_mandatory' => 0,
+                    ],
+                ];
+                $appraisalCriterias[] = $newSectionData;
+            }
+        }
+        usort($appraisalCriterias, function ($a, $b) {
+            $orderA = $a['_joinData']['order'] ?? 0;
+            $orderB = $b['_joinData']['order'] ?? 0;
+            return $orderA <=> $orderB;
+        });
+        $requestData['AppraisalForms']['appraisal_criterias'] = $appraisalCriterias;
         $appraisalScore = $this->AppraisalCriterias->AppraisalScores;
-        $appraisalScore->dispatchEvent('Model.Appraisal.edit.beforeSave', [$entity, $requestData, $this->alias()], $appraisalScore);
+        $appraisalScore->dispatchEvent('Model.Appraisal.edit.beforeSave', [$entity, $requestData, $this->getAlias()], $appraisalScore);
     }
+
     // Start POCOR-5188
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $is_manual_exist = $this->getManualUrl('Administration','Forms','Staff Appraisals');       
+        $is_manual_exist = $this->getManualUrl('Administration','Forms','Staff Appraisals');
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
@@ -331,6 +391,47 @@ class AppraisalFormsTable extends ControllerActionTable
             $helpBtn['attr']['title'] = __('Help');
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
+    }// End POCOR-5188
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'visible':
+                return __('Visible');
+            case 'name':
+                return __('Name');
+            case 'code':
+                return __('Code');
+            case 'national_code':
+                return __('National Code');
+            case 'editable':
+                return __('Editable');
+            case 'default':
+                return __('Default');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
-    // End POCOR-5188
+    
+    //POCOR-8620 -- Start
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+    //POCOR-8620 -- End
 }

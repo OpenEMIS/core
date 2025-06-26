@@ -11,14 +11,15 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Database\Expression\IdentifierExpression;
+use Cake\ORM\Table; //POCOR-9005
 
 class GuardiansTable extends AppTable
 {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
 
-        $this->table('student_guardians');
+        $this->setTable('student_guardians');
         parent::initialize($config);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Excel', [
@@ -30,7 +31,7 @@ class GuardiansTable extends AppTable
     {
 
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -39,13 +40,13 @@ class GuardiansTable extends AppTable
 
     public function onExcelGetStudentNameByGuardian(Event $event, Entity $entity)
     {
-        $securityUsers = TableRegistry::get('security_users');
+        $securityUsers = self::getDynamicTableInstance('Security.Users'); //POCOR-9005
 
         if (!is_null($entity->student_id)) {
             $getStudent = $securityUsers->find()
-                ->select(['security_users.first_name', 'security_users.last_name'])
+                ->select(['Users.first_name', 'Users.last_name'])
                 ->leftJoin(['Guardians' => 'student_guardians'], [
-                    'security_users.id = ' . 'Guardians.student_id'
+                    'Users.id = ' . 'Guardians.student_id'
                 ])
                 ->where(['Guardians.student_id' => $entity->student_id])
                 ->first();
@@ -61,14 +62,14 @@ class GuardiansTable extends AppTable
     public function onExcelGetGuardianFatherName(Event $event, Entity $entity)
     {
 
-        $guardianData = TableRegistry::get('security_users');
+        $guardianData = self::getDynamicTableInstance('Security.Users'); //POCOR-9005
         $name = '';
 
         if (!is_null($entity->student_id)) {
             $getGuardian = $guardianData->find()
-                ->select(['security_users.first_name', 'security_users.last_name'])
+                ->select(['Users.first_name', 'Users.last_name'])
                 ->leftJoin(['Guardians' => 'student_guardians'], [
-                    'security_users.id = ' . 'Guardians.guardian_id',
+                    'Users.id = ' . 'Guardians.guardian_id',
                 ])
                 ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
                     'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
@@ -87,14 +88,14 @@ class GuardiansTable extends AppTable
     public function onExcelGetFatherEmail(Event $event, Entity $entity)
     {
 
-        $guardianData = TableRegistry::get('security_users');
+        $guardianData = self::getDynamicTableInstance('Security.Users'); //POCOR-9005
         $fatherEmail = '';
 
         if (!is_null($entity->student_id)) {
             $getGuardian = $guardianData->find()
-                ->select(['security_users.email'])
+                ->select(['Users.email'])
                 ->leftJoin(['Guardians' => 'student_guardians'], [
-                    'security_users.id = ' . 'Guardians.guardian_id',
+                    'Users.id = ' . 'Guardians.guardian_id',
                 ])
                 ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
                     'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
@@ -113,14 +114,14 @@ class GuardiansTable extends AppTable
     public function onExcelGetFatherAddress(Event $event, Entity $entity)
     {
 
-        $guardianData = TableRegistry::get('security_users');
+        $guardianData = self::getDynamicTableInstance('Security.Users'); //POCOR-9005
         $fatherAddress = '';
 
         if (!is_null($entity->student_id)) {
             $getGuardian = $guardianData->find()
-                ->select(['security_users.address'])
+                ->select(['Users.address'])
                 ->leftJoin(['Guardians' => 'student_guardians'], [
-                    'security_users.id = ' . 'Guardians.guardian_id',
+                    'Users.id = ' . 'Guardians.guardian_id',
                 ])
                 ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
                     'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
@@ -139,15 +140,15 @@ class GuardiansTable extends AppTable
     public function onExcelGetGuardianMotherName(Event $event, Entity $entity)
     {
 
-        $guardianData = TableRegistry::get('security_users');
+        $guardianData = self::getDynamicTableInstance('Security.Users'); //POCOR-9005
         $motherName = '';
 
         if (!is_null($entity->student_id)) {
 
             $motherDetails = $guardianData->find()
-                ->select(['security_users.first_name', 'security_users.last_name'])
+                ->select(['Users.first_name', 'Users.last_name'])
                 ->leftJoin(['Guardians' => 'student_guardians'], [
-                    'security_users.id = ' . 'Guardians.guardian_id',
+                    'Users.id = ' . 'Guardians.guardian_id',
                 ])
                 ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
                     'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
@@ -166,14 +167,14 @@ class GuardiansTable extends AppTable
     public function onExcelGetMotherEmail(Event $event, Entity $entity)
     {
 
-        $guardianData = TableRegistry::get('security_users');
+        $guardianData = self::getDynamicTableInstance('Security.Users'); //POCOR-9005
         $motherEmail = '';
 
         if (!is_null($entity->student_id)) {
             $motherDetails = $guardianData->find()
-                ->select(['security_users.email'])
+                ->select(['Users.email'])
                 ->leftJoin(['Guardians' => 'student_guardians'], [
-                    'security_users.id = ' . 'Guardians.guardian_id',
+                    'Users.id = ' . 'Guardians.guardian_id',
                 ])
                 ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
                     'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
@@ -192,14 +193,14 @@ class GuardiansTable extends AppTable
     public function onExcelGetMotherAddress(Event $event, Entity $entity)
     {
 
-        $guardianData = TableRegistry::get('security_users');
+        $guardianData = self::getDynamicTableInstance('Security.Users'); //POCOR-9005
         $motherAddress = '';
 
         if (!is_null($entity->student_id)) {
             $motherDetails = $guardianData->find()
-                ->select(['security_users.address'])
+                ->select(['Users.address'])
                 ->leftJoin(['Guardians' => 'student_guardians'], [
-                    'security_users.id = ' . 'Guardians.guardian_id',
+                    'Users.id = ' . 'Guardians.guardian_id',
                 ])
                 ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
                     'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
@@ -222,7 +223,6 @@ class GuardiansTable extends AppTable
         $institutionId = $requestData->institution_id;
         $institutionTypeId = $requestData->institution_type_id;
         $academicPeriodId = $requestData->academic_period_id;
-        $institutionsTable = TableRegistry::get('institutions');
         $areaId = $requestData->area_education_id;
         $conditions = [];
         if (!empty($institutionId) && $institutionId > 0) {
@@ -260,7 +260,11 @@ class GuardiansTable extends AppTable
                 'area_name' => 'Areas.name',
                 'contact_no' => 'UserContacts.value',
                 'atoll' => 'AreaAdministrativeLevels.name',//POCOR-6728
-                'education_code' => 'AreaAdministratives.code'//POCOR-6728
+                'education_code' => 'AreaAdministratives.code',//POCOR-9005 start
+                'region_code' => 'ParentAreas.code',
+                'region_name' => 'ParentAreas.name',
+                'area_administrative_code' => 'AreaAdministratives.code',
+                'area_administrative_name' => 'AreaAdministratives.name', //POCOR-9005 end
             ])
             ->leftJoin(['Users' => 'security_users'], [
                 'Users.id = ' . 'Guardians.student_id'
@@ -286,6 +290,17 @@ class GuardiansTable extends AppTable
             ->leftJoin(['Areas' => 'areas'], [
                 'Institutions.area_id = ' . 'Areas.id'
             ])
+            ->leftJoin( //POCOR-9005 start
+                ['ParentAreas' => 'areas'],
+                [
+                    'ParentAreas.id = Areas.parent_id',
+                ]
+            )
+            ->leftJoin(
+                ['AreaLevels' => 'area_levels'],
+                ['ParentAreas.area_level_id = AreaLevels.id',
+                    'AreaLevels.level != 1']
+            ) //POCOR-9005 end
             ->leftJoin(['AreaAdministratives' => 'area_administratives'], [
                 'Institutions.area_administrative_id = ' . 'AreaAdministratives.id'
             ])
@@ -312,54 +327,7 @@ class GuardiansTable extends AppTable
 //            'Areas.area_level_id !=' . 1,
                 $conditions
             ]);
-        /**POCOR-6728 starts*/
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
-
-                $areas1 = TableRegistry::get('areas');
-                $areasData = $areas1
-                    ->find()
-                    ->where([$areas1->alias('code') => $row->area_code])
-                    ->first();
-                $row['region_code'] = '';
-                $row['region_name'] = '';
-                if (!empty($areasData)) {
-                    $areas = TableRegistry::get('areas');
-                    $areaLevels = TableRegistry::get('area_levels');
-                    $institutions = TableRegistry::get('institutions');
-                    $val = $areas
-                        ->find()
-                        ->select([
-                            $areas1->aliasField('code'),
-                            $areas1->aliasField('name'),
-                        ])
-                        ->leftJoin(
-                            [$areaLevels->alias() => $areaLevels->table()],
-                            [
-                                $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
-                            ]
-                        )
-                        ->leftJoin(
-                            [$institutions->alias() => $institutions->table()],
-                            [
-                                $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
-                            ]
-                        )
-                        ->where([
-                            $areaLevels->aliasField('level !=') => 1,
-                            $areas->aliasField('id') => $areasData->parent_id
-                        ])->first();
-
-                    if (!empty($val->name) && !empty($val->code)) {
-                        $row['region_code'] = $val->code;
-                        $row['region_name'] = $val->name;
-                    }
-                }
-
-                return $row;
-            });
-        });
-        /**POCOR-6728 end*/
+    //POCOR-9005 removed map
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -387,8 +355,13 @@ class GuardiansTable extends AppTable
             'label' => __('Area Code')
         ];
         /**POCOR-6728 starts - uncommented area column*/
-        $AreaLevelTbl = TableRegistry::get('area_levels');
-        $AreaLevelArr = $AreaLevelTbl->find()->select(['id', 'name'])->order(['id' => 'DESC'])->limit(2)->hydrate(false)->toArray();
+        $AreaLevelTbl = self::getDynamicTableInstance('Area.AreaLevels'); //POCOR-9005 start
+        $AreaLevelArr = $AreaLevelTbl->find()
+            ->select(['id', 'name'])->order(['id' => 'DESC'])
+            ->where(['name IS NOT' => null, 'name !=' => ''])
+            ->limit(2)
+            ->disableHydration()
+            ->toArray(); //POCOR-9005 end
 
         $extraFields[] = [
             'key' => '',
@@ -506,5 +479,55 @@ class GuardiansTable extends AppTable
 
         $fields->exchangeArray($newFields);
     }
+
+    /**
+     * POCOR-9005 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
 
 }

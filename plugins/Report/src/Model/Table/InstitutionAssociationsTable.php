@@ -11,9 +11,9 @@ use Cake\ORM\TableRegistry;
 
 class InstitutionAssociationsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_associations');
+        $this->setTable('institution_associations');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -39,6 +39,7 @@ class InstitutionAssociationsTable extends AppTable
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions('Institutions');
+        $attr['select'] = true;
         return $attr;
     }
     

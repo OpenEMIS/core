@@ -50,7 +50,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         return ExaminationCentresExaminationsTable
             .select()
             .where({examination_centre_id: examinationCentreId, examination_id: examinationId})
-            .contain(['AcademicPeriods', 'Examinations', 'ExaminationCentres'])
+            .contain([ 'Examinations', 'ExaminationCentres'])
             .ajax({defer: true});
     };
 
@@ -382,7 +382,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         return cols;
     };
 
-    function getRowData(academicPeriodId, examinationId, examinationCentreId, subject, limit, page, filterModel) {
+    function getRowData(examinationId, examinationCentreId, subject, limit, page, filterModel) {
         var success = function(response, deferred) {
             if (angular.isDefined(response.data.error)) {
                 deferred.reject(response.data.error);
@@ -498,7 +498,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         }
     };
 
-    function saveRowData(results, subject, academicPeriodId, examinationId, examinationCentreId, educationSubjectId, examinationItemId) {
+    function saveRowData(results, subject, examinationId, examinationCentreId, educationSubjectId, examinationItemId) {
         var promises = [];
 
         angular.forEach(results, function(result, studentId) {
@@ -524,7 +524,6 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
                 var data = {
                     "marks" : marks,
                     "examination_grading_option_id" : gradingOptionId,
-                    "academic_period_id" : academicPeriodId,
                     "examination_id" : examinationId,
                     "education_subject_id" : educationSubjectId,
                     "examination_subject_id" : examinationItemId,

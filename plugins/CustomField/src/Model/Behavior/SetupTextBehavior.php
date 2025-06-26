@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 use CustomField\Model\Behavior\SetupBehavior;
 
@@ -14,7 +15,7 @@ class SetupTextBehavior extends SetupBehavior
     private $ruleOptions = [];
     private $lengthValidationOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -36,7 +37,7 @@ class SetupTextBehavior extends SetupBehavior
     {
         $model = $this->_table;
         $fieldTypes = $model->getFieldTypes();
-        $selectedFieldType = isset($model->request->data[$model->alias()]['field_type']) ? $model->request->data[$model->alias()]['field_type'] : key($fieldTypes);
+        $selectedFieldType = isset($model->request->getData($model->getAlias())['field_type']) ? $model->request->getData($model->getAlias())['field_type'] : key($fieldTypes);
 
         if ($selectedFieldType == $this->fieldTypeCode) {
             $this->buildTextValidator();
@@ -54,7 +55,7 @@ class SetupTextBehavior extends SetupBehavior
     {
         $max = $this->inputLimits['text_value']['max'];
 
-        $validator = $this->_table->validator();
+        $validator = $this->_table->getValidator();
         $validator
             // LENGTH - Mininum Length
             ->notEmpty('text_minimum_length')
@@ -133,25 +134,25 @@ class SetupTextBehavior extends SetupBehavior
             if (!$entity->isNew()) {
                 if ($entity->has('params') && !empty($entity->params)) {
                     $params = json_decode($entity->params, true);
-                    if (array_key_exists('min_length', $params)) {
+                    if (isset($params['min_length'])) {
                         $entity->text_validation_rule = 'length';
                         $entity->text_length_validation = 'min_length';
 
                         $entity->text_minimum_length = $params['min_length'];
-                    } else if (array_key_exists('max_length', $params)) {
+                    } else if (isset($params['max_length'])) {
                         $entity->text_validation_rule = 'length';
                         $entity->text_length_validation = 'max_length';
 
                         $entity->text_maximum_length = $params['max_length'];
-                    } else if (array_key_exists('range', $params)) {
+                    } else if (isset($params['range'])) {
                         $entity->text_validation_rule = 'length';
                         $entity->text_length_validation = 'range';
 
                         $entity->text_lower_limit = $params['range']['lower'];
                         $entity->text_upper_limit = $params['range']['upper'];
-                    } else if (array_key_exists('url', $params)) {
+                    } else if (isset($params['url'])) {
                         $entity->text_validation_rule = 'url';
-                    } else if (array_key_exists('input_mask', $params)) {
+                    } else if (isset($params['input_mask'])) {
                         $entity->text_validation_rule = 'input_mask';
                         $entity->validation_format = $params['input_mask'];
                     } else {
@@ -269,7 +270,7 @@ class SetupTextBehavior extends SetupBehavior
         return $value;
     }
 
-    public function onUpdateFieldTextValidationRule(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTextValidationRule(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -280,7 +281,7 @@ class SetupTextBehavior extends SetupBehavior
         return $attr;
     }
 
-    public function onUpdateFieldTextLengthValidation(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTextLengthValidation(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -306,7 +307,7 @@ class SetupTextBehavior extends SetupBehavior
                                 $selectedLengthValidation = $data['text_length_validation'];
                                 switch ($selectedLengthValidation) {
                                     case 'min_length':
-                                        $minLength = array_key_exists('text_minimum_length', $data) ? $data['text_minimum_length']: null;
+                                        $minLength = $data->offsetExists('text_minimum_length') ? $data->offsetGet('text_minimum_length') : null;
 
                                         if (!is_null($minLength)) {
                                             $params['min_length'] = $minLength;
@@ -314,7 +315,7 @@ class SetupTextBehavior extends SetupBehavior
                                         break;
 
                                     case 'max_length':
-                                        $maxLength = array_key_exists('text_maximum_length', $data) ? $data['text_maximum_length']: null;
+                                        $maxLength = $data->offsetExists('text_maximum_length') ? $data->offsetGet('text_maximum_length') : null;
 
                                         if (!is_null($maxLength)) {
                                             $params['max_length'] = $maxLength;
@@ -322,8 +323,8 @@ class SetupTextBehavior extends SetupBehavior
                                         break;
 
                                     case 'range':
-                                        $lowerLimit = array_key_exists('text_lower_limit', $data) ? $data['text_lower_limit']: null;
-                                        $upperLimit = array_key_exists('text_upper_limit', $data) ? $data['text_upper_limit']: null;
+                                        $lowerLimit = $data->offsetExists('text_lower_limit') ? $data->offsetGet('text_lower_limit'): null;
+                                        $upperLimit = $data->offsetExists('text_upper_limit') ? $data->offsetGet('text_upper_limit'): null;
 
                                         if (!is_null($lowerLimit) && !is_null($upperLimit)) {
                                             $params['range'] = [
@@ -332,7 +333,7 @@ class SetupTextBehavior extends SetupBehavior
                                             ];
                                         }
                                         break;
-                                    
+
                                     default:
                                         break;
                                 }
@@ -343,8 +344,8 @@ class SetupTextBehavior extends SetupBehavior
                             $params['url'] = 1;
                             break;
                         case 'input_mask':
-                            if (array_key_exists('validation_format', $data) && !empty($data['validation_format'])) {
-                                $params['input_mask'] = $data['validation_format'];
+                            if ($data->offsetExists('validation_format') && !empty($data->offsetGet('validation_format'))) {
+                                $params['input_mask'] = $data->offsetGet('validation_format');
                             }
                             break;
                         default:

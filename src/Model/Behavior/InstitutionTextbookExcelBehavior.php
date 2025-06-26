@@ -42,29 +42,29 @@ class InstitutionTextbookExcelBehavior extends Behavior
         'auto_contain' => true
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->config('excludes', array_merge($this->config('default_excludes'), $this->config('excludes')));
-        if (!array_key_exists('filename', $config)) {
-            $this->config('filename', $this->_table->alias());
+        $this->getConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
+        if (!isset($config['filename'])) {
+            $this->setConfig('filename', $this->_table->getAlias());
         }
-        $folder = WWW_ROOT . $this->config('folder');
+        $folder = WWW_ROOT . $this->getConfig('folder');
 
         if (!file_exists($folder)) {
             umask(0);
             mkdir($folder, 0777);
         } else {
             // $delete = true;
-            // if (array_key_exists('delete', $settings) &&  $settings['delete'] == false) {
+            // if (isset($settings['delete']) &&  $settings['delete'] == false) {
             //  $delete = false;
             // }
             // if ($delete) {
             //  $this->deleteOldFiles($folder, $format);
             // }
         }
-        $pages = $this->config('pages');
+        $pages = $this->getConfig('pages');
         if ($pages !== false && empty($pages)) {
-            $this->config('pages', ['index', 'view']);
+            $this->setConfig('pages', ['index', 'view']);
         }
     }
 
@@ -90,7 +90,7 @@ class InstitutionTextbookExcelBehavior extends Behavior
         $id = 0;
         $break = false;
         $action = $this->_table->action;
-        $pass = $this->_table->request->pass;
+        $pass = $this->_table->request->getParam('pass');
         if (in_array($action, $pass)) {
             unset($pass[array_search($action, $pass)]);
             $pass = array_values($pass);
@@ -111,8 +111,8 @@ class InstitutionTextbookExcelBehavior extends Behavior
     public function generateXLXS($settings = [])
     {
         $_settings = [
-            'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
-            'path' => WWW_ROOT . $this->config('folder') . DS,
+            'file' => $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
+            'path' => WWW_ROOT . $this->getConfig('folder') . DS,
             'download' => true,
             'purge' => true
         ];
@@ -131,10 +131,10 @@ class InstitutionTextbookExcelBehavior extends Behavior
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (is_callable($event->result)) {
-            $generate = $event->result;
+        if (is_callable($event->getResult())) {
+            $generate = $event->getResult();
         }
 
         $generate($_settings);
@@ -147,13 +147,13 @@ class InstitutionTextbookExcelBehavior extends Behavior
 
         $data = $this->getData($settings);
         $writer->writeSheetRow('InstitutionsTextbooks', $headerRow);
-        
+
         foreach($data as $row) {
             if(array_filter($row)) {
                 $writer->writeSheetRow('InstitutionsTextbooks', $row);
             }
         }
-        
+
         $blankRow[] = [];
         $footer = $this->getFooter();
         $writer->writeSheetRow('InstitutionsTextbooks', $blankRow);
@@ -179,16 +179,20 @@ class InstitutionTextbookExcelBehavior extends Behavior
 
     private function getData($settings) {
 
-        $session = $this->_table->request->session();
+        $session = $this->_table->request->getSession();
         $institution_id = $session->read('Institution.Institutions.id') ? $session->read('Institution.Institutions.id'): 0;
 
-        $subject_id = !empty($this->_table->request->query) ? $this->_table->request->query['subject'] : 0;
-        $period_id = !empty($this->_table->request->query) ? $this->_table->request->query['period'] : 0;
-        $grade_id = !empty($this->_table->request->query) ? $this->_table->request->query['grade'] : 0;
+        if(empty($institution_id) && isset($this->_table->request->getParam('pass')[1])) {
+            $institution_id = $this->_table->paramsDecode($this->_table->request->getParam('pass')[1])['institution_id'];
+        }
+
+        $subject_id = !empty($this->_table->request->getQuery('subject')) ? $this->_table->request->getQuery('subject') : 0;
+        $period_id = !empty($this->_table->request->getQuery('period')) ? $this->_table->request->getQuery('period') : 0;
+        $grade_id = !empty($this->_table->request->getQuery('grade')) ? $this->_table->request->getQuery('grade') : 0;
 
         $InstitutionTextbooks = TableRegistry::get('Institution.InstitutionTextbooks');
 
-        
+
         $where1 = [];
         $where2 = [];
         $where3 = [];
@@ -202,27 +206,27 @@ class InstitutionTextbookExcelBehavior extends Behavior
 
         // if ( $grade_id > 0) {
         //     $where3 = [$InstitutionTextbooks->aliasField('education_grade_id') => $grade_id];
-        // } 
+        // }
 
         //array("Academic Period","Textbook ID","Textbook","Condition","Status","Allocated To","Student Status");
 
         $record = $InstitutionTextbooks->find()
         ->contain([
-            'Institutions',               
+            'Institutions',
             'EducationGrades',
             'AcademicPeriods',
             'Textbooks',
             'TextbookStatuses',
             'TextbookConditions',
             'Users'
-        ])   
+        ])
         ->where([
             $InstitutionTextbooks->aliasField('institution_id') => $institution_id,
             $where1,
             $where2,
             $where3,
         ])
-        
+
         ->order([
             $InstitutionTextbooks->aliasField('id'),
         ])
@@ -246,7 +250,7 @@ class InstitutionTextbookExcelBehavior extends Behavior
                 if(!empty($textbook_data)){
                     $textbook_name = $textbook_data['title'];
                 }
-                                   
+
 
                 $result[$key] = [$value['academic_period']['name'], $value['code'], "$textbook_name",$value['textbook_condition']['name'],$value['textbook_status']['name'],$value['user']['first_name'].' '.$value['user']['last_name'],"$student_status"];
             }
@@ -266,11 +270,11 @@ class InstitutionTextbookExcelBehavior extends Behavior
 
     private function getFields($table, $settings, $label)
     {
-        $language = I18n::locale();
-        $module = $this->_table->alias();
+        $language = I18n::getLocale();
+        $module = $this->_table->getAlias();
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $label, $language], true);
-        return $event->result;
+        return $event->getResult();
     }
 
     private function getFooter()
@@ -294,8 +298,8 @@ class InstitutionTextbookExcelBehavior extends Behavior
                 } else {
                     $event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr]);
                 }
-                if ($event->result) {
-                    $returnedResult = $event->result;
+                if ($event->getResult()) {
+                    $returnedResult = $event->getResult();
                     if (is_array($returnedResult)) {
                         $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                         $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
@@ -341,7 +345,7 @@ class InstitutionTextbookExcelBehavior extends Behavior
     {
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     return true;
                 }
             }
@@ -355,7 +359,7 @@ class InstitutionTextbookExcelBehavior extends Behavior
 
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     $relatedModel = $assoc;
                     break;
                 }
@@ -369,17 +373,17 @@ class InstitutionTextbookExcelBehavior extends Behavior
         $tableObj = $this->getAssociatedTable($table, $field);
         $key = null;
         if (is_object($tableObj)) {
-            $key = Inflector::underscore(Inflector::singularize($tableObj->alias()));
+            $key = Inflector::underscore(Inflector::singularize($tableObj->getAlias()));
         }
         return $key;
     }
 
     public function generate($settings = [])
     {
-        $language = I18n::locale();
-        $module = $this->_table->alias();
+        $language = I18n::getLocale();
+        $module = $this->_table->getAlias();
         //echo '<pre>';print_r($module);
-        
+
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, 'postal_code', $language], true);
         return $event;
     }
@@ -390,7 +394,7 @@ class InstitutionTextbookExcelBehavior extends Behavior
         foreach ($fields as $attr) {
             $field = $attr['field'];
             if ($this->isForeignKey($table, $field)) {
-                $contain[] = $this->getAssociatedTable($table, $field)->alias();
+                $contain[] = $this->getAssociatedTable($table, $field)->getAlias();
             }
         }
         $query->contain($contain);
@@ -419,7 +423,7 @@ class InstitutionTextbookExcelBehavior extends Behavior
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 0];
@@ -438,8 +442,8 @@ class InstitutionTextbookExcelBehavior extends Behavior
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $action = $this->_table->action; 
-        if (in_array($action, $this->config('pages'))) {
+        $action = $this->_table->action;
+        if (in_array($action, $this->getConfig('pages'))) {
             $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
             $toolbarAttr = [
                 'class' => 'btn btn-xs btn-default',
@@ -478,7 +482,7 @@ class InstitutionTextbookExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if (in_array($action, $pages)) {
                 $toolbarButtons['export'] = $export;
             }
@@ -495,7 +499,7 @@ class InstitutionTextbookExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if ($pages != false) {
                 if (in_array($action, $pages)) {
                     $toolbarButtons['export'] = $export;

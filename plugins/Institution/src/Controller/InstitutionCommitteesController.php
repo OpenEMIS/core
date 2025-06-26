@@ -17,7 +17,7 @@ class InstitutionCommitteesController extends PageController
         $this->Page->disable(['search']);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $session = $this->request->session();
         $institutionId = $this->getInstitutionID();
@@ -51,7 +51,7 @@ class InstitutionCommitteesController extends PageController
             ->setControlType('hidden')
             ->setValue($institutionId);
         $page->setQueryString('institution_id', $institutionId);
-        
+
         $page->get('meeting_date')->setLabel('Date of Meeting');
 
         $page->move('academic_period_id')->after('id');

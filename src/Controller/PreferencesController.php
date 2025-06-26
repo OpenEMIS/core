@@ -12,12 +12,12 @@ use App\Controller\AppController;
 class PreferencesController extends AppController {
 	public $activeObj = null;
 
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
 		$this->ControllerAction->models = [];
 	}
 
-	public function implementedEvents()
+	public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
@@ -33,13 +33,13 @@ class PreferencesController extends AppController {
     public function Preferences()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Preferences']); }
     // End
 
-	public function beforeFilter(Event $event) {
+	public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
 		parent::beforeFilter($event);
 		$header = __('Preferences');
 
-		$action = $this->request->params['action'];
+		$action = $this->request->getParam('action');
 
-        $Preferences = TableRegistry::get('Preferences');
+        $Preferences = TableRegistry::getTableLocator()->get('Preferences');
         $loginUserId = $this->Auth->user('id');
 
         if ($Preferences->exists([$Preferences->primaryKey() => $loginUserId])) {

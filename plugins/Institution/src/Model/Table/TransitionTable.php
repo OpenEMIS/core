@@ -20,7 +20,7 @@ class TransitionTable extends ControllerActionTable
 
 	public function initialize(array $config)
 	{
-		$this->table('institution_students');
+		$this->getTable('institution_students');
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -72,8 +72,8 @@ class TransitionTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        if ($this->controller->name == 'Profiles') {
+        $session = $this->request->getSession();
+        if ($this->controller->getName() == 'Profiles') {
             $sId = $session->read('Student.Students.id');
             if (!empty($sId)) {
                 $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
@@ -101,7 +101,7 @@ class TransitionTable extends ControllerActionTable
         $options['type'] = 'student';
         $tabElements = $this->controller->getAcademicTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
@@ -163,10 +163,10 @@ class TransitionTable extends ControllerActionTable
         $AcademicPeriods = $attr['entity']['academic_period']->id;
         $getCycle = $EducationCycles ->find()
                     ->select([$EducationCycles->aliasField('id')])
-                    ->leftJoin([$EducationLevels->alias() => $EducationLevels->table()], [
+                    ->leftJoin([$EducationLevels->getAlias() => $EducationLevels->getTable()], [
                                 $EducationLevels->aliasField('id = ') . $EducationCycles->aliasField('education_level_id')
                     ])
-                    ->leftJoin([$EducationSystems->alias() => $EducationSystems->table()], [
+                    ->leftJoin([$EducationSystems->getAlias() => $EducationSystems->getTable()], [
                                 $EducationSystems->aliasField('id = ') . $EducationLevels->aliasField('education_system_id')
                     ])
                     ->where([$EducationSystems->aliasField('academic_period_id') => $AcademicPeriods]);
@@ -200,9 +200,9 @@ class TransitionTable extends ControllerActionTable
         unset($request->query['programme']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
-                    $request->query['programme'] = $request->data[$this->alias()]['education_programme_id'];
+            if (array_key_exists($this->getAlias(), $request->data)) {
+                if (array_key_exists('education_programme_id', $request->data[$this->getAlias()])) {
+                    $request->query['programme'] = $request->data[$this->getAlias()]['education_programme_id'];
                 }
             }
         }
@@ -244,12 +244,12 @@ class TransitionTable extends ControllerActionTable
     public function addEditOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        unset($request->query['grade']);
+        unset($request->getQuery['grade']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
-                    $selectedGrade = $request->data[$this->alias()]['education_grade_id'];
+            if (array_key_exists($this->getAlias(), $request->data)) {
+                if (array_key_exists('education_grade_id', $request->data[$this->getAlias()])) {
+                    $selectedGrade = $request->data[$this->getAlias()]['education_grade_id'];
                     $request->query['grade'] = $selectedGrade;
                 }
             }
@@ -345,10 +345,10 @@ class TransitionTable extends ControllerActionTable
                                 $EducationProgrammes->aliasField('id'),
                                 $EducationProgrammes->aliasField('order')
                             ])
-                            ->leftJoin([$EducationGrades->alias() => $EducationGrades->table()], [
+                            ->leftJoin([$EducationGrades->getAlias() => $EducationGrades->getTable()], [
                                 $EducationGrades->aliasField('id = ') . $InstitutionStudents->aliasField('education_grade_id')
                             ])
-                            ->leftJoin([$EducationProgrammes->alias() => $EducationProgrammes->table()], [
+                            ->leftJoin([$EducationProgrammes->getAlias() => $EducationProgrammes->getTable()], [
                                 $EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')
                             ])
                             ->where([

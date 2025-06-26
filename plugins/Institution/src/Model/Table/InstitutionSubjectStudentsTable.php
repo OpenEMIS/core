@@ -5,7 +5,6 @@ namespace Institution\Model\Table;
 use App\Model\Traits\UserTrait;
 use ArrayObject;
 use Cake\Datasource\ResultSetInterface;
-use Cake\I18n\Date;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\I18n\Time;
 use Cake\Event\Event;
@@ -13,18 +12,17 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
-use Cake\Validation\Validator;
-use Cake\Utility\Text;
+use Cake\Log\Log;
+use Cake\ORM\Locator\TableLocator;
 
 class InstitutionSubjectStudentsTable extends AppTable
 {
-    use UserTrait;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
 
         parent::initialize($config);
 
-        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Users', ['className' => 'API.Students', 'foreignKey' => 'student_id']);
         $this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -55,7 +53,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Students.afterSave'] = 'studentsAfterSave';
@@ -179,7 +177,7 @@ class InstitutionSubjectStudentsTable extends AppTable
 
         if (!empty($totalMark)) {
             // update all records of student regardless of institution
-            $modifiedUserId = (isset($event->data()[0]->modified_user_id) && $event->data()[0]->modified_user_id) ? $event->data()[0]->modified_user_id : $event->data()[0]->created_user_id;
+            $modifiedUserId = (isset($event->getData()[0]->modified_user_id) && $event->getData()[0]->modified_user_id) ? $event->getData()[0]->modified_user_id : $event->getData()[0]->created_user_id;
 
             $this->query()
                 ->update()
@@ -194,10 +192,11 @@ class InstitutionSubjectStudentsTable extends AppTable
                     'academic_period_id' => $academicPeriodId,
                     'education_subject_id' => $educationSubjectId,
                     'education_grade_id' => $educationGradeId,
-                    //'institution_class_id' => $institutionClassesId,//POCOR-6479 comment this code of POCOR-6468  
+                    'institution_id' => $institutionId,//POCOR-6516
+                    //'institution_class_id' => $institutionClassesId,//POCOR-6479 comment this code of POCOR-6468
                 ])
                 ->execute();
-            //update created date in assesment_item_results table  //POCOR-6573 starts  
+            //update created date in assesment_item_results table  //POCOR-6573 starts
             $ItemResults->updateAll(['created' => Time::now()],
                 [
                     'student_id' => $studentId,
@@ -236,7 +235,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                 $this->aliasField('institution_id'),
                 $this->aliasField('academic_period_id'),
                 $this->aliasField('education_grade_id'),
-                $this->aliasField('education_subject_id'),//POCOR-6479 
+                $this->aliasField('education_subject_id'),//POCOR-6479
                 $this->aliasField('student_status_id'),
                 $this->aliasField('total_mark'),
                 $Users->aliasField('id'),
@@ -261,7 +260,7 @@ class InstitutionSubjectStudentsTable extends AppTable
             })
             ->contain('StudentStatuses')
             ->innerJoin(
-                [$InstitutionSubjects->alias() => $InstitutionSubjects->table()],
+                [$InstitutionSubjects->getAlias() => $InstitutionSubjects->getTable()],
                 [
                     $InstitutionSubjects->aliasField('id = ') . $this->aliasField('institution_subject_id'),
                     $InstitutionSubjects->aliasField('institution_id') => $institutionId,
@@ -270,7 +269,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                 ]
             )
             ->leftJoin(
-                [$ItemResults->alias() => $ItemResults->table()],
+                [$ItemResults->getAlias() => $ItemResults->getTable()],
                 [
                     $ItemResults->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $ItemResults->aliasField('assessment_id') => $assessmentId,
@@ -280,13 +279,13 @@ class InstitutionSubjectStudentsTable extends AppTable
                 ]
             )
             ->leftJoin(
-                [$StudentStatuses->alias() => $StudentStatuses->table()],
+                [$StudentStatuses->getAlias() => $StudentStatuses->getTable()],
                 [
                     $this->aliasField('student_status_id = ') . $StudentStatuses->aliasField('id')
                 ]
             )//POCOR-6468 starts
             ->innerJoin(
-                [$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()],
+                [$InstitutionClassStudents->getAlias() => $InstitutionClassStudents->getTable()],
                 [
                     $InstitutionClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $InstitutionClassStudents->aliasField('institution_class_id =') . $this->aliasField('institution_class_id')
@@ -298,8 +297,8 @@ class InstitutionSubjectStudentsTable extends AppTable
             ->where([
                 $InstitutionSubjects->aliasField('institution_id') => $institutionId,
                 $this->aliasField('education_grade_id') => $gradeId,
-                $this->aliasField('institution_class_id') => $classId, //POCOR-6479 
-                //$StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED','WITHDRAWN']//POCOR-6479 
+                $this->aliasField('institution_class_id') => $classId, //POCOR-6479
+                //$StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED','WITHDRAWN']//POCOR-6479
             ])
             ->group([
                 $this->aliasField('student_id'),
@@ -320,7 +319,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                             $StudentStatuses->aliasField('name')
                         ])
                         ->innerJoin(
-                            [$StudentStatuses->alias() => $StudentStatuses->table()],
+                            [$StudentStatuses->getAlias() => $StudentStatuses->getTable()],
                             [
                                 $InstitutionStudents->aliasField('student_status_id = ') . $StudentStatuses->aliasField('id')
                             ]
@@ -341,7 +340,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                 }
                 return $arrResults;
             });
-        //POCOR-6479 starts    
+        //POCOR-6479 starts
         $query->formatResults(function ($results1) {
             $arrResults1 = is_array($results1) ? $results1 : $results1->toArray();
             foreach ($arrResults1 as &$result) {
@@ -365,7 +364,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                 $result['AssessmentItemResults']['marks'] = $assessmentItemResultsData->marks;
             }
             return $arrResults1;
-        }); //POCOR-6479 ends     
+        }); //POCOR-6479 ends
         return $query;
     }
 
@@ -394,15 +393,26 @@ class InstitutionSubjectStudentsTable extends AppTable
         if($archive){
             $archive = true;
         }
-        $education_subject_id = $this->getStrictEdicationSubjectIdForResults($institution_subject_id, $education_subject_id);
-        $options['education_subject_id'] = $education_subject_id;
+        if ($institution_subject_id) {
+            $education_subject_id = $this->getStrictEdicationSubjectIdForResults($institution_subject_id, $education_subject_id);
+        }
+        if ($education_subject_id) {
+            $options['education_subject_id'] = $education_subject_id;
+        } else {
+            $options['education_subject_id'] = -1;
+        }
+//        Log::debug($options);
         $where = [
-            $this->aliasField('education_subject_id') => $education_subject_id,
-            $this->aliasField('institution_class_id') => $institution_class_id,
-            $this->aliasField('institution_id') => $institution_id,
-            $this->aliasField('education_grade_id') => $education_grade_id,
-            $this->aliasField('academic_period_id') => $academic_period_id,
+            $this->aliasField('institution_class_id = ') . $institution_class_id,
+            $this->aliasField('institution_id = ') . $institution_id,
+            $this->aliasField('academic_period_id = ') . $academic_period_id,
         ];
+        if ($options['education_subject_id'] > 0) {
+            $where[] = $this->aliasField('education_subject_id = ') . $education_subject_id;
+        }
+        if ($options['education_grade_id'] > 0) {
+            $where[] = $this->aliasField('education_grade_id = ') . $education_grade_id;
+        }
 //        $this->log('$where', 'debug');
 //        $this->log($where, 'debug');
         if(!$archive){
@@ -412,6 +422,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         $query = $this->getBasicAssessmentStatusesQuery($query);
         $query = $this->getBasicAssessmentUsersQuery($query);
         $query = $this->getBasicAssessmentMarksQuery($query, $options, $archive);
+        // echo "<pre>";print_r('sfs');die;
         return $query;
     }
 
@@ -506,7 +517,7 @@ class InstitutionSubjectStudentsTable extends AppTable
             ->matching('Users')
             ->contain('StudentStatuses')
             ->innerJoin(
-                [$InstitutionSubjects->alias() => $InstitutionSubjects->table()],
+                [$InstitutionSubjects->getAlias() => $InstitutionSubjects->getTable()],
                 [
                     $InstitutionSubjects->aliasField('id') => $subjectId,
                     $InstitutionSubjects->aliasField('institution_id') => $institutionId,
@@ -514,7 +525,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                 ]
             )
             ->leftJoin(
-                [$ItemResults->alias() => $ItemResults->table()],
+                [$ItemResults->getAlias() => $ItemResults->getTable()],
                 [
                     $ItemResults->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $ItemResults->aliasField('assessment_id') => $assessmentId,
@@ -524,13 +535,13 @@ class InstitutionSubjectStudentsTable extends AppTable
                 ]
             )
             ->leftJoin(
-                [$StudentStatuses->alias() => $StudentStatuses->table()],
+                [$StudentStatuses->getAlias() => $StudentStatuses->getTable()],
                 [
                     $this->aliasField('student_status_id') => $StudentStatuses->aliasField('id')
                 ]
             )//POCOR-6572 starts
             ->innerJoin(
-                [$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()],
+                [$InstitutionClassStudents->getAlias() => $InstitutionClassStudents->getTable()],
                 [
                     $InstitutionClassStudents->aliasField('student_id = ') . $this->aliasField('student_id')
                 ]
@@ -613,7 +624,7 @@ class InstitutionSubjectStudentsTable extends AppTable
             ])
             ->matching('Users')
             ->innerJoin(
-                [$InstitutionSubjects->alias() => $InstitutionSubjects->table()],
+                [$InstitutionSubjects->getAlias() => $InstitutionSubjects->getTable()],
                 [
                     $InstitutionSubjects->aliasField('id = ') . $this->aliasField('institution_subject_id'),
                     $InstitutionSubjects->aliasField('institution_id') => $institutionId,
@@ -622,7 +633,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                 ]
             )
             ->leftJoin(
-                [$ItemResults->alias() => $ItemResults->table()],
+                [$ItemResults->getAlias() => $ItemResults->getTable()],
                 [
                     $ItemResults->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $ItemResults->aliasField('academic_period_id') => $academicPeriodId,
@@ -633,7 +644,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                 ]
             )
             ->leftJoin(
-                [$GradingOptions->alias() => $GradingOptions->table()],
+                [$GradingOptions->getAlias() => $GradingOptions->getTable()],
                 [
                     $GradingOptions->aliasField('id = ') . $ItemResults->aliasField('assessment_grading_option_id')
                 ]
@@ -685,7 +696,7 @@ class InstitutionSubjectStudentsTable extends AppTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
 
-        if ($entity->isNew() || $entity->dirty('student_status_id')) {
+        if ($entity->isNew() || $entity->getDirty('student_status_id')) {
             $id = $entity->institution_subject_id;
             $countMale = $this->getMaleCountBySubject($id);
             $countFemale = $this->getFemaleCountBySubject($id);
@@ -696,7 +707,6 @@ class InstitutionSubjectStudentsTable extends AppTable
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
-
         $res = $this->InstitutionSubjects->find()->select(['InstitutionSubjects.id'])->join([
             'institution_subject_students' => [
                 'table' => 'institution_subject_students',
@@ -883,7 +893,8 @@ class InstitutionSubjectStudentsTable extends AppTable
     {
         if ($institution_subject_id) {
             if (!$education_subject_id) {
-                $institution_subject = self::getRelatedRecord('institution_subjects', $institution_subject_id);
+                $tableName = 'Institution.InstitutionSubjects';
+                $institution_subject = self::getRelatedRecord($tableName, $institution_subject_id);
                 $education_subject_id = $institution_subject['education_subject_id'];
             }
         }
@@ -899,7 +910,7 @@ class InstitutionSubjectStudentsTable extends AppTable
 
     private function getBasicAssessmentQuery(Query $query, array $where, $assessment_id)
     {
-        $AssessmentPeriods = TableRegistry::get('assessment_periods');
+        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
 
         return $query
             ->select([
@@ -910,13 +921,15 @@ class InstitutionSubjectStudentsTable extends AppTable
                 'assessment_id' => $AssessmentPeriods->aliasField('assessment_id'),
                 'assessment_period_id' => $AssessmentPeriods->aliasField('id'),
             ])
+            ->contain('StudentStatuses')
             ->where($where)
             ->group([
                 $this->aliasField('student_id'),
                 $AssessmentPeriods->aliasField('id'),
+                $this->aliasField('education_subject_id'),
             ])
             ->innerJoin(
-                [$AssessmentPeriods->alias() => $AssessmentPeriods->table()],
+                [$AssessmentPeriods->getAlias() => $AssessmentPeriods->getTable()],
                 [
                     $AssessmentPeriods->aliasField('assessment_id = ') . $assessment_id,
                 ]
@@ -949,18 +962,20 @@ class InstitutionSubjectStudentsTable extends AppTable
      */
     private function getBasicAssessmentUsersQuery(Query $query)
     {
+        $Users = TableRegistry::get('User.Users');
         $query =$query->contain('Users')
             ->select([
                 $this->aliasField('student_id'),
-                'first_name' => $this->Users->aliasField('first_name'),
-                'middle_name' => $this->Users->aliasField('middle_name'),
-                'third_name' => $this->Users->aliasField('third_name'),
-                'last_name' => $this->Users->aliasField('last_name'),
-                'preferred_name' => $this->Users->aliasField('preferred_name'),
-                'the_student_code' => $this->Users->aliasField('openemis_no'),
+                'first_name' => $Users->aliasField('first_name'),
+                'middle_name' => $Users->aliasField('middle_name'),
+                'third_name' => $Users->aliasField('third_name'),
+                'last_name' => $Users->aliasField('last_name'),
+                'preferred_name' => $Users->aliasField('preferred_name'),
+                'the_student_code' => $Users->aliasField('openemis_no'),
             ])->formatResults(function ($results) {
                 return $results->map(function ($row) {
                     $row['the_student_name'] = $this->getUserName($row);
+                    //$row['the_student_name'] = 'Only for testing';
                     return $row;
                 });
             });
@@ -975,33 +990,51 @@ class InstitutionSubjectStudentsTable extends AppTable
     private function getBasicAssessmentMarksQuery(Query $query, $options, $archive)
     {
         $Results = TableRegistry::get('Assessment.AssessmentItemResults');
-//        $this->log($options, 'debug');
-        $marksPerStudent = $Results::getClassAssessmentItemResults($options, $archive);
-//        $this->log($marksPerStudent, 'debug');
-//        $totalMarksPerStudent = $Results::getTotalMarksPerStudent($marksPerStudent);
-//        $this->log($marksPerStudent, 'debug');
-        $query = $query->formatResults(function ($results) use ($marksPerStudent) {
-            return $results->map(function ($row) use ($marksPerStudent) {
+        try {
+            $marksPerStudent = $Results::getClassAssessmentItemResults($options, $archive);
+        } catch (\Exception $exception) {
+            Log::debug('getClassAssessmentItemResults error');
+        }
+        $exemptPerStudent = $Results::getClassExemptions($options);
+        $query = $query->formatResults(function ($results) use ($marksPerStudent, $exemptPerStudent) {
+            return $results->map(function ($row) use ($marksPerStudent, $exemptPerStudent) {
+
                 $education_subject_id = $row->education_subject_id;
                 $student_id = $row->student_id;
                 $assessment_period_id = $row->assessment_period_id;
-                $mark = $marksPerStudent[$student_id][$education_subject_id][$assessment_period_id][0];
+                $exempt = isset($exemptPerStudent[$student_id][$education_subject_id][$assessment_period_id])
+                    ? $exemptPerStudent[$student_id][$education_subject_id][$assessment_period_id]
+                    : null;
 
-                $row['mark_id'] = self::getFromArray($mark, 'id');
-                $row['mark'] = self::getFromArray($mark, 'marks');
-                $row['assessment_grading_option_id'] = self::getFromArray($mark, 'assessment_grading_option_id');
+                // If exempt, set 'EXEMPT' flag, otherwise fetch the mark
+                if ($exempt) {
+                    $row['mark'] = $exempt;
+                    $row['mark_id'] = null;
+                    $row['assessment_grading_option_id'] = null;
+                } else {
+                    $mark = isset($marksPerStudent[$student_id][$education_subject_id][$assessment_period_id][0])
+                        ? $marksPerStudent[$student_id][$education_subject_id][$assessment_period_id][0]
+                        : null;
+
+                    $row['mark_id'] = $mark ? self::getFromArray($mark, 'id') : null;
+                    $row['mark'] = $mark ? self::getFromArray($mark, 'marks') : null;
+
+                    $row['assessment_grading_option_id'] = $mark ? self::getFromArray($mark, 'assessment_grading_option_id') : null;
+                }
                 $row['assessment_period_id'] = $assessment_period_id;
+                $row['marks'] = $row['mark'];
                 return $row;
             });
         });
+//        Log::debug($query->sql());
         return $query;
     }
 
     protected function getUserName($row) {
         $name = '';
         $separator = ' ';
-        $keys = $this->getNameKeys();
-        foreach($keys as $k=>$v){
+        //$keys = $this->getNameKeys();
+        /*foreach($keys as $k=>$v){
             if(isset($row->{$k})&&$v){
                 if($k!='last_name'){
                     if($k=='preferred_name'){
@@ -1015,7 +1048,18 @@ class InstitutionSubjectStudentsTable extends AppTable
                     $name .= $row->{$k};
                 }
             }
+        }*/
+        $keys = ['first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name'];
+        foreach ($keys as $key) {
+            if (!empty($row[$key])) {
+                if ($key == 'preferred_name') {
+                    $name .= $separator . '(' . $row[$key] . ')';
+                } else {
+                    $name .= $row[$key] . $separator;
+                }
+            }
         }
+
         return trim(sprintf('%s', $name));
     }
 

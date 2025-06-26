@@ -16,9 +16,9 @@ class BuildingTypesTable extends ControllerActionTable
     private $levelOptions = [];
     private $buildingLevel = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('building_types');
+        $this->setTable('building_types');
         parent::initialize($config);
 
         $this->hasMany('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -46,6 +46,14 @@ class BuildingTypesTable extends ControllerActionTable
         $this->field('infrastructure_level', ['after' => 'national_code']);
     }
 
+    // POCOR-9074
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+        unset($entity->infrastructure_level);
+    }
+
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
@@ -56,7 +64,8 @@ class BuildingTypesTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldInfrastructureLevel(Event $event, array $attr, $action, Request $request)
+    // POCOR-9074
+    public function onUpdateFieldInfrastructureLevel(Event $event, array $attr, $action,  $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'readonly';

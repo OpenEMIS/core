@@ -1,0 +1,7 @@
+<kd-progressloader *ngIf="displayLoading" configtype="small-spinner" [configvalue]="null"></kd-progressloader>
+<kd-alert></kd-alert>
+<kd-pageheader [config]='pageheader'></kd-pageheader>
+<kd-filter displayType='horizontal-form' [inputData]="dropdownWithoutLabel"
+    (valueUpdate)="_changeEvent($event)"></kd-filter>
+<kd-table #changetable [row]="_row" [column]="_column" [config]="_config" [api]="_tableApi" class="student-table-data" *ngIf="showTable">
+</kd-table>

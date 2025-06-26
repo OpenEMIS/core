@@ -14,9 +14,9 @@ use App\Model\Table\ControllerActionTable;
 class DutiesTable extends ControllerActionTable
 {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff_duties');
+        $this->setTable('institution_staff_duties');
         parent::initialize($config);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -25,10 +25,15 @@ class DutiesTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->toggle('add', false);
+        $this->addBehavior('Staff.StaffTab', [
+            'appliedAction' => ['Subjects' =>['id']
+            ]
+        ]);
+        $this->addBehavior('Institution.InstitutionTab');
              
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
@@ -40,6 +45,8 @@ class DutiesTable extends ControllerActionTable
             return __('Academic Period');
         } else if ($field == 'staff_duties_id') {
             return __('Duty Type');
+        } else if ($field == 'institution_id') {
+            return __('Institution');
         } else if ($field == 'comment') {
             return __('Comment');
         } else {
@@ -50,7 +57,7 @@ class DutiesTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->setFieldOrder(['academic_period_id','institution_id', 'staff_duties_id',  'comment']);
-
+        $this->field('staff_id', ['type' => 'hidden']);
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Personal','Duties','Staff - Career');       
 		if(!empty($is_manual_exist)){
@@ -75,9 +82,11 @@ class DutiesTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options = ['type' => 'staff'];
-        $tabElements = $this->controller->getCareerTabElements($options);
+        $tabElements = $this->getCareerTabElements($options);
+        $controllerName = $this->controller->getName();
+        $selectedAction = $this->getAlias();
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'Duties');
+        $this->controller->set('selectedAction', $selectedAction);
     }
 
 }

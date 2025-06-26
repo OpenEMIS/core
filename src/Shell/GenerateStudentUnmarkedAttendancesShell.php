@@ -11,8 +11,8 @@ use Cake\Console\Shell;
 
 class GenerateStudentUnmarkedAttendancesShell extends Shell
 {
-	
-    public function initialize()
+
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Cases.InstitutionCases');
@@ -22,7 +22,7 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 		$this->loadModel('Institution.Institutions');
 		$this->loadModel('AcademicPeriod.AcademicPeriods');
 		$this->loadModel('Workflow.WorkflowRules');
-		
+
         $this->loadModel('Security.Users');
         $this->loadModel('Security.SecurityGroupUsers');
 
@@ -30,17 +30,19 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
     }
 
     public function main()
-    {  
+    {
 		$academicPeriodId = $this->AcademicPeriods->getCurrent();
-		$workflowRules = $this->WorkflowRules->find()->where(['feature' => 'StudentUnmarkedAttendances'])->hydrate(false)->toArray();
-		
+		$workflowRules = $this->WorkflowRules->find()->where(['feature' => 'StudentUnmarkedAttendances'])
+            ->disableHydration() // POCOR-8533
+            ->toArray();
+
 		$getWorkingDaysOfWeek = $this->AcademicPeriods->getWorkingDaysOfWeek();
 		$year = date('Y'); //6023 task
 		$month = date('n');
 		$day = date('d');
-		
+
 		foreach($workflowRules as $workflowRule){
-			$rule = json_decode($workflowRule['rule'], true);	
+			$rule = json_decode($workflowRule['rule'], true);
 			//6023 starts get workflow name
 			$Workflows = TableRegistry::get('Workflows');
 			$workflows = $Workflows->find()->where(['id' => $workflowRule['workflow_id']])->first();
@@ -49,27 +51,27 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 			$securityRoleId = $rule['where']['security_role_id']; //POCOR-6363
 			$conditions['ClassAttendanceRecords.academic_period_id'] = $academicPeriodId;
 			$conditions['ClassAttendanceRecords.month'] = $month;
-			
+
 			if($day > $daysUnmarked){
 				for($i = 1; $i<= $daysUnmarked; $i++){
 					$num = $day - $i;
-					$conditions['day_'.$num] = 0; 
+					$conditions['day_'.$num] = 0;
 				}
-				
+
 				$classAttendanceRecords =  $this->ClassAttendanceRecords->find()
 					->contain(['InstitutionClasses' => ['Institutions']])
 					->where($conditions)
-					->hydrate(false)
+					->disableHydration() // POCOR-8533
 					->toArray();
-				
+
 				$mailed_data = []; //6023 task
 				foreach($classAttendanceRecords as $classAttendanceRecord){
-					//6023 starts 
+					//6023 starts
 					$studentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records');
 					$studentRecords = $studentAttendanceMarkedRecords
 									->find()
 									->where([
-										'institution_id' => $classAttendanceRecord['institution_class']['institution']['id'], 
+										'institution_id' => $classAttendanceRecord['institution_class']['institution']['id'],
 										'academic_period_id' => $academicPeriodId,
 										'institution_class_id' => $classAttendanceRecord['institution_class']['id']
 									])->all();
@@ -93,7 +95,7 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 						//count unmarked dates for month
 						$number_of_unmarked_day_in_month = $daysUnmarked;
 					}
-					
+
 					$mailed_data = [
 						'class_name' => $classAttendanceRecord['institution_class']['name'],
 						'institution_name' => $classAttendanceRecord['institution_class']['institution']['name'],
@@ -107,18 +109,18 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 					$title = $classAttendanceRecord['institution_class']['name'] . ' ' . $classAttendanceRecord['institution_class']['institution']['code'] . ' - ' . $classAttendanceRecord['institution_class']['institution']['name'] . ' with ' . $daysUnmarked . ' day Student Unmarked Attendances';
 					//POCOR-6363:: START
 					$institutionId = $classAttendanceRecord['institution_class']['institution']['id'];
-					$INSTITUTIONS = TableRegistry::get('institutions');	
-					$INSTITITUTEDATA = $INSTITUTIONS->find('all',['conditions'=>['id'=>$institutionId]])->first();	
-					$securityGroupUsers = TableRegistry::get('security_group_users');	
-					$dataForAssigneeID = $securityGroupUsers->find('all',['conditions'=>['security_group_id'=>$INSTITITUTEDATA->security_group_id,'security_role_id'=>$securityRoleId]])->first();	
-					if(!empty($dataForAssigneeID)){	
-						$assigneeId = $dataForAssigneeID->security_user_id;	
-					}else{	
-						$assigneeId = 0;	
+					$INSTITUTIONS = TableRegistry::get('institutions');
+					$INSTITITUTEDATA = $INSTITUTIONS->find('all',['conditions'=>['id'=>$institutionId]])->first();
+					$securityGroupUsers = TableRegistry::get('security_group_users');
+					$dataForAssigneeID = $securityGroupUsers->find('all',['conditions'=>['security_group_id'=>$INSTITITUTEDATA->security_group_id,'security_role_id'=>$securityRoleId]])->first();
+					if(!empty($dataForAssigneeID)){
+						$assigneeId = $dataForAssigneeID->security_user_id;
+					}else{
+						$assigneeId = 0;
 					}
 					//POCOR-6363:: END
 					$recordId = $classAttendanceRecord['institution_class']['id'];
-					$feature = $workflowRule['feature'];					
+					$feature = $workflowRule['feature'];
 					$statusId = 59;
 					$institutionId = $institutionId;
 					$workflowRuleId = $workflowRule['id'];
@@ -126,7 +128,7 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 						'record_id' => $recordId,
 						'feature' => $feature
 					];
-					
+
 					$caseData = [
 						'case_number' => '',
 						'title' => $title,
@@ -136,41 +138,41 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 						'workflow_rule_id' => $workflowRuleId, // required by workflow behavior to get the correct workflow
 						'linked_records' => $linkedRecords
 					];
-					
+
 					$patchOptions = ['validate' => false];
-					
+
 					$newEntity = $this->InstitutionCases->newEntity();
 					$newEntity = $this->InstitutionCases->patchEntity($newEntity, $caseData, $patchOptions);
 					$alreadyExistonSameDay = $this->InstitutionCases->find('all',['conditions'=>[strtotime('y-m-d','created')=>date('y-m-d'), 'status_id'=>$statusId, 'assignee_id !=' =>0]])->first();
 					if(empty($alreadyExistonSameDay)){
 						$result = $this->InstitutionCases->save($newEntity);
-						
+
 						$linkedRecords['institution_case_id'] = $result->id;
 						$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->newEntity();
 						$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->patchEntity($newEntityInstitutionCaseRecord, $linkedRecords, $patchOptions);
 						$this->InstitutionCaseRecords->save($newEntityInstitutionCaseRecord);
-						$this->sendEmail($rule['where']['security_role_id'], $institutionId, $daysUnmarked,$mailed_data);//6023 add param $mailed_data  
+						$this->sendEmail($rule['where']['security_role_id'], $institutionId, $daysUnmarked,$mailed_data);//6023 add param $mailed_data
 						echo "saved";
 					}
-					
+
 				}
 			}
 		}
     }
-	
-	
+
+
 	public function sendEmail($securityRoleId, $institutionId, $daysUnmarked, $mailed_data=array()){
-		
+
 		if (!empty($securityRoleId) && !empty($institutionId)) { //check if the alertRule have security role and institution id
 			$emailList = $this->getEmailList($securityRoleId, $institutionId);
 			$email = !empty($emailList) ? implode(', ', $emailList) : ' ';
 			// subject and message for alert email
 			$feature = 'StudentUnmarkedAttendances';
 			$subject = '[Class Unmarked Student Attendance] (To Do) System Administrator';
-			
+
 			$defaultMessage = __('Your action is required for [Class Unmarked Student Attendance].');
 			$defaultMessage .= "\n"; // line break
-			//6023 starts 
+			//6023 starts
 			$defaultMessage .= "\n" . __('Status')      . ': ' . "\t \t"    . 'To Do' ;
 			$defaultMessage .= "\n" . __('Sent By')     . ': ' . "\t \t"    . 'System Administrator' ;
 			$defaultMessage .= "\n" . __('Title')    . ': ' . "\t"    . $daysUnmarked.' days unmarked attendance' ;
@@ -179,12 +181,12 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 			$defaultMessage .= "\n" . __('Class Name')    . ': ' . "\t"    . $mailed_data['class_name'];
 			$defaultMessage .= "\n" . __('Date of Unmarked Attendances')    . ': ' . "\t"    . $mailed_data['date_of_unmarked_attendances'];
 			$defaultMessage .= "\n" . __('Number of days that are unmarked')    . ': ' . "\t"    . $mailed_data['number_of_days_that_are_unmarked'];
-			//6023 ends 
+			//6023 ends
 			// insert record to  the alertLog
 			$this->AlertLogs->insertAlertLog('Email', $feature, $email, $subject, $defaultMessage);
 		}
 	}
-	
+
 	public function getEmailList($securityRoleRecords, $institutionId = null)
     {
         $emailList = [];
@@ -202,7 +204,7 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
             $emailListResult = $this->SecurityGroupUsers
                 ->find('emailList', $options)
                 ->toArray();
-			
+
             // combine all email to the email list
             if (!empty($emailListResult)) {
                 foreach ($emailListResult as $obj) {

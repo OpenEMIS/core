@@ -39,7 +39,7 @@ class RegistrationRepository extends Controller
 {
 
 
-    public function academicPeriodsList()
+    public function academicPeriodsList($params)
     {
         try {
             $academicPeriods = AcademicPeriod::select('id', 'name', 'start_year')->where('current', 1)->orderBy('id','DESC')->get()->toArray();
@@ -90,41 +90,65 @@ class RegistrationRepository extends Controller
                 $lists = $lists->where('academic_periods.current', 1);
             }
 
-                    
-            $educationGrades = $lists->get();
-            
+            if(isset($request['order'])){
+                $orderBy = $request['order_by']??"ASC";
+                $col = 'education_grades.'.$request['order'];
+                $lists = $lists->orderBy($col, $orderBy);
+            }
+
+
+            if ($request['limit']) {
+                $educationGrades = $lists->paginate($request['limit']);
+            } else {
+                $educationGrades = $lists->get();
+            }
             return $educationGrades;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Failed to fetch list from DB');
         }
     }
 
 
-    public function institutionDropdown($request)
+    public function institutionDropdown($params)
     {
         try {
             $institutions = Institutions::select('id', 'name', 'code');
 
-            if($request['institution_type_id']){
-                $institutions = $institutions->where('institution_type_id', $request['institution_type_id']);
+            if(isset($params['institution_type_id'])){
+                $institutions = $institutions->where('institution_type_id', $params['institution_type_id']);
             }
 
 
-            if($request['area_id']){
-                $institutions = $institutions->where('area_id', $request['area_id']);
+            if(isset($params['area_id'])){
+                $institutions = $institutions->where('area_id', $params['area_id']);
             }
 
 
-            $data = $institutions->get();
+            //$data = $institutions->get();
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $institutions = $institutions->orderBy($col, $orderBy);
+            }
+                        
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $institutions->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $institutions->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
             
-            return $data;
+            return $list;
         } catch (\Exception $e) {
-            
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -135,13 +159,18 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function administrativeAreasList()
+    public function administrativeAreasList($params)
     {
         try {
-            /*$areaAdministratives = AreaAdministratives::select('id', 'name', 'parent_id')->with('areaAdministrativesChild:id,name,parent_id')->get();*/
 
-            $areaAdministratives = Areas::select('id', 'name', 'parent_id')->orderBy('name', 'ASC')->get()->toArray();
-            
+            $areaAdministratives = Areas::select('id', 'name', 'parent_id')->orderBy('name', 'ASC');
+
+            if (isset($params['limit'])) {
+                $areaAdministratives = $areaAdministratives->paginate($params['limit'])->toArray();
+            } else {
+                $areaAdministratives = $areaAdministratives->get()->toArray();
+            }
+
             return $areaAdministratives;
         } catch (\Exception $e) {
             Log::error(
@@ -284,7 +313,7 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function autocompleteOpenemisNo($id)
+    public function autocompleteOpenemisNo($params, $id)
     {
         try {
             $data = SecurityUsers::select(
@@ -295,9 +324,25 @@ class RegistrationRepository extends Controller
                     'third_name',
                     'last_name',
                     'openemis_no',
-                    )->where('openemis_no', 'LIKE', '%'.$id.'%')->get()->toArray();
+                    )->where('openemis_no', 'LIKE', '%'.$id.'%');
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $data = $data->orderBy($col, $orderBy);
+            }
+                        
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $data->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $data->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
             
-            return $data;
+            return $list;
             
         } catch (\Exception $e) {
             Log::error(
@@ -327,7 +372,7 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function detailsByEmis($id)
+    public function detailsByEmis($params,$id)
     {
         try {
             $data = SecurityUsers::with(
@@ -336,29 +381,51 @@ class RegistrationRepository extends Controller
                     'institutionStudent',
                     'institutionStudent.institution'
                 )
-                ->where('openemis_no', $id)
-                ->orWhere('identity_number', $id)
-                ->get();
-            return $data;
+                ->where('openemis_no', 'LIKE', '%'.$id.'%')
+                ->orWhere('identity_number', 'LIKE', '%'.$id.'%');
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $data = $data->orderBy($col, $orderBy);
+            }
+                        
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $data->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $data->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+            return $list;
             
         } catch (\Exception $e) {
             Log::error(
                 'Failed to find candidate data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
+            dd($e);
             return $this->sendErrorResponse('Failed to find candidate data.');
         }
     }
 
 
-    public function nationalityList()
+    public function nationalityList($params)
     {
         try {
-            $nationalities = Nationalities::orderBy('order', 'ASC')->get();
+            $nationalities = Nationalities::orderBy('order', 'ASC');
+            if (isset($params['limit'])) {
+                $nationalities = $nationalities->paginate($params['limit']);
+            } else {
+                $nationalities = $nationalities->get();
+            }
             
             return $nationalities;
         } catch (\Exception $e) {
+
             Log::error(
                 'Failed to find nationality list.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -748,7 +815,7 @@ class RegistrationRepository extends Controller
         try {
             $param = $request->all();
             
-            $customFields = $this->getStudentCustomFields();
+            $customFields = $this->getStudentCustomFields($param);
 
             $requiredCfArray = [];
             $requiredCfIds = [];
@@ -1216,7 +1283,7 @@ class RegistrationRepository extends Controller
 
 
 
-    public function getStudentCustomFields()
+    public function getStudentCustomFields($params)
     {
         try {
             $customFields = StudentCustomFormField::with([
@@ -1226,11 +1293,27 @@ class RegistrationRepository extends Controller
             ])
             ->whereHas('studentCustomField')
             ->where('student_custom_form_id', 1)
-            ->orderBy('order', 'ASC')
-            ->get()
-            ->toArray();
+            ->orderBy('order', 'ASC');
             //dd($customFields);
-            return $customFields;
+
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $customFields = $customFields->orderBy($col, $orderBy);
+            }
+                        
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $customFields->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $customFields->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+            return $list;
 
         } catch (\Exception $e) {
             Log::error(
@@ -1243,11 +1326,17 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function identityTypeList()
+    public function identityTypeList($params)
     {
         try {
-            $identityTypes = IdentityTypes::select('id', 'name')->orderBy('order', 'ASC')->get();
-            
+            $identityTypes = IdentityTypes::select('id', 'name')->orderBy('order', 'ASC');
+
+            if (isset($params['limit'])) {
+                $identityTypes = $identityTypes->paginate($params['limit']);
+            } else {
+                $identityTypes = $identityTypes->get();
+            }
+
             return $identityTypes;
         } catch (\Exception $e) {
             Log::error(
@@ -1267,10 +1356,6 @@ class RegistrationRepository extends Controller
             $institutions = new Institutions();
 
             $institutions = $institutions->select('institutions.*')->where('institutions.institution_status_id', '!=', 2);
-            /*$institutions = $institutions->whereHas('educationGrades',
-                    function ($query) use ($gradeId) {
-                        $query->where('education_grade_id', $gradeId);
-                    })->select('id', 'name', 'code');*/
 
             $institutions = $institutions->join('institution_grades', 'institution_grades.institution_id', '=', 'institutions.id')->where('institution_grades.education_grade_id', $gradeId);
 
@@ -1284,8 +1369,14 @@ class RegistrationRepository extends Controller
                 $institutions = $institutions->where('area_id', $request['area_id']);
             }
 
-            $lists = $institutions->orderBy('institutions.name', 'ASC')->get();
-            
+            $lists = $institutions->orderBy('institutions.name', 'ASC');
+
+            if (isset($request['limit'])) {
+                $lists = $lists->paginate($request['limit']);
+            } else {
+                $lists = $lists->get();
+            }
+
             return $lists;
         } catch (\Exception $e) {
 
@@ -1299,12 +1390,28 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function institutionTypesDropdown()
+    public function institutionTypesDropdown($params)
     {
         try {
-            $institutions = InstitutionTypes::select('id', 'name')->get();
+            $institutions = InstitutionTypes::select('id', 'name');
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $institutions = $institutions->orderBy($col, $orderBy);
+            }
+                        
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $institutions->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $institutions->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
             
-            return $institutions;
+            return $list;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -1316,11 +1423,22 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function areaLevelsDropdown()
+    public function areaLevelsDropdown($params)
     {
         try {
-            $areaLevels = AreaLevels::select('id', 'name')->get();
-            
+            $areaLevels = AreaLevels::select('id', 'name');
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $areaLevels = $areaLevels->orderBy($col, $orderBy);
+            }
+
+            if (isset($params['limit'])) {
+                $areaLevels = $areaLevels->paginate($params['limit']);
+            } else {
+                $areaLevels = $areaLevels->get();
+            }
             return $areaLevels;
         } catch (\Exception $e) {
             Log::error(
@@ -1342,8 +1460,12 @@ class RegistrationRepository extends Controller
                 $areas = $areas->where('area_level_id', $request['area_level_id']);
             }
 
-            $data = $areas->orderBy('name', 'ASC')->get();
-            
+            $data = $areas->orderBy('name', 'ASC');
+            if (isset($request['limit'])) {
+                $data = $data->paginate($request['limit']);
+            } else {
+                $data = $data->get();
+            }
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -1356,11 +1478,23 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function areaAdministrativeLevelsDropdown()
+    public function areaAdministrativeLevelsDropdown($params)
     {
         try {
-            $areaLevels = AreaAdministrativeLevels::select('id', 'name')->get();
-            
+            $areaLevels = AreaAdministrativeLevels::select('id', 'name');
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $areaLevels = $areaLevels->orderBy($col, $orderBy);
+            }
+
+            if (isset($params['limit'])) {
+                $areaLevels = $areaLevels->paginate($params['limit']);
+            } else {
+                $areaLevels = $areaLevels->get();
+            }
+
             return $areaLevels;
         } catch (\Exception $e) {
             Log::error(
@@ -1377,16 +1511,22 @@ class RegistrationRepository extends Controller
     public function areasAdministrativeDropdown($request)
     {
         try {
-            $areas = AreaAdministrativeLevels::select('id', 'name');
+            $areas = AreaAdministratives::select('id', 'name');
 
-            if($request['area_level_id']){
+            if($request['area_administrative_level_id']){
                 $areas = $areas->where('area_administrative_level_id', $request['area_administrative_level_id']);
             }
 
-            $data = $areas->orderBy('name', 'ASC')->get();
-            
+            $data = $areas->orderBy('name', 'ASC');
+
+            if (isset($request['limit'])) {
+                $data = $data->paginate($request['limit']);
+            } else {
+                $data = $data->get();
+            }
             return $data;
         } catch (\Exception $e) {
+            dd($e);
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1530,4 +1670,3 @@ class RegistrationRepository extends Controller
     }
 
 }
-

@@ -12,8 +12,8 @@ use App\Model\Table\AppTable;
 
 class StaffTrainingReportsTable extends AppTable {
 
-    public function initialize(array $config) {
-        $this->table('staff_trainings');
+    public function initialize(array $config): void {
+        $this->setTable('staff_trainings');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -33,8 +33,8 @@ class StaffTrainingReportsTable extends AppTable {
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
-        $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request) {
+        $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
         return $attr;
     }
     
@@ -42,7 +42,7 @@ class StaffTrainingReportsTable extends AppTable {
     {
         $identityTypeName = '';
         if (!empty($entity->identity_type)) {
-            $identityType = TableRegistry::get('FieldOption.IdentityTypes')->find()->where(['id'=>$entity->identity_type])->first();
+            $identityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes')->find()->where(['id'=>$entity->identity_type])->first();
             $identityTypeName = $identityType->name;
         }
         return $identityTypeName;
@@ -53,8 +53,8 @@ class StaffTrainingReportsTable extends AppTable {
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
         $academicPeriodId = $requestData->academic_period_id;
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $startDate = $periodEntity->start_date->format('Y-m-d');
         $endDate = $periodEntity->end_date->format('Y-m-d');
@@ -107,7 +107,7 @@ class StaffTrainingReportsTable extends AppTable {
         ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
             'InstitutionStaff.staff_id = ' . $this->aliasField('staff_id')
         ])
-        ->leftJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()], [
+        ->leftJoin([$InstitutionsTable->getAlias() => $InstitutionsTable->getTable()], [
             $InstitutionsTable->aliasField('id = ') . 'InstitutionStaff.institution_id'
         ]);
         $query->where(['Users.is_staff' => 1, $conditions]);

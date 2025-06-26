@@ -8,20 +8,27 @@ use Cake\Core\Configure;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 use Cake\Log\Log;
-use Cake\Network\Exception\NotFoundException;
+use Cake\Http\Exception\NotFoundException;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Utility\Xml;
 use Cake\Utility\Text;
 use Firebase\JWT\JWT;
 use Firebase\JWT\ExpiredException;
+use Laminas\Diactoros\Stream;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
+use Cake\Http\Response;
+use Cake\Datasource\Exception\RecordNotFoundException;
+use Firebase\JWT\Key;
+use Cake\Utility\Exception\XmlException;
+use DOMDocument;
 
 define("NS_XHTML", "http://www.w3.org/1999/xhtml");
 define("NS_XF", "http://www.w3.org/2002/xforms");
 define("NS_EV", "http://www.w3.org/2001/xml-events");
 define("NS_XSD", "http://www.w3.org/2001/XMLSchema");
 define("NS_OE", "https://www.openemis.org");
+define('NS_OE', 'http://www.w3.org/1999/xhtml');
 
 class RestSurveyComponent extends Component
 {
@@ -30,18 +37,20 @@ class RestSurveyComponent extends Component
 
     public $components = ['Paginator', 'Workflow'];
 
-    public $allowedActions = array('listing', 'schools', 'download' . 'downloadUrl', 'studentlist', 'stafflist','checkIns');
+    public $allowedActions = array('listing', 'schools', 'download' . 'downloadUrl', 'studentlist',
+                                'stafflist','checkIns');
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->controller = $this->_registry->getController();
-        $this->action = $this->request->params['action'];
+        $this->action = $this->getController()->getRequest()->getParam('action');
+        $this->response = $this->getController()->getResponse();
 
-        $models = $this->config('models');
+        $models = $this->getConfig('models');
         foreach ($models as $key => $model) {
             if (!is_null($model)) {
-                $this->{$key} = TableRegistry::get($model);
-                $this->{lcfirst($key) . 'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->alias())) . '_id';
+                $this->{$key} = TableRegistry::get((string)$model);
+                $this->{lcfirst($key) . 'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->getAlias())) . '_id';
             } else {
                 $this->{$key} = null;
             }
@@ -50,18 +59,25 @@ class RestSurveyComponent extends Component
             $base = count($modelInfo) == 1 ? $modelInfo[0] : $modelInfo[1];
             $this->controller->set('Custom_' . $key, $base);
         }
+        if($this->getController()->getRequest()->getParam('pass')[0] == 'upload'){
+            $this->upload();
+        }
     }
 
     public function downloadUrl()
     {
-        $url = '/' . $this->controller->name . '/survey/download/xform/';
-        $this->response->body(json_encode($url, JSON_UNESCAPED_UNICODE));
-        $this->response->type('json');
+        $url = '/' . $this->getController()->getName() . '/survey/download/xform/';
+
+        $this->response = $this->response
+            ->withType('application/json')
+            ->withStringBody(json_encode($url, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         return $this->response;
     }
 
+
+
     public function download($format = "xform", $id = 0, $output = true)
-    {
+    { 
         switch ($format) {
             case 'xform':
                 $result = $this->getXForms($format, $id);
@@ -69,60 +85,78 @@ class RestSurveyComponent extends Component
             default:
                 break;
         }
-
         if ($output) { // true = output to screen
-            if (is_object($result)) {
-                $this->response->body($result->asXML());
-            } else {
-                $this->response->body($result);
-            }
-            $this->response->type('xml');
+        if (is_object($result)) {
+            // Convert object to XML string
+            $xmlString = $result->asXML();
+        } else {
+            // Handle non-object result
+            $xmlString = $result;
+        }
 
-            return $this->response;
-        } else { // download as file
+        // Create a stream from the XML string
+        $stream = new Stream('php://memory', 'rw');
+        $stream->write($xmlString);
+        $stream->rewind();
+
+        // Set the response body and type
+        $response = $this->response->withBody($stream)
+                             ->withType('xml');
+        // Return the modified response
+        return $response;
+
+    }else { // download as file
             $fileName = $format . '_' . date('Ymdhis');
 
-            $this->response->body($result->asXML());
-            $this->response->type('xml');
+            // $this->response->body($result->asXML());
+            // $this->response->type('xml');
+
+            $this->response->getBody(function () use ($filePath) {
+                $content = file_get_contents($filePath);
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+                return $content;
+            });
+            $stream = new Stream('php://memory', 'rw');
+            $stream->write($result->asXML());
+            $stream->rewind();
+            $this->response = $this->response->withBody($stream);
+            $this->response = $this->response->withType('xml');
 
             // Optionally force file download
-            $this->response->download($fileName . '.xml');
+            $this->response = $this->response->withDownload($fileName . '.xml');
 
             // Return response object to prevent controller from trying to render a view.
             return $this->response;
         }
     }
-
-
     //POCOR-8089
     public function getXXList($instanceId, $id, $insCode, $acamic)
     {
-    $title = $this->Form->get($id)->name;
-    $institutionSurveysTbl = TableRegistry::get('institution_surveys');
-    $institutionTbl = TableRegistry::get('Institution.Institutions');
-    $insData = $institutionTbl->find('all', ['conditions' => ['code' => $insCode]])->first();
-    $insId = $insData->id;
-    $academicPeriodTbl = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-    $apData = $academicPeriodTbl->find('all', ['conditions' => ['name' => $acamic]])->first();
-    $apId = $apData->id;
+        $title = $this->Form->get($id)->name;
+        $institutionSurveysTbl = TableRegistry::get('Institution.InstitutionSurveys');
+        $institutionTbl = TableRegistry::get('Institution.Institutions');
+        $insData = $institutionTbl->find('all', ['conditions' => ['code' => $insCode]])->first();
+        $insId = $insData->id;
+        $academicPeriodTbl = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $apData = $academicPeriodTbl->find('all', ['conditions' => ['name' => $acamic]])->first();
+        $apId = $apData->id;
 
-    $checkInsSurvey = $institutionSurveysTbl->find('all', ['conditions'=>['institution_id'=> $insId, 'academic_period_id'=> $apId, 'survey_form_id' => $id]])->first();
-    if(empty($checkInsSurvey)){
-        $final['code'] = '302';
-        $final['survey_exist_for_ins'] = 'no';
-    }else{
-        $final['code'] = '200';
-        $final['survey_exist_for_ins'] = 'yes';
-    }
-    $params = json_encode($final, true);
-    echo $params;
-    die;
-    }
+        $checkInsSurvey = $institutionSurveysTbl->find('all', ['conditions'=>['institution_id'=> $insId, 'academic_period_id'=> $apId, 'survey_form_id' => $id]])->first();
+        if(empty($checkInsSurvey)){
+            $final['code'] = '302';
+            $final['survey_exist_for_ins'] = 'no';
+        }else{
+            $final['code'] = '200';
+            $final['survey_exist_for_ins'] = 'yes';
+        }
+        $params = json_encode($final, true);
+        echo $params;
+        die;
+    }//POCOR-8089
+
     //POCOR-8089
-	
-	
-	
-	//POCOR-8089
     public function checkIns($format = "xform", $id = 0, $insCode = 0, $academicPeriod = 0, $surveyQuesId = 0, $output = true)
     {
         switch ($format) {
@@ -134,11 +168,10 @@ class RestSurveyComponent extends Component
         }
     }
     //POCOR-8089
-
-
     //POCOR-7707
     public function studentlist($format = "xform", $id = 0, $insCode = 0, $academicPeriod = 0, $surveyQuesId = 0, $output = true)
     {
+        //$this->response = $this->getController()->getResponse();
         switch ($format) {
             case 'xform':
                 $result = $this->getXList($format, $id, $insCode, $academicPeriod, $surveyQuesId);
@@ -149,21 +182,31 @@ class RestSurveyComponent extends Component
 
         if ($output) { // true = output to screen
             if (is_object($result)) {
-                $this->response->body($result->asXML());
+                $xmlString = $result->asXML();
+                $stream = new Stream('php://memory', 'rw');
+                $stream->write($xmlString);
+                $stream->rewind();
+                $this->response = $this->response->withBody($stream);
             } else {
-                $this->response->body($result);
+                $stream = new Stream('php://memory', 'rw');
+                $stream->write($result);
+                $stream->rewind();
+                $this->response = $this->response->withBody($stream);
             }
-            $this->response->type('xml');
+            $this->response = $this->response->withType('xml');
 
             return $this->response;
         } else { // download as file
             $fileName = $format . '_' . date('Ymdhis');
 
-            $this->response->body($result->asXML());
-            $this->response->type('xml');
+            $stream = new Stream('php://memory', 'rw');
+            $stream->write($result->asXML());
+            $stream->rewind();
+            $this->response = $this->response->withBody($stream);
+            $this->response = $this->response->withType('xml');
 
             // Optionally force file download
-            $this->response->download($fileName . '.xml');
+            $this->response = $this->response->withDownload($fileName . '.xml');
 
             // Return response object to prevent controller from trying to render a view.
             return $this->response;
@@ -173,24 +216,29 @@ class RestSurveyComponent extends Component
 
     public function upload()
     {
-        $generateErrorResponse = function ($params = [], $code = 500) {
-            $this->response->statusCode($code);
-            $this->response->body(json_encode(($params), JSON_UNESCAPED_UNICODE));
-            $this->response->type('json');
-            return $this->response;
-        };
+        //$this->response = $this->getController()->getResponse();
 
-        if ($this->request->is(['post', 'put'])) {
+       /* $generateErrorResponse = function ($params = [], $code = 500) {
+            $this->response = $this->response->withStatus($code)
+                                             ->withType('application/json')
+                                             ->withStringBody(json_encode($params, JSON_UNESCAPED_UNICODE));
+            return $this->response;
+        };*/
+        if ($this->getController()->getRequest()->is(['post', 'put'])) {
+
             // check for valid authorization token to upload survey
-            $header = $this->request->header('authorization');
-            if ($header) {
-                $token = str_ireplace('bearer ', '', $header);
+            $header = $this->getController()->getRequest()->getData()['code'];
+            if (isset($header)) {
+                //$token = str_ireplace('Bearer ', '', $header);
+                $token = $header;
+                
+                $publicKey = Configure::read('Application.public.key');
                 try {
                     $payload = JWT::decode($token, Configure::read('Application.public.key'), ['RS256']);
+ 
                 } catch (ExpiredException $e) {
                     return $generateErrorResponse(['message' => __('Expired token')], 500);
                 }
-
                 // check userId in the token payload
                 if (empty($payload->sub)) {
                     return $generateErrorResponse(['message' => __('No userId found in token')], 500);
@@ -200,42 +248,60 @@ class RestSurveyComponent extends Component
                 return $generateErrorResponse(['message' => __('Do not have permission to access the server')], 500);
             }
 
-            $data = $this->request->data;
+            $data = $this->getController()->getRequest()->getData(); 
             Log::write('debug', 'Data:');
-            Log::write('debug', $data);
-
+            Log::write('debug', (string)$data);
+            
             if (array_key_exists('response', $data)) {
                 $CustomRecords = TableRegistry::get('Institution.InstitutionSurveys');
-                $formAlias = $this->Form->alias();
-                $fieldAlias = $this->Field->alias();
+                $formAlias = $this->Form->getAlias();
+                $fieldAlias = $this->Field->getAlias();
 
                 $xmlResponse = $data['response'];
-
                 // lines below is for testing
-                // $xmlResponse = "<xf:instance id='xform'><oe:SurveyForms id='1'><oe:Institutions>1</oe:Institutions><oe:AcademicPeriods>10</oe:AcademicPeriods><oe:SurveyQuestions id='2'>some text</oe:SurveyQuestions><oe:SurveyQuestions id='3'>0</oe:SurveyQuestions><oe:SurveyQuestions id='4'>some long long text</oe:SurveyQuestions><oe:SurveyQuestions id='6'>3</oe:SurveyQuestions><oe:SurveyQuestions id='7'>5 6 7</oe:SurveyQuestions><oe:SurveyQuestions id='25'><oe:SurveyTableRows id='20'><oe:SurveyTableColumns0 id='0'>Male</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>10</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>20</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>30</oe:SurveyTableColumns3></oe:SurveyTableRows><oe:SurveyTableRows id='21'><oe:SurveyTableColumns0 id='0'>Female</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>15</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>25</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>35</oe:SurveyTableColumns3></oe:SurveyTableRows></oe:SurveyQuestions></oe:SurveyForms></xf:instance>";
+               /*  $xmlResponse = '<xf:instance id="xform"><oe:SurveyForms id="19"><oe:Institutions>P1002</oe:Institutions><oe:AcademicPeriods>33</oe:AcademicPeriods><oe:SurveyQuestions id="107" /><oe:SurveyQuestions id="106">-122.083922%2037.4220936</oe:SurveyQuestions><oe:SurveyQuestions id="7">6</oe:SurveyQuestions><oe:SurveyQuestions id="14">3</oe:SurveyQuestions><oe:SurveyQuestions id="9"><oe:SurveyTableRows id="95"><oe:SurveyTableColumns0 id="0">test row</oe:SurveyTableColumns0></oe:SurveyTableRows></oe:SurveyQuestions><oe:SurveyQuestions id="103">0.1</oe:SurveyQuestions><oe:SurveyQuestions id="112"><oe:RepeatBlock><oe:SurveyQuestions1 id="7">12</oe:SurveyQuestions1><oe:SurveyQuestions2 id="10">2024-07-27</oe:SurveyQuestions2><oe:SurveyQuestions3 id="17">test desc</oe:SurveyQuestions3><oe:SurveyQuestions4 id="22">13</oe:SurveyQuestions4><oe:SurveyQuestions5 id="109">divya akash</oe:SurveyQuestions5></oe:RepeatBlock></oe:SurveyQuestions><oe:SurveyQuestions id="110">96</oe:SurveyQuestions><oe:SurveyQuestions id="109">divya akash testing</oe:SurveyQuestions><oe:SurveyQuestions id="104">divya akashesting</oe:SurveyQuestions></oe:SurveyForms></xf:instance>'*/;
+
                 // $xmlResponse = '<xf:instance id="xform"><oe:SurveyForms id="16"><oe:Institutions>1059</oe:Institutions><oe:AcademicPeriods>10</oe:AcademicPeriods><oe:SurveyQuestions id="113" array-id="1">1.3641 123.9214</oe:SurveyQuestions><oe:SurveyQuestions id="114" array-id="2">1.74 100.243</oe:SurveyQuestions><oe:SurveyQuestions id="16" array-id="3">5</oe:SurveyQuestions></oe:SurveyForms></xf:instance>';
                 // end testing data //
 
                 // save response into database for debug purpose, always purge 3 days old response
                 $this->deleteExpiredResponse();
+                
                 $this->addResponse($xmlResponse);
-                // End
-
+               
+                 Log::write('debug', 'DataAkash:');
+                Log::write('debug', (string)$xmlResponse);
                 Log::write('debug', 'XML Response');
-                Log::write('debug', $xmlResponse);
+               // $xmlResponse = preg_replace('/(xf:|oe:)/', '', $xmlResponse);
+                //Log::write('debug', $xmlResponse);
+                //echo "<pre>"; print_r($xmlResponse); die;
                 $xmlResponse = str_replace("xf:", "", $xmlResponse);
                 $xmlResponse = str_replace("oe:", "", $xmlResponse);
+               // $xmlString = $this->arrayToXml($xmlResponse, 'xf:instance');
+                
+                //$xmlString = $xmlObject->saveXML();
 
                 $xmlstr = '<?xml version="1.0" encoding="UTF-8"?>' . $xmlResponse;
-                Log::write('debug', 'XML String:');
-                Log::write('debug', $xmlstr);
-                $xml = Xml::build($xmlstr);
+               /* $dom = new \DOMDocument();
+                $dom->loadXML($xmlstr);*/
+                /*Log::write('debug', 'XML String:');
+                Log::write('debug', $xmlstr);*/
+                /*$rawXml = file_get_contents('php://input');
+             $xmlResponse = preg_replace('/(xf:|oe:)/', '', $rawXml);*/
+             //Log::write('error', $xmlResponse);
+                try {
+                    $xml = Xml::build($xmlstr);
+
+                   // Log::write('debug', 'Parsed XML: ' . print_r($xml, true));
+                } catch (XmlException $e) {
+                    //Log::write('error', 'XML Exception: ' . $e->getMessage());
+                }
 
                 $periodId = $xml->{$formAlias}->AcademicPeriods->__toString();
                 $formId = $xml->{$formAlias}->attributes()->id->__toString();
                 $institutionCode = $xml->{$formAlias}->Institutions->__toString();
-
                 // checking institutionId
+
                 $Institutions = TableRegistry::get('Institution.Institutions');
                 $institutionResult = $Institutions
                     ->find()
@@ -250,13 +316,14 @@ class RestSurveyComponent extends Component
                 }
 
                 $institutionRecord = $institutionResult->first();
+
                 $institutionId = $institutionRecord->id;
                 // end of check for institutionId
 
                 $SecurityUser = TableRegistry::get('User.Users');
                 $userEntity = $SecurityUser->get($userId);
 
-                // checking of access only if the user is not super admin    
+                // checking of access only if the user is not super admin
                 if ($userEntity->super_admin == 0) {
                     $userHasAccess = $Institutions
                         ->find('byAccess', ['userId' => $userId])
@@ -309,14 +376,14 @@ class RestSurveyComponent extends Component
 
                 // update modified user id to the entitiy
                 $institutionSurveyEntity = $CustomRecords->patchEntity($institutionSurveyEntity, ['modified_user_id' => $userId], ['validate' => false]);
+
                 if ($CustomRecords->save($institutionSurveyEntity)) {
                     $message = 'Survey record has been submitted successfully.';
                     Log::write('debug', 'Message:');
                     Log::write('debug', $message);
                 } else {
-                    Log::write('debug', $institutionSurveyEntity->errors());
+                    Log::write('debug', $institutionSurveyEntity->getErrors());
                 }
-
                 // Delete relevance questions
                 $this->deleteQuestionWithRules($formId, $institutionSurveyId);
 
@@ -428,11 +495,13 @@ class RestSurveyComponent extends Component
 
     private function saveFieldValue($answerData, $extra)
     {
+
         $model = $extra['model'];
 
         $answerEntity = $model->newEntity($answerData);
+         Log::write('debug', $answerEntity);
         if (!$model->save($answerEntity)) {
-            Log::write('debug', $answerEntity->errors());
+            Log::write('debug', $answerEntity->getErrors());
         }
     }
 
@@ -454,12 +523,13 @@ class RestSurveyComponent extends Component
 
         $cellEntity = $cellModel->newEntity($cellData);
         if (!$cellModel->save($cellEntity)) {
-            Log::write('debug', $cellEntity->errors());
+            Log::write('debug', $cellEntity->getErrors());
         }
     }
 
     private function processUpload($key, $extra)
     {
+
         $data = $extra['data'];
         $value = $extra['value'];
         if (!empty($data)) {
@@ -500,8 +570,8 @@ class RestSurveyComponent extends Component
     {
         $thresholdDataaa = json_decode($extra['value'], true);
 
-        $InstitutionStudentSurveysTbl = TableRegistry::get('institution_student_surveys');
-        $InstitutionStudentSurveyAnswersTbl = TableRegistry::get('institution_student_survey_answers');
+        $InstitutionStudentSurveysTbl = TableRegistry::get('Institution.InstitutionStudentSurveys');
+        $InstitutionStudentSurveyAnswersTbl = TableRegistry::get('Institution.InstitutionStudentSurveyAnswers');
         $students = $thresholdDataaa;
         foreach ($students as $w => $stu) {
             $alreadyExistData = $InstitutionStudentSurveysTbl->find('all', ['conditions' => [
@@ -634,9 +704,9 @@ class RestSurveyComponent extends Component
         if ($fieldEntity->has('params') && !empty($fieldEntity->params)) {
             $params = json_decode($fieldEntity->params, true);
 
-            if (array_key_exists('number', $params)) {
+            if (isset($params['number'])) {
                 $cellValueColumn = 'number_value';
-            } elseif (array_key_exists('decimal', $params)) {
+            } elseif (isset($params['decimal'])) {
                 $cellValueColumn = 'decimal_value';
             }
         }
@@ -696,7 +766,7 @@ class RestSurveyComponent extends Component
     }
 
     private function uploadFile($field, $entity, $extra)
-    {
+    { 
         $data = $extra['data'];
         $value = $extra['value'];
 
@@ -781,7 +851,7 @@ class RestSurveyComponent extends Component
                         }
                     }
                 } else {
-                    Log::write('debug', $repeaterEntity->errors());
+                    Log::write('debug', $repeaterEntity->getErrors());
                 }
             }
         } else {
@@ -789,8 +859,8 @@ class RestSurveyComponent extends Component
         }
     }
 
-    public function getXForms($instanceId, $id)
-    {
+    public function getXFormsbkp($instanceId, $id)
+    { 
         $title = $this->Form->get($id)->name;
         $description = $this->Form->get($id)->description;
         $title = htmlspecialchars($title, ENT_QUOTES);
@@ -818,14 +888,14 @@ class RestSurveyComponent extends Component
 
         $instanceNode = $modelNode->addChild("instance", null, NS_XF);
         $instanceNode->addAttribute("id", $instanceId);
-        $formNode = $instanceNode->addChild($this->Form->alias(), null, NS_OE);
+        $formNode = $instanceNode->addChild($this->Form->getAlias(), null, NS_OE);
         $formNode->addAttribute("id", $id);
 
         // need further testing if is commented out
         // $sectionBreakNode = $bodyNode;
 
         // set fixed Institutions Field
-        $references = [$this->Form->alias(), 'Institutions'];
+        $references = [$this->Form->getAlias(), 'Institutions'];
 
         $formNode->addChild('Institutions', null, NS_OE);
         $fieldNode = $bodyNode->addChild("input", null, NS_XF);
@@ -837,13 +907,13 @@ class RestSurveyComponent extends Component
         // End
 
         // set fixed Academic Periods Field
-        $references = [$this->Form->alias(), 'AcademicPeriods'];
+        $references = [$this->Form->getAlias(), 'AcademicPeriods'];
 
         $formNode->addChild('AcademicPeriods', null, NS_OE);
         $fieldNode = $bodyNode->addChild("select1", null, NS_XF);
         $fieldNode->addAttribute("ref", $this->getRef($instanceId, $references));
         $fieldNode->addAttribute("oe-type", "integer");
-        $fieldNode->addAttribute("oe-dependency", $this->getRef($instanceId, [$this->Form->alias(), 'Institutions']));
+        $fieldNode->addAttribute("oe-dependency", $this->getRef($instanceId, [$this->Form->getAlias(), 'Institutions']));
         $fieldNode->addChild("label", "Academic Period", NS_XF);
 
         $SurveyForms = TableRegistry::get('Survey.SurveyForms');
@@ -909,7 +979,7 @@ class RestSurveyComponent extends Component
             $extra['hint'] = null;
             $extra['constraint'] = null;
 
-            $extra['references'] = [$this->Form->alias(), $this->Field->alias() . "[" . $extra['index'] . "]"];
+            $extra['references'] = [$this->Form->getAlias(), $this->Field->getAlias() . "[" . $extra['index'] . "]"];
             $extra['default_value'] = null; // to handle default value for dropdown
 
             // For relevancy
@@ -951,10 +1021,10 @@ class RestSurveyComponent extends Component
     {
 
         $title = $this->Form->get($id)->name;
-        $institutionClassStudentsTbl = TableRegistry::get('institution_class_students');
-        $SurveyFormsQuestionsTbl = TableRegistry::get('survey_forms_questions');
-        $institutionStudentSurveysTbl = TableRegistry::get('institution_student_surveys');
-        $surveyQuestionChoicesTbl = TableRegistry::get('survey_question_choices');
+        $institutionClassStudentsTbl = TableRegistry::get('Institution.InstitutionClassStudents');
+        $SurveyFormsQuestionsTbl = TableRegistry::get('Survey.SurveyFormsQuestions');
+        $institutionStudentSurveysTbl = TableRegistry::get('Institution.StudentSurveys');
+        $surveyQuestionChoicesTbl = TableRegistry::get('Survey.SurveyQuestionChoices');
         $institution_student_survey_answers_tbl = TableRegistry::get('institution_student_survey_answers');
 
         $institutionTbl = TableRegistry::get('Institution.Institutions');
@@ -976,14 +1046,14 @@ class RestSurveyComponent extends Component
             ,classes_student_info.openemis_no
             ,classes_student_info.student_name
         FROM institution_classes
-        LEFT JOIN 
+        LEFT JOIN
         (
             SELECT institution_class_students.institution_class_id
                 ,security_users.id student_id
                 ,security_users.openemis_no
                 ,REPLACE(CONCAT_WS(' ',security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name), '  ', ' ') student_name
             FROM institution_class_students
-            INNER JOIN 
+            INNER JOIN
             (
                 SELECT institution_class_students.student_id
                     ,institution_class_students.education_grade_id
@@ -1010,7 +1080,7 @@ class RestSurveyComponent extends Component
             ON security_users.id = institution_class_students.student_id
             INNER JOIN academic_periods
             ON academic_periods.id = institution_class_students.academic_period_id
-            WHERE institution_class_students.academic_period_id = $apId 
+            WHERE institution_class_students.academic_period_id = $apId
             AND institution_class_students.institution_id = $insId
             AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_class_students.student_status_id = 1, institution_class_students.student_status_id IN (1, 7, 6, 8))
         ) classes_student_info
@@ -1033,12 +1103,12 @@ class RestSurveyComponent extends Component
             ,institution_student_survey_answers.survey_question_id
             ,institution_student_survey_answers.parent_survey_question_id
             ,survey_question_choices.id answer_choice_id_for_dropdown
-            ,IF(institution_student_survey_answers.id IS NULL, '', 
-                IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value, 
-                    IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value, 
-                        IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value, 
-                            IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value, 
-                                IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value, 
+            ,IF(institution_student_survey_answers.id IS NULL, '',
+                IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value,
+                    IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value,
+                        IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value,
+                            IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value,
+                                IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value,
                                         IF(survey_question_choices.id IS NOT NULL, survey_question_choices.name, institution_student_survey_answers.number_value))))))) survey_answer_values
         FROM institution_student_survey_answers
         INNER JOIN institution_student_surveys
@@ -1133,12 +1203,12 @@ class RestSurveyComponent extends Component
                 // 'student_id' => "institution_student_surveys.student_id",
                 // 'openemis_no'=> "security_users.openemis_no",
                 // 'student_name'=> "(REPLACE(CONCAT_WS(' ',security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name), '  ', ' '))",
-                // 'survey_answer' => "(IF(institution_student_survey_answers.id IS NULL, '', 
-                // IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value, 
-                //     IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value, 
-                //         IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value, 
-                //             IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value, 
-                //                 IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value, 
+                // 'survey_answer' => "(IF(institution_student_survey_answers.id IS NULL, '',
+                // IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value,
+                //     IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value,
+                //         IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value,
+                //             IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value,
+                //                 IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value,
                 //                         IF(survey_question_choices.id IS NOT NULL, survey_question_choices.id, institution_student_survey_answers.number_value))))))))"
             ])
             ->from(['main_query' => $main_query])
@@ -1168,12 +1238,12 @@ class RestSurveyComponent extends Component
 
                 'academic_period_id' => 'main_query.academic_period_id',
 
-                // 'survey_answer' => "(IF(institution_student_survey_answers.id IS NULL, '', 
-                // IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value, 
-                //     IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value, 
-                //         IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value, 
-                //             IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value, 
-                //                 IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value, 
+                // 'survey_answer' => "(IF(institution_student_survey_answers.id IS NULL, '',
+                // IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value,
+                //     IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value,
+                //         IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value,
+                //             IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value,
+                //                 IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value,
                 //                         IF(survey_question_choices.id IS NOT NULL, survey_question_choices.id, institution_student_survey_answers.number_value))))))))"
             ])
             ->from(['main_query' => $main_query])
@@ -1203,12 +1273,12 @@ class RestSurveyComponent extends Component
                 // 'student_id' => "institution_student_surveys.student_id",
                 // 'openemis_no'=> "security_users.openemis_no",
                 // 'student_name'=> "(REPLACE(CONCAT_WS(' ',security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name), '  ', ' '))",
-                // 'survey_answer' => "(IF(institution_student_survey_answers.id IS NULL, '', 
-                // IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value, 
-                //     IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value, 
-                //         IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value, 
-                //             IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value, 
-                //                 IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value, 
+                // 'survey_answer' => "(IF(institution_student_survey_answers.id IS NULL, '',
+                // IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value,
+                //     IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value,
+                //         IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value,
+                //             IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value,
+                //                 IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value,
                 //                         IF(survey_question_choices.id IS NOT NULL, survey_question_choices.id, institution_student_survey_answers.number_value))))))))"
             ])
             ->from(['main_query' => $main_query])
@@ -1307,7 +1377,7 @@ class RestSurveyComponent extends Component
 
         // foreach($tabData as $p => $tbDta){
         //     $finalData[$tbDta->section]['parent_question_tab_id'] = $tbDta->institutiton_survey_question_id;
-        //     foreach($finalData[$tbDta->section]['students'] as $ke=>$student){ 
+        //     foreach($finalData[$tbDta->section]['students'] as $ke=>$student){
 
         //         $ins_stu_survey = $institutionStudentSurveysTbl->find('all',['conditions'=>[
         //             'status_id' => 1,
@@ -1370,7 +1440,7 @@ class RestSurveyComponent extends Component
                 'params' => $this->Field->aliasField('params')
             ])
             ->innerJoin(
-                [$this->Field->alias() => $this->Field->table()],
+                [$this->Field->getAlias() => $this->Field->getTable()],
                 [$this->Field->aliasField('id =') . $this->FormField->aliasField($this->fieldKey)]
             )
             ->where([
@@ -1403,7 +1473,7 @@ class RestSurveyComponent extends Component
                         break;
                     case 'range':
                         $validationType = $key;
-                        if (array_key_exists('lower', $value) && array_key_exists('upper', $value)) {
+                        if (isset($value['lower']) && isset($value['upper'])) {
                             $validations['min_length'] = $value['lower'];
                             $validations['max_length'] = $value['upper'];
                             $validationHint = $this->Field->getMessage('CustomField.text.range', ['sprintf' => [$value['lower'], $value['upper']]]);
@@ -1657,7 +1727,7 @@ class RestSurveyComponent extends Component
         $tableHeader = $tableNode->addChild("tr", null, NS_XHTML);
         $tableBody = $tableNode->addChild("tbody", null, NS_XHTML);
         $repeatNode = $tableBody->addChild("repeat", null, NS_XF);
-        $repeatNode->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableRow->alias()])));
+        $repeatNode->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableRow->getAlias()])));
         $tbodyRow = $repeatNode->addChild("tr", null, NS_XHTML);
 
         $tableColumnResults = $this->TableColumn
@@ -1695,7 +1765,7 @@ class RestSurveyComponent extends Component
             if ($field->has('params') && !empty($field->params)) {
                 $params = json_decode($field->params, true);
 
-                if (array_key_exists('number', $params)) {
+                if (isset($params['number'])) {
                     $inputType = 'integer';
 
                     $validationRules = $params['number'];
@@ -1721,7 +1791,7 @@ class RestSurveyComponent extends Component
                             }
                         }
                     }
-                } elseif (array_key_exists('decimal', $params)) {
+                } elseif (isset($params['decimal'])) {
                     $inputType = 'decimal';
 
                     $generateRangeValues = function ($length, $precision = 0) {
@@ -1781,18 +1851,18 @@ class RestSurveyComponent extends Component
             // end validation constraint
 
             foreach ($tableRows as $row => $tableRow) {
-                $rowNode = $fieldNode->addChild($this->TableRow->alias(), null, NS_OE);
+                $rowNode = $fieldNode->addChild($this->TableRow->getAlias(), null, NS_OE);
                 $rowNode->addAttribute("id", $tableRow->id);
 
                 foreach ($tableColumns as $col => $tableColumn) {
                     if ($col == 0) {
-                        $columnNode = $rowNode->addChild($this->TableColumn->alias() . $col, htmlspecialchars($tableRow->name, ENT_QUOTES), NS_OE);
+                        $columnNode = $rowNode->addChild($this->TableColumn->getAlias() . $col, htmlspecialchars($tableRow->name, ENT_QUOTES), NS_OE);
                         $columnNode->addAttribute("id", $col);
                         $cellType = 'output';
                         $cellLabel = $tableRow->name;
                         $cellHint = null;
                     } else {
-                        $columnNode = $rowNode->addChild($this->TableColumn->alias() . $col, null, NS_OE);
+                        $columnNode = $rowNode->addChild($this->TableColumn->getAlias() . $col, null, NS_OE);
                         $columnNode->addAttribute("id", $tableColumn->id);
                         $cellType = 'input';
                         $cellLabel = $tableRow->name;
@@ -1803,14 +1873,14 @@ class RestSurveyComponent extends Component
                         $tableHeader->addChild("th", htmlspecialchars($tableColumn->name, ENT_QUOTES), NS_XHTML);
                         $tbodyColumn = $tbodyRow->addChild("td", null, NS_XHTML);
                         $tbodyCell = $tbodyColumn->addChild($cellType, null, NS_XF);
-                        $tbodyCell->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableColumn->alias() . $col])));
+                        $tbodyCell->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableColumn->getAlias() . $col])));
 
                         $tbodyCell->addChild("label", htmlspecialchars($cellLabel, ENT_QUOTES), NS_XF);
                         if (!empty($cellHint)) {
                             $tbodyCell->addChild("hint", htmlspecialchars($cellHint, ENT_QUOTES), NS_XF);
                         }
 
-                        $this->setBindNode($extra['model'], $instanceId, array_merge($extra['references'], [$this->TableColumn->alias() . $col]), $extra);
+                        $this->setBindNode($extra['model'], $instanceId, array_merge($extra['references'], [$this->TableColumn->getAlias() . $col]), $extra);
                     }
                 }
             }
@@ -1825,8 +1895,8 @@ class RestSurveyComponent extends Component
         if ($field->has('params') && !empty($field->params)) {
             $params = json_decode($field->params, true);
 
-            $startDate = array_key_exists('start_date', $params) ? $params['start_date'] : null;
-            $endDate = array_key_exists('end_date', $params) ? $params['end_date'] : null;
+            $startDate = isset($params['start_date']) ? $params['start_date'] : null;
+            $endDate = isset($params['end_date']) ? $params['end_date'] : null;
 
             if (!is_null($startDate) && !is_null($endDate)) {
                 $constraint = ". >= '" . $startDate . "'' && " . ". <= '" . $endDate . "'";
@@ -1855,8 +1925,8 @@ class RestSurveyComponent extends Component
         if ($field->has('params') && !empty($field->params)) {
             $params = json_decode($field->params, true);
 
-            $startTime = array_key_exists('start_time', $params) ? $params['start_time'] : null;
-            $endTime = array_key_exists('end_time', $params) ? $params['end_time'] : null;
+            $startTime = isset($params['start_time']) ? $params['start_time'] : null;
+            $endTime = isset($params['end_time']) ? $params['end_time'] : null;
 
             if (!is_null($startTime) && !is_null($endTime)) {
                 $constraint = ". >= '" . $this->twentyFourHourFormat($startTime) . "'' && " . ". <= '" . $this->twentyFourHourFormat($endTime) . "'";
@@ -1920,7 +1990,7 @@ class RestSurveyComponent extends Component
                     $extra['subIndex'] = $index;
                     // must reset to null
                     $extra['default_value'] = null;
-                    $extra['references'] = [$this->Form->alias(), $this->Field->alias() . "[" . $extra['index'] . "]", 'RepeatBlock', $this->Field->alias() . $index];
+                    $extra['references'] = [$this->Form->getAlias(), $this->Field->getAlias() . "[" . $extra['index'] . "]", 'RepeatBlock', $this->Field->getAlias() . $index];
                     $extra['hint'] = null; // reset hint
 
                     $fieldTypeFunction = strtolower($field->field_type);
@@ -1928,7 +1998,7 @@ class RestSurveyComponent extends Component
                         $this->$fieldTypeFunction($field, $repeaterNode, $instanceId, $extra);
 
                         // add to Head > Model > Instance > RepeatBlock here
-                        $repeatBlockNode = $repeatNode->addChild($this->Field->alias() . $index, $extra['default_value'], NS_OE);
+                        $repeatBlockNode = $repeatNode->addChild($this->Field->getAlias() . $index, $extra['default_value'], NS_OE);
                         $repeatBlockNode->addAttribute("id", $field->field_id);
                     }
                 }
@@ -1951,8 +2021,8 @@ class RestSurveyComponent extends Component
 
     private function setCommonNode($field, $parentNode, $instanceId, $extra)
     {
-        $tagName = array_key_exists('tagName', $extra) ? $extra['tagName'] : 'input';
-        $bindType = array_key_exists('bindType', $extra) ? $extra['bindType'] : 'string';
+        $tagName = array_key_exists('tagName', $extra instanceof \ArrayObject ? $extra->getArrayCopy() : $extra) ? $extra['tagName'] : 'input';
+        $bindType = array_key_exists('bindType', $extra instanceof \ArrayObject ? $extra->getArrayCopy() : $extra) ? $extra['bindType'] : 'string';
 
         $this->setBodyNode($field, $parentNode, $instanceId, $tagName, $extra);
         $extra['type'] = $bindType;
@@ -1980,9 +2050,9 @@ class RestSurveyComponent extends Component
 
     private function setBindNode($modelNode, $instanceId, $references = [], $attr = [])
     {
-        $bindType = array_key_exists('type', $attr) ? $attr['type'] : 'string';
-        $required = array_key_exists('required', $attr) ? $attr['required'] : false;
-        $constraint = array_key_exists('constraint', $attr) ? $attr['constraint'] : null;
+        $bindType = array_key_exists('type', $attr instanceof \ArrayObject ? $attr->getArrayCopy() : $attr) ? $attr['type'] : 'string';
+        $required = array_key_exists('required', $attr instanceof \ArrayObject ? $attr->getArrayCopy() : $attr) ? $attr['required'] : false;
+        $constraint = array_key_exists('constraint',$attr instanceof \ArrayObject ? $attr->getArrayCopy() : $attr) ? $attr['constraint'] : null;
 
         $bindNode = $modelNode->addChild("bind", null, NS_XF);
         $bindNode->addAttribute("ref", $this->getRef($instanceId, $references));
@@ -2023,7 +2093,7 @@ class RestSurveyComponent extends Component
 
     private function setModelNode($field, $formNode, $instanceId, $extra)
     {
-        $fieldNode = $formNode->addChild($this->Field->alias(), $extra['default_value'], NS_OE);
+        $fieldNode = $formNode->addChild($this->Field->getAlias(), $extra['default_value'], NS_OE);
         $fieldNode->addAttribute("id", $field->field_id);
 
         return $fieldNode;
@@ -2048,32 +2118,34 @@ class RestSurveyComponent extends Component
     }
 
     private function deleteExpiredResponse()
-    {
+    { 
         $SurveyResponses = TableRegistry::get('Survey.SurveyResponses');
         $expiryDate = new Time();
         $expiryDate->subDays(3);
         $SurveyResponses->deleteAll([
             $SurveyResponses->aliasField('created <') => $expiryDate
         ]);
+
     }
 
     private function addResponse($xmlResponse)
     {
+
         $SurveyResponses = TableRegistry::get('Survey.SurveyResponses');
         $responseData = [
             'id' => Text::uuid(),
             'response' => $xmlResponse
         ];
-
         $responseEntity = $SurveyResponses->newEntity($responseData);
+
         if (!$SurveyResponses->save($responseEntity)) {
-            Log::write('debug', $responseEntity->errors());
+            Log::write('debug', $responseEntity->getErrors());
         }
     }
     //POCOR-7857 start
     public function stafflist($format = "xform", $id = 0, $insCode = 0, $academicPeriod = 0, $surveyQuesId = 0, $output = true)
     {
-
+        $response = $this->getController()->getResponse();
         switch ($format) {
             case 'xform':
                 $result = $this->getYList($format, $id, $insCode, $academicPeriod, $surveyQuesId);
@@ -2084,21 +2156,31 @@ class RestSurveyComponent extends Component
 
         if ($output) { // true = output to screen
             if (is_object($result)) {
-                $this->response->body($result->asXML());
+                $xmlString = $result->asXML();
+                $stream = new Stream('php://memory', 'rw');
+                $stream->write($xmlString);
+                $stream->rewind();
+                $this->response = $this->response->withBody($stream);
             } else {
-                $this->response->body($result);
+                $stream = new Stream('php://memory', 'rw');
+                $stream->write($result);
+                $stream->rewind();
+                $this->response = $this->response->withBody($stream);
             }
-            $this->response->type('xml');
+            $this->response = $this->response->withType('xml');
 
             return $this->response;
         } else { // download as file
             $fileName = $format . '_' . date('Ymdhis');
 
-            $this->response->body($result->asXML());
-            $this->response->type('xml');
+            $stream = new Stream('php://memory', 'rw');
+            $stream->write($result->asXML());
+            $stream->rewind();
+            $this->response = $this->response->withBody($stream);
+            $this->response = $this->response->withType('xml');
 
             // Optionally force file download
-            $this->response->download($fileName . '.xml');
+            $this->response = $this->response->withDownload($fileName . '.xml');
 
             // Return response object to prevent controller from trying to render a view.
             return $this->response;
@@ -2108,7 +2190,7 @@ class RestSurveyComponent extends Component
     {
 
         $title = $this->Form->get($id)->name;
-        $institutionStaffTbl = TableRegistry::get('Institutions.StaffTable');
+        $institutionStaffTbl = TableRegistry::get('Institution.Staff');
         $SurveyFormsQuestionsTbl = TableRegistry::get('Survey.SurveyFormsQuestions');
         $institutionStaffSurveysTbl = TableRegistry::get('Staff.StaffSurveys');
         $surveyQuestionChoicesTbl = TableRegistry::get('Survey.SurveyQuestionChoices');
@@ -2130,17 +2212,17 @@ class RestSurveyComponent extends Component
                         security_users.openemis_no openemis_no,
                         REPLACE(CONCAT_WS(' ', security_users.first_name, security_users.middle_name, security_users.third_name, security_users.last_name), '  ', ' ') staff_name
                    FROM institution_staff
-                   INNER JOIN academic_periods 
-                       ON (((`institution_staff`.`end_date` IS NOT NULL AND 
-                            `institution_staff`.`start_date` <= `academic_periods`.`start_date` AND 
-                            `institution_staff`.`end_date` >= `academic_periods`.`start_date`) 
-                           OR (`institution_staff`.`end_date` IS NOT NULL 
+                   INNER JOIN academic_periods
+                       ON (((`institution_staff`.`end_date` IS NOT NULL AND
+                            `institution_staff`.`start_date` <= `academic_periods`.`start_date` AND
+                            `institution_staff`.`end_date` >= `academic_periods`.`start_date`)
+                           OR (`institution_staff`.`end_date` IS NOT NULL
                            AND `institution_staff`.`start_date` <= `academic_periods`.`end_date`
                            AND `institution_staff`.`end_date` >= `academic_periods`.`end_date`)
-                           OR (`institution_staff`.`end_date` IS NOT NULL 
+                           OR (`institution_staff`.`end_date` IS NOT NULL
                            AND `institution_staff`.`start_date` >= `academic_periods`.`start_date`
-                           AND `institution_staff`.`end_date` <= `academic_periods`.`end_date`)) 
-                           OR (`institution_staff`.`end_date` IS NULL 
+                           AND `institution_staff`.`end_date` <= `academic_periods`.`end_date`))
+                           OR (`institution_staff`.`end_date` IS NULL
                            AND `institution_staff`.`start_date` <= `academic_periods`.`end_date`))
                    INNER JOIN institutions
                        ON institutions.id = institution_staff.institution_id
@@ -2164,17 +2246,17 @@ class RestSurveyComponent extends Component
         //                 ,security_users.openemis_no openemis_no
         //                 ,REPLACE(CONCAT_WS(' ',security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name), '  ', ' ') staff_name
         //                 FROM institution_staff
-        //                 INNER JOIN academic_periods 
-        //                     ON (((`institution_staff`.`end_date` IS NOT NULL AND 
-        //                          `institution_staff`.`start_date` <= `academic_periods`.`start_date` AND 
-        //                          `institution_staff`.`end_date` >= `academic_periods`.`start_date`) 
-        //                     OR (`institution_staff`.`end_date` IS NOT NULL 
+        //                 INNER JOIN academic_periods
+        //                     ON (((`institution_staff`.`end_date` IS NOT NULL AND
+        //                          `institution_staff`.`start_date` <= `academic_periods`.`start_date` AND
+        //                          `institution_staff`.`end_date` >= `academic_periods`.`start_date`)
+        //                     OR (`institution_staff`.`end_date` IS NOT NULL
         //                     AND `institution_staff`.`start_date` <= `academic_periods`.`end_date`
         //                     AND `institution_staff`.`end_date` >= `academic_periods`.`end_date`)
-        //                     OR (`institution_staff`.`end_date` IS NOT NULL 
+        //                     OR (`institution_staff`.`end_date` IS NOT NULL
         //                     AND `institution_staff`.`start_date` >= `academic_periods`.`start_date`
-        //                     AND `institution_staff`.`end_date` <= `academic_periods`.`end_date`)) 
-        //                     OR (`institution_staff`.`end_date` IS NULL 
+        //                     AND `institution_staff`.`end_date` <= `academic_periods`.`end_date`))
+        //                     OR (`institution_staff`.`end_date` IS NULL
         //                     AND `institution_staff`.`start_date` <= `academic_periods`.`end_date`))
         //                INNER JOIN institutions
         //                   ON institutions.id = institution_staff.institution_id
@@ -2200,12 +2282,12 @@ class RestSurveyComponent extends Component
             ,institution_staff_survey_answers.survey_question_id
             ,institution_staff_survey_answers.parent_survey_question_id
             ,survey_question_choices.id answer_choice_id_for_dropdown
-            ,IF(institution_staff_survey_answers.id IS NULL, '', 
-                IF(institution_staff_survey_answers.text_value IS NOT NULL, institution_staff_survey_answers.text_value, 
-                    IF(institution_staff_survey_answers.decimal_value IS NOT NULL, institution_staff_survey_answers.decimal_value, 
-                        IF(institution_staff_survey_answers.textarea_value IS NOT NULL, institution_staff_survey_answers.textarea_value, 
-                            IF(institution_staff_survey_answers.date_value IS NOT NULL, institution_staff_survey_answers.date_value, 
-                                IF(institution_staff_survey_answers.time_value IS NOT NULL, institution_staff_survey_answers.time_value, 
+            ,IF(institution_staff_survey_answers.id IS NULL, '',
+                IF(institution_staff_survey_answers.text_value IS NOT NULL, institution_staff_survey_answers.text_value,
+                    IF(institution_staff_survey_answers.decimal_value IS NOT NULL, institution_staff_survey_answers.decimal_value,
+                        IF(institution_staff_survey_answers.textarea_value IS NOT NULL, institution_staff_survey_answers.textarea_value,
+                            IF(institution_staff_survey_answers.date_value IS NOT NULL, institution_staff_survey_answers.date_value,
+                                IF(institution_staff_survey_answers.time_value IS NOT NULL, institution_staff_survey_answers.time_value,
                                         IF(survey_question_choices.id IS NOT NULL, survey_question_choices.name, institution_staff_survey_answers.number_value))))))) survey_answer_values
             FROM institution_staff_survey_answers
             INNER JOIN institution_staff_surveys
@@ -2525,5 +2607,164 @@ class RestSurveyComponent extends Component
 
         $this->processUpload('staff_list', ['sada']);
     }
-    //POCOR-7857 end
+    
+    public function getXForms($instanceId, $id)
+    {
+        
+        // Ensure Form object is properly initialized
+        if (is_null($this->Form) || !method_exists($this->Form, 'get')) {
+            throw new \RuntimeException('Form object is not properly initialized.');
+        }
+
+        // Fetch and sanitize form data
+        $form = $this->Form->get($id);
+
+        if (!$form) {
+            throw new \RuntimeException('Form not found.');
+        }
+        $title = htmlspecialchars($form->name, ENT_QUOTES);
+        $description = htmlspecialchars($form->description, ENT_QUOTES);
+
+        // Fetch fields
+        $fields = $this->getFields($id);
+        if (empty($fields)) {
+            throw new \RuntimeException('Fields are not initialized or empty.');
+        }
+
+        // Initialize XML structure
+        $xmlstr = '<?xml version="1.0" encoding="UTF-8"?>
+                   <html xmlns="' . NS_XHTML . '"
+                         xmlns:xf="' . NS_XF . '"
+                         xmlns:ev="' . NS_EV . '"
+                         xmlns:xsd="' . NS_XSD . '"
+                         xmlns:oe="' . NS_OE . '">
+                   </html>';
+Log::debug('XML String: ' . $xmlstr);
+        try {
+            $xml = Xml::build($xmlstr);
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Failed to build XML: ' . $e->getMessage());
+        }
+
+        // Build XML nodes
+        $headNode = $xml->addChild("head", null, NS_XHTML);
+        $bodyNode = $xml->addChild("body", null, NS_XHTML);
+        $headNode->addChild("title", $title, NS_XHTML);
+        $metaNode = $headNode->addChild("meta", null, NS_XHTML);
+        $metaNode->addAttribute("name", "description");
+        $metaNode->addAttribute("content", $description);
+        $modelNode = $headNode->addChild("model", null, NS_XF);
+        Log::debug('XML String: ' . $modelNode);
+        $instanceNode = $modelNode->addChild("instance", null, NS_XF);
+         Log::error('XML String: ' . $instanceNode);
+        
+        $instanceNode->addAttribute("id", $instanceId);
+        $formNode = $instanceNode->addChild($this->Form->getAlias(), null, NS_OE);
+        $formNode->addAttribute("id", $id);
+
+        // Set fixed Institutions Field
+        $references = [$this->Form->getAlias(), 'Institutions'];
+        $formNode->addChild('Institutions', null, NS_OE);
+        $fieldNode = $bodyNode->addChild("input", null, NS_XF);
+        $fieldNode->addAttribute("ref", $this->getRef($instanceId, $references));
+        $fieldNode->addAttribute("oe-type", "string");
+        $fieldNode->addChild("label", "Institution Code", NS_XF);
+
+        $this->setBindNode($modelNode, $instanceId, $references, ['type' => 'string', 'required' => true]);
+
+        // Set fixed Academic Periods Field
+        $references = [$this->Form->getAlias(), 'AcademicPeriods'];
+        $formNode->addChild('AcademicPeriods', null, NS_OE);
+        $fieldNode = $bodyNode->addChild("select1", null, NS_XF);
+        $fieldNode->addAttribute("ref", $this->getRef($instanceId, $references));
+        $fieldNode->addAttribute("oe-type", "integer");
+        $fieldNode->addAttribute("oe-dependency", $this->getRef($instanceId, [$this->Form->getAlias(), 'Institutions']));
+        $fieldNode->addChild("label", "Academic Period", NS_XF);
+
+        // Fetch Survey Forms and Statuses
+        $SurveyForms = TableRegistry::getTableLocator()->get('Survey.SurveyForms');
+        $SurveyStatuses = $SurveyForms->SurveyStatuses;
+        $todayDate = date("Y-m-d");
+
+        $periodListResults = $SurveyForms->find('list', [
+                'keyField' => 'academic_period_id',
+                'valueField' => 'academic_period_name'
+            ])
+            ->select([
+                'academic_period_id' => 'AcademicPeriods.id',
+                'academic_period_name' => 'AcademicPeriods.name'
+            ])
+            ->matching('SurveyStatuses.AcademicPeriods')
+            ->group(['AcademicPeriods.id'])
+            ->where([
+                'AND' => [
+                    [$SurveyForms->aliasField('id') => $id],
+                    [$SurveyStatuses->aliasField('date_disabled >= ') => $todayDate]
+                ]
+            ])
+            ->all();
+
+        if (!$periodListResults->isEmpty()) {
+            $periodOptions = $periodListResults->toArray();
+            foreach ($periodOptions as $periodId => $periodName) {
+                $itemNode = $fieldNode->addChild("item", null, NS_XF);
+                $itemNode->addChild("label", htmlspecialchars($periodName), NS_XF);
+                $itemNode->addChild("value", htmlspecialchars($periodId), NS_XF);
+            }
+        }
+
+        $this->setBindNode($modelNode, $instanceId, $references, ['type' => 'integer', 'required' => true]);
+
+        // Used to build validation rules
+        $schemaNode = $modelNode->addChild("schema", null, NS_XSD);
+
+        // Relevancy rules
+        $RulesTable = TableRegistry::getTableLocator()->get('Survey.SurveyRules');
+        $rules = $RulesTable->find('SurveyRulesList', [
+                'survey_form_id' => $id
+            ])->toArray();
+        $rules = new ArrayObject($rules);
+
+        $sectionName = null;
+        foreach ($fields as $key => $field) {
+            $extra = new ArrayObject([]);
+            $extra['index'] = $key + 1;
+            $extra['subIndex'] = 0;
+            $extra['head'] = $headNode;
+            $extra['body'] = $bodyNode;
+            $extra['model'] = $modelNode;
+            $extra['instance'] = $instanceNode;
+            $extra['schema'] = $schemaNode;
+            $extra['form'] = $formNode;
+            $extra['hint'] = null;
+            $extra['constraint'] = null;
+            $extra['references'] = [$this->Form->getAlias(), $this->Field->getAlias() . "[" . $extra['index'] . "]"];
+            $extra['default_value'] = null; // to handle default value for dropdown
+            $extra['field_id'] = $field->field_id;
+            $extra['rules'] = $rules;
+
+            if (is_null($sectionName)) {
+                $parentNode = $bodyNode;
+            }
+
+            if ($field->section_name != $sectionName) {
+                $sectionName = $field->section_name;
+                $sectionBreakNode = $bodyNode->addChild("group", null, NS_XF);
+                $sectionBreakNode->addAttribute("ref", $field->form_id . '_' . $field->field_id);
+                $sectionBreakNode->addChild("label", htmlspecialchars($sectionName, ENT_QUOTES), NS_XF);
+                $parentNode = $sectionBreakNode;
+            }
+
+            $fieldTypeFunction = strtolower($field->field_type);
+            if (method_exists($this, $fieldTypeFunction)) {
+                $this->$fieldTypeFunction($field, $parentNode, $instanceId, $extra);
+                if (!is_null($extra['form'])) {
+                    $this->setModelNode($field, $extra['form'], $instanceId, $extra);
+                }
+            }
+        }
+
+        return $xml;
+    }
+    
 }

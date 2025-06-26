@@ -9,7 +9,7 @@ use App\Controller\PageController;
 
 class AttachmentsController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Security.Users');
@@ -22,14 +22,14 @@ class AttachmentsController extends PageController
         $this->Page->loadElementsFromTable($this->ApplicationAttachments);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderMandatory'] = 'onRenderMandatory';
         return $event;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
 
@@ -103,11 +103,11 @@ class AttachmentsController extends PageController
     public function setBreadCrumb($options)
     {
         $page = $this->Page;
-        $plugin = $this->plugin;
-        $name = $this->name;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
 
-        $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
-        $userId = array_key_exists('userId', $options) ? $options['userId'] : '';
+        $userName = isset($options['userName']) ? $options['userName'] : '';
+        $userId = isset($options['userId']) ? $options['userId'] : '';
 
         if ($plugin == 'Scholarship') {
             $page->addCrumb('Scholarships', [
@@ -116,7 +116,7 @@ class AttachmentsController extends PageController
                 'action' => 'Scholarships',
                 'index'
             ]);
-            
+
             $page->addCrumb('Applicants', [
                 'plugin' => 'Scholarship',
                 'controller' => 'Scholarships',
@@ -144,7 +144,7 @@ class AttachmentsController extends PageController
     public function setupTabElements()
     {
         $page = $this->Page;
-        $name = $this->name;
+        $name = $this->getName();
 
         $tabElements = [];
         if ($name == 'ScholarshipApplicationAttachments') {

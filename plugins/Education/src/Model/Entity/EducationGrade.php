@@ -21,7 +21,7 @@ class EducationGrade extends Entity
 			try {
 				$name = $table->get($id)->name . ' - ' . $this->name;
 			} catch (InvalidPrimaryKeyException $ex) {
-				Log::write('error', __METHOD__ . ': ' . $table->alias() . ' primary key not found (' . $id . ')');
+				Log::write('error', __METHOD__ . ': ' . $table->getAlias() . ' primary key not found (' . $id . ')');
 				$name = $this->name;
 			}
 		}

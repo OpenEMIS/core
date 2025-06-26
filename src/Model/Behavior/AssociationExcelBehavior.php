@@ -13,8 +13,8 @@ use Cake\I18n\I18n;
 use Cake\Utility\Hash;
 use XLSXWriter;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
-use Cake\Network\Session;
+use Cake\Http\ServerRequest;
+use Cake\Http\Session;
 // Events
 // public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {}
 // public function onExcelGenerate(Event $event, $writer, ArrayObject $settings) {}
@@ -42,29 +42,30 @@ class AssociationExcelBehavior extends Behavior
         'auto_contain' => true
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->config('excludes', array_merge($this->config('default_excludes'), $this->config('excludes')));
-        if (!array_key_exists('filename', $config)) {
-            $this->config('filename', $this->_table->alias());
+        $this->setConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
+        if (!isset($config['filename'])) {
+            $this->setConfig('filename', $this->_table->getAlias());
         }
-        $folder = WWW_ROOT . $this->config('folder');
+
+        $folder = WWW_ROOT . $this->getConfig('folder');
 
         if (!file_exists($folder)) {
             umask(0);
             mkdir($folder, 0777);
         } else {
             // $delete = true;
-            // if (array_key_exists('delete', $settings) &&  $settings['delete'] == false) {
+            // if (isset($settings['delete']) &&  $settings['delete'] == false) {
             //  $delete = false;
             // }
             // if ($delete) {
             //  $this->deleteOldFiles($folder, $format);
             // }
         }
-        $pages = $this->config('pages');
+        $pages = $this->getConfig('pages');
         if ($pages !== false && empty($pages)) {
-            $this->config('pages', ['index', 'view']);
+            $this->setConfig('pages', ['index', 'view']);
         }
     }
 
@@ -91,7 +92,7 @@ class AssociationExcelBehavior extends Behavior
         $break = false;
         $action = $this->_table->action;
         $pass = $this->_table->request->pass;
-        if (in_array($action, $pass)) {
+        if (in_array($action, (array)$pass)) {
             unset($pass[array_search($action, $pass)]);
             $pass = array_values($pass);
         }
@@ -111,8 +112,8 @@ class AssociationExcelBehavior extends Behavior
     public function generateXLXS($settings = [])
     {
         $_settings = [
-            'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
-            'path' => WWW_ROOT . $this->config('folder') . DS,
+            'file' => $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
+            'path' => WWW_ROOT . $this->getConfig('folder') . DS,
             'download' => true,
             'purge' => true
         ];
@@ -131,10 +132,10 @@ class AssociationExcelBehavior extends Behavior
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (is_callable($event->result)) {
-            $generate = $event->result;
+        if (is_callable($event->getResult())) {
+            $generate = $event->getResult();
         }
 
         $generate($_settings);
@@ -164,7 +165,7 @@ class AssociationExcelBehavior extends Behavior
 
         if (count($sheets->getArrayCopy())==0) {
             $sheets[] = [
-                'name' => $this->_table->alias(),
+                'name' => $this->_table->getAlias(),
                 'table' => $this->_table,
                 'query' => $this->_table->find(),
             ];
@@ -172,12 +173,17 @@ class AssociationExcelBehavior extends Behavior
 
         $sheetNameArr = [];
         //POCOR-5852 starts
-        $session = $this->_table->request->session();
-        $institution_id = $session->read('Institution.Institutions.id') ? $session->read('Institution.Institutions.id'): 0;
+        $session = $this->_table->request->getSession();
+        //$institution_id = $session->read('Institution.Institutions.id') ? $session->read('Institution.Institutions.id'): 0;
+        $params = $this->_table->request->getAttribute('params')['pass'][1];
+        $paramsDecodedArray = $this->_table->paramsDecode($params);
+        $institution_id = !empty($paramsDecodedArray) ? $paramsDecodedArray['institution_id'] : 0;
         $condition = [];
-        if(isset($this->_table->request->query['academic_period_id'])){
-            $academic_period_id = $this->_table->request->query['academic_period_id'];
-            $InstitutionAssociations = TableRegistry::get('Institution.InstitutionAssociations');
+        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');//POCOR-8556
+        $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
+        $academic_period_id = !is_null($this->_table->request->getQuery('academic_period_id')) ? $this->_table->request->getQuery('academic_period_id') : $currentAcademicPeriod;
+        if(!is_null($academic_period_id)){
+            $InstitutionAssociations = TableRegistry::getTableLocator()->get('Institution.InstitutionAssociations');
                 //option for all grades
                 $conditions = [
                     $InstitutionAssociations->aliasField('InstitutionAssociations.academic_period_id') => $academic_period_id,
@@ -194,12 +200,12 @@ class AssociationExcelBehavior extends Behavior
 
             $footer = $this->getFooter();
             $Query = $sheet['query'];
-			
-			$EducationGrades = TableRegistry::get('Education.EducationGrades');
-			$InstitutionAssociations = TableRegistry::get('Institution.InstitutionAssociations');
-			$Institutions = TableRegistry::get('Institution.Institutions');
-			$InstitutionAssociationStaff = TableRegistry::get('Institution.InstitutionAssociationStaff');
-			$InstitutionStudents = TableRegistry::get('Student.InstitutionAssociationStudent');
+
+			$EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+			$InstitutionAssociations = TableRegistry::getTableLocator()->get('Institution.InstitutionAssociations');
+			$Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+			$InstitutionAssociationStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionAssociationStaff');
+			$InstitutionStudents = TableRegistry::getTableLocator()->get('Student.InstitutionAssociationStudent');
 
 			$query = $Query
 				->select([
@@ -246,13 +252,13 @@ class AssociationExcelBehavior extends Behavior
 				[
 					'InstitutionAssociationStudent.institution_association_id = '. $InstitutionAssociations->aliasField('id')
 				]
-				) 
+				)
                 ->leftJoin(
 				['EducationGrades' => 'education_grades'],
 				[
 					'InstitutionAssociationStudent.education_grade_id = '. $EducationGrades->aliasField('id')
 				]
-				) 
+				)
 				->leftJoin(
 				['StudentStatuses' => 'student_statuses'],
 				[
@@ -297,41 +303,50 @@ class AssociationExcelBehavior extends Behavior
                 //POCOR-5852 starts
                 $Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                     return $results->map(function ($row) {
-                        $Users = TableRegistry::get('security_users');
-                        $user_data= $Users
-                                    ->find()
-                                    ->where(['security_users.openemis_no' => $row->openEMIS_ID])
-                                    ->first();
-                        $UserIdentities = TableRegistry::get('user_identities');//POCOR-5852 starts
-                        $IdentityTypes = TableRegistry::get('identity_types');//POCOR-5852 ends
-                        $conditions = [
-                            $UserIdentities->aliasField('security_user_id') => $user_data->id,
-                        ];
+                        $user_data = '';
+                        if(!empty($row->openEMIS_ID)){
+                            $Users = TableRegistry::getTableLocator()->get('Security.Users')->setAlias('security_users');
+                            $user_data= $Users
+                                        ->find()
+                                        ->where([$Users->aliasField('openemis_no') => $row->openEMIS_ID])
+                                        ->first();
+                        }
+                        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');//POCOR-5852 starts
+                        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');//POCOR-5852 ends
+                        $condition = [];
+                        if(!empty($user_data)){
+                            $conditions = [
+                                $UserIdentities->aliasField('security_user_id') => $user_data->id,
+                            ];
+                        }
                         $data = $UserIdentities
-                                    ->find()    
+                                    ->find()
                                     ->select([
-                                        'identity_type' => $IdentityTypes->alias().'.name',//POCOR-5852 starts
-                                        'identity_number' => $UserIdentities->alias().'.number',
-                                        'default' => $IdentityTypes->alias().'.default'
+                                        // 'identity_type' => $IdentityTypes->getAlias().'.name',//POCOR-5852 starts
+                                        // 'identity_number' => $UserIdentities->getAlias().'.number',
+                                        // 'default' => $IdentityTypes->getAlias().'.default'
+                                        'identity_type' => $IdentityTypes->aliasField('name'),//POCOR-5852 starts
+                                        'identity_number' => $UserIdentities->aliasField('number'),
+                                        'identity_default' => $IdentityTypes->aliasField('default')
                                         //POCOR-5852 ends
                                     ])
                                     ->leftJoin(
-                                    [$IdentityTypes->alias() => $IdentityTypes->table()],
+                                    [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
                                         [
                                             $IdentityTypes->aliasField('id = '). $UserIdentities->aliasField('identity_type_id')
                                         ]
                                     )
                                     ->where($conditions)->toArray();
-                        $row['identity_type'] = '';            
-                        $row['identity_number'] = '';            
+                        $row['identity_type'] = '';
+                        $row['identity_number'] = '';
                         if(!empty($data)){
                             $identity_type_name = '';
                             $identity_type_number = '';
                             foreach ($data as $key => $value) {
-                                if($value->default == 1){
-                                   $identity_type_name =  $value->identity_type;    
-                                   $identity_type_number =  $value->identity_number;   
-                                   break; 
+                                if($value->identity_default == 1){
+                                   $identity_type_name =  $value->identity_type;
+                                   $identity_type_number =  $value->identity_number;
+                                   break;
                                 }
                             }
                             if(!empty($identity_type_name) && !empty($identity_type_number)){
@@ -342,7 +357,7 @@ class AssociationExcelBehavior extends Behavior
                                 $row['identity_number'] = $data[0]->identity_number;
                             }
                         }
-                        return $row;           
+                        return $row;
                     });
                 });
                 //POCOR-5852 ends
@@ -371,22 +386,22 @@ class AssociationExcelBehavior extends Behavior
             $baseSheetName = $sheetName;
 
             // if the primary key of the record is given, only generate that record
-            if (array_key_exists('id', $settings)) {
+            if (isset($settings['id'])) {
                 $id = $settings['id'];
                 if ($id != 0) {
-                    $primaryKey = $table->primaryKey();
+                    $primaryKey = $table->getPrimaryKey();
                     $query->where([$table->aliasField($primaryKey) => $id]);
                 }
             }
 
-            if ($this->config('auto_contain')) {
+            if ($this->getConfig('auto_contain')) {
                 $this->contain($query, $fields, $table);
             }
 
             // To auto include the default fields. Using select will turn off autoFields by default
             // This is set so that the containable data will still be in the array.
             //POCOR-5852 starts
-            /*$autoFields = $this->config('autoFields');
+            /*$autoFields = $this->getConfig('autoFields');
 
             if (!isset($autoFields) || $autoFields == true) {
                 $query->autoFields(true);
@@ -397,24 +412,24 @@ class AssociationExcelBehavior extends Behavior
             $sheetCount = 1;
             $sheetRowCount = 0;
             $percentCount = intval($count / 100);
-            $pages = ceil($count / $this->config('limit'));
+            $pages = ceil($count / $this->getConfig('limit'));
 
-            // Debugging 
+            // Debugging
             $pages = 1;
 
             if (isset($sheet['orientation'])) {
                 if ($sheet['orientation'] == 'landscape') {
-                    $this->config('orientation', 'landscape');
+                    $this->setConfig('orientation', 'landscape');
                 } else {
-                    $this->config('orientation', 'portrait');
+                    $this->setConfig('orientation', 'portrait');
                 }
             } elseif ($count == 1) {
-                $this->config('orientation', 'portrait');
+                $this->setConfig('orientation', 'portrait');
             }
 
             $this->dispatchEvent($table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count], true);
             $this->onEvent($table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
-            if ($this->config('orientation') == 'landscape') {
+            if ($this->getConfig('orientation') == 'landscape') {
                 $headerRow = [];
                 $headerStyle = [];
                 $headerFormat = [];
@@ -433,7 +448,7 @@ class AssociationExcelBehavior extends Behavior
                     foreach ($fields as $index => $attr) {
                         $subjectsHeaderRow[$index] = "";
 
-                        if (array_key_exists('group', $attr)) {
+                        if (isset($attr['group'])) {
                             if ($groupName !== $attr['group']) {
                                 $groupStartingIndex = $index;
                                 $groupName = $attr['group'];
@@ -482,7 +497,7 @@ class AssociationExcelBehavior extends Behavior
                 // process every page based on the limit
                 for ($pageNo=0; $pageNo<$pages; $pageNo++) {
                     $resultSet = $query
-                    ->limit($this->config('limit'))
+                    ->limit($this->getConfig('limit'))
                     ->page($pageNo+1)
                     ->all();
 
@@ -494,7 +509,7 @@ class AssociationExcelBehavior extends Behavior
 
                     // process each row based on the result set
                     foreach ($resultSet as $entity) {
-                        if ($sheetRowCount >= $this->config('sheet_limit')) {
+                        if ($sheetRowCount >= $this->getConfig('sheet_limit')) {
                             $sheetCount++;
                             $sheetName = $baseSheetName . '_' . $sheetCount;
 
@@ -517,7 +532,7 @@ class AssociationExcelBehavior extends Behavior
                         $sheetRowCount++;
                         $rowCount++;
                         $event = $this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
-                        if (!$event->result) {
+                        if (!$event->getResult()) {
                             $writer->writeSheetRow($sheetName, $row, $rowStyle);
                         }
                     }
@@ -560,34 +575,34 @@ class AssociationExcelBehavior extends Behavior
 
     private function getFields($table, $settings)
     {
-        $schema = $table->schema();
+        $schema = $table->getSchema();
         //$columns = $schema->columns();
         //POCOR-5852 added 'identity_type', 'identity_number' starts
 		$columns = ['institution_code','institution_name','academic_period_id',
 					'association_name','education_grade','association_staff',
 					'openEMIS_ID','student_name','gender','student_status',
 					];
-        //POCOR-5852 ends                  
-        $excludes = $this->config('excludes');
+        //POCOR-5852 ends
+        $excludes = $this->getConfig('excludes');
 
-        if (!is_array($table->primaryKey())) { //if not composite key
-            $excludes[] = $table->primaryKey();
+        if (!is_array($table->getPrimaryKey())) { //if not composite key
+            $excludes[] = $table->getPrimaryKey();
         }
 
         $fields = new ArrayObject();
-        $module = $table->alias();
-        $language = I18n::locale();
+        $module = $table->getAlias();
+        $language = I18n::getLocale();
         $excludedTypes = ['binary'];
         $columns = array_diff($columns, $excludes);
 
         foreach ($columns as $col) {
-            $field = $schema->column($col);
+            $field = $schema->getColumn($col);
             if (!in_array($field['type'], $excludedTypes)) {
                 $label = $table->aliasField($col);
 
                 $event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $col, $language], true);
-                if (strlen($event->result)) {
-                    $label = $event->result;
+                if (strlen($event->getResult())) {
+                    $label = $event->getResult();
                 }
 
                 $fields[] = [
@@ -659,8 +674,8 @@ class AssociationExcelBehavior extends Behavior
             } else {
                 $method = 'onExcelGet' . Inflector::camelize($field);
                 $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity], true);
-                if ($event->result) {
-                    $returnedResult = $event->result;
+                if ($event->getResult()) {
+                    $returnedResult = $event->getResult();
                     if (is_array($returnedResult)) {
                         $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                         $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
@@ -694,7 +709,7 @@ class AssociationExcelBehavior extends Behavior
     {
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     return true;
                 }
             }
@@ -708,7 +723,7 @@ class AssociationExcelBehavior extends Behavior
 
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     $relatedModel = $assoc;
                     break;
                 }
@@ -722,7 +737,7 @@ class AssociationExcelBehavior extends Behavior
         $tableObj = $this->getAssociatedTable($table, $field);
         $key = null;
         if (is_object($tableObj)) {
-            $key = Inflector::underscore(Inflector::singularize($tableObj->alias()));
+            $key = Inflector::underscore(Inflector::singularize($tableObj->getAlias()));
         }
         return $key;
     }
@@ -733,7 +748,7 @@ class AssociationExcelBehavior extends Behavior
         foreach ($fields as $attr) {
             $field = $attr['field'];
             if ($this->isForeignKey($table, $field)) {
-                $contain[] = $this->getAssociatedTable($table, $field)->alias();
+                $contain[] = $this->getAssociatedTable($table, $field)->getAlias();
             }
         }
         $query->contain($contain);
@@ -777,7 +792,7 @@ class AssociationExcelBehavior extends Behavior
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 0];
@@ -798,7 +813,7 @@ class AssociationExcelBehavior extends Behavior
     {
         $action = $this->_table->action;
         //POCOR-5852 starts add  || $action == 'index' condition
-        if (in_array($action, $this->config('pages')) || $action == 'index') {
+        if (in_array($action, $this->getConfig('pages')) || $action == 'index') {
             $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
             $toolbarAttr = [
                 'class' => 'btn btn-xs btn-default',
@@ -838,7 +853,7 @@ class AssociationExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if (in_array($action, $pages)) {
                 $toolbarButtons['export'] = $export;
             }
@@ -855,7 +870,7 @@ class AssociationExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if ($pages != false) {
                 if (in_array($action, $pages)) {
                     $toolbarButtons['export'] = $export;

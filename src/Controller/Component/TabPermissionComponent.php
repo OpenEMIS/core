@@ -10,7 +10,7 @@ class TabPermissionComponent extends Component
     // The other component your component uses
     public $components = ['AccessControl'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->controller = $this->_registry->getController();
     }

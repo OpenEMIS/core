@@ -17,7 +17,7 @@ use Cake\Database\Exception as DatabaseException;
 
 class StudentGuardiansTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('StudentUser', ['className' => 'Student.GuardianUser', 'foreignKey' => 'guardian_id']);

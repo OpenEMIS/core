@@ -21,9 +21,9 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
     private $institutionId;
     private $academicPeriodId;
     private $assessmentId;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_classes');
+        $this->setTable('institution_classes');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -34,8 +34,8 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         $this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'dependent' => true]);
         $this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
 
-        $this->behaviors()->get('ControllerAction')->config('actions.add', false);
-        $this->behaviors()->get('ControllerAction')->config('actions.search', false);
+        $this->behaviors()->get('ControllerAction')->setConfig('actions.add', false);
+        $this->behaviors()->get('ControllerAction')->setConfig('actions.search', false);
 //        $this->addBehavior('Excel', [
 //            'pages' => ['index'],
 //            'orientation' => 'landscape'
@@ -43,6 +43,10 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
 
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Results' =>['id']
+            ]
+        ]);
     }
 
     /**
@@ -110,7 +114,9 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $extra['elements']['controls'] = ['name' => 'Institution.Assessment/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $extra['elements']['controls'] = ['name' => 'Institution.Assessment/controls', 'data' => [ 'encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
 
         $this->field('assessment');
         $this->field('education_grade');
@@ -124,23 +130,25 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $session = $this->request->getSession();
+        $institutionId = $queryString['institution_id'];
         $this->institutionId = $institutionId;
         list($query, $extra) = $this->setBasicQuery($query, $extra);
         list($query, $extra) = $this->setAccessControlledQuery($query, $extra);
 
         $Assessments = TableRegistry::get('Assessment.Assessments');
         $selectedAcademicPeriod = !is_null(
-            $this->request->query('academic_period_id'))
+            $this->request->getQuery('academic_period_id'))
             ?
-            $this->request->query('academic_period_id')
+            $this->request->getQuery('academic_period_id')
             :
             $this->AcademicPeriods->getCurrent();
         $selectedAssessment = !is_null(
-            $this->request->query('assessment_id'))
+            $this->request->getQuery('assessment_id'))
             ?
-            $this->request->query('assessment_id')
+            $this->request->getQuery('assessment_id')
             :
             null;
 
@@ -151,13 +159,14 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
             $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
             $this->academicPeriodId = $selectedAcademicPeriod;
         }
-        if ($selectedAssessment != '-1') {
+       // echo "<pre>"; print_r($selectedAssessment); die;
+        if ($selectedAssessment != '-1' && $selectedAssessment != NULL) {
             $query->where([$Assessments->aliasField('id') => $selectedAssessment]);
             $this->assessmentId = $selectedAssessment;
         }
 
         $whereArchive = ['institution_id = ' . $institutionId];
-        if ($selectedAssessment != '-1') {
+        if ($selectedAssessment != '-1' && $selectedAssessment != NULL) {
             $whereArchive['assessment_id'] = $selectedAssessment;
         }
         if ($selectedAcademicPeriod) {
@@ -196,8 +205,8 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (isset($buttons['view']['url'])) {
             $url = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'action' => 'AssessmentItemResultsArchived'
             ];
 
@@ -303,25 +312,25 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
             ])
             ->distinct([$this->aliasField('id')])
             ->innerJoin(
-                [$ClassGrades->alias() => $ClassGrades->table()],
+                [$ClassGrades->getAlias() => $ClassGrades->getTable()],
                 [$ClassGrades->aliasField('institution_class_id = ') . $this->aliasField('id')]
             )
             ->innerJoin(
-                [$Assessments->alias() => $Assessments->table()],
+                [$Assessments->getAlias() => $Assessments->getTable()],
                 [
                     $Assessments->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $Assessments->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
                 ]
             )
             ->innerJoin(
-                [$EducationGrades->alias() => $EducationGrades->table()],
+                [$EducationGrades->getAlias() => $EducationGrades->getTable()],
                 [$EducationGrades->aliasField('id = ') . $Assessments->aliasField('education_grade_id')]
             )
             ->innerJoin(
-                [$EducationProgrammes->alias() => $EducationProgrammes->table()],
+                [$EducationProgrammes->getAlias() => $EducationProgrammes->getTable()],
                 [$EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')]
             )
-            ->autoFields(true);
+            ->enableAutoFields(true);
         return array($query, $extra);
     }
 
@@ -337,8 +346,9 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         if ($AccessControl->isAdmin()) {
             return array($query, $extra);
         }
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getQueryString('institution_id');
+        $session = $this->request->getSession();
+        //$institutionId = $session->read('Institution.Institutions.id');
         $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $userId = $session->read('Auth.User.id');
         $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
@@ -403,10 +413,9 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
 
     private function setAcademicPeriodOptions($selectedAcademicPeriod)
     {
-// Academic Periods filter
+    // Academic Periods filter
 
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-//
         $institutionId = $this->institutionId;
         $academicPeriodStudentAttendanceArray = ArchiveConnections::getArchiveYears('assessment_item_results',
             ['institution_id' => $institutionId]);

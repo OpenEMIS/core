@@ -4,13 +4,32 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\InstitutionScope;
 
 class InstitutionStudentAbsenceDetails extends Model
 {
     use HasFactory;
+use InstitutionScope;
 
-    public $timestamps = false;
+    // ✅ Allow mass assignment
+    protected $fillable = ['student_id', 'institution_id', 'academic_period_id', 'institution_class_id', 'education_grade_id', 'date', 'period', 'comment', 'absence_type_id', 'student_absence_reason_id', 'subject_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'student_id', 'institution_id', 'academic_period_id', 'institution_class_id', 'education_grade_id', 'absence_type_id', 'student_absence_reason_id', 'subject_id', 'modified_user_id', 'created_user_id'];
+
     protected $table = "institution_student_absence_details";
+    public $timestamps = false;
+
+    // ✅ Allow mass assignment
+    public $incrementing = false;
+
+    // ✅ Define the primary key
+    protected $dates = ['modified', 'created'];
+    protected $primaryKey = ["student_id","institution_id","academic_period_id","institution_class_id","date","period","subject_id"];
+
+
+
+
+
+
+
 
 
     public function securityUser()
@@ -64,6 +83,33 @@ class InstitutionStudentAbsenceDetails extends Model
     public function subject()
     {
         return $this->belongsTo(InstitutionSubjects::class, 'subject_id', 'id');
+    }
+
+    protected function getKeyForSaveQuery()
+    {
+        $query = $this->newQueryWithoutScopes();
+        $keyName = $this->getKeyName();
+        if (!is_array($keyName)) {
+            $keyName = [$keyName];;
+        }
+        foreach ($keyName as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
+    }
+
+    protected function setKeysForSaveQuery($query)
+    {
+        $keyName = $this->getKeyName();
+        if (!is_array($keyName)) {
+            $keyName = [$keyName];;
+        }
+        foreach ($keyName as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
     }
 
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Repositories\AttendanceRepository;
 use JWTAuth;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class AttendanceService extends Controller
 {
@@ -22,10 +23,8 @@ class AttendanceService extends Controller
     {
         try {
             $data = $this->attendanceRepository->getAcademicPeriods($request);
-            $resp = [];
-            $resp = $data['list'];
             
-            return $resp;
+            return $data;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Academic Periods List from DB',
@@ -209,5 +208,256 @@ class AttendanceService extends Controller
     }
 
     //For POCOR-7854 End...
+
+
+    //For POCOR-8363 Starts...
+    public function getStudentAttendancesExport($params)
+    {
+        try {
+            $data = $this->attendanceRepository->getStudentAttendancesExport($params);
+            
+            $resp = [];
+            if(isset($data['data'])){
+                foreach ($data['data'] as $key => $d) {
+                    $resp[$key]['Openemis ID'] = $d['user']['openemis_no'];
+                    $resp[$key]['Name'] = $d['user']['full_name'];
+                    if($d['institution_student_absences']['absence_type_name'] != ""){
+                        $resp[$key]['Attendance'] = $d['institution_student_absences']['absence_type_name'];
+                    } else {
+                        $resp[$key]['Attendance'] = "Present";
+                    }
+                    
+                    $resp[$key]['Date'] = Null;
+                    if($d['institution_student_absences']['date']){
+                        $date1 = date('d/m/Y', strtotime($d['institution_student_absences']['date']));
+
+                        $resp[$key]['Date'] = $date1;
+                    }
+                    $resp[$key]['Student Statuses'] = "";
+                    $resp[$key]['Class'] = $d['institution_class_name'];
+                    $resp[$key]['Absent Reasons'] = $d['institution_student_absences']['student_absence_reason_name'];
+                    $resp[$key]['Comment'] = $d['institution_student_absences']['comment'];
+                    $resp[$key]['Modified User'] = Null;
+                    if($d['modified_user']){
+                        $resp[$key]['Modified User'] = $d['modified_user']['full_name'];
+                    }
+
+                    $resp[$key]['Modified'] = Null;
+                    if($d['modified_date']){
+                        $date2 = date('Y-m-d', strtotime($d['modified_date']));
+                        $formattedDate = Carbon::createFromFormat('Y-m-d', $date2)->format('F d, Y');
+
+                        $resp[$key]['Modified'] = $formattedDate;
+                    }
+
+                    $resp[$key]['Created User'] = Null;
+                    if($d['created_user']){
+                        $resp[$key]['Created User'] = $d['created_user']['full_name'];
+                    }
+
+                    $resp[$key]['Created'] = Null;
+                    if($d['created_date']){
+                        $date3 = date('Y-m-d', strtotime($d['created_date']));
+                        $formattedDate = Carbon::createFromFormat('Y-m-d', $date3)->format('F d, Y');
+                        $resp[$key]['Created'] = $formattedDate;
+                    }
+                }
+            }
+            return $resp;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to export students attendances from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to export students attendances from DB.');
+        }
+    }
+
+
+    /*public function getStudentAttendancesImportTemplate($params)
+    {
+        try {
+            $data = $this->attendanceRepository->getStudentAttendancesImportTemplate($params);
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch students attendances import template data from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch students attendances import template data from DB.');
+        }
+    }*/
+
+
+    public function studentAttendancesImport($params)
+    {
+        try {
+            $data = $this->attendanceRepository->studentAttendancesImport($params);
+
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to import students attendances in DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to import students attendances in DB.');
+        }
+    }
+
+
+    public function studentAttendancesNoScheduledClass($params)
+    {
+        try {
+            $data = $this->attendanceRepository->studentAttendancesNoScheduledClass($params);
+            
+            return $data;
+
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to set Student attendance for no-schedules class.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to set Student attendance for no-schedules class.');
+        }
+    }
+    //For POCOR-8363 Ends...
+
+
+
+    //For POCOR-8397 Starts...
+    public function getArchiveAcademicPeriods($params)
+    {
+        try {
+            $data = $this->attendanceRepository->getArchiveAcademicPeriods($params);
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get archive academic periods.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to get archive academic periods.');
+        }
+    }
+
+
+    public function getStudentAttendanceMarkedRecordArchiveList($params, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $data = $this->attendanceRepository->getStudentAttendanceMarkedRecordArchiveList($params, $institutionId, $gradeId, $classId);
+            
+            $resp = [];
+
+            if(count($data['data']) > 0){
+                foreach ($data['data'] as $k => $d) {
+                    $resp[$k]['institution_id'] = $d['institution_id'];
+                    $resp[$k]['academic_period_id'] = $d['academic_period_id'];
+                    $resp[$k]['institution_class_id'] = $d['institution_class_id'];
+                    $resp[$k]['education_grade_id'] = $d['education_grade_id'];
+                    $resp[$k]['date'] = date('F d, Y', strtotime($d['date']));
+                    $resp[$k]['period'] = $d['period'];
+                    $resp[$k]['subject_id'] = $d['subject_id'];
+                    $resp[$k]['no_scheduled_class'] = $d['no_scheduled_class'];
+                }
+            }
+
+            $data['data'] = $resp;
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student attendance marked archive.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to get student attendance marked archive.');
+        }
+    }
+
+
+    public function getStudentAttendanceArchiveList($params, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $data = $this->attendanceRepository->getStudentAttendanceArchiveList($params, $institutionId, $gradeId, $classId);
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student attendance archive list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to get student attendance archive list.');
+        }
+    }
+
+
+    public function getStudentAttendanceArchiveExport($params)
+    {
+        try {
+            $data = $this->attendanceRepository->getStudentAttendanceArchiveExport($params);
+            
+            $resp = [];
+
+            foreach($data as $k => $d){
+                $resp[$k]['Student'] = $d['first_name']. ' '.$d['last_name'];
+                $resp[$k]['Academic Period'] = $d['academic_period_name'];
+                $resp[$k]['Institution Class'] = $d['class_name'];
+                $resp[$k]['Education Grade'] = $d['education_grade_name'];
+                $resp[$k]['Date'] = date('F d, Y', strtotime($d['date']));
+                $resp[$k]['Period'] = $d['period'];
+                $resp[$k]['Comment'] = $d['comment'];
+                $resp[$k]['Absence Type'] = $d['absence_type_name'];
+                $resp[$k]['Student Absence Reason'] = $d['student_absence_reason_name'];
+                $resp[$k]['Subject'] = $d['institution_subject_name'];
+            }
+            
+            return $resp;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to export students attendances archive from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to export students attendances archive from DB.');
+        }
+    }
+    //For POCOR-8397 Ends...
+    
+    //For POCOR-8396 Start...
+    public function getDataForSheet($params)
+    {
+        try {
+            $data = $this->attendanceRepository->getDataForSheet($params);
+
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getDataForSheet.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed in getDataForSheet.');
+        }
+    }
+    //For POCOR-8396 End...
+
+    public function getStaffAttendancesDetails($request, $institutionId, $staffId)
+    {
+        try {
+            $data = $this->attendanceRepository->getStaffAttendancesDetails($request, $institutionId, $staffId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Staff Attendances Details from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Staff Attendances Details Not Found');
+        }
+    }
 
 }

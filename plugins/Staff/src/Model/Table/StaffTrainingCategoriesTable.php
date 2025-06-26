@@ -12,9 +12,9 @@ use App\Model\Table\ControllerActionTable;
 
 class StaffTrainingCategoriesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_training_categories');
+        $this->setTable('staff_training_categories');
         parent::initialize($config);
 
         $this->hasMany('StaffTrainings', ['className' => 'Staff.StaffTrainings', 'foreignKey' => 'staff_training_category_id']);
@@ -38,7 +38,7 @@ class StaffTrainingCategoriesTable extends ControllerActionTable
                             ->all();
 
                         $recordCount = 0;
-                        if (!$records->isEmpty() && array_key_exists('type', $attr)) {
+                        if (!$records->isEmpty() && isset($attr['type'])) {
                             if ($attr['type'] == 'select') {
                                 foreach ($records as $obj) {
                                     $thresholdData = json_decode($obj->threshold, true);
@@ -61,6 +61,46 @@ class StaffTrainingCategoriesTable extends ControllerActionTable
                     }
                 }
             }
+        }
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'visible':
+                return __('Visible');
+            case 'name':
+                return __('Name');
+            case 'international_code':
+                return __('International Code');
+            case 'national_code':
+                return __('National Code');
+            case 'editable':
+                return __('Editable');
+            case 'default':
+                return __('Default');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

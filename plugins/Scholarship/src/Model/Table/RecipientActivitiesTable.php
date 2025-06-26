@@ -5,9 +5,9 @@ use App\Model\Table\AppTable;
 
 class RecipientActivitiesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('scholarship_recipient_activities');
+        $this->setTable('scholarship_recipient_activities');
         parent::initialize($config);
 
 		$this->belongsTo('ScholarshipRecipients', ['className' => 'Scholarship.ScholarshipRecipients', 'foreignKey' => ['recipient_id', 'scholarship_id']]);

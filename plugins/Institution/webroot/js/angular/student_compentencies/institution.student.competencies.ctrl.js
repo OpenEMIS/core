@@ -140,6 +140,9 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
 
                 InstitutionStudentCompetenciesSvc.translate(textToTranslate)
                 .then(function(res){
+                    if(res == null || res == ''){
+                        res =textToTranslate;
+                    }
                     var commentTranslation = res.pop();
                     angular.forEach(res, function(value, key) {
                         response.data[key]['headerName'] = value;

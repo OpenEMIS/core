@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 
@@ -18,7 +18,7 @@ class AreaAdministrativesTable extends ControllerActionTable
     private $fieldsOrder = ['visible', 'code', 'name', 'area_administrative_level_id'];
     private $worldId;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AreaAdministrativeParents', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'parent_id']);
@@ -29,9 +29,8 @@ class AreaAdministrativesTable extends ControllerActionTable
         $this->hasMany('UsersBirthplaceAreas', ['className' => 'Directory.Directories', 'foreignKey' => 'birthplace_area_id']);
         $this->addBehavior('Tree');
         if ($this->behaviors()->has('Reorder')) {
-            $this->behaviors()->get('Reorder')->config([
-                'filter' => 'parent_id',
-            ]);
+            $reorderBehavior = $this->behaviors()->get('Reorder');
+            $reorderBehavior->setConfig('filter', 'parent_id');
         }
 
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -39,11 +38,14 @@ class AreaAdministrativesTable extends ControllerActionTable
             'SgTree' => ['index'],
             'Results' => ['index', 'view'] //POCOR-5672
         ]);
-
         $this->setDeleteStrategy('restrict');
+        if ($this->behaviors()->has('ControllerAction')) {
+            $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
+            $controllerActionBehavior->setConfig(['actions' => ['reorder' => false]]);
+        }
     }
     //POCOR-5672 starts
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
@@ -59,8 +61,9 @@ class AreaAdministrativesTable extends ControllerActionTable
         }
     }//POCOR-5672 ends
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('code', 'ruleUniqueCode', [
                 'rule' => 'validateUnique',
@@ -81,28 +84,30 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('area_administrative_level_id');
-        
-        $this->field('name');
-        $count = $this->find()->where([
-                'OR' => [
-                    [$this->aliasField('lft').' IS NULL'],
-                    [$this->aliasField('rght').' IS NULL']
-                ]
-            ])
-            ->count();
-        if ($count) {
-            $this->rebuildLftRght();
+        if($this->action != 'index'){
+            $this->field('area_administrative_level_id');
+            
+            $this->field('name');
+            $count = $this->find()->where([
+                    'OR' => [
+                        [$this->aliasField('lft').' IS NULL'],
+                        [$this->aliasField('rght').' IS NULL']
+                    ]
+                ])
+                ->count();
+            if ($count) {
+                $this->rebuildLftRght();
+            }
+            $this->fields['lft']['visible'] = false;
+            $this->fields['rght']['visible'] = false;
+
+            $query = $this->find()
+                    ->select([$this->aliasField('id')])
+                    ->where([$this->aliasField('parent_id').' IS NULL'])
+                    ->first();
+
+            $this->worldId = $query->id;
         }
-        $this->fields['lft']['visible'] = false;
-        $this->fields['rght']['visible'] = false;
-
-        $query = $this->find()
-                ->select([$this->aliasField('id')])
-                ->where([$this->aliasField('parent_id').' IS NULL'])
-                ->first();
-
-        $this->worldId = $query->id;
     }
 
     public function rebuildLftRght()
@@ -126,9 +131,9 @@ class AreaAdministrativesTable extends ControllerActionTable
     public function findAreaList(Query $query, array $options)
     {
         $selected = !empty($options['selected']) && $options['selected'] != 'null' ? $options['selected'] : null;
-
+        //$selected = 1;
         if (isset($options['recordOnly']) && $options['recordOnly']) {
-            return $query
+            $query = $query
                 ->contain(['AreaAdministrativeLevels'])
                 ->select([
                     $this->aliasField('id'),
@@ -136,9 +141,21 @@ class AreaAdministrativesTable extends ControllerActionTable
                     $this->aliasField('parent_id'),
                     'AreaAdministrativeLevels.name',
                     $this->aliasField('order')
-                ])
-                ->where([$this->aliasField('id') => $selected])
-                ->hydrate(false)
+                ]);
+            if(!empty($selected)) {
+                $query = $query->where([$this->aliasField('id') => $selected]);
+            }
+            return $query
+                // ->contain(['AreaAdministrativeLevels'])
+                // ->select([
+                //     $this->aliasField('id'),
+                //     $this->aliasField('name'),
+                //     $this->aliasField('parent_id'),
+                //     'AreaAdministrativeLevels.name',
+                //     $this->aliasField('order')
+                // ])
+                // ->where([$this->aliasField('id') => $selected])
+                ->enableHydration(false)
                 ->formatResults(function ($results) use ($selected) {
                     $results = $results->toArray();
                     foreach ($results as &$result) {
@@ -153,7 +170,6 @@ class AreaAdministrativesTable extends ControllerActionTable
                     return $results;
                 });
         }
-
         $authorisedAreaIds = [];
         $worldId = $this
                 ->find()
@@ -174,7 +190,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                     $this->aliasField('is_main_country') => true,
                     $this->aliasField('parent_id') => $worldId->id
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             foreach ($authorisedAreaIds as $area) {
@@ -191,7 +207,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                     $this->aliasField('is_main_country') => false,
                     $this->aliasField('parent_id') => $worldId->id
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
             $removeAreas = array_column($removeAreas, 'id');
 
@@ -205,7 +221,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                 ->where([
                     $this->aliasField('parent_id') => $worldId->id
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
         }
 
@@ -224,7 +240,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                 'AreaAdministrativeLevels.name',
                 $this->aliasField('order')
             ])
-            ->hydrate(false)
+            ->enableHydration(false)
             // Remove world record
             ->where($conditions)
             ->formatResults(function ($results) use ($authorisedAreaIds, $selected) {
@@ -284,7 +300,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
         $this->fields['parent_id']['visible'] = false;
 
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : null;
         if ($parentId != null) {
             $crumbs = $this
                 ->find('path', ['for' => $parentId])
@@ -307,23 +323,26 @@ class AreaAdministrativesTable extends ControllerActionTable
                     ->id;
 
                 $action = $this->url('index');
-                $action['parent'] = $parentId;
+               // $action['parent'] = $parentId;
+                $action['?']['parent'] = $parentId;
                 return $this->controller->redirect($action);
             }
         }
 
         //to hide / show is main country field on index
         $request = $this->request;
-        if (array_key_exists('parent', $request->query)) {
-            if ($request->query['parent'] != $this->worldId) {
+        if (array_key_exists('parent', $request->getQuery())) {
+            if ($request->getQuery('parent') != $this->worldId) {
                 $this->fields['is_main_country']['visible'] = false;
             }
         }
+        $this->field('lft', ['visible'=> false]);
+        $this->field('rght',['visible'=> false]);
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->data[$this->alias()]['area_administrative_level_id'] = $entity->area_administrative_level_id;
+        $this->request->getData()[$this->getAlias()]['area_administrative_level_id'] = $entity->area_administrative_level_id;
         $this->field('is_main_country');
     }
 
@@ -334,7 +353,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : null;
         if ($parentId != null) {
             $query->where([$this->aliasField('parent_id') => $parentId]);
         } else {
@@ -348,7 +367,7 @@ class AreaAdministrativesTable extends ControllerActionTable
         $this->fieldsOrder = ['area_administrative_level_id', 'code', 'name'];
 
         $this->fields['parent_id']['type'] = 'hidden';
-        $parentId = $this->request->query('parent');
+        $parentId = $this->request->getQuery('parent');
 
         if (is_null($parentId)) {
             $this->fields['parent_id']['attr']['value'] = null;
@@ -378,10 +397,10 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function onGetName(Event $event, Entity $entity)
     {
-        return $event->subject()->HtmlField->link($entity->name, [
-            'plugin' => $this->controller->plugin,
-            'controller' => $this->controller->name,
-            'action' => $this->alias,
+        return $event->getSubject()->HtmlField->link($entity->name, [
+            'plugin' => $this->controller->getPlugin(),
+            'controller' => $this->controller->getName(),
+            'action' => 'Administratives',
             'index',
             'parent' => $entity->id
         ]);
@@ -394,11 +413,11 @@ class AreaAdministrativesTable extends ControllerActionTable
         return $return;
     }
 
-    public function onUpdateFieldIsMainCountry(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldIsMainCountry(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action=='add') {
             $attr['visible'] = true;
-            $areaAdminLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
+            $areaAdminLevelId = $request->getData()[$this->getAlias()]['area_administrative_level_id'];
             if ($areaAdminLevelId == 1) {
                 $attr['options'] = $this->getSelectOptions('general.yesno');
                 return $attr;
@@ -409,7 +428,7 @@ class AreaAdministrativesTable extends ControllerActionTable
             }
         } elseif ($action == 'edit') {
             $attr['visible'] = true;
-            $areaAdminLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
+            $areaAdminLevelId = $request->getData()[$this->getAlias()]['area_administrative_level_id'];
             if ($areaAdminLevelId == 1) {
                 $attr['options'] = $this->getSelectOptions('general.yesno');
                 return $attr;
@@ -421,9 +440,9 @@ class AreaAdministrativesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldAreaAdministrativeLevelId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAreaAdministrativeLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : null;
         $results = $this
             ->find()
             ->select([
@@ -478,17 +497,17 @@ class AreaAdministrativesTable extends ControllerActionTable
                     $attr['options'] = $levelOptions;
                 }
             }
-            if (!isset($request->data[$this->alias()]['area_administrative_level_id'])) {
-                $request->data[$this->alias()]['area_administrative_level_id'] = key($attr['options']);
+            if (!isset($request->getData()[$this->getAlias()]['area_administrative_level_id'])) {
+                $request->getData()[$this->getAlias()]['area_administrative_level_id'] = key($attr['options']);
             }
         }
 
         return $attr;
     }
 
-    public function onUpdateFieldName(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldName(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : null;
         $results = $this
             ->find()
             ->select([$this->aliasField('parent_id'), $this->aliasField('area_administrative_level_id')])
@@ -533,7 +552,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->dirty('is_main_country')) {
+        if ($entity->getDirty('is_main_country')) {
             if ($entity->is_main_country == 1) { //if set as main country
 
                 // update the rest of areas to non main country
@@ -557,5 +576,18 @@ class AreaAdministrativesTable extends ControllerActionTable
 
         $this->dispatchEventToModels('Model.AreaAdministrative.afterDelete', [$entity], $this, $listeners);    
     }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
 
 }

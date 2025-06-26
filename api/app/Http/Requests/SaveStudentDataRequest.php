@@ -42,8 +42,6 @@ class SaveStudentDataRequest extends FormRequest
         ];
     }
 
-
-
     /**
      * @param Validator $validator
      */

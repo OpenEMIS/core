@@ -1,0 +1,230 @@
+<kd-progressloader *ngIf="displayLoading" configtype="small-spinner" [configvalue]="null"></kd-progressloader>
+<kd-alert></kd-alert>
+<kd-pageheader [config]='pageheader'></kd-pageheader>
+
+<kd-splitter style="margin-top: 72px;" class="has-page-header has-breadcrumb" floatbtn="true" collapsible="true">
+    <kd-pane [ngClass]="showFullWidth == true ? 'full-width' : ''">
+        <div class="main-wrapper">
+            <div class="content-wrapper">
+                <div class="content-area">
+                    <div class="content">
+                        <div class="table-responsive">
+                            <table class="m-4" *ngIf="displayTable">
+                                <thead>
+                                    <tr>
+                                        <th colspan="6">{{timetable_name}}<br><span style="font-size: 15px;">Grade: {{ education_grade_name }} |
+                                                Class: Primary 1-A</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Time</td>
+                                        <td *ngFor="let day of days">
+                                            {{day?.day | uppercase}}
+                                        </td>
+                                    </tr>
+                                    <tr *ngFor="let schedule of timetableData; let indexOfElement=index">
+                                        <td style="width: 20%;">{{schedule.time}}</td>
+                                        <td class="schedule-data"
+                                            (mouseenter)="setMouseOver(indexOfElement, inedxOfData)"
+                                            (click)="showSubContent(indexOfElement, inedxOfData)"
+                                            (mouseleave)="resetMouseOver()"
+                                            *ngFor="let scheduleData of schedule.data; let inedxOfData = index">
+                                            <div *ngIf="schedule.data[inedxOfData].subject?.length > 0">
+                                                <div *ngFor="let curriculumData of schedule.data[inedxOfData].subject; let ind = index"
+                                                    style="text-align: left;">
+                                                    <div
+                                                        *ngIf="curriculumData?.schedule_curriculum_lesson?.institution_subject?.name">
+                                                        <div class="mt-1 d-flex justify-content-between"
+                                                            style="border: 1px solid #CCC; border-radius: 5px; padding: 5px; background-color: #FFFFFF;">
+                                                            <div style="font-size: 12px;">
+                                                                <span style="font-weight: 700;">
+                                                                    {{curriculumData?.schedule_curriculum_lesson?.institution_subject?.name}}
+                                                                </span>
+                                                                <div>
+                                                                    {{curriculumData?.schedule_lesson_room?.institution_room?.name}}
+                                                                </div>
+                                                            </div>
+                                                            <span style="font-size: 12px; cursor: pointer;"
+                                                                [style]=" isMouseOver && indexOfElement == currentRowIndex && currentCellIndex == inedxOfData ? 'color: red' : 'color: #FFFFFF'"
+                                                                (click)="onRemoveClick($event, indexOfElement, inedxOfData, ind, curriculumData)">
+                                                                <i class="fa fa-trash" aria-hidden="true"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div *ngIf="curriculumData?.schedule_non_curriculum_lesson?.name">
+                                                        <div class="mt-1 d-flex justify-content-between"
+                                                            style="border: 1px solid #CCC; border-radius: 5px; padding: 5px; background-color: #FFFFFF;">
+                                                            <div style="font-size: 12px;">
+                                                                <span style="font-weight: 700;">
+                                                                    {{curriculumData?.schedule_non_curriculum_lesson?.name}}
+                                                                </span>
+                                                                <div>
+                                                                    {{curriculumData?.schedule_lesson_room?.institution_room?.name}}
+                                                                </div>
+                                                            </div>
+                                                            <span style="font-size: 12px; cursor: pointer;"
+                                                                [style]=" isMouseOver && indexOfElement == currentRowIndex && currentCellIndex == inedxOfData ? 'color: red' : 'color: #FFFFFF'"
+                                                                (click)="onRemoveClick($event, indexOfElement, inedxOfData, ind, curriculumData)">
+                                                                <i class="fa fa-trash" aria-hidden="true"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </kd-pane>
+
+    <kd-pane class="second-pane" size="25%" min="10%" max="30%"
+        [ngClass]="showFullWidth == true ? 'push-subcontent-right-out' : ''">
+        <div class="main-wrapper">
+            <div class="content-wrapper">
+                <div class="content-area">
+                    <div class="content" *ngIf="displayLessons">
+                        <div class="split-content-header ng-scope">
+                            <div class="kdx-split-header-container">
+                                <h3>Lessons</h3>
+                                <div class="split-content-btn">
+                                    <button href="#" class="btn btn-outline" (click)="hideSubContent()">
+                                        <i class="fa fa-close fa-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="d-flex my-4" style="align-items: baseline;">
+                                <label for="curriculumType">Type:</label> <br>
+                                <select #curriculum name="curriculumType" id="curriculumType"
+                                    style="font-size: 14px; height: 30px; width: -webkit-fill-available; padding: 5px;"
+                                    class="ml-1" [(ngModel)]="selectLesson">
+                                    <option [value]="lesson.id" [selected]="lesson.id == ''"
+                                        *ngFor="let lesson of lessonType">{{
+                                        lesson?.name }}</option>
+                                    <!-- <option value="nonCurriculum">Non Curriculum Lesson</option> -->
+                                </select>
+                                <i class="fa fa-plus" style="font-size: 15px; cursor: pointer; padding-left: 5px;"
+                                    (click)="addLessonData()"></i>
+                            </div>
+
+                            <div *ngFor="let newLesson of addNewLesson; let i = index">
+                                <div *ngIf="newLesson.type == 'nonCurriculum'" style="margin-bottom: 25px;">
+                                    <div style="border: 1px solid #DDD;">
+                                        <div class="d-flex justify-content-between"
+                                            style="font-size: 16px; background-color: #DDD; padding: 10px;">
+                                            <div>Non Curriculum</div>
+                                            <div style="cursor: pointer;" (click)="removeData(i)">
+                                                <i class="fa fa-trash" aria-hidden="true"></i>
+                                            </div>
+                                        </div>
+                                        <div style="padding: 10px;">
+                                            <label for="nonCurriculumName" class="font-size15">Name</label><br>
+                                            <input #nonCurriculumName value="" placeholder="Name" type="text"
+                                                name="nonCurriculumName"
+                                                style="width: 100%; height: 30px; padding: 5px; font-size: 14px;"
+                                                id="nonCurriculumName"
+                                                (input)="onNonCurriculumInput(nonCurriculumName, i)">
+                                            <div style="color: #CC5C5C; font-size: 11px;" *ngIf="showTextErrorMsg">This
+                                                field cannot be empty
+                                            </div>
+                                            <label for="nonCurriculumRoom" style="margin-top: 10px;"
+                                                class="font-size15">Room</label><br>
+                                            <select #roomSelect
+                                                style="width: 100%; height: 30px; padding: 5px; font-size: 14px;"
+                                                name="nonCurriculumRoom" id="nonCurriculumRoom" class="select-section"
+                                                (change)="onRoomSelectNonCurriculum(roomSelect, i)">
+                                                <option [value]="room.id" *ngFor="let room of institutionRoomData">{{
+                                                    room.name }}</option>
+                                            </select>
+                                            <button class="btn btn-primary mt-3" style="font-size: 14px;"
+                                                (click)="onAddClick(i, 'nonCurriculum')"><i
+                                                    class="fa fa-plus mr-1"></i>Add</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div *ngIf="newLesson.type == 'curriculum'" style="margin-bottom: 25px;">
+                                    <div style="border: 1px solid #DDD;">
+                                        <!-- <div style="font-size: 16px; background-color: #DDD; padding: 10px;">Curriculum</div> -->
+                                        <div class="d-flex justify-content-between"
+                                            style="font-size: 16px; background-color: #DDD; padding: 10px;">
+                                            <div>Curriculum</div>
+                                            <div style="cursor: pointer;" (click)="removeData(i)">
+                                                <i class="fa fa-trash" aria-hidden="true"></i>
+                                            </div>
+                                        </div>
+                                        <div style="padding: 10px;">
+                                            <label for="subject" class="font-size15">Subject</label><br>
+                                            <select #pickSubject name="subject" id="subject" class="select-section"
+                                                style="width: 100%; height: 30px; padding: 5px; font-size: 14px;"
+                                                (change)="onSubjectChanged(pickSubject, i)">
+                                                <option [value]="subject?.id"
+                                                    *ngFor="let subject of institutionSubject">{{ subject?.name }}
+                                                </option>
+                                            </select>
+                                            <div style="color: #CC5C5C; font-size: 11px;" *ngIf="showDropdownErrorMsg">
+                                                This field cannot be
+                                                empty</div>
+                                            <label for="curriculumRoom" style="margin-top: 10px;"
+                                                class="font-size15">Room</label><br>
+
+                                            <select #roomSelect class="select-section" name="curriculumRoom"
+                                                id="curriculumRoom"
+                                                style="width: 100%; height: 30px; padding: 5px; font-size: 14px;"
+                                                (change)="onRoomSelect(roomSelect, i)">
+                                                <option [value]="room.id" *ngFor="let room of institutionRoomData">{{
+                                                    room.name }}</option>
+                                            </select>
+                                            <!-- <button class="btn btn-primary" (click)="onAddClick()">Add</button> -->
+                                            <button class="btn btn-primary mt-3" style="font-size: 14px;"
+                                                (click)="onAddClick(i,'curriculum')"><i
+                                                    class="fa fa-plus mr-1"></i>Add</button>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="content" *ngIf="!displayLessons">
+                        <div class="split-content-header ng-scope">
+                            <div class="kdx-split-header-container mb-1">
+                                <h3>Overview</h3>
+                                <div class="split-content-btn">
+                                    <button href="#" class="btn btn-outline" (click)="hideSubContent()">
+                                        <i class="fa fa-close fa-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <kd-view displayType="stacked-form" [inputData]="academicPeriod" [button]="filterButtons"
+                                [api]="academicPeriodApi" (change)="_submitEvent($event)"></kd-view>
+                            <kd-view displayType="stacked-form" [inputData]="term" [button]="filterButtons"
+                                [api]="termApi" (change)="_submitEvent($event)"></kd-view>
+                            <kd-view displayType="stacked-form" [inputData]="status" [button]="filterButtons"
+                                (change)="_submitEvent($event, 'status')"></kd-view>
+                            <kd-view displayType="stacked-form" [inputData]="name" [button]="filterButtons"
+                                [api]="nameApi" (change)="_submitEvent($event, 'name')"></kd-view>
+                            <kd-view displayType="stacked-form" [inputData]="grade" [button]="filterButtons"
+                                [api]="gradeApi" (change)="_submitEvent($event)"></kd-view>
+                            <kd-view displayType="stacked-form" [inputData]="class" [button]="filterButtons"
+                                [api]="classApi" (change)="_submitEvent($event)"></kd-view>
+                            <kd-view displayType="stacked-form" [inputData]="interval" [button]="filterButtons"
+                                [api]="intervalApi"(change)="_submitEvent($event)"></kd-view>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </kd-pane>
+</kd-splitter>

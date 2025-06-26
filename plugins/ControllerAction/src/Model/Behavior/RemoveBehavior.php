@@ -21,7 +21,7 @@ class RemoveBehavior extends Behavior
     private $showForceDeleteFields = false;
     private $selectedForceDelete = false;
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.remove'] = 'remove';
@@ -32,7 +32,7 @@ class RemoveBehavior extends Behavior
         return $events;
     }
 
-    public function validationForceDelete(Validator $validator)
+    public function validationForceDelete(Validator $validator): Validator
     {
         $validator = $this->_table->validationDefault($validator);
         return $validator
@@ -75,7 +75,7 @@ class RemoveBehavior extends Behavior
             $cells = $extra['cells'];
 
             $model->fields = [];
-            $primaryKey = $model->primaryKey();
+            $primaryKey = $model->getPrimaryKey();
             if (is_array($primaryKey)) {
                 foreach ($primaryKey as $key) {
                     $model->field($key, ['type' => 'hidden']);
@@ -94,7 +94,7 @@ class RemoveBehavior extends Behavior
             $entity = $extra['entity'];
             $cells = $extra['cells'];
             $model->fields = [];
-            $primaryKey = $model->primaryKey();
+            $primaryKey = $model->getPrimaryKey();
             if (is_array($primaryKey)) {
                 foreach ($primaryKey as $key) {
                     $model->field($key, ['type' => 'hidden']);
@@ -146,40 +146,45 @@ class RemoveBehavior extends Behavior
         $event = $model->dispatchEvent('ControllerAction.Model.delete.beforeAction', [$extra], $this);
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();
-            return $event->result;
+            return $event->getResult();
         }
 
         $passwordErrors = [];
         $forceDeleteRecord = false;
-        if (isset($request->data['submit']) && isset($request->data[$model->alias()]['force_delete'])) {
-            $this->selectedForceDelete = $request->data[$model->alias()]['force_delete'];
+        if (isset($request->getData()['submit']) && isset($request->getData()[$model->getAlias()]['force_delete'])) {
+            $this->selectedForceDelete = $request->getData()[$model->getAlias()]['force_delete'];
 
-            if ($this->selectedForceDelete && $request->data['submit'] == 'save') {
-                $tempEntity = $model->newEntity($request->data, ['validate' => 'forceDelete']);
-                if (array_key_exists('password', $tempEntity->errors())) {
-                    $passwordErrors = $tempEntity->errors('password');
+            if ($this->selectedForceDelete && $request->getData()['submit'] == 'save') {
+                $tempEntity = $model->newEntity($request->getData(), ['validate' => 'forceDelete']);
+                if (array_key_exists('password', $tempEntity->getErrors())) {
+                    $passwordErrors = $tempEntity->getErrors('password');
                 } else {
                     $forceDeleteRecord = true; // allow delete if password is correct
                 }
             }
         }
 
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $model->getPrimaryKey();
         $result = true;
         $entity = null;
-
         if (!$request->is(['delete']) && !$forceDeleteRecord && $model->actions('remove') == 'restrict' ) {
+
             // Logic for restrict delete
-            $entity = $model->newEntity();
+            $entity = $model->newEntity([]);
             $controller = $model->controller;
-            $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
-            $sessionKey = $model->registryAlias() . '.primaryKey';
+            $modelNameArray = ['institution_students', 'institution_staff', 'institution_classes' , 'institution_subjects', 'institution_textbooks', 'institution_positions'];//POCOR-8333
+            if(in_array($model->getTable(), $modelNameArray)){//POCOR-8333 starts
+                $ids = empty($model->paramsPass(1)) ? [] : $model->paramsDecode($model->paramsPass(1));
+            }else{ // POCOR-8333 ends
+                $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
+            }
+            $sessionKey = $model->getRegistryAlias() . '.primaryKey';
             if (empty($ids)) {
                 if ($model->Session->check($sessionKey)) {
                     $ids = $model->Session->read($sessionKey);
                 } else if (!empty($model->ControllerAction->getQueryString())) {
                     // Query string logic not implemented yet, will require to check if the query string contains the primary key
-                    $primaryKey = $model->primaryKey();
+                    $primaryKey = $model->getPrimaryKey();
                     $ids = $model->ControllerAction->getQueryString($primaryKey);
                 }
             }
@@ -191,7 +196,7 @@ class RemoveBehavior extends Behavior
                 $event = $model->dispatchEvent('ControllerAction.Model.delete.onInitialize', [$entity, $query, $extra], $this);
                 if ($event->isStopped()) {
                     $mainEvent->stopPropagation();
-                    return $event->result;
+                    return $event->getResult();
                 }
 
                 $associations = $this->getAssociatedRecords($model, $entity, $extra);
@@ -225,7 +230,7 @@ class RemoveBehavior extends Behavior
                     $extra['config']['form'] = ['type' => 'DELETE'];
                     $this->recordHasAssociatedRecords = false;
                 }
-                
+
                 /** Start POCOR-7253 */
                 if(!empty($cells)){
                     foreach($cells as $key => $cell_val){
@@ -246,7 +251,7 @@ class RemoveBehavior extends Behavior
                         if ($this->selectedForceDelete) {
                             $model->Alert->warning('general.delete.cascadeDelete', ['reset' => true]);
                             if (!empty($passwordErrors)) {
-                                $entity->errors('password', $passwordErrors); // set password errors
+                                $entity->getErrors('password', $passwordErrors); // set password errors
                             }
                         }
                     }
@@ -254,30 +259,37 @@ class RemoveBehavior extends Behavior
 
                 $controller->set('data', $entity);
             }
+            else{  //POCOR-9202[START]
+                $model->Alert->error('general.notExists');
+                return $model->controller->redirect($extra['redirect']);
+            }//POCOR-9202[END]
             return $entity;
-        } else if ($request->is('delete') || $forceDeleteRecord) {
+
+        } else if ($request->is('delete') || $forceDeleteRecord ) {
+
             $ids = [];
 
             if ($model->actions('remove') == 'restrict') {
                 if (is_array($primaryKey)) {
                     foreach ($primaryKey as $key) {
-                        if (!empty($request->data[$model->alias()][$key])) {
-                            $ids[$model->aliasField($key)] = $request->data[$model->alias()][$key];
+                        if (!empty($request->getData()[$model->getAlias()][$key])) {
+                            $ids[$model->aliasField($key)] = $request->getData()[$model->getAlias()][$key];
                         } else {
                             $ids = [];
                             break;
                         }
                     }
                 } else {
-                    if (!empty($request->data[$model->alias()][$primaryKey])) {
-                        $ids[$model->aliasField($primaryKey)] = $request->data[$model->alias()][$primaryKey];
+                    if (!empty($request->getData()[$model->getAlias()][$primaryKey])) {
+                        $ids[$model->aliasField($primaryKey)] = $request->getData()[$model->getAlias()][$primaryKey];
                     } else {
                         $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
                     }
                 }
             } else {
-                $modalPrimaryKeys = array_key_exists('primaryKey', $request->data) ? $model->paramsDecode($request->data['primaryKey']) : [];
+                $modalPrimaryKeys = array_key_exists('primaryKey', $request->getData()) ? $model->paramsDecode($request->getData('primaryKey')) : [];
                 if (is_array($primaryKey)) {
+
                     foreach ($primaryKey as $key) {
                         if (!empty($modalPrimaryKeys[$key])) {
                             $ids[$model->aliasField($key)] = $modalPrimaryKeys[$key];
@@ -294,23 +306,39 @@ class RemoveBehavior extends Behavior
                     }
                 }
             }
+           // echo "<pre>"; print_r($ids); die;
             if (!empty($ids)) {
                 try {
-                    $entity = $model->get($ids);
+
+                    //POCOR-8072 add conditon if else
+                    if($request->getParam('plugin') == 'Scholarship' && $request->getParam('action') == 'ScholarshipApplicationInstitutionChoices'){
+                        $array = $ids;
+                        $ids = reset($array);
+                        $entity = $model->get($ids);
+                    }elseif($request->getParam('plugin') == 'Scholarship' && $request->getParam('action') == 'ScholarshipApplicationAttachments'){
+                        $array = $ids;
+                        $ids = reset($array);
+                        $entity = $model->get($ids);
+                    }else{
+                     $entity = $model->get($ids);
+                    }
+
                 } catch (RecordNotFoundException $exception) { // to handle concurrent deletes
                     $mainEvent->stopPropagation();
                     return $model->controller->redirect($extra['redirect']);
                 }
                 $result = $this->doDelete($entity, $extra);
             }
+
         }
+
         $extra['result'] = $result;
         $extra['forceDeleteRecord'] = $forceDeleteRecord;
 
         $event = $model->dispatchEvent('ControllerAction.Model.delete.afterAction', [$entity, $extra], $this);
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();
-            return $event->result;
+            return $event->getResult();
         }
 
         $mainEvent->stopPropagation();
@@ -335,14 +363,14 @@ class RemoveBehavior extends Behavior
         $request = $model->request;
         $extra['config']['form'] = ['type' => 'DELETE'];
         $extra['options'] = [
-            'keyField' => $model->primaryKey(),
+            'keyField' => $model->getPrimaryKey(),
             'valueField' => 'name'
         ];
 
         $event = $model->dispatchEvent('ControllerAction.Model.transfer.beforeAction', [$extra], $this);
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();
-            return $event->result;
+            return $event->getResult();
         }
 
         $result = true;
@@ -358,7 +386,7 @@ class RemoveBehavior extends Behavior
                 $event = $model->dispatchEvent('ControllerAction.Model.transfer.onInitialize', [$entity, $query, $extra], $this);
                 if ($event->isStopped()) {
                     $mainEvent->stopPropagation();
-                    return $event->result;
+                    return $event->getResult();
                 }
 
                 $notIdKeys = [];
@@ -372,7 +400,7 @@ class RemoveBehavior extends Behavior
                     ->toArray();
 
                 $convertOptions = [];
-                $primaryKey = $model->primaryKey();
+                $primaryKey = $model->getPrimaryKey();
 
                 foreach ($convertOptions as $value) {
                     $keysToEncode = $model->getIdKeys($model, $value, false);
@@ -400,7 +428,7 @@ class RemoveBehavior extends Behavior
             $event = $model->dispatchEvent('ControllerAction.Model.transfer.afterAction', [$entity, $extra], $this);
             if ($event->isStopped()) {
                 $mainEvent->stopPropagation();
-                return $event->result;
+                return $event->getResult();
             }
 
             // Need to review the following code
@@ -410,7 +438,7 @@ class RemoveBehavior extends Behavior
             }
             return $entity;
         } else if ($request->is('delete')) {
-            $primaryKey = $model->primaryKey();
+            $primaryKey = $model->getPrimaryKey();
             $idKeys = $model->getIdKeys($model, $request->data($this->alias()));
             if (!empty($idKeys)) {
                 try {
@@ -440,7 +468,7 @@ class RemoveBehavior extends Behavior
                 $event = $model->dispatchEvent('ControllerAction.Model.transfer.afterAction', [$entity, $extra], $this);
                 if ($event->isStopped()) {
                     $mainEvent->stopPropagation();
-                    return $event->result;
+                    return $event->getResult();
                 }
 
                 $mainEvent->stopPropagation();
@@ -462,9 +490,9 @@ class RemoveBehavior extends Behavior
         };
 
         $event = $model->dispatchEvent('ControllerAction.Model.onBeforeDelete', [$entity, $extra], $this);
-        if ($event->isStopped()) { return $event->result; }
-        if (is_callable($event->result)) {
-            $process = $event->result;
+        if ($event->isStopped()) { return $event->getResult(); }
+        if (is_callable($event->getResult())) {
+            $process = $event->getResult();
         }
 
         $options = $extra['options'];
@@ -490,7 +518,7 @@ class RemoveBehavior extends Behavior
                     break;
             }
         }
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $model->getPrimaryKey();
         $ids = [];
         if (is_array($primaryKey)) {
             foreach ($primaryKey as $key) {
@@ -501,17 +529,25 @@ class RemoveBehavior extends Behavior
         }
         $associations = [];
         foreach ($model->associations() as $assoc) {
-            if (in_array($assoc->dependent(), $dependent)) {
+            if (in_array($assoc->getDependent(), $dependent)) {
                 if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-                    if (!array_key_exists($assoc->alias(), $associations)) {
-                        $count = 0;
-                        $assocTable = $assoc;
+                    // POCOR-8683-start
+                    try{
+                        $assocTable = self::getDynamicTableInstance($assoc->getAlias());
+                    }catch (\Exception $exception){
+                        continue;
+                    }
+                    // POCOR-8683-end
+                    if (!array_key_exists($assoc->getAlias(), $associations)) {
+//                        $count = 0; // POCOR-8683-start
+                        $assocTable =$assoc;
                         if ($assoc->type() == 'manyToMany') {
-                            $assocTable = $assoc->junction();
+                            //$assocTable = $assoc->junction()->getAlias(); // POCOR-8683-start
+                            $assocTable = $assoc->junction(); // POCOR-8861
                         }
 //                        Log::write('debug', $assoc);
-                        $bindingKey = $assoc->bindingKey();
-                        $foreignKey = $assoc->foreignKey();
+                        $bindingKey = $assoc->getBindingKey();
+                        $foreignKey = $assoc->getForeignKey();
                         $conditions = [];
 
                         if (is_array($foreignKey)) {
@@ -527,10 +563,10 @@ class RemoveBehavior extends Behavior
                         $event = $model->dispatchEvent('ControllerAction.Model.getAssociatedRecordConditions', [$query, $assocTable, $extra], $this);
 
                         $count = $query->count();
-                        $title = $assoc->name();
+                        $title = $assoc->getName();
                         $event = $assoc->dispatchEvent('ControllerAction.Model.transfer.getModelTitle', [], $this);
-                        if (!is_null($event->result)) {
-                            $title = $event->result;
+                        if (!is_null($event->getResult())) {
+                            $title = $event->getResult();
                         }
 
                         $isAssociated = true;
@@ -541,7 +577,7 @@ class RemoveBehavior extends Behavior
                         }
                         if ($isAssociated) {
                             if($count){
-                            $associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+                            $associations[$assoc->getAlias()] = ['model' => $title, 'count' => $count];
                             }
                         }
                     }
@@ -670,4 +706,50 @@ class RemoveBehavior extends Behavior
         $model = $globalData['providers']['table'];
         return ((new DefaultPasswordHasher)->check($field, $Users->get($model->Auth->user('id'))->password));
     }
+
+    /*
+     * POCOR-8683
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
 }

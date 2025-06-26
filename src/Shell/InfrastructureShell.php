@@ -7,7 +7,7 @@ use Cake\Console\Shell;
 
 class InfrastructureShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
     }
@@ -129,7 +129,9 @@ class InfrastructureShell extends Shell
         ];
 
         while (!is_null($query)) {
-            $executedQuery = $query->page($pageCount++, $limit)->hydrate(false)->toArray();
+            $executedQuery = $query->page($pageCount++, $limit)
+                ->disableHydration() // POCOR-8533
+                ->toArray();
             if (empty($executedQuery)) {
                 break;
             }

@@ -10,7 +10,7 @@ use Cake\ORM\TableRegistry;
 
 class ReportCardsController extends AppController
 {
-    public function initialize() {
+    public function initialize(): void {
         parent::initialize();
         $this->loadComponent('Paginator');
     }
@@ -26,23 +26,36 @@ class ReportCardsController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         $header = __('Report Cards');
-        $header .= ' - ' . $model->getHeader($model->alias);
-        $this->Navigation->addCrumb('Report Cards', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
+        // POCOR-8970 start
+        $action = 'Templates';
+        $alias = $model->getAlias();
+        if ($alias == 'ReportCardProcesses') {
+            $header .= ' - ' . __('Processes');
+            $action = 'Processes';
+        }
+        if ($alias == 'ReportCards') {
+            $header .= ' - ' . __('Templates');
+            $action = 'Templates';
+        }
+        $this->Navigation->addCrumb('Report Cards',
+            ['plugin' => $this->getPlugin(),
+            'controller' => $this->getName(),
+            'action' => $action]);
+        // POCCR-8970 end
         $this->set('contentHeader', $header);
     }
 
     public function getReportCardTab($id)
     {
-        $encodedParam = $this->request->params['pass'][1];
-
+        $encodedParam = $this->request->getParam('pass')[1];
         $tabElements = [
             'ReportCards' => [
                 'text' => __('Overview'),
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Templates', 'view', $encodedParam]
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Templates', 'view', $encodedParam]
             ],
             'ReportCardEmail' => [
                 'text' => __('Email'),
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ReportCardEmail', 'view', $encodedParam]
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'ReportCardEmail', 'view', $encodedParam]
             ]
         ];
 
@@ -64,5 +77,11 @@ class ReportCardsController extends AppController
             $tabElements[$key]['url'] = array_merge($sessionUrl, ['action' => $key, 'index']);
         }
         return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 }

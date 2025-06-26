@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderTextBehavior extends RenderBehavior {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
         parent::initialize($config);
     }
 
@@ -18,9 +18,10 @@ class RenderTextBehavior extends RenderBehavior {
         $customField = $attr['customField'];
         $fieldId = $attr['customField']->id;
         $fieldValues = $attr['customFieldValues'];
+
         $savedId = null;
         $savedValue = null;
-        if (!empty($fieldValues) && array_key_exists($fieldId, $fieldValues)) {
+        if (isset($fieldValues[$fieldId])) { // POCOR-9066
             if (isset($fieldValues[$fieldId]['id'])) {
                 $savedId = $fieldValues[$fieldId]['id'];
             }
@@ -37,26 +38,28 @@ class RenderTextBehavior extends RenderBehavior {
                 // url
                 if ($customField->has('params') && !empty($customField->params)) {
                     $params = json_decode($customField->params, true);
-                    if (array_key_exists('url', $params)) {
-                        $value = $event->subject()->Html->link($savedValue, $savedValue, ['target' => '_blank', 'escape' => false]);
+                    if (isset($params['url'])) {
+                        $value = $event->getSubject()->Html->link($savedValue, $savedValue, ['target' => '_blank', 'escape' => false]);
                     }
                 }
                 // End
             }
         } else if ($action == 'edit') {
-            $form = $event->subject()->Form;
+            $form = $event->getSubject()->Form;
             $unlockFields = [];
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
             $options['type'] = 'string';
             if (!is_null($savedValue)) {
                 $options['value'] = $savedValue;
+            }else { // POCOR-9066
+                $options['value'] = '';
             }
             // input mask
             if ($customField->has('params') && !empty($customField->params)) {
                 $params = json_decode($customField->params, true);
-                if (array_key_exists('input_mask', $params) && !empty($params['input_mask'])) {
-                    $HtmlField = $event->subject();
+                if (isset($params['input_mask']) && !empty($params['input_mask'])) {
+                    $HtmlField = $event->getSubject();
                     $HtmlField->includes['jasny']['include'] = true;
                     $options['data-mask'] = $params['input_mask'];
                 }
@@ -65,13 +68,15 @@ class RenderTextBehavior extends RenderBehavior {
 
             $value .= $form->input($fieldPrefix.".text_value", $options);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
+
             $unlockFields[] = $fieldPrefix.".text_value";
             $unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
             if (!is_null($savedId)) {
+
                 $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
                 $unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
             }
-            $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
+        $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
         $event->stopPropagation();

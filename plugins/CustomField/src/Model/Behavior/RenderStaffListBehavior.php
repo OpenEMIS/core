@@ -14,17 +14,17 @@ use Cake\I18n\Date;
 use Cake\I18n\Time;
 
 /**
- * 
+ *
  * This class is used to render staff list in surveys
  * @author Megha Gupta <megha.gupta@mail.valuecoders.com>
- * 
+ *
  */
 class RenderStaffListBehavior extends RenderBehavior
 {
 
     use IdGeneratorTrait;
     use PickerTrait;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -40,9 +40,9 @@ class RenderStaffListBehavior extends RenderBehavior
         $staffsurveyAnswers = TableRegistry::get('Staff.StaffSurveyAnswers');
 
         $model = $this->_table;
-        $session = $model->request->session();
-        $registryAlias = $model->registryAlias();
-        $debugInfo = $model->alias() . ' #' . $entity->id . ' (Institution ID: ' . $entity->institution_id . ', Academic Period ID: ' . $entity->academic_period_id . ', Survey Form ID: ' . $entity->survey_form_id . ')';
+        $session = $model->request->getSession();
+        $registryAlias = $model->getRegistryAlias();
+        $debugInfo = $model->getAlias() . ' #' . $entity->id . ' (Institution ID: ' . $entity->institution_id . ', Academic Period ID: ' . $entity->academic_period_id . ', Survey Form ID: ' . $entity->survey_form_id . ')';
 
         $value = '';
 
@@ -52,7 +52,7 @@ class RenderStaffListBehavior extends RenderBehavior
         $formKey = $attr['attr']['formKey'];
         $fieldId = $customField->id;
 
-        $form = $event->subject()->Form;
+        $form = $event->getSubject()->Form;
         $fieldPrefix = $attr['model'] . '.institution_staff_surveys.' . $fieldId;
         $unlockFields = [];
         $tableHeaders = [];
@@ -63,7 +63,7 @@ class RenderStaffListBehavior extends RenderBehavior
         // Get Survey Form ID
         if ($customField->has('params') && !empty($customField->params)) {
             $params = json_decode($customField->params, true);
-            if (array_key_exists('survey_form_id', $params)) {
+            if (isset($params['survey_form_id'])) {
                 $formId = $params['survey_form_id'];
             }
         }
@@ -71,13 +71,13 @@ class RenderStaffListBehavior extends RenderBehavior
         //echo "<pre>";print_r(count($entity['institution_staff_surveys']));die;
         $session->write('SurveyTabCount', count($entity['institution_staff_surveys']));
         $tabCount = count($entity['institution_staff_surveys']);
-        $tabID = $attr['customField']['id']; 
+        $tabID = $attr['customField']['id'];
         if ($tabCount == 1) {
             if (!is_null($formId)) {
                 $questions = $CustomFormsFields
                     ->find('all')
                     ->innerJoin(
-                        [$CustomFields->alias() => $CustomFields->table()],
+                        [$CustomFields->getAlias() => $CustomFields->getTable()],
                         [
                             $CustomFields->aliasField('id = ') . $CustomFormsFields->aliasField($fieldKey),
                         ]
@@ -142,12 +142,12 @@ class RenderStaffListBehavior extends RenderBehavior
                             $rowInput = "";
 
                             if ($action == 'view') {
-                                $rowData[] = $event->subject->Html->link($staff->user->openemis_no, [
+                                $rowData[] = $event->getSubject()->Html->link($staff->user->openemis_no, [
                                     'plugin' => 'Institution',
                                     'controller' => 'Institutions',
                                     'action' => 'StaffUser',
                                     'view',
-                                    $model->paramsEncode(['id' => $staff->user->id])
+                                    $model->paramsEncode(['id' => $staff->user->id, 'staff_id' => $staff->user->id,'institution_id' => $institutionId])
                                 ]);
                                 $rowData[] = $staff->user->name;
                             } else if ($action == 'edit') {
@@ -276,7 +276,7 @@ class RenderStaffListBehavior extends RenderBehavior
                                         $attr['id'] = $attr['model'] . '_' . $attr['field'];
 
                                         $attr['fieldName'] = $cellPrefix . "." . $fieldTypes[$questionType];
-                                        if (array_key_exists('fieldName', $attr)) {
+                                        if (isset($attr['fieldName'])) {
                                             $attr['id'] = $this->_domId($attr['fieldName']);
                                         }
 
@@ -285,7 +285,7 @@ class RenderStaffListBehavior extends RenderBehavior
                                             $attr['default_date'] = $defaultDate;
                                         }
 
-                                        if (!array_key_exists('value', $attr)) {
+                                        if (!isset($attr['value'])) {
                                             if (!is_null($answerValue)) {
                                                 if ($answerValue instanceof Time || $answerValue instanceof Date) {
                                                     $attr['value'] = $answerValue->format('d-m-Y');
@@ -309,8 +309,8 @@ class RenderStaffListBehavior extends RenderBehavior
 
                                         $attr['null'] = !$attr['customField']['is_mandatory'];
 
-                                        $event->subject()->viewSet('datepicker', $attr);
-                                        $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
+                                        $event->getSubject()->viewSet('datepicker', $attr);
+                                        $cellInput = $event->getSubject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
                                         $cellValue = !is_null($answerValue) ? $this->_table->formatDate($answerValue) : '';
                                         unset($attr['value']); // Need to unset so that it will not effect other Date or Time elements.
                                         break;
@@ -349,7 +349,7 @@ class RenderStaffListBehavior extends RenderBehavior
                 $questions = $CustomFormsFields
                     ->find('all')
                     ->innerJoin(
-                        [$CustomFields->alias() => $CustomFields->table()],
+                        [$CustomFields->getAlias() => $CustomFields->getTable()],
                         [
                             $CustomFields->aliasField('id = ') . $CustomFormsFields->aliasField($fieldKey),
                         ]
@@ -413,12 +413,12 @@ class RenderStaffListBehavior extends RenderBehavior
                             $rowInput = "";
 
                             if ($action == 'view') {
-                                $rowData[] = $event->subject->Html->link($staff->user->openemis_no, [
+                                $rowData[] = $event->getSubject()->Html->link($staff->user->openemis_no, [
                                     'plugin' => 'Institution',
                                     'controller' => 'Institutions',
                                     'action' => 'StaffUser',
                                     'view',
-                                    $model->paramsEncode(['id' => $staff->user->id])
+                                    $model->paramsEncode(['id' => $staff->user->id, 'staff_id' => $staff->user->id,'institution_id' => $institutionId])
                                 ]);
                                 $rowData[] = $staff->user->name;
                             } else if ($action == 'edit') {
@@ -444,7 +444,7 @@ class RenderStaffListBehavior extends RenderBehavior
                                 // put back answer value for edit and validation failed
                                 if (isset($entity->institution_staff_surveys[$fieldId][$staffId][$questionId])) {
                                     //$answerObj = $entity->institution_staff_surveys[$fieldId][$staffId][$questionId];
-                                    
+
                                     $staffsurvy = $staffsurveys->find('all', ['conditions' => [
                                         'status_id' => $entity->status_id,
                                         'institution_id' => $entity->institution_id,
@@ -452,13 +452,13 @@ class RenderStaffListBehavior extends RenderBehavior
                                         'academic_period_id' => $entity->academic_period_id,
                                         'parent_form_id' => $entity->survey_form_id
                                     ]])->first();
-                                    
+
                                 }
 
                                 switch ($questionType) {
                                     case 'TEXT':
-                                        $existFieldOption = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $fieldId, 'institution_staff_survey_id' => $staffsurvy->id])->first(); 
-                                        $answerValue = !empty($existFieldOption->text_value) ? $existFieldOption->text_value : (!is_null($answerObj['text_value']) ? $answerObj['text_value'] : null); 
+                                        $existFieldOption = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $fieldId, 'institution_staff_survey_id' => $staffsurvy->id])->first();
+                                        $answerValue = !empty($existFieldOption->text_value) ? $existFieldOption->text_value : (!is_null($answerObj['text_value']) ? $answerObj['text_value'] : null);
 
 
                                         $cellOptions['type'] = 'string';
@@ -468,8 +468,8 @@ class RenderStaffListBehavior extends RenderBehavior
                                         break;
                                     case 'TEXTAREA':
 
-                                        $existFieldOption = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $fieldId, 'institution_staff_survey_id' => $staffsurvy->id])->first(); 
-                                        $answerValue = !empty($existFieldOption->textarea_value) ? $existFieldOption->textarea_value : (!is_null($answerObj['textarea_value']) ? $answerObj['textarea_value'] : null); 
+                                        $existFieldOption = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $fieldId, 'institution_staff_survey_id' => $staffsurvy->id])->first();
+                                        $answerValue = !empty($existFieldOption->textarea_value) ? $existFieldOption->textarea_value : (!is_null($answerObj['textarea_value']) ? $answerObj['textarea_value'] : null);
 
 
                                         $cellOptions['type'] = 'string';
@@ -479,8 +479,8 @@ class RenderStaffListBehavior extends RenderBehavior
                                         break;
                                     case 'TIME':
 
-                                        $existFieldOption = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $fieldId, 'institution_staff_survey_id' => $staffsurvy->id])->first(); 
-                                        $answerValue = !empty($existFieldOption->time_value) ? $existFieldOption->time_value : (!is_null($answerObj['time_value']) ? $answerObj['time_value'] : null); 
+                                        $existFieldOption = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $fieldId, 'institution_staff_survey_id' => $staffsurvy->id])->first();
+                                        $answerValue = !empty($existFieldOption->time_value) ? $existFieldOption->time_value : (!is_null($answerObj['time_value']) ? $answerObj['time_value'] : null);
 
 
                                         $cellOptions['type'] = 'string';
@@ -490,8 +490,8 @@ class RenderStaffListBehavior extends RenderBehavior
                                         break;
                                     case 'NUMBER':
 
-                                        $existFieldOption = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $fieldId, 'institution_staff_survey_id' => $staffsurvy->id])->first(); 
-                                        $answerValue = !empty($existFieldOption->number_value) ? $existFieldOption->number_value : (!is_null($answerObj['number_value']) ? $answerObj['number_value'] : null); 
+                                        $existFieldOption = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $fieldId, 'institution_staff_survey_id' => $staffsurvy->id])->first();
+                                        $answerValue = !empty($existFieldOption->number_value) ? $existFieldOption->number_value : (!is_null($answerObj['number_value']) ? $answerObj['number_value'] : null);
 
 
                                         $cellOptions['type'] = 'number';
@@ -501,8 +501,8 @@ class RenderStaffListBehavior extends RenderBehavior
                                         break;
                                     case 'DECIMAL':
 
-                                        $existFieldOption = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $fieldId, 'institution_staff_survey_id' => $staffsurvy->id])->first(); 
-                                        $answerValue = !empty($existFieldOption->decimal_value) ? $existFieldOption->decimal_value : (!is_null($answerObj['decimal_value']) ? $answerObj['decimal_value'] : null); 
+                                        $existFieldOption = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $fieldId, 'institution_staff_survey_id' => $staffsurvy->id])->first();
+                                        $answerValue = !empty($existFieldOption->decimal_value) ? $existFieldOption->decimal_value : (!is_null($answerObj['decimal_value']) ? $answerObj['decimal_value'] : null);
 
                                         $cellOptions['type'] = 'number';
                                         $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
@@ -520,8 +520,8 @@ class RenderStaffListBehavior extends RenderBehavior
                                         $cellValue = !is_null($answerValue) ? $answerValue : '';
                                         break;
                                     case 'DROPDOWN':
-                                        $existFieldOption = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $fieldId, 'institution_staff_survey_id' => $staffsurvy->id])->first(); 
-                                        $answerValue = !empty($existFieldOption->number_value) ? $existFieldOption->number_value : (!is_null($answerObj['number_value']) ? $answerObj['number_value'] : null); 
+                                        $existFieldOption = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $fieldId, 'institution_staff_survey_id' => $staffsurvy->id])->first();
+                                        $answerValue = !empty($existFieldOption->number_value) ? $existFieldOption->number_value : (!is_null($answerObj['number_value']) ? $answerObj['number_value'] : null);
 
 
 
@@ -544,7 +544,7 @@ class RenderStaffListBehavior extends RenderBehavior
                                         // for view
                                         $cellValue = !is_null($answerValue) ? $dropdownOptions[$answerValue] : '';
                                         break;
-                                    
+
                                     case 'DATE':
                                         $answerObj = $entity->institution_staff_surveys[$fieldId][$staffId][$questionId];
                                         $answerValue = !is_null($answerObj['date_value']) ? $answerObj['date_value'] : null;
@@ -560,7 +560,7 @@ class RenderStaffListBehavior extends RenderBehavior
                                         $attr['id'] = $attr['model'] . '_' . $attr['field'];
 
                                         $attr['fieldName'] = $cellPrefix . "." . $fieldTypes[$questionType];
-                                        if (array_key_exists('fieldName', $attr)) {
+                                        if (isset($attr['fieldName'])) {
                                             $attr['id'] = $this->_domId($attr['fieldName']);
                                         }
 
@@ -569,7 +569,7 @@ class RenderStaffListBehavior extends RenderBehavior
                                             $attr['default_date'] = $defaultDate;
                                         }
 
-                                        if (!array_key_exists('value', $attr)) {
+                                        if (!isset($attr['value'])) {
                                             if (!is_null($answerValue)) {
                                                 if ($answerValue instanceof Time || $answerValue instanceof Date) {
                                                     $attr['value'] = $answerValue->format('d-m-Y');
@@ -579,7 +579,7 @@ class RenderStaffListBehavior extends RenderBehavior
                                                         $attr['value'] = date('d-m-Y', strtotime($answerValue));
                                                     }
                                                     //POCOR-7858 end
-                                                  
+
                                                 }
                                             } else if ($attr['default_date']) {
                                                 $attr['value'] = date('d-m-Y');
@@ -594,8 +594,8 @@ class RenderStaffListBehavior extends RenderBehavior
 
                                         $attr['null'] = !$attr['customField']['is_mandatory'];
 
-                                        $event->subject()->viewSet('datepicker', $attr);
-                                        $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
+                                        $event->getSubject()->viewSet('datepicker', $attr);
+                                        $cellInput = $event->getSubject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
                                         $cellValue = !is_null($answerValue) ? $this->_table->formatDate($answerValue) : '';
                                         unset($attr['value']); // Need to unset so that it will not effect other Date or Time elements.
                                         break;
@@ -636,9 +636,9 @@ class RenderStaffListBehavior extends RenderBehavior
         $attr['tableCells'] = $tableCells;
 
         if ($action == 'view') {
-            $value = $event->subject()->renderElement('CustomField.Render/' . $fieldType, ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('CustomField.Render/' . $fieldType, ['attr' => $attr]);
         } else if ($action == 'edit') {
-            $value = $event->subject()->renderElement('CustomField.Render/' . $fieldType, ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('CustomField.Render/' . $fieldType, ['attr' => $attr]);
             $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
@@ -648,23 +648,23 @@ class RenderStaffListBehavior extends RenderBehavior
 
     public function formatStaffListEntity(Event $event, Entity $entity, ArrayObject $settings)
     {
-        
+
         $surveysArray = $entity->has('institution_staff_surveys') ? $entity->institution_staff_surveys : [];
-        
+
         if (isset($entity->id)) {
-            
+
             $fieldKey = $settings['fieldKey'];
             $formKey = $settings['formKey'];
             $customField = $settings['customField'];
 
             $params = json_decode($customField->params, true);
-          
+
             if (array_key_exists($formKey, $params)) {
-                
+
                 $staffsurveys = TableRegistry::get('Staff.StaffSurveys');
-               
+
                 $staffsurveyAnswers = TableRegistry::get('Staff.StaffSurveyAnswers');
-                
+
                 $status = $entity->status_id;
                 $institutionId = $entity->institution_id;
                 $periodId = $entity->academic_period_id;
@@ -681,7 +681,7 @@ class RenderStaffListBehavior extends RenderBehavior
                         $staffsurveys->aliasField($formKey) => $formId,
                         $staffsurveys->aliasField('parent_form_id') => $entity->survey_form_id
                     ])->all();
-                   
+
                 if (!$surveyResults->isEmpty()) {
                     foreach ($surveyResults as $survey) {
                         $answersArray = [];
@@ -705,8 +705,8 @@ class RenderStaffListBehavior extends RenderBehavior
         }
 
         $model = $this->_table;
-        $session = $model->request->session();
-        $registryAlias = $model->registryAlias();
+        $session = $model->request->getSession();
+        $registryAlias = $model->getRegistryAlias();
         $sessionKey = "$registryAlias.staff_surveys";
         $session->write($sessionKey, $surveysArray);
 
@@ -754,7 +754,7 @@ class RenderStaffListBehavior extends RenderBehavior
                     if (!empty($surveyIds)) {
                         $staffsurveyAnswers->deleteAll([
                             $staffsurveyAnswers->aliasField('institution_staff_survey_id IN ') => $surveyIds ,
-                            $staffsurveyAnswers->aliasField('parent_survey_question_id') => $parentFormId 
+                            $staffsurveyAnswers->aliasField('parent_survey_question_id') => $parentFormId
                         ]);
                     }
                     // End
@@ -770,7 +770,7 @@ class RenderStaffListBehavior extends RenderBehavior
                                 'staff_id' => $staffId
                             ];
                             // for edit record
-                            if (array_key_exists('id', $staffObj)) {
+                            if (isset($staffObj['id'])) {
                                 $surveyData['id'] = $staffObj['id'];
                                 unset($staffObj['id']);
                             }
@@ -785,12 +785,12 @@ class RenderStaffListBehavior extends RenderBehavior
                                 $textareaValue = isset($answerObj['textarea_value']) && strlen($answerObj['textarea_value']) > 0 ? $answerObj['textarea_value'] : null;
                                 $dateValue = isset($answerObj['date_value']) && strlen($answerObj['date_value']) > 0 ? $answerObj['date_value'] : null;
                                 $timeValue = isset($answerObj['time_value']) && strlen($answerObj['time_value']) > 0 ? $answerObj['time_value'] : null;
-                                
-                                $duplicateData11 = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $parentIdd, 'institution_staff_survey_id' => $surveyData['id']])->toArray();
+
+                                $duplicateData11 = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $parentIdd, 'institution_staff_survey_id IS' => $surveyData['id']])->toArray();
                                 foreach ($duplicateData11 as $dup) {
                                     $staffsurveyAnswers->delete($dup);
                                 }
-                                
+
                                 if (!is_null($textValue) || !is_null($numberValue) || !is_null($decimalValue) || !is_null($textareaValue) || !is_null($dateValue) || !is_null($timeValue)) {
                                     $answerObj = array_merge($answerObj, [
                                         $fieldKey => $questionId
@@ -798,7 +798,7 @@ class RenderStaffListBehavior extends RenderBehavior
 
                                     $answers[] = $answerObj;
                                     $answers[$ir]['parent_survey_question_id'] = $parentIdd;
-                                    $ir++;                               
+                                    $ir++;
                                  }
                             }
                             $surveyData['custom_field_values'] = $answers;
@@ -806,14 +806,14 @@ class RenderStaffListBehavior extends RenderBehavior
                             // save staff by staff
                             if ($staffsurveys->save($surveyEntity)) {
                             } else {
-                                Log::write('debug', $surveyEntity->errors());
+                                Log::write('debug', $surveyEntity->getErrors());
                             }
                         }
                     }
                 }
             }
         } else {
-           
+
             if ($entity->has('institution_staff_surveys')) {
                 $fieldKey = 'survey_question_id';
                 $formKey = 'survey_form_id';
@@ -824,7 +824,7 @@ class RenderStaffListBehavior extends RenderBehavior
                 $institutionId = $entity->institution_id;
                 $periodId = $entity->academic_period_id;
                 $parentFormId = $entity->{$formKey};
-                $parentIdd = array_keys($entity['institution_staff_surveys'])[0]; 
+                $parentIdd = array_keys($entity['institution_staff_surveys'])[0];
 
                 foreach ($entity->institution_staff_surveys as $fieldId => $fieldObj) {
                     $formId = $fieldObj[$formKey];
@@ -850,7 +850,7 @@ class RenderStaffListBehavior extends RenderBehavior
                     if (!empty($surveyIds)) {
                         $staffsurveyAnswers->deleteAll([
                             $staffsurveyAnswers->aliasField('institution_staff_survey_id IN ') => $surveyIds,
-                            $staffsurveyAnswers->aliasField('parent_survey_question_id') => $parentFormId 
+                            $staffsurveyAnswers->aliasField('parent_survey_question_id') => $parentFormId
                         ]);
                     }
                     // End
@@ -866,7 +866,7 @@ class RenderStaffListBehavior extends RenderBehavior
                                 'staff_id' => $staffId
                             ];
                             // for edit record
-                            if (array_key_exists('id', $staffObj)) {
+                            if (isset($staffObj['id'])) {
                                 $surveyData['id'] = $staffObj['id'];
                                 unset($staffObj['id']);
                             }
@@ -881,19 +881,19 @@ class RenderStaffListBehavior extends RenderBehavior
                                 $textareaValue = isset($answerObj['textarea_value']) && strlen($answerObj['textarea_value']) > 0 ? $answerObj['textarea_value'] : null;
                                 $dateValue = isset($answerObj['date_value']) && strlen($answerObj['date_value']) > 0 ? $answerObj['date_value'] : null;
                                 $timeValue = isset($answerObj['time_value']) && strlen($answerObj['time_value']) > 0 ? $answerObj['time_value'] : null;
-                                
-                                $duplicateData11 = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $parentIdd, 'institution_staff_survey_id' => $surveyData['id']])->toArray();
+
+                                $duplicateData11 = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $parentIdd, 'institution_staff_survey_id IS' => $surveyData['id']])->toArray();
                                 foreach ($duplicateData11 as $dup) {
                                     $staffsurveyAnswers->delete($dup);
                                 }
-                                
+
                                 if (!is_null($textValue) || !is_null($numberValue) || !is_null($decimalValue) || !is_null($textareaValue) || !is_null($dateValue) || !is_null($timeValue)) {
                                     $answerObj = array_merge($answerObj, [
                                         $fieldKey => $questionId
                                     ]);
 
                                     $answers[] = $answerObj;
-                                    $answers[$ir]['parent_survey_question_id'] = $parentIdd; 
+                                    $answers[$ir]['parent_survey_question_id'] = $parentIdd;
                                 }
                                 $ir++;
                             }
@@ -903,7 +903,7 @@ class RenderStaffListBehavior extends RenderBehavior
                             // save staff by staff
                             if ($staffsurveys->save($surveyEntity)) {
                             } else {
-                                Log::write('debug', $surveyEntity->errors());
+                                Log::write('debug', $surveyEntity->getErrors());
                             }
                         }
                     }

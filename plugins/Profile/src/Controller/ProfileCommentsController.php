@@ -24,7 +24,7 @@ class ProfileCommentsController extends BaseController
         return true;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         $userId = $this->Auth->user('id');
@@ -36,6 +36,6 @@ class ProfileCommentsController extends BaseController
         $page->setHeader($userName . ' - Comments');
         $page->setQueryString('security_user_id', $userId);
         $this->setBreadCrumb(['userId' => $userId, 'userName' => $userName]);
-        $this->setupTabElements(['userId' => $userId, 'userName' => $userName]);
+//        $this->setupUserTabElements(['userId' => $userId, 'userName' => $userName]);
     }
 }

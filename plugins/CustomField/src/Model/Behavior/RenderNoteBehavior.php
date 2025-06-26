@@ -9,7 +9,7 @@ use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderNoteBehavior extends RenderBehavior
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -40,12 +40,13 @@ class RenderNoteBehavior extends RenderBehavior
                 $value = nl2br($displayValue);
             }
         } else if ($action == 'edit') {
-            $form = $event->subject()->Form;
+            $form = $event->getSubject()->Form;
             $unlockFields = [];
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
             $options['type'] = 'textarea';
             $options['disabled'] = 'disabled';
+            $options['style'] = 'height: 200px'; //POCOR-8956
             if (!is_null($displayValue)) {
                 $options['value'] = $displayValue;
             }

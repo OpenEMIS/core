@@ -1,22 +1,22 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Database\Type;
 
-use Cake\Database\Driver;
-use Cake\Database\Type;
-use Cake\Database\TypeInterface;
+use Cake\Database\DriverInterface;
 use InvalidArgumentException;
 use PDO;
 
@@ -25,37 +25,51 @@ use PDO;
  *
  * Use to convert integer data between PHP and the database types.
  */
-class IntegerType extends Type implements TypeInterface
+class IntegerType extends BaseType implements BatchCastingInterface
 {
+    /**
+     * Checks if the value is not a numeric value
+     *
+     * @throws \InvalidArgumentException
+     * @param mixed $value Value to check
+     * @return void
+     */
+    protected function checkNumeric($value): void
+    {
+        // if (!is_numeric($value)) {
+        //     throw new InvalidArgumentException(sprintf(
+        //         'Cannot convert value of type `%s` to integer',
+        //         getTypeName($value)
+        //     ));
+        // }
+    }
 
     /**
      * Convert integer data into the database format.
      *
      * @param mixed $value The value to convert.
-     * @param \Cake\Database\Driver $driver The driver instance to convert with.
-     * @return int
+     * @param \Cake\Database\DriverInterface $driver The driver instance to convert with.
+     * @return int|null
      */
-    public function toDatabase($value, Driver $driver)
+    public function toDatabase($value, DriverInterface $driver): ?int
     {
         if ($value === null || $value === '') {
             return null;
         }
 
-        if (!is_scalar($value)) {
-            throw new InvalidArgumentException('Cannot convert value to integer');
-        }
+        $this->checkNumeric($value);
 
-        return (int)$value;
+        return (int) $value;
     }
 
     /**
-     * Convert integer values to PHP integers
+     * {@inheritDoc}
      *
      * @param mixed $value The value to convert.
-     * @param \Cake\Database\Driver $driver The driver instance to convert with.
-     * @return int
+     * @param \Cake\Database\DriverInterface $driver The driver instance to convert with.
+     * @return int|null
      */
-    public function toPHP($value, Driver $driver)
+    public function toPHP($value, DriverInterface $driver): ?int
     {
         if ($value === null) {
             return null;
@@ -65,33 +79,48 @@ class IntegerType extends Type implements TypeInterface
     }
 
     /**
+     * @inheritDoc
+     */
+    public function manyToPHP(array $values, array $fields, DriverInterface $driver): array
+    {
+        foreach ($fields as $field) {
+            if (!isset($values[$field])) {
+                continue;
+            }
+
+            $this->checkNumeric($values[$field]);
+
+            $values[$field] = (int)$values[$field];
+        }
+
+        return $values;
+    }
+
+    /**
      * Get the correct PDO binding type for integer data.
      *
      * @param mixed $value The value being bound.
-     * @param \Cake\Database\Driver $driver The driver.
+     * @param \Cake\Database\DriverInterface $driver The driver.
      * @return int
      */
-    public function toStatement($value, Driver $driver)
+    public function toStatement($value, DriverInterface $driver): int
     {
         return PDO::PARAM_INT;
     }
 
     /**
-     * Marshalls request data into PHP floats.
+     * Marshals request data into PHP integers.
      *
      * @param mixed $value The value to convert.
      * @return int|null Converted value.
      */
-    public function marshal($value)
+    public function marshal($value): ?int
     {
         if ($value === null || $value === '') {
             return null;
         }
-        if (is_numeric($value) || ctype_digit($value)) {
+        if (is_numeric($value)) {
             return (int)$value;
-        }
-        if (is_array($value)) {
-            return 1;
         }
 
         return null;

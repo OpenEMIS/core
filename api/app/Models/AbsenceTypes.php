@@ -10,5 +10,10 @@ use Illuminate\Database\Eloquent\Model;
 class AbsenceTypes extends Model
 {
     use HasFactory;
+    // ✅ Allow mass assignment
+    protected $fillable = ['id', 'code', 'name'];
+    // ✅ Disable Laravel's default timestamps
+    public $timestamps = false;
     protected $table = "absence_types";
+
 }

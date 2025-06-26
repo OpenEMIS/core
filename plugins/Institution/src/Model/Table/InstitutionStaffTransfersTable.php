@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
+use Cake\Log\Log; // POCOR-8532
 
 // This file serves as an abstract class for StaffTransferIn and StaffTransferOut
 
@@ -29,9 +30,9 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     // fte options
     public $fteOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff_transfers');
+        $this->setTable('institution_staff_transfers');
         parent::initialize($config);
 
         // Mandatory data
@@ -54,7 +55,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('User.AdvancedNameSearch');
 
-        $this->fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
+        $this->fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1.00' => '100%'];
     }
 
     private $workflowEvents = [
@@ -67,7 +68,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         ]
     ];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
@@ -97,7 +98,12 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $StaffTable = TableRegistry::get('Institution.Staff');
         $StaffStatusesTable = TableRegistry::get('Staff.StaffStatuses');
         $entity = $this->get($id);
-        $institutionStaffEntity = $StaffTable->find('all',['conditions'=>['staff_id'=>$entity->staff_id]])->first(); //POCOR-7311
+        $institutionStaffEntity = $StaffTable->find('all',
+            ['conditions'=>
+                ['staff_id'=>$entity->staff_id]
+            ])->first(); //POCOR-7311
+//        Log::debug(print_r(['entity' => $entity], true));
+//        Log::debug(print_r(['institutionStaffEntity' => $institutionStaffEntity], true));
 
         // add new institution staff record in new institution
         $incomingStaff = [
@@ -116,26 +122,37 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
             $incomingStaff['end_date'] = $entity->new_end_date;
             $incomingStaff['end_year'] = $entity->new_end_date->year;
         }
-        $newEntity = $StaffTable->newEntity($incomingStaff, ['validate' => 'AllowPositionType']);
+//        Log::debug(print_r(['incomingStaff' => $incomingStaff], true));
 
-        if ($StaffTable->save($newEntity)) {
+        $newEntity = $StaffTable->newEntity($incomingStaff, ['validate' => 'AllowPositionType']);
+//        Log::debug(print_r(['new Entity' => $newEntity], true));
+        $savedEntity = $StaffTable->save($newEntity); // POCOR-8532
+//        Log::debug(print_r(['saved Entity' => $savedEntity], true));
+
+        if ($savedEntity) {
+//            Log::debug(print_r($savedEntity, true));
             if (!empty($entity->previous_institution_staff_id)) {
                 $transferType = $entity->transfer_type;
-                $oldRecord = $StaffTable->get($entity->previous_institution_staff_id);
+                $previous_institution_staff_id = $entity->previous_institution_staff_id; // POCOR-8532
+                $oldRecord = $StaffTable->get($previous_institution_staff_id);
+                $oldRecord->unset('newFTE'); // POCOR-8532
+//                Log::debug(print_r(['oldRecord' => $oldRecord], true));
 
                 if ($transferType == self::FULL_TRANSFER) {
                      // end previous institution staff record
                      $oldRecord->end_date = $entity->previous_end_date;
-                     $StaffTable->save($oldRecord);
-                     $this->removeStaffFromSecurityGroups($oldRecord);
+
+                     $oldRecord = $StaffTable->save($oldRecord); // POCOR-8532
+                     $this->removeStaffFromSecurityGroups($previous_institution_staff_id); // POCOR-8532
 
                 } else if ($transferType == self::PARTIAL_TRANSFER) {
                     // end previous institution staff record
                     $oldRecord->end_date = $entity->previous_end_date;
-                    $StaffTable->save($oldRecord);
+                    $savedOlderEntity = $StaffTable->save($oldRecord); // POCOR-8532
+//                    Log::debug(print_r(['savedOlderEntity' => $savedOlderEntity], true)); // POCOR-8532
 
                     // add new institution staff record in previous institution
-                    $newRecord = [
+                    $newerRecord = [ // POCOR-8532
                         'FTE' => $entity->previous_FTE,
                         'start_date' => $entity->previous_effective_date,
                         'start_year' => $entity->previous_effective_date->year,
@@ -146,8 +163,12 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
                         'institution_position_id' => $oldRecord->institution_position_id,
                         'staff_position_grade_id' => $institutionStaffEntity->staff_position_grade_id //POCOR-7311
                     ];
-                    $newEntity = $StaffTable->newEntity($newRecord, ['validate' => 'AllowPositionType']);
-                    $StaffTable->save($newEntity);
+//                    Log::debug(print_r(['newerRecord' => $newerRecord], true));
+                    $newerEntity = $StaffTable->newEntity($newerRecord, ['validate' => 'AllowPositionType']);
+//                    Log::debug(print_r(['newerEntity' => $newerEntity], true));
+
+                    $savedNewerEntity =  $StaffTable->save($newerEntity); // POCOR-8532
+//                    Log::debug(print_r(['savedNewerEntity' => $savedNewerEntity], true));
                 }
             }
         }
@@ -157,7 +178,9 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     {
         $canAddButtons = false;
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
-        $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $requestInstitutionId = $this->request->getParam('institutionId');
+        $currentInstitutionId = isset($requestInstitutionId) ? $this->paramsDecode($requestInstitutionId)['id'] : $getInstitutionId;
 
         $ConfigStaffTransfersTable = TableRegistry::get('Configuration.ConfigStaffTransfers');
         $isRestricted = $ConfigStaffTransfersTable->checkStaffTransferRestricted($entity->previous_institution_id, $entity->new_institution_id);
@@ -208,7 +231,10 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     public function onGetStatusId(Event $event, Entity $entity)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
-        $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $requestInstitutionId = $this->request->getParam('institutionId');
+        $currentInstitutionId = isset($requestInstitutionId) ? $this->paramsDecode($requestInstitutionId)['id'] : $getInstitutionId;
+        //$currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
 
         $belongsToCurrentInstitution = ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) || ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id);
 
@@ -223,7 +249,10 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     public function onGetWorkflowStatus(Event $event, Entity $entity)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
-        $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $requestInstitutionId = $this->request->getParam('institutionId');
+        $currentInstitutionId = isset($requestInstitutionId) ? $this->paramsDecode($requestInstitutionId)['id'] : $getInstitutionId;
+       //$currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
 
         $belongsToCurrentInstitution = ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) || ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id);
 
@@ -274,6 +303,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+//        Log::debug(print_r([__FUNCTION__ => $entity], true));
         foreach($entity->shifts_id['_ids'] as $shiftId)
         {
             $shiftData = array( 'staff_id'=> $entity->staff_id ,'shift_id'=> $shiftId);
@@ -281,7 +311,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
             $this->InstitutionStaffShifts->save($saveShift);
         }
 
-        if (!$entity->isNew() && $entity->dirty('status_id')) {
+        if (!$entity->isNew() && $entity->getDirty('status_id')) {
             if (!$entity->all_visible) {
                 $currentInstitutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
                 $previousInstitutionOwner = $this->getWorkflowStepsParamValue($entity->getOriginal('status_id'), 'institution_owner');
@@ -297,7 +327,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     {
         $institutionId = $options['institution_id'];
         $incomingInstitution = self::INCOMING;
-        $pending = array_key_exists('pending_records', $options) ? $options['pending_records'] : false;
+        $pending = isset($options['pending_records']) ? $options['pending_records'] : false;
 
         $query
             ->matching('Statuses.WorkflowStepsParams', function ($q) {
@@ -321,7 +351,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     {
         $institutionId = $options['institution_id'];
         $outgoingInstitution = self::OUTGOING;
-        $pending = array_key_exists('pending_records', $options) ? $options['pending_records'] : false;
+        $pending = isset($options['pending_records']) ? $options['pending_records'] : false;
 
         $query
             ->matching('Statuses.WorkflowStepsParams', function ($q) {
@@ -342,19 +372,21 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         return $query;
     }
 
-    /**
-     * @param \Cake\Datasource\EntityInterface $oldRecord
-     */
-    private function removeStaffFromSecurityGroups(\Cake\Datasource\EntityInterface $oldRecord)
+    // POCOR-8532: refactor
+    private function removeStaffFromSecurityGroups($previous_institution_staff_id)
     {
+        $StaffTable = TableRegistry::get('Institution.Staff'); // POCOR-8532
+        $oldRecord = $StaffTable->get($previous_institution_staff_id); // POCOR-8532
         $security_group_user_id = $oldRecord->security_group_user_id;
-        $StaffTable = TableRegistry::get('Institution.Staff');
         $oldRecord->security_group_user_id = null;
+        $oldRecord->unset('newFTE'); // POCOR-8532
         $StaffTable->save($oldRecord);
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-        $SecurityGroupUsers->deleteAll([
-            $SecurityGroupUsers->aliasField($SecurityGroupUsers->primaryKey()) => $security_group_user_id
-        ]);
+        if ($security_group_user_id) { // POCOR-8532
+            $SecurityGroupUsers->deleteAll([
+                $SecurityGroupUsers->aliasField($SecurityGroupUsers->getPrimaryKey()) => $security_group_user_id
+            ]);
+        }
     }
 
 }

@@ -355,18 +355,18 @@ trait StudentPdfReportTrait
             unset($mdpf);
         }
         // Merge all the pdf that belongs to one report
-		if(!empty($student_id)) {
-			$fileName = $this->config('filename') . '_' . $student_id;
-		} else {
-			$fileName = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His');
-		}
+        if(!empty($student_id)) {
+            $fileName = $this->getConfig('filename') . '_' . $student_id;
+        } else {
+            $fileName = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His');
+        }
        
         Log::write('debug', '----------------------fileName---------------------: ');
         Log::write('debug', $fileName);
 
         $this->mergePDFFiles($filePaths, $fileName, $fileName);
         // // Remove the temp file that is converted from excel object and its successfully converted to pdf
-        if ($this->config('purge')) {
+        if ($this->getConfig('purge')) {
             foreach ($filePaths as $filepath) {
                 // delete excel file after successfully converted to pdf
                 $this->deleteFile($filepath);
@@ -374,7 +374,7 @@ trait StudentPdfReportTrait
         }
     }
 
-    private function mergePDFFiles(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
+    /*private function mergePDFFiles(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
     {
         $mpdf = new \Mpdf\Mpdf();
         $mpdf->SetTitle($title);
@@ -408,15 +408,58 @@ trait StudentPdfReportTrait
                 }
             }
         }
-		
-        $file_path = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . $outFile.'.pdf';
-        $pdf_file_path = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
+        
+        $file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile.'.pdf';
+        $pdf_file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
         $content = $mpdf->Output($file_path, "S");
-		$fp = fopen($pdf_file_path . $outFile . ".txt","wb");
-		fwrite($fp,$content);
-		fclose($fp);
+        $fp = fopen($pdf_file_path . $outFile . ".txt","wb");
+        fwrite($fp,$content);
+        fclose($fp);
+        unset($mpdf);
+    }*/
+
+    // POCOR-8298
+
+    private function mergePDFFiles(array $filenames, $outFile, $title = '', $author = '', $subject = '')
+    {
+        // Create a new Mpdf instance
+        $mpdf = new \Mpdf\Mpdf();
+        $mpdf->SetTitle($title);
+        $mpdf->SetAuthor($author);
+        $mpdf->SetSubject($subject);
+
+        // Loop through each file and import its pages
+        foreach ($filenames as $curFile) {
+            if (file_exists($curFile)) {
+                $pageCount = $mpdf->SetSourceFile($curFile);
+                for ($p = 1; $p <= $pageCount; $p++) {
+                    $tplId = $mpdf->ImportPage($p);
+                    $wh = $mpdf->getTemplateSize($tplId);
+                    $orientation = ($wh['w'] > $wh['h']) ? 'L' : 'P';
+                    $mpdf->AddPage($orientation);
+                    $mpdf->UseTemplate($tplId);
+                    // Apply CSS styling for font size and right border
+                    $mpdf->WriteHTML('<div style="font-size: 10pt; border-right: 1px solid black;"></div>', \Mpdf\HTMLParserMode::HTML_BODY);
+                }
+            }
+        }
+
+        // Define file paths
+        $file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile . '.pdf';
+        $pdf_file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
+
+        // Output the merged PDF to the specified file
+        $content = $mpdf->Output($file_path, "S");
+
+        // Save the PDF content to a text file
+        $fp = fopen($pdf_file_path . $outFile . ".txt", "wb");
+        fwrite($fp, $content);
+        fclose($fp);
+
+        // Clean up
         unset($mpdf);
     }
+
 
 }
 ?>

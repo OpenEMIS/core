@@ -9,8 +9,8 @@ return [
      * Development Mode:
      * true: Errors and warnings shown.
      */
-    //'debug' => filter_var(env('DEBUG', false), FILTER_VALIDATE_BOOLEAN),
-    'debug' => false,
+    'debug' => filter_var(env('DEBUG', false), FILTER_VALIDATE_BOOLEAN),
+    //'debug' => true,
 
     /**
      * Configure basic information about the application.
@@ -76,7 +76,7 @@ return [
      * enable timestamping regardless of debug value.
      */
     'Asset' => [
-        // 'timestamp' => true,
+         'timestamp' => true,
     ],
 
     /**
@@ -113,6 +113,15 @@ return [
             'className' => 'File',
             'prefix' => 'myapp_cake_model_',
             'path' => CACHE . 'models/',
+            'serialize' => true,
+            'duration' => '+2 minutes',
+            'url' => env('CACHE_CAKEMODEL_URL', null),
+        ],
+
+        '_cake_routes_' => [
+            'className' => 'File',
+            'prefix' => 'myapp_cake_routes_',
+            'path' => CACHE . 'routes/',
             'serialize' => true,
             'duration' => '+2 minutes',
             'url' => env('CACHE_CAKEMODEL_URL', null),
@@ -158,12 +167,76 @@ return [
      *   the memory limit by when a fatal error is encountered. This allows
      *   breathing room to complete logging or error handling.
      */
+    //POCOR-8626 -- Added ignoredDeprecationPaths for deprecation warnings.
     'Error' => [
         'errorLevel' => E_ALL & ~E_DEPRECATED & ~E_NOTICE & ~E_WARNING ,
         'exceptionRenderer' => 'Cake\Error\ExceptionRenderer',
         'skipLog' => [],
         'log' => true,
         'trace' => true,
+        'ignoredDeprecationPaths' => [
+            'config/routes.php',
+            'plugins/User/config/routes.php',
+            'plugins/Archive/config/routes.php',
+            'plugins/GuardianNav/config/routes.php',
+            'plugins/Meal/config/routes.php',
+            'plugins/ProfileTemplate/config/routes.php',
+            'plugins/MoodleApi/config/routes.php',
+            'plugins/SpecialNeeds/config/routes.php',
+            'plugins/Email/config/routes.php',
+            'plugins/Guardian/config/routes.php',
+            'plugins/Attendance/config/routes.php',
+            'plugins/StaffAppraisal/config/routes.php',
+            'plugins/Theme/config/routes.php',
+            'plugins/Outcome/config/routes.php',
+            'plugins/Installer/config/routes.php',
+            'plugins/Transport/config/routes.php',
+            'plugins/Profile/config/routes.php',
+            'plugins/ReportCard/config/routes.php',
+            'plugins/Competency/config/routes.php',
+            'plugins/CustomExcel/config/routes.php',
+            'plugins/Configuration/config/routes.php',
+            'plugins/Examination/config/routes.php',
+            'plugins/InstitutionRepeater/config/routes.php',
+            'plugins/System/config/routes.php',
+            'plugins/Cache/config/routes.php',
+            'plugins/Health/config/routes.php',
+            'plugins/Map/config/routes.php',
+            'plugins/Training/config/routes.php',
+            'plugins/Log/config/routes.php',
+            'plugins/API/config/routes.php',
+            'plugins/Import/config/routes.php',
+            'plugins/Error/config/routes.php',
+            'plugins/Infrastructure/config/routes.php',
+            'plugins/StaffCustomField/config/routes.php',
+            'plugins/StudentCustomField/config/routes.php',
+            'plugins/InstitutionCustomField/config/routes.php',
+            'plugins/Risk/config/routes.php',
+            'plugins/CustomField/config/routes.php',
+            'plugins/Workflow/config/routes.php',
+            'plugins/Rubric/config/routes.php',
+            'plugins/Rubric/config/routes.php',
+            'plugins/Rest/config/routes.php',
+            'plugins/Survey/config/routes.php',
+            'plugins/Security/config/routes.php',
+            'plugins/Textbook/config/routes.php',
+            'plugins/Assessment/config/routes.php',
+            'plugins/Education/config/routes.php',
+            'plugins/Staff/config/routes.php',
+            'plugins/Student/config/routes.php',
+            'plugins/FieldOption/config/routes.php',
+            'plugins/Directory/config/routes.php',
+            'plugins/AcademicPeriod/config/routes.php',
+            'plugins/Alert/config/routes.php',
+            'plugins/Manuals/config/routes.php',
+            'plugins/Area/config/routes.php',
+            'plugins/Localization/config/routes.php',
+            'plugins/Angular/config/routes.php',
+            'plugins/ControllerAction/config/routes.php',
+            'plugins/OpenEmis/config/routes.php',
+            'vendor/cakephp/cakephp/src/Routing/Router.php',
+            'plugins/Gpa/config/routes.php'
+        ],
     ],
 
     /**
@@ -281,7 +354,8 @@ return [
             'database' => 'test_myapp',
             'encoding' => 'utf8',
             'timezone' => 'UTC',
-            'cacheMetadata' => true,
+            //'cacheMetadata' => true,
+            'cacheMetadata' => false,
             'quoteIdentifiers' => false,
             'log' => false,
             //'init' => ['SET GLOBAL innodb_stats_on_metadata = 0'],
@@ -304,9 +378,9 @@ return [
             'className' => 'Cake\Log\Engine\FileLog',
             'path' => LOGS,
             'file' => 'error',
-            'levels' => ['warning', 'error', 'critical', 'alert', 'emergency'],
+            'levels' => ['error', 'critical', 'alert', 'emergency'],
             'url' => env('LOG_ERROR_URL', null),
-        ],  
+        ],
     ],
 
     /**
@@ -355,5 +429,21 @@ return [
     'installerCore' => true,
     'installerSchool' => false,
     'installerCensus' => false,
-    'installerVaccinations' => false
+    'installerVaccinations' => false,
+    //POCOR-7485 for angular build start
+    'BUILD_MAIN' => define('BUILD_MAIN', 'angular/dist/main'),
+    'BUILD_POLYFILLS' => define('BUILD_POLYFILLS', 'angular/dist/polyfills'),
+    'BUILD_RUNTIME' => define('BUILD_RUNTIME', 'angular/dist/runtime'),
+    'BUILD_SCRIPTS' => define('BUILD_SCRIPTS', 'angular/dist/scripts'),
+    'STYLE_GUIDE' => define('STYLE_GUIDE', 'angular/main/styles'),
+    'BUILD_STYLE' => define('BUILD_STYLE', 'angular/main/newStyles'),
+
+    'Application' => [
+        'public' => [
+            'key' => @file_get_contents(CONFIG . 'public.key')
+        ],
+        'private' => [
+            'key' => @file_get_contents(CONFIG . 'private.key')
+        ],
+    ],
 ];

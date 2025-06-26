@@ -10,7 +10,7 @@ use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
@@ -62,13 +62,13 @@ class TransferLogsTable extends ControllerActionTable
 
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
-        $this->table('transfer_logs');
-        $this->displayField('id');
-        $this->primaryKey('id');
+        $this->setTable('transfer_logs');
+        $this->getDisplayField('id');
+        $this->getPrimaryKey('id');
 
         $this->belongsTo('AcademicPeriods', [
             'foreignKey' => 'academic_period_id',
@@ -94,7 +94,7 @@ class TransferLogsTable extends ControllerActionTable
      * @param \Cake\Validation\Validator $validator Validator instance.
      * @return \Cake\Validation\Validator
      */
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator->integer('id')->allowEmpty('id', 'create');
         $validator->dateTime('generated_on')->allowEmpty('generated_on', 'create');
@@ -109,7 +109,7 @@ class TransferLogsTable extends ControllerActionTable
      * @param \Cake\ORM\RulesChecker $rules The rules object to be modified.
      * @return \Cake\ORM\RulesChecker
      */
-    public function buildRules(RulesChecker $rules)
+    public function buildRules(RulesChecker $rules): RulesChecker
     {
         $rules->add($rules->existsIn(['academic_period_id'], 'AcademicPeriods'));
 
@@ -279,7 +279,7 @@ class TransferLogsTable extends ControllerActionTable
             }
             $inputString = $entity->features;
 
-// Use a regular expression to extract the desired string
+            // Use a regular expression to extract the desired string
             if (preg_match('/^([^\.]+)/', $inputString, $matches)) {
                 $feature = $matches[1];
             } else {
@@ -298,7 +298,7 @@ class TransferLogsTable extends ControllerActionTable
                 return false;
             }
             $entity->p_id = random_int(100000, 999999);
-//        $entity->process_status = 0;
+            //$entity->process_status = 0;
             $entity->academic_period_id = $entity['academic_period_id'];
             $entity->generated_on = date("Y-m-d H:i:s");
             $entity->generated_by = $this->Session->read('Auth.User.id');
@@ -322,7 +322,7 @@ class TransferLogsTable extends ControllerActionTable
 //            $this->Alert->error('Archive.notSuperAdmin');
 //            return false;
 //        }
-//        $this->log('after_save', 'debug');
+//        $this->log('after save', 'debug');
         ini_set('memory_limit', '-1');
 //        $this->log('after save' . $entity->features, 'debug');
         if ($entity->features == "Student Attendances") {
@@ -456,9 +456,9 @@ class TransferLogsTable extends ControllerActionTable
     {
         $tablesToArchive = self::$ArchiveVars['Tables']['StudentAssessments'];
         $shellName = self::$ArchiveVars['Shell']['StudentAssessments'];
-//        $this->log(self::$ArchiveVars, 'debug');
-        $this->log($tablesToArchive, 'debug');
-        $this->log($shellName, 'debug');
+        $this->log((string) self::$ArchiveVars, 'debug');
+        $this->log((string) $tablesToArchive, 'debug');
+        $this->log((string) $shellName, 'debug');
         $this->archiveTableRecords($entity, $tablesToArchive, $shellName);
     }
 
@@ -474,7 +474,6 @@ class TransferLogsTable extends ControllerActionTable
         $this->log($shellName, 'debug');
         $session = $this->Session;
         $superAdmin = $session->read('Auth.User.super_admin');
-
 //        if ($superAdmin == 1) {//POCOR-7399
             $academic_period_id = $entity->academic_period_id;
             $recordsToArchive = 0;
@@ -484,7 +483,7 @@ class TransferLogsTable extends ControllerActionTable
                         $academic_period_id);
                 $recordsToArchive = $recordsToArchive + $tableRecordsCount;
             }
-
+            
             if ($recordsToArchive == 0) {
 //                $this->log($entity, 'debug');
                 $entity['process_status'] = self::DONE;
@@ -509,7 +508,7 @@ class TransferLogsTable extends ControllerActionTable
                     . $recordsToArchiveStr . ' / ' . $recordsInArchiveStr;  // POCOR-7957
 
                 $alreadytransferring = $this->find('all')
-                    ->where(['academic_period_id' => $entity->academic_perid_id,
+                    ->where(['academic_period_id IS' => $entity->academic_perid_id,//POCOR-8636
                         'process_status' => self::IN_PROGRESS,
                         'p_id !=' => $entity->p_id
                     ])
@@ -522,10 +521,10 @@ class TransferLogsTable extends ControllerActionTable
                 $entity->process_status = self::IN_PROGRESS;
                 $this->save($entity);
             }
-//        }
-//        if ($superAdmin != 1) {
-//            $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
-//        }
+        // }
+        // if ($superAdmin != 1) {
+        //     $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
+        // }
     }
 
     public static
@@ -673,7 +672,7 @@ class TransferLogsTable extends ControllerActionTable
     private function clearPendingProcesses()
     {
         $SystemProcesses = TableRegistry::get('SystemProcesses');
-        $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->getRegistryAlias());
         foreach ($runningProcess as $key => $processData) {
             $process_params = (array)json_decode($processData['params']);
             $systemProcessId = $processData['id'];
@@ -698,6 +697,26 @@ class TransferLogsTable extends ControllerActionTable
                     self::setSystemProcessFailed($systemProcessId);
                 }
             }
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'features':
+                return __('Features');
+            case 'generated_on':
+                return __('Generated On');
+            case 'generated_by':
+                return __('Generated By');
+            case 'created_user_id':
+                return __('Created By');
+            case 'created':
+                return __('Created');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 

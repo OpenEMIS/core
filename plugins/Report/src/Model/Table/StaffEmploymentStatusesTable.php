@@ -10,7 +10,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
 class StaffEmploymentStatusesTable extends AppTable {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -24,7 +24,7 @@ class StaffEmploymentStatusesTable extends AppTable {
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-                $requestData = json_decode($settings['process']['params']);
+        $requestData = json_decode($settings['process']['params']);
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
         $academicPeriodId = $requestData->academic_period_id;
@@ -69,7 +69,7 @@ class StaffEmploymentStatusesTable extends AppTable {
             ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
                 'InstitutionStaff.staff_id = ' . $this->aliasField('staff_id')
             ])
-            ->leftJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()], [
+            ->leftJoin([$InstitutionsTable->getAlias() => $InstitutionsTable->getTable()], [
                 $InstitutionsTable->aliasField('id = ') . 'InstitutionStaff.institution_id'
             ])
             ->select(['openemis_no' => 'Users.openemis_no'])

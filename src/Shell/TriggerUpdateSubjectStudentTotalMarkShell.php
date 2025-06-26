@@ -9,7 +9,7 @@ use Cake\I18n\Time;
 use Cake\Filesystem\File;
 
 class TriggerUpdateSubjectStudentTotalMarkShell extends Shell {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Institution.Institutions');

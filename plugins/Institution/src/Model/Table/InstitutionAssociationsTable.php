@@ -3,12 +3,11 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use stdClass;
-
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
@@ -16,7 +15,6 @@ use Cake\Collection\Collection;
 use Cake\I18n\Date;
 use Cake\Log\Log;
 use Cake\Routing\Router;
-
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 
@@ -24,7 +22,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
 {
     use MessagesTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -46,22 +44,21 @@ class InstitutionAssociationsTable extends ControllerActionTable
         //     'targetForeignKey' => 'security_user_id',
         //     'dependent' => true
         // ]);
-        
+
         //$this->hasMany('AssociationStaff', ['className' => 'Institution.InstitutionAssociationStaff', 'saveStrategy' => 'replace', 'cascadeCallbacks' => true]);
         $this->addBehavior('AssociationExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'AssociationStudent' => ['index','add','view', 'edit'],
         ]);
-
+        $this->addBehavior('Institution.InstitutionTab');
     }
-    
+
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-         
-         switch ($field) {
+        switch ($field) {
             case 'association_staff':
                 return __('Staff');
-            case 'total_male_students': 
+            case 'total_male_students':
                 return __('Male Students');
             case 'total_female_students':
                 return __('Female Students');
@@ -75,7 +72,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
-        $query = $this->request->query;
+        $query = $this->request->getQuery();
         $this->field('modified_user_id', ['visible' => false]);
         $this->field('modified', ['visible' => false]);
         $this->field('created_user_id', ['visible' => false]);
@@ -106,7 +103,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
         ]);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Associations','Academic');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Associations','Academic');
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
@@ -115,7 +112,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
                 'escape' => false,
                 'target'=>'_blank'
             ];
-    
+
             $helpBtn['url'] = $is_manual_exist['url'];
             $helpBtn['type'] = 'button';
             $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -143,9 +140,8 @@ class InstitutionAssociationsTable extends ControllerActionTable
 
     public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        
         if(!empty($this->controllerAction) && ($this->controllerAction == 'Associations')) {
-            // Delete Students related to associations 
+            // Delete Students related to associations
             $existingStudents = $this->AssociationStudent
                 ->find('all')
                 ->select([
@@ -156,15 +152,16 @@ class InstitutionAssociationsTable extends ControllerActionTable
                 ])
                 ->toArray();
             if ($existingStudents && !empty($existingStudents)) {
-                foreach ($existingStudents as $key => $StudentEntity) {    
+                $id = $entity->id;//POCOR-7485
+                foreach ($existingStudents as $key => $StudentEntity) {
                      $this->AssociationStudent->delete($StudentEntity);
                 }
                 $countMale = $this->AssociationStudent->getMaleCountByAssociations($entity->id);
                 $countFemale = $this->AssociationStudent->getFemaleCountByAssociations($entity->id);
-                $this->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]); 
+                $this->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
             }
 
-            // Delete Staff related to associations 
+            // Delete Staff related to associations
              $existingStaffs = $this->AssociationStaff
                 ->find('all')
                 ->select([
@@ -175,11 +172,10 @@ class InstitutionAssociationsTable extends ControllerActionTable
                 ])
                 ->toArray();
             if ($existingStaffs && !empty($existingStaffs)) {
-                foreach ($existingStaffs as $key => $StaffEntity) {    
+                foreach ($existingStaffs as $key => $StaffEntity) {
                      $this->AssociationStaff->delete($StaffEntity);
-                } 
+                }
             }
-                
         }
     }
     /******************************************************************************************************************
@@ -193,16 +189,16 @@ class InstitutionAssociationsTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 //        $institutionId = $extra['institution_id']; // POCOR-7988
        // $selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
-        $selectedAcademicPeriodId = !is_null($this->request->query('academic_period_id'))
-            ? $this->request->query('academic_period_id') :
-            $this->AcademicPeriods->getCurrent();
-        $selectedAcademicPeriod = $selectedAcademicPeriodId;
+        $selectedAcademicPeriodId = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
+
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriodId);
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod')); // POCOR-7988
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
         $extra['elements']['control'] = [
             'name' => 'Institution.Associations/controls',
-            'data' => [],
+            'data' => ['encodedQueryString' => $encodedQueryString],
 // POCOR-7988
 //             'data' => [
 //                'academicPeriodOptions'=>$academicPeriodOptions,
@@ -216,7 +212,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $sortable = !is_null($this->request->query('sort')) ? true : false;
+        $sortable = !is_null($this->request->getQuery('sort')) ? true : false;
 
         $query
             // ->find('byGrades', [
@@ -255,21 +251,23 @@ class InstitutionAssociationsTable extends ControllerActionTable
     }
 
     public function onGetAssociationStaff(Event $event, Entity $entity)
-    {        
+    {
         if ($this->action == 'view') {
+            $paramsEncoded = $this->request->getAttribute('params')['pass'][1];
+            $params = $this->ControllerAction->paramsDecode($paramsEncoded);
+            $institutionId = $params['institution_id'];
             if ($entity->has('association_staff') && !empty($entity->association_staff)) {
                 $staffList = [];
                 foreach ($entity->association_staff as $staffVal) {
-                        $staffLink = $event->subject()->Html->link($staffVal->user->name_with_id, [
+                        $staffLink = $event->getSubject()->Html->link($staffVal->user->name_with_id, [
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
                             'action' => 'StaffUser',
                             'view',
-                            $this->paramsEncode(['id' => $staffVal->user->id])
+                            $this->paramsEncode(['id' => $staffVal->user->id, 'institution_id' => $institutionId, 'staff_id'=> $staffVal->user->id])
                         ]);
-
                         $staffList[] = $staffLink;
-                } 
+                }
                 return implode(', ', $staffList);
             } else {
                 return $this->getMessage('InstitutionClasses.noTeacherAssigned'); //POCOR-7994
@@ -277,7 +275,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
         } else {
             if ($entity->has('association_staff') && !empty($entity->association_staff)) {
                 $staffList = [];
-              
+
                 foreach ($entity->association_staff as $staffVal) {
                     $staffList[] = $staffVal->user->name_with_id;
                 }
@@ -296,19 +294,19 @@ class InstitutionAssociationsTable extends ControllerActionTable
     {
         if ($extra['selectedAcademicPeriodId'] == -1) {
             return $this->controller->redirect([
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'action' => 'Classes'
             ]);
         }
 
-        $query = $this->request->query;
-        if (array_key_exists('academic_period_id', $query) || array_key_exists('education_grade_id', $query)) {
+        $query = $this->request->getQuery();
+        if (isset($query['academic_period_id']) || isset($query['education_grade_id'])) {
             $action = $this->url('view');
-            if (array_key_exists('academic_period_id', $query)) {
+            if (isset($query['academic_period_id'])) {
                 unset($action['academic_period_id']);
             }
-            if (array_key_exists('education_grade_id', $query)) {
+            if (isset($query['education_grade_id'])) {
                 unset($action['education_grade_id']);
             }
             //$this->controller->redirect($action);
@@ -323,27 +321,27 @@ class InstitutionAssociationsTable extends ControllerActionTable
         $extra['selectedGrade'] = -1;
         $extra['selectedStatus'] = -1;
         $extra['selectedGender'] = -1;
-        if (array_key_exists('queryString', $this->request->query)) {
-            $queryString = $this->paramsDecode($this->request->query['queryString']);
+        if (array_key_exists('queryString', $this->request->getQuery())) {
+            $queryString = $this->paramsDecode($this->request->getQuery('queryString'));
 
-            if (!empty($queryString) && array_key_exists('grade', $queryString)) {
+            if (!empty($queryString) && isset($queryString['grade'])) {
                 $extra['selectedGrade'] = $queryString['grade'];
             }
 
-            if (!empty($queryString) && array_key_exists('status', $queryString)) {
+            if (!empty($queryString) && isset($queryString['status'])) {
                 $extra['selectedStatus'] = $queryString['status'];
             }
 
 
-            if (!empty($queryString) && array_key_exists('gender', $queryString)) {
+            if (!empty($queryString) && isset($queryString['gender'])) {
                 $extra['selectedGender'] = $queryString['gender'];
             }
 
-            if (!empty($queryString) && array_key_exists('sort', $queryString)) {
+            if (!empty($queryString) && isset($queryString['sort'])) {
                 $extra['sort'] = $queryString['sort'];
             }
 
-            if (!empty($queryString) && array_key_exists('direction', $queryString)) {
+            if (!empty($queryString) && isset($queryString['direction'])) {
                 $extra['direction'] = $queryString['direction'];
             }
         }
@@ -385,7 +383,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-       
+
         //generate student filter.
         $params = $this->getQueryString();
         $baseUrl = $this->url($this->action, true);
@@ -397,7 +395,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
         $statusOptions = [];
         $genderOptions = [];
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $configureStudentName = $ConfigItems->value("configure_student_name");
 
         foreach ($entity->association_student as $key => $value) {
@@ -527,8 +525,8 @@ class InstitutionAssociationsTable extends ControllerActionTable
     ******************************************************************************************************************/
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {    
-          
+    {
+
         if ($entity->isNew()) {
                 // POCOR-5435 ->Webhook Feature class (create)
                 if ($entity->has('associationStudents') && !empty($entity->associationStudents)) {
@@ -539,7 +537,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
                     $student['institution_association_id'] = $entity->id;
                     $newStudents[$student['security_user_id']] = $student;
                 }
-                                      
+
                 foreach ($newStudents as $key => $student) {
                     $newClassStudentEntity = $this->AssociationStudent->newEntity($student);
                     $this->AssociationStudent->save($newClassStudentEntity);
@@ -567,7 +565,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
                         unset($newStudents[$classStudentEntity->security_user_id]);
                     }
                 }
-            }   
+            }
         else {
              if ($entity->has('associationStudents') && !empty($entity->associationStudents)) {
                 $newStudents = [];
@@ -598,15 +596,15 @@ class InstitutionAssociationsTable extends ControllerActionTable
                     } else { // if student exists, then remove from the array to get the new student records to be added
                         unset($newStudents[$classStudentEntity->security_user_id]);
                     }
-                }                                 
-                foreach ($newStudents as $key => $student) {     
+                }
+                foreach ($newStudents as $key => $student) {
                     $newClassStudentEntity = $this->AssociationStudent->newEntity($student);
                     $this->AssociationStudent->save($newClassStudentEntity);
                 }
             }
         }
     }
-    
+
     public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
     {
         $id = $entity->id;
@@ -617,7 +615,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
 
     private function getAcademicPeriodOptions($institutionId)
     {
-        $InstitutionStudentsTable = TableRegistry::get('institution_students');
+        $InstitutionStudentsTable = TableRegistry::get('Institution.InstitutionStudents');
         $InstitutionStudentsYears = $InstitutionStudentsTable
             ->find('all')
             ->where(['institution_id' => $institutionId])
@@ -667,5 +665,5 @@ class InstitutionAssociationsTable extends ControllerActionTable
                 return $arrResults;
             });
     }
-  
+
 }

@@ -9,19 +9,21 @@ use Cake\I18n\Date;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
-
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
+use Cake\Filesystem\File;
+
+use Laminas\Diactoros\UploadedFile;
 
 class QualificationsTable extends ControllerActionTable
 {
-	public function initialize(array $config)
+    public function initialize(array $config): void
     {
-		$this->table('staff_qualifications');
-		parent::initialize($config);
+        $this->setTable('staff_qualifications');
+        parent::initialize($config);
 
-		$this->addBehavior('ControllerAction.FileUpload', [
+        $this->addBehavior('ControllerAction.FileUpload', [
             // 'name' => 'file_name',
             // 'content' => 'file_content',
             'size' => '2MB',
@@ -30,15 +32,11 @@ class QualificationsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
 
-        $this->addBehavior('Excel', [
-            'excludes' => ['staff_id'],
-            'pages' => ['index'],
-        ]);
 
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-		$this->belongsTo('QualificationTitles', ['className' => 'FieldOption.QualificationTitles']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('QualificationTitles', ['className' => 'FieldOption.QualificationTitles']);
         $this->belongsTo('QualificationCountries', ['className' => 'FieldOption.Countries', 'foreignKey' => 'qualification_country_id']);
-		$this->belongsTo('FieldOfStudies', ['className' => 'Education.EducationFieldOfStudies', 'foreignKey' => 'education_field_of_study_id']);
+        $this->belongsTo('FieldOfStudies', ['className' => 'Education.EducationFieldOfStudies', 'foreignKey' => 'education_field_of_study_id']);
 
         $this->belongsToMany('EducationSubjects', [
             'className' => 'Education.EducationSubjects',
@@ -60,33 +58,63 @@ class QualificationsTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
-		// setting this up to be overridden in viewAfterAction(), this code is required
-		$this->behaviors()->get('ControllerAction')->config(
-			'actions.download.show',
-			true
-		);
+        // setting this up to be overridden in viewAfterAction(), this code is required
+        $this->behaviors()->get('ControllerAction')->setConfig(
+            'actions.download.show',
+            true
+        );
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportStaffQualifications']);
+        $this->addBehavior('Excel', [
+            'excludes' => ['staff_id'],
+            'pages' => ['index'],
+        ]);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['StaffQualifications' =>
+                ['education_field_of_study_id',
+                    'qualification_title_id',
+                    'qualification_country_id',
+                    'staff_id'],
+                'Qualifications' =>
+                ['education_field_of_study_id',
+                    'qualification_title_id',
+                    'qualification_country_id',
+                    'staff_id']
+            ]
+        ]);
+        $this->addBehavior('Staff.StaffTab');
 	}
 
-	public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
-
-		return $validator
+    public function validationDefault(Validator $validator): Validator {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+        return $validator
             ->requirePresence('qualification_country_id')
             ->allowEmpty('graduate_year')
-			->add('graduate_year', 'ruleNumeric', [
+            ->add('graduate_year', 'ruleNumeric', [
                     'rule' => ['numeric'],
                     'on' => function ($context) { //validate when only graduate_year is not empty
                         return !empty($context['data']['graduate_year']);
                     }
-			])
-			->allowEmpty('file_content');
-	}
+            ])
+            ->allowEmpty('file_content');
+    }
 
-	public function indexBeforeAction(Event $event)
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
-		$this->field('file_name', ['visible' => false]);
-        $this->field('file_content', ['visible' => false]);
+        $queryString = $this->getQueryString();
+        if(isset($queryString['staff_id']) && !empty($queryString['staff_id'])){
+			$staffId = $queryString['staff_id'];
+		}else{
+			$staffId = $queryString['user_id'];
+		}
+        
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $staffId]);
+    }
+
+    public function indexBeforeAction(Event $event)
+    {
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['type' => 'binary', 'visible' => false]);
         $this->field('gpa', ['visible' => false]);
         $this->field('qualification_country_id', ['visible' => false]);
 
@@ -96,7 +124,7 @@ class QualificationsTable extends ControllerActionTable
         $this->setFieldOrder([
             'graduate_year', 'qualification_level', 'qualification_title_id', 'document_no', 'qualification_institution', 'file_type'
         ]);
-	}
+    }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
@@ -111,8 +139,8 @@ class QualificationsTable extends ControllerActionTable
         // END: POCOR-6551 sort by level
 
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Qualifications','Staff - Professional');       
+        if($this->request->getParam('controller') == 'Staff'){
+            $is_manual_exist = $this->getManualUrl('Institutions','Qualifications','Staff - Professional');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -121,7 +149,7 @@ class QualificationsTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -129,8 +157,8 @@ class QualificationsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Qualifications','Staff - Professional');       
+        }elseif($this->request->getParam('controller') == 'Directories'){
+            $is_manual_exist = $this->getManualUrl('Directory','Qualifications','Staff - Professional');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -154,9 +182,74 @@ class QualificationsTable extends ControllerActionTable
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
+        // if ($field == 'qualification_level') {
+        //     return __('Level');
+        // } elseif ($field == 'graduate_year') {
+        //     return __('Graduate Year');
+        // }elseif ($field == 'qualification_institution') {
+        //     return __('Institution');
+        // }elseif ($field == 'document_no') {
+        //     return __('Document No');
+        // }elseif ($field == 'qualification_title_id') {
+        //     return __('Title');
+        // }elseif ($field == 'industry_id') {
+        //     return __('Industry');
+        // }elseif ($field == 'education_field_of_study_id') {
+        //     return __('Field of Study');
+        // }elseif ($field == 'qualification_specialisations') {
+        //     return __('Qualification Specialisations');
+        // }elseif ($field == 'qualification_country_id') {
+        //     return __('Qualification Country');
+        // }elseif ($field == 'gpa') {
+        //     return __('GPA');
+        // }elseif ($field == 'created_user_id') {
+        //     return __('Created By');
+        // } else if ($field == 'created') {
+        //     return  __('Created On');
+        // }elseif ($field == 'modified_user_id') {
+        //     return __('Last Modified By');
+        // } else if ($field == 'modified') {
+        //     return  __('Last Modified On');
+        // } else if ($field == 'education_subjects') {
+        //     return  __('Education Subject');
+        // } else if ($field == 'file_content') {
+        //     return  __('Attachment');
+        // }else {
+        //     return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        // }
         if ($field == 'qualification_level') {
             return __('Level');
-        } else {
+        } elseif ($field == 'graduate_year') {
+            return __('Graduate Year');
+        }elseif ($field == 'qualification_institution') {
+            return __('Institution');
+        }elseif ($field == 'document_no') {
+            return __('Document No');
+        }elseif ($field == 'qualification_title_id') {
+            return __('Title');
+        }elseif ($field == 'industry_id') {
+            return __('Industry');
+        }elseif ($field == 'education_field_of_study_id') {
+            return __('Field of Study');
+        }elseif ($field == 'qualification_specialisations') {
+            return __('Specialisations');
+        }elseif ($field == 'qualification_country_id') {
+            return __('Qualification Country');
+        }elseif ($field == 'gpa') {
+            return __('GPA');
+        }elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } else if ($field == 'created') {
+            return  __('Created On');
+        }elseif ($field == 'modified_user_id') {
+            return __('Last Modified By');
+        } else if ($field == 'modified') {
+            return  __('Last Modified On');
+        } else if ($field == 'education_subjects') {
+            return  __('Subjects');
+        } else if ($field == 'file_content') {
+            return  __('Attachment');
+        }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
@@ -169,27 +262,36 @@ class QualificationsTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-    	$this->setupFields($entity);
+        $this->setupFields($entity);
     }
 
-	public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-		// determine if download button is shown
-		$showFunc = function() use ($entity) {
-			$filename = $entity->file_content;
-			return !empty($filename);
-		};
-		$this->behaviors()->get('ControllerAction')->config(
-			'actions.download.show',
-			$showFunc
-		);
-
+        // determine if download button is shown
+        $showFunc = function() use ($entity) {
+            $filename = $entity->file_content;
+            return !empty($filename);
+        };
+        $this->behaviors()->get('ControllerAction')->setConfig(
+            'actions.download.show',
+            $showFunc
+        );
+        $toolbarButtons =  $extra['toolbarButtons'];
+        $filename = $entity->file_content;
+        if( $toolbarButtons->offsetExists('download') && empty($filename)) {
+            $extra['toolbarButtons']['download'] = false;
+        }
         $this->setupFields($entity);
-	}
+    }
 
-    public function onUpdateFieldQualificationTitleId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldQualificationTitleId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        unset($request->query['title']);
+        $queryParams = $request->getQueryParams();
+        // Unset a specific parameter, for example 'title'
+        unset($queryParams['title']);
+
+        // Set the modified query parameters back to the request object
+        $request = $request->withQueryParams($queryParams);
         $attr['onChangeReload'] = 'changeQualificationTitleId';
         return $attr;
     }
@@ -197,23 +299,24 @@ class QualificationsTable extends ControllerActionTable
     public function addEditOnChangeQualificationTitleId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        unset($request->query['title']);
+        unset($request->getQuery['title']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('qualification_title_id', $request->data[$this->alias()])) {
-                    $request->query['title'] = $request->data[$this->alias()]['qualification_title_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('qualification_title_id', $request->getData()[$this->getAlias()])) {
+                    $QueryTitle = $request->getQuery('title');
+                    $QueryTitle = $request->getData()[$this->getAlias()]['qualification_title_id'];
                 }
             }
         }
     }
 
-    public function onUpdateFieldQualificationLevel(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldQualificationLevel(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
-            if (array_key_exists('title', $this->request->query)) {
-                $qualificationTitle = $this->request->query('title');
+            if (array_key_exists('title', $this->request->getQuery())) {
+                $qualificationTitle = $this->request->getQuery('title');
             } else {
                 if (!empty($attr['entity'])) {
                     $qualificationTitle = $attr['entity']->qualification_title_id;
@@ -239,23 +342,24 @@ class QualificationsTable extends ControllerActionTable
         }
     }
 
-	public function onUpdateFieldGraduateYear(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldGraduateYear(Event $event, array $attr, $action, ServerRequest $request)
     {
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $lowestYear = $ConfigItems->value('lowest_year');
+        if(!empty($lowestYear)) {
+            $currentYear = new Date();
+            $currentYear = $currentYear->format('Y');
+            
+            if (($action == 'add') || ($action == 'edit')) {
+                for ($i=$currentYear;$i>=$lowestYear;$i--) {
+                    $attr['options'][$i] = $i;
+                }
+            }
+        }
+        return $attr;
+    }
 
-		$currentYear = new Date();
-		$currentYear = $currentYear->format('Y');
-
-		if (($action == 'add') || ($action == 'edit')) {
-			for ($i=$currentYear;$i>=$lowestYear;$i--) {
-				$attr['options'][$i] = $i;
-			}
-		}
-		return $attr;
-	}
-
-    public function onUpdateFieldEducationFieldOfStudyId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationFieldOfStudyId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $fieldOfStudyOptions = $this->FieldOfStudies
             ->find('list')
@@ -277,15 +381,15 @@ class QualificationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldQualificationSpecialisations(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldQualificationSpecialisations(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
-            $requestData = $request->data;
+            $requestData = $request->getData();
             $fieldOfStudyId = 0;
 
-            if (array_key_exists($this->alias(), $requestData) && !empty($requestData[$this->alias()]['education_field_of_study_id'])) {
-                $fieldOfStudyId = $requestData[$this->alias()]['education_field_of_study_id'];
+            if (array_key_exists($this->getAlias(), $requestData) && !empty($requestData[$this->getAlias()]['education_field_of_study_id'])) {
+                $fieldOfStudyId = $requestData[$this->getAlias()]['education_field_of_study_id'];
             } else {
                 $entity = $attr['entity'];
                 if ($entity->has('education_field_of_study_id')) {
@@ -312,15 +416,15 @@ class QualificationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationSubjects(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationSubjects(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($action) {
             case 'edit': case 'add':
-                $requestData = $request->data;
+                $requestData = $request->getData();
                 $fieldOfStudyId = 0;
 
-                if (array_key_exists($this->alias(), $requestData) && !empty($requestData[$this->alias()]['education_field_of_study_id'])) {
-                    $fieldOfStudyId = $requestData[$this->alias()]['education_field_of_study_id'];
+                if (array_key_exists($this->getAlias(), $requestData) && !empty($requestData[$this->getAlias()]['education_field_of_study_id'])) {
+                    $fieldOfStudyId = $requestData[$this->getAlias()]['education_field_of_study_id'];
                 } else {
                     $entity = $attr['entity'];
                     if ($entity->has('education_field_of_study_id')) {
@@ -331,7 +435,7 @@ class QualificationsTable extends ControllerActionTable
                 $subjectData = $this->EducationSubjects
                     ->find()
                     ->select([
-                        $this->EducationSubjects->aliasField($this->EducationSubjects->primaryKey()),
+                        $this->EducationSubjects->aliasField($this->EducationSubjects->getPrimaryKey()),
                         $this->EducationSubjects->aliasField('name'),
                         $this->EducationSubjects->aliasField('code')
                     ])
@@ -364,10 +468,10 @@ class QualificationsTable extends ControllerActionTable
         return $attr;
     }
 
-	public function onGetFileType(Event $event, Entity $entity)
+    public function onGetFileType(Event $event, Entity $entity)
     {
-		return (!empty($entity->file_name))? $this->getFileTypeForView($entity->file_name): '';;
-	}
+        return (!empty($entity->file_name))? $this->getFileTypeForView($entity->file_name): '';;
+    }
 
     public function onGetQualificationLevel(Event $event, Entity $entity)
     {
@@ -399,17 +503,18 @@ class QualificationsTable extends ControllerActionTable
         return $value;
     }
 
-	private function setupTabElements()
+    private function setupTabElements()
     {
-		$tabElements = $this->controller->getProfessionalTabElements();
+		$tabElements = $this->getProfessionalTabElements();
+        $action = $this->getAlias();
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
+		$this->controller->set('selectedAction', $action);
 	}
 
-	public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(Event $event, ArrayObject $extra)
     {
-		$this->setupTabElements();
-	}
+        $this->setupTabElements();
+    }
 
     private function setupFields(Entity $entity)
     {
@@ -446,14 +551,14 @@ class QualificationsTable extends ControllerActionTable
             'type' => 'binary',
             'visible' => $visible
         ]);
-
+        
         $this->setFieldOrder([
             'qualification_title_id', 'qualification_level', 'education_field_of_study_id', 'qualification_specialisations', 'education_subjects', 'qualification_country_id', 'qualification_institution', 'document_no', 'graduate_year', 'gpa', 'file_content'
         ]);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
-    {     
+    {
         $extraField[] = [
             'key'   => 'graduate_year',
             'field' => 'graduate_year',
@@ -513,26 +618,39 @@ class QualificationsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $qualificationTitles = TableRegistry::get('QualificationTitles');
-        $qualificationLevel = TableRegistry::get('QualificationLevels');
-        
+
+        $userId = $this->getUserID();
+        if($userId == NULL){
+            $userId = '';
+        }
+        $qualificationTitles = TableRegistry::get('FieldOption.QualificationTitles');
+        $qualificationLevel = TableRegistry::get('FieldOption.QualificationLevels');
+
         $query
         ->select([
             'qualification_level' => 'QualificationLevels.name'
         ])
         ->leftJoin(
-            [$qualificationTitles->alias() => $qualificationTitles->table()],[
+            [$qualificationTitles->getAlias() => $qualificationTitles->getTable()],[
                 $qualificationTitles->aliasField('id = ').$this->aliasField('qualification_title_id')
             ])
         ->leftJoin(
-            [$qualificationLevel->alias() => $qualificationLevel->table()],[
+            [$qualificationLevel->getAlias() => $qualificationLevel->getTable()],[
                 $qualificationLevel->aliasField('id = ').$qualificationTitles->aliasField('qualification_level_id')
             ])
         ->where([
-            'staff_id =' .$staffUserId,
+            //'staff_id =' .$staffUserId,
+            $this->aliasField('staff_id') => $userId
         ])
         ->order(['QualificationLevels.order'=>'ASC']);  //POCOR-6551
+        return $query;
+    }
+
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('education_field_of_study_id');
+        $this->setFieldOrder([
+            'qualification_title_id', 'qualification_level', 'education_field_of_study_id', 'qualification_specialisations', 'education_subjects', 'qualification_country_id', 'qualification_institution', 'document_no', 'graduate_year', 'gpa', 'file_content'
+        ]);
     }
 }

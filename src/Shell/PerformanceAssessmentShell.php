@@ -9,7 +9,7 @@ use Cake\Utility\Text;
 
 class PerformanceAssessmentShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
     }
@@ -66,9 +66,9 @@ class PerformanceAssessmentShell extends Shell
                     //Copy Assessment [Start]
                     $statement1 = $connection->prepare('INSERT INTO assessments(code, name, description,
                                     excel_template_name, excel_template, type, academic_period_id, education_grade_id,
-                                    assessment_grading_type_id, modified_user_id, modified, created_user_id, created)
+                                     modified_user_id, modified, created_user_id, created)
                                     VALUES (:code, :name, :description, :excel_template_name, :excel_template, :type, :academic_period_id, :education_grade_id,
-                                    :assessment_grading_type_id, :modified_user_id, :modified, :created_user_id, :created)');
+                                    :modified_user_id, :modified, :created_user_id, :created)');
 
                     $statement1->execute(array(
                         'code' => $assessmentData->code,
@@ -79,7 +79,6 @@ class PerformanceAssessmentShell extends Shell
                         'type' => $assessmentData->type,
                         'academic_period_id' => $copyTo,
                         'education_grade_id' => $assessmentData->education_grade_id,
-                        'assessment_grading_type_id' => $assessmentData->assessment_grading_type_id,
                         'modified_user_id' => $assessmentData->modified_user_id,
                         'modified' =>  date("Y-m-d H:i:s", strtotime($assessmentData->modified)),
                         'created_user_id' => $assessmentData->created_user_id,

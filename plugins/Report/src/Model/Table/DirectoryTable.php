@@ -6,8 +6,8 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use Cake\Http\ServerRequest;
 
 class DirectoryTable extends AppTable
 {
@@ -15,10 +15,10 @@ class DirectoryTable extends AppTable
     const STUDENT = 1;
     const STAFF = 2;
    
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
-        $this->entityClass('User.User');
+        $this->setTable('security_users');
+        $this->SetEntityClass('User.User');
         parent::initialize($config);
 
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
@@ -48,15 +48,15 @@ class DirectoryTable extends AppTable
         $this->ControllerAction->field('filter_types', ['type' => 'hidden']);
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action)
     {
         if ($action == 'add') {
-            $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+            $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
             $attr['onChangeReload'] = true;
-            if (!(isset($this->request->data[$this->alias()]['feature']))) {
+            if (!(isset($this->request->getData[$this->getAlias()]['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->data[$this->alias()]['feature'] = key($option);
+                $this->request->getData[$this->getAlias()]['feature'] = key($option);
             }
             return $attr;
         }
@@ -64,7 +64,9 @@ class DirectoryTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+       
         $requestData = json_decode($settings['process']['params']);
+        
         $feature = $requestData->feature;
         $filter = $requestData->filter_types;
         $condition = [];
@@ -100,10 +102,10 @@ class DirectoryTable extends AppTable
             ->where([$condition]);
     }
 
-    public function onUpdateFieldFilterTypes(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFilterTypes(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
+        if (isset($this->request->getData['Directory']['feature'])) {
+            $feature = $this->request->getData['Directory']['feature'];
             if ($feature == 'Report.Directory') {
                 $option[self::NO_FILTER] = __('All Users');
                 $option[self::STUDENT] = __('Students');
@@ -118,10 +120,10 @@ class DirectoryTable extends AppTable
         }
     }
 
-    public function onUpdateFieldUserType(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldUserType(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
             if (in_array($feature, ['Report.Users'])) {
                 $options = [
                     'Guardian' => __('Guardian'),
@@ -132,6 +134,7 @@ class DirectoryTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['select'] = false;
                 $attr['options'] = $options;
+                $attr['onChangeReload'] = true;
                 return $attr;
             }
         }
@@ -146,8 +149,8 @@ class DirectoryTable extends AppTable
             'type' => 'string',
             'label' => __('OpenEMIS ID')
         ];
-		
-		$extraFields[] = [
+        
+        $extraFields[] = [
             'key' => 'username',
             'field' => 'username',
             'type' => 'string',
@@ -197,5 +200,14 @@ class DirectoryTable extends AppTable
         ];
 
         $fields->exchangeArray($extraFields);
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
+    {
+        if($this->_table->controller->getPlugin() == 'Report'){
+            $redirectIndex = "/Reports/" . $this->_table->getAlias();
+            $this->_table->Alert->success('general.add.success');
+            return $this->_table->controller->redirect($redirectIndex);
+        }
     }
 }

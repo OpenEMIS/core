@@ -12,8 +12,8 @@ use App\Model\Traits\OptionsTrait;
 class InstitutionSummaryReportTable extends AppTable  {
 	use OptionsTrait;
 
-	public function initialize(array $config) {
-		$this->table('institution_grades');
+	public function initialize(array $config): void {
+		$this->setTable('institution_grades');
 		parent::initialize($config);
 
 		$this->belongsTo('EducationGrades', 	['className' => 'Education.EducationGrades']);
@@ -49,7 +49,7 @@ class InstitutionSummaryReportTable extends AppTable  {
 			->where([$where]);
 	}
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request) {
 		$attr['options'] = $this->controller->getFeatureOptions('Institutions');
 		return $attr;
 	}

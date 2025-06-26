@@ -5,22 +5,23 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
 use Cake\Database\Exception as DatabaseException;
 
 class StudentUserTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
-        $this->entityClass('User.User');
+        $this->setTable('security_users');
+        $this->setEntityClass('User.User');
         parent::initialize($config);
 
         // Associations
@@ -39,7 +40,7 @@ class StudentUserTable extends ControllerActionTable
                 'formKey' => 'student_custom_form_id',
                 'filterKey' => 'student_custom_filter_id',
                 'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
-                'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
+                //'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],//cakephp4 comment
                 'recordKey' => 'student_id',
                 'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
                 'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
@@ -52,7 +53,7 @@ class StudentUserTable extends ControllerActionTable
             'pages' => ['view']
         ]);
 
-        $this->addBehavior('Configuration.Pull');
+        //$this->addBehavior('Configuration.Pull'); //cakephp4 comment
 
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -94,7 +95,7 @@ class StudentUserTable extends ControllerActionTable
         $model->hasMany('Awards', ['className' => 'User.Awards',            'foreignKey' => 'security_user_id', 'dependent' => true]);
 
         $model->hasMany('SpecialNeeds', ['className' => 'SpecialNeeds.SpecialNeedsAssessments',    'foreignKey' => 'security_user_id', 'dependent' => true]);
-        
+
         $model->belongsToMany('SecurityRoles', [
             'className' => 'Security.SecurityRoles',
             'foreignKey' => 'security_role_id',
@@ -139,7 +140,7 @@ class StudentUserTable extends ControllerActionTable
         $model->hasMany('Extracurriculars', ['className' => 'Student.Extracurriculars',    'foreignKey' => 'security_user_id', 'dependent' => true]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Students.afterSave'] = 'studentsAfterSave';
@@ -147,11 +148,12 @@ class StudentUserTable extends ControllerActionTable
         return $events;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $BaseUsers = TableRegistry::get('User.Users');
+        $BaseUsers = self::getDynamicTableInstance('User.Users');
         $validator = $BaseUsers->setUserValidation($validator, $this);
+        $validator->setProvider('custom', $this);
         $validator
             ->allowEmpty('student_name')
             ->add('student_name', 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
@@ -171,7 +173,7 @@ class StudentUserTable extends ControllerActionTable
             ->allowEmpty('class')
             ->add('class', 'ruleClassMaxLimit', [
                 'rule' => ['checkInstitutionClassMaxLimit'],
-                'on' => function ($context) {  
+                'on' => function ($context) {
                     return (!empty($context['data']['class']) && $context['newRecord']);
                 }
             ])
@@ -216,9 +218,8 @@ class StudentUserTable extends ControllerActionTable
         // this value comes from the list page from StudentsTable->onUpdateActionButtons
         $institutionStudentId = $this->getQueryString('institution_student_id');
 
-        $institutionId = !empty($this->getQueryString('institution_id')) ? $this->getQueryString('institution_id') : $this->request->session()->read('Institution.Institutions.id');
+        $institutionId = !empty($this->getQueryString('institution_id')) ? $this->getQueryString('institution_id') : $this->request->getSession()->read('Institution.Institutions.id');
         $extra['institutionId'] = $institutionId;
-
         // this is required if the student link is clicked from the Institution Classes or Subjects
         if (empty($institutionStudentId)) {
             $params = [];
@@ -229,39 +230,53 @@ class StudentUserTable extends ControllerActionTable
             $studentId = isset($params['id']) ? $params['id'] : $this->Session->read('Institution.StudentUser.primaryKey.id');
 
             // get the id of the latest student record in the current institution
-            $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-            $institutionStudentId = $InstitutionStudentsTable->find()
-                ->where([
-                    $InstitutionStudentsTable->aliasField('student_id') => $studentId,
-                    $InstitutionStudentsTable->aliasField('institution_id') => $institutionId,
-                ])
-                ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC'])
-                ->extract('id')
-                ->first();
+            $InstitutionStudentsTable = self::getDynamicTableInstance('Institution.Students');
+            if($institutionId != null){
+                $institutionStudentId = $InstitutionStudentsTable->find()
+                    ->where([
+                        $InstitutionStudentsTable->aliasField('student_id') => $studentId,
+                        $InstitutionStudentsTable->aliasField('institution_id') => $institutionId,
+                    ])
+                    ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC'])
+                    ->extract('id')
+                    ->first();
+            }else{
+                $institutionStudentId = $InstitutionStudentsTable->find()
+                    ->where([
+                        $InstitutionStudentsTable->aliasField('student_id') => $studentId,
+                    ])
+                    ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC'])
+                    ->extract('id')
+                    ->first();
+            }
         }
         $this->Session->write('Institution.Students.id', $institutionStudentId);
         if (empty($institutionStudentId)) { // if value is empty, redirect back to the list page
             $event->stopPropagation();
             return $this->controller->redirect(['action' => 'Students', 'index']);
         } else {
-            $this->request->query['id'] = $institutionStudentId;
+            // Get the existing query parameters
+            $queryParams = $this->request->getQuery();
+            $queryParams['id'] = $institutionStudentId;
+            $this->request = $this->request->withQueryParams($queryParams);
             $extra['institutionStudentId'] = $institutionStudentId;
+
         }
     }
 
     // POCOR-5684
     public function onGetIdentityNumber(Event $event, Entity $entity){
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = self::getDynamicTableInstance('User.Identities');
         $user_identities = $users_ids->find()
         ->select(['number','nationality_id'])
         ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])->all();
-        
-        $users_ids = TableRegistry::get('user_identities');
+
+        $users_ids = self::getDynamicTableInstance('User.Identities');
         $user_id_data = $users_ids->find()
         ->select(['number'])
-        ->where([                
+        ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->first();
@@ -273,7 +288,7 @@ class StudentUserTable extends ControllerActionTable
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('nationalities');
+            $nationalities = self::getDynamicTableInstance('FieldOption.Nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -290,14 +305,14 @@ class StudentUserTable extends ControllerActionTable
             $nat_ids = [];
             foreach ($nationalities_ids as $item) {
                 array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
-            }     
+            }
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('user_identities');
+                $users_ids = self::getDynamicTableInstance('User.Identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number'])
-                ->where([                
+                ->where([
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
@@ -306,7 +321,7 @@ class StudentUserTable extends ControllerActionTable
                     array_push($nationality_based_ids, $user_id_data_nat);
                 }
             }
-            
+
             if(count($nationality_based_ids) > 0){
                 // Case 2 - returning value
                 return $entity->identity_number = $nationality_based_ids[0]['number'];
@@ -320,24 +335,24 @@ class StudentUserTable extends ControllerActionTable
     // POCOR-5684
     public function onGetIdentityTypeID(Event $event, Entity $entity)
     {
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = self::getDynamicTableInstance('User.Identities');
         $user_identities = $users_ids->find()
         ->select(['number','nationality_id'])
         ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->all();
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = self::getDynamicTableInstance('User.Identities');
         $user_id_data = $users_ids->find()
         ->select(['number', 'identity_type_id'])
-        ->where([                
+        ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->first();
 
         if(count($user_identities) == 1){
             // Case 1
-            $users_id_type = TableRegistry::get('identity_types');
+            $users_id_type = self::getDynamicTableInstance('FieldOption.IdentityTypes');
             $user_id_name = $users_id_type->find()
             ->select(['name'])
             ->where([
@@ -348,7 +363,7 @@ class StudentUserTable extends ControllerActionTable
         }else{
             // Case 2 or 3
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('nationalities');
+            $nationalities = self::getDynamicTableInstance('FieldOption.Nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -365,14 +380,14 @@ class StudentUserTable extends ControllerActionTable
             $nat_ids = [];
             foreach ($nationalities_ids as $item) {
                 array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
-            }     
+            }
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('user_identities');
+                $users_ids = self::getDynamicTableInstance('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number','identity_type_id'])
-                ->where([                
+                ->where([
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
@@ -384,7 +399,7 @@ class StudentUserTable extends ControllerActionTable
             // echo '<pre>'; print_r($nationality_based_ids); die;
             if(count($nationality_based_ids) > 0){
                 // Case 2 - returning value
-                $users_id_type = TableRegistry::get('identity_types');
+                $users_id_type = self::getDynamicTableInstance('identity_types');
                 $user_id_name = $users_id_type->find()
                 ->select(['name'])
                 ->where([
@@ -394,7 +409,7 @@ class StudentUserTable extends ControllerActionTable
                 return $entity->identity_type_id = $user_id_name->name;
             }else{
                 // Case 3 - returning value, return again from Case 1
-                $users_id_type = TableRegistry::get('identity_types');
+                $users_id_type = self::getDynamicTableInstance('identity_types');
                 $user_id_name = $users_id_type->find()
                 ->select(['name'])
                 ->where([
@@ -410,13 +425,15 @@ class StudentUserTable extends ControllerActionTable
     {
         $entity = $extra['entity'];
         if (!is_null($entity)) {
-            $StudentTable = TableRegistry::get('Institution.Students');
-            $studentEntity = $StudentTable->get($extra['institutionStudentId']);
-
+            $StudentTable = self::getDynamicTableInstance('Institution.Students');
             $userId = $this->Auth->user('id');
-            $studentId = $studentEntity->student_id;
+            // $studentId = $this->getStudentID();
+            // $institutionID = $this->getInstitutionID();
 
-            $isStudentEnrolled = $StudentTable->checkEnrolledInInstitution($studentId, $studentEntity->institution_id); // PHPOE-1897
+            $studentEntity = $StudentTable->get($extra['institutionStudentId']);
+            $studentId = $studentEntity->student_id;
+            $institutionID = $studentEntity->institution_id;
+            $isStudentEnrolled = $StudentTable->checkEnrolledInInstitution($studentId, $institutionID);
             $isAllowedByClass = $this->checkClassPermission($studentId, $userId); // POCOR-3010
             if (isset($extra['toolbarButtons']['edit']['url'])) {
                 $extra['toolbarButtons']['edit']['url'][1] = $this->paramsEncode(['id' => $studentId]);
@@ -485,7 +502,7 @@ class StudentUserTable extends ControllerActionTable
             'data-placement' => 'bottom',
             'escape' => false
         ];
-        
+
         $extraButtons = [
             'back' => [
                 'GuardianNavs' => ['GuardianNavs', 'GuardianNavs', 'index'],
@@ -499,7 +516,7 @@ class StudentUserTable extends ControllerActionTable
             $button = [
                 'type' => 'button',
                 'attr' => $btnAttr,
-                'url' => [0 => 'index'] 
+                'url' => [0 => 'index']
             ];
             $button['url']['action'] = $attr['action'];
             $button['attr']['title'] = $attr['title'];
@@ -532,16 +549,16 @@ class StudentUserTable extends ControllerActionTable
 
         $tabElements = $this->controller->getUserTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     private function addTransferButton(Entity $entity, ArrayObject $extra)
     {
-        if ($this->AccessControl->check([$this->controller->name, 'StudentTransferOut', 'add'])) {
+        if ($this->AccessControl->check([$this->controller->getName(), 'StudentTransferOut', 'add'])) {
             $toolbarButtons = $extra['toolbarButtons'];
 
-            $StudentsTable = TableRegistry::get('Institution.Students');
-            $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
+            $StudentsTable = self::getDynamicTableInstance('Institution.Students');
+            $StudentTransfers = self::getDynamicTableInstance('Institution.InstitutionStudentTransfers');
 
             $institutionStudentId = $extra['institutionStudentId'];
             $studentEntity = $StudentsTable->get($institutionStudentId);
@@ -550,7 +567,12 @@ class StudentUserTable extends ControllerActionTable
             $studentId = $studentEntity->student_id;
 
             $params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
-            $action = $this->setQueryString(['controller' => $this->controller->name, 'action' => 'StudentTransferOut', 'add'], $params);
+            $encodedParams = $this->paramsEncode($params);
+            $url = $this->url(['controller' => $this->controller->getName(),
+                'action' => 'StudentTransferOut',
+                '0' => 'add',
+                '1' => $encodedParams,
+                ]);
 
             $checkIfCanTransfer = $StudentsTable->checkIfCanTransfer($studentEntity, $institutionId);
 
@@ -560,7 +582,7 @@ class StudentUserTable extends ControllerActionTable
                 $transferButton['label'] = '<i class="fa kd-transfer"></i>';
                 $transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
                 $transferButton['attr']['title'] = __('Transfer');
-                $transferButton['url'] = $action;
+                $transferButton['url'] = $url;
                 $toolbarButtons['transfer'] = $transferButton;
             }
         }
@@ -568,12 +590,12 @@ class StudentUserTable extends ControllerActionTable
 
     private function addPromoteButton(Entity $entity, ArrayObject $extra)
     {
-        if ($this->AccessControl->check([$this->controller->name, 'Promotion', 'add'])) {
+        if ($this->AccessControl->check([$this->controller->getName(), 'Promotion', 'add'])) {
             $toolbarButtons = $extra['toolbarButtons'];
 
-            $StudentsTable = TableRegistry::get('Institution.Students');
-            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $StudentsTable = self::getDynamicTableInstance('Institution.Students');
+            $StudentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
+            $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
             $editableAcademicPeriods = $AcademicPeriods->getYearList(['isEditable' => true]);
 
             $Enrolled = $StudentStatuses->getIdByCode('CURRENT');
@@ -582,7 +604,7 @@ class StudentUserTable extends ControllerActionTable
             $academicPeriodId = $studentEntity->academic_period_id;
 
             $params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
-            $action = $this->setUrlParams(['controller' => $this->controller->name, 'action' => 'IndividualPromotion', 'add'], $params);
+            $action = $this->setUrlParams(['controller' => $this->controller->getName(), 'action' => 'IndividualPromotion', 'add'], $params);
 
             // Show Promote button only if the Student Status is Current and academic period is editable
             if ($studentEntity->student_status_id == $Enrolled && array_key_exists($academicPeriodId, $editableAcademicPeriods)) {
@@ -602,13 +624,13 @@ class StudentUserTable extends ControllerActionTable
 
     private function addWithdrawButton(Entity $entity, ArrayObject $extra)
     {
-        if ($this->AccessControl->check([$this->controller->name, 'WithdrawRequests', 'add'])) {
+        if ($this->AccessControl->check([$this->controller->getName(), 'WithdrawRequests', 'add'])) {
             $session = $this->Session;
             $toolbarButtons = $extra['toolbarButtons'];
 
-            $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-            $StudentsTable = TableRegistry::get('Institution.Students');
-            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+            $InstitutionStudentsTable = self::getDynamicTableInstance('Institution.Students');
+            $StudentsTable = self::getDynamicTableInstance('Institution.Students');
+            $StudentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
 
             $institutionStudentId = $extra['institutionStudentId'];
             $studentEntity = $StudentsTable->get($institutionStudentId);
@@ -618,7 +640,7 @@ class StudentUserTable extends ControllerActionTable
             if ($studentEntity->student_status_id == $enrolledStatus) {
                 $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
                 $WithdrawRequests = TableRegistry::get('Institution.WithdrawRequests');
-                $session->write($WithdrawRequests->registryAlias().'.id', $institutionStudentId);
+                $session->write($WithdrawRequests->getRegistryAlias().'.id', $institutionStudentId);
                 $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
                 $approvedStatus = $WorkflowModels->getWorkflowStatusSteps('Institution.StudentWithdraw', 'APPROVED');
 
@@ -680,7 +702,7 @@ class StudentUserTable extends ControllerActionTable
     public function onUpdateFieldIdentityNumber(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $attr['fieldName'] = $this->alias().'.identities.0.number';
+            $attr['fieldName'] = $this->getAlias().'.identities.0.number';
             $attr['attr']['label'] = __('Identity Number');
         }
         return $attr;
@@ -695,7 +717,7 @@ class StudentUserTable extends ControllerActionTable
 
     public function pullBeforePatch(Event $event, Entity $entity, ArrayObject $queryString, ArrayObject $patchOption, ArrayObject $extra)
     {
-        if (!array_key_exists('institution_id', $queryString)) {
+        if (!isset($queryString['institution_id'])) {
             $session = $this->request->session();
             $queryString['institution_id'] = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
         }
@@ -707,11 +729,11 @@ class StudentUserTable extends ControllerActionTable
         if (!$this->AccessControl->isAdmin()) {
             $event = $this->controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
             $roles = [];
-            if (is_array($event->result)) {
-                $roles = $event->result;
+            if (is_array($event->getResult())) {
+                $roles = $event->getResult();
             }
             if (!$this->AccessControl->check(['Institutions', 'AllClasses', $permission], $roles)) {
-                $Class = TableRegistry::get('Institution.InstitutionClasses');
+                $Class = self::getDynamicTableInstance('Institution.InstitutionClasses');
                 $classStudentRecord = $Class
                     ->find('ByAccess', [
                         'accessControl' => $this->AccessControl,
@@ -736,7 +758,7 @@ class StudentUserTable extends ControllerActionTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityType = self::getDynamicTableInstance('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
 
         foreach ($fields as $key => $field) {
@@ -755,7 +777,7 @@ class StudentUserTable extends ControllerActionTable
 
     public function getAcademicTabElements($options = [])
     {
-        $id = (array_key_exists('id', $options))? $options['id']: 0;
+        $id = (isset($options['id']))? $options['id']: 0;
 
         $tabElements = [];
         $studentTabElements = [
@@ -782,15 +804,15 @@ class StudentUserTable extends ControllerActionTable
         // Programme & Textbooks will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
             if ($key == 'Programmes' || $key == 'Textbooks' || $key == 'Associations') {
-                $type = (array_key_exists('type', $options))? $options['type']: null;
+                $type = (isset($options['type']))? $options['type']: null;
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
             } elseif ($key == 'Risks') {
-                $type = (array_key_exists('type', $options))? $options['type']: null;
+                $type = (isset($options['type']))? $options['type']: null;
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
             }elseif ($key == 'Curriculars') {
-                $type = (array_key_exists('type', $options))? $options['type']: null;
+                $type = (isset($options['type']))? $options['type']: null;
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
             } else {
@@ -819,15 +841,15 @@ class StudentUserTable extends ControllerActionTable
     {
         $query->where([$this->aliasField('super_admin').' <> ' => 1]);
 
-        $limit = (array_key_exists('limit', $options))? $options['limit']: null;
-        $page = (array_key_exists('page', $options))? $options['page']: null;
+        $limit = (isset($options['limit']))? $options['limit']: null;
+        $page = (isset($options['page']))? $options['page']: null;
 
         // conditions
-        $firstName = (array_key_exists('first_name', $options))? $options['first_name']: null;
-        $lastName = (array_key_exists('last_name', $options))? $options['last_name']: null;
-        $openemisNo = (array_key_exists('openemis_no', $options))? $options['openemis_no']: null;
-        $identityNumber = (array_key_exists('identity_number', $options))? $options['identity_number']: null;
-        $dateOfBirth = (array_key_exists('date_of_birth', $options))? $options['date_of_birth']: null;
+        $firstName = (isset($options['first_name']))? $options['first_name']: null;
+        $lastName = (isset($options['last_name']))? $options['last_name']: null;
+        $openemisNo = (isset($options['openemis_no']))? $options['openemis_no']: null;
+        $identityNumber = (isset($options['identity_number']))? $options['identity_number']: null;
+        $dateOfBirth = (isset($options['date_of_birth']))? $options['date_of_birth']: null;
 
         if (is_null($firstName) && is_null($lastName) && is_null($openemisNo) && is_null($identityNumber) && is_null($dateOfBirth)) {
             return $query->where(['1 = 0']);
@@ -893,4 +915,124 @@ class StudentUserTable extends ControllerActionTable
         ]);
         return $query;
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'modified':
+                return __('Modified');
+            case 'first_name':
+                return __('First Name');
+            case 'middle_name':
+                return __('Middle Name');
+            case 'third_name':
+                return __('Third Name');
+            case 'last_name':
+                return __('Last Name');
+            case 'preferred_name':
+                return __('Preferred Name');
+            case 'gender_id':
+                return __('Gender');
+            case 'date_of_birth':
+                return __('Date Of Birth');
+            case 'details':
+                return __('Details');
+            case 'address_area_id':
+                return __('Address');
+            case 'address':
+                return __('Address');
+            case 'birthplace_area_id':
+                return __('Address');
+            case 'photo_content':
+                return __('Photo Content');
+            case 'email':
+                return __('Email');
+            case 'email':
+                return __('Email');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'visible':
+                return __('Visible');
+            case 'name':
+                return __('Name');
+            case 'international_code':
+                return __('International Code');
+            case 'national_code':
+                return __('National Code');
+            case 'editable':
+                return __('Editable');
+            case 'default':
+                return __('Default');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    private static function debug($something)
+    {
+        if (is_null($something)) {
+            $message = 'NULL';
+        } elseif (is_bool($something)) {
+            $message = $something ? 'TRUE' : 'FALSE';
+        } elseif (is_array($something) || is_object($something)) {
+            $message = json_encode($something, JSON_PRETTY_PRINT);
+        } else {
+            $message = (string)$something;
+        }
+
+        \Cake\Log\Log::debug($message);
+    }
+
+    /**
+     * @param string $tableName
+     * @return Table
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        $locator = TableRegistry::getTableLocator();;
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        // Parse plugin and table names if dot notation is used
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+            self::debug([$tableFullAlias, $tableAlias]);
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
 }

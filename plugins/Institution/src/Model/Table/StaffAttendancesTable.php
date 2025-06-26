@@ -18,9 +18,9 @@ class StaffAttendancesTable extends ControllerActionTable
     private $_leaveData = [];
     private $_attendanceData = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff');
+        $this->setTable('institution_staff');
         $config['Modified'] = false;
         $config['Created'] = false;
         parent::initialize($config);
@@ -43,7 +43,9 @@ class StaffAttendancesTable extends ControllerActionTable
                 'staff_status_id',
                 'institution_id',
                 'institution_position_id',
-                'security_group_user_id'
+                'security_group_user_id',
+                'is_homeroom', //POCOR-8167
+                'staff_position_grade_id' //POCOR-8167
             ],
             'pages' => ['index']
         ]);
@@ -54,9 +56,10 @@ class StaffAttendancesTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('view', false);
         $this->toggle('remove', false);
+        
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
@@ -65,10 +68,13 @@ class StaffAttendancesTable extends ControllerActionTable
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $startDate = $AcademicPeriodTable->get($this->request->query['academic_period_id'])->start_date->format('Y-m-d');
-        $endDate = $AcademicPeriodTable->get($this->request->query['academic_period_id'])->end_date->format('Y-m-d');
+        $startDate = $AcademicPeriodTable->get($this->request->getQuery('academic_period_id'))->start_date->format('Y-m-d');
+        $endDate = $AcademicPeriodTable->get($this->request->getQuery('academic_period_id'))->end_date->format('Y-m-d');
         $months = $AcademicPeriodTable->generateMonthsByDates($startDate, $endDate);
         $institutionId = $this->Session->read('Institution.Institutions.id');
+        if (empty($institutionId) && $this->request->getQuery('institution_id') != null) {
+            $institutionId =  $this->request->getQuery('institution_id');
+        }
         foreach ($months as $month) {
             $year = $month['year'];
             $sheetName = $month['month']['inString'].' '.$year;
@@ -101,8 +107,11 @@ class StaffAttendancesTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $academicPeriodId = $this->request->query['academic_period_id'];
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
         $institutionId = $this->Session->read('Institution.Institutions.id');
+        if (empty($institutionId) && $this->request->getQuery('institution_id') != null) {
+            $institutionId =  $this->request->getQuery('institution_id');
+        }
         $query
             ->where([$this->aliasField('institution_id') => $institutionId])
             ->distinct([$this->aliasField('staff_id')])
@@ -118,7 +127,7 @@ class StaffAttendancesTable extends ControllerActionTable
             'field' => 'openemis_no',
             'type' => 'string',
             'label' => ''
-        ];
+        ];      
         $newFields = array_merge($newArray, $fields->getArrayCopy());
         $fields->exchangeArray($newFields);
         $sheet = $settings['sheet'];
@@ -172,8 +181,8 @@ class StaffAttendancesTable extends ControllerActionTable
 
         if (isset($attendanceData[$entity->staff_id][$attr['date']])) {
             $attendanceObj = $attendanceData[$entity->staff_id][$attr['date']]['attendance'];
-            $timeIn = $attendanceObj->time_in ? $attendanceObj->time_in->format('H:i:s') : '';
-            $timeOut = $attendanceObj->time_out ? ' - '.$attendanceObj->time_out->format('H:i:s') : '';
+            $timeIn = $attendanceObj->time_in ? $attendanceObj->time_in: '';
+            $timeOut = $attendanceObj->time_out ? ' - '.$attendanceObj->time_out: '';
             return $timeIn. $timeOut;
         }
 

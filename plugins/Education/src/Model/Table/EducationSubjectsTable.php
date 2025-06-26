@@ -17,7 +17,7 @@ class EducationSubjectsTable extends ControllerActionTable
 {
     use HtmlTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->addBehavior('Education.Setup');
@@ -56,7 +56,7 @@ class EducationSubjectsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator
@@ -83,11 +83,14 @@ class EducationSubjectsTable extends ControllerActionTable
             return $subjectOptions;
         }
     }
+
     //POCOR-8142::Start
     public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
         $extra['excludedModels'] = [ //this will exclude checking during remove restrict
-            $this->Assessments->alias()
+            $this->Assessments->getAlias()
         ];
         if ($this->hasAssociatedRecords($this, $entity, $extra)) {
             $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
@@ -100,8 +103,8 @@ class EducationSubjectsTable extends ControllerActionTable
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         // To handle when delete all subjects
-        if (!array_key_exists('field_of_studies', $data[$this->alias()])) {
-            $data[$this->alias()]['field_of_studies'] = [];
+        if (!array_key_exists('field_of_studies', $data[$this->getAlias()])) {
+            $data[$this->getAlias()]['field_of_studies'] = [];
         }
 
         $newOptions['associated'] = [
@@ -198,7 +201,7 @@ class EducationSubjectsTable extends ControllerActionTable
 
         $fieldOfStudiesOptions = $this->getFieldOfStudiesOptions();
 
-        $alias = $this->alias();
+        $alias = $this->getAlias();
         $fieldKey = 'field_of_studies';
 
         if ($action == 'view') {
@@ -212,7 +215,7 @@ class EducationSubjectsTable extends ControllerActionTable
         } else if ($action == 'add' || $action == 'edit') {
             $tableHeaders[] = __('Action');
 
-            $Form = $event->subject()->Form;
+            $Form = $event->getSubject()->Form;
             $Form->unlockField($alias.".".$fieldKey);
 
             $arrayOptions = [];
@@ -226,9 +229,9 @@ class EducationSubjectsTable extends ControllerActionTable
                     }
                 }
             } elseif ($this->request->is(['post', 'put'])) {
-                $requestData = $this->request->data;
-                if (array_key_exists('field_of_studies', $requestData[$this->alias()])) {
-                    foreach ($requestData[$this->alias()]['field_of_studies'] as $key => $obj) {
+                $requestData = $this->request->getData();
+                if (array_key_exists('field_of_studies', $requestData[$this->getAlias()])) {
+                    foreach ($requestData[$this->getAlias()]['field_of_studies'] as $key => $obj) {
                         $arrayOptions[] = [
                             'id' => $obj['id'],
                             'name' => $obj['name']
@@ -270,7 +273,7 @@ class EducationSubjectsTable extends ControllerActionTable
         $attr['tableCells'] = $tableCells;
         $attr['fieldOfStudiesOptions'] = $fieldOfStudiesOptions;
 
-        return $event->subject()->renderElement($fieldKey, ['attr' => $attr]);
+        return $event->getSubject()->renderElement($fieldKey, ['attr' => $attr]);
     }
 
     public function isUsedInStaffQualifications(Entity $entity, $educationFieldOfStudyId)
@@ -278,22 +281,23 @@ class EducationSubjectsTable extends ControllerActionTable
         $educationSubjectId = $entity->id;
 
         $StaffQualificationsSubjects = TableRegistry::get('Staff.QualificationsSubjects');
-        $count = $StaffQualificationsSubjects->find()
+        $query = $StaffQualificationsSubjects->find()
             ->matching('StaffQualifications', function ($q) use ($educationFieldOfStudyId) {
                 return $q->where(['education_field_of_study_id' => $educationFieldOfStudyId]);
-            })
-            ->where([$StaffQualificationsSubjects->aliasField('education_subject_id') => $educationSubjectId])
-            ->count();
+            });
+        if(!empty( $educationSubjectId)) {
+            $query = $query->where([$StaffQualificationsSubjects->aliasField('education_subject_id') => $educationSubjectId]);
+        }
+        $count = $query->count();
 
         return $count > 0 ? true : false;
     }
 
     public function addEditOnAddFieldOfStudy(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $alias = $this->alias();
+        $alias = $this->getAlias();
         $fieldKey = 'selected_field_of_study';
-
-        if (array_key_exists($alias, $data) && array_key_exists($fieldKey, $data[$alias])) {
+        if (isset($data[$alias][$fieldKey])) {
             $selectedFieldOfStudy = $data[$alias][$fieldKey];
             $fieldOfStudyEntity = $this->FieldOfStudies->get($selectedFieldOfStudy);
 
@@ -301,7 +305,7 @@ class EducationSubjectsTable extends ControllerActionTable
                 'id' => $selectedFieldOfStudy,
                 'name' => $fieldOfStudyEntity->name
             ];
-
+            $this->request = $this->request->withData($alias . '.field_of_studies', $data[$alias]['field_of_studies']);;
             unset($data[$alias][$fieldKey]);
         }
 
@@ -311,5 +315,32 @@ class EducationSubjectsTable extends ControllerActionTable
                 'validate' => false
             ]
         ];
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'visible') {
+            return __('Visible');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
 }

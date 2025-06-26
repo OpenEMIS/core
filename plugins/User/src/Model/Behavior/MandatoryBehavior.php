@@ -16,10 +16,10 @@ class MandatoryBehavior extends Behavior
     protected $_roleFields;
     protected $_currentNationality;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->_userRole = (array_key_exists('userRole', $config))? $config['userRole']: null;
-        $this->_roleFields = (array_key_exists('roleFields', $config))? $config['roleFields']: [];
+        $this->_userRole = (isset($config['userRole']))? $config['userRole']: null;
+        $this->_roleFields = (isset($config['roleFields']))? $config['roleFields']: [];
         if (is_null($this->_userRole)) {
             die('userRole must be set in mandatory behavior');
         }
@@ -37,7 +37,7 @@ class MandatoryBehavior extends Behavior
         $this->_table->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -68,11 +68,16 @@ class MandatoryBehavior extends Behavior
         $value = $data->value;
 
         $ConfigItemOptions = TableRegistry::get('Configuration.ConfigItemOptions');
-        $result = $ConfigItemOptions
-            ->find()
-            ->where([$ConfigItemOptions->aliasField('option_type') => $optionType, $ConfigItemOptions->aliasField('value') => $value])
-            ->first();
-        return $result->option;
+        if($optionType) { // POCOR-9116
+            $result = $ConfigItemOptions
+                ->find()
+                ->where([$ConfigItemOptions->aliasField('option_type') => $optionType,
+                    $ConfigItemOptions->aliasField('value') => $value])
+                ->first();
+            return $result->option;
+        } else { // POCOR-9116
+            return '';
+        }
     }
 
     public function addOnInitialize(Event $event, Entity $entity)
@@ -88,23 +93,23 @@ class MandatoryBehavior extends Behavior
                 // if default nationality can be found
                 $this->_table->fields['nationality']['default'] = $defaultNationality->id;
                 //POCOR-6047 starts
-                if ($this->_table->alias() == "Directories") {
+                if ($this->_table->getAlias() == "Directories") {
                     $defaultIdentityType = ['0' => '-- '.__('Select').' --'];
                 } else {
                     $defaultIdentityType = $defaultNationality->identity_type_id;
                 }
                 //POCOR-6047 ends
-                
+
             }
 
             if (empty($defaultIdentityType)) {
-                $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+                $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
                 $defaultIdentityTypeEntity = $IdentityTypes->find()
                     ->where([$IdentityTypes->aliasField('default') => 1])
                     ->first();
                 if (!empty($defaultIdentityTypeEntity)) {
                     //POCOR-6047 starts
-                if ($this->_table->alias() == "Directories") {
+                if ($this->_table->getAlias() == "Directories") {
                     $defaultIdentityType = ['0' => '-- '.__('Select').' --'];
                 } else {
                     $defaultIdentityType = $defaultIdentityTypeEntity->id;
@@ -115,7 +120,7 @@ class MandatoryBehavior extends Behavior
 
             if (!empty($defaultIdentityType)) {
                 //POCOR-6047 starts
-                if ($this->_table->alias() == "Directories") {
+                if ($this->_table->getAlias() == "Directories") {
                     $this->_table->fields['identity_type']['default'] = ['0' => '-- '.__('Select').' --'];
                 } else {
                     $this->_table->fields['identity_type']['default'] = $defaultIdentityType;
@@ -180,31 +185,31 @@ class MandatoryBehavior extends Behavior
 
                 $tableName = Inflector::tableize($key);
 
-                if (array_key_exists($tableName, $data[$this->_table->alias()])) { //entire form data
+                if (array_key_exists($tableName, $data[$this->_table->getAlias()])) { //entire form data
 
-                    if (array_key_exists(0, $data[$this->_table->alias()][$tableName])) { //data per form element
+                    if (array_key_exists(0, $data[$this->_table->getAlias()][$tableName])) { //data per form element
 
                         // going to check all fields.. if something is empty(form fill incomplete).. the data will not be removed and not saved
                         $incompleteField = false;
 
-                        foreach ($data[$this->_table->alias()][$tableName][0] as $ckey => $check) { //value each form element
+                        foreach ($data[$this->_table->getAlias()][$tableName][0] as $ckey => $check) { //value each form element
 
                             // done for controller v4 for add saving by association 'security_user_id' is pre-set and replaced by cake later with the correct id
 
                             if (in_array($key, ['Nationalities', 'Contacts'])) {
-                                if (array_key_exists($tableName, $data[$this->_table->alias()])) {
-                                    foreach ($data[$this->_table->alias()][$tableName] as $tkey => $tvalue) {
+                                if (array_key_exists($tableName, $data[$this->_table->getAlias()])) {
+                                    foreach ($data[$this->_table->getAlias()][$tableName] as $tkey => $tvalue) {
                                         // logic to get contact_option_id from contact_type_id as contact_option_id is set as requirePresence, otherwise will have validation error
                                         if ($key == 'Contacts' && $ckey == 'contact_type_id') {
                                             $contactTypeId = $check;
                                             if (!empty($contactTypeId)) {
                                                 $ContactTypes = TableRegistry::get('User.ContactTypes');
                                                 $contactOptionId = $ContactTypes->get($contactTypeId)->contact_option_id;
-                                                $data[$this->_table->alias()][$tableName][$tkey]['contact_option_id'] = $contactOptionId;
+                                                $data[$this->_table->getAlias()][$tableName][$tkey]['contact_option_id'] = $contactOptionId;
                                             }
                                         }
                                         // End
-                                        $data[$this->_table->alias()][$tableName][$tkey]['security_user_id'] = '0';
+                                        $data[$this->_table->getAlias()][$tableName][$tkey]['security_user_id'] = '0';
                                     }
                                 }
                             }
@@ -216,7 +221,7 @@ class MandatoryBehavior extends Behavior
                                 }
 
                                 if ($incompleteField) {
-                                    unset($data[$this->_table->alias()][$tableName]);
+                                    unset($data[$this->_table->getAlias()][$tableName]);
                                 }
                             }
                         }
@@ -233,23 +238,23 @@ class MandatoryBehavior extends Behavior
     public function addOnChangeNationality(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $Nationalities = TableRegistry::get('FieldOption.Nationalities');
-        $nationalityId = $data[$this->_table->alias()]['nationalities'][0]['nationality_id'];
+        $nationalityId = $data[$this->_table->getAlias()]['nationalities'][0]['nationality_id'];
         $nationality = $Nationalities->findById($nationalityId)->first();
         $defaultIdentityType = (!empty($nationality))? $nationality->identity_type_id: null;
         if (empty($defaultIdentityType)) {
-            $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+            $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
             $defaultIdentityType = $IdentityTypes->find()
                 ->where([$IdentityTypes->aliasField('default') => 1])
                 ->first();
             $defaultIdentityType = (!empty($defaultIdentityType))? $defaultIdentityType->id: null;
         }
 
-        $this->_table->fields['nationality']['default'] = $data[$this->_table->alias()]['nationalities'][0]['nationality_id'];
+        $this->_table->fields['nationality']['default'] = $data[$this->_table->getAlias()]['nationalities'][0]['nationality_id'];
 
         // overriding the  previous input to put in default identities
         if (isset($this->_table->fields['identity_type'])) {
             //POCOR-6047 starts
-            if ($this->_table->alias() == "Directories") {
+            if ($this->_table->getAlias() == "Directories") {
                 $this->_table->fields['identity_type']['default'] = ['0' => '-- '.__('Select').' --'];
             } else {
                 $this->_table->fields['identity_type']['default'] = $defaultIdentityType;
@@ -258,10 +263,10 @@ class MandatoryBehavior extends Behavior
         }
 
         //POCOR-6047 starts
-        if ($this->_table->alias() == "Directories") {
-            $data[$this->_table->alias()]['identities'][0]['identity_type_id'] = ['0' => '-- '.__('Select').' --'];
+        if ($this->_table->getAlias() == "Directories") {
+            $data[$this->_table->getAlias()]['identities'][0]['identity_type_id'] = ['0' => '-- '.__('Select').' --'];
         } else {
-            $data[$this->_table->alias()]['identities'][0]['identity_type_id'] = $defaultIdentityType;
+            $data[$this->_table->getAlias()]['identities'][0]['identity_type_id'] = $defaultIdentityType;
         }
         //POCOR-6047 ends
 
@@ -290,9 +295,9 @@ class MandatoryBehavior extends Behavior
                 'ContactTypes.order'
             ])
             ->toArray();
-            
+
         $attr['type'] = 'select';
-        $attr['fieldName'] = $this->_table->alias().'.contacts.0.contact_type_id';
+        $attr['fieldName'] = $this->_table->getAlias().'.contacts.0.contact_type_id';
         $attr['options'] = $contactOptions;
 
         return $attr;
@@ -301,7 +306,7 @@ class MandatoryBehavior extends Behavior
     public function onUpdateFieldContactValue(Event $event, array $attr, $action, $request)
     {
         $attr['type'] = 'string';
-        $attr['fieldName'] = $this->_table->alias().'.contacts.0.value';
+        $attr['fieldName'] = $this->_table->getAlias().'.contacts.0.value';
 
         return $attr;
     }
@@ -320,7 +325,7 @@ class MandatoryBehavior extends Behavior
         $attr['type'] = 'select';
         $attr['options'] = $nationalityOptions;
         $attr['onChangeReload'] = 'changeNationality';
-        $attr['fieldName'] = $this->_table->alias().'.nationalities.0.nationality_id';
+        $attr['fieldName'] = $this->_table->getAlias().'.nationalities.0.nationality_id';
         // default is set in addOnInitialize
 
         return $attr;
@@ -334,10 +339,10 @@ class MandatoryBehavior extends Behavior
             }
         }
 
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identityTypeOptions = $IdentityTypes->getList();
         $attr['type'] = 'select';
-        $attr['fieldName'] = $this->_table->alias().'.identities.0.identity_type_id';
+        $attr['fieldName'] = $this->_table->getAlias().'.identities.0.identity_type_id';
         $attr['options'] = $identityTypeOptions->toArray();
         // default is set in addOnInitialize
 
@@ -347,7 +352,7 @@ class MandatoryBehavior extends Behavior
     public function onUpdateFieldIdentityNumber(Event $event, array $attr, $action, $request)
     {
         $attr['type'] = 'string';
-        $attr['fieldName'] = $this->_table->alias().'.identities.0.number';
+        $attr['fieldName'] = $this->_table->getAlias().'.identities.0.number';
 
         return $attr;
     }

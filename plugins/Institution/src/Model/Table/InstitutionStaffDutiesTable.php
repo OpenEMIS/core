@@ -12,9 +12,9 @@ use App\Model\Table\ControllerActionTable;
 
 class InstitutionStaffDutiesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff_duties');
+        $this->setTable('institution_staff_duties');
         parent::initialize($config);
         $this->belongsTo('StaffDuties', ['className' => 'Institution.StaffDuties', 'foreignKey' => 'staff_duties_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -25,15 +25,19 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
            // 'excludes' => ['institution_id'],
             'pages' => ['index'],
         ]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StaffDuties' =>['id']
+            ]
+        ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 
 		return $validator
@@ -52,6 +56,16 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
             return __('Staff');
         } else if ($field == 'comment') {
             return __('Comment');
+        }else if ($field == 'Institution') {
+            return __('Institution');
+        }else if ($field == 'modified') {
+            return __('Modified');
+        }else if ($field == 'modified_user_id') {
+            return __('Modified User Id');
+        }else if ($field == 'created') {
+            return __('Created');
+        }else if ($field == 'created_user_id') {
+            return __('Created By');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -116,7 +130,7 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
      */
     public function getStaffList () {
 
-        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $Staff = TableRegistry::get('Institution.Staff');
         $staffOptions = array();
         $result = $Staff->find()
@@ -182,13 +196,13 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
 
     public function onExcelGetInstitutionName(Event $event, Entity $entity)
     {
-        $Institutions = TableRegistry::get('institutions');
+        $Institutions = TableRegistry::get('Institution.Institutions');
         $InstitutionName=$Institutions->find()->select('name')->where(['id' => $entity->institution_id])->first();
         return $InstitutionName['name'];
     }
     public function onGetInstitution(Event $event, Entity $entity)
     {
-        $Institutions = TableRegistry::get('institutions');
+        $Institutions = TableRegistry::get('Institution.Institutions');
         $InstitutionName=$Institutions->find()->select('name')->where(['id' => $entity->institution_id])->first();
         return $InstitutionName['name'];
     }

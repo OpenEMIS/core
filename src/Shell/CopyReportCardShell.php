@@ -9,7 +9,7 @@ use Cake\Utility\Text;
 
 class CopyReportCardShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
     }

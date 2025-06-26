@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\Log\Log;
 use Cake\ORM\Entity;
@@ -18,9 +18,9 @@ use Cake\Datasource\ConnectionManager;
  */
 class InstitutionStandardStudentAbsencesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_absence_days');
+        $this->setTable('institution_student_absence_days');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
@@ -40,24 +40,25 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 
-        $controllerName = $this->controller->name;
+        $controllerName = $this->controller->getName();
         $institutions_crumb = __('Institutions');
         $parent_crumb       = __('Statistics');
         $reportName         = __('Standard');
         
         //# START: Crumb
-        $this->Navigation->removeCrumb($this->getHeader($this->alias));
+        $this->Navigation->removeCrumb($this->getHeader($this->getAlias()));
         $this->Navigation->addCrumb($institutions_crumb . ' ' . $parent_crumb);
         //# END: Crumb
         $this->controller->set('contentHeader', __($institutions_crumb) . ' ' . $parent_crumb . ' - ' . $reportName);
     }
 
-    public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institution_id = $session->read('Institution.Institutions.id');
-        $request->data[$this->alias()]['current_institution_id'] = $institution_id;
-        $request->data[$this->alias()]['institution_id'] = $institution_id;
+        $request = $request->getData($this->getAlias());
+        $request['current_institution_id'] = $institution_id;
+        $request['institution_id'] = $institution_id;
         if ($action == 'add') {
             $attr['value'] = 'xlsx';
             $attr['attr']['value'] = 'Excel';
@@ -66,15 +67,16 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         $options = $options = $this->controller->getInstitutionStatisticStandardReportFeature();
         $attr['options'] = $options;
         $attr['onChangeReload'] = true;
-        if (!(isset($this->request->data[$this->alias()]['feature']))) {
+        $request = $this->request->getData($this->getAlias());
+        if (!(isset($request['feature']))) {
             $option = $attr['options'];
             reset($option);
-            $this->request->data[$this->alias()]['feature'] = key($option);
+            $request['feature'] = key($option);
         }
         return $attr;
     }
@@ -82,7 +84,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'

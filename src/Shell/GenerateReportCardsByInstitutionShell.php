@@ -13,7 +13,7 @@ class GenerateReportCardsByInstitutionShell extends Shell
     CONST SLEEP_TIME = 10;
     CONST ACADEMIC_PERIOD_ID = 18;
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('CustomExcel.ReportCards');
@@ -23,8 +23,8 @@ class GenerateReportCardsByInstitutionShell extends Shell
     }
 
     public function main()
-    {  
-         
+    {
+
         $recordToProcesses = $this->ReportCardProcesses->find()
             ->select([
             $this->ReportCardProcesses->aliasField('report_card_id'),
@@ -41,12 +41,12 @@ class GenerateReportCardsByInstitutionShell extends Shell
                         $this->ReportCardProcesses->aliasField('created'),
                         $this->ReportCardProcesses->aliasField('student_id')
                     ])
-                    ->hydrate(false)
+                    ->disableHydration() // POCOR-8533
                     ->limit(2);  // for 2 institutions
 
             if (!empty($recordToProcesses)) {
                 foreach ($recordToProcesses as $key => $recordToProcess) {
-                    
+
                         $this->out('Generating report card for Student ' . $recordToProcess['student_id'] . ' (' . Time::now() . ')');
                         $institutionId = $recordToProcess['institution_id'];
                         if (!empty($institutionId)) {
@@ -56,9 +56,9 @@ class GenerateReportCardsByInstitutionShell extends Shell
                         } else {
                             $this->out('Cannot generating report card for institutions ' . $institutionId . ' (' . Time::now() . ')');
                         }
-                
+
             }
-            } 
+            }
     }
 
     private function generateCardById($institutionId = NULL)
@@ -88,7 +88,7 @@ class GenerateReportCardsByInstitutionShell extends Shell
                         $this->ReportCardProcesses->aliasField('created'),
                         $this->ReportCardProcesses->aliasField('student_id')
                     ])
-                    ->hydrate(false)
+                    ->disableHydration() // POCOR-8533
                     ->first();
 
                 if (!empty($recordToProcess)) {

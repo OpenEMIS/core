@@ -10,9 +10,9 @@ use App\Model\Table\AppTable;
 
 class ApplicationInstitutionChoicesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('scholarship_application_institution_choices');
+        $this->setTable('scholarship_application_institution_choices');
         parent::initialize($config);
 
         $this->belongsTo('Applications', ['className' => 'Scholarship.Applications', 'foreignKey' => ['applicant_id', 'scholarship_id']]);
@@ -25,7 +25,7 @@ class ApplicationInstitutionChoicesTable extends AppTable
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

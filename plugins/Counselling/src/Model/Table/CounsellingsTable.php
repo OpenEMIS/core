@@ -13,10 +13,10 @@ class CounsellingsTable extends AppTable
 {
     const ASSIGNED = 1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
        
-        $this->table('counsellings');
+        $this->setTable('counsellings');
         parent::initialize($config);
 
         $this->belongsTo('GuidanceTypes', ['className' => 'Student.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
@@ -27,7 +27,7 @@ class CounsellingsTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
@@ -43,7 +43,7 @@ class CounsellingsTable extends AppTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

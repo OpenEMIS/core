@@ -6,7 +6,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -16,9 +16,9 @@ class ScholarshipsTable extends AppTable  {
 
     private $interestRateOptions = [];
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
         
-        $this->table('scholarships');
+        $this->setTable('scholarships');
         parent::initialize($config);
         
         $this->belongsTo('FinancialAssistanceTypes', ['className' => 'Scholarship.FinancialAssistanceTypes', 'foreignKey' => 'scholarship_financial_assistance_type_id']);
@@ -73,13 +73,13 @@ class ScholarshipsTable extends AppTable  {
         $this->ControllerAction->field('scholarship_financial_assistance_type_id');
     }
     
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
-        $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request) {
+        $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
         $attr['onChangeReload'] = true;
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) 
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request) 
     {
         $attr['options'] = $this->AcademicPeriods->getYearList();
         $attr['default'] = $this->AcademicPeriods->getCurrent();
@@ -149,7 +149,7 @@ class ScholarshipsTable extends AppTable  {
     }
     //POCOR-6637::END
 
-    public function onUpdateFieldScholarshipFinancialAssistanceTypeId(Event $event, array $attr, $action, Request $request) 
+    public function onUpdateFieldScholarshipFinancialAssistanceTypeId(Event $event, array $attr, $action, ServerRequest $request) 
     {
         $financialAssistanceTypeOptions = $this->FinancialAssistanceTypes->getList()->toArray();
         $financialAssistanceTypeOptions = ['-1' => __('All Types')] + $financialAssistanceTypeOptions;
@@ -387,12 +387,26 @@ class ScholarshipsTable extends AppTable  {
                         $return[] = $studyField->name;
                 }
             }else {
-                $EducationFieldOfStudies = TableRegistry::get('Education.EducationFieldOfStudies')->getList()->toArray();
+                $EducationFieldOfStudies = TableRegistry::getTableLocator()->get('Education.EducationFieldOfStudies')->getList()->toArray();
                 foreach ($EducationFieldOfStudies as $educationFieldOfStudy) {
                     $return [] = $educationFieldOfStudy;
                 }
             }
         }
         return implode(', ', array_values($return));
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

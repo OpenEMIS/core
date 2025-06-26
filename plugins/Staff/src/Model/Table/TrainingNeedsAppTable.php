@@ -7,7 +7,8 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Cake\Network\Request;
+use Cake\Http\Session;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
@@ -28,7 +29,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
 
     private $trainingCourse = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -46,7 +47,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -185,10 +186,10 @@ class TrainingNeedsAppTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
         // POCOR-1893
-        if ($this->controller->name == 'Profiles') {
+        if ($this->controller->getName() == 'Profiles') {
             $sessionKey = 'Auth.User.id';
         } else {
             $sessionKey = 'Staff.Staff.id';
@@ -197,16 +198,22 @@ class TrainingNeedsAppTable extends ControllerActionTable
 
         if ($session->check($sessionKey)) {
             $staffId = $session->read($sessionKey);
+        } else if($this->controller->getName() == 'Directories' && isset($this->request->getParam('pass')[1])) {
+            $param = $this->paramsDecode($this->request->getParam('pass')[1]);
+            $staffId = isset($param['staff_id']) ? $param['staff_id'] : '';
         }
 
         $extra['auto_contain_fields'] = [
             'TrainingCourses' => ['code']
         ];
 
+        if($staffId == NULL){
+            $staffId = '';
+        }
         $query
             ->contain(['TrainingNeedSubStandards.TrainingNeedStandards'])
             ->where([$this->aliasField('staff_id') => $staffId])
-            ->autoFields(true);
+            ->enableAutoFields(true);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
@@ -233,7 +240,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldType(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldType(Event $event, array $attr, $action, ServerRequest $request)
     {
         $typeOptions = $this->getTypes();
 
@@ -253,9 +260,9 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isCatalogue = $this->isCatalogue($entity);
 
         if ($action == 'view') {
@@ -265,8 +272,8 @@ class TrainingNeedsAppTable extends ControllerActionTable
                 $trainingCourseOptions = $this->Training->getCourseList();
 
                 $trainingCourseId = null;
-                if (isset($request->data[$this->alias()]['training_course_id'])) {
-                    $trainingCourseId = $request->data[$this->alias()]['training_course_id'];
+                if (isset($request->data[$this->getAlias()]['training_course_id'])) {
+                    $trainingCourseId = $request->data[$this->getAlias()]['training_course_id'];
                 } else if ($entity->has('training_course_id')) {
                     $trainingCourseId = $entity->training_course_id;
                 }
@@ -288,9 +295,9 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCourseCode(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCourseCode(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isCatalogue = $this->isCatalogue($entity);
 
         if ($action == 'view') {
@@ -316,9 +323,9 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCourseName(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCourseName(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isCatalogue = $this->isCatalogue($entity);
 
         if ($action == 'view') {
@@ -344,9 +351,9 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCourseDescription(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCourseDescription(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isCatalogue = $this->isCatalogue($entity);
 
         if ($action == 'view') {
@@ -372,9 +379,9 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingRequirementId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTrainingRequirementId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isCatalogue = $this->isCatalogue($entity);
 
         if ($action == 'view') {
@@ -400,9 +407,9 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingNeedCategoryId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTrainingNeedCategoryId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isNeed = $this->isNeed($entity);
 
         if ($action == 'view') {
@@ -419,9 +426,9 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingNeedCompetencyId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTrainingNeedCompetencyId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isNeed = $this->isNeed($entity);
 
         if ($action == 'view') {
@@ -438,9 +445,9 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingNeedStandardId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTrainingNeedStandardId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isNeed = $this->isNeed($entity);
 
         if ($action == 'view') {
@@ -466,9 +473,9 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingNeedSubStandardId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTrainingNeedSubStandardId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isNeed = $this->isNeed($entity);
 
         if ($action == 'view') {
@@ -478,8 +485,8 @@ class TrainingNeedsAppTable extends ControllerActionTable
         } else if ($action == 'add' || $action == 'edit') {
             if ($isNeed) {
                 $trainingNeedStandardId = null;
-                if (isset($request->data[$this->alias()]['training_need_standard_id'])) {
-                    $trainingNeedStandardId = $request->data[$this->alias()]['training_need_standard_id'];
+                if (isset($this->request->getData()[$this->getAlias()]['training_need_standard_id'])) {
+                    $trainingNeedStandardId = $this->request->getData()[$this->getAlias()]['training_need_standard_id'];
                 } else if ($entity->has('training_need_standard_id')) {
                     $trainingNeedStandardId = $entity->training_need_standard_id;
                 }
@@ -507,10 +514,10 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $session = $request->session();
+            $session = $request->getSession();
             $sessionKey = 'Staff.Staff.id';
 
             if ($session->check($sessionKey)) {
@@ -603,9 +610,9 @@ class TrainingNeedsAppTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
-
+        $session = $controller->getRequest()->getSession();
         $userId = $session->read('Auth.User.id');
+        // $userId = $this->getUserID();
         $Statuses = $this->Statuses;
         $doneStatus = self::DONE;
         $typeOptions = $this->getTypes();
@@ -637,8 +644,8 @@ class TrainingNeedsAppTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->TrainingCourses->alias(), $this->CreatedUser->alias(), $this->TrainingNeedCategories->alias(), $this->Staff->alias(),'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->TrainingCourses->getAlias(), $this->CreatedUser->getAlias(), $this->TrainingNeedCategories->getAlias(), $this->Staff->getAlias(),'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
@@ -680,19 +687,19 @@ class TrainingNeedsAppTable extends ControllerActionTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Staff > Training > Needs';
-            $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
                             'workflow_id'=>$Workflows->aliasField('id'),
                             'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                                 [
                                     $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
                                 ])
@@ -707,7 +714,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
+            $session = $request->getSession();
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
             }
@@ -721,7 +728,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
                     $Areas = TableRegistry::get('Area.Areas');
                     $Institutions = TableRegistry::get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {                        
+                        if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
                         } else {
                             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
@@ -737,12 +744,12 @@ class TrainingNeedsAppTable extends ControllerActionTable
                                     ->find('userList', ['where' => $where])
                                     ->leftJoinWith('SecurityGroups.Institutions');
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                            
+
                             // Region based assignee
                             $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
                                         ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-                            
+
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
                             // End
                             $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;

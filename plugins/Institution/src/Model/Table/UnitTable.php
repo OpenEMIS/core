@@ -4,14 +4,15 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\Request;
 use App\Model\Table\ControllerActionTable;
+use ArrayObject;
 
 class UnitTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_units');
+        $this->setTable('institution_units');
         parent::initialize($config);
 
         //$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -24,7 +25,7 @@ class UnitTable extends ControllerActionTable
 
     public function getUnitOptions($institutionsId, $periodId)
     {
-        $institutionClasses = TableRegistry::get('institution_units');
+        $institutionClasses = TableRegistry::getTableLocator()->get('Institution.Unit');
         $query = $institutionClasses->find('list',['keyField' => 'id', 'valueField' => 'name']);
         return $query;
     }
@@ -34,8 +35,48 @@ class UnitTable extends ControllerActionTable
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
         
-        $institutionClasses = TableRegistry::get('institution_units');
+        $institutionClasses = TableRegistry::getTableLocator()->get('Institution.Unit');
         $query = $institutionClasses->find('list',['keyField' => 'id', 'valueField' => 'name']);
-        return $query->toArray();
+        return $query;
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'visible':
+                return __('Visible');
+            case 'name':
+                return __('Name');
+            case 'international_code':
+                return __('International Code');
+            case 'national_code':
+                return __('National Code');
+            case 'editable':
+                return __('Editable');
+            case 'default':
+                return __('Default');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

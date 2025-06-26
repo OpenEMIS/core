@@ -16,9 +16,9 @@ class ScheduleLessonDetailsTable extends ControllerActionTable
     const CURRICULUM_LESSON = 1;
     const NON_CURRICULUM_LESSON = 2;
 
-    public function initialize(array $config)
+    public function initialize(array $config):void
     {
-        $this->table('institution_schedule_lesson_details');
+        $this->setTable('institution_schedule_lesson_details');
         parent::initialize($config);
 
         $this->belongsTo('ScheduleLessons', [
@@ -70,13 +70,13 @@ class ScheduleLessonDetailsTable extends ControllerActionTable
         $options = null;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
@@ -146,7 +146,8 @@ class ScheduleLessonDetailsTable extends ControllerActionTable
                 ->deleteAll(['institution_schedule_lesson_detail_id' => $lessionId]);
         TableRegistry::get('Schedule.ScheduleLessonRooms')
                 ->deleteAll(['institution_schedule_lesson_detail_id' => $lessionId]);
-        return $this->deleteAll(['id' => $lessionId]);
+        $this->deleteAll(['id' => $lessionId]);
+        return $query;
     }
     
 }

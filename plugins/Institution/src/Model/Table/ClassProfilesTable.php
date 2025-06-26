@@ -21,7 +21,7 @@ class ClassProfilesTable extends ControllerActionTable
      CONST GENERATED = 3;
      CONST PUBLISHED = 4;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('ClassTemplates', ['className' => 'ProfileTemplate.ClassTemplates', 'foreignKey' => 'class_profile_template_id']);

@@ -7,7 +7,7 @@ use Alert\Model\Behavior\AlertRuleBehavior;
 
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 
 class AlertRuleStaffTypeBehavior extends AlertRuleBehavior
@@ -71,7 +71,7 @@ class AlertRuleStaffTypeBehavior extends AlertRuleBehavior
         ]
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -81,7 +81,7 @@ class AlertRuleStaffTypeBehavior extends AlertRuleBehavior
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
-                $validator = $model->validator();
+                $validator = $model->getValidator();
                 $validator->add('value', [
                     'ruleRange' => [
                         'rule' => ['range', 1, 30],

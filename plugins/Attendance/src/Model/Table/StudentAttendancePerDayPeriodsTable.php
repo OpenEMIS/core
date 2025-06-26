@@ -9,11 +9,11 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 class StudentAttendancePerDayPeriodsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades', 'foreignKey' => 'education_grade_id']);

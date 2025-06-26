@@ -1,16 +1,17 @@
 <?php
 namespace App\Shell;
 
-use Cake\I18n\Date;
-use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
+use Cake\I18n\FrozenDate;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Console\Shell;
 use Cake\Log\Log;
 
+// This file for generate risk for all institution
 class UpdateRisksShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Institution.InstitutionStudentRisks');
@@ -30,7 +31,6 @@ class UpdateRisksShell extends Shell
         $academicPeriodId = !empty($this->args[3]) ? $this->args[3] : 0;
 
         $riskCriteriaData = $this->RiskCriterias->getCriteriaKey($riskId);
-
         if (!empty($riskCriteriaData)) {
             foreach ($riskCriteriaData as $key => $obj) {
                 $criteriaData = $this->Risks->getCriteriasDetails($key);
@@ -46,7 +46,7 @@ class UpdateRisksShell extends Shell
         $this->InstitutionRisks->updateAll(
             [
                 'generated_by' => $userId,
-                'generated_on' => new Time(),
+                'generated_on' => new FrozenTime(),
                 'pid' => null,
                 'status' => 3 // completed
             ],
@@ -56,7 +56,8 @@ class UpdateRisksShell extends Shell
 
     public function autoUpdateRisks($key, $model, $institutionId, $userId, $academicPeriodId)
     {
-        $today = Time::now();
+
+        $today = FrozenTime::now();
         $CriteriaModel = TableRegistry::get($model);
 
         // get the list of enrolled student in the institution in academic period
@@ -143,10 +144,10 @@ class UpdateRisksShell extends Shell
             // end debug
 
             // will triggered the aftersave of the model (indexes behavior)
-            $criteriaModelEntity->dirty('modified_user_id', true);
+            $criteriaModelEntity->setDirty('modified_user_id', true);
             $criteriaModelEntity->trigger_from = 'shell';
             $CriteriaModel->save($criteriaModelEntity);
-
+            
             // update the institution student index
             $this->InstitutionStudentRisks->query()
                 ->update()

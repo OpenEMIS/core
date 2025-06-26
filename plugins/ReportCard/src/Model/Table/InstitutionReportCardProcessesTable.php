@@ -10,7 +10,7 @@ class InstitutionReportCardProcessesTable extends ControllerActionTable
     const COMPLETED = 3;
     const ERROR = -1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 

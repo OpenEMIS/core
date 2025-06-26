@@ -31,50 +31,93 @@ class ScheduleService extends Controller
         return $this->scheduleRepository->getTimeTableById($id);
     }
 
-    public function getLessonsByTimeTableId($id)
+    public function getLessonsByTimeTableId($id, $params)
     {
-        $lessons = $this->scheduleRepository->getLessonsByTimeTableId($id)->map(function($item){
+        $lessons = $this->scheduleRepository->getLessonsByTimeTableId($id, $params);
 
-            $startTime = $item->timeslots->instituteInterval->shift->start_time;
+        if (isset($params['limit'])) {
+            $lessons->getCollection()->transform(function ($item, $key) {
+                $startTime = $item->timeslots->instituteInterval->shift->start_time;
 
-            $carbon = Carbon::createFromFormat('H:i:s', $startTime);
+                $carbon = Carbon::createFromFormat('H:i:s', $startTime);
 
-            $carbon->addMinutes($item->timeslots->interval);
+                $carbon->addMinutes($item->timeslots->interval);
 
-            $endTime = $carbon->format('H:i:s');
+                $endTime = $carbon->format('H:i:s');
 
-            $item->timeslots->start_time = $startTime;
-            $item->timeslots->end_time = $endTime;
+                $item->timeslots->start_time = $startTime;
+                $item->timeslots->end_time = $endTime;
 
-            unset($item['timeslots']['instituteInterval']);
+                unset($item['timeslots']['instituteInterval']);
+              
+                return $item;
+            });
+        } else {
+            $lessons = $lessons->map(function($item){
 
-            return $item;
-        });
+                $startTime = $item->timeslots->instituteInterval->shift->start_time;
+
+                $carbon = Carbon::createFromFormat('H:i:s', $startTime);
+
+                $carbon->addMinutes($item->timeslots->interval);
+
+                $endTime = $carbon->format('H:i:s');
+
+                $item->timeslots->start_time = $startTime;
+                $item->timeslots->end_time = $endTime;
+
+                unset($item['timeslots']['instituteInterval']);
+
+                return $item;
+            });
+        }
 
         return $lessons;
     }
 
-    public function getTimeSlotsByIntervalId($intervalId)
+    public function getTimeSlotsByIntervalId($intervalId, $params)
     {
-        $timeSlots = $this->scheduleRepository->getTimeSlotsByIntervalId($intervalId)->map(function($item){
+        $timeSlots = $this->scheduleRepository->getTimeSlotsByIntervalId($intervalId, $params);
+        if (isset($params['limit'])) {
+            $timeSlots->getCollection()->transform(function ($item, $key) {
+                $startTime = $item->instituteInterval->shift->start_time;
 
-            $startTime = $item->instituteInterval->shift->start_time;
+                $carbon = Carbon::createFromFormat('H:i:s', $startTime);
 
-            $carbon = Carbon::createFromFormat('H:i:s', $startTime);
+                $carbon->addMinutes($item->interval);
 
-            $carbon->addMinutes($item->interval);
+                $endTime = $carbon->format('H:i:s');
 
-            $endTime = $carbon->format('H:i:s');
+                return [
+                    'id' => $item->id,
+                    'institution_schedule_interval_id' => $item->institution_schedule_interval_id,
+                    'interval' => $item->interval,
+                    'order' => $item->order,
+                    'start_time' => $item->instituteInterval->shift->start_time,
+                    'end_time' => $endTime
+                ];
+            });
+        } else {
+            $timeSlots = $timeSlots->map(function($item){
 
-            return [
-                'id' => $item->id,
-                'institution_schedule_interval_id' => $item->institution_schedule_interval_id,
-                'interval' => $item->interval,
-                'order' => $item->order,
-                'start_time' => $item->instituteInterval->shift->start_time,
-                'end_time' => $endTime
-            ];
-        });
+                $startTime = $item->instituteInterval->shift->start_time;
+
+                $carbon = Carbon::createFromFormat('H:i:s', $startTime);
+
+                $carbon->addMinutes($item->interval);
+
+                $endTime = $carbon->format('H:i:s');
+
+                return [
+                    'id' => $item->id,
+                    'institution_schedule_interval_id' => $item->institution_schedule_interval_id,
+                    'interval' => $item->interval,
+                    'order' => $item->order,
+                    'start_time' => $item->instituteInterval->shift->start_time,
+                    'end_time' => $endTime
+                ];
+            });
+        }
 
         return $timeSlots;
     }
@@ -88,7 +131,6 @@ class ScheduleService extends Controller
            throw $e;
         }
     }
-
 
 
     //POCOR-8295 start...

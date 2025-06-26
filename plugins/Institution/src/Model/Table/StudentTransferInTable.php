@@ -1,19 +1,19 @@
 <?php
+
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
-use Cake\Datasource\ResultSetInterface;
-use Institution\Model\Table\InstitutionStudentTransfersTable;
 
 class StudentTransferInTable extends InstitutionStudentTransfersTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -23,17 +23,41 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         ]);
 
         if ($this->behaviors()->has('Workflow')) {
-            $this->behaviors()->get('Workflow')->config([
-                'institution_key' => 'institution_id'
-            ]);
+            // $this->behaviors()->get('Workflow')->config([
+            //     'institution_key' => 'institution_id'
+            // ]);
+            $workflowBehavior = $this->behaviors()->get('Workflow');
+            $workflowBehavior->setConfig('institution_key', 'institution_id');
         }
 
         $this->toggle('add', true);//POCOR-6925
+        $this->addBehavior('Institution.InstitutionTab'
+            , [
+                'appliedAction' => ['StudentTransferIn' => [
+                    'assignee_id',
+                    'institution_id',
+                    'academic_period_id',
+                    'previous_institution_id',
+                    'previous_academic_period_id',
+                    'previous_education_grade_id',
+                    'student_transfer_reason_id'
+                ]
+                ]
+            ]
+        );
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationBulkTransfer(Validator $validator)
+    {
+        // requested_date is not relevent for transfer of promoted/graduated students
+        $validator = $this->validationDefault($validator);
+        return $validator->remove('start_date', 'ruleCompareDateReverse');
+    }
+
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator
             ->notEmpty(['start_date', 'workflow_assignee_id'])
             ->add('start_date', [
@@ -41,9 +65,10 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
                 ],
                 'ruleCompareDateReverse' => [
-                    'rule' => ['compareDateReverse', 'requested_date', []],
+                    'rule' => ['compareDateReverse', 'requested_date', true],
                     'on' => function ($context) {
-                        return array_key_exists('requested_date', $context['data']) && !empty($context['data']['requested_date']);
+                        return array_key_exists('requested_date', $context['data'])
+                            && !empty($context['data']['requested_date']);
                     }
                 ],
                 'ruleCompareDate' => [
@@ -94,14 +119,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
             ]);
     }
 
-    public function validationBulkTransfer(Validator $validator)
-    {
-        // requested_date is not relevent for transfer of promoted/graduated students
-        $validator = $this->validationDefault($validator);
-        return $validator->remove('start_date', 'ruleCompareDateReverse');
-    }
-
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Students.afterSave'] = 'studentsAfterSave';
@@ -112,13 +130,14 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     {
         if ($student->isNew()) {
             // close other pending RECEIVING transfer applications (in same education system) if the student is successfully transferred in one school
-            $this->rejectPendingTransferRequests($this->registryAlias(), $student);
+            $this->rejectPendingTransferRequests($this->getRegistryAlias(), $student);
         }
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $this->field('requested_date', ['type' => 'hidden']);
         $this->field('end_date', ['type' => 'hidden']);
         $this->field('institution_id', ['type' => 'hidden']);
@@ -148,15 +167,17 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $toolbarButtonsArray['back']['url']['controller'] = 'Institutions';
         $toolbarButtonsArray['back']['url']['action'] = 'Students';
         $toolbarButtonsArray['back']['url'][0] = 'index';
+        $toolbarButtonsArray['back']['url'][1] = $encodedQueryString;
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 //        $this->log('before_check');
-        if($this->checkUserAccess()) {
+        if ($this->checkUserAccess()) {
             $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
             $url = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'BulkStudentTransferIn',
-                'edit'
+                '0' => 'edit',
+                '1' => $encodedQueryString
             ];
             $toolbarButtonsArray['bulkAdmission'] = $this->getButtonTemplate();
             $toolbarButtonsArray['bulkAdmission']['label'] = '<i class="fa kd-transfer"></i>';
@@ -173,26 +194,25 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     {
         $check = false;
         $newQ = clone $this->query();
-        $session = $this->request->session();
-        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $newQ->find('InstitutionStudentTransferIn', ['institution_id' => $institutionId]);
         $newQ->where(['Statuses.category' => self::IN_PROGRESS]);
         $one_req = $newQ->find('all')->first();
-        if($one_req){
+        if ($one_req) {
             $status_id = $one_req->status_id;
 //            $this->log($status_id, 'debug');
-        }else{
+        } else {
             return false;
         }
         $session = $this->Session;
         $superAdmin = $session->read('Auth.User.super_admin');
-        if($superAdmin){
+        if ($superAdmin) {
             return true;
         }
         $roleIds = [];
         $event = $this->dispatchEvent('Workflow.onUpdateRoles', null, $this);
-        if ($event->result) {
-            $roleIds = $event->result;
+        if ($event->getResult()) {
+            $roleIds = $event->getResult();
         } else {
             $roles = $this->AccessControl->getRolesByUser()->toArray();
             foreach ($roles as $key => $role) {
@@ -203,7 +223,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
             $roleIds = [0];
         }
 //        $this->log($roleIds);
-        $all_steps_and_roles = TableRegistry::get('workflow_steps_roles');
+        $all_steps_and_roles = TableRegistry::get('Workflow.WorkflowStepsRoles');
         $distinct_step = $all_steps_and_roles->find()
             ->select(['workflow_step_id'])
             ->where(['workflow_step_id' => $status_id,
@@ -221,8 +241,10 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $paramInstituionId = $this->request->getAttribute('params')['institutionId'];
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $institutionId = isset($paramInstituionId) ? $this->paramsDecode($paramInstituionId)['id'] : $getInstitutionId;
 
         $query->find('InstitutionStudentTransferIn', ['institution_id' => $institutionId]);
         $extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code']];
@@ -244,6 +266,8 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $selectedAcademicPeriodData = $this->AcademicPeriods->get($entity->academic_period_id);
 
         //$entity->start_date = $selectedAcademicPeriodData->start_date;
@@ -261,12 +285,12 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         ]);
         //POCOR-5944 starts
         $statusId = $entity['status']->id;
-        $session = $this->request->session();
-        $institutionId = $this->request->pass[1];
+        $session = $this->request->getSession();
+        $institutionId = $this->getInstitutionID();
         $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
         $editCheck = $WorkflowSteps->find()
-                        ->where([$WorkflowSteps->aliasField('id') => $statusId])
-                        ->first();
+            ->where([$WorkflowSteps->aliasField('id') => $statusId])
+            ->first();
         if (!empty($editCheck)) {
             $isEditable = $editCheck->is_editable;
             $isRemovable = $editCheck->is_removable;
@@ -292,7 +316,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                         $button = [
                             'type' => 'hidden',
                             'attr' => $btnAttr,
-                            'url' => [0 => 'index']
+                            'url' => [0 => 'index', 1 => $encodedQueryString]
                         ];
                         $button['url']['action'] = $attr['action'];
                         $button['attr']['title'] = $attr['title'];
@@ -324,7 +348,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                         $button = [
                             'type' => 'hidden',
                             'attr' => $btnAttr,
-                            'url' => [0 => 'index']
+                            'url' => [0 => 'index', 1 => $encodedQueryString]
                         ];
                         $button['url']['action'] = $attr['action'];
                         $button['attr']['title'] = $attr['title'];
@@ -393,7 +417,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
 
         $this->setFieldOrder([
             'previous_information_header', 'student_id', 'previous_institution_id', 'previous_academic_period_id', 'previous_education_grade_id', 'requested_date',
-            'new_information_header', 'academic_period_id', 'education_grade_id', 'institution_id',  'institution_class_id', 'start_date', 'end_date',
+            'new_information_header', 'academic_period_id', 'education_grade_id', 'institution_id', 'institution_class_id', 'start_date', 'end_date',
             'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
         ]);
     }
@@ -406,12 +430,12 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $startDate = $entity->start_date;
         $newDate = date("Y-m-d", strtotime($startDate));
         $endDate = $entity->end_date;
-        $institutionStudents = TableRegistry::get('institution_students');
+        $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $query = $institutionStudents->query();
         $query->update()
-                ->set(['start_date' => $newDate])
-                ->where(['institution_id' => $institutionId, 'student_id' => $studentId, 'academic_period_id' => $academicPeriodId])
-                ->execute();
+            ->set(['start_date' => $newDate])
+            ->where(['institution_id' => $institutionId, 'student_id' => $studentId, 'academic_period_id' => $academicPeriodId])
+            ->execute();
 
     }
 
@@ -426,7 +450,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldRequestedDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldRequestedDate(Event $event, array $attr, $action, $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -441,7 +465,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -484,7 +508,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -504,7 +528,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->getRequest()->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -538,8 +562,8 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->alias(), $this->Institutions->alias(), $this->PreviousInstitutions->alias(), $this->CreatedUser->alias(),'Assignees'])
-            ->matching($Statuses->alias().'.'.$StepsParams->alias(), function ($q) use ($Statuses, $StepsParams, $doneStatus, $incomingInstitution) {
+            ->contain([$this->Users->getAlias(), $this->Institutions->getAlias(), $this->PreviousInstitutions->getAlias(), $this->CreatedUser->getAlias(), 'Assignees'])
+            ->matching($Statuses->getAlias() . '.' . $StepsParams->getAlias(), function ($q) use ($Statuses, $StepsParams, $doneStatus, $incomingInstitution) {
                 return $q->where([
                     $Statuses->aliasField('category <> ') => $doneStatus,
                     $StepsParams->aliasField('name') => 'institution_owner',
@@ -555,9 +579,12 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                         'plugin' => 'Institution',
                         'controller' => 'Institutions',
                         'action' => 'StudentTransferIn',
-                        'view',
-                        $this->paramsEncode(['id' => $row->id]),
-                        'institution_id' => $row->institution_id
+                        '0' => 'view',
+                        '1' => $this->paramsEncode(['id' => $row->id, //POCOR-8642
+                         'institution_id' => $row->institution_id]),
+                        // '1' => $encodedQueryString,
+                        // '2' => $this->paramsEncode(['id' => $row->id]),
+                        // // 'institution_id' => $row->institution_id
                     ];
 
                     if (is_null($row->modified)) {
@@ -581,7 +608,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         // change in  POCOR-7027 add auto assign
         $assigneeOptions = [$this->Auth->user('id') => __('Auto Assign')]; //POCOR-7080

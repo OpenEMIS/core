@@ -7,7 +7,7 @@ use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
@@ -18,6 +18,8 @@ use Cake\Core\Exception\Exception;
 use Cake\Auth\DefaultPasswordHasher;
 use Cake\Core\Configure;
 use Cake\Utility\Security;
+use Cake\ORM\Locator\TableLocator;
+use Cake\Database\Schema\TableSchema;
 
 /**
  * DeletedLogs Model
@@ -48,13 +50,13 @@ class DataManagementConnectionsTable extends ControllerActionTable
      * @param array $config The configuration for the Table.
      * @return void
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
-        $this->table('data_management_connections');
-        $this->displayField('id');
-        $this->primaryKey('id');
+        $this->setTable('data_management_connections');
+        $this->getDisplayField('id');
+        $this->getPrimaryKey('id');
 
         $this->toggle('remove', false);
         $this->toggle('add', false);
@@ -63,7 +65,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
 
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator->integer('id')->allowEmpty('id', 'create');
         $validator->requirePresence('name', 'create')->notEmpty('name');
@@ -93,7 +95,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
 
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.onGetFormButtons'] = 'onGetFormButtons';
@@ -243,7 +245,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
 
     public function onGetModifiedUserId(Event $event, Entity $entity)
     {
-        $Users = TableRegistry::get('User.Users');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
         $result = $Users
             ->find()
             ->select(['first_name','last_name'])
@@ -255,7 +257,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
 
     public function onGetCreatedUserId(Event $event, Entity $entity)
     {
-        $Users = TableRegistry::get('User.Users');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
         $result = $Users
             ->find()
             ->select(['first_name','last_name'])
@@ -355,6 +357,8 @@ class DataManagementConnectionsTable extends ControllerActionTable
         return substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $length);
     }
 
+    
+
     /**
      * a common function to check whether there is an archive table or not.
      * If the archive table is absent it is created.
@@ -368,7 +372,6 @@ class DataManagementConnectionsTable extends ControllerActionTable
      */
     public static function hasArchiveTable($sourceTableName, $db_name = 'default')
     {
-
         $targetTableName = $sourceTableName . '_archived';
         $archive_connection = ConnectionManager::get($db_name);
         $default_connection = ConnectionManager::get('default');
@@ -384,17 +387,17 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $sourceTableSchema = $defaultSchemaCollection->describe($sourceTableName);
 
         // Create a new table schema for the target table
-        $targetTableSchema = new \Cake\Database\Schema\Table($targetTableName);
+        $targetTableSchema = new TableSchema($targetTableName);
 
         // Copy the columns from the source table to the target table
         foreach ($sourceTableSchema->columns() as $column) {
-            $columnDefinition = $sourceTableSchema->column($column);
+            $columnDefinition = $sourceTableSchema->getColumn($column);
             $targetTableSchema->addColumn($column, $columnDefinition);
         }
         $randomString = self::generateRandomString();
         // Copy the indexes from the source table to the target table
         foreach ($sourceTableSchema->indexes() as $index) {
-            $indexDefinition = $sourceTableSchema->index($index);
+            $indexDefinition = $sourceTableSchema->getIndex($index);
             $targetTableSchema->addIndex($index . $randomString, $indexDefinition);
         }
 
@@ -402,8 +405,8 @@ class DataManagementConnectionsTable extends ControllerActionTable
         // FIX for random FK name
 
         foreach ($sourceTableSchema->constraints() as $constraint) {
-            $constraintDefinition = $sourceTableSchema->constraint($constraint);
-            if ($constraintDefinition['type'] !== \Cake\Database\Schema\Table::CONSTRAINT_FOREIGN) {
+            $constraintDefinition = $sourceTableSchema->getConstraint($constraint);
+            if ($constraintDefinition['type'] !== TableSchema::CONSTRAINT_FOREIGN) {
                 // If it's not a foreign key constraint, proceed with adding it to the destination table
                 $constraintname = $constraint != 'primary' ? $constraint . $randomString : $constraint;
                 $targetTableSchema->addConstraint($constraintname, $constraintDefinition);
@@ -447,9 +450,32 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $archiveConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
-            'connection' => $archiveConnection,
-        ]);
+        // if($targetTableName == 'assessment_item_results_archived'){
+        //     $targetTableName = 'AssessmentItemResultsArchived';
+        // }  
+        
+        
+        if($targetTableName == 'assessment_item_results_archived'){
+            $tableLocator = new TableLocator();
+            $tableArchived = $tableLocator->get('AssessmentItemResultsArchived', [
+            'connection' => $archiveConnection]); 
+        }else if($targetTableName == 'institution_staff_attendances_archived'){
+            $tableLocator = new TableLocator();
+            $tableArchived = $tableLocator->get('institution_staff_attendances_archived', [
+            'connection' => $archiveConnection]); 
+        }else{
+            $tableLocator = new TableLocator();
+            $tableArchived =$tableLocator->get($targetTableName, [
+            'connection' => $archiveConnection]); 
+        }
+
+
+        /*echo "<pre>"; print_r($targetTableName);
+        echo "<pre>"; print_r($archiveConnection);
+die;*/
+        // $tableArchived = TableRegistry::getTableLocator()->get('Institution.'.$targetTableName, [
+        //     'connection' => $archiveConnection,
+        // ]);
         $count = $tableArchived->find('all')
 //            ->select('*')// POCOR-7339-HINDOL
             ->where($where)->first();
@@ -463,6 +489,22 @@ class DataManagementConnectionsTable extends ControllerActionTable
         }
         return $is_archive_exists;
     }
+
+    function snakeToCamel($string) {
+        // Split the string by underscores
+        $words = explode('_', $string);
+    
+        // Convert the first word to lowercase
+        $camelCaseString = strtolower(array_shift($words));
+    
+        // Capitalize the first letter of each remaining word and concatenate
+        foreach ($words as $word) {
+            $camelCaseString .= ucfirst(strtolower($word));
+        }
+    
+        return $camelCaseString;
+    }
+    
 
     /**
      * common function to get archive table name and connection
@@ -492,7 +534,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
     public static function hasArchiveConnection()
     {
         $archiveConnection = false;
-//        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+//        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 //        $archiveConnection = $ConfigItems->value('remote_archive_data_connection');
 //        if ($archiveConnection) {
 //            $archiveConnection = ($archiveConnection == "1") ? true : false;
@@ -510,13 +552,21 @@ class DataManagementConnectionsTable extends ControllerActionTable
      */
     public static function getArchiveYears(string $table_name, array $where)
     {
+
         $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
-            'connection' => $remoteConnection,
-        ]);
+        if($targetTableName == 'assessment_item_results_archived'){
+            $tableLocator = new TableLocator();
+            $tableArchived = $tableLocator->get('AssessmentItemResultsArchived', [
+            'connection' => $remoteConnection]); 
+        }else{
+            $tableLocator = new TableLocator();
+            $tableArchived = $tableLocator->get($targetTableName, [
+            'connection' => $remoteConnection]); 
+        }
+        
 //        Log::write('debug', 'getArchiveYears');
 //        Log::write('debug', $where);
         $distinctYears = $tableArchived->find('all')
@@ -543,6 +593,9 @@ class DataManagementConnectionsTable extends ControllerActionTable
     {
         $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
         $targetTableName = $targetTableNameAndConnection[0];
+        if($targetTableName == 'assessment_item_results_archived'){
+            $targetTableName = 'Institution.AssessmentItemResultsArchived';
+        }
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
         $tableArchived = TableRegistry::get($targetTableName, [
@@ -574,7 +627,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
+        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $remoteConnection,
         ]);
         $distinctResults = $tableArchived->find('all')
@@ -603,7 +656,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
+        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $remoteConnection,
         ]);
         $distinctResults = $tableArchived->find('all')
@@ -632,9 +685,16 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
+        
+        if($targetTableName == 'assessment_item_results_archived'){
+            $tableLocator = new TableLocator();
+            $tableArchived = $tableLocator->get('AssessmentItemResultsArchived', [
+            'connection' => $remoteConnection]); 
+        }else{
+           $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $remoteConnection,
         ]);
+        }
 //        Log::write('debug', 'getArchiveYears');
 //        Log::write('debug', $where);
 
@@ -670,7 +730,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
+        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $remoteConnection,
         ]);
         return $tableArchived;
@@ -683,7 +743,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
+        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $remoteConnection,
         ]);
         $distinctDates = $tableArchived->find('all')
@@ -707,7 +767,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
+        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $remoteConnection,
         ]);
 //        Log::write('debug', 'getArchiveLeaveDays');
@@ -742,5 +802,6 @@ class DataManagementConnectionsTable extends ControllerActionTable
 //        Log::write('debug', $distinctDateValues);
         return $distinctDateValues;
     }
+
 
 }

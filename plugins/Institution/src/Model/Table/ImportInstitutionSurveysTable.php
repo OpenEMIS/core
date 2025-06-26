@@ -22,8 +22,8 @@ class ImportInstitutionSurveysTable extends AppTable {
     private $institutionSurveyId = false;
     private $institutionSurvey = false;
 
-    public function initialize(array $config) {
-        $this->table('import_mapping');
+    public function initialize(array $config): void {
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'InstitutionSurveys']);
@@ -80,12 +80,12 @@ class ImportInstitutionSurveysTable extends AppTable {
                 ->find('list', ['keyField' => 'code', 'valueField' => 'value'])
                 ->toArray()
                 ;
-            $this->sessionKey = $this->registryAlias().'.Import.data';
+            $this->sessionKey = $this->getRegistryAlias().'.Import.data';
             $this->InstitutionSurveyAnswers->ControllerAction = $this->ControllerAction;
         }
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $newEvent = [];
         $newEvent['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
@@ -94,8 +94,9 @@ class ImportInstitutionSurveysTable extends AppTable {
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
-        $crumbTitle = $this->getHeader($this->alias());
+    // public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona) {
+    public function onGetBreadcrumb(Event $event, $request, Component $Navigation, $persona) {
+        $crumbTitle = $this->getHeader($this->getAlias());
         $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys'];
         $Navigation->substituteCrumb($crumbTitle, 'Surveys', $url);
         $Navigation->addCrumb($crumbTitle);

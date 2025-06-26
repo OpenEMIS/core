@@ -8,17 +8,16 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\ORM\ResultSet;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
 class StudentRisksTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_risks');
+        $this->setTable('institution_student_risks');
         parent::initialize($config);
-
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
         $this->belongsTo('Risks', ['className' => 'Risk.Risks', 'foreignKey' =>'risk_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
@@ -30,6 +29,7 @@ class StudentRisksTable extends ControllerActionTable
         $this->toggle('search', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -48,17 +48,19 @@ class StudentRisksTable extends ControllerActionTable
 
         // element control
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
 
-        $selectedAcademicPeriodId = !empty($requestQuery) && array_key_exists('academic_period_id', $requestQuery) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
-
+        $selectedAcademicPeriodId = !empty($requestQuery) && isset($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
 
         $extra['elements']['control'] = [
             'name' => 'Risks/controls',
             'data' => [
                 'academicPeriodOptions'=>$academicPeriodOptions,
-                'selectedAcademicPeriod'=>$selectedAcademicPeriodId
+                'selectedAcademicPeriod'=>$selectedAcademicPeriodId,
+                'encodedQueryString' => $encodedQueryString,
             ],
             'options' => [],
             'order' => 3
@@ -67,7 +69,7 @@ class StudentRisksTable extends ControllerActionTable
 
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Guardian','Risks');       
+		$is_manual_exist = $this->getManualUrl('Guardian','Risks');
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
@@ -76,7 +78,7 @@ class StudentRisksTable extends ControllerActionTable
                 'escape' => false,
                 'target'=>'_blank'
             ];
-    
+
             $helpBtn['url'] = $is_manual_exist['url'];
             $helpBtn['type'] = 'button';
             $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -92,7 +94,8 @@ class StudentRisksTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         if (isset($buttons['view'])) {
             $icon = '<i class="fa fa-eye"></i>';
 
@@ -101,6 +104,8 @@ class StudentRisksTable extends ControllerActionTable
             $buttons['view']['url']['plugin'] = 'Institution';
             $buttons['view']['url']['controller'] = 'Institutions';
             $buttons['view']['url']['action'] = 'StudentRisks';
+            $buttons['view']['url']['0'] = 'view';
+            $buttons['view']['url']['1'] = $encodedQueryString;
         }
 
         return $buttons;
@@ -171,11 +176,11 @@ class StudentRisksTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $conditions = [];
-
+        $extra['selectedAcademicPeriodId'] =  !empty($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $conditions[$this->aliasField('academic_period_id')] = $extra['selectedAcademicPeriodId'];
         $user = $this->Auth->user();
 
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if ($session->read('Auth.User.is_guardian') == 1) {
             /*POCOR-6267 starts*/
             if ($this->request->controller == 'GuardianNavs') {
@@ -198,9 +203,9 @@ class StudentRisksTable extends ControllerActionTable
                 //# END: [POCOR-6548] Check if user data not found then add current login user data
             }
         } else {
-            $studentId = $session->read('Student.Students.id');
+            $studentId = $this->getStudentID();
         }
-         
+
         if ($user['is_student'] == 1 && $user['is_guardian'] == 0) {
             $query = $query
             ->where([
@@ -217,15 +222,19 @@ class StudentRisksTable extends ControllerActionTable
                 ])
                 ->order(['risk_id']);
         }
-     
-        
+
+
         return $query;
     }
 
     private function setupTabElements()
     {
         $options['type'] = 'student';
-        $tabElements = $this->controller->getAcademicTabElements($options);
+        //$tabElements = $this->controller->getAcademicTabElements($options);
+        $tabElements = $this->getAcademicTabElements($options);
+        if($this->controller->getName() == 'GuardianNavs' || $this->controller->getName() == 'Directories') {
+			$tabElements = $this->controller->getAcademicTabElements($options);
+		}
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Risks');
     }
@@ -364,6 +373,63 @@ class StudentRisksTable extends ControllerActionTable
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->subject()->renderElement('Risk.Risks/' . $fieldKey, ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Risk.Risks/' . $fieldKey, ['attr' => $attr]);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'institution_id') {
+            return __('Institution');
+        } elseif ($field == 'risk_id') {
+            return __('Risk');
+        } elseif ($field == 'total_risk') {
+            return __('	Total Risk');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    //POCOR-8414 start
+    public function afterAction(Event $event, ArrayObject $options)
+    {
+        $plugin = __($this->controller->getPlugin());
+        if($plugin != 'Profile' && $plugin != 'GuardianNav'){
+            $id = $this->request->getAttribute('params')['pass'][1];
+            //POCOR-8489 --Start
+			if(isset($id)) {
+				$DecodedQueryString = $this->paramsDecode($id);
+				$userId = $DecodedQueryString['user_id'] ?? $DecodedQueryString['student_id'];
+			}else {
+				$queryString = $this->getQueryString();
+				$userId = $queryString['student_id'];
+			}
+            //POCOR-8489 --End
+            $Users = TableRegistry::get('User.Users');
+            $result = $Users
+                ->find()
+                ->select(['first_name','last_name'])
+                ->where(['id' =>  $userId])
+                ->first();
+
+            $fullName = $result->first_name.' '.$result->last_name;
+            try {
+
+                $gettabName = 'Risks';
+                $this->controller->set('contentHeader', $fullName . ' - ' . $gettabName);
+                //$this->controller->set('contentHeader', $plugin);
+            } catch (RecordNotFoundException $e) {
+                Log::write('error', $e->getMessage());
+            }
+        }
     }
 }

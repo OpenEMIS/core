@@ -8,7 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
 
@@ -19,12 +19,12 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
     private $queryString;
     private $examCentreId;
 
-	public function initialize(array $config)
+    public function initialize(array $config): void
     {
-		parent::initialize($config);
-		$this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
+        parent::initialize($config);
+        $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
-		$this->belongsTo('Invigilators', ['className' => 'User.Users']);
+        $this->belongsTo('Invigilators', ['className' => 'User.Users']);
         $this->belongsTo('ExaminationCentresExaminations', [
             'className' => 'Examination.ExaminationCentresExaminations',
             'foreignKey' => ['examination_centre_id', 'examination_id']
@@ -38,9 +38,9 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
 
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('CompositeKey');
-	}
+    }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.ajaxInvigilatorAutocomplete'] = 'ajaxInvigilatorAutocomplete';
@@ -49,9 +49,26 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    /**
+     * POCOR-8812
+     * Add validation rules for the examination entity.
+     * Ensures that 'examination_id' and 'rooms' fields are not empty.
+     *
+     * @param \Cake\Validation\Validator $validator The validator instance.
+     * @return \Cake\Validation\Validator Updated validator instance.
+     */
+    public function validationDefault(Validator $validator): Validator
     {
-        $this->queryString = $request->query['queryString'];
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+          $validator
+            ->notEmpty('examination_id')
+            ->notEmpty('rooms');
+        return $validator;
+    }
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    {
+        $this->queryString = $this->request->getQuery['queryString'];
         $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
         $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $this->queryString];
 
@@ -64,7 +81,9 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
     {
         $this->controller->getExamCentresTab();
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
-
+        if($this->examCentreId == null){
+            $this->examCentreId = 1;
+        }
         // Set the header of the page
         $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
         $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Invigilators'));
@@ -77,7 +96,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
     {
         if (is_null($this->examCentreId)) {
             $event->stopPropagation();
-            $this->Alert->error('general.notExists', ['reset' => 'override']);
+            $this->Alert->getError('general.notExists', ['reset' => 'override']);
             $this->controller->redirect(['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'index']);
         }
     }
@@ -90,24 +109,24 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         $this->setFieldOrder(['openemis_no', 'invigilator_id', 'examination_id', 'rooms']);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Exam Centre Invigilators','Examinations');       
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Administration','Exam Centre Invigilators','Examinations');
+        if(!empty($is_manual_exist)){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -127,7 +146,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
             ->toArray();
 
         $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
-        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : -1;
+        $selectedExamination = !is_null($this->request->getQuery('examination_id')) ? $this->request->getQuery('examination_id') : -1;
         $this->controller->set(compact('examinationOptions', 'selectedExamination'));
         if ($selectedExamination != -1) {
             $where[$this->aliasField('examination_id')] = $selectedExamination;
@@ -139,7 +158,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
             ->where([$ExamCentreRooms->aliasField('examination_centre_id') => $this->examCentreId])
             ->toArray();
         $roomOptions = ['0' => __('All Rooms'), '-1' => __('Invigilators without Room')] + $roomOptions;
-        $selectedRoom = !is_null($this->request->query('examination_centre_room_id')) ? $this->request->query('examination_centre_room_id') : 0;
+        $selectedRoom = !is_null($this->request->getQuery('examination_centre_room_id')) ? $this->request->getQuery('examination_centre_room_id') : 0;
         $this->controller->set(compact('roomOptions', 'selectedRoom'));
 
         if ($selectedRoom > 0) {
@@ -202,8 +221,9 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
                 $rooms[] = $obj->examination_centre_room->name;
             }
 
-            return implode($rooms, ", ");
+            return implode(", ", $rooms); // Correct order of arguments
         }
+        return ''; // Return an empty string if no rooms are found
     }
 
     public function onGetOpenemisNo(Event $event, Entity $entity)
@@ -237,7 +257,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         $this->setFieldOrder(['academic_period_id', 'examination_centre_id', 'invigilator_id', 'examination_id', 'rooms']);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $examCentreEntity = $this->ExaminationCentres->get($this->examCentreId, ['contain' => ['AcademicPeriods']]);
         $academicPeriod = $examCentreEntity->academic_period->name;
@@ -245,7 +265,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         return $attr;
     }
 
-    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $examCentreEntity = $this->ExaminationCentres->get($this->examCentreId);
         $attr['value'] = $this->examCentreId;
@@ -253,7 +273,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         return $attr;
     }
 
-    public function onUpdateFieldInvigilatorId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInvigilatorId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
         $attr['value'] = $entity->invigilator_id;
@@ -261,7 +281,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         return $attr;
     }
 
-    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $linkedExams = $this->ExaminationCentresExaminations->find('list', [
@@ -286,14 +306,14 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
 
     public function addOnChangeExaminationId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists($this->alias(), $data)) {
-            if (array_key_exists('invigilators', $data[$this->alias()])) {
-                unset($data[$this->alias()]['invigilators']);
+        if (isset($data[$this->getAlias()])) {
+            if (isset($data[$this->getAlias()]['invigilators'])) {
+                unset($data[$this->getAlias()]['invigilators']);
             }
         }
     }
 
-    public function onUpdateFieldRooms(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldRooms(Event $event, array $attr, $action, ServerRequest $request)
     {
         $ExaminationCentreRooms = $this->ExaminationCentres->ExaminationCentreRooms;
         $roomOptions = $ExaminationCentreRooms->find('list')
@@ -308,10 +328,10 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
                 foreach ($roomInvigilators as $room) {
                     $obj[] = $room->examination_centre_room_id;
                 }
-                $request->data[$this->alias()]['rooms'] = $obj;
+                $request->getData()[$this->getAlias()]['rooms'] = $obj;
             }
 
-            $attr['fieldName'] = $this->alias().'.rooms';
+            $attr['fieldName'] = $this->getAlias().'.rooms';
         }
 
         $attr['options'] = $roomOptions;
@@ -322,49 +342,84 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
     {
         $tableHeaders = [__('OpenEMIS ID'), __('Invigilator')];
         $tableCells = [];
-        $alias = $this->alias();
+        $alias = $this->getAlias();
         $fieldKey = 'invigilators';
-        $examinationId = isset($this->request->data[$this->alias()]['examination_id']) ? $this->request->data[$this->alias()]['examination_id'] : -1;
+        $examinationId = isset($this->request->getData()[$this->getAlias()]['examination_id']) 
+            ? $this->request->getData()[$this->getAlias()]['examination_id'] 
+            : -1;
 
-        if ($action == 'edit') {
-            $tableHeaders[] = ''; // for delete column
-            $Form = $event->subject()->Form;
+        if ($action == 'add' || $action == 'edit') { //POCOR-8812 change logic for request data
+            $tableHeaders[] = '';
+            $Form = $event->getSubject()->Form;
             $Form->unlockField('ExaminationCentres.invigilators');
-
-            // refer to addOnAddInvigilator for http post
-            if ($this->request->data("$alias.$fieldKey")) {
-                $associated = $this->request->data("$alias.$fieldKey");
-
-                foreach ($associated as $key => $obj) {
-                    $invigilatorId = $obj['id'];
-                    $openemisId = $obj['openemis_no'];
-                    $name = $obj['name'];
-
-                    $rowData = [];
-
-                    $cell = $name;
-                    $cell .= $Form->hidden("$alias.$fieldKey.$key.id", ['value' => $invigilatorId, 'autocomplete-exclude' => $invigilatorId]);
-                    $cell .= $Form->hidden("$alias.$fieldKey.$key.openemis_no", ['value' => $openemisId]);
-                    $cell .= $Form->hidden("$alias.$fieldKey.$key.name", ['value' => $name]);
-
-                    $Form->unlockField("$alias.$fieldKey.$key.id");
-                    $Form->unlockField("$alias.$fieldKey.$key.openemis_no");
-                    $Form->unlockField("$alias.$fieldKey.$key.name");
-
-                    $rowData[] = $openemisId;
-                    $rowData[] = $cell;
-                    $rowData[] = $this->getDeleteButton();
-                    $tableCells[] = $rowData;
+            
+            if ($this->request->is(['post'])) {
+                $data = $this->request->getData();
+                
+                // Check if invigilators data exists
+                if (isset($data[$alias][$fieldKey]) && is_array($data[$alias][$fieldKey])) {
+                    foreach ($data[$alias][$fieldKey] as $key => $data) {
+                        // Handle the data based on its type
+                        $obj = is_string($data) ? $this->paramsDecode($data) : $data;
+                        
+                        if (is_array($obj)) {
+                            $rowData = [];
+                            
+                            // Get the invigilator details
+                            $invigilatorId = $obj['id'] ?? '';
+                            $openemisId = $obj['openemis_no'] ?? '';
+                            $name = $obj['name'] ?? '';
+                            
+                            // If any required field is empty, try to get from parent array
+                            if (empty($name) && isset($obj['invigilator_search'])) {
+                                $searchData = $obj['invigilator_search'];
+                                if (is_string($searchData)) {
+                                    $splitData = explode(' - ', $searchData);
+                                    $openemisId = $splitData[0] ?? '';
+                                    $name = $splitData[1] ?? '';
+                                }
+                            }
+                            
+                            // Only add row if we have valid data
+                            if (!empty($invigilatorId) && !empty($name)) {
+                                // Create the cell content
+                                $cell = $name;
+                                $cell .= $Form->hidden("$alias.$fieldKey.$key.id", [
+                                    'value' => $invigilatorId, 
+                                    'autocomplete-exclude' => $invigilatorId
+                                ]);
+                                $cell .= $Form->hidden("$alias.$fieldKey.$key.openemis_no", [
+                                    'value' => $openemisId
+                                ]);
+                                $cell .= $Form->hidden("$alias.$fieldKey.$key.name", [
+                                    'value' => $name
+                                ]);
+                                
+                                // Unlock the fields
+                                $Form->unlockField("$alias.$fieldKey.$key.id");
+                                $Form->unlockField("$alias.$fieldKey.$key.openemis_no");
+                                $Form->unlockField("$alias.$fieldKey.$key.name");
+                                
+                                // Build the row
+                                $rowData[] = $openemisId;
+                                $rowData[] = $cell;
+                                $rowData[] = $this->getDeleteButton();
+                                
+                                // Add to table cells
+                                $tableCells[] = $rowData;
+                            }
+                        }
+                    }
                 }
             }
         }
-
+        
         $attr['examination_id'] = $examinationId;
         $attr['queryString'] = $this->queryString;
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
-
-        return $event->subject()->renderElement('Examination.ExaminationCentres/' . $fieldKey, ['attr' => $attr]);
+        
+        return $event->getSubject()->renderElement('Examination.ExaminationCentres/' . $fieldKey, ['attr' => $attr]);
     }
 
     public function onUpdateIncludes(Event $event, ArrayObject $includes, $action)
@@ -384,7 +439,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         $this->autoRender = false;
 
         if ($this->request->is(['ajax'])) {
-            $term = $this->request->query['term'];
+            $term = $this->request->getQuery('term');
             $search = sprintf('%s%%', $term);
             $data = [];
             $examinationId = $this->paramsDecode($this->paramsPass(0))['examination_id'];
@@ -429,29 +484,56 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         }
     }
 
+    /**
+     * Manually handles the addition of invigilators for Examination Centre Rooms.
+     * POCOR-8812
+     * Ensures that the related `ExaminationCentreRoomsExaminationsInvigilators` data
+     * is correctly processed when an invigilator is added.
+     * @param \ArrayObject $data The request data array.
+     * @param \ArrayObject $options Additional options for processing.
+     */
     public function addOnAddInvigilator(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $alias = $this->alias();
+        $alias = $this->getAlias();
         $fieldKey = 'invigilators';
-
+        
+        // Initialize the invigilators array if it doesn't exist
         if (empty($data[$alias][$fieldKey])) {
             $data[$alias][$fieldKey] = [];
         }
-
+        
         if ($data->offsetExists($alias)) {
-            if (array_key_exists('invigilator_id', $data[$alias]) && !empty($data[$alias]['invigilator_id'])) {
+            if (isset($data[$alias]['invigilator_id']) && !empty($data[$alias]['invigilator_id'])) {
                 $id = $data[$alias]['invigilator_id'];
-
                 try {
                     $obj = $this->Invigilators->get($id);
-
-                    $data[$alias][$fieldKey][] = [
+                    
+                    // Build the invigilator data array
+                    $invigilator = [
                         'id' => $obj->id,
                         'openemis_no' => $obj->openemis_no,
                         'name' => $obj->name,
                     ];
-
+                    
+                    // Get existing request data
+                    $requestData = $this->request->getData();
+                    
+                    // Generate a unique key for the new invigilator
+                    $newKey = uniqid('inv_');
+                    
+                    // Add new invigilator with a unique key
+                    if (!isset($requestData[$alias][$fieldKey])) {
+                        $requestData[$alias][$fieldKey] = [];
+                    }
+                    
+                    $requestData[$alias][$fieldKey][$newKey] = $this->paramsEncode($invigilator);
+                    
+                    // Update the request with the new data
+                    $this->request = $this->request->withParsedBody($requestData);
+                    
+                    // Clear the invigilator_id field for the next addition
                     $data[$alias]['invigilator_id'] = '';
+                    
                 } catch (RecordNotFoundException $ex) {
                     Log::write('debug', __METHOD__ . ': Record not found for id: ' . $id);
                 }
@@ -461,30 +543,30 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
-        $requestData[$this->alias()]['invigilator_id'] = 0;
+        $requestData[$this->getAlias()]['invigilator_id'] = 0;
     }
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {
         $process = function ($model, $entity) use ($requestData) {
-            if (!empty($entity->errors())) {
+            if (!empty($entity->getErrors())) {
                 return false;
             }
 
-            if (isset($requestData[$model->alias()]['invigilators']) && !empty($requestData[$model->alias()]['invigilators'])) {
-                $invigilators = $requestData[$model->alias()]['invigilators'];
+            if (isset($requestData[$model->getAlias()]['invigilators']) && !empty($requestData[$model->getAlias()]['invigilators'])) {
+                $invigilators = $requestData[$model->getAlias()]['invigilators'];
                 $newEntities = [];
 
                 if (is_array($invigilators)) {
                     foreach ($invigilators as $invigilator) {
                         $requestData['invigilator_id'] = $invigilator['id'];
 
-                        if (!empty($requestData[$model->alias()]['rooms'])) {
-                            $requestData[$model->alias()]['examination_centre_rooms_examinations_invigilators'][] = [
-                                'examination_centre_room_id' => $requestData[$model->alias()]['rooms'],
-                                'examination_id' => $requestData[$model->alias()]['examination_id'],
+                        if (!empty($requestData[$model->getAlias()]['rooms'])) {
+                            $requestData[$model->getAlias()]['examination_centre_rooms_examinations_invigilators'][] = [
+                                'examination_centre_room_id' => $requestData[$model->getAlias()]['rooms'],
+                                'examination_id' => $requestData[$model->getAlias()]['examination_id'],
                                 'invigilator_id' => $invigilator['id'],
-                                'examination_centre_id' => $requestData[$model->alias()]['examination_centre_id']
+                                'examination_centre_id' => $requestData[$model->getAlias()]['examination_centre_id']
                             ];
                         }
 
@@ -493,7 +575,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
 
                     if (empty($newEntities)) {
                         $model->Alert->warning($this->aliasField('noInvigilatorsSelected'));
-                        $entity->errors('invigilator_search', __('There are no invigilators selected'));
+                        $entity->getErrors('invigilator_search', __('There are no invigilators selected'));
                         return false;
                     }
 
@@ -501,7 +583,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
                 }
             } else {
                 $model->Alert->warning($this->aliasField('noInvigilatorsSelected'));
-                $entity->errors('invigilator_search', __('There are no invigilators selected'));
+                $entity->getErrors('invigilator_search', __('There are no invigilators selected'));
                 return false;
             }
         };
@@ -511,19 +593,19 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        if (isset($data[$this->alias()]['rooms']) && !empty($data[$this->alias()]['rooms'])) {
+        if (isset($data[$this->getAlias()]['rooms']) && !empty($data[$this->getAlias()]['rooms'])) {
             $roomInvigilators = [];
 
-            foreach ($data[$this->alias()]['rooms'] as $key => $value) {
+            foreach ($data[$this->getAlias()]['rooms'] as $key => $value) {
                 $roomInvigilators[] = [
-                    'examination_centre_id' => $data[$this->alias()]['examination_centre_id'],
-                    'invigilator_id' => $data[$this->alias()]['invigilator_id'],
-                    'examination_id' => $data[$this->alias()]['examination_id'],
+                    'examination_centre_id' => $data[$this->getAlias()]['examination_centre_id'],
+                    'invigilator_id' => $data[$this->getAlias()]['invigilator_id'],
+                    'examination_id' => $data[$this->getAlias()]['examination_id'],
                     'examination_centre_room_id' => $value
                 ];
             }
 
-            $data[$this->alias()]['examination_centre_rooms_examinations_invigilators'] = $roomInvigilators;
+            $data[$this->getAlias()]['examination_centre_rooms_examinations_invigilators'] = $roomInvigilators;
         }
     }
 
@@ -531,11 +613,11 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
     {
         // manually delete hasMany roomInvigilators data
         $fieldKey = 'examination_centre_rooms_examinations_invigilators';
-        if (!array_key_exists($fieldKey, $data[$this->alias()])) {
-            $data[$this->alias()][$fieldKey] = [];
+        if (!array_key_exists($fieldKey, $data[$this->getAlias()])) {
+            $data[$this->getAlias()][$fieldKey] = [];
         }
 
-        $currentRoomIds = array_column($data[$this->alias()][$fieldKey], 'examination_centre_room_id');
+        $currentRoomIds = array_column($data[$this->getAlias()][$fieldKey], 'examination_centre_room_id');
         $originalRooms = $entity->extractOriginal([$fieldKey])[$fieldKey];
 
         foreach ($originalRooms as $key => $room) {
@@ -543,6 +625,27 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
                 $this->ExaminationCentreRoomsExaminationsInvigilators->delete($room);
                 unset($entity->examination_centre_rooms_examinations_invigilators[$key]);
             }
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'invigilator_id') {
+            return __('Invigilator');
+        } elseif ($field == 'examination_id') {
+            return __('Examination');
+        } elseif ($field == 'rooms') {
+            return __('Rooms');
+        }elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 

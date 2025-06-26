@@ -10,13 +10,13 @@ use Cake\Console\Shell;
 /**
  * Class is Shell used for Class profile report generation
  * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
- * 
+ *
  */
 class GenerateAllClassProfilesShell extends Shell
 {
     private $sleepTime = 5;
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('CustomExcel.ClassProfiles');
@@ -43,7 +43,7 @@ class GenerateAllClassProfilesShell extends Shell
                 ->order([
                     $this->ClassProfileProcesses->aliasField('created'),
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->first();
 
             if (!empty($recordToProcess)) {
@@ -78,7 +78,12 @@ class GenerateAllClassProfilesShell extends Shell
             }
         }
         try {
-            posix_kill(getmypid(), 9);
+            $pid = getmypid();
+            if (function_exists('posix_kill')) {
+                posix_kill($pid, 9);
+            } else {
+                exec("kill -15 $pid"); // Works on Unix-like systems
+            }
         } catch (\Exception $exception) {
             $this->out($exception->getMessage());
         }

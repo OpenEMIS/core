@@ -93,7 +93,7 @@ class RecipientPaymentsTable extends ControllerActionTable
         ]);
     }
 
-    public function editAfterAction(Event $event, Entity $entity) 
+    public function editAfterAction(Event $event, Entity $entity)
     {
         $this->setupFields($entity);
     }
@@ -126,7 +126,7 @@ class RecipientPaymentsTable extends ControllerActionTable
             'after' => 'estimated_amount',
             'visible' => ['view' => false, 'edit' => true],
             'attr' => [
-                'label' => $this->Scholarships->addCurrencySuffix('Approved Award Amount'), 
+                'label' => $this->Scholarships->addCurrencySuffix('Approved Award Amount'),
                 'value' => $entity->scholarship_recipient->approved_amount
             ]
         ]);
@@ -138,7 +138,7 @@ class RecipientPaymentsTable extends ControllerActionTable
             'attr' => ['label' => $this->Scholarships->addCurrencySuffix('Balance Amount')],
             'entity' => $entity
         ]);
-       
+
         $this->field('disbursement_category_id', [
             'type' => 'custom_disbursement_category',
             'after' => 'balance_amount'
@@ -177,7 +177,7 @@ class RecipientPaymentsTable extends ControllerActionTable
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
-        
+
     }
 
     // edit fields
@@ -196,9 +196,9 @@ class RecipientPaymentsTable extends ControllerActionTable
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
-           
+
             $approvedAmt = $entity->scholarship_recipient->approved_amount;
-            
+
             $conditions = [
                 'recipient_id' => $entity->recipient_id,
                 'scholarship_id' => $entity->scholarship_id,
@@ -213,7 +213,7 @@ class RecipientPaymentsTable extends ControllerActionTable
                 ->first();
 
             $balance = $approvedAmt - ($RecipientDisbursements->disbursed_amt);
-             
+
             $attr['attr']['value'] =  $balance;
         }
 
@@ -230,7 +230,7 @@ class RecipientPaymentsTable extends ControllerActionTable
 
         $recipientId = $this->ControllerAction->getQueryString('recipient_id');
         $scholarshipId = $this->ControllerAction->getQueryString('scholarship_id');
-      
+
         if (isset($data[$this->alias()]['disbursement_category_id']) && !empty($data[$this->alias()]['disbursement_category_id'])) {
             $selectedDisbursementCategory = $data[$this->alias()]['disbursement_category_id'];
             $disbursementCategoryEntity = TableRegistry::get('Scholarship.DisbursementCategories')->get($selectedDisbursementCategory);
@@ -317,14 +317,14 @@ class RecipientPaymentsTable extends ControllerActionTable
                     }
                 }
             } elseif ($this->request->is(['post', 'put'])) {
-            
+
                 $requestData = $this->request->data;
 
                 if (isset($requestData[$this->alias()]['recipient_disbursements'])) {
                     foreach ($requestData[$this->alias()]['recipient_disbursements'] as $key => $obj) {
                         $arrayRecipientDisbursements[] = $obj;
                     }
-                
+
                 }
 
             }
@@ -336,13 +336,13 @@ class RecipientPaymentsTable extends ControllerActionTable
             if (!empty($arrayRecipientDisbursements)) {
                 foreach ($arrayRecipientDisbursements as $key => $obj) {
                     $fieldPrefix = $attr['model'] . '.recipient_disbursements.' . $cellCount++;
-                    
+
                     $cellData = $obj['scholarship_disbursement_category_name'];
                     $cellData .= $form->hidden($fieldPrefix.".scholarship_disbursement_category_id", ['value' => $obj['scholarship_disbursement_category_id']]);
                     $cellData .= $form->hidden($fieldPrefix.".scholarship_disbursement_category_name", ['value' => $obj['scholarship_disbursement_category_name']]);
                     $cellData .= $form->hidden($fieldPrefix.".recipient_id", ['value' => $obj['recipient_id']]);
                     $cellData .= $form->hidden($fieldPrefix.".scholarship_id", ['value' => $obj['scholarship_id']]);
-                
+
                     $value = $obj['disbursement_date'] ? $obj['disbursement_date'] : null;
                     $_options = [
                         'format' => 'dd-mm-yyyy',
@@ -353,17 +353,17 @@ class RecipientPaymentsTable extends ControllerActionTable
                     $attr['date_options'] = $_options;
 
                     $attr['fieldName'] = $fieldPrefix.".".'disbursement_date';
-                    
-                    if (array_key_exists('fieldName', $attr)) {
+
+                    if (isset($attr['fieldName'])) {
                         $attr['id'] = $this->_domId($attr['fieldName']);
                     }
 
                     $defaultDate = date('d-m-Y');
                     if (!isset($attr['default_date'])) {
                         $attr['default_date'] = $defaultDate;
-                    }   
+                    }
 
-                   if (!array_key_exists('value', $attr)) {
+                   if (!isset($attr['value'])) {
                         if (!is_null($value)) {
                             if ($value instanceof Time || $value instanceof Date) {
                                 $attr['value'] = $value->format('d-m-Y');
@@ -373,7 +373,7 @@ class RecipientPaymentsTable extends ControllerActionTable
                         } else if ($attr['default_date']) {
                             $attr['value'] = $attr['default_date'];
                         }
-                    } else {    
+                    } else {
                         if ($attr['value'] instanceof Time || $value instanceof Date) {
                             $attr['value'] = $attr['value']->format('d-m-Y');
                         } else {
@@ -382,7 +382,7 @@ class RecipientPaymentsTable extends ControllerActionTable
                     }
                     $attr['class'] = 'no-margin-bottom';
                     $event->subject()->viewSet('datepicker', $attr);
-                    $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);   
+                    $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
                     unset($attr['value']);
 
                     $semesterList = TableRegistry::get('Scholarship.Semesters')->getList()->toArray();
@@ -398,7 +398,7 @@ class RecipientPaymentsTable extends ControllerActionTable
                         'default' => $obj['scholarship_semester_id'],
                         'value' => $obj['scholarship_semester_id']
                     ];
-                    
+
                     $semesterCellData = $form->input("$fieldPrefix.scholarship_semester_id", $semesterInputOptions);
                     $amountCellData = $form->input("$fieldPrefix.amount", ['type' => 'number']);
                     $commentCellData = $form->input("$fieldPrefix.comments", ['type' => 'textarea']);
@@ -409,7 +409,7 @@ class RecipientPaymentsTable extends ControllerActionTable
                     $rowData[] = $amountCellData;
                     $rowData[] = $semesterCellData;
                     $rowData[] = $commentCellData;
-                    
+
                     $rowData[] = '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
 
                     $tableCells[] = $rowData;
@@ -428,17 +428,17 @@ class RecipientPaymentsTable extends ControllerActionTable
     {
         if (array_key_exists($this->alias(), $requestData)) {
             if (!array_key_exists('recipient_disbursements', $requestData[$this->alias()])) {
-                    $requestData[$this->alias()]['recipient_disbursements'] = []; 
-            } 
+                    $requestData[$this->alias()]['recipient_disbursements'] = [];
+            }
         }
     }
-    
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $data) 
-    {  
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
+    {
         $recipientId = $this->ControllerAction->getQueryString('recipient_id');
         $scholarshipId = $this->ControllerAction->getQueryString('scholarship_id');
 
-        $approvedAmt = $this->ScholarshipRecipients->get(['recipient_id' => $recipientId, 'scholarship_id' => $scholarshipId])->approved_amount;        
+        $approvedAmt = $this->ScholarshipRecipients->get(['recipient_id' => $recipientId, 'scholarship_id' => $scholarshipId])->approved_amount;
 
         $conditions = [
                 'recipient_id' => $entity->recipient_id,

@@ -9,8 +9,10 @@ use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\Log\Log;
 use Cake\Core\Configure;
-use Cake\Network\Exception\NotFoundException;
+use Cake\Http\Exception\NotFoundException;
 use Cake\ORM\TableRegistry;   //POCOR-5301
+use Cake\Http\Session;
+use Cake\Http\ServerRequest;
 
 class IndexBehavior extends Behavior
 {
@@ -18,7 +20,7 @@ class IndexBehavior extends Behavior
         'pageOptions' => [10, 20, 30, 40, 50]
     ];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index'] = 'index';
@@ -34,7 +36,8 @@ class IndexBehavior extends Behavior
     }
 
     public function index(Event $mainEvent, ArrayObject $extra)
-    {     
+    {
+        //$serverRequest = $this->controller->request->getSession();
         $model = $this->_table;
         $extra['pagination'] = true;
         $extra['options'] = [];
@@ -47,16 +50,16 @@ class IndexBehavior extends Behavior
         * @ticket POCOR-5301
         */
         //START: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
-        $ConfigItemOptionsTable = TableRegistry::get('Configuration.ConfigItemOptions');
+        $ConfigItemOptionsTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItemOptions');
         $ConfigItemoption =   $ConfigItemOptionsTable
                             ->find()
                             ->select(['listpage' => 'ConfigItemOptions.value'])
                             ->where([
                               $ConfigItemOptionsTable->aliasField('option_type') => 'list_page'
                                    ]);
-        $optionslist = array(); 
+        $optionslist = array();
         foreach ($ConfigItemoption->toArray() as $value) {
-        $optionslist[] =  $value['listpage']; 
+        $optionslist[] =  $value['listpage'];
         }
         $extra['config']['pageOptions'] = $optionslist;
         //ENDS: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
@@ -70,17 +73,17 @@ class IndexBehavior extends Behavior
         * @ticket POCOR-5301
         */
         //START: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
-        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemsTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItem =   $ConfigItemsTable
                             ->find()
                             ->select(['listvalue' => 'ConfigItems.value'])
                             ->where([
                               $ConfigItemsTable->aliasField('option_type') => 'list_page'
                                    ]);
-         
         foreach ($ConfigItem->toArray() as $defaultval) {
                      $defaultvals = $defaultval['listvalue'];
         }
+        $defaults = 0; // POCOR-8446
         if($defaultvals == 10){
             $defaults = 0;
         }elseif($defaultvals == 20){
@@ -90,41 +93,47 @@ class IndexBehavior extends Behavior
         }elseif($defaultvals == 40){
             $defaults = 3;
         }elseif($defaultvals == 50){
-            $defaults = 4; 
+            $defaults = 4;
         }elseif($defaultvals == 100){
-            $defaults = 5;        
+            $defaults = 5;
         }elseif($defaultvals == 200){
-            $defaults = 6;       
-        }  
+            $defaults = 6;
+        }
         if ($extra['pagination']) {
-            $alias = $model->registryAlias();
-            $session = $model->request->session();
+            $alias = $model->getRegistryAlias();
+            $session = $model->request->getSession();
             $request = $model->request;
             $pageOptions = $extra['config']['pageOptions'];
 
             $limit = $session->check($alias.'.search.limit') ? $session->read($alias.'.search.limit') : $defaults;
         //END: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
             if ($request->is(['post', 'put'])) {
-                if (isset($request->data['Search'])) {
-                    if (array_key_exists('limit', $request->data['Search'])) {
-                        $limit = $request->data['Search']['limit'];
+                $requestData  = $request->getData();
+                if (isset($requestData['Search'])) {
+                    //if (array_key_exists('limit', $request->data['Search'])) {
+                    if (array_key_exists('limit', $request->getData()['Search'])) {
+                        $limit = $request->getData()['Search']['limit'];
+                        $request->getData()['Search']['limit'] = $limit;
                         $session->write($alias.'.search.limit', $limit);
                     }
                 }
+                //cakephp4 add
+              //  $request->data['Search']['limit'] = $limit;
             }
 
-            $request->data['Search']['limit'] = $limit;
+
             $extra['options']['limit'] = $pageOptions[$limit];
+            $this->_table->request = $request->withData('Search', ['limit' => $limit]);
         }
 
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();
-            return $event->result;
+            return $event->getResult();
         }
-        if ($event->result instanceof Table) {
-            $query = $event->result->find();
-        } elseif ($event->result instanceof Query) {
-            $query = $event->result;
+        if ($event->getResult() instanceof Table) {
+            $query = $event->getResult()->find();
+        } elseif ($event->getResult() instanceof Query) {
+            $query = $event->getResult();
         }
 
         $event = $model->controller->dispatchEvent('ControllerAction.Controller.beforeQuery', [$model, $query, $extra], $this);
@@ -140,7 +149,6 @@ class IndexBehavior extends Behavior
                 $query->contain($contain);
             }
         }
-
         $data = [];
         if ($hasQuery) {
             if ($extra['pagination']) {
@@ -149,14 +157,19 @@ class IndexBehavior extends Behavior
                 } catch (NotFoundException $e) {
                     Log::write('debug', $e->getMessage());
                     $action = $model->url('index', 'QUERY');
-                    if (array_key_exists('page', $action)) {
-                        unset($action['page']);
+
+                    if (isset($action['page'])) {
+                        $action['page'] = 1; // POCOR-8128
                     }
+                    if (isset($action['?']['page'])) {
+                        $action['?']['page'] = 1; // POCOR-8128
+                    }
+//                    dd($action);
                     $mainEvent->stopPropagation();
                     return $model->controller->redirect($action);
                 }
             } else {
-                $data = $query->all();
+                $data = $query->toArray();
             }
         }
 
@@ -168,10 +181,10 @@ class IndexBehavior extends Behavior
         $event = $model->dispatchEvent('ControllerAction.Model.index.afterAction', [$query, $data, $extra], $this);
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();
-            return $event->result;
+            return $event->getResult();
         }
-        if ($event->result) {
-            $data = $event->result;
+        if ($event->getResult()) {
+            $data = $event->getResult();
         }
         $model->controller->set('data', $data);
         return true;

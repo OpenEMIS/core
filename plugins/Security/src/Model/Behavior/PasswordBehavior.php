@@ -9,7 +9,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 
 class PasswordBehavior extends Behavior {
@@ -18,23 +18,26 @@ class PasswordBehavior extends Behavior {
 	private $passwordAllowEmpty = false;
 	private $createRetype = false;
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
         $events['Model.buildValidator'] = ['callable' => 'buildValidator', 'priority' => 5];
 		return $events;
 	}
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		$this->targetField = $config['field'];
-		$this->checkOwnPassword = (array_key_exists('checkOwnPassword', $config))? $config['checkOwnPassword']: $this->checkOwnPassword;
-		$this->passwordAllowEmpty = (array_key_exists('passwordAllowEmpty', $config))? $config['passwordAllowEmpty']: $this->passwordAllowEmpty;
-		$this->createRetype = (array_key_exists('createRetype', $config))? $config['createRetype']: $this->createRetype;
+		$this->checkOwnPassword = (isset($config['checkOwnPassword']))? $config['checkOwnPassword']: $this->checkOwnPassword;
+		$this->passwordAllowEmpty = (isset($config['passwordAllowEmpty']))? $config['passwordAllowEmpty']: $this->passwordAllowEmpty;
+		$this->createRetype = (isset($config['createRetype']))? $config['createRetype']: $this->createRetype;
 	}
 
-	public function buildValidator(Event $event, Validator $validator, $name) {
-		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 
+
+	    public function buildValidator(Event $event, Validator $validator, $name) {
+        $validator->setProvider('custom', $event->getSubject()); //POCOR-8080 here is the problem
+
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 		$passwordMinLength = $ConfigItems->value('password_min_length');
 		$passwordHasUppercase = $ConfigItems->value('password_has_uppercase');
 		$passwordHasLowercase = $ConfigItems->value('password_has_lowercase');
@@ -47,7 +50,7 @@ class PasswordBehavior extends Behavior {
                     'rule' => ['minLength', 6],
                     'on' => function ($context) {
 						return ($context['data']['username'] != 'admin');
-					},
+					}
                 ],
 				'ruleUnique' => [
 					'rule' => 'validateUnique',
@@ -66,12 +69,12 @@ class PasswordBehavior extends Behavior {
 				]
 			])
 			;
-        
+
         $this->_table->setValidationCode('username.ruleMinLength', 'User.Accounts');
 		$this->_table->setValidationCode('username.ruleUnique', 'User.Accounts');
 		$this->_table->setValidationCode('username.ruleCheckUsername', 'User.Accounts');
 		$this->_table->setValidationCode('retype_password.ruleCompare', 'User.Accounts');
-		
+
 		if ($this->passwordAllowEmpty) {
 			$validator->allowEmpty($this->targetField);
 			$validator->allowEmpty('retype_password');
@@ -157,7 +160,7 @@ class PasswordBehavior extends Behavior {
 		if ($this->checkOwnPassword) {
 			$this->_table->ControllerAction->field($this->targetField, ['type' => 'password', 'attr' => ['value' => '']]);
 		}
-		
+
 		if ($this->createRetype) {
 			$this->_table->ControllerAction->field('retype_password', ['type' => 'password', 'attr' => ['value' => '']]);
 		}

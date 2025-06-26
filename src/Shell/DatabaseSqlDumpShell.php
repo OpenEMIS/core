@@ -9,7 +9,7 @@ use Cake\Datasource\ConnectionManager;
 
 class DatabaseSqlDumpShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
     }

@@ -15,9 +15,9 @@ class ScholarshipDisbursementsAmountsTable extends AppTable
 
     use OptionsTrait;
 
-    public function initialize(array $config) 
+    public function initialize(array $config): void 
     {        
-        $this->table('scholarship_recipient_disbursements');
+        $this->setTable('scholarship_recipient_disbursements');
         parent::initialize($config);
 
         $this->belongsTo('ScholarshipRecipients', ['className' => 'Scholarship.ScholarshipRecipients', 'foreignKey' => ['recipient_id', 'scholarship_id']]);

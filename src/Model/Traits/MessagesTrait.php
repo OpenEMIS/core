@@ -124,8 +124,18 @@ trait MessagesTrait
             'custom_validation_pattern' => 'Please enter a valid format',
             'custom_validation_minimum_height' => 'Height is less then minimum height.',
             'custom_validation_maximum_height' => 'Height is more then maximum height.',
+
+            'validation_minimum_height' => 'Height is less then minimum height.',
+            'validation_maximum_height' => 'Height is more then maximum height.',
+
+
             'custom_validation_minimum_weight' => 'Height is less then minimum weight.',
             'custom_validation_maximum_weight' => 'Height is more then maximum weight.',
+
+            'validation_minimum_weight' => 'Weight is less then minimum weight.',
+            'validation_maximum_weight' => 'Weight is more then maximum weight.',
+
+
             'custom_validation_land_size' => 'Size is greater then config size.',
             //'bulk_student_transfer_in' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution.',
             'bulk_student_transfer_in' => 'Bulk Student is updated.', //POCOR-7007 change message
@@ -408,7 +418,7 @@ trait MessagesTrait
                 'remoteFail' => 'Remote authentication failed, please try local login.',
                 'changePassword' => 'This is the first time that you are logging in, please change your password.',
                 'locked_account'=> 'Your account has been locked. Please contact system administrator for assistance.'//POCOR-2976
-            
+
             ],
             'noAccess' => 'You do not have access to this location.',
             'emptyFields' => 'Some of the required fields for this authentication type are empty.'
@@ -474,7 +484,11 @@ trait MessagesTrait
         'Users' => [
             'student_category' => 'Category',
             'status' => 'Status',
-            'select_student' => 'Select Student', 
+            'openemis_no' => 'Openemis No', // POCOR-9046
+            'name' => 'Name', // POCOR-9046
+            'gender' => 'Gender', // POCOR-9046
+            'gender_id' => 'Gender', // POCOR-9046
+            'select_student' => 'Select Student',
             'select_users' => 'Select Users', // POCOR-7362
             'select_student_empty' => 'No Other Student Available',
             'add_all_student' => 'Add All Students',
@@ -571,7 +585,13 @@ trait MessagesTrait
             'reconfirm' => 'Please review the information before proceeding with the operation',
             'noStudentSelected' => 'There are no students selected',
             'savingError' => 'Some selected students record were not updated succesfully',
-        ],
+        ],//POCOR-8434 starts
+        'BulkStudentEnrolment' => [
+            'success' => 'Bulk students admission successful',
+            'reconfirm' => 'Please review the information before proceeding with the operation',
+            'noStudentSelected' => 'There are no students selected',
+            'savingError' => 'Some selected students record were not updated succesfully',
+        ],//POCOR-8434 ends
         'BulkStudentTransferIn' => [
             'success' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution',
             'reconfirm' => 'Please review the information before proceeding with the operation',
@@ -687,7 +707,7 @@ trait MessagesTrait
             'evaluator_types' => 'Type',
             'evaluator' => 'Evaluator'
         ],
-        
+
         'TrainingSessionResults' => [
             'noResultTypes' => 'You need to configure Result Types under Training Course.',
             'noTrainees' => 'No Available Trainees'
@@ -764,7 +784,8 @@ trait MessagesTrait
             'noGrades' => 'No Grades',
             'noClassSubjectSelected' => 'Please select Subject and Textbook before adding record',
             'noTextbookStatusCondition' => 'Please define Textbook Status and Condition before proceed',
-            'noTextbookStudent' => 'Please add physical textbook to be added'
+            'noTextbookStudent' => 'Please add physical textbook to be added',
+            'noStudentSelected' => 'Please select student'
         ],
         'InstitutionTextbooks' => [
             'noTextbooks' => 'No Textbooks',
@@ -791,7 +812,11 @@ trait MessagesTrait
             'select_classification' => 'Select Classification'
         ],
         'UserNationalities' => [
-            'noRecordRemain' => 'There should be at least one Nationality record'
+            'noRecordRemain' => 'There should be at least one Nationality record',
+            'ValidateNumberSuccess' => 'Identity number validate successfully.',
+            'ValidateNumberFail' => 'Please enter correct identity number.',
+            'IdentityNumberNotExist' => 'Identity number should not be blank.',
+            'NationalitiesRecordNoRemain' => 'There must be at least one Preferred Nationality.',
         ],
         'StudentAbsence' => [
             'deleteRecord' => 'Student absence record deleted successfully'
@@ -828,7 +853,9 @@ trait MessagesTrait
             'emailAll' => 'All Report Cards will be sent in the background',
             'emailInProgress' => 'There is already a email process sending in the background',
 			'date_closed' => 'Generate date for report card has been closed',
-            'timezone'=>'Timezone is not configured. Please contact the administrator for assistance.'
+            'timezone'=>'Timezone is not configured. Please contact the administrator for assistance.',
+            'gpa' => 'GPA is Generated Successfully for the Report Card',
+            'gpa_closed' => 'Generate date for Student GPA has been closed',
         ],
         'StaffProfiles' => [
             'noProgrammes' => 'There is no programme set for this institution',
@@ -1114,7 +1141,7 @@ trait MessagesTrait
                     'ruleCheckFTE' => 'No available FTE.',
                 ],
                 'start_date' => [
-                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
+                    'ruleStaffExistWithinPeriod' => 'This staff member is already assigned within the selected dates. Please choose a different period.',
                 ],
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
@@ -1202,7 +1229,7 @@ trait MessagesTrait
                     'ruleCheckStaffAssignment' => 'The staff has already been assigned to another Institution.'
                 ],
                 'start_date' => [
-                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
+                    'ruleStaffExistWithinPeriod' => 'This staff member is already assigned within the selected dates. Please choose a different period.',
                     'ruleInAllPeriod' => 'Staff start date must be within all academic period range'
                 ],
                 'end_date' => [
@@ -1561,7 +1588,7 @@ trait MessagesTrait
                     'ruleValidatePreferred' => 'There must be one Preferred Contact for each Contact Type'
                 ],
             ],
-            'Identities' => [
+            'IdentitiesPersonal' => [
                 'identity_type_id' => [
                     'ruleNotBlank' => 'Please select a Type',
                     'custom_validation' => 'Identity Type exists for this Nationality'
@@ -1691,6 +1718,14 @@ trait MessagesTrait
                 'date_to' => [
                     'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
                 ]
+            ],
+            'Identities' => [
+                'issue_date' => [
+                    'ruleCompareDate' => 'Please select',
+                ],
+                'identity_type_id' => [
+                    'ruleCustomIdentityType' => 'Please select',
+                ],
             ],
         ],
         'Student' => [
@@ -2035,7 +2070,7 @@ trait MessagesTrait
                 'range' => 'Text should be between %d and %d characters'
             ],
             'number' => [
-                'minValue' => 'Number should not be lesser than %d',
+                'minValue' => 'Number should not be less than %d',
                 'maxValue' => 'Number should not be greater than %d',
                 'range' => 'Number should be between %d and %d'
             ],
@@ -2552,7 +2587,7 @@ trait MessagesTrait
                 ]
             ]
         ], //POCOR-7271 end
-        
+
         'SpecialNeeds' => [
             'SpecialNeedsReferrals' => [
                 'date' => [
@@ -2617,6 +2652,7 @@ trait MessagesTrait
             'genralerror' => 'To and from academic period can not be same.',
             'alreadyexist' => 'There are existing data in the selected To Academic Period.',
             'nodataexist' => 'Data does not exist for seleceted from academic period.',
+            'invalidDate' => 'From academic period cannot be greater than to academic period.',
             'nodataexisteducationsystem' => 'Data does not exist in education system for seleceted to academic period.'
         ],
         'UserNationalities' => [
@@ -2630,6 +2666,40 @@ trait MessagesTrait
         ],
         'Messaging'=>[//POCOR-7458
             'email'=>'Message has been send successfully'
+        ],
+        //POCOR-8222
+        'Gpa' => [
+            'GpaGradingTypes' => [
+                    'code' => [
+                        'ruleUniqueCode' => 'Code must be unique',
+                    ],
+                    'pass_mark' => [
+                        'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
+                        'ruleIsDecimal' => 'Value is not a valid decimal',
+                        'ruleRange' => 'Mark entered exceeds system limit'
+                    ],
+                    'max' => [
+                        'ruleIsDecimal' => 'Value is not a valid decimal',
+                        'ruleRange' => 'Mark entered exceeds system limit'
+                    ],
+            ],
+
+            'GradingOptions' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique',
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+                ],
+                'min' => [
+                    'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
+                ],
+                'max' => [
+                    'ruleNotMoreThanGradingTypeMax' => 'Grading Option max value cannot be more than Grading Type max value',
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
+                ],
+            ],
         ]
 
     ];
@@ -2637,8 +2707,8 @@ trait MessagesTrait
 
     public function getMessage($code, $options = [])
     {
-        $sprintf = (array_key_exists('sprintf', $options))? $options['sprintf']: [];
-        $defaultMessage = (array_key_exists('defaultMessage', $options))? $options['defaultMessage']: true;
+        $sprintf = (isset($options['sprintf']))? $options['sprintf']: [];
+        $defaultMessage = (isset($options['defaultMessage']))? $options['defaultMessage']: true;
 
         $Labels = TableRegistry::get('Labels');
         $message = Cache::read($code, $Labels->getDefaultConfig());
@@ -2660,6 +2730,6 @@ trait MessagesTrait
             }
         }
 
-        return !is_array($message) ? vsprintf(__($message), $sprintf) : $message;
+        return !is_array($message) ? vsprintf(__($message), (array)$sprintf) : $message;
     }
 }

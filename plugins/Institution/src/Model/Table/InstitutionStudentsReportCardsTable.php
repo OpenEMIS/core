@@ -21,7 +21,7 @@ class InstitutionStudentsReportCardsTable extends ControllerActionTable
     CONST PUBLISHED = 4;
     CONST ERROR = -1; //POCOR-6788 //POCOR-7989
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('ReportCards', ['className' => 'ReportCard.ReportCards']);

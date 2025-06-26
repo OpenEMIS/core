@@ -10,7 +10,7 @@ use App\Model\Table\AppTable;
 use Cake\Log\Log;
 class AppraisalAnswersTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AppraisalForms', ['className' => 'StaffAppraisal.AppraisalForms', 'foreignKey' => 'appraisal_form_id']);
@@ -19,7 +19,7 @@ class AppraisalAnswersTable extends AppTable
     }
 
     // this will be moved to a behaviour when revamping the custom fields
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         return $validator
             ->notEmpty('answer', null, function ($context) {
@@ -33,7 +33,7 @@ class AppraisalAnswersTable extends AppTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew() && $entity->answer === '') {
-            return $event->stopPropagation();
+          //  return $event->stopPropagation(); //POCOR-8688
         }
     }
 

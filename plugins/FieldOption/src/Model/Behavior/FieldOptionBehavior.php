@@ -26,7 +26,7 @@ use Cake\Validation\Validator;
 
 class FieldOptionBehavior extends Behavior
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->_table->setDeleteStrategy('restrict');
     }
@@ -34,7 +34,7 @@ class FieldOptionBehavior extends Behavior
     public function getDefaultValue()
     {
         $value = '';
-        $primaryKey = $this->_table->primaryKey();
+        $primaryKey = $this->_table->getPrimaryKey();
         $entity = $this->getDefaultEntity();
         return $entity->{$primaryKey};
     }
@@ -54,7 +54,7 @@ class FieldOptionBehavior extends Behavior
         return $entity;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];
@@ -70,10 +70,18 @@ class FieldOptionBehavior extends Behavior
         if (!$data->offsetExists('default')) {
             $data['default'] = '0';
         }
+        //POCOR-7485 starts
+        if (!$data->offsetExists('visible')) {
+            $data['visible'] = '0';
+        }//POCOR-7485 ends
     }
 
     public function buildValidator(Event $event, Validator $validator, $name)
     {
+        $model = $this->_table; // POCOR-8696
+        $validator = $model->validationDefault($validator); // POCOR-8696
+        //POCOR-8166 [Remove validation for contact types of unique name rule] STARTS
+        $tableAlias = $model->getAlias(); // POCOR-8696
         $addUniqueName = false;
         if ($validator->hasField('name')) {
             $set = $validator->field('name');
@@ -84,42 +92,56 @@ class FieldOptionBehavior extends Behavior
             $addUniqueName = true;
         }
 
-        if ($addUniqueName) {
-            $validator
-                ->add('name', [
-                    'ruleUnique' => [
-                        'rule' => 'validateUnique',
-                        'provider' => 'table',
-                        'message' => __('This field has to be unique')
-                    ]
-                ]);
+
+
+        if(isset($tableAlias) && $tableAlias != 'ContactTypes'){
+
+            if ($addUniqueName) {
+                $validator
+                    ->add('name', [
+                        'ruleUnique' => [
+                            'rule' => 'validateUnique',
+                            'provider' => 'table',
+                            'message' => __('This field has to be unique')
+                        ]
+                    ]);
+            }
         }
-        //POCOR-5668 add external validation starts
-        if (isset($this->_table->alias) && $this->_table->alias == 'Nationalities') {
-            $validator
-                ->requirePresence('external_validation')
-                ->add('external_validation', [
-                    'externalVal' => [
-                        'rule' => 'check_external_validation',
-                        //'provider' => 'table',
-                        'message' => __('Please configure External Data Source in System Configurations to enable External Validation.')
-                    ]
-                ]);
-        }
-        //POCOR-5668 add external validation ends
+        //POCOR-8166 [Remove validation for contact types of unique name rule] END
+
+
         $validator
             ->requirePresence('visible')
             ->requirePresence('default');
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
         // only perform for v4
         if ($this->_table->hasBehavior('ControllerAction')) {
             if ($entity->has('default') && $entity->default == 1) {
-                $this->_table->updateAll(['default' => 0], [$this->_table->primaryKey() . ' != ' => $entity->{$this->_table->primaryKey()}]);
+                $this->_table->updateAll(['default' => 0], [$this->_table->getPrimaryKey().' != ' => $entity->{$this->_table->getPrimaryKey()}]);
             }
         }
+    }
+
+    private function buildFieldOptions() {
+        $data = $this->_table->FieldOption->getFieldOptions();
+        $fieldOptions = [];
+        foreach ($data as $key => $obj) {
+            $parent = __($obj['parent']);
+            if (!array_key_exists($parent, $fieldOptions)) {
+                $fieldOptions[$parent] = [];
+            }
+
+            if (isset($obj['title'])) {
+                $keyName = $obj['title'];
+            } else {
+                $keyName = Inflector::humanize(Inflector::underscore($key));
+            }
+            $fieldOptions[$parent][$key] = __($keyName);
+            asort($fieldOptions[$parent]); // POCOR-8147
+        }
+        return $fieldOptions;
     }
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
@@ -179,26 +201,6 @@ class FieldOptionBehavior extends Behavior
         $model->field('editable', ['options' => $model->getSelectOptions('general.yesno'), 'visible' => ['index' => true], 'after' => 'default']);
 
         $extra['config']['selectedLink'] = ['controller' => 'FieldOptions', 'action' => 'index'];
-    }
-
-    private function buildFieldOptions()
-    {
-        $data = $this->_table->FieldOption->getFieldOptions();
-        $fieldOptions = [];
-        foreach ($data as $key => $obj) {
-            $parent = __($obj['parent']);
-            if (!array_key_exists($parent, $fieldOptions)) {
-                $fieldOptions[$parent] = [];
-            }
-
-            if (isset($obj['title'])) {
-                $keyName = $obj['title'];
-            } else {
-                $keyName = Inflector::humanize(Inflector::underscore($key));
-            }
-            $fieldOptions[$parent][$key] = __($keyName);
-        }
-        return $fieldOptions;
     }
 
     private function addFieldOptionControl(ArrayObject $extra, $data = [])

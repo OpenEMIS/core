@@ -10,9 +10,9 @@ use App\Model\Table\ControllerActionTable;
 
 class StudentReportCardsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_students_report_cards');
+        $this->setTable('institution_students_report_cards');
 
         parent::initialize($config);
         $this->belongsTo('ReportCards', ['className' => 'ReportCard.ReportCards']);
@@ -26,9 +26,11 @@ class StudentReportCardsTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);
+
+        $this->addBehavior('Institution.InstitutionTab');
     }
     //POCOR-7321 start
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.viewPDF'] = 'viewPDF';//POCOR-7321
@@ -56,7 +58,7 @@ class StudentReportCardsTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'institution_id', 'report_card_id', 'education_grade_id', 'institution_class_id']);
 
         // Start POCOR-5188
-		if($this->request->params['controller'] == 'Students'){
+		if($this->request->getParam('controller') == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Report Cards (PDF)','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -73,7 +75,7 @@ class StudentReportCardsTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Report Cards (PDF)','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -101,11 +103,11 @@ class StudentReportCardsTable extends ControllerActionTable
         $user = $this->Auth->user();
        
         $InstitutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-        $StudentGuardians = TableRegistry::get('student_guardians');
+        $StudentGuardians = TableRegistry::get('Student.StudentGuardians');
 
         //Start POCOR-7055
         if ($user['is_student'] == 1 && $user['is_guardian'] == 1 && $user['is_staff'] == 1) {
-            if ($this->controller->name == 'Profiles') {
+            if ($this->controller->getName() == 'Profiles') {
                 $query
                 ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')            
                 ->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED,
@@ -113,10 +115,9 @@ class StudentReportCardsTable extends ControllerActionTable
                 ])
                 ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);
             }
-            $session = $this->request->session();
-            $session = $this->request->session();//POCOR-6267
-            $student_id = $session->read('Student.Students.id');
-
+            $session = $this->request->getSession();//POCOR-6267
+            //$student_id = $this->getStudentID();
+            $student_id = !empty($this->getStudentID()) ? $this->getStudentID() : (!empty($session->read('Student.Students.id')) ? $session->read('Student.Students.id') : 0); //POCOR-8413
             $query
             ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')            
             ->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED,
@@ -132,17 +133,17 @@ class StudentReportCardsTable extends ControllerActionTable
             //->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED])
             ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);
         }else if($user['is_guardian'] == 1){ //POCOR-6202 starts
-            $session = $this->request->session();//POCOR-6267
+            $session = $this->request->getSession();//POCOR-6267
             //$studentId = $session->read('Student.Students.id');
-            $student_id = $session->read('Student.Students.id'); 
-            if ($this->request->params['pass'][1]) {
-                $student_id = $this->ControllerAction->paramsDecode($this->request->params['pass'][1])['id']; 
+            $student_id = $this->getStudentID(); 
+            if ($this->request->getParam('pass')[1]) {
+                $student_id = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1])['id']; 
             }
 
             $query
             ->contain('AcademicPeriods', 'Institutions', 'EducationGrades') 
             ->leftJoin(
-                [$StudentGuardians->alias() => $StudentGuardians->table()],
+                [$StudentGuardians->getAlias() => $StudentGuardians->getTable()],
                 [
                     $StudentGuardians->aliasField('student_id = ') . $this->aliasField('student_id')
                 ]
@@ -187,19 +188,19 @@ class StudentReportCardsTable extends ControllerActionTable
         ];
         //POCOR-7321 end
         $downloadAccess = false;
-        if ($this->controller->name == 'Students') {
+        if ($this->controller->getName() == 'Students') {
             $downloadAccess = $this->AccessControl->check(['Students', 'ReportCards', 'download']);
             $downloadExcel = $this->AccessControl->check(['Students', 'ReportCard', 'download']);
-        } else if ($this->controller->name == 'Directories') {
+        } else if ($this->controller->getName() == 'Directories') {
             $downloadAccess = $this->AccessControl->check(['Directories', 'StudentReportCards', 'download']);
             $downloadExcel = $this->AccessControl->check(['Directories', 'StudentReportCard', 'download']);
-        } else if ($this->controller->name == 'Profiles') {
+        } else if ($this->controller->getName() == 'Profiles') {
             $downloadAccess = $this->AccessControl->check(['Profiles', 'StudentReportCards', 'download']);
             $downloadExcel = $this->AccessControl->check(['Profiles', 'StudentReportCard', 'download']);
             // unset($buttons['view']);
         }
         /**POCOR-6845 starts - Added condition to get download button when logged in as Guardian*/  
-        else if ($this->controller->name == 'GuardianNavs') {
+        else if ($this->controller->getName() == 'GuardianNavs') {
             $downloadAccess = $this->AccessControl->check(['GuardianNavs', 'StudentReportCards', 'download']);
             $downloadExcel = $this->AccessControl->check(['GuardianNavs', 'StudentReportCard', 'download']);
         }
@@ -253,7 +254,11 @@ class StudentReportCardsTable extends ControllerActionTable
     private function setupTabElements()
     {
         $options['type'] = 'student';
-        $tabElements = $this->controller->getAcademicTabElements($options);
+        //$tabElements = $this->controller->getAcademicTabElements($options);
+        $tabElements = $this->getAcademicTabElements($options);
+        if($this->controller->getName() == 'GuardianNavs' || $this->controller->getName() == 'Directories') {
+			$tabElements = $this->controller->getAcademicTabElements($options);
+		}
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'ReportCards');
     }
@@ -296,4 +301,27 @@ class StudentReportCardsTable extends ControllerActionTable
         return $file;
     }
     //POCOR-7321 ends
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'report_card_id') {
+            return __('Report Card');
+        } else if ($field == 'academic_period_id') {
+            return  __('Academic Period');
+        } else if ($field == 'education_grade_id') {
+            return  __('Education Grade');
+        } else if ($field == 'institution_class_id') {
+            return  __('Institution Class');
+        } else if ($field == 'gpa') {
+            return  __('Gpa');
+        } else if ($field == 'institution_id') {
+            return  __('Institution');
+        } else if ($field == 'total_male_students') {
+            return  __('Male Students');
+        } else if ($field == 'total_female_students') {
+            return  __('Female Students');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

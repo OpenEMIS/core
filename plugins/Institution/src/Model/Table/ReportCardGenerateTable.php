@@ -1,28 +1,26 @@
 <?php
 
 namespace Institution\Model\Table;
-
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Table\ControllerActionTable;
+use Cake\Routing\Router;
 
 class ReportCardGenerateTable extends ControllerActionTable
 {
     use MessagesTrait;
-
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('assessment_item_results');
+        $this->setTable('assessment_item_results');
         parent::initialize($config);
-
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_classes_id']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
@@ -51,7 +49,7 @@ class ReportCardGenerateTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator
@@ -80,12 +78,12 @@ class ReportCardGenerateTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $classId = $this->ControllerAction->getQueryString('class_id');
-        $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
-        $institutionId = $this->ControllerAction->getQueryString('institution_id');
-        $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
+        $classId = $this->getQueryString('class_id');
+        $assessmentId = $this->getQueryString('assessment_id');
+        $institutionId = $this->getQueryString('institution_id');
+        $academicPeriodId = $this->getQueryString('academic_period_id');
 //        $this->log('onUpdateFieldAcademicPeriodId', 'debug');
 //        $this->log($academicPeriodId, 'debug');
         if ($action == 'add') {
@@ -120,18 +118,18 @@ class ReportCardGenerateTable extends ControllerActionTable
     }
 
 
-    public function onUpdateFieldInstitutionClassesId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionClassesId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $classId = $this->ControllerAction->getQueryString('class_id');
-            $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
-            $institutionId = $this->ControllerAction->getQueryString('institution_id');
-            $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
+            $classId = $this->getQueryString('class_id');
+            $assessmentId = $this->getQueryString('assessment_id');
+            $institutionId = $this->getQueryString('institution_id');
+            $academicPeriodId = $this->getQueryString('academic_period_id');
 
-            $session = $this->request->session();
-            $periodId = $request->data[$this->alias()]['academic_period_id'];
-            $educationGradeId = $request->data[$this->alias()]['education_grade_id'];
-            $institutionId = $session->read('Institution.Institutions.id');
+            $session = $this->request->getSession();
+            $periodId = empty($academicPeriodId) ? $request->getData($this->getAlias())['academic_period_id'] : $academicPeriodId;
+            $educationGradeId = $request->getData($this->getAlias())['education_grade_id'];
+            //$institutionId = $session->read('Institution.Institutions.id');
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
             $userId = $this->Auth->user('id');
             $classQuery = $this->InstitutionClasses
@@ -162,7 +160,7 @@ class ReportCardGenerateTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStudents(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStudents(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $studentsOptions = [
@@ -181,26 +179,29 @@ class ReportCardGenerateTable extends ControllerActionTable
 
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, $request)
     {
-        $classId = $this->ControllerAction->getQueryString('class_id');
-        $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
-        $institutionId = $this->ControllerAction->getQueryString('institution_id');
-        $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
+        $classId = $this->getQueryString('class_id');
+        $assessmentId = $this->getQueryString('assessment_id');
+        $institutionId = $this->getQueryString('institution_id');
+        $academicPeriodId = $this->getQueryString('academic_period_id');
 
         if ($action == 'add') {
             if (!$academicPeriodId) {
-                $academicPeriodId = $request->data['ReportCardGenerate']['academic_period_id'];
+                $academicPeriodId = $request->getData()['ReportCardGenerate']['academic_period_id'];
             }
             if (!$institutionId) {
-                $institutionId = $request->data['ReportCardGenerate']['institution_id'];
+                $institutionId = $request->getData()['ReportCardGenerate']['institution_id'];
             }
             if ($classId) {
                 $grades = TableRegistry::get('Institution.InstitutionClassGrades');
             }
-            $where = [
-                'EducationSystems.academic_period_id' => $academicPeriodId,
-            ];
-            if (!$classId) {
-                $where[$grades->aliasField('institution_id')] = $institutionId;
+            if(!empty( $academicPeriodId)) {
+                $where = [
+                    'EducationSystems.academic_period_id' => $academicPeriodId,
+                ];
+            }
+
+            if (!empty($classId)) {
+                //$where[$grades->aliasField('institution_id')] = $institutionId;
             }
             if ($classId) {
                 $where[$grades->aliasField('institution_class_id')] = $classId;
@@ -210,7 +211,7 @@ class ReportCardGenerateTable extends ControllerActionTable
                 'valueField' => 'programme_grade_name'])
                 ->find('visible')
                 ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
-                ->LeftJoin([$grades->alias() => $grades->table()], [
+                ->LeftJoin([$grades->getAlias() => $grades->getTable()], [
                     $EducationGrades->aliasField('id') . ' = ' . $grades->aliasField('education_grade_id')
                 ])
                 ->where($where)
@@ -245,74 +246,90 @@ class ReportCardGenerateTable extends ControllerActionTable
     public function onUpdateFieldListOfStudents(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
-            $class_id = $this->ControllerAction->getQueryString('class_id');
-            $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
-            $institutionId = $this->ControllerAction->getQueryString('institution_id');
-            $academic_period_id = $this->ControllerAction->getQueryString('academic_period_id');
 
-            $session = $this->request->session();
+            $class_id = $this->getQueryString('class_id');
+            $assessmentId = $this->getQueryString('assessment_id');
+            $institutionId = $this->getQueryString('institution_id');
+            $academic_period_id = $this->getQueryString('academic_period_id');
+            // POCOR-8578: start
+            $Users = self::getDynamicTableInstance('security_users');
+            $session = $request->getSession();
+            $alias = $this->getAlias();
+            $data = $request->getData($alias);
+            if ($data['students'] == 0) {
+                $attr['visible'] = false;
+                return $attr;
+            }else{
+                $attr['visible'] = true;
+            }
             if (!$academic_period_id) {
-                $academic_period_id = $request->data[$this->alias()]['academic_period_id'];
+                $academic_period_id = $data['academic_period_id'];
             }
             if (!$class_id) {
-                $class_id = $request->data[$this->alias()]['institution_classes_id'];
+                $class_id = $data['institution_classes_id'];
             }
             if (!$institutionId) {
                 $institutionId = $session->read('Institution.Institutions.id');
             }
-            $educationGradeId = $request->data[$this->alias()]['education_grade_id'];
-            $statusId = $request->data[$this->alias()]['student_status_id'];
+            $educationGradeId = $data['education_grade_id'];
+            $statusId = $data['student_status_id'];
             $InstitutionStudents = TableRegistry::get('Institution.Students');
             $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
             $where = [];
             if ($statusId > 0) {
-                $where[$InstitutionClassStudents->aliasField('student_status_id')] = $statusId;
+                $where[] = $InstitutionClassStudents->aliasField("student_status_id = ") . $statusId;
             }
-            $studentOptions = $InstitutionStudents
+
+            if (!empty($educationGradeId)) {
+                $where[] = $InstitutionStudents->aliasField("education_grade_id = ") . $educationGradeId;
+            }
+
+            $studentOptionsQuery = $InstitutionStudents
                 ->find()
                 ->select([
-                    $this->Users->aliasField('id'),
-                    $this->Users->aliasField('openemis_no'),
-                    $this->Users->aliasField('first_name'),
-                    $this->Users->aliasField('middle_name'),
-                    $this->Users->aliasField('third_name'),
-                    $this->Users->aliasField('last_name'),
-                    $this->Users->aliasField('preferred_name')
+                    'user_id' => $Users->aliasField('id'),
+                    'openemis_no' => $Users->aliasField('openemis_no'),
+                    'first_name' => $Users->aliasField('first_name'),
+                    'middle_name' => $Users->aliasField('middle_name'),
+                    'third_name' => $Users->aliasField('third_name'),
+                    'last_name' => $Users->aliasField('last_name'),
+                    'preferred_name' => $Users->aliasField('preferred_name')
                 ])
-                ->leftJoin([$this->Users->alias() => $this->Users->table()], [
-                    $this->Users->aliasField('id =') . $InstitutionStudents->aliasField('student_id')
+                ->leftJoin([$Users->getAlias() => $Users->getTable()], [
+                    $Users->aliasField('id =') . $InstitutionStudents->aliasField('student_id')
                 ])
-                ->leftJoin([$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()], [
+                ->leftJoin([$InstitutionClassStudents->getAlias() => $InstitutionClassStudents->getTable()], [
                     $InstitutionClassStudents->aliasField('student_id =') . $InstitutionStudents->aliasField('student_id'),
                     $InstitutionClassStudents->aliasField('education_grade_id =') . $InstitutionStudents->aliasField('education_grade_id'),
                     $InstitutionClassStudents->aliasField('academic_period_id =') . $InstitutionStudents->aliasField('academic_period_id'),
                     $InstitutionClassStudents->aliasField('institution_id =') . $InstitutionStudents->aliasField('institution_id')
                 ])
                 ->where([
-                    $InstitutionStudents->aliasField('academic_period_id') => $academic_period_id,
-                    $InstitutionClassStudents->aliasField('institution_class_id') => $class_id,
-                    $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-                    $InstitutionStudents->aliasField('institution_id') => $institutionId,
+                    $InstitutionStudents->aliasField('academic_period_id =') . $academic_period_id,
+                    $InstitutionClassStudents->aliasField('institution_class_id =') . $class_id,
+                    //$where[ $InstitutionStudents->aliasField('education_grade_id')] = $educationGradeId;
+                    $InstitutionStudents->aliasField('institution_id =') . $institutionId,
                     $where
                 ])
-                ->group([$this->Users->aliasField('id')])
-                ->toArray();
+                ->group([$Users->aliasField('id')]);
+            $studentOptions = $studentOptionsQuery->toArray();
             $options = [];
             if (!empty($studentOptions)) {
                 foreach ($studentOptions as $value) {
                     $studentName = [];
-                    ($value->Users['first_name']) ? $studentName[] = $value->Users['first_name'] : '';
-                    ($value->Users['middle_name']) ? $studentName[] = $value->Users['middle_name'] : '';
-                    ($value->Users['third_name']) ? $studentName[] = $value->Users['third_name'] : '';
-                    ($value->Users['last_name']) ? $studentName[] = $value->Users['last_name'] : '';
+                    ($value['first_name']) ? $studentName[] = $value['first_name'] : '';
+                    ($value['middle_name']) ? $studentName[] = $value['middle_name'] : '';
+                    ($value['third_name']) ? $studentName[] = $value['third_name'] : '';
+                    ($value['last_name']) ? $studentName[] = $value['last_name'] : '';
                     $name = implode(' ', $studentName);
-                    $options[$value->Users['id']] = trim(sprintf('%s - %s', $value->Users['openemis_no'], $name));
+                    $options[$value['user_id']] = trim(sprintf('%s - %s', $value['openemis_no'], $name));
                 }
             }
 
-            if ($request->data[$this->alias()]['students'] == 0) {
+            if ($data['students'] == 0) {
                 $attr['visible'] = false;
             }
+            // POCOR-8578: end
             $attr['options'] = $options;
         }
 
@@ -322,7 +339,7 @@ class ReportCardGenerateTable extends ControllerActionTable
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $data = $requestData['ReportCardGenerate'];
-        $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery('queryString');
         $assessmentId = $this->paramsDecode($queryString)['assessment_id'];
         $url = [
             'plugin' => 'CustomExcel',
@@ -330,7 +347,7 @@ class ReportCardGenerateTable extends ControllerActionTable
             'action' => 'export',
             0 => 'AssessmentResults'
         ];
-        $customUrl = $this->ControllerAction->setQueryString($url, [
+        $customUrl = $this->setQueryString($url, [
             'class_id' => $data['institution_classes_id'],
             'assessment_id' => $assessmentId,
             'institution_id' => $data['institution_id'],
@@ -340,12 +357,17 @@ class ReportCardGenerateTable extends ControllerActionTable
             'students' => $data['students'],
             'list_of_students' => $data['list_of_students']
         ]);
+        $customUrl = self::secureUrl($customUrl);
         return $this->controller->redirect($customUrl);
+    }
+    private static function secureUrl($url, $fullBase = true) {
+        $fullUrl = Router::url($url, $fullBase);
+        return preg_replace("/^http:/i", "https:", $fullUrl);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery('queryString');
         $button = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
@@ -354,5 +376,54 @@ class ReportCardGenerateTable extends ControllerActionTable
         ];
 
         $extra['toolbarButtons']['back']['url'] = $button;
+    }
+
+    /**
+     * POCOR-8391 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
     }
 }

@@ -17,14 +17,14 @@ class InstitutionCasesTable extends AppTable
 {
     private $features = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_cases');
+        $this->setTable('institution_cases');
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->hasMany('InstitutionCaseRecords', ['className' => 'Institution.InstitutionCaseRecords', 'foreignKey' => 'institution_case_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionCaseRecords', ['className' => 'Cases.InstitutionCaseRecords', 'foreignKey' => 'institution_case_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsTo('CaseTypes', ['className' => 'Cases.CaseTypes', 'foreignKey' => 'case_type_id']); //POCOR-7786
         $this->belongsTo('CasePriority', ['className' => 'Cases.CasePriorities', 'foreignKey' => 'case_priority_id']); //POCOR-7786
         $this->addBehavior('Excel', [
@@ -33,7 +33,7 @@ class InstitutionCasesTable extends AppTable
         $this->addBehavior('Report.InstitutionSecurity');
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('AcademicPeriod.Period');
-        $this->addBehavior('Report.AreaList');//POCOR-7851
+
         $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
         $this->features = $WorkflowRules->getFeatureOptionsWithClassName();
     }
@@ -41,7 +41,7 @@ class InstitutionCasesTable extends AppTable
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -66,30 +66,13 @@ class InstitutionCasesTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
-        $areaLevelId = $requestData->area_level_id;//POCOR-7851
         $where = [];
         if ($institution_id != 0) {
             $where['Institutions.id'] = $institution_id;
         }
-        //POCOR-7851 start
-        $areaList = [];
-        if (
-            $areaLevelId > 1 && $areaId > 1
-        ) {
-            $areaList = $this->getAreaList($areaLevelId, $areaId);
-        } elseif ($areaLevelId > 1) {
-
-            $areaList = $this->getAreaList($areaLevelId, 0);
-        } elseif ($areaId > 1) {
-            $areaList = $this->getAreaList(0, $areaId);
+        if ($areaId != -1) {
+            $where['Institutions.area_id'] = $areaId;
         }
-        if (!empty($areaList)) {
-            $where['Institutions.area_id IN'] = $areaList;
-        }
-        //POCOR-7851 end
-        // if ($areaId != -1) {
-        //     $where['Institutions.area_id'] = $areaId;
-        // }
         //POCOR-7786 start
         // $module = $requestData->module;
         // $listener = TableRegistry::get(]);
@@ -138,8 +121,8 @@ class InstitutionCasesTable extends AppTable
                     $arr->executed_by = $arr['_matchingData']['CreatedUser']['openemis_no']." - ".$arr['_matchingData']['CreatedUser']['name'];
                     $arr->assignee=$arr['assignee_openemis']." - ".$arr['assignee_first_name']." ".$arr["assignee_last_name"];
                     
-                    $linkedRecords = TableRegistry::get('institution_case_links'); //POCOR-7786
-                    $institutionCases = TableRegistry::get('institution_cases');
+                    $linkedRecords = TableRegistry::get('Institution.InstitutionCaseLinks'); //POCOR-7786
+                    $institutionCases = TableRegistry::get('Institution.InstitutionCases');
                     $childCases=$linkedRecords->find()
                                                ->where([$linkedRecords->aliasField('parent_case_id')=>$arr->case_id])
                                                ->toArray();
@@ -158,10 +141,10 @@ class InstitutionCasesTable extends AppTable
         // $event = $listener->dispatchEvent('InstitutionCase.onBuildCustomQuery', [$query], $listener);
         //POCOR-7786 end
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (!empty($event->result)) {
-            $query = $event->result;
+        if (!empty($event->getResult())) {
+            $query = $event->getResult();
         }
 
         if (!is_null($academicPeriodId) && $academicPeriodId != 0) {
@@ -276,10 +259,10 @@ class InstitutionCasesTable extends AppTable
         // $event = $listener->dispatchEvent('InstitutionCase.onIncludeCustomExcelFields', [$newFields], $listener);  //POCOR-7786 start
          //POCOR-7786 end
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (!empty($event->result)) {
-            $newFields = $event->result;
+        if (!empty($event->getResult())) {
+            $newFields = $event->getResult();
         }
 
         $fields->exchangeArray($newFields);

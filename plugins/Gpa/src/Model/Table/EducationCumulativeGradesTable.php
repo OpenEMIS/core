@@ -1,0 +1,41 @@
+<?php
+namespace Gpa\Model\Table;
+
+use App\Model\Table\ControllerActionTable;
+use ArrayObject;
+use Cake\Event\Event;
+use Cake\ORM\Query;
+use Cake\ORM\Entity;
+use Cake\Validation\Validator;
+use Cake\ORM\TableRegistry;
+
+/**
+ * POCOR-8222
+ * Develop GPA features in system
+ * */
+class EducationCumulativeGradesTable extends ControllerActionTable {
+    public function initialize(array $config): void
+    {
+        $this->setTable('education_grades_cumulative_gpa');
+        parent::initialize($config);
+        $this->belongsTo('EducationGrades', [
+            'foreignKey' => 'education_grade_id',
+            'joinType' => 'INNER',
+            'className' => 'Education.EducationGrades',
+        ]);
+
+        /*$this->belongsTo('EducationGradesGpa', [
+            'foreignKey' => 'education_grade_gpa_id',
+            'joinType' => 'INNER',
+            'className' => 'Gpa.Cumulative',
+        ]);*/
+
+        $this->belongsTo('MainEducationGrades', [
+            'foreignKey' => 'main_education_grade_id',
+            'joinType' => 'INNER',
+            'className' => 'Education.EducationGrades',
+        ]);
+    }
+
+    
+}

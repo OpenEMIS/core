@@ -40,14 +40,25 @@ class ExaminationRepository
 
         return $student;
     }
-    public function examinationCenterExaminationSubjects($examinationId, $centerId)
+    public function examinationCenterExaminationSubjects($params, $examinationId, $centerId)
     {
-        return ExaminationCentreExaminationSubject::select('examination_centres_examinations_subjects.*')->with('examinationSubject.gradingType.gradingOptions','educationSubject')
+        $resp = [];
+        $list = ExaminationCentreExaminationSubject::select('examination_centres_examinations_subjects.*')->with('examinationSubject.gradingType.gradingOptions','educationSubject')
                 ->join('education_subjects',  'education_subjects.id', '=', 'examination_centres_examinations_subjects.education_subject_id')
         ->where('examination_id', $examinationId)
         ->where('examination_centre_id', $centerId)
-        ->orderBy('order')
-        ->get();
+        ->orderBy('order');
+
+        //For POCOR-8215/8216 start...
+        if(isset($params['limit'])){
+            $limit = $params['limit'];
+            $resp = $list->paginate($limit)->toArray();
+        } else {
+            $resp['data'] = $list->get()->toArray();
+        }
+        //For POCOR-8215/8216 end...
+        
+        return $resp;
     }
 
     public function examinationCenterExaminationSubjectsStudents($examinationId, $centerId, $subjectId)

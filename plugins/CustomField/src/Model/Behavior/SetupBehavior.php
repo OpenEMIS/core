@@ -10,7 +10,7 @@ class SetupBehavior extends Behavior
     protected $fieldType;
     protected $inputLimits;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -38,7 +38,7 @@ class SetupBehavior extends Behavior
         ];
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $eventMap = [

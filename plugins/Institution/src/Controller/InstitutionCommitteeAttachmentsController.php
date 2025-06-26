@@ -15,7 +15,7 @@ class InstitutionCommitteeAttachmentsController extends PageController
         $this->Page->enable(['download']);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $session = $this->request->session();
         $institutionId = $this->getInstitutionID();
@@ -49,7 +49,7 @@ class InstitutionCommitteeAttachmentsController extends PageController
         $page->setHeader($institutionName . ' - ' . __('Committee Attachments'));
 
         $query = $this->request->query['querystring'];
-        
+
         $this->setupTabElements($encodedInstitutionId, $query);
     }
 
@@ -82,7 +82,7 @@ class InstitutionCommitteeAttachmentsController extends PageController
         $this->addEdit();
         //$institutionCommitteeId = $page->decode($this->request->query['querystring']);
         $institutionCommitteeId = $this->paramsDecode($this->request->query['querystring']);
-         
+
         $page->get('institution_committee_id')
              ->setValue($institutionCommitteeId['institution_committee_id']);
         $page->get('file_content')

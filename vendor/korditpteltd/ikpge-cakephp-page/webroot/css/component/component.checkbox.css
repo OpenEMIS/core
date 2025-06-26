@@ -1,0 +1,706 @@
+/* CHECKBOX v.1.0.5 */
+
+
+/* BASE CHECKBOX & RADIOBUTTON STYLING */
+
+[type="checkbox"]:not(:checked),
+[type="checkbox"]:checked,
+[type="radio"]:not(:checked),
+[type="radio"]:checked {
+    position: absolute;
+    margin: 0 4px !important;
+    z-index: 9999999999;
+    opacity: 0;
+    cursor: pointer;
+    width: 18px !important;
+    height: 18px;
+}
+
+.ag-fresh [type="checkbox"]:not(:checked),
+.ag-fresh [type="checkbox"]:checked,
+.ag-fresh [type="radio"]:not(:checked),
+.ag-fresh [type="radio"]:checked {
+    margin: 2px !important;
+}
+
+[type="checkbox"]:not(:checked) + label,
+[type="checkbox"]:checked + label,
+[type="checkbox"]:not(:checked) + .ag-cell-value,
+[type="checkbox"]:checked + .ag-cell-value,
+[type="checkbox"]:not(:checked) + .ag-filter-value,
+[type="checkbox"]:checked + .ag-filter-value,
+[type="radio"]:not(:checked) + label,
+[type="radio"]:checked + label,
+[type="radio"]:not(:checked) + .ag-cell-value,
+[type="radio"]:checked + .ag-cell-value,
+[type="radio"]:not(:checked) + .ag-filter-value,
+[type="radio"]:checked + .ag-filter-value {
+    position: relative;
+    padding-left: 25px !important;
+    width: 100% !important;
+}
+
+
+/* END OF BASE CHECKBOX & RADIOBUTTON STYLING */
+
+
+/* DEFAULT CHECKBOX */
+
+[type="checkbox"]:not(:checked) + label:before,
+[type="checkbox"]:checked + label:before,
+[type="checkbox"]:not(:checked) + .ag-cell-value:before,
+[type="checkbox"]:checked + .ag-cell-value:before,
+[type="checkbox"]:not(:checked) + .ag-filter-value:before,
+[type="checkbox"]:checked + .ag-filter-value:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: -1px;
+    width: 18px;
+    height: 18px;
+    background-color: #FFF;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    -ms-border-radius: 3px;
+    border-radius: 3px;
+    border: 1px solid #CCC;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .1);
+}
+
+[type="checkbox"]:checked + label:before,
+[type="checkbox"]:checked + .ag-cell-value:before,
+[type="checkbox"]:checked + .ag-filter-value:before,
+[type="radio"]:checked + label:before,
+[type="radio"]:checked + .ag-cell-value:before,
+[type="radio"]:checked + .ag-filter-value:before {
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    -ms-box-shadow: none !important;
+    box-shadow: none !important;
+}
+
+
+/* END OF DEFAULT CHECKBOX */
+
+
+/* CHECKBOX MARKED */
+
+[type="checkbox"]:not(:checked) + label:after,
+[type="checkbox"]:checked + label:after,
+[type="checkbox"]:not(:checked) + .ag-cell-value:after,
+[type="checkbox"]:checked + .ag-cell-value:after,
+[type="checkbox"]:not(:checked) + .ag-filter-value:after,
+[type="checkbox"]:checked + .ag-filter-value:after {
+    font-family: "FontAwesome";
+    content: '\f00c';
+    position: absolute;
+    top: 0;
+    left: 2px;
+    font-size: 14px;
+    line-height: 15px;
+    color: #999;
+    transition: all .2s;
+}
+
+
+/* END OF CHECKBOX MARKED */
+
+
+/* RADIO BUTTON */
+
+[type="radio"]:not(:checked) + label:before,
+[type="radio"]:checked + label:before,
+[type="radio"]:not(:checked) + .ag-cell-value:before,
+[type="radio"]:checked + .ag-cell-value:before,
+[type="radio"]:not(:checked) + .ag-filter-value:before,
+[type="radio"]:checked + .ag-filter-value:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: -1px;
+    width: 18px;
+    height: 18px;
+    background-color: #FFF;
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    -ms-border-radius: 50%;
+    border-radius: 50%;
+    border: 1px solid #CCC;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .1)
+}
+
+[type="radio"]:not(:checked) + label:after,
+[type="radio"]:checked + label:after,
+[type="radio"]:not(:checked) + .ag-cell-value:after,
+[type="radio"]:checked + .ag-cell-value:after,
+[type="radio"]:not(:checked) + .ag-filter-value:after,
+[type="radio"]:checked + .ag-filter-value:after {
+    font-family: "FontAwesome";
+    content: '\f111';
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 10px;
+    line-height: 17px;
+    color: #999;
+    transition: all .2s;
+    width: 18px;
+    text-align: center;
+}
+
+.chrome [type="checkbox"]:not(:checked) + label:after,
+.chrome [type="checkbox"]:checked + label:after,
+.chrome [type="checkbox"]:not(:checked) + .ag-cell-value:after,
+.chrome [type="checkbox"]:checked + .ag-cell-value:after,
+.chrome [type="checkbox"]:not(:checked) + .ag-filter-value:after,
+.chrome [type="checkbox"]:checked + .ag-filter-value:after,
+.safari [type="checkbox"]:not(:checked) + label:after,
+.safari [type="checkbox"]:checked + label:after,
+.safari [type="checkbox"]:not(:checked) + .ag-cell-value:after,
+.safari [type="checkbox"]:checked + .ag-cell-value:after,
+.safari [type="checkbox"]:not(:checked) + .ag-filter-value:after,
+.safari [type="checkbox"]:checked + .ag-filter-value:after {
+    top: 1px;
+}
+
+
+/* END OF RADIO BUTTON */
+
+
+/* RADIO BUTTON MARKED */
+
+[type="checkbox"]:not(:checked) + label:after,
+[type="checkbox"]:not(:checked) + .ag-cell-value:after,
+[type="checkbox"]:not(:checked) + .ag-filter-value:after,
+[type="radio"]:not(:checked) + label:after,
+[type="radio"]:not(:checked) + .ag-cell-value:after,
+[type="radio"]:not(:checked) + .ag-filter-value:after {
+    opacity: 0;
+    transform: scale(0);
+}
+
+[type="checkbox"]:checked + label:after,
+[type="checkbox"]:checked + .ag-cell-value:after,
+[type="checkbox"]:checked + .ag-filter-value:after,
+[type="radio"]:checked + label:after,
+[type="radio"]:checked + .ag-cell-value:after,
+[type="radio"]:checked + .ag-filter-value:after {
+    opacity: 1;
+    transform: scale(1);
+}
+
+
+/* END OF RADIO MARKED */
+
+
+/* DISABLED CHECKBOX */
+
+[type="checkbox"]:disabled:not(:checked) + label:before,
+[type="checkbox"]:disabled:checked + label:before,
+[type="checkbox"]:disabled:not(:checked) + .ag-cell-value:before,
+[type="checkbox"]:disabled:checked + .ag-cell-value:before,
+[type="checkbox"]:disabled:not(:checked) + .ag-filter-value:before,
+[type="checkbox"]:disabled:checked + .ag-filter-value:before,
+[type="radio"]:disabled:not(:checked) + label:before,
+[type="radio"]:disabled:checked + label:before,
+[type="radio"]:disabled:not(:checked) + .ag-cell-value:before,
+[type="radio"]:disabled:checked + .ag-cell-value:before,
+[type="radio"]:disabled:not(:checked) + .ag-filter-value:before,
+[type="radio"]:disabled:checked + .ag-filter-value:before {
+    box-shadow: none;
+    border-color: #999;
+    background-color: #F9F9F9;
+}
+
+[type="checkbox"]:disabled:checked + label:after,
+[type="checkbox"]:disabled:checked + .ag-cell-value:after,
+[type="checkbox"]:disabled:checked + .ag-filter-value:after,
+[type="radio"]:disabled:checked + label:after,
+[type="radio"]:disabled:checked + .ag-cell-value:after,
+[type="radio"]:disabled:checked + .ag-filter-value:after {
+    color: #999;
+}
+
+[type="checkbox"]:disabled + label,
+[type="checkbox"]:disabled + .ag-cell-value,
+[type="checkbox"]:disabled + .ag-filter-value,
+[type="radio"]:disabled + label,
+[type="radio"]:disabled + .ag-cell-value,
+[type="radio"]:disabled + .ag-filter-value {
+    color: #EEE;
+}
+
+
+/* END OF DISABLED CHECKBOX */
+
+
+/* ACCESSIBILITY */
+
+[type="checkbox"]:checked:focus + label:before,
+[type="checkbox"]:not(:checked):focus + label:before,
+[type="checkbox"]:checked:focus + .ag-cell-value:before,
+[type="checkbox"]:not(:checked):focus + .ag-cell-value:before,
+[type="checkbox"]:checked:focus + .ag-filter-value:before,
+[type="checkbox"]:not(:checked):focus + .ag-filter-value:before,
+[type="radio"]:checked:focus + label:before,
+[type="radio"]:not(:checked):focus + label:before,
+[type="radio"]:checked:focus + .ag-cell-value:before,
+[type="radio"]:not(:checked):focus + .ag-cell-value:before,
+[type="radio"]:checked:focus + .ag-filter-value:before,
+[type="radio"]:not(:checked):focus + .ag-filter-value:before {
+    border: 1px solid #CCC;
+}
+
+[type="checkbox"]:checked:hover + label:before,
+[type="checkbox"]:not(:checked):hover + label:before,
+[type="checkbox"]:checked:hover + .ag-cell-value:before,
+[type="checkbox"]:not(:checked):hover + .ag-cell-value:before,
+[type="checkbox"]:checked:hover + .ag-filter-value:before,
+[type="checkbox"]:not(:checked):hover + .ag-filter-value:before,
+[type="radio"]:checked:hover + label:before,
+[type="radio"]:not(:checked):hover + label:before,
+[type="radio"]:checked:hover + .ag-cell-value:before,
+[type="radio"]:not(:checked):hover + .ag-cell-value:before,
+[type="radio"]:checked:hover + .ag-filter-value:before,
+[type="radio"]:not(:checked):hover + .ag-filter-value:before {
+    border: 1px solid #6B6B6B;
+}
+
+[type="checkbox"]:disabled + label:before,
+[type="radio"]:disabled + label:before,
+[type="checkbox"]:disabled:hover + label:before,
+[type="radio"]:disabled:hover + label:before {
+    border-color: #CCC !important;
+}
+
+[type="checkbox"]:checked + label:before,
+[type="checkbox"]:checked + .ag-cell-value:before,
+[type="checkbox"]:checked + .ag-filter-value:before,
+[type="radio"]:checked + label:before,
+[type="radio"]:checked + .ag-cell-value:before,
+[type="radio"]:checked + .ag-filter-value:before {
+    border-color: #6B6B6B !important;
+}
+
+[type="checkbox"]:not(:checked) + label:after,
+[type="checkbox"]:checked + label:after,
+[type="checkbox"]:not(:checked) + .ag-cell-value:after,
+[type="checkbox"]:checked + .ag-cell-value:after,
+[type="checkbox"]:not(:checked) + .ag-filter-value:after,
+[type="checkbox"]:checked + .ag-filter-value:after,
+[type="radio"]:not(:checked) + label:after,
+[type="radio"]:checked + label:after,
+[type="radio"]:not(:checked) + .ag-cell-value:after,
+[type="radio"]:checked + .ag-cell-value:after,
+[type="radio"]:not(:checked) + .ag-filter-value:after,
+[type="radio"]:checked + .ag-filter-value:after {
+    color: #6B6B6B;
+}
+
+
+/* END OF ACCESSIBILITY */
+
+
+/* HOVER STYLE ON SELECTION */
+
+[type="checkbox"] + label:hover:before,
+[type="radio"] + label:hover:before,
+.ag-cell-value:hover:before {
+    border: 1px solid #CCC !important;
+}
+
+
+/* END OF HOVER STYLE ON SELECTION */
+
+
+/* CHECKBOX & RADIOBUTTON IN TABLE */
+
+.section-header .selection-wrapper,
+table .selection-wrapper {
+    position: relative;
+    height: 18px;
+}
+
+.section-header .selection-wrapper [type="checkbox"] {
+    width: 18px !important;
+    height: 18px;
+}
+
+table .selection-wrapper .no-selection-label[type="checkbox"] {
+    width: 18px !important;
+    min-width: 18px !important;
+    height: 18px;
+    top: 0;
+    left: 50%;
+    -webkit-transform: translateX(-50%);
+    -moz-transform: translateX(-50%);
+    -ms-transform: translateX(-50%);
+    -o-transform: translateX(-50%);
+    transform: translateX(-50%);
+}
+
+table .selection-wrapper .no-selection-label[type="checkbox"] + label,
+table .selection-wrapper .no-selection-label[type="radio"] + label {
+    font-size: 0;
+}
+
+table .selection-wrapper .no-selection-label[type="checkbox"]:not(:checked) + label:before,
+table .selection-wrapper .no-selection-label[type="checkbox"]:checked + label:before,
+table .selection-wrapper .no-selection-label[type="checkbox"]:not(:checked) + label:after,
+table .selection-wrapper .no-selection-label[type="checkbox"]:checked + label:after,
+table .selection-wrapper .no-selection-label[type="radio"]:not(:checked) + label:before,
+table .selection-wrapper .no-selection-label[type="radio"]:checked + label:before,
+table .selection-wrapper .no-selection-label[type="radio"]:not(:checked) + label:after,
+table .selection-wrapper .no-selection-label[type="radio"]:checked + label:after {
+    left: 50%;
+    -webkit-transform: translateX(-50%);
+    -moz-transform: translateX(-50%);
+    -ms-transform: translateX(-50%);
+    -o-transform: translateX(-50%);
+    transform: translateX(-50%);
+}
+
+table .selection-wrapper [type="checkbox"]:not(:checked) + label:before,
+table .selection-wrapper [type="checkbox"]:checked + label:before {
+    top: 0;
+}
+
+table .selection-wrapper [type="checkbox"]:not(:checked) + label:after,
+table .selection-wrapper [type="checkbox"]:checked + label:after {
+    top: 1px;
+}
+
+.chrome table .selection-wrapper [type="checkbox"]:not(:checked) + label:after,
+.chrome table .selection-wrapper [type="checkbox"]:checked + label:after{
+    top: 2px;
+} 
+
+.selection-wrapper [type="checkbox"] + label,
+.selection-wrapper [type="radio"] + label {
+    display: block;
+    background-color: transparent !important;
+    border: 0 !important;
+    margin-bottom: 0 !important;
+    font-weight: normal;
+}
+
+
+/* END OF CHECKBOX IN TABLE */
+
+.check-input {
+    margin: 2px 5px 2px !important;
+    width: 18px;
+    height: 18px;
+    display: inline-block !important;
+}
+
+.form-horizontal input[type="checkbox"],
+.form-horizontal input[type="radio"] {
+    height: 18px;
+    width: 18px !important;
+    margin: 4px !important;
+}
+
+
+/* INPUT SELECTION */
+
+.input-selection-inline,
+.input-selection {
+    display: inline-block;
+    margin-bottom: 15px;
+    border: 1px solid #CCC;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    padding: 10px;
+    background-color: #FFF;
+    width: 50%;
+}
+
+.input-selection-inline .selection-wrapper,
+.input-selection .selection-wrapper {
+    position: relative;
+    padding: 2px 0;
+}
+
+.panel-accordion [type="checkbox"],
+.panel-accordion [type="radio"],
+.input-selection-inline .selection-label,
+.input-selection .selection-label,
+[type="checkbox"]:not(:checked) + label,
+[type="checkbox"]:checked + label,
+[type="radio"]:not(:checked) + label,
+[type="radio"]:checked + label {
+    background: transparent;
+    border: 0 !important;
+    margin: 4px !important;
+    padding: 0 0 0 25px !important;
+}
+
+.input-selection-inline .selection-label,
+.format-item [type="checkbox"] + label,
+.format-item [type="radio"] + label,
+.section-header .selection-wrapper label:after {
+    font-weight: normal;
+}
+
+.input-selection .selection-label {
+    width: 80% !important;
+    margin-bottom: 10px;
+    font-weight: normal;
+}
+
+.input-selection-inline .input {
+    display: inline-block;
+    margin-bottom: 4px;
+}
+
+.checkbox,
+.checkbox-inline {
+    padding: 4px 0;
+}
+
+td.center .check-input {
+    float: none !important;
+    margin: 0 auto !important;
+}
+
+td.center .check-input input {
+    width: 18px !important;
+}
+
+
+/* RTL */
+
+.rtl .input-selection-inline .selection-label,
+.rtl .input-selection .selection-label {
+    font-size: 14px;
+    line-height: 14px;
+}
+
+
+/* RTL CHECKBOX */
+
+.rtl [type="checkbox"]:not(:checked) + label,
+.rtl [type="checkbox"]:checked + label,
+.rtl [type="checkbox"]:not(:checked) + .ag-filter-value,
+.rtl [type="checkbox"]:checked + .ag-filter-value,
+.rtl [type="radio"]:not(:checked) + label,
+.rtl [type="radio"]:checked + label,
+.rtl [type="radio"]:not(:checked) + .ag-filter-value,
+.rtl [type="radio"]:checked + .ag-filter-value {
+    padding-left: 0 !important;
+    padding-right: 25px !important;
+}
+
+.rtl [type="checkbox"]:not(:checked) + .ag-cell-value,
+.rtl [type="checkbox"]:checked + .ag-cell-value,
+.rtl [type="radio"]:not(:checked) + .ag-cell-value,
+.rtl [type="radio"]:checked + .ag-cell-value {
+    padding-left: 0 !important;
+}
+
+.rtl [type="checkbox"]:not(:checked) + .ag-cell-value:before,
+.rtl [type="checkbox"]:checked + .ag-cell-value:before,
+.rtl [type="checkbox"]:not(:checked) + .ag-filter-value:before,
+.rtl [type="checkbox"]:checked + .ag-filter-value:before {
+    left: auto !important;
+    right: 0;
+}
+
+.rtl [type="checkbox"]:not(:checked) + .ag-cell-value:after,
+.rtl [type="checkbox"]:checked + .ag-cell-value:after,
+.rtl [type="checkbox"]:not(:checked) + .ag-filter-value:after,
+.rtl [type="checkbox"]:checked + .ag-filter-value:after {
+    left: auto !important;
+    right: 2px;
+}
+
+.rtl [type="checkbox"]:not(:checked) + label:before,
+.rtl [type="checkbox"]:checked + label:before,
+.rtl [type="checkbox"]:not(:checked) + .ag-cell-value:before,
+.rtl [type="checkbox"]:checked + .ag-cell-value:before,
+.rtl [type="checkbox"]:not(:checked) + .ag-filter-value:before,
+.rtl [type="checkbox"]:checked + .ag-filter-value:before,
+.rtl [type="radio"]:not(:checked) + label:before,
+.rtl [type="radio"]:checked + label:before,
+.rtl [type="radio"]:not(:checked) + .ag-cell-value:before,
+.rtl [type="radio"]:checked + .ag-cell-value:before,
+.rtl [type="radio"]:not(:checked) + .ag-filter-value:before,
+.rtl [type="radio"]:checked + .ag-filter-value:before {
+    top: 0;
+}
+
+
+.rtl [type="checkbox"]:not(:checked) + label:after,
+.rtl [type="checkbox"]:checked + label:after,
+.rtl [type="checkbox"]:not(:checked) + .ag-cell-value:after,
+.rtl [type="checkbox"]:checked + .ag-cell-value:after {
+    top: 1px;
+}
+
+
+.rtl.chrome [type="checkbox"]:not(:checked) + label:after,
+.rtl.chrome [type="checkbox"]:checked + label:after,
+.rtl.chrome [type="checkbox"]:not(:checked) + .ag-cell-value:after,
+.rtl.chrome [type="checkbox"]:checked + .ag-cell-value:after,
+.rtl.chrome [type="checkbox"]:not(:checked) + .ag-filter-value:after,
+.rtl.chrome [type="checkbox"]:checked + .ag-filter-value:after,
+.rtl.safari [type="checkbox"]:not(:checked) + label:after,
+.rtl.safari [type="checkbox"]:checked + label:after,
+.rtl.safari [type="checkbox"]:not(:checked) + .ag-cell-value:after,
+.rtl.safari [type="checkbox"]:checked + .ag-cell-value:after,
+.rtl.safari [type="checkbox"]:not(:checked) + .ag-filter-value:after,
+.rtl.safari [type="checkbox"]:checked + .ag-filter-value:after {
+    top: 2px;
+}
+
+.rtl table .selection-wrapper .no-selection-label[type="checkbox"] {
+    top: 0;
+}
+
+.rtl table .selection-wrapper .no-selection-label[type="checkbox"]:not(:checked) + label:before,
+.rtl table .selection-wrapper .no-selection-label[type="checkbox"]:checked + label:before,
+.rtl table .selection-wrapper .no-selection-label[type="checkbox"]:not(:checked) + label:after,
+.rtl table .selection-wrapper .no-selection-label[type="checkbox"]:checked + label:after,
+.rtl table .selection-wrapper .no-selection-label[type="radio"]:not(:checked) + label:before,
+.rtl table .selection-wrapper .no-selection-label[type="radio"]:checked + label:before,
+.rtl table .selection-wrapper .no-selection-label[type="radio"]:not(:checked) + label:after,
+.rtl table .selection-wrapper .no-selection-label[type="radio"]:checked + label:after {
+    left: 50%;
+    -webkit-transform: translatex(-50%);
+    -moz-transform: translatex(-50%);
+    -ms-transform: translatex(-50%);
+    -o-transform: translatex(-50%);
+    transform: translatex(-50%);
+    margin-left: 4px;
+}
+
+.rtl .section-header [type="checkbox"]:not(:checked) + label:before,
+.rtl .section-header [type="checkbox"]:checked + label:before,
+.rtl .section-header [type="checkbox"]:not(:checked) + label:after,
+.rtl .section-header [type="checkbox"]:checked + label:after,
+.rtl .check-all [type="checkbox"]:not(:checked) + label:before,
+.rtl .check-all [type="checkbox"]:checked + label:before,
+.rtl .check-all [type="checkbox"]:not(:checked) + label:after,
+.rtl .check-all [type="checkbox"]:checked + label:after,
+.rtl .input-selection-inline [type="checkbox"]:not(:checked) + label:before,
+.rtl .input-selection-inline [type="checkbox"]:checked + label:before,
+.rtl .input-selection-inline [type="checkbox"]:not(:checked) + label:after,
+.rtl .input-selection-inline [type="checkbox"]:checked + label:after,
+.rtl .input-selection [type="checkbox"]:not(:checked) + label:before,
+.rtl .input-selection [type="checkbox"]:checked + label:before,
+.rtl .input-selection [type="checkbox"]:not(:checked) + label:after,
+.rtl .input-selection [type="checkbox"]:checked + label:after,
+.rtl .panel-toolbar [type="checkbox"]:not(:checked) + label:before,
+.rtl .panel-toolbar [type="checkbox"]:checked + label:before,
+.rtl .panel-toolbar [type="checkbox"]:not(:checked) + label:after,
+.rtl .panel-toolbar [type="checkbox"]:checked + label:after {
+    left: auto !important;
+}
+
+.rtl .input-selection-inline input[type="checkbox"],
+.rtl .input-selection-inline input[type="radio"],
+.rtl .input-selection input[type="checkbox"],
+.rtl .input-selection input[type="radio"],
+.rtl .section-header [type="checkbox"]:not(:checked) + label:before,
+.rtl .section-header [type="checkbox"]:checked + label:before,
+.rtl .check-all [type="checkbox"]:not(:checked) + label:before,
+.rtl .check-all [type="checkbox"]:checked + label:before,
+.rtl .input-selection-inline [type="checkbox"]:not(:checked) + label:before,
+.rtl .input-selection-inline [type="checkbox"]:checked + label:before,
+.rtl .input-selection [type="checkbox"]:not(:checked) + label:before,
+.rtl .input-selection [type="checkbox"]:checked + label:before,
+.rtl .panel-toolbar [type="checkbox"]:not(:checked) + label:before,
+.rtl .panel-toolbar [type="checkbox"]:checked + label:before {
+    right: 0;
+}
+
+.rtl .section-header [type="checkbox"]:not(:checked) + label:after,
+.rtl .section-header [type="checkbox"]:checked + label:after,
+.rtl .check-all [type="checkbox"]:not(:checked) + label:after,
+.rtl .check-all [type="checkbox"]:checked + label:after,
+.rtl .input-selection-inline [type="checkbox"]:not(:checked) + label:after,
+.rtl .input-selection-inline [type="checkbox"]:checked + label:after,
+.rtl .input-selection [type="checkbox"]:not(:checked) + label:after,
+.rtl .input-selection [type="checkbox"]:checked + label:after,
+.rtl .panel-toolbar [type="checkbox"]:not(:checked) + label:after,
+.rtl .panel-toolbar [type="checkbox"]:checked + label:after {
+    right: 2px;
+}
+
+
+/* === Forms Checkbox === */
+
+.rtl .form-horizontal table .selection-wrapper .no-selection-label[type="checkbox"] {
+    margin: 0 !important;
+}
+
+.rtl .form-horizontal table .selection-wrapper .no-selection-label[type="checkbox"]:not(:checked) + label:before,
+.rtl .form-horizontal table .selection-wrapper .no-selection-label[type="checkbox"]:checked + label:before,
+.rtl .form-horizontal table .selection-wrapper .no-selection-label[type="radio"]:not(:checked) + label:before,
+.rtl .form-horizontal table .selection-wrapper .no-selection-label[type="radio"]:checked + label:before {
+    top: -4px;
+}
+
+.rtl .form-horizontal table .selection-wrapper .no-selection-label[type="checkbox"]:not(:checked) + label:after,
+.rtl .form-horizontal table .selection-wrapper .no-selection-label[type="checkbox"]:checked + label:after,
+.rtl .form-horizontal table .selection-wrapper .no-selection-label[type="radio"]:not(:checked) + label:after,
+.rtl .form-horizontal table .selection-wrapper .no-selection-label[type="radio"]:checked + label:after {
+    top: -3px;
+}
+
+.rtl.chrome .form-horizontal table .selection-wrapper .no-selection-label[type="checkbox"]:not(:checked) + label:after,
+.rtl.chrome .form-horizontal table .selection-wrapper .no-selection-label[type="checkbox"]:checked + label:after,
+.rtl.chrome .form-horizontal table .selection-wrapper .no-selection-label[type="radio"]:not(:checked) + label:after,
+.rtl.chrome .form-horizontal table .selection-wrapper .no-selection-label[type="radio"]:checked + label:after {
+    top: -2px;
+}
+
+
+/* End of Forms Checkbox */
+
+
+/* END OF RTL CHECKBOX */
+
+
+/* RTL RADIOBUTTON */
+
+.rtl [type="radio"]:not(:checked) + label:before,
+.rtl [type="radio"]:checked + label:before,
+.rtl [type="radio"]:not(:checked) + .ag-cell-value:before,
+.rtl [type="radio"]:checked + .ag-cell-value:before,
+.rtl [type="radio"]:not(:checked) + .ag-filter-value:before,
+.rtl [type="radio"]:checked + .ag-filter-value:before,
+.rtl [type="radio"]:not(:checked) + label:after,
+.rtl [type="radio"]:checked + label:after,
+.rtl [type="radio"]:not(:checked) + .ag-cell-value:after,
+.rtl [type="radio"]:checked + .ag-cell-value:after,
+.rtl [type="radio"]:not(:checked) + .ag-filter-value:after,
+.rtl [type="radio"]:checked + .ag-filter-value:after {
+    left: auto !important;
+    right: 0;
+}
+
+.rtl [type="radio"]:not(:checked) + label:after,
+.rtl [type="radio"]:checked + label:after,
+.rtl [type="radio"]:not(:checked) + .ag-cell-value:after,
+.rtl [type="radio"]:checked + .ag-cell-value:after,
+.rtl [type="radio"]:not(:checked) + .ag-filter-value:after,
+.rtl [type="radio"]:checked + .ag-filter-value:after {
+    top: 1px;
+}
+
+
+/* END OF RTL RADIOBUTTON */
+
+
+/*==========  Non-Mobile First Method  ==========*/
+
+@media only screen and (max-width: 1240px) {}
+
+@media only screen and (max-width: 480px) {
+    .input-selection-inline,
+    .input-selection {
+        width: 100% !important;
+    }
+}

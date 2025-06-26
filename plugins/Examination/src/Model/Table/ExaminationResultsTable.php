@@ -9,18 +9,18 @@ use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
 class ExaminationResultsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('examination_centres_examinations');
+        $this->setTable('examination_centres_examinations');
         parent::initialize($config);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportResults']);
 
@@ -35,8 +35,8 @@ class ExaminationResultsTable extends ControllerActionTable
 
         if (isset($buttons['view']['url'])) {
             $buttons['view']['url'] = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'action' => 'Results',
                 'academic_period_id' => $entity->academic_period_id,
                 'examination_id' => $entity->examination_id,
@@ -53,9 +53,9 @@ class ExaminationResultsTable extends ControllerActionTable
         $this->field('name', ['sort' => ['field' => 'ExaminationCentres.name']]);
         $this->setFieldOrder(['name', 'academic_period_id', 'examination_id', 'total_registered']);
 
-                
+
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Results','Examinations');       
+		$is_manual_exist = $this->getManualUrl('Administration','Results','Examinations');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -77,21 +77,17 @@ class ExaminationResultsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $serverRequest = $this->request;
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
 
         $where = [];
         // Academic Period
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
-
-        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         // End
 
         // Examination
-        $examinationOptions = $this->getExaminationOptions($selectedAcademicPeriod);
+        $examinationOptions = $this->getExaminationOptions();
         $examinationOptions = ['-1' => __('All Examinations')] + $examinationOptions;
-        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : -1;
+        $selectedExamination = !is_null($serverRequest->getQuery('examination_id')) ? $serverRequest->getQuery('examination_id') : -1;
 
         $this->controller->set(compact('examinationOptions', 'selectedExamination'));
         if ($selectedExamination != -1) {
@@ -124,13 +120,27 @@ class ExaminationResultsTable extends ControllerActionTable
         return $entity->examination_centre->code_name;
     }
 
-    private function getExaminationOptions($selectedAcademicPeriod)
+    private function getExaminationOptions()
     {
         $examinationOptions = $this->Examinations
             ->find('list')
-            ->where([$this->Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod])
             ->toArray();
 
         return $examinationOptions;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'name') {
+            return  __('Name');
+        } else if ($field == 'academic_period_id') {
+            return  __('Academic Period');
+        } else if ($field == 'examination_id') {
+            return  __('Examination');
+        }else if ($field == 'total_registered') {
+            return  __('Total Registered');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

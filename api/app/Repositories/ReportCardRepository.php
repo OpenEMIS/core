@@ -7,79 +7,26 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use JWTAuth;
-use App\Models\AbsenceReasons;
-use App\Models\AbsenceTypes;
-use App\Models\Institutions;
-use App\Models\InstitutionGrades;
-use App\Models\EducationGrades;
-use App\Models\InstitutionClasses;
-use App\Models\InstitutionSubjects;
-use App\Models\EducationSubjects;
-use App\Models\InstitutionShifts;
-use App\Models\AreaAdministratives;
-use App\Models\SummaryInstitutions;
-use App\Models\SummaryInstitutionGrades;
-use App\Models\SummaryInstitutionNationalities;
-use App\Models\SummaryInstitutionGradeNationalities;
-use App\Models\InstitutionStaff;
-use App\Models\StaffStatuses;
-use App\Models\InstitutionPositions;
-use App\Models\LocaleContentTranslations;
-use App\Models\SummaryInstitutionRoomTypes;
 use App\Models\ReportCard;
-use App\Models\InstitutionStudentReportCardComment;
-use App\Models\InstitutionStudentReportCard;
 use App\Models\InstitutionClassStudents;
-use App\Models\InstitutionStudent;
-use App\Models\InstitutionCompetencyResults;
-use App\Models\InstitutionCompetencyItemComments;
-use App\Models\InstitutionCompetencyPeriodComments;
-use App\Models\StaffTypes;
 use App\Models\AssessmentItemResults;
-use App\Models\ConfigItem;
-use App\Models\InstitutionGender;
-use App\Models\InstitutionLocalities;
-use App\Models\InstitutionOwnerships;
-use App\Models\InstitutionProviders;
-use App\Models\InstitutionSectors;
-use App\Models\InstitutionSubjectStaff;
-use App\Models\AcademicPeriod;
-use App\Models\StudentStatuses;
-use App\Models\Nationalities;
-use App\Models\Workflows;
-use App\Models\InstitutionStudentTransfers;
-use App\Models\SecurityUsers;
-use App\Models\UserNationalities;
-use App\Models\IdentityTypes;
-use App\Models\UserIdentities;
-use App\Models\StaffPositionTitles;
 use App\Models\SecurityRoles;
-use App\Models\InstitutionStudentAdmission;
-use App\Models\InstitutionClassSubjects;
 use App\Models\InstitutionSubjectStudents;
-use App\Models\StudentCustomFieldValues;
-use App\Models\InstitutionTypes;
-use App\Models\MealBenefits;
-use App\Models\MealProgrammes;
-use App\Models\StudentAttendanceMarkedRecords;
-use App\Models\InstitutionStudentAbsences;
-use App\Models\InstitutionStudentAbsenceDays;
-use App\Models\InstitutionStudentAbsenceDetails;
-use App\Models\StaffBehaviourCategories;
-use App\Models\StudentBehaviours;
-use App\Models\StudentBehaviourCategory;
-use App\Models\InstitutionMealProgrammes;
-use App\Models\InstitutionMealStudents;
-use App\Models\StaffPayslip;
-use App\Models\SecurityGroupUsers;
-use App\Models\SecurityRoleFunctions;
 use App\Models\ReportCardSubject;
+use App\Models\InstitutionStudentReportCard;
 use App\Models\Assessments;
+use App\Models\Institutions;
 use App\Models\ReportCardCommentCode;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Session;
+use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class ReportCardRepository extends Controller
 {
@@ -608,12 +555,17 @@ class ReportCardRepository extends Controller
             }
 
             $list = $list->groupBy('institution_subjects.name')
-                    ->orderBy('education_subjects.order')
-                    ->get()
-                    ->toArray();
+                    ->orderBy('education_subjects.order');
 
-            return $list;
-                
+            $resp = [];
+            if (isset($params['limit'])) {
+                $list = $list->paginate($params['limit'])->toArray();
+                $resp = $list;
+            } else {
+                $list = $list->get()->toArray();
+                $resp = $list;
+            }
+            return $resp;
 
         } catch (\Exception $e) {
             Log::error(
@@ -693,5 +645,81 @@ class ReportCardRepository extends Controller
     }
     //For pocor-8270 end...
 
-}
 
+
+    //For POCOR-8617 Start...
+    public function studentReportCardPdfDownload($params, $institutionId, $classId, $studentId)
+    {
+        try {
+            $reportCard = ReportCard::where('id', $params['report_card_id'])->first();
+            $file_list = [];
+
+            $instStudentReportCard = InstitutionStudentReportCard::where('student_id', $studentId)
+                    ->where('institution_id', $institutionId)
+                    ->where('academic_period_id', $params['academic_period_id'])
+                    ->where('report_card_id', $params['report_card_id'])
+                    ->where('education_grade_id', $reportCard->education_grade_id??0)
+                    ->where('institution_class_id', $classId)
+                    ->whereIn('status', [3,4])
+                    ->first();
+
+            
+            if($instStudentReportCard){
+                $file_list['id'] = $instStudentReportCard['id'];
+                $file_name = $instStudentReportCard['file_name'];
+                $file_name = explode(".", $instStudentReportCard['file_name'])[0];
+                $file_name = $file_name.".pdf";
+                
+                $file_list['file_name'] = $file_name;
+                $file_list['file_content'] = base64_encode($instStudentReportCard['file_content_pdf']);
+            }
+            
+            return $file_list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to generate student report card in PDF.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to generate student report card in PDF.');
+        }
+    }
+
+
+    public function studentReportCardExcelDownload($params, $institutionId, $classId, $studentId)
+    {
+        try {
+            $reportCard = ReportCard::where('id', $params['report_card_id'])->first();
+            $file_list = [];
+
+            $instStudentReportCard = InstitutionStudentReportCard::where('student_id', $studentId)
+                    ->where('institution_id', $institutionId)
+                    ->where('academic_period_id', $params['academic_period_id'])
+                    ->where('report_card_id', $params['report_card_id'])
+                    ->where('education_grade_id', $reportCard->education_grade_id??0)
+                    ->where('institution_class_id', $classId)
+                    ->whereIn('status', [3,4])
+                    ->first();
+
+            
+            if($instStudentReportCard){
+                $file_list['id'] = $instStudentReportCard['id'];
+                $file_name = $instStudentReportCard['file_name'];
+                
+                $file_list['file_name'] = $file_name;
+                $file_list['file_content'] = base64_encode($instStudentReportCard['file_content']);
+            }
+            
+            return $file_list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to generate student report card in excel.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to generate student report card in excel.');
+        }
+    }
+    //For POCOR-8617 End...
+
+}

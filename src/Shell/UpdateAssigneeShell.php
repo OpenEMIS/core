@@ -12,7 +12,7 @@ class UpdateAssigneeShell extends Shell
 	const IN_PROGRESS = 2;
 	const DONE = 3;
 
-	public function initialize()
+	public function initialize(): void
 	{
 		parent::initialize();
 		$this->loadModel('Workflow.WorkflowModels');
@@ -74,8 +74,8 @@ class UpdateAssigneeShell extends Shell
 					$where[$model->aliasField('institution_id')] = $institutionEntity->id;
 
 					$event = $model->dispatchEvent('UpdateAssignee.onSetSchoolBasedConditions', [$institutionEntity, $where], $this);
-					if ($event->result) {
-						$where = $event->result;
+					if ($event->getResult()) {
+						$where = $event->getResult();
 					}
 				}
 			}
@@ -108,8 +108,8 @@ class UpdateAssigneeShell extends Shell
 				}
 
 				$event = $model->dispatchEvent('UpdateAssignee.onSetCustomAssigneeParams', [$unassignedEntity, $params], $this);
-				if ($event->result) {
-					$params = $event->result;
+				if ($event->getResult()) {
+					$params = $event->getResult();
 				}
 
 				// POCOR-4666: Only reassign if the current assignee does not have any of the configured security roles for the workflow step
@@ -126,7 +126,7 @@ class UpdateAssigneeShell extends Shell
 							]);
 
 						if ($isSchoolBased) {
-							if (array_key_exists('institution_id', $params) && !empty($params['institution_id'])) {
+							if (isset($params['institution_id']) && !empty($params['institution_id'])) {
 								$institutionObj = $this->Institutions->find()
 									->contain(['Areas'])
 									->where([$this->Institutions->aliasField('id') => $params['institution_id']])

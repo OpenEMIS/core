@@ -12,9 +12,9 @@ use App\Model\Table\AppTable;
 
 class StudentsPhotoTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
+        $this->setTable('security_users');
         parent::initialize($config);
 
         $this->belongsTo('Genders', ['className' => 'User.Genders']);

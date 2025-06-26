@@ -2,28 +2,28 @@
 namespace App\Auth;
 
 use Cake\Auth\BaseAuthorize;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\TableRegistry;
 
 class SecurityAuthorize extends BaseAuthorize
 {
-    public function authorize($user, Request $request)
+    public function authorize($user, ServerRequest $request): bool
     {
         $controller = $this->_registry->getController();
-        $action = $request->params['action'];
+        $action = $request->getParam('action');
         $AccessControl = $controller->AccessControl;
         $authorized = false;
 
-        if (!$request->is('ajax') && $request->params['_ext'] != 'json') {
+        if (!$request->is('ajax') && $request->getParam('_ext') != 'json') {
             // Set for roles belonging to the controller
             $roles = [];
             $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
-            if ($event->result) {
-                $roles = $event->result;
+            if ($event->getResult()) {
+                $roles = $event->getResult();
             }
 
             $event = $controller->dispatchEvent('Controller.SecurityAuthorize.isActionIgnored', [$action], $this);
-            if ($event->result == true) {
+            if ($event->getResult() == true) {
                 $authorized = true;
             }
             if ($authorized || $user['super_admin'] == true || $user['username'] == 'superrole' || $user['username'] == true) {
@@ -40,7 +40,7 @@ class SecurityAuthorize extends BaseAuthorize
                 $isCAv4 = ctype_upper(substr($action, 0, 1));
                 // CAv4 should use uppercase for action names
                 if ($isCAv4) {
-                    $pass = $request->pass;
+                    $pass = $request->getParam('pass');
                     $model = $action;
                     $action = isset($pass[0]) ? $pass[0] : 'index';
                     $authorized = $AccessControl->check([$controller->name, $model, $action], $roles);

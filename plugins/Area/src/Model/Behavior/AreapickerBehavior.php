@@ -7,12 +7,14 @@ use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use Cake\Http\Session;
+use Cake\Http\ServerRequest;
 
 class AreapickerBehavior extends Behavior
 {
     private $areaByUser = [];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.edit.beforePatch'] = 'editBeforePatch';
@@ -30,9 +32,10 @@ class AreapickerBehavior extends Behavior
     public function onGetAreapickerElement(Event $event, $action, Entity $entity, $attr, $options)
     {
         $fieldName = $attr['model'] . '.' . $attr['field'];
-        $HtmlField = $event->subject();
+        $HtmlField = $event->getSubject();
         $data = $HtmlField->request->data;
-        $value = isset($data[$this->_table->alias()][$attr['field']]) ? $data[$this->_table->alias()][$attr['field']] : $entity->{$attr['field']};
+        // $request = $HtmlField->getRequest();
+        $value = isset($data[$this->_table->getAlias()][$attr['field']]) ? $data[$this->_table->getAlias()][$attr['field']] : $entity->{$attr['field']};
 
         if ($action == 'edit') {
             $Url = $HtmlField->Url;
@@ -43,7 +46,7 @@ class AreapickerBehavior extends Behavior
             $attr['value'] = $value;
 
             $targetModel = $attr['source_model'];
-            $targetTable = TableRegistry::get($targetModel);
+            $targetTable = TableRegistry::getTableLocator()->get($targetModel);
 
             $areaOptions = $targetTable
                 ->find('list');
@@ -83,12 +86,12 @@ class AreapickerBehavior extends Behavior
             $areaOptions = $areaOptions->toArray();
             $areaKeys = array_keys($areaOptions);
             $areaKeys[] = null;
-            $session = $HtmlField->request->session();
+            // $session  = $HtmlField->getSession();
 
             $areaKeys = array_merge($areaKeys, [$entity->{$attr['field']}]);
             // Temporary disabled for further investigation
             // $session->write('FormTampering.'.$fieldName, $areaKeys);
-            return $event->subject()->renderElement('Area.sg_tree', ['attr' => $attr]);
+            return $event->getSubject()->renderElement('Area.sg_tree', ['attr' => $attr]);
         }
         return $value;
     }
@@ -118,16 +121,18 @@ class AreapickerBehavior extends Behavior
                     $list = $this->getAreaLevelName($targetModel, $areaId);
                     $after = $field;
                     foreach ($list as $key => $area) {
+                        $level_name = $area['level_name'] ?? ""; // POCOR-9008
+                        $area_name = $area['area_name'] ?? ""; // POCOR-9008
                         if ($this->isCAv4()) {
                             $this->_table->field($field.$key, [
                                 'type' => 'readonly',
-                                'attr' => ['label' => __($area['level_name']), 'value' => __($area['area_name'])],
+                                'attr' => ['label' => __($level_name), 'value' => __($area_name)],
                                 'after' => $after
                             ]);
                         } else {
                             $this->_table->ControllerAction->field($field.$key, [
                                 'type' => 'disabled',
-                                'attr' => ['label' => __($area['level_name']), 'value' => $area['area_name']],
+                                'attr' => ['label' => __($level_name), 'value' => $area_name],
                                 'after' => $after
                             ]);
                         }
@@ -152,18 +157,20 @@ class AreapickerBehavior extends Behavior
                 }
                 $after = $field;
                 foreach ($list as $key => $area) {
+                    $level_name = $area['level_name'] ?? ""; // POCOR-9008
+                    $area_name = $area['area_name'] ?? ""; // POCOR-9008
                     if ($this->isCAv4()) {
                         $this->_table->field($field.$key, [
                             'type' => 'disabled',
-                            'attr' => ['label' => __($area['level_name']), 'value' => $area['area_name']],
-                            'value' => __($area['area_name']),
+                            'attr' => ['label' => __($level_name), 'value' => $area_name],
+                            'value' => __($area_name),
                             'after' => $after
                         ]);
                     } else {
                         $this->_table->ControllerAction->field($field.$key, [
                             'type' => 'readonly',
-                            'attr' => ['label' => __($area['level_name'])],
-                            'value' => __($area['area_name']),
+                            'attr' => ['label' => __($level_name)],
+                            'value' => __($area_name),
                             'after' => $after
                         ]);
                     }
@@ -177,7 +184,7 @@ class AreapickerBehavior extends Behavior
     {
         // to prevent html injection on area_id
         if ($entity->has('area_restricted') && $entity->area_restricted == true) {
-            if (array_key_exists('Institutions', $data)) {
+            if ($data->offsetExists('Institutions')) {
                 $data['Institutions']['area_id'] = $entity->area_id;
                 $data['Institutions']['isSystemGroup'] = true; // this flag is to be used in ValidationBehavior->checkAuthorisedArea
             }
@@ -186,13 +193,13 @@ class AreapickerBehavior extends Behavior
 
     public function getAreaLevelName($targetModel, $areaId)
     {
-        $targetTable = TableRegistry::get($targetModel);
-        $levelAssociation = Inflector::singularize($targetTable->alias()).'Levels';
+        $targetTable = TableRegistry::getTableLocator()->get($targetModel);
+        $levelAssociation = Inflector::singularize($targetTable->getAlias()).'Levels';
         $path = $targetTable
             ->find('path', ['for' => $areaId])
             ->contain([$levelAssociation])
             ->select(['level_name' => $levelAssociation.'.name', 'area_name' => $targetTable->aliasField('name')])
-            ->bufferResults(false)
+            //->bufferResults(false) // comment cakephp 4
             ->toArray();
 
         if ($targetModel == 'Area.AreaAdministratives') {

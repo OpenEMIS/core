@@ -140,7 +140,7 @@ trait ImportExcelTrait
 		$objPHPExcel->setActiveSheetIndex(0);
 
 		if ($autoTitle) {
-			$this->beginExcelHeaderStyling( $objPHPExcel, $dataSheetName, 2, __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName );
+			$this->beginExcelHeaderStyling( $objPHPExcel, $dataSheetName, 2, __(Inflector::humanize(Inflector::tableize($this->_table->getAlias()))) .' '. $dataSheetName );
 		} else {
 			$this->beginExcelHeaderStyling( $objPHPExcel, $dataSheetName, 2, '', $titleColumn);
 		}

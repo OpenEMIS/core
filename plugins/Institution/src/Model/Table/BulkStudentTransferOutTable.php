@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
 use Cake\Utility\Hash;
 use Cake\Log\Log;
@@ -19,9 +19,9 @@ class BulkStudentTransferOutTable extends ControllerActionTable
     private $_stepsOptions;
     private $_currentData;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('workflow_steps');
+        $this->setTable('workflow_steps');
         parent::initialize($config);
 
         $this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
@@ -44,7 +44,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                 'WorkflowModels.model' => $this->_modelAlias
             ])
             ->toArray();
-        //remove open status because we are not getting start_date, end_date, institution class 
+        //remove open status because we are not getting start_date, end_date, institution class
         $option = array();
         //POCOR-6362 starts
         foreach ($steplists as $klist => $vlist) {
@@ -53,9 +53,13 @@ class BulkStudentTransferOutTable extends ControllerActionTable
             }
         } //POCOR-6362 ends
         $this->_stepsOptions = $option;
+        $this->addBehavior('Institution.InstitutionTab'/*,
+            ['appliedAction' => ['BulkStudentTransferOut'=>
+                ['id']]]*/
+        );
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator
@@ -65,7 +69,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
         return $validator;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
@@ -74,7 +78,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona=false)
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona=false)
     {
         $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentTransferOut'];
         $Navigation->substituteCrumb('Bulk Student Transfer Out', 'Student Transfer Out', $url);
@@ -88,10 +92,11 @@ class BulkStudentTransferOutTable extends ControllerActionTable
 
         $userId = $session->read('Auth.User.id');
         $superAdmin = $session->read('Auth.User.super_admin');
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getQueryString('institution_id');
+        //$institutionId = $session->read('Institution.Institutions.id');
 
         if ($request->is(['post', 'put'])) {
-            $statusId = $request->data[$this->alias()]['status'];
+            $statusId = $request->getData($this->getAlias())['status'];
         } else {
             $statusId = key($this->_stepsOptions);
         }
@@ -102,7 +107,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
             'StudentTransferIn'=> function ($q) use ($superAdmin, $userId, $institutionId) {
                 $q->where(['StudentTransferIn.previous_institution_id' => $institutionId])
                     ->contain(['Users', 'Assignees', 'AcademicPeriods', 'EducationGrades', 'InstitutionClasses', 'Statuses','PreviousInstitutions']);
-                /**POCOR-6946 - "if" condition has been updated to fetch list of students*/ 
+                /**POCOR-6946 - "if" condition has been updated to fetch list of students*/
                 if ($this->AccessControl->check(['Institutions', 'StudentTransferOut', 'edit'])) {
                     return $q;
                 } else {
@@ -126,7 +131,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                 $toolbarButtons['back']['url'][0] = 'index';
                 break;
             case 'reconfirm':
-                $sessionKey = $this->registryAlias() . '.confirm';
+                $sessionKey = $this->getRegistryAlias() . '.confirm';
                 if ($this->Session->check($sessionKey)) {
                     $this->_currentData = $this->Session->read($sessionKey);
                 }
@@ -139,11 +144,11 @@ class BulkStudentTransferOutTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldWorkflowId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldWorkflowId(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($this->action) {
             case 'edit':
-                $selectedStatus = isset($request->data[$this->alias()]['status']) ? $request->data[$this->alias()]['status'] : null;
+                $selectedStatus = isset($request->getData($this->getAlias())['status']) ? $request->getData($this->getAlias())['status'] : null;
             break;
 
             case 'reconfirm':
@@ -157,7 +162,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($this->action) {
             case 'edit':
@@ -166,7 +171,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                 $attr['options'] = $this->_stepsOptions;
                 $attr['onChangeReload'] = 'changeStatus';
             break;
-            
+
             case 'reconfirm':
                 $selectedStatus = $this->_currentData['status'];
                 $attr['attr']['value'] = $this->_stepsOptions[$selectedStatus];
@@ -178,12 +183,12 @@ class BulkStudentTransferOutTable extends ControllerActionTable
 
     public function addEditOnChangeStatus(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        $data[$this->alias()]['action'] = null;
-        $data[$this->alias()]['next_step'] = null;
-        $data[$this->alias()]['assignee_id'] = null;
+        $data[$this->getAlias()]['action'] = null;
+        $data[$this->getAlias()]['next_step'] = null;
+        $data[$this->getAlias()]['assignee_id'] = null;
     }
 
-    public function onUpdateFieldAction(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAction(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($this->action) {
             case 'edit':
@@ -195,7 +200,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
             break;
 
             case 'reconfirm':
-                $sessionKey = $this->registryAlias() . '.confirm';
+                $sessionKey = $this->getRegistryAlias() . '.confirm';
                 $workflowActionEntity = $this->getWorkflowActionEntity($this->_currentData);
                 $attr['type'] = 'readonly';
                 $attr['attr']['value'] = $workflowActionEntity['name'];
@@ -209,11 +214,11 @@ class BulkStudentTransferOutTable extends ControllerActionTable
 
     public function addEditOnChangeAction(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        $data[$this->alias()]['next_step'] = null;
-        $data[$this->alias()]['assignee_id'] = null;
+        $data[$this->getAlias()]['next_step'] = null;
+        $data[$this->getAlias()]['assignee_id'] = null;
     }
 
-    public function onUpdateFieldNextStep(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNextStep(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($this->action) {
             case 'edit':
@@ -235,11 +240,11 @@ class BulkStudentTransferOutTable extends ControllerActionTable
             default:
                 break;
         }
-       
+
         return $attr;
     }
 
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($this->action) {
             case 'edit':
@@ -256,7 +261,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                     ->where([
                         'WorkflowModels.model' => $this->_modelAlias
                     ])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->first();
 
                 $isSchoolBased = $workflowModelEntity['WorkflowModels']['is_school_based'];
@@ -268,7 +273,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                     ];
 
                     if ($isSchoolBased) {
-                        $session = $this->request->session();
+                        $session = $this->request->getSession();
                         if ($session->check('Institution.Institutions.id')) {
                             $institutionId = $session->read('Institution.Institutions.id');
                             $params['institution_id'] = $institutionId;
@@ -283,7 +288,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                     }else{
                         $assigneeOptions = [$this->Auth->user('id') => __('Auto Assign')];//POCOR-7080
                     }
-                    
+
                 }
                 $attr['type'] = 'select';
                 $attr['options'] = $assigneeOptions;
@@ -299,8 +304,8 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                     $assigneeOptions = 'Auto Assign'; //POCOR-6961
                     $attr['type'] = 'readonly';
                     $attr['value'] = '-1';
-                    $attr['attr']['value'] = $assigneeOptions; //POCOR-6961 
-                    break; 
+                    $attr['attr']['value'] = $assigneeOptions; //POCOR-6961
+                    break;
                 }else{
                     $assigneeOptions = $assigneeOptions;
                     $attr['type'] = 'readonly';
@@ -313,7 +318,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldComment(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldComment(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($this->action) {
             case 'reconfirm':
@@ -326,7 +331,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldBulkStudentTransferOut(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldBulkStudentTransferOut(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($this->action) {
             case 'edit':
@@ -348,15 +353,17 @@ class BulkStudentTransferOutTable extends ControllerActionTable
 
     public function reconfirm()
     {
+        $getQueryString = $this->getQueryString(); //POCOR-8624
         $this->Alert->info($this->aliasField('reconfirm'), ['reset' => true]);
         $this->setupFields();
         $url = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'BulkStudentTransferOut',
-            'edit'
+                0 =>'edit',
+                1 => $getQueryString //POCOR-8624
         ];
-        $sessionKey = $this->registryAlias() . '.confirm';
+        $sessionKey = $this->getRegistryAlias() . '.confirm';
         if ($this->Session->check($sessionKey)) {
             $currentEntity = $this->Session->read($sessionKey);
             $currentData = $this->Session->read($sessionKey.'Data');
@@ -364,7 +371,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
             $this->Alert->warning('general.notExists');
             return $this->controller->redirect($url);
         }
-        
+
         if ($currentEntity && !empty($currentEntity)) {
             if ($this->request->is(['post', 'put'])) {
                 if ($currentData instanceOf ArrayObject) {
@@ -384,37 +391,42 @@ class BulkStudentTransferOutTable extends ControllerActionTable
 
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
+        $getQueryString = $this->getQueryString(); //POCOR-8624
         $process = function ($model, $entity) use ($event, $data) {
             // Removal of some fields that are not in use in the table validation
-            $errors = $entity->errors();
+            $data = $data->getArrayCopy();
+            $errors = $entity->getErrors();
             if (empty($errors)) {
-                if (array_key_exists($this->alias(), $data)) {
+                $dataArray = $data->getArrayCopy();
+                if (array_key_exists($this->getAlias(), $dataArray)) {
                     $selectedStudent = false;
-                    if (array_key_exists('students', $data[$this->alias()])) {
-                        foreach ($data[$this->alias()]['students'] as $key => $value) {
+                    if (array_key_exists('students', $data[$this->getAlias()])) {
+                        foreach ($data[$this->getAlias()]['students'] as $key => $value) {
                             if ($value['selected'] != 0) {
                                 $selectedStudent = true;
                                 break;
                             }
                         }
                     }
+                    $encodedQueryParams = $this->request->getParam('pass')[1];
                     if ($selectedStudent) {
                         // redirects to confirmation page
                         $url = [
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
                             'action' => 'BulkStudentTransferOut',
-                            'reconfirm'
+                                0 => 'reconfirm',
+                                1 => $encodedQueryParams //POCOR-8624
                         ];
                         $this->currentEntity = $entity;
                         $session = $this->Session;
-                        $session->write($this->registryAlias().'.confirm', $entity);
-                        $session->write($this->registryAlias().'.confirmData', $data);
+                        $session->write($this->getRegistryAlias().'.confirm', $entity);
+                        $session->write($this->getRegistryAlias().'.confirmData', $data);
                         $this->currentEvent = $event;
                         $event->stopPropagation();
                         return $this->controller->redirect($url);
                     } else {
-                        $this->Alert->warning($this->alias().'.noStudentSelected', ['reset' => true]);
+                        $this->Alert->warning($this->getAlias().'.noStudentSelected', ['reset' => true]);
                         return false;
                     }
                 }
@@ -426,15 +438,21 @@ class BulkStudentTransferOutTable extends ControllerActionTable
     }
     public function saveBulkStudentTransferOut(Entity $entity, ArrayObject $data)
     {
-        $primaryKey = $this->StudentTransferIn->primaryKey();
+        $getQueryString = $this->getQueryString(); //POCOR-8624
+        $encodedQueryString = $this->paramsEncode([
+            'id' => $getQueryString['institution_id'],
+            'institution_id' => $getQueryString['institution_id']
+        ]); //POCOR-8624
+        $primaryKey = $this->StudentTransferIn->getPrimaryKey();
         $url = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'StudentTransferOut',
-            'index'
+                0 =>    'index',
+                1 => $encodedQueryString //POCOR-8624
         ];
         $workflowTransitionObj = [];
-        foreach ($data[$this->alias()]['students'] as $key => $studentObj) {
+        foreach ($data[$this->getAlias()]['students'] as $key => $studentObj) {
             if ($studentObj['selected']) {
                 unset($studentObj['selected']);
                 foreach ($entity->student_transfer_in as $key => $value) {
@@ -445,8 +463,8 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                 }
 
                 $prevWorkflowStepName = $existingEntityToUpdate->status->name;
-                $existingEntityToUpdate->status_id = $data[$this->alias()]['next_step'];
-                $existingEntityToUpdate->assignee_id = $data[$this->alias()]['assignee_id'];
+                $existingEntityToUpdate->status_id = $data[$this->getAlias()]['next_step'];
+                $existingEntityToUpdate->assignee_id = $data[$this->getAlias()]['assignee_id'];
                 $workflowModel = $entity->workflow->id;
                 $workflowAction = $this->getWorkflowActionEntity($entity);
                 if ($this->StudentTransferIn->save($existingEntityToUpdate)) {
@@ -458,12 +476,12 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                         foreach ($eventKeys as $eventKey) {
                             $event = $subject->dispatchEvent($eventKey, [$id, $entity], $subject);
                             if ($event->isStopped()) {
-                                return $event->result;
+                                return $event->getResult();
                             }
                         }
                     }
                     $workflowTransition = [];
-                    $workflowTransition['comment'] = $data[$this->alias()]['comment'];
+                    $workflowTransition['comment'] = $data[$this->getAlias()]['comment'];
                     $workflowTransition['prev_workflow_step_name'] = $prevWorkflowStepName;
                     $workflowTransition['workflow_step_name'] = $workflowAction->next_workflow_step['name'];
                     $workflowTransition['workflow_action_name'] = $workflowAction['name'];
@@ -478,18 +496,20 @@ class BulkStudentTransferOutTable extends ControllerActionTable
         if ($WorkflowTransitions->saveMany($workflowTransitionEntities)) {
             $this->Alert->success('general.bulk_student_transfer_out', ['reset' => true]);
             $session = $this->Session;
-            $session->delete($this->registryAlias() . '.confirm');
-            $session->delete($this->registryAlias() . '.Data');
+            $session->delete($this->getRegistryAlias() . '.confirm');
+            $session->delete($this->getRegistryAlias() . '.Data');
         } else {
-            $this->log($entity->errors(), 'debug');
+            $this->log($entity->getErrors(), 'debug');
             $url['action'] = 'BulkStudentTransferOut';
             $url[0] = 'edit';
+            $url[1] = $getQueryString; //POCOR-8624
         }
         return $this->controller->redirect($url);
     }
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
+        $getQueryString = $this->getQueryString();
         switch ($this->action) {
             case 'edit':
                 $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Next');
@@ -504,7 +524,8 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
                             'action' => 'BulkStudentTransferOut',
-                            'edit'
+                                0 => 'edit',
+                                1 => $getQueryString //POCOR-8624
                         ];
                 $cancelButton['url'] = $cancelUrl;
                 $buttons[0] = $confirmButton;

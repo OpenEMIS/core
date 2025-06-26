@@ -1,15 +1,23 @@
 <?php
+declare(strict_types=1);
+
 /**
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
+ * @license       https://www.opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Chronos\Traits;
+
+use Cake\Chronos\ChronosDate;
+use Cake\Chronos\ChronosInterface;
+use DateTimeImmutable;
+use DateTimeInterface;
+use ReturnTypeWillChange;
 
 /**
  * A trait for freezing the time aspect of a DateTime.
@@ -18,7 +26,6 @@ namespace Cake\Chronos\Traits;
  */
 trait FrozenTimeTrait
 {
-
     use RelativeKeywordTrait;
 
     /**
@@ -26,26 +33,37 @@ trait FrozenTimeTrait
      *
      * Used to ensure constructed objects always lack time.
      *
-     * @param string|int $time The input time. Integer values will be assumed
+     * @param \DateTime|\DateTimeImmutable|string|int|null $time The input time. Integer values will be assumed
      *   to be in UTC. The 'now' and '' values will use the current local time.
+     * @param \DateTimeZone|null $tz The timezone in which the date is taken
      * @return string The date component of $time.
      */
-    protected function stripTime($time)
+    protected function stripTime($time, $tz): string
     {
-        if (substr($time, 0, 1) === '@') {
-            return gmdate('Y-m-d 00:00:00', substr($time, 1));
-        }
-        if (is_int($time) || ctype_digit($time)) {
+        if (is_int($time)) {
             return gmdate('Y-m-d 00:00:00', $time);
         }
-        if ($time === null || $time === 'now' || $time === '') {
-            return date('Y-m-d 00:00:00');
-        }
-        if ($this->hasRelativeKeywords($time)) {
-            return date('Y-m-d 00:00:00', strtotime($time));
+
+        if (is_string($time) && substr($time, 0, 1) === '@') {
+            return gmdate('Y-m-d 00:00:00', (int)substr($time, 1));
         }
 
-        return preg_replace('/\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?/', '00:00:00', $time);
+        if (!($time instanceof DateTimeInterface)) {
+            $time = new DateTimeImmutable($time ?? 'now', $tz);
+        }
+
+        return $time->format('Y-m-d 00:00:00');
+    }
+
+    /**
+     * Remove time components from strtotime relative strings.
+     *
+     * @param string $time The input expression
+     * @return string The output expression with no time modifiers.
+     */
+    protected function stripRelativeTime(string $time): string
+    {
+        return preg_replace('/([-+]\s*\d+\s(?:minutes|seconds|hours|microseconds))/', '', $time);
     }
 
     /**
@@ -59,9 +77,10 @@ trait FrozenTimeTrait
      * @param int $microseconds The microseconds to set (ignored)
      * @return static A modified Date instance.
      */
-    public function setTime($hours, $minutes, $seconds = null, $microseconds = null)
+    #[ReturnTypeWillChange]
+    public function setTime($hours, $minutes, $seconds = null, $microseconds = null): ChronosInterface
     {
-        return parent::setTime(0, 0, 0);
+        return parent::setTime(0, 0, 0, 0);
     }
 
     /**
@@ -72,7 +91,8 @@ trait FrozenTimeTrait
      * @param \DateInterval $interval The interval to modify this date by.
      * @return static A modified Date instance
      */
-    public function add($interval)
+    #[ReturnTypeWillChange]
+    public function add($interval): ChronosInterface
     {
         return parent::add($interval)->setTime(0, 0, 0);
     }
@@ -85,7 +105,8 @@ trait FrozenTimeTrait
      * @param \DateInterval $interval The interval to modify this date by.
      * @return static A modified Date instance
      */
-    public function sub($interval)
+    #[ReturnTypeWillChange]
+    public function sub($interval): ChronosInterface
     {
         return parent::sub($interval)->setTime(0, 0, 0);
     }
@@ -100,6 +121,10 @@ trait FrozenTimeTrait
      */
     public function timezone($value)
     {
+        if (static::class === ChronosDate::class) {
+            trigger_error('2.5 timezone() will be removed in 3.x.', E_USER_DEPRECATED);
+        }
+
         return $this;
     }
 
@@ -113,6 +138,10 @@ trait FrozenTimeTrait
      */
     public function tz($value)
     {
+        if (static::class === ChronosDate::class) {
+            trigger_error('2.5 tz() will be removed in 3.x.', E_USER_DEPRECATED);
+        }
+
         return $this;
     }
 
@@ -124,8 +153,27 @@ trait FrozenTimeTrait
      * @param \DateTimeZone|string $value The DateTimeZone object or timezone name to use.
      * @return $this
      */
+    #[ReturnTypeWillChange]
     public function setTimezone($value)
     {
+        if (static::class === ChronosDate::class) {
+            $trace = debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 5);
+            $found = false;
+            foreach ($trace as $frame) {
+                $found = in_array(
+                    $frame['class'],
+                    ['PHPUnit\Framework\Assert', 'PHPUnit\Framework\Constraint\IsEqual'],
+                    true
+                );
+                if ($found) {
+                    break;
+                }
+            }
+            if (!$found) {
+                trigger_error('2.5 setTimezone() will be removed in 3.x.', E_USER_DEPRECATED);
+            }
+        }
+
         return $this;
     }
 
@@ -138,8 +186,13 @@ trait FrozenTimeTrait
      * @param int $value The timestamp value to set.
      * @return static
      */
-    public function setTimestamp($value)
+    #[ReturnTypeWillChange]
+    public function setTimestamp($value): ChronosInterface
     {
+        if (static::class === ChronosDate::class) {
+            trigger_error('2.5 setTimestamp() will be removed in 3.x.', E_USER_DEPRECATED);
+        }
+
         return parent::setTimestamp($value)->setTime(0, 0, 0);
     }
 
@@ -152,7 +205,8 @@ trait FrozenTimeTrait
      * @param string $relative The relative change to make.
      * @return static A new date with the applied date changes.
      */
-    public function modify($relative)
+    #[ReturnTypeWillChange]
+    public function modify($relative): ChronosInterface
     {
         if (preg_match('/hour|minute|second/', $relative)) {
             return $this;

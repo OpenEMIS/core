@@ -11,13 +11,14 @@ use Cake\Network\Request;
 use Cake\Controller\Component;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 
 class RegistrationDirectoryTable extends ControllerActionTable {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
-        $this->entityClass('User.User');
+        $this->setTable('security_users');
+        $this->setEntityClass('User.User');
         parent::initialize($config);
 
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
@@ -35,13 +36,13 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         $this->toggle('remove', false);
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
         $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'RegisteredStudents'];
         $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
@@ -180,7 +181,7 @@ class RegistrationDirectoryTable extends ControllerActionTable {
             $attr['data'] = $needsArray;
         }
 
-        return $event->subject()->renderElement('Examination.special_needs', ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Examination.special_needs', ['attr' => $attr]);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -202,5 +203,56 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         ];
 
         return $buttons;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'date_of_birth') {
+            return __('Date of Birth');
+        } elseif ($field == 'special_needs') {
+            return __('Special Needs');
+        } elseif ($field == 'gender_id') {
+            return __('Gender');
+        } elseif ($field == 'email') {
+            return __('Email');
+        } elseif ($field == 'photo_content') {
+            return __('Photo Content');
+        } elseif ($field == 'first_name') {
+            return __('First Name');
+        } elseif ($field == 'middle_name') {
+            return __('Middle Name');
+        } elseif ($field == 'third_name') {
+            return __('Third Name');
+        } elseif ($field == 'last_name') {
+            return __('Last Name');
+        } elseif ($field == 'preferred_name') {
+            return __('Preferred Name');
+        } elseif ($field == 'details') {
+            return __('Detail');
+        } else if ($field == 'address') {
+            return  __('Address');
+        } else if ($field == 'postal_code') {
+            return  __('Postal Code');
+        } else if ($field == 'address_area_id') {
+            return  __('Address Area');
+        }else if ($field == 'birthplace_area_id') {
+            return  __('Birthplace Area');
+        }else if ($field == 'birthplace_area_id') {
+            return  __('Birthplace Area');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        }elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

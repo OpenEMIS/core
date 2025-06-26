@@ -14,9 +14,9 @@ use App\Model\Table\ControllerActionTable;
 
 class AppraisalsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff_appraisals');
+        $this->setTable('institution_staff_appraisals');
         parent::initialize($config);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -48,7 +48,7 @@ class AppraisalsTable extends ControllerActionTable
         ]);
 
         // setting this up to be overridden in viewAfterAction(), this code is required for file download
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->setConfig(
             'actions.download.show',
             true
         );
@@ -84,7 +84,7 @@ class AppraisalsTable extends ControllerActionTable
         $doneStatus = WorkflowSteps::DONE;
         $Statuses = $this->Statuses;
         $query
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category') => $doneStatus]);
             });
     }
@@ -99,13 +99,45 @@ class AppraisalsTable extends ControllerActionTable
 
         $tabElements = $this->controller->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('institution_id');
         $this->setFieldOrder(['academic_period_id', 'appraisal_type_id', 'appraisal_period_id', 'appraisal_form_id', 'appraisal_period_from', 'appraisal_period_to', 'date_appraised', 'file_content', 'comment']);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'appraisal_period_from':
+                return __('Appraisal Period From');
+            case 'appraisal_period_to':
+                return __('Appraisal Period To');
+            case 'appraisal_form_id':
+                return __('Appraisal Form');
+            case 'institution_id':
+                return __('Institution');
+            case 'date_appraised':
+                return __('Date Appraised');
+            case 'status_id':
+                return __('Status');
+            case 'appraisal_type_id':
+                return __('Appraisal Type');
+            case 'assignee_id':
+                return __('Assignees');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
 }

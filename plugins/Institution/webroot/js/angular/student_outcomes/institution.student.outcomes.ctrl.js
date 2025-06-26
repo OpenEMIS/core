@@ -24,6 +24,8 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
     Controller.gradingOptions = [];
     Controller.studentResults = [];
     Controller.studentComments = '';
+    Controller.finalGradingOptions = [];//POCOR-8435
+    Controller.outcomeFinalResult='';//POCOR-8435
 
     // Filters
     Controller.studentOptions = [];
@@ -74,7 +76,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
             .then(function (outcomeTemplate) {
                 Controller.outcomeTemplateName = outcomeTemplate.code_name;
                 Controller.educationGradeId = outcomeTemplate.education_grade_id;
-                Controller.selectedStudent = Controller.studentOptions[0].student_id; //6198 studentId 
+                Controller.selectedStudent = Controller.studentOptions[0].student_id; //6198 studentId
 
                 Controller.periodOptions = outcomeTemplate.periods;
                 if (Controller.periodOptions.length > 0) {
@@ -83,8 +85,17 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 } else {
                     AlertSvc.warning(Controller, "Please setup outcome periods for the selected template");
                 }
+                //POCOR-8435 start
+                if (outcomeTemplate &&
+                    outcomeTemplate.outcome_grading_type &&
+                    outcomeTemplate.outcome_grading_type_id != null &&
+                    Array.isArray(outcomeTemplate.outcome_grading_type.grading_options) &&
+                    outcomeTemplate.outcome_grading_type.grading_options.length > 0) {
 
-                return InstitutionStudentOutcomesSvc.getSubjectOptions(Controller.classId, Controller.institutionId, Controller.academicPeriodId, Controller.educationGradeId, Controller.selectedStudent); //6198 studentId 
+                    Controller.finalGradingOptions = outcomeTemplate.outcome_grading_type.grading_options;
+                }
+                //POCOR-8435 end
+                return InstitutionStudentOutcomesSvc.getSubjectOptions(Controller.classId, Controller.institutionId, Controller.academicPeriodId, Controller.educationGradeId, Controller.selectedStudent); //6198 studentId
             }, function (error) {
                 console.log(error);
             })
@@ -123,6 +134,17 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
             })
             .then(function (outcomeComments) {
                 Controller.studentComments = outcomeComments.length > 0 ? outcomeComments[0].comments : '';
+                return InstitutionStudentOutcomesSvc.getStudentOutcomeFinalResult(
+                    Controller.selectedStudent, Controller.educationGradeId, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId);
+            }, function (error) {
+                console.log(error);
+            })
+            .then(function (outcomeFinalResults) {//POCOR-8345
+                Controller.outcomeFinalResult="";
+                var outcomeValue=outcomeFinalResults.length > 0 ? outcomeFinalResults[0].outcome_result : '';
+                if(outcomeValue){
+                    Controller.outcomeFinalResult= Controller.finalGradingOptions.find((item=>item.name==outcomeValue))?.id
+                }
                 return Controller.initGrid();
             }, function (error) {
                 console.log(error);
@@ -145,7 +167,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
         Controller.studentResults = studentResults;
     }
 
-    function resetColumnDefs(gradingOptions, period, selectedPeriodStatus, subject, student, studentStatusCode) {
+    function resetColumnDefs(gradingOptions, period, selectedPeriodStatus, subject, student, studentStatusCode,finalGradingOptions) {//POCOR-8435
         var response = InstitutionStudentOutcomesSvc.getColumnDefs(period, subject, student, Controller.periodOptions, Controller.subjectOptions, Controller.studentOptions, Controller.studentResults);
 
         if (angular.isDefined(response.error)) {
@@ -162,7 +184,10 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
 
                 InstitutionStudentOutcomesSvc.translate(textToTranslate)
                 .then(function(res){
-                    var commentTranslation = res.pop();
+                    //POCOR-8566[START]
+                    // var commentTranslation = res.pop();
+                    var commentTranslation = res;
+                    //POCOR-8566[END]
                     angular.forEach(res, function(value, key) {
                         response.data[key]['headerName'] = value;
                     });
@@ -191,7 +216,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                                     }
                                 };
 
-                                InstitutionStudentOutcomesSvc.getRowData(Controller.outcomeTemplateId, subject, defaultRow, gradingOptions, Controller.studentResults, limit, page)
+                                InstitutionStudentOutcomesSvc.getRowData(Controller.outcomeTemplateId, subject, defaultRow, gradingOptions, Controller.studentResults, limit, page,finalGradingOptions)
                                 .then(function(response) {
                                     // console.log('response data source', response.data);
                                     var lastRowIndex = response.data.total;
@@ -232,12 +257,28 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                             outcome_period_id: period,
                             period_editable: selectedPeriodStatus,
                             education_subject_id: subject,
-                            outcome_criteria_name: commentTranslation,
+                            outcome_criteria_name: 'Comments',
                             result: Controller.studentComments,
                             save_error: {
                                 result: false
                             }
-                        }];
+                        },
+                        ,{
+                            // New row with a select dropdown for outcome final result POCOR-8435
+                            student_id: student,
+                            student_status: studentStatusCode,
+                            outcome_period_id: period,
+                            period_editable: selectedPeriodStatus,
+                            education_subject_id: subject,
+                            outcome_criteria_name: "Final Result",
+                            final_garding_options: finalGradingOptions,
+                            result:  Controller.outcomeFinalResult,
+                            save_error: {
+                                result: false
+                            },
+                            select:true
+                        },
+                    ];
                         Controller.gridOptions.api.setPinnedBottomRowData(pinnedRowData);
                     }
 
@@ -269,10 +310,24 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 Controller.selectedStudent, Controller.outcomeTemplateId, Controller.selectedPeriod, Controller.educationGradeId, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId);
         }, function (error) {
         })
+        //POCOR-8435 start
         .then(function (outcomeComments) {
             Controller.studentComments = outcomeComments.length > 0 ? outcomeComments[0].comments : '';
-            Controller.resetColumnDefs(Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode);
-        }, function (error) {
+            return InstitutionStudentOutcomesSvc.getStudentOutcomeFinalResult(
+                Controller.selectedStudent, Controller.educationGradeId, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId);
+        },
+        function (error) {
+        })
+        .then(function (outcomeFinalResults) {
+            Controller.outcomeFinalResult="";
+            var outcomeValue=outcomeFinalResults.length > 0 ? outcomeFinalResults[0].outcome_result : '';
+            if(outcomeValue){
+                Controller.outcomeFinalResult= Controller.finalGradingOptions.find((item=>item.name==outcomeValue))?.id
+            }
+            Controller.resetColumnDefs(Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode,Controller.finalGradingOptions);//POCOR-8435
+        },
+        //POCOR-8435 end
+        function (error) {
         });
     }
 
@@ -295,13 +350,26 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 Controller.selectedStudent, Controller.outcomeTemplateId, Controller.selectedPeriod, Controller.educationGradeId, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId);
         }, function (error) {
         })
+        //POCOR-8435 start
         .then(function (outcomeComments) {
             Controller.studentComments = outcomeComments.length > 0 ? outcomeComments[0].comments : '';
-            Controller.resetColumnDefs(Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode);
+            return InstitutionStudentOutcomesSvc.getStudentOutcomeFinalResult(
+                Controller.selectedStudent, Controller.educationGradeId, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId);
+        },
+        function (error) {
+        })
+        .then(function (outcomeFinalResults) {
+            Controller.outcomeFinalResult="";
+            var outcomeValue=outcomeFinalResults.length > 0 ? outcomeFinalResults[0].outcome_result : '';
+            if(outcomeValue){
+                Controller.outcomeFinalResult= Controller.finalGradingOptions.find((item=>item.name==outcomeValue))?.id
+            }
+            //POCOR-8435 end
+            Controller.resetColumnDefs(Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode,Controller.finalGradingOptions);//POCOR-8435
             // 6198 starts
             return InstitutionStudentOutcomesSvc.getSubjectOptions(Controller.classId, Controller.institutionId, Controller.academicPeriodId, Controller.educationGradeId, Controller.selectedStudent)
             .then(function (subjectOptions){
-                console.log(subjectOptions);    
+                console.log(subjectOptions);
                 if (subjectOptions.length > 0) {
                         var options = [];
                     for (var i = 0; i < subjectOptions.length; ++i) {
@@ -311,7 +379,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                     Controller.subjectOptions = options;
                     Controller.selectedSubject = subjectOptions[0].education_subject.id;
                 }
-                
+
             });// 6198 ends
         }, function (error) {
         });
@@ -331,7 +399,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 columnDefs: [],
                 rowData: [],
                 headerHeight: 38,
-                rowHeight: 40,
+                rowHeight: 70,  /* POCOR-8877 */
                 minColWidth: 100,
                 enableColResize: true,
                 enableSorting: false,
@@ -358,11 +426,23 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 },
                 getRowStyle: function(params) {
                     if (params.node.rowPinned) {
-                        return {'font-weight': 'bold'}
+                        return {'font-weight': 'bold','min-height':'40px !important'}//POCOR-8435
                     }
                 },
+                getRowHeight: params => {//POCOR-8435
+                    if (params.node.rowPinned) {
+                        // Check a unique property to differentiate pinned rows
+                        const rowData = params.data;
+                        if (rowData && rowData.select) {
+                            return 40; // Reduced height for specific pinned row
+                        }
+                        return 70; // Default height for other pinned rows
+                    }
+                    return 58; // Default height for regular rows
+                },
+
                 onGridReady: function() {
-                    Controller.resetColumnDefs(Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode);
+                    Controller.resetColumnDefs(Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode,Controller.finalGradingOptions);//POCOR-8435
                 }
             };
         }, function(error){
@@ -396,11 +476,22 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 },
                 getRowStyle: function(params) {
                     if (params.node.rowPinned) {
-                        return {'font-weight': 'bold'}
+                        return {'font-weight': 'bold','min-height':'40px !important'}//POCOR-8435
                     }
                 },
+                getRowHeight: params => {//POCOR-8435
+                    if (params.node.rowPinned) {
+                        // Check a unique property to differentiate pinned rows
+                        const rowData = params.data;
+                        if (rowData && rowData.select) {
+                            return 40; // Reduced height for specific pinned row
+                        }
+                        return 70; // Default height for other pinned rows
+                    }
+                    return 58; // Default height for regular rows
+                },
                 onGridReady: function() {
-                    Controller.resetColumnDefs(Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode);
+                    Controller.resetColumnDefs(Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode,Controller.finalGradingOptions);
                 }
             };
         });

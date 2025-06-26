@@ -21,11 +21,14 @@ use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use App\MoodleApi\MoodleFunction\MoodleCreateUser;
 use MoodleApi\Model\Table\MoodleApiLogTable;
+use App\MoodleApi\MoodleFunction\MoodleCreateCourse;//POCOR-8706
 
 class MoodleApi
 {
     private $_token;
     private $_baseURL;
+    private $_enableUserCreation;//POCOR-8706
+    private $_status;//POCOR-8706
     const WEB_SERVICE_URL = "webservice/rest/server.php";
     const TOKEN_PARAM = "wstoken";
     const FUNCTION_PARAM = "wsfunction";
@@ -91,7 +94,7 @@ class MoodleApi
      */
     public function createUser($data)
     {
-        if ($this->enableUserCreation()) {
+        if ($this->enableUserCreation() && $this->getStatus()) {//POCOR-8706
             $moodleUser = new MoodleCreateUser($data);
 
             $response = $this->post(MoodleCreateUser::getFunctionParam(), $moodleUser->getData());
@@ -111,6 +114,50 @@ class MoodleApi
             return null;
         }
     }
+  
+    /**
+     * Creates a course on Moodle and returns the response if successful.
+     *
+     * This method sends a request to the Moodle API to create a new course using
+     * the provided data. It utilizes the `MoodleCreateCourse` class to structure
+     * the request data and handles the API response.
+     *
+     * @param array $data An associative array containing the parameters for the course creation.
+     *                    Refer to the `MoodleCreateCourse` class for the list of available fields.
+     *
+     * @return \Psr\Http\Message\ResponseInterface|null The response object if the course creation is successful.
+     *                                                  Returns `null` if the API request fails.
+     *
+     * @author Megha Gupta <barkha@madvit.com>
+     * @since 2024-12-20
+     * @task  POCOR-8706 
+     */
+
+     public function createCourse($data)
+     {
+        if($this->getStatus()){ 
+            $moodleCourse = new MoodleCreateCourse($data);
+            $response = $this->post(MoodleCreateCourse::getFunctionParam(), $moodleCourse->getData());
+            $this->_apiLog(MoodleCreateCourse::getFunctionParam(), $moodleCourse->getData(), $response, __METHOD__, $data);
+            if ($response->isOk()) {
+                Log::info('Moodle course creation successful.', [
+                    'response' => $response->getJson()
+                ]);
+    
+                $responseData = $response->getJson();
+                $data = $responseData[0] ?? null; 
+            } else {
+                Log::warning('Moodle course creation failed.', [
+                    'response_status' => $response->getStatusCode(),
+                    'response_body' => $response->getBody()->getContents()
+                ]);
+            }
+            return $response;
+        }
+        else{
+            return null;
+        }
+     }
 
     /**
      * To construct Moodle API URL based on the function name you are calling.
@@ -133,17 +180,26 @@ class MoodleApi
     {
         return isset($this->_enableUserCreation) && $this->_enableUserCreation;
     }
+    //POCOR-8706 start
+    // It simply return status whether moodle is enabled or not
+    public function getStatus()
+    {
+        return isset($this->_status) && $this->_status;
+    }
+    //POCOR-8706 end
 
     private function _apiLog($action, $param, $response, $callback, $callbackData)
     {
         $apiLogTable = TableRegistry::get("MoodleApi.MoodleApiLog");
-        $apiInstance = $apiLogTable->newEntity();
+        // Pass an empty array to newEntity() if you don't have initial data to populate
+        $apiInstance = $apiLogTable->newEntity([]);
 
         if ($response->isOk()) {
             $status = MoodleApiLogTable::STATUS_SUCCESS;
         } else {
             $status = MoodleApiLogTable::STATUS_FAILED;
         }
+
         $apiInstance->action = $action;
         $apiInstance->params = json_encode($param);
         $apiInstance->response = json_encode($response);
@@ -156,10 +212,34 @@ class MoodleApi
 
     private function _loadConfig()
     {
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $this->_token = $ConfigItems->value("api_token");
-        $this->_baseURL = $ConfigItems->value("base_url");
-        $this->_enableUserCreation = $ConfigItems->value("core_user_create_users");
+        //POCOR-8386 new changes
+        $ConfigItemsTable = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
+        $ConfigItems = $ConfigItemsTable->find()->where(['external_data_source_type' => 'External Data Source - LMS'])->toArray();
+        //POCOR-8706 start
+        $StatusTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $status = $StatusTable->find()
+                    ->select(['value']) 
+                    ->where([
+                        'code' => 'external_source_status',
+                        'type' => 'External Data Source - LMS',
+                    ])
+                    ->first(); 
+        $statusValue = $status->value ?? null;
+
+        $this->_token = null;
+        $this->_baseURL = null;
+        $this->_enableUserCreation = null;
+        $this->_status = $statusValue;
+        //POCOR-8706 end
+        foreach ($ConfigItems as $configItem) {
+            if($configItem->attribute_field == 'api_token'){
+                $this->_token = $configItem->value;
+            }elseif($configItem->attribute_field == 'base_url'){
+                $this->_baseURL = $configItem->value;
+            }elseif($configItem->attribute_field == 'enable_user_creation'){
+                $this->_enableUserCreation = $configItem->value;
+            }
+        }
     }
 
     private function _constructBasicParams($function)

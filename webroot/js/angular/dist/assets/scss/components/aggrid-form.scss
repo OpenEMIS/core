@@ -1,0 +1,148 @@
+@charset "UTF-8";
+
+@import "../general/variables.scss";
+@import "../general/classes.scss";
+
+/* Table Form V1.1.1 */
+
+.kdx-table {
+    .stg-theme {
+        &.cell-top {
+            .ag-row {
+                .ag-cell {
+                    align-items: baseline;
+
+                    &.ag-default {
+                        padding-top: 16px !important;
+
+                        .rtl & {
+                            padding-top: $padding15 !important;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    .kdx-table-input {
+        width: 98%;
+        flex: 1 auto;
+        display: flex;
+        flex-flow: column wrap;
+
+        &>* {
+            flex: 1 0 auto;
+        }
+
+        &>.table-input-wrapper {
+            width: 100% !important;
+            display: flex;
+
+            &+.table-input-wrapper {
+                margin-top: $margin15;
+            }
+
+            &>div {
+                flex: 1 0 auto;
+
+                input,
+                textarea,
+                .kdx-datepicker {
+                    width: 100% !important;
+                    margin: auto;
+                }
+
+                .kdx-timepicker {
+                    .kdx-timepicker-wrapper {
+                        .ngb-tp {
+                            .form-control {
+                                width: 50px !important;
+                            }
+                            .ngb-tp-hour,
+                            .ngb-tp-spacer,
+                            .ngb-tp-minute {
+                                button {
+
+                                    width: 17px;
+                                    margin-right: $margin5;
+
+                                    span {
+
+                                        &:after {
+                                            .rtl & {
+                                                margin-right: $noMargin;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                textarea {
+                    resize: none;
+                }
+
+                .kdx-input-select-wrapper {
+                    position: relative;
+                    display: block;
+                    margin: $noMargin;
+                    padding: $noPadding !important;
+                    font-size: $textSizeS;
+                    width: 100% !important;
+                    border-color: $whiteColor !important;
+                    background-color: $whiteColor;
+
+                    &:after {
+                        border-left: 5px solid transparent;
+                        border-right: 5px solid transparent;
+                        border-top: 5px solid;
+                        color: #555;
+                        content: "";
+                        height: 0;
+                        margin-right: 14px;
+                        pointer-events: none;
+                        position: absolute;
+                        width: 0;
+                        right: 0;
+                        top: 48%;
+
+                        .rtl & {
+                            margin-right: auto;
+                            margin-left: 14px;
+                            right: auto;
+                            left: 0;
+                        }
+                    }
+
+                    select {
+                        background: none;
+                        position: relative;
+                        border: $greyCBorder;
+                        margin: $noMargin;
+                        width: 100%;
+                        height: 30px;
+                        cursor: pointer;
+                        appearance: none;
+                        border-radius: 3px;
+                        padding: $padding5 $padding10;
+                        font-size: $bodyTextSize;
+
+                        &:focus {
+                            outline: none !important;
+                        }
+                    }
+                }
+            }
+        }
+
+        .kdx-tooltip {
+            .form-vertical & {
+                @media #{$tabletPortrait} {
+                    position: unset;
+                }
+            }
+        }
+
+    }
+}

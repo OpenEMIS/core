@@ -1,0 +1,295 @@
+@charset "UTF-8";
+
+/* File Input V1.1.0 */
+
+.kdx-fileinput {
+    .kdx-fileinput-wrapper {
+        width: 100%;
+        display: inline-block;
+        margin-bottom: $margin15;
+
+        .left-button-style {
+            background-color: transparent;
+            border-radius: 0 !important;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 30px !important;
+            height: 30px;
+            padding: $noPadding;
+        }
+
+        .kdx-file-preview {
+            margin-bottom: $margin15;
+        }
+
+        label.kdx-wrapper {
+            position: relative;
+            height: 30px;
+            width: 100%;
+            border: $greyCBorder;
+            border-radius: 3px;
+            cursor: text;
+            margin: $noMargin;
+
+            input {
+                position: absolute;
+                top: 0;
+                left: 0;
+                display: inline-block;
+                width: 100%;
+            }
+
+            i.fa-file-o {
+                vertical-align: top;
+                margin: 3px $margin5 $noMargin $noMargin;
+            }
+
+            p {
+                @extend .ellipsis;
+
+                display: inline-block;
+                margin: $noMargin;
+                max-width: calc(100% - 100px);
+            }
+
+            .btn {
+                position: absolute;
+                top: -1px;
+                margin: $noMargin;
+                width: 50px;
+                height: 30px;
+                border-top-left-radius: 0;
+                border-bottom-left-radius: 0;
+
+                &.btn-browse {
+                    right: 0;
+
+                    i {
+                        position: absolute;
+                        left: 50%;
+                        top: 50%;
+                        transform: translate(-50%, -50%);
+                    }
+                }
+            }
+
+            .kdx-input-text {
+                padding: $padding5 $padding10;
+                height: 30px;
+                font-weight: normal;
+            }
+
+            .btn-remove {
+                position: absolute;
+                top: 0;
+                right: 50px;
+                color: #999 !important;
+                cursor: pointer;
+                background: none !important;
+                width: 35px;
+                padding: $noPadding;
+            }
+        }
+
+        .kdx-fileinput-text {
+            clear: both;
+            font-style: italic;
+            font-size: $textSizeXXS !important;
+            color: #777;
+            padding: $padding5 $noPadding $noPadding;
+            cursor: text;
+        }
+
+        .input-single-btn,
+        .input-double-btn {
+            display: inline-block;
+            position: absolute;
+            top: 0;
+            left: -1px;
+
+            .btn {
+                border-right: $greyCBorder;
+
+                &:first-child {
+                    border-top-left-radius: 3px !important;
+                    border-bottom-left-radius: 3px !important;
+                }
+
+                &:not(:first-child) {
+                    border-top-left-radius: 0 !important;
+                    border-bottom-left-radius: 0 !important;
+                }
+            }
+        }
+
+        .input-single-btn {
+            width: 30px;
+
+            .btn {
+                @extend .left-button-style;
+            }
+
+            &+.kdx-input-text {
+                display: inline-block;
+                width: calc(100% - 115px) !important;
+                margin: $noMargin $noMargin $noMargin $margin30;
+
+                p {
+                    max-width: calc(100% - 20px) !important;
+                }
+            }
+        }
+
+
+        .input-double-btn {
+            width: 60px;
+
+            .btn {
+                @extend .left-button-style;
+
+                &:not(:first-child) {
+                    left: 30px !important;
+                }
+
+                &:first-child+.tooltip.tooltip-bottom {
+                    @media #{$tabletPortrait} {
+                        left: 0 !important;
+                    }
+
+                    .tooltip-arrow {
+                        @media #{$tabletPortrait} {
+                            left: 15px !important;
+                        }
+                    }
+                }
+            }
+
+            &+.kdx-input-text {
+                display: inline-block;
+                width: calc( 100% - 140px) !important;
+                margin: $noMargin $noMargin $noMargin 60px;
+
+                p {
+                    max-width: calc(100% - 20px) !important;
+                }
+            }
+        }
+    }
+}
+
+
+.rtl {
+    .kdx-fileinput-wrapper {
+
+        .left-button-style {
+            left: auto !important;
+            right: 0;
+        }
+
+        label.kdx-wrapper {
+            border-right: $greyCBorder;
+
+            p {
+                max-width: calc(100% - 30px) !important;
+            }
+
+            input {
+                left: auto !important;
+                right: 0;
+            }
+
+            i.fa-file-o {
+                margin: 3px $noMargin $noMargin $margin5;
+            }
+
+            .btn {
+                border-top-left-radius: 3px;
+                border-top-right-radius: 0;
+                border-bottom-left-radius: 3px;
+                border-bottom-right-radius: 0;
+
+                &.btn-browse {
+                    left: 0;
+                    right: auto !important;
+                }
+            }
+
+            .kdx-input-text {
+                position: absolute;
+                top: 0;
+                right: 0;
+                left: 85px;
+                padding: $padding5 $padding10;
+                height: 30px;
+                font-weight: 400;
+            }
+
+            .btn-remove {
+                left: 50px;
+                right: auto !important;
+            }
+        }
+
+        .input-single-btn,
+        .input-double-btn {
+            left: auto !important;
+            right: 0;
+
+            .btn {
+                border-left: $lightGreyBorder;
+                border-right: 0 !important;
+
+                &:first-child {
+                    border-top-left-radius: 0 !important;
+                    border-bottom-left-radius: 0 !important;
+                    border-top-right-radius: 3px !important;
+                    border-bottom-right-radius: 3px !important;
+                }
+            }
+        }
+
+        .input-single-btn {
+            .btn {
+                &:not(:first-child) {
+                    right: 30px !important;
+                    left: auto !important;
+                }
+            }
+
+            &+.kdx-input-text {
+                width: calc(100% - 110px) !important;
+                margin: $noMargin $margin30 $noMargin $noMargin;
+            }
+        }
+
+        .input-double-btn {
+            .btn {
+
+                &:not(:first-child) {
+                    right: 30px !important;
+                    left: auto !important;
+                }
+
+                &:first-child+.tooltip.tooltip-bottom {
+                    @media #{$tabletPortrait} {
+                        right: 0 !important;
+                        left: auto !important;
+                    }
+
+                    .tooltip-arrow {
+                        @media #{$tabletPortrait} {
+                            right: 10px !important;
+                            left: auto !important;
+                        }
+                    }
+                }
+            }
+
+            &+.kdx-input-text {
+                width: calc(100% - 140px)!important;
+                margin: $noMargin 60px $noMargin;
+            }
+        }
+    }
+}

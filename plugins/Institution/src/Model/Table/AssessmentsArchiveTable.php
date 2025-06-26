@@ -29,7 +29,7 @@ class AssessmentsArchiveTable extends ControllerActionTable
     {
         $connectionone = ConnectionManager::get('default');
         $db1 = $connectionone->config()['database'];
-        $DataManagementConnections = TableRegistry::get('Archive.DataManagementConnections');
+        $DataManagementConnections = TableRegistry::getTableLocator()->get('Archive.DataManagementConnections');
         $DataManagementConnectionsData = $DataManagementConnections->find('all')
             ->select([
                 'DataManagementConnections.host','DataManagementConnections.db_name','DataManagementConnections.host','DataManagementConnections.username','DataManagementConnections.password','DataManagementConnections.db_name'

@@ -3,9 +3,9 @@ namespace App\Model\Table;
 
 class CalendarTypesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('calendar_types');
+        $this->setTable('calendar_types');
         parent::initialize($config);
 
         $this->belongsTo('CalendarsTable', ['className' => 'CalendarsTable', 'foreignKey' => 'calendar_type_id']);

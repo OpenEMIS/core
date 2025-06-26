@@ -16,15 +16,15 @@ use Cake\Validation\Validator;
 
 class SubjectsBookListsTable extends AppTable
 {
-    
+
     const NO_FILTER = 0;
     const NO_STUDENT = 1;
     const NO_STAFF = 2;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        
-        $this->table('institution_subject_students');
+
+        $this->setTable('institution_subject_students');
         parent::initialize($config);
         $this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
         $this->belongsTo('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents']);
@@ -35,7 +35,7 @@ class SubjectsBookListsTable extends AppTable
     }
 
    public function beforeAction(Event $event)
-    { 
+    {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('format');
@@ -44,7 +44,7 @@ class SubjectsBookListsTable extends AppTable
    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
        $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -60,22 +60,25 @@ class SubjectsBookListsTable extends AppTable
        $educationSubjectId = $requestData->education_subject_id;
        $areaId = $requestData->area_education_id;
        $conditions = [];
-       
-        if (!empty($educationSubjectId)) {
+
+        if (!empty($educationSubjectId) && $educationSubjectId != -1) { // POCOR-8993
             $conditions[$this->aliasField('education_subject_id')] = $educationSubjectId;
         }
-        if (!empty($institutionId)) {
+        if (!empty($institutionId) && $institutionId != -1) { // POCOR-8993
             $conditions[$this->aliasField('institution_id')] = $institutionId;
         }
-        if (!empty($academicPeriodId)) {
+        if (!empty($academicPeriodId) && $academicPeriodId != -1) { // POCOR-8993
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
+        }
+        if (!empty($educationGradeId) && $educationGradeId != -1) { // POCOR-8993
+            $conditions[$this->aliasField('education_grade_id')] = $educationGradeId;
         }
         if (!empty($areaId) && $areaId != -1) {
             $conditions['Institutions.area_id'] = $areaId;
         }
        $query
-            ->select([   
-                'student_id' =>'Users.id',             
+            ->select([
+                'student_id' =>'Users.id',
                 'student_first_name' => 'Users.first_name',
                 'student_last_name' => 'Users.last_name',
                 'openemis_no' => 'Users.openemis_no',
@@ -88,13 +91,11 @@ class SubjectsBookListsTable extends AppTable
                 'education_subject_name' => 'EducationSubjects.name',
                 'textbook_code' => 'Textbooks.code',
                 'textbook_name' => 'Textbooks.title',
-                'start_date' => 'InstitutionStudents.start_date',//POCOR-5740 
+                'start_date' => 'InstitutionStudents.start_date',//POCOR-5740
             ])
-             
            ->InnerJoin(['Users' => 'security_users'], [
                             'Users.id = ' . 'SubjectsBookLists.student_id'
                        ])
-
            ->InnerJoin(['Institutions' => 'institutions'], [
                       'SubjectsBookLists.institution_id = ' . 'Institutions.id'
                        ])
@@ -102,27 +103,34 @@ class SubjectsBookListsTable extends AppTable
             ->InnerJoin(['EducationGrades' => 'education_grades'], [
                      'SubjectsBookLists.education_grade_id = ' . 'EducationGrades.id'
                        ])
-            
+
             ->leftJoin(['InstitutionClasses' => 'institution_classes'], [
                     'InstitutionClasses.id = ' . 'SubjectsBookLists.institution_class_id'
                       ])
             //POCOR-5740 starts
-            ->InnerJoin(['InstitutionStudents' => 'institution_students'], [
+            ->innerJoin(['InstitutionStudents' => 'institution_students'], [ // POCOR-8993 instead of left join, to remove deleted records
                       'InstitutionStudents.student_id = ' . 'SubjectsBookLists.student_id'
                     ])
             //POCOR-5740 ends
-            ->leftJoin(['EducationSubjects' => 'education_subjects'], [
+            ->innerJoin(['EducationSubjects' => 'education_subjects'], [ // POCOR-8993  instead of left join, to remove deleted records
                     'EducationSubjects.id = ' . 'SubjectsBookLists.education_subject_id'
                      ])
-
-            ->leftJoin(['Textbooks' => 'textbooks'], [
+            ->innerJoin(['Textbooks' => 'textbooks'], [ // POCOR-8993  instead of left join, to remove deleted records
                     'Textbooks.education_subject_id = ' . 'SubjectsBookLists.education_subject_id'
                     ])
             ->where($conditions)
+            ->group(['Users.id', // POCOR-8993  to remove dublicates
+                'Textbooks.code', // POCOR-8993 to remove dublicates
+                'Textbooks.title', // POCOR-8993  to remove dublicates
+            ], true)
             //POCOR-5740 starts
             ->order([
-                'InstitutionStudents.start_date' => 'DESC'
-            ]);
+                // POCOR-8993 added order to make list more clear
+                'Users.first_name' => 'ASC',
+                'Users.last_name' => 'ASC',
+                'InstitutionStudents.start_date' => 'DESC',
+                'Textbooks.title' => 'ASC',
+            ], true);
             //POCOR-5740 ends
         }
 
@@ -178,7 +186,7 @@ class SubjectsBookListsTable extends AppTable
             'field' => 'student_first_name',
             'type' => 'string',
             'label' => __('Student First Name')
-        ];    
+        ];
 
         $extraFields[] = [
             'key' => 'Users.last_name',

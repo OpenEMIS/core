@@ -1,0 +1,75 @@
+/* AUTOCOMPLETE v.1.0.3 */
+
+.ui-autocomplete {
+    max-height: 320px !important;
+    overflow: scroll;
+}
+
+.ui-widget-content {
+    background: none !important;
+    background-color: #FFF !important;
+    border: 1px solid #CCC !important;
+    -webkit-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+    -ms-overflow-x: hidden;
+    overflow-x: hidden;
+}
+
+.ui-widget input,
+.ui-widget select,
+.ui-widget textarea,
+.ui-widget button,
+.ui-widget {
+    font-family: 'Helvetica Neue', Helvetica, sans-serif !important;
+    color: #333 !important;
+    font-weight: normal !important;
+}
+
+.ui-widget label {
+    font-size: 12px !important;
+}
+
+.ui-menu-item {
+    padding: 6px 8px !important;
+    background: none !important;
+    border: 0 !important;
+    font-size: 12px !important;
+    font-weight: normal !important;
+}
+
+.ui-menu-item:hover,
+.ui-state-focus:hover,
+.ui-state-focus:focus,
+.ui-state-focus:visited,
+.ui-state-focus:active,
+.chosen-container .chosen-results li.highlighted,
+.chosen-container .chosen-results li.active-result:hover {
+    background: none !important;
+    background-color: #EEE !important;
+    color: #555 !important;
+    border: 1px solid #CCC !important;
+    font-size: 12px !important;
+    font-weight: normal !important;
+}
+
+.ui-widget input:focus {
+    outline: none !important;
+}
+
+/* RTL */
+
+.rtl .ui-menu .ui-menu-item,
+.rtl .ui-widget label,
+.rtl .ui-menu-item:hover,
+.rtl .ui-state-focus:hover,
+.rtl .ui-state-focus:focus,
+.rtl .ui-state-focus:visited,
+.rtl .ui-state-focus:active,
+.rtl .chosen-container .chosen-results li.highlighted,
+.rtl .chosen-container .chosen-results li.active-result:hover {
+    font-size: 14px !important;
+}
+
+.rtl .chosen-container .chosen-results li {
+    font-size: 14px !important;
+}

@@ -29,9 +29,9 @@ class GuardianNavsTable extends ControllerActionTable
 
     private $dashboardQuery = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_students');
+        $this->setTable('institution_students');
         parent::initialize($config);
 
         // Associations
@@ -133,7 +133,7 @@ class GuardianNavsTable extends ControllerActionTable
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
@@ -147,10 +147,10 @@ class GuardianNavsTable extends ControllerActionTable
         $searchableFields[] = 'openemis_no';
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         $validator
             ->add('start_date', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'end_date', false]
@@ -213,7 +213,7 @@ class GuardianNavsTable extends ControllerActionTable
         $options = array_merge($options, $newOptions);
 
         // targetInstitutionId is used to determine the error message, whether it is enrolled in 'this' or 'other' institution
-        $targetInstitutionId = (array_key_exists('targetInstitutionId', $options))? $options['targetInstitutionId']: null;
+        $targetInstitutionId = (isset($options['targetInstitutionId']))? $options['targetInstitutionId']: null;
 
         $enrolledInstitutionIds = $this->enrolledInAnyInstitution($studentId, $systemId, $options);
 
@@ -234,7 +234,7 @@ class GuardianNavsTable extends ControllerActionTable
     {
         $newOptions['select'] = ['institution_id', 'education_grade_id'];
         $options = array_merge($options, $newOptions);
-        $getInstitutions = (array_key_exists('getInstitutions', $options))? $options['getInstitutions']: false;
+        $getInstitutions = (isset($options['getInstitutions']))? $options['getInstitutions']: false;
 
         $EducationGradesTable = TableRegistry::get('Education.EducationGrades');
 
@@ -265,7 +265,7 @@ class GuardianNavsTable extends ControllerActionTable
     {
         $studentId = $options['studentId'];
         $statusCode = 'CURRENT';
-        if (array_key_exists('code', $options)) {
+        if (isset($options['code'])) {
             $statusCode = $options['code'];
         }
         $status = $this->StudentStatuses->getIdByCode($statusCode);
@@ -275,11 +275,11 @@ class GuardianNavsTable extends ControllerActionTable
             $this->aliasField('student_status_id') => $status
         ];
 
-        if (array_key_exists('excludeInstitutions', $options) && !empty($options['excludeInstitutions'])) {
+        if (isset($options['excludeInstitutions']) && !empty($options['excludeInstitutions'])) {
             $conditions[$this->aliasField('institution_id') . ' NOT IN '] = $options['excludeInstitutions'];
         }
 
-        if (array_key_exists('select', $options) && !empty($options['select'])) {
+        if (isset($options['select']) && !empty($options['select'])) {
             $query->select($options['select']);
         }
 
@@ -298,7 +298,7 @@ class GuardianNavsTable extends ControllerActionTable
         return $query
             ->select([$Classes->aliasField('name')])
             ->leftJoin(
-                [$ClassStudents->alias() => $ClassStudents->table()],
+                [$ClassStudents->getAlias() => $ClassStudents->getTable()],
                 [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
@@ -306,7 +306,7 @@ class GuardianNavsTable extends ControllerActionTable
                 ]
             )
             ->leftJoin(
-                [$Classes->alias() => $Classes->table()],
+                [$Classes->getAlias() => $Classes->getTable()],
                 [
                     $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id'),
                     $Classes->aliasField('academic_period_id') => $periodId,
@@ -317,9 +317,9 @@ class GuardianNavsTable extends ControllerActionTable
 
     public function findTripPassengers(Query $query, array $options)
     {
-        $queryString = array_key_exists('querystring', $options) ? $options['querystring'] : [];
-        $institutionId = array_key_exists('institution_id', $queryString) ? $queryString['institution_id'] : 0;
-        $academicPeriodId = array_key_exists('academic_period_id', $queryString) ? $queryString['academic_period_id'] : 0;
+        $queryString = isset($options['querystring']) ? $options['querystring'] : [];
+        $institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : 0;
+        $academicPeriodId = isset($queryString['academic_period_id']) ? $queryString['academic_period_id'] : 0;
 
         $query
             ->select([
@@ -331,7 +331,7 @@ class GuardianNavsTable extends ControllerActionTable
                 $this->Users->aliasField('last_name'),
                 $this->Users->aliasField('preferred_name')
             ])
-            ->contain($this->Users->alias())
+            ->contain($this->Users->getAlias())
             ->where([
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('academic_period_id') => $academicPeriodId
@@ -385,7 +385,7 @@ class GuardianNavsTable extends ControllerActionTable
                 'Users.third_name',
                 'Users.last_name'
             ])
-            ->leftJoin([$StudentGuardians->alias() => $StudentGuardians->table()], [
+            ->leftJoin([$StudentGuardians->getAlias() => $StudentGuardians->getTable()], [
                 $StudentGuardians->aliasField('student_id = ') . $this->aliasField('student_id')
             ])
             ->where($conditions, [], true);
@@ -396,7 +396,7 @@ class GuardianNavsTable extends ControllerActionTable
     {
         foreach ($query->toArray() as $key => $value)
         {
-            $InstitutionStudents = TableRegistry::get('InstitutionStudents');
+            $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
 
             $InstitutionStudentsCurrentData = $InstitutionStudents
             ->find()
@@ -926,7 +926,7 @@ class GuardianNavsTable extends ControllerActionTable
 
             $studentEducationGrade = $EducationGrades
                 ->find()
-                ->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $gradeId])
+                ->where([$EducationGrades->aliasField($EducationGrades->getPrimaryKey()) => $gradeId])
                 ->first();
 
             $currentProgrammeGrades = $EducationGrades
@@ -1082,7 +1082,7 @@ class GuardianNavsTable extends ControllerActionTable
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
         foreach ($conditions as $key => $value) {
-            $_conditions[$this->alias().'.'.$key] = $value;
+            $_conditions[$this->getAlias().'.'.$key] = $value;
         }
 
         $AcademicPeriod = $this->AcademicPeriods;
@@ -1138,7 +1138,7 @@ class GuardianNavsTable extends ControllerActionTable
                 ->where($queryCondition)
                 ->group(['gender_name', $this->aliasField('academic_period_id')])
                 ->order('AcademicPeriods.order DESC')
-                ->hydrate(false)
+                ->disableHydration() // POCOR-8533
                 ->toArray()
                 ;
 
@@ -1160,7 +1160,7 @@ class GuardianNavsTable extends ControllerActionTable
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
         foreach ($conditions as $key => $value) {
-            $_conditions[$this->alias().'.'.$key] = $value;
+            $_conditions[$this->getAlias().'.'.$key] = $value;
         }
 
         $AcademicPeriod = $this->AcademicPeriods;
@@ -1248,7 +1248,7 @@ class GuardianNavsTable extends ControllerActionTable
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
         foreach ($conditions as $key => $value) {
-            $_conditions[$this->alias().'.'.$key] = $value;
+            $_conditions[$this->getAlias().'.'.$key] = $value;
         }
 
         $AcademicPeriod = $this->AcademicPeriods;
@@ -1260,7 +1260,7 @@ class GuardianNavsTable extends ControllerActionTable
             $currentYear = __('Not Defined');
         }
 
-		$studentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records');
+		$studentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
 
         $StudentAttendancesRecords = $studentAttendanceMarkedRecords->find('all')
             ->select([

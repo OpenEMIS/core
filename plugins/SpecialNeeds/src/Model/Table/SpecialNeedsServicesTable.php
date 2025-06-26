@@ -1,10 +1,11 @@
 <?php
+
 namespace SpecialNeeds\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -14,9 +15,10 @@ use Cake\Validation\Validator;
 class SpecialNeedsServicesTable extends ControllerActionTable
 {
     const COMMENT_MAX_LENGTH = 350;
-    public function initialize(array $config)
+
+    public function initialize(array $config): void
     {
-        $this->table('user_special_needs_services');
+        $this->setTable('user_special_needs_services');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -33,23 +35,31 @@ class SpecialNeedsServicesTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+
         $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['SpecialNeedsServices' =>
+                ['academic_period_id',
+                    'special_needs_service_type_id',
+                    'special_needs_service_classification_id']
+            ]
+        ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
-                // ->add('description', 'length', [
-                // 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
-                // 'message' => __('Description must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
-                // ])
-                // ->add('comment', 'length', [
-                // 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
-                // 'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
-                // ])
-                ->allowEmpty('file_content');
+            // ->add('description', 'length', [
+            // 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
+            // 'message' => __('Description must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
+            // ])
+            // ->add('comment', 'length', [
+            // 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
+            // 'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
+            // ])
+            ->allowEmpty('file_content');
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
@@ -57,10 +67,26 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         switch ($field) {
             case 'special_needs_service_type_id':
                 return __('Service Name');
+            case 'file_content':
+                return __('Attachment');
+            case 'description':
+                return __('Description');
+            case 'comment':
+                return __('Comment');
+            case 'academic_period_id':
+                return __('Academic Period');
             case 'organization':
                 return __('Service Provider');
             case 'special_needs_service_classification_id':
                 return __('Classification');
+            case 'modified_user_id':
+                return __('Modified By');  //POCOR-6873
+            case 'modified':
+                return __('Modified On');  //POCOR-6873
+            case 'created_user_id':
+                return __('Created By');  //POCOR-6873
+            case 'created':
+                return __('Created On');  //POCOR-6873
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -68,12 +94,12 @@ class SpecialNeedsServicesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        if (is_null($this->request->query('academic_period_id'))) {
+        if (is_null($this->request->getQuery('academic_period_id'))) {
             $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
-            $url = $this->ControllerAction->url($this->alias());
+            $url = $this->ControllerAction->url($this->getAlias());
             // $url['academic_period_id'] = $currentAcademicPeriod;
-            $url['academic_period_id'] = '-1';
-            $this->controller->redirect($url);
+            // $url['academic_period_id'] = '-1';
+            //$this->controller->redirect($url);
         }
 
         $this->field('file_name', ['visible' => false]);
@@ -86,17 +112,17 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         $this->setFieldOrder(['special_needs_service_type_id']);
 
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Services','Staff - Special Needs');       
-            if(!empty($is_manual_exist)){
+        if ($this->request->getParam('controller') == 'Staff') {
+            $is_manual_exist = $this->getManualUrl('Institutions', 'Services', 'Staff - Special Needs');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -104,17 +130,17 @@ class SpecialNeedsServicesTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Students'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Services','Students - Special Needs');       
-            if(!empty($is_manual_exist)){
+        } elseif ($this->request->getParam('controller') == 'Students') {
+            $is_manual_exist = $this->getManualUrl('Institutions', 'Services', 'Students - Special Needs');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -123,17 +149,17 @@ class SpecialNeedsServicesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Services','Special Needs');       
-            if(!empty($is_manual_exist)){
+        } elseif ($this->request->getParam('controller') == 'Directories') {
+            $is_manual_exist = $this->getManualUrl('Directory', 'Services', 'Special Needs');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -142,17 +168,17 @@ class SpecialNeedsServicesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Profiles'){ 
-            $is_manual_exist = $this->getManualUrl('Personal','Services','Special Needs');       
-            if(!empty($is_manual_exist)){ 
+        } elseif ($this->request->getParam('controller') == 'Profiles') {
+            $is_manual_exist = $this->getManualUrl('Personal', 'Services', 'Special Needs');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -169,7 +195,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
     {
         // Academic Periods Filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : '-1';
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : '-1';
 
         $academicPeriodOptions = ['-1' => 'All Academic Period'] + $academicPeriodOptions;
         if ($selectedAcademicPeriod != '-1') {
@@ -177,7 +203,10 @@ class SpecialNeedsServicesTable extends ControllerActionTable
                 $this->aliasField('academic_period_id') => $selectedAcademicPeriod
             ]);
         }
-
+        $userID = $this->getUserID();
+        $query->where([
+            $this->aliasField('security_user_id') => $userID
+        ]);
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $extra['elements']['controls'] = ['name' => 'SpecialNeeds.Services/controls', 'data' => [], 'options' => [], 'order' => 1];
         // Academic Periods Filter - END
@@ -198,7 +227,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -206,7 +235,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
             if ($entity->has('academic_period_id')) {
                 $selectedAcademicPeriodId = $entity->academic_period_id;
             } else {
-                $academicPeriodQueryString = $this->request->query('academic_period_id');
+                $academicPeriodQueryString = $this->request->getQuery('academic_period_id');
                 if (!is_null($academicPeriodQueryString) && $this->AcademicPeriods->exists($academicPeriodQueryString)) {
                     $selectedAcademicPeriodId = $academicPeriodQueryString;
                 } else {
@@ -245,21 +274,24 @@ class SpecialNeedsServicesTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
-        $academicPeriodId = $this->request->query['academic_period_id'];
+        $userId = $this->getUserID();
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
+        if($academicPeriodId == null){
+            $academicPeriodId = $this->AcademicPeriods->getCurrent();
+        }
 
-        if($academicPeriodId == '-1'){
+        if ($academicPeriodId == '-1') {
             $query
-            ->where([
-                'security_user_id =' .$studentUserId,
-            ]);
-        }else{
+                ->where([
+                    'security_user_id' => $userId, 
+                ]);
+        } else {
             $query
-            ->where([
-                'academic_period_id =' .$academicPeriodId,
-                'security_user_id =' .$studentUserId,
-            ]);
+                ->where([
+                    'academic_period_id' => $academicPeriodId,
+                    'security_user_id' => $userId,
+                ]);
         }
     }
+
 }

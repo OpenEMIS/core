@@ -5,9 +5,11 @@ namespace Directory\Model\Table;
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
+use Cake\Log\Log;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
@@ -29,1133 +31,1246 @@ class DirectoriesTable extends ControllerActionTable
     private $dashboardQuery;
 
     /**
-     * @param $requestDataParams
-     * @return array
+     * POCOR-8231
+     * Retrieves internal search results for users based on provided parameters.
+     *
+     * @param array $requestDataParams The parameters for the internal search.
+     * @return array The search results.
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public static function getUserInternalSearch($requestDataParams)
+    public static function getUserInternalSearch(array $requestDataParams): array
     {
+//        Log::debug(__FUNCTION__);
+//        Log::debug(print_r($requestDataParams, true));
+        $institutionId = $requestDataParams['institution_id'] ?? null;
+        $userTypeId = $requestDataParams['user_type_id'] ?? null;
+        $firstName = $requestDataParams['first_name'] ?? null;
+        $lastName = $requestDataParams['last_name'] ?? null;
+        $openemisNo = $requestDataParams['openemis_no'] ?? null;
+        $identityNumber = $requestDataParams['identity_number'] ?? null;
+        $dateOfBirth = $requestDataParams['date_of_birth'] ?? null;
+        $identityTypeId = $requestDataParams['identity_type_id'] ?? null;
+        $nationalityId = $requestDataParams['nationality_id'] ?? null;
+        $studentOpenemisNo = $requestDataParams['student_openemis_no'] ?? null; // POCOR-8063
+        $guardianTypeId = $requestDataParams['guardian_type_id'] ?? null; // POCOR-8063
+        $limit = $requestDataParams['limit'] ?? 10;
+        $page = $requestDataParams['page'] ?? 1;
+        $userId = $requestDataParams['id'] ?? null;
+        // POCOR-8231 unified getting table
+        $securityUsersTable = self::getDynamicTableInstance('User.Users');
+        $userIdentitiesTable = self::getDynamicTableInstance('User.Identities');
+        $userNationalitiesTable = self::getDynamicTableInstance('user_nationalities');
+        $gendersTable = self::getDynamicTableInstance('User.Genders');
+        // POCOR-8231 unified getting table
+        $identityTypesTable = self::getDynamicTableInstance('FieldOption.IdentityTypes');
+        $nationalitiesTable = self::getDynamicTableInstance('FieldOption.Nationalities');
+        $areaAdministrativesTable = self::getDynamicTableInstance('Area.AreaAdministratives');
+        $birthAreaAdministrativesTable = self::getDynamicTableInstance('Area.AreaAdministratives');
 
-        $institutionId = (array_key_exists('institution_id', $requestDataParams)) ? $requestDataParams['institution_id'] : null;
-        $userTypeId = (array_key_exists('user_type_id', $requestDataParams)) ? $requestDataParams['user_type_id'] : null;
-        $firstName = (array_key_exists('first_name', $requestDataParams)) ? $requestDataParams['first_name'] : null;
-        $lastName = (array_key_exists('last_name', $requestDataParams)) ? $requestDataParams['last_name'] : null;
-        $openemisNo = (array_key_exists('openemis_no', $requestDataParams)) ? $requestDataParams['openemis_no'] : null;
-        $identityNumber = (array_key_exists('identity_number', $requestDataParams)) ? $requestDataParams['identity_number'] : null;
-        $dateOfBirth = (array_key_exists('date_of_birth', $requestDataParams)) ? $requestDataParams['date_of_birth'] : null;
-        $identityTypeId = (array_key_exists('identity_type_id', $requestDataParams)) ? $requestDataParams['identity_type_id'] : null;
-        $nationalityId = (array_key_exists('nationality_id', $requestDataParams)) ? $requestDataParams['nationality_id'] : null;
-        $limit = (array_key_exists('limit', $requestDataParams)) ? $requestDataParams['limit'] : 10;
-        $page = (array_key_exists('page', $requestDataParams)) ? $requestDataParams['page'] : 1;
-        $get_user_id = (array_key_exists('id', $requestDataParams)) ? $requestDataParams['id'] : null;
+        if($userId){
+            $openemisNo = null;
+            $identityNumber = null;
+            $firstName = null;
+            $lastName = null;
+            $dateOfBirth = null;
+        }
+        if($openemisNo){
+            $identityNumber = null;
+            $firstName = null;
+            $lastName = null;
+            $dateOfBirth = null;
+        }
+        if($identityNumber){
+            $firstName = null;
+            $lastName = null;
+            $dateOfBirth = null;
+        }
+        // POCOR-8063: start
+        $base_conditions = [];
+        if ($studentOpenemisNo && $guardianTypeId) {
+            $base_conditions = [$securityUsersTable->aliasField('openemis_no !=') => $studentOpenemisNo];
+        }
+        if (!$identityNumber) {
+            $new_conditions = self::buildUserSearchConditions($securityUsersTable, $userId, $openemisNo, $firstName, $lastName, $dateOfBirth);
+            $conditions = array_merge($base_conditions, $new_conditions);
+//            Log::debug(print_r($conditions, true));
+        }
+        // POCOR-8063: end
+        $usersSearchResult = [];
 
+        if (!empty($conditions)) {
+            $usersSearchResult = self::getUsersSearchArr($securityUsersTable,
+                $gendersTable,
+                $identityTypesTable,
+                $nationalitiesTable,
+                $areaAdministrativesTable,
+                $userIdentitiesTable,
+                $userNationalitiesTable,
+                $birthAreaAdministrativesTable,
+                $conditions,
+                $limit,
+                $page);
+        }
+//        Log::debug(__FUNCTION__);
+//        Log::debug(print_r($identityTypeId, true));
+//        Log::debug(print_r($identityNumber, true));
+        $identityUsersResult = [];
+
+        if ($identityNumber) {
+            // POCOR-8063: start
+            $new_identityCondition = self::getUserSearchIdentityCondition($identityTypeId,
+                $identityNumber,
+                $nationalityId,
+                $userIdentitiesTable);
+            $identityCondition = array_merge($base_conditions, $new_identityCondition);
+//            Log::debug(print_r($conditions, true));
+            // POCOR-8063: end
+            $identityUsersResult = self::getUsersSearchWithIdentityArr($securityUsersTable,
+                $gendersTable,
+                $identityTypesTable,
+                $nationalitiesTable,
+                $areaAdministrativesTable,
+                $userIdentitiesTable,
+                $identityCondition,
+                $birthAreaAdministrativesTable,
+                $limit,
+                $page);
+        }
+
+        if (!empty($identityUsersResult)) {
+            $usersSearchResult = $identityUsersResult;
+        }
+
+        $institutionsTable = self::getDynamicTableInstance('Institution.Institutions');
+
+        $institutionStaffTable = self::getDynamicTableInstance('Institution.Staff');
+
+        $userInternalSearchResult = [];
+        foreach ($usersSearchResult as $securityUser) {
+            $userInternalSearchResult[] = self::buildUserInternalSearchResult(
+                $securityUser,
+                $institutionId,
+                $userTypeId,
+                $institutionsTable,
+                $institutionStaffTable);
+        }
+//        Log::debug(__FUNCTION__);
+//        Log::debug(print_r($userInternalSearchResult, true));
+
+        return ['data' => $userInternalSearchResult, 'total' => count($userInternalSearchResult)];
+    }
+
+    private static function buildUserSearchConditions($securityUsersTable, $userId, $openemisNo, $firstName, $lastName, $dateOfBirth): array
+    {
         $conditions = [];
-        $security_users = TableRegistry::get('security_users');
-        $userIdentities = TableRegistry::get('user_identities');
-        $genders = TableRegistry::get('genders');
-        $mainIdentityTypes = TableRegistry::get('identity_types');
-        $mainNationalities = TableRegistry::get('nationalities');
-        $areaAdministratives = TableRegistry::get('area_administratives');
-        $birthAreaAdministratives = TableRegistry::get('area_administratives');
 
-        if (!empty($firstName)) {
-            $conditions[$security_users->aliasField('first_name') . ' LIKE'] = $firstName . '%';
-        }
-        if (!empty($lastName)) {
-            $conditions[$security_users->aliasField('last_name') . ' LIKE'] = $lastName . '%';
-        }
-        if (!empty($openemisNo)) {
-            $conditions[$security_users->aliasField('openemis_no') . ' LIKE'] = $openemisNo . '%';
-        }
-        if (!empty($dateOfBirth)) {
-            $conditions[$security_users->aliasField('date_of_birth')] = date_create($dateOfBirth)->format('Y-m-d');
-        }
-
-        if (!empty($userTypeId)) {
-            //POCOR-7192 comment user_type condition starts
-            /*if($userTypeId ==1){
-                $conditions[$security_users->aliasField('is_student')] = 1;
-            }else if($userTypeId ==2){
-                $conditions[$security_users->aliasField('is_staff')] = 1;
-            }else if($userTypeId ==3){
-                $conditions[$security_users->aliasField('is_guardian')] = 1;
-            }*///POCOR-7192 Ends
-        }
-
-        //it is user for getting single user data
-        if (!empty($get_user_id)) {
-            $conditions[$security_users->aliasField('id')] = $get_user_id;
-        }
-        $totalCount = 0;
-        if ($identityNumber == '') {
-            $security_users_result = $security_users
-                ->find()
-                ->select([
-                    $security_users->aliasField('id'),
-                    $security_users->aliasField('username'),
-                    $security_users->aliasField('password'),
-                    $security_users->aliasField('openemis_no'),
-                    $security_users->aliasField('first_name'),
-                    $security_users->aliasField('middle_name'),
-                    $security_users->aliasField('third_name'),
-                    $security_users->aliasField('last_name'),
-                    $security_users->aliasField('preferred_name'),
-                    $security_users->aliasField('email'),
-                    $security_users->aliasField('address'),
-                    $security_users->aliasField('postal_code'),
-                    $security_users->aliasField('date_of_death'),
-                    $security_users->aliasField('external_reference'),
-                    $security_users->aliasField('last_login'),
-                    $security_users->aliasField('photo_name'),
-                    $security_users->aliasField('photo_content'),
-                    $security_users->aliasField('preferred_language'),
-                    $security_users->aliasField('address_area_id'),
-                    $security_users->aliasField('birthplace_area_id'),
-                    $security_users->aliasField('gender_id'),
-                    $security_users->aliasField('date_of_birth'),
-                    $security_users->aliasField('nationality_id'),
-                    $security_users->aliasField('identity_number'),
-                    $security_users->aliasField('super_admin'),
-                    $security_users->aliasField('status'),
-                    $security_users->aliasField('is_student'),
-                    $security_users->aliasField('is_staff'),
-                    $security_users->aliasField('is_guardian'),
-                    'Genders_id' => $genders->aliasField('id'),
-                    'Genders_name' => $genders->aliasField('name'),
-                    'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
-                    'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
-                    'MainNationalities_id' => $mainNationalities->aliasField('id'),
-                    'MainNationalities_name' => $mainNationalities->aliasField('name'),
-                    'area_name' => $areaAdministratives->aliasField('name'),
-                    'area_code' => $areaAdministratives->aliasField('code'),
-                    'birth_area_name' => 'birthAreaAdministratives.name',
-                    'birth_area_code' => 'birthAreaAdministratives.code',
-                    'MainIdentityTypes_number' => $userIdentities->aliasField('number'),
-                ])
-                ->LeftJoin([$userIdentities->alias() => $userIdentities->table()], [
-                    $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id')
-                ])
-                ->LeftJoin([$genders->alias() => $genders->table()], [
-                    $genders->aliasField('id =') . $security_users->aliasField('gender_id')
-                ])
-                ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
-                    $mainIdentityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')
-                ])
-                ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
-                    $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
-                ])
-                ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()], [
-                    $areaAdministratives->aliasField('id =') . $security_users->aliasField('address_area_id')
-                ])
-                ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->table()], [
-                    'birthAreaAdministratives.id =' . $security_users->aliasField('birthplace_area_id')
-                ])
-                ->where([$security_users->aliasField('super_admin') . ' <> ' => 1, $conditions])
-                ->group([$security_users->aliasField('id')])
-                ->limit($limit)
-                ->page($page)
-                ->toArray();
-
-            $totalCount = self::getCountInternalSearch($conditions, $identityNumber);
+        if (!empty($userId)) {
+            $conditions[$securityUsersTable->aliasField('id')] = $userId;
+        } elseif (!empty($openemisNo)) {
+            $conditions[$securityUsersTable->aliasField('openemis_no')] = $openemisNo;
         } else {
-            //POCOR-5672 start new changes searching users by identity number
-            $userTypeCondition = [];
-            if (!empty($userTypeId)) {
-                //POCOR-7192 comment user_type condition starts
-                /*if($userTypeId ==1){
-                    $userTypeCondition[$security_users->aliasField('is_student')] = 1;
-                }else if($userTypeId ==2){
-                    $userTypeCondition[$security_users->aliasField('is_staff')] = 1;
-                }else if($userTypeId ==3){
-                    $userTypeCondition[$security_users->aliasField('is_guardian')] = 1;
-                }*///POCOR-7192 ends
+            if (!empty($firstName)) {
+                $conditions[$securityUsersTable->aliasField('first_name') . ' LIKE'] = $firstName . '%';
             }
-            $identityCondition = [];
-            if (!empty($identityTypeId) && !empty($identityNumber) && !empty($nationalityId)) {
-                $identityCondition[$userIdentities->aliasField('identity_type_id')] = $identityTypeId;
-                $identityCondition[$userIdentities->aliasField('nationality_id')] = $nationalityId;
-                $identityCondition[$userIdentities->aliasField('number')] = $identityNumber;
-            } else if (!empty($identityTypeId) && !empty($identityNumber) && empty($nationalityId)) {
-                $identityCondition[$userIdentities->aliasField('identity_type_id')] = $identityTypeId;
-                $identityCondition[$userIdentities->aliasField('number')] = $identityNumber;
-            } else if (empty($identityTypeId) && !empty($identityNumber) && empty($nationalityId)) {
-                $identityCondition[$userIdentities->aliasField('number')] = $identityNumber;
+            if (!empty($lastName)) {
+                $conditions[$securityUsersTable->aliasField('last_name') . ' LIKE'] = $lastName . '%';
             }
-
-            $get_result_by_identity_users_result = $security_users
-                ->find()
-                ->select([
-                    $security_users->aliasField('id'),
-                    $security_users->aliasField('username'),
-                    $security_users->aliasField('password'),
-                    $security_users->aliasField('openemis_no'),
-                    $security_users->aliasField('first_name'),
-                    $security_users->aliasField('middle_name'),
-                    $security_users->aliasField('third_name'),
-                    $security_users->aliasField('last_name'),
-                    $security_users->aliasField('preferred_name'),
-                    $security_users->aliasField('email'),
-                    $security_users->aliasField('address'),
-                    $security_users->aliasField('postal_code'),
-                    $security_users->aliasField('date_of_death'),
-                    $security_users->aliasField('external_reference'),
-                    $security_users->aliasField('last_login'),
-                    $security_users->aliasField('photo_name'),
-                    $security_users->aliasField('photo_content'),
-                    $security_users->aliasField('preferred_language'),
-                    $security_users->aliasField('address_area_id'),
-                    $security_users->aliasField('birthplace_area_id'),
-                    $security_users->aliasField('gender_id'),
-                    $security_users->aliasField('date_of_birth'),
-                    $security_users->aliasField('nationality_id'),
-                    $security_users->aliasField('identity_number'),
-                    $security_users->aliasField('super_admin'),
-                    $security_users->aliasField('status'),
-                    $security_users->aliasField('is_student'),
-                    $security_users->aliasField('is_staff'),
-                    $security_users->aliasField('is_guardian'),
-                    'Genders_id' => $genders->aliasField('id'),
-                    'Genders_name' => $genders->aliasField('name'),
-                    'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
-                    'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
-                    'MainNationalities_id' => $mainNationalities->aliasField('id'),
-                    'MainNationalities_name' => $mainNationalities->aliasField('name'),
-                    'area_name' => $areaAdministratives->aliasField('name'),
-                    'area_code' => $areaAdministratives->aliasField('code'),
-                    'birth_area_name' => 'birthAreaAdministratives.name',
-                    'birth_area_code' => 'birthAreaAdministratives.code',
-                    'MainIdentityTypes_number' => $userIdentities->aliasField('number'),
-                ])
-                ->InnerJoin([$userIdentities->alias() => $userIdentities->table()], [
-                    $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
-                    $identityCondition
-                    //$userIdentities->aliasField('number') ." LIKE '" . $identityNumber . "%'"
-                ])
-                ->LeftJoin([$genders->alias() => $genders->table()], [
-                    $genders->aliasField('id =') . $security_users->aliasField('gender_id')
-                ])
-                ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
-                    $mainIdentityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')
-                ])
-                ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
-                    $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
-                ])
-                ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()], [
-                    $areaAdministratives->aliasField('id =') . $security_users->aliasField('address_area_id')
-                ])
-                ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->table()], [
-                    'birthAreaAdministratives.id =' . $security_users->aliasField('birthplace_area_id')
-                ])
-                ->where([$security_users->aliasField('super_admin') . ' <> ' => 1, $userTypeCondition])
-                ->group([$security_users->aliasField('id')])
-                ->limit($limit)
-                ->page($page)
-                ->toArray();
-            if (empty($get_result_by_identity_users_result)) {
-                $security_users_result = $security_users
-                    ->find()
-                    ->select([
-                        $security_users->aliasField('id'),
-                        $security_users->aliasField('username'),
-                        $security_users->aliasField('password'),
-                        $security_users->aliasField('openemis_no'),
-                        $security_users->aliasField('first_name'),
-                        $security_users->aliasField('middle_name'),
-                        $security_users->aliasField('third_name'),
-                        $security_users->aliasField('last_name'),
-                        $security_users->aliasField('preferred_name'),
-                        $security_users->aliasField('email'),
-                        $security_users->aliasField('address'),
-                        $security_users->aliasField('postal_code'),
-                        $security_users->aliasField('date_of_death'),
-                        $security_users->aliasField('external_reference'),
-                        $security_users->aliasField('last_login'),
-                        $security_users->aliasField('photo_name'),
-                        $security_users->aliasField('photo_content'),
-                        $security_users->aliasField('preferred_language'),
-                        $security_users->aliasField('address_area_id'),
-                        $security_users->aliasField('birthplace_area_id'),
-                        $security_users->aliasField('gender_id'),
-                        $security_users->aliasField('date_of_birth'),
-                        $security_users->aliasField('nationality_id'),
-                        $security_users->aliasField('identity_number'),
-                        $security_users->aliasField('super_admin'),
-                        $security_users->aliasField('status'),
-                        $security_users->aliasField('is_student'),
-                        $security_users->aliasField('is_staff'),
-                        $security_users->aliasField('is_guardian'),
-                        'Genders_id' => $genders->aliasField('id'),
-                        'Genders_name' => $genders->aliasField('name'),
-                        'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
-                        'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
-                        'MainNationalities_id' => $mainNationalities->aliasField('id'),
-                        'MainNationalities_name' => $mainNationalities->aliasField('name'),
-                        'area_name' => $areaAdministratives->aliasField('name'),
-                        'area_code' => $areaAdministratives->aliasField('code'),
-                        'birth_area_name' => 'birthAreaAdministratives.name',
-                        'birth_area_code' => 'birthAreaAdministratives.code',
-                        'MainIdentityTypes_number' => $userIdentities->aliasField('number'),
-                    ])
-                    ->InnerJoin([$userIdentities->alias() => $userIdentities->table()], [
-                        $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
-                        $identityCondition
-                    ])
-                    ->LeftJoin([$genders->alias() => $genders->table()], [
-                        $genders->aliasField('id =') . $security_users->aliasField('gender_id')
-                    ])
-                    ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
-                        $mainIdentityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')
-                    ])
-                    ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
-                        $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
-                    ])
-                    ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()], [
-                        $areaAdministratives->aliasField('id =') . $security_users->aliasField('address_area_id')
-                    ])
-                    ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->table()], [
-                        'birthAreaAdministratives.id =' . $security_users->aliasField('birthplace_area_id')
-                    ])
-                    ->where([$security_users->aliasField('super_admin') . ' <> ' => 1, $conditions])
-                    ->group([$security_users->aliasField('id')])
-                    ->limit($limit)
-                    ->page($page)
-                    ->toArray();
-            } else {
-                $security_users_result = $get_result_by_identity_users_result;
-            }
-
-            $totalCount = self::getCountInternalSearch($conditions, $identityNumber, $identityCondition, $userTypeCondition);//POCOR-5672 ends
-        }
-        $institutions = TableRegistry::get('institutions');
-        $institutionsTbl = $institutions
-            ->find()
-            ->select([
-                'institution_name' => $institutions->aliasField('name'),
-                'institution_code' => $institutions->aliasField('code')
-            ])->where([
-                $institutions->aliasField('id') => $institutionId
-            ])->first();
-
-        $institutionStudents = TableRegistry::get('institution_students');
-        $institutionStaff = TableRegistry::get('institution_staff');
-
-        $user_internal_search_result = [];
-        foreach ($security_users_result as $security_user) {
-            $MainNationalities_id = !empty($security_user['MainNationalities_id']) ? $security_user['MainNationalities_id'] : '';
-            $MainNationalities_name = !empty($security_user['MainNationalities_name']) ? $security_user['MainNationalities_name'] : '';
-            $MainIdentityTypes_id = !empty($security_user['MainIdentityTypes_id']) ? $security_user['MainIdentityTypes_id'] : '';
-            $MainIdentityTypes_name = !empty($security_user['MainIdentityTypes_name']) ? $security_user['MainIdentityTypes_name'] : '';
-            $identity_number = !empty($security_user['MainIdentityTypes_number']) ? $security_user['MainIdentityTypes_number'] : '';
-            $security_user_id = $security_user['id'];
-
-            $UserNeeds = TableRegistry::get('user_special_needs_assessments');
-            $SpecialNeeds = $UserNeeds->find()
-                ->where([$UserNeeds->aliasField('security_user_id') => $security_user_id])
-                ->count();
-            $has_special_needs = ($SpecialNeeds == 1) ? true : false;
-
-            $is_same_school = $is_diff_school = $academic_period_id = $academic_period_year = 0;
-            $is_pending_transfer = $is_pending_withdraw = $education_grade_id = $institution_id = 0;
-            $institution_code = $institution_name =
-            $pending_transfer_institution_name = $pending_transfer_institution_code =
-            $pending_transfer_prev_institution_code = $pending_transfer_prev_institution_name =
-            $pending_withdraw_institution_name = $pending_withdraw_institution_code = '';
-            $CustomDataArray = [];
-//            Log::write('debug', 'getUserInternalSearch');
-//            Log::write('debug', '$userTypeId');
-//            Log::write('debug', $userTypeId);
-            if (!empty($userTypeId)) {
-                if ($security_user['is_student'] == 1) {
-                    $account_type = 'Student';
-                } else if ($security_user['is_staff'] == 1) {
-                    $account_type = 'Staff';
-                } else if ($security_user['is_guardian'] == 1) {
-                    $account_type = 'Guardian';
-                } else {
-                    $account_type = 'Others';
-                }
-                if ($userTypeId == self::STUDENT) {
-//                    Log::write('debug', '$userTypeId == self::STUDENT');
-                    //POCOR-7224-HINDOL
-                    //$account_type = 'Student';
-                    $student = self::getStudent($security_user_id);
-                    if (!empty($student)) {
-                        $institution_id = $student->institution_id;
-                        $institution_name = $student->institution_name;
-                        $institution_code = $student->institution_code;
-                        $academic_period_id = $student->academic_period_id;
-                        $academic_period_year = $student->academic_period_year;
-                        $education_grade_id = $student->education_grade_id;
-                        if ($student->institution_id == $institutionId) {
-                            $is_same_school = 1;
-                        } else {
-                            $is_diff_school = 1;
-                        }
-                    }
-
-                    $pendingTransfer = self::getPendingTransfer($security_user_id);
-//                    Log::write('debug', '$pendingTransfer');
-//                    Log::write('debug', $pendingTransfer);
-                    $pendingWithdraw = self::getPendingWithdraw($security_user_id);
-//                    Log::write('debug', '$pendingWithdraw');
-//                    Log::write('debug', $pendingWithdraw);
-
-                    if ($pendingTransfer) {
-                        $is_pending_transfer = 1;
-                        $pending_transfer_institution_name = $pendingTransfer->institution_name;
-                        $pending_transfer_institution_code = $pendingTransfer->institution_code;
-                        $pending_transfer_prev_institution_code = $pendingTransfer->previous_institution_code;
-                        $pending_transfer_prev_institution_name = $pendingTransfer->previous_institution_name;
-                    }
-                    if ($pendingWithdraw) {
-                        $is_pending_withdraw = 1;
-                        $pending_withdraw_institution_name = $pendingWithdraw->institution_name;
-                        $pending_withdraw_institution_code = $pendingWithdraw->institution_code;
-                    }
-//
-                    //get student custom data
-                    $CustomDataArray = self::getStudentCustomData($security_user_id);
-                }
-                if ($userTypeId == self::STAFF) {
-                    //$account_type = 'Staff';
-                    $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-                    $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
-
-                    $institutionStaffTbl = $institutionStaff
-                        ->find()
-                        ->select([
-                            'institution_id' => $institutionStaff->aliasField('institution_id'),
-                            'staff_id' => $institutionStaff->aliasField('staff_id'),
-                            'institution_position_id' => $institutionStaff->aliasField('institution_position_id'),
-                            'staff_status_id' => $institutionStaff->aliasField('staff_status_id'),
-                            'institution_name' => $institutions->aliasField('name'),
-                            'institution_code' => $institutions->aliasField('code')
-                        ])
-                        ->InnerJoin([$institutions->alias() => $institutions->table()], [
-                            $institutions->aliasField('id =') . $institutionStaff->aliasField('institution_id')
-                        ])
-                        ->where([
-                            $institutionStaff->aliasField('staff_id') => $security_user_id,
-                            $institutionStaff->aliasField('staff_status_id') => $assignedStatus,
-                            $institutionStaff->aliasField('institution_id') => $institutionId
-                        ])->toArray();
-
-                    if (!empty($institutionStaffTbl)) {
-                        $positionArray = [];
-                        $is_same_school = 1;
-                        foreach ($institutionStaffTbl as $skey => $sval) {
-                            $institution_id = $sval->institution_id;
-                            $institution_name = $sval->institution_name;
-                            $institution_code = $sval->institution_code;
-                            $positionArray[$skey] = $sval->institution_position_id;
-                        }
-                    } else {
-                        $institutionStaffTbl = $institutionStaff
-                            ->find()
-                            ->select([
-                                'institution_id' => $institutionStaff->aliasField('institution_id'),
-                                'staff_id' => $institutionStaff->aliasField('staff_id'),
-                                'institution_position_id' => $institutionStaff->aliasField('institution_position_id'),
-                                'staff_status_id' => $institutionStaff->aliasField('staff_status_id'),
-                                'institution_name' => $institutions->aliasField('name'),
-                                'institution_code' => $institutions->aliasField('code')
-                            ])
-                            ->InnerJoin([$institutions->alias() => $institutions->table()], [
-                                $institutions->aliasField('id =') . $institutionStaff->aliasField('institution_id')
-                            ])
-                            ->where([
-                                $institutionStaff->aliasField('staff_id') => $security_user_id,
-                                $institutionStaff->aliasField('staff_status_id') => $assignedStatus
-                            ])->toArray();
-                        if (empty($institutionStaffTbl)) {
-                            $is_diff_school = 0;
-                        } else {
-                            $is_diff_school = 1;
-                        }
-                        $positionArray = [];
-                        foreach ($institutionStaffTbl as $skey => $sval) {
-                            $institution_id = $sval->institution_id;
-                            $institution_name = $sval->institution_name;
-                            $institution_code = $sval->institution_code;
-                            $positionArray[$skey] = $sval->institution_position_id;
-                        }
-                    }
-                    //get staff custom data
-                    $CustomDataArray = self::getStaffCustomData($security_user_id);
-                }
-                if ($userTypeId == self::GUARDIAN) {
-                    //$account_type = 'Guardian';
-                }
-                if ($userTypeId == self::OTHER) {
-                    //$account_type = 'Others';
-                }
-            }
-            $contactData = self::getContactData($security_user_id);
-
-            $user_internal_search_result[] = [
-                'id' => $security_user_id,
-                'username' => $security_user['username'],
-                'password' => $security_user['password'],
-                'openemis_no' => $security_user['openemis_no'],
-                'first_name' => $security_user['first_name'],
-                'middle_name' => $security_user['middle_name'],
-                'third_name' => $security_user['third_name'],
-                'last_name' => $security_user['last_name'],
-                'preferred_name' => $security_user['preferred_name'],
-                'email' => $security_user['email'],
-                'address' => $security_user['address'],
-                'postal_code' => $security_user['postal_code'],
-                'gender_id' => $security_user['gender_id'],
-                'external_reference' => $security_user['external_reference'],
-                'last_login' => $security_user['last_login'],
-                'photo_name' => $security_user['photo_name'],
-                'photo_content' => $security_user['photo_content'],
-                'preferred_language' => $security_user['preferred_language'],
-                'address_area_id' => $security_user['address_area_id'],
-                'birthplace_area_id' => $security_user['birthplace_area_id'],
-                'super_admin' => $security_user['super_admin'],
-                'status' => $security_user['status'],
-                'is_student' => $security_user['is_student'],
-                'is_staff' => $security_user['is_staff'],
-                'is_guardian' => $security_user['is_guardian'],
-                'name' => $security_user['first_name'] . " " . $security_user['last_name'],
-                'date_of_birth' => $security_user['date_of_birth']->format('Y-m-d'),
-                'gender' => $security_user['Genders_name'],
-                'nationality_id' => $MainNationalities_id,
-                'nationality' => $MainNationalities_name,
-                'identity_type_id' => $MainIdentityTypes_id,
-                'identity_type' => $MainIdentityTypes_name,
-                'identity_number' => $identity_number,
-                'has_special_needs' => $has_special_needs,
-                'area_name' => $security_user['area_name'],
-                'area_code' => $security_user['area_code'],
-                'birth_area_name' => $security_user['birth_area_name'],
-                'birth_area_code' => $security_user['birth_area_code'],
-                'is_same_school' => $is_same_school,
-                'is_diff_school' => $is_diff_school,
-                'is_pending_withdraw' => $is_pending_withdraw,
-                'is_pending_transfer' => $is_pending_transfer,
-                'current_enrol_institution_id' => $institution_id,
-                'current_enrol_institution_name' => $institution_name,
-                'current_enrol_institution_code' => $institution_code,
-                'pending_withdraw_institution_code' => $pending_withdraw_institution_code,
-                'pending_withdraw_institution_name' => $pending_withdraw_institution_name,
-                'pending_transfer_prev_institution_code' => $pending_transfer_prev_institution_code,
-                'pending_transfer_prev_institution_name' => $pending_transfer_prev_institution_name,
-                'pending_transfer_institution_code' => $pending_transfer_institution_code,
-                'pending_transfer_institution_name' => $pending_transfer_institution_name,
-                'current_enrol_academic_period_id' => $academic_period_id,
-                'current_enrol_academic_period_year' => $academic_period_year,
-                'current_enrol_education_grade_id' => $education_grade_id,
-                'institution_name' => $institutionsTbl->institution_name,
-                'institution_code' => $institutionsTbl->institution_code,
-                'positions' => $positionArray,
-                'account_type' => $account_type,
-                'custom_data' => $CustomDataArray,
-                'contact_type_id' => $contactData['contact_type_id'], //POCOR-8012-n
-                'contact_type' => $contactData['contact_type'], //POCOR-8012-n
-                'contact_value' => $contactData['contact_value'], //POCOR-8012-n
-            ];
-        }
-        $userInternalSearch = ['data' => $user_internal_search_result, 'total' => $totalCount];
-        return $userInternalSearch;
-    }
-
-    private static function getCountInternalSearch($conditions = [], $identityNumber, $identityCondition = [], $userTypeCondition = [])
-    {
-        $security_users = TableRegistry::get('security_users');
-        $userIdentities = TableRegistry::get('user_identities');
-        $genders = TableRegistry::get('genders');
-        $mainIdentityTypes = TableRegistry::get('identity_types');
-        $mainNationalities = TableRegistry::get('nationalities');
-        if ($identityNumber == '') {
-            $security_users_result = $security_users
-                ->find()
-                ->select([
-                    $security_users->aliasField('id'),
-                    $security_users->aliasField('openemis_no'),
-                    $security_users->aliasField('first_name'),
-                    $security_users->aliasField('middle_name'),
-                    $security_users->aliasField('third_name'),
-                    $security_users->aliasField('last_name'),
-                    $security_users->aliasField('address_area_id'),
-                    $security_users->aliasField('birthplace_area_id'),
-                    $security_users->aliasField('gender_id'),
-                    $security_users->aliasField('date_of_birth'),
-                    $security_users->aliasField('nationality_id'),
-                    $security_users->aliasField('identity_number'),
-                    $security_users->aliasField('super_admin'),
-                    $security_users->aliasField('status'),
-                    $security_users->aliasField('is_student'),
-                    $security_users->aliasField('is_staff'),
-                    $security_users->aliasField('is_guardian'),
-                    'Genders_id' => $genders->aliasField('id'),
-                    'Genders_name' => $genders->aliasField('name'),
-                    'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
-                    'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
-                    'MainNationalities_id' => $mainNationalities->aliasField('id'),
-                    'MainNationalities_name' => $mainNationalities->aliasField('name'),
-                ])
-                ->LeftJoin(['Identities' => 'user_identities'], [
-                    'Identities.security_user_id' => $security_users->aliasField('id'),
-                ])
-                ->LeftJoin([$genders->alias() => $genders->table()], [
-                    $genders->aliasField('id =') . $security_users->aliasField('gender_id')
-                ])
-                ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
-                    $mainIdentityTypes->aliasField('id =') . $security_users->aliasField('identity_type_id')
-                ])
-                ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
-                    $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
-                ])
-                ->where([$security_users->aliasField('super_admin') . ' <> ' => 1, $conditions])
-                ->group([$security_users->aliasField('id')])
-                ->count();
-        } else {
-            //POCOR-5672 start new changes searching users by identity number
-            $get_result_by_identity_users_result = $security_users
-                ->find()
-                ->select([
-                    $security_users->aliasField('id'),
-                    $security_users->aliasField('openemis_no'),
-                    $security_users->aliasField('first_name'),
-                    $security_users->aliasField('middle_name'),
-                    $security_users->aliasField('third_name'),
-                    $security_users->aliasField('last_name'),
-                    $security_users->aliasField('address_area_id'),
-                    $security_users->aliasField('birthplace_area_id'),
-                    $security_users->aliasField('gender_id'),
-                    $security_users->aliasField('date_of_birth'),
-                    $security_users->aliasField('nationality_id'),
-                    $security_users->aliasField('identity_number'),
-                    $security_users->aliasField('super_admin'),
-                    $security_users->aliasField('status'),
-                    $security_users->aliasField('is_student'),
-                    $security_users->aliasField('is_staff'),
-                    $security_users->aliasField('is_guardian'),
-                    'Genders_id' => $genders->aliasField('id'),
-                    'Genders_name' => $genders->aliasField('name'),
-                    'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
-                    'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
-                    'MainNationalities_id' => $mainNationalities->aliasField('id'),
-                    'MainNationalities_name' => $mainNationalities->aliasField('name'),
-                ])
-                ->InnerJoin([$userIdentities->alias() => $userIdentities->table()], [
-                    $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
-                    $identityCondition
-                ])
-                ->LeftJoin([$genders->alias() => $genders->table()], [
-                    $genders->aliasField('id =') . $security_users->aliasField('gender_id')
-                ])
-                ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
-                    $mainIdentityTypes->aliasField('id =') . $security_users->aliasField('identity_type_id')
-                ])
-                ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
-                    $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
-                ])
-                ->where([$security_users->aliasField('super_admin') . ' <> ' => 1, $userTypeCondition])
-                ->group([$security_users->aliasField('id')])
-                ->count();
-            if ($get_result_by_identity_users_result == 0) {
-                $security_users_result = $security_users
-                    ->find()
-                    ->select([
-                        $security_users->aliasField('id'),
-                        $security_users->aliasField('openemis_no'),
-                        $security_users->aliasField('first_name'),
-                        $security_users->aliasField('middle_name'),
-                        $security_users->aliasField('third_name'),
-                        $security_users->aliasField('last_name'),
-                        $security_users->aliasField('address_area_id'),
-                        $security_users->aliasField('birthplace_area_id'),
-                        $security_users->aliasField('gender_id'),
-                        $security_users->aliasField('date_of_birth'),
-                        $security_users->aliasField('nationality_id'),
-                        $security_users->aliasField('identity_number'),
-                        $security_users->aliasField('super_admin'),
-                        $security_users->aliasField('status'),
-                        $security_users->aliasField('is_student'),
-                        $security_users->aliasField('is_staff'),
-                        $security_users->aliasField('is_guardian'),
-                        'Genders_id' => $genders->aliasField('id'),
-                        'Genders_name' => $genders->aliasField('name'),
-                        'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
-                        'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
-                        'MainNationalities_id' => $mainNationalities->aliasField('id'),
-                        'MainNationalities_name' => $mainNationalities->aliasField('name'),
-                    ])
-                    ->InnerJoin([$userIdentities->alias() => $userIdentities->table()], [
-                        $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
-                        $identityCondition
-                    ])
-                    ->LeftJoin([$genders->alias() => $genders->table()], [
-                        $genders->aliasField('id =') . $security_users->aliasField('gender_id')
-                    ])
-                    ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
-                        $mainIdentityTypes->aliasField('id =') . $security_users->aliasField('identity_type_id')
-                    ])
-                    ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
-                        $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
-                    ])
-                    ->where([$security_users->aliasField('super_admin') . ' <> ' => 1, $conditions])
-                    ->group([$security_users->aliasField('id')])
-                    ->count();
-            } else {
-                $security_users_result = $get_result_by_identity_users_result;
+            if (!empty($dateOfBirth)) {
+                $conditions[$securityUsersTable->aliasField('date_of_birth')] = date_create($dateOfBirth)->format('Y-m-d');
             }
         }
-        //POCOR-5672 ends
-        return $security_users_result;
+
+        return $conditions;
     }
 
     /**
-     * @param $security_user_id
-     * @return mixed
-     * @author Dr Khindol Madraimov khindol.madraimov@gmail.com
+     * POCOR-8231
+     * Gets the search results for users based on provided conditions.
+     *
+     * @param \Cake\ORM\Table $securityUsers The security users table instance.
+     * @param \Cake\ORM\Table $genders The genders table instance.
+     * @param \Cake\ORM\Table $mainIdentityTypes The main identity types table instance.
+     * @param \Cake\ORM\Table $mainNationalities The main nationalities table instance.
+     * @param \Cake\ORM\Table $areaAdministratives The area administratives table instance.
+     * @param \Cake\ORM\Table $userIdentities The user identities table instance.
+     * @param \Cake\ORM\Table $userNationalities The user identities table instance.
+     * @param \Cake\ORM\Table $birthAreaAdministratives The birth area administratives table instance.
+     * @param array $conditions The search conditions.
+     * @param int $limit The limit for the search results.
+     * @param int $page The page number for the search results.
+     * @return array The search results.
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private static function getStudent($security_user_id)
+    public static function getUsersSearchArr(Table $securityUsers,
+                                             Table $genders,
+                                             Table $mainIdentityTypes,
+                                             Table $mainNationalities,
+                                             Table $areaAdministratives,
+                                             Table $userIdentities,
+                                             Table $userNationalities,
+                                             Table $birthAreaAdministratives,
+                                             array $conditions, int $limit, int $page): array
     {
-        $institutionStudents = TableRegistry::get('institution_students');
-        $studentStatuses = TableRegistry::get('Student.StudentStatuses');
-        $institutions = TableRegistry::get('institutions');
-        $statuses = $studentStatuses->findCodeList();
-        $studentStatusCurrent = $statuses['CURRENT'];
-
-        $student = $institutionStudents
+        $securityUsersResult = $securityUsers
             ->find()
             ->select([
-                'institution_id' => $institutionStudents->aliasField('institution_id'),
-                'student_id' => $institutionStudents->aliasField('student_id'),
-                'student_status_id' => $institutionStudents->aliasField('student_status_id'),
-                'institution_name' => $institutions->aliasField('name'),
-                'institution_code' => $institutions->aliasField('code'),
-                'academic_period_id' => $institutionStudents->aliasField('academic_period_id'),
-                'academic_period_year' => $institutionStudents->aliasField('start_year'),
-                'education_grade_id' => $institutionStudents->aliasField('education_grade_id')
+                'id' => $securityUsers->aliasField('id'),
+                'username' => $securityUsers->aliasField('username'),
+                'password' => $securityUsers->aliasField('password'),
+                'openemis_no' => $securityUsers->aliasField('openemis_no'),
+                'first_name' => $securityUsers->aliasField('first_name'),
+                'middle_name' => $securityUsers->aliasField('middle_name'),
+                'third_name' => $securityUsers->aliasField('third_name'),
+                'last_name' => $securityUsers->aliasField('last_name'),
+                'preferred_name' => $securityUsers->aliasField('preferred_name'),
+                'email' => $securityUsers->aliasField('email'),
+                'mobile_number' => $securityUsers->aliasField('mobile_number'), // POCOR-9011
+                'address' => $securityUsers->aliasField('address'),
+                'postal_code' => $securityUsers->aliasField('postal_code'),
+                'date_of_death' => $securityUsers->aliasField('date_of_death'),
+                'external_reference' => $securityUsers->aliasField('external_reference'),
+                'last_login' => $securityUsers->aliasField('last_login'),
+                'photo_name' => $securityUsers->aliasField('photo_name'),
+                'photo_content' => $securityUsers->aliasField('photo_content'),
+                'preferred_language' => $securityUsers->aliasField('preferred_language'),
+                'address_area_id' => $securityUsers->aliasField('address_area_id'),
+                'birthplace_area_id' => $securityUsers->aliasField('birthplace_area_id'),
+                'gender_id' => $securityUsers->aliasField('gender_id'),
+                'date_of_birth' => $securityUsers->aliasField('date_of_birth'),
+                'nationality_id' => $securityUsers->aliasField('nationality_id'),
+                'identity_number' => $securityUsers->aliasField('identity_number'),
+                'super_admin' => $securityUsers->aliasField('super_admin'),
+                'status' => $securityUsers->aliasField('status'),
+                'is_student' => $securityUsers->aliasField('is_student'),
+                'is_staff' => $securityUsers->aliasField('is_staff'),
+                'is_guardian' => $securityUsers->aliasField('is_guardian'),
+                'Genders_id' => $genders->aliasField('id'),
+                'Genders_name' => $genders->aliasField('name'),
+                'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
+                'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
+                'MainNationalities_id' => $mainNationalities->aliasField('id'),
+                'MainNationalities_name' => $mainNationalities->aliasField('name'),
+                'area_name' => $areaAdministratives->aliasField('name'),
+                'area_code' => $areaAdministratives->aliasField('code'),
+                'birth_area_name' => 'birthAreaAdministratives.name',
+                'birth_area_code' => 'birthAreaAdministratives.code',
+                'MainIdentityTypes_number' => $userIdentities->aliasField('number'),
             ])
-            ->InnerJoin([$institutions->alias() => $institutions->table()], [
-                $institutions->aliasField('id =') . $institutionStudents->aliasField('institution_id')
+            ->leftJoin([$userIdentities->getAlias() => $userIdentities->getTable()], [
+                $userIdentities->aliasField('security_user_id') . ' = ' . $securityUsers->aliasField('id')
             ])
-            ->where([
-                $institutionStudents->aliasField('student_id') => $security_user_id,
-                $institutionStudents->aliasField('student_status_id') => $studentStatusCurrent
-            ])->first();
-        return $student;
+            ->leftJoin([$userNationalities->getAlias() => $userNationalities->getTable()], [
+                $userNationalities->aliasField('security_user_id') . ' = ' . $securityUsers->aliasField('id')
+            ])
+            ->leftJoin([$genders->getAlias() => $genders->getTable()], [
+                $genders->aliasField('id') . ' = ' . $securityUsers->aliasField('gender_id')
+            ])
+            ->leftJoin([$mainIdentityTypes->getAlias() => $mainIdentityTypes->getTable()], [
+                $mainIdentityTypes->aliasField('id') . ' = ' . $userIdentities->aliasField('identity_type_id')
+            ])
+            ->leftJoin([$mainNationalities->getAlias() => $mainNationalities->getTable()], [
+                $mainNationalities->aliasField('id') . ' = ' . $userNationalities->aliasField('nationality_id'),
+                $userNationalities->aliasField('preferred = 1')
+            ])
+            ->leftJoin([$areaAdministratives->getAlias() => $areaAdministratives->getTable()], [
+                $areaAdministratives->aliasField('id') . ' = ' . $securityUsers->aliasField('address_area_id')
+            ])
+            ->leftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->getTable()], [
+                'birthAreaAdministratives.id = ' . $securityUsers->aliasField('birthplace_area_id')
+            ])
+            ->where([$securityUsers->aliasField('super_admin') . ' <> ' => 1, $conditions])
+            ->group([$securityUsers->aliasField('id')])
+            ->disableHydration()
+            ->limit($limit)
+            ->page($page);
+        // POCOR-8231 removed redundant debug
+        // Log::debug($securityUsersResult->sql());
+        $securityUsersResult = $securityUsersResult ? (is_array($securityUsersResult) ? $securityUsersResult : $securityUsersResult->toArray()) : [];
+        return $securityUsersResult;
+
     }
 
     /**
-     * @param $security_user_id
-     * @return mixed
-     * @author Dr Khindol Madraimov khindol.madraimov@gmail.com
+     * POCOR-8231
+     * Gets the identity search conditions for users based on provided parameters.
+     *
+     * @param int|null $identityTypeId The identity type ID.
+     * @param string|null $identityNumber The identity number.
+     * @param int|null $nationalityId The nationality ID.
+     * @param \Cake\ORM\Table $userIdentities The user identities table instance.
+     * @return array The identity search conditions.
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private static function getPendingTransfer($security_user_id)
+    public static function getUserSearchIdentityCondition(?int $identityTypeId, ?string $identityNumber, ?int $nationalityId, Table $userIdentities): array
     {
-        $institutions = TableRegistry::get('institutions');
-        $prev_institutions = TableRegistry::get('Institution.Institutions');
-        $transfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
-        $doneStatus = $transfers::DONE;
-        $pendingTransfer = $transfers->find()
-            ->select([
-                'id' => $transfers->aliasField('id'),
-                'institution_id' => $transfers->aliasField('institution_id'),
-                'previous_institution_id' => $transfers->aliasField('previous_institution_id'),
-                'student_id' => $transfers->aliasField('student_id'),
-                'institution_name' => $institutions->aliasField('name'),
-                'institution_code' => $institutions->aliasField('code'),
-                'previous_institution_name' => $prev_institutions->aliasField('name'),
-                'previous_institution_code' => $prev_institutions->aliasField('code'),
-                'academic_period_id' => $transfers->aliasField('academic_period_id'),
-            ])
-            ->InnerJoin([$institutions->alias() => $institutions->table()], [
-                $institutions->aliasField('id =') . $transfers->aliasField('institution_id')])
-            ->InnerJoin([$prev_institutions->alias() => $prev_institutions->table()], [
-                $prev_institutions->aliasField('id =') . $transfers->aliasField('previous_institution_id')
-            ])
-            ->matching('Statuses', function ($q) use ($doneStatus) {
-                return $q->where([
-                    'Statuses.category <> ' => $doneStatus,
-                ]);
-            })
-            ->where([
-                $transfers->aliasField('student_id') => $security_user_id,
-            ])
-            ->first();
-        return $pendingTransfer;
+
+        $identityCondition = [];
+        if ($identityTypeId && $identityNumber && $nationalityId) {
+            $identityCondition[$userIdentities->aliasField('identity_type_id')] = $identityTypeId;
+            $identityCondition[$userIdentities->aliasField('nationality_id')] = $nationalityId;
+            $identityCondition[$userIdentities->aliasField('number')] = $identityNumber;
+        } elseif ($identityTypeId && $identityNumber) {
+            $identityCondition[$userIdentities->aliasField('identity_type_id')] = $identityTypeId;
+            $identityCondition[$userIdentities->aliasField('number')] = $identityNumber;
+        } elseif ($identityNumber) {
+            $identityCondition[$userIdentities->aliasField('number')] = $identityNumber;
+        }
+        return $identityCondition;
     }
 
     /**
-     * @param Table $institutions
-     * @param $security_user_id
-     * @return mixed
+     * POCOR-8231
+     * Gets the search results for users with identity based on provided conditions.
+     *
+     * @param \Cake\ORM\Table $securityUsers The security users table instance.
+     * @param \Cake\ORM\Table $genders The genders table instance.
+     * @param \Cake\ORM\Table $mainIdentityTypes The main identity types table instance.
+     * @param \Cake\ORM\Table $mainNationalities The main nationalities table instance.
+     * @param \Cake\ORM\Table $areaAdministratives The area administratives table instance.
+     * @param \Cake\ORM\Table $userIdentities The user identities table instance.
+     * @param array $identityCondition The identity search conditions.
+     * @param \Cake\ORM\Table $birthAreaAdministratives The birth area administratives table instance.
+     * @param int $limit The limit for the search results.
+     * @param int $page The page number for the search results.
+     * @return array The search results.
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private static function getPendingWithdraw($security_user_id)
+    public static function getUsersSearchWithIdentityArr(Table $securityUsers, Table $genders, Table $mainIdentityTypes, Table $mainNationalities, Table $areaAdministratives, Table $userIdentities, array $identityCondition, Table $birthAreaAdministratives, int $limit, int $page): array
     {
-        $institutions = TableRegistry::get('institutions');
-        $withdraws = TableRegistry::get('Institution.StudentWithdraw');
-        $doneStatus = $withdraws::DONE;
-        $pendingWithdraw = $withdraws->find()
-            ->select([
-                'institution_id' => $withdraws->aliasField('institution_id'),
-                'student_id' => $withdraws->aliasField('student_id'),
-                'institution_name' => $institutions->aliasField('name'),
-                'institution_code' => $institutions->aliasField('code'),
-                'academic_period_id' => $withdraws->aliasField('academic_period_id'),
-            ])
-            ->InnerJoin([$institutions->alias() => $institutions->table()], [
-                $institutions->aliasField('id =') . $withdraws->aliasField('institution_id')
-            ])
-            ->matching('Statuses', function ($q) use ($doneStatus) {
-                return $q->where([
-                    'Statuses.category <> ' => $doneStatus,
-                ]);
-            })
-            ->where([
-                $withdraws->aliasField('student_id') => $security_user_id,
-            ])->first();
-        return $pendingWithdraw;
-    }
+        $userNationalities = self::getDynamicTableInstance('user_nationalities'); //POCOR-8776
 
-private static function getStudentCustomData($student_id = null)
-    {
-        $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
-        $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
-        $studentCustomFields = TableRegistry::get('student_custom_fields');
-        $studentCustomData = $studentCustomFieldValues->find()
-            ->select([
-                'id' => $studentCustomFieldValues->aliasField('id'),
-                'custom_id' => 'studentCustomField.id',
-                'student_id' => $studentCustomFieldValues->aliasField('student_id'),
-                'student_custom_field_id' => $studentCustomFieldValues->aliasField('student_custom_field_id'),
-                'text_value' => $studentCustomFieldValues->aliasField('text_value'),
-                'number_value' => $studentCustomFieldValues->aliasField('number_value'),
-                'decimal_value' => $studentCustomFieldValues->aliasField('decimal_value'),
-                'textarea_value' => $studentCustomFieldValues->aliasField('textarea_value'),
-                'date_value' => $studentCustomFieldValues->aliasField('date_value'),
-                'time_value' => $studentCustomFieldValues->aliasField('time_value'),
-                'option_value_text' => $studentCustomFieldOptions->aliasField('name'),
-                'name' => 'studentCustomField.name',
-                'field_type' => 'studentCustomField.field_type',
-            ])->leftJoin(
-                ['studentCustomField' => 'student_custom_fields'],
-                [
-                    'studentCustomField.id = ' . $studentCustomFieldValues->aliasField('student_custom_field_id')
-                ])
-            ->leftJoin(
-                [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
-                [
-                    $studentCustomFieldOptions->aliasField('student_custom_field_id = ') . $studentCustomFieldValues->aliasField('student_custom_field_id'),
-                    $studentCustomFieldOptions->aliasField('id = ') . $studentCustomFieldValues->aliasField('number_value')
-                ])
-            ->where([
-                $studentCustomFieldValues->aliasField('student_id') => $student_id,
-            ])->hydrate(false)->toArray();
-        $custom_field = array();
-        $count = 0;
-        if (!empty($studentCustomData)) {
-            foreach ($studentCustomData as $val) {
-                $custom_field['custom_field'][$count]["id"] = (!empty($val['custom_id']) ? $val['custom_id'] : '');
-                $custom_field['custom_field'][$count]["name"] = (!empty($val['name']) ? $val['name'] : '');
-                $fieldTypes[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
-                $fieldType = $fieldTypes[$count];
-                if ($fieldType == 'TEXT') {
-                    $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
-                } else if ($fieldType == 'CHECKBOX') {
-                    $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
-                } else if ($fieldType == 'NUMBER') {
-                    $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
-                } else if ($fieldType == 'DECIMAL') {
-                    $custom_field['custom_field'][$count]["decimal_value"] = (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
-                } else if ($fieldType == 'TEXTAREA') {
-                    $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
-                } else if ($fieldType == 'DROPDOWN') {
-                    $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
-                } else if ($fieldType == 'DATE') {
-                    $custom_field['custom_field'][$count]["date_value"] = date('Y-m-d', strtotime($val->date_value));
-                } else if ($fieldType == 'TIME') {
-                    $custom_field['custom_field'][$count]["time_value"] = date('h:i A', strtotime($val->time_value));
-                } else if ($fieldType == 'COORDINATES') {
-                    $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
-                }
-                $count++;
-            }
-        }
-        return $custom_field;
-    }
-
-    private static function getStaffCustomData($staff_id = null)
-    {
-        $staffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
-        $staffCustomFieldOptions = TableRegistry::get('staff_custom_field_options');
-        $staffCustomFields = TableRegistry::get('staff_custom_fields');
-        $staffCustomData = $staffCustomFieldValues->find()
-            ->select([
-                'id' => $staffCustomFieldValues->aliasField('id'),
-                'custom_id' => 'staffCustomField.id',
-                'staff_id' => $staffCustomFieldValues->aliasField('staff_id'),
-                'staff_custom_field_id' => $staffCustomFieldValues->aliasField('staff_custom_field_id'),
-                'text_value' => $staffCustomFieldValues->aliasField('text_value'),
-                'number_value' => $staffCustomFieldValues->aliasField('number_value'),
-                'decimal_value' => $staffCustomFieldValues->aliasField('decimal_value'),
-                'textarea_value' => $staffCustomFieldValues->aliasField('textarea_value'),
-                'date_value' => $staffCustomFieldValues->aliasField('date_value'),
-                'time_value' => $staffCustomFieldValues->aliasField('time_value'),
-                'option_value_text' => $staffCustomFieldOptions->aliasField('name'),
-                'name' => 'staffCustomField.name',
-                'field_type' => 'staffCustomField.field_type',
-            ])->leftJoin(
-                ['staffCustomField' => 'staff_custom_fields'],
-                [
-                    'staffCustomField.id = ' . $staffCustomFieldValues->aliasField('staff_custom_field_id')
-                ])
-            ->leftJoin(
-                [$staffCustomFieldOptions->alias() => $staffCustomFieldOptions->table()],
-                [
-                    $staffCustomFieldOptions->aliasField('staff_custom_field_id = ') . $staffCustomFieldValues->aliasField('staff_custom_field_id'),
-                    $staffCustomFieldOptions->aliasField('id = ') . $staffCustomFieldValues->aliasField('number_value')
-                ])
-            ->where([
-                $staffCustomFieldValues->aliasField('staff_id') => $staff_id,
-            ])->hydrate(false)->toArray();
-        $custom_field = array();
-        $count = 0;
-        if (!empty($staffCustomData)) {
-            foreach ($staffCustomData as $val) {
-                $custom_field['custom_field'][$count]["id"] = (!empty($val['custom_id']) ? $val['custom_id'] : '');
-                $custom_field['custom_field'][$count]["name"] = (!empty($val['name']) ? $val['name'] : '');
-                $fieldTypes[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
-                $fieldType = $fieldTypes[$count];
-                if ($fieldType == 'TEXT') {
-                    $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
-                } else if ($fieldType == 'CHECKBOX') {
-                    $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
-                } else if ($fieldType == 'NUMBER') {
-                    $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
-                } else if ($fieldType == 'DECIMAL') {
-                    $custom_field['custom_field'][$count]["decimal_value"] = (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
-                } else if ($fieldType == 'TEXTAREA') {
-                    $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
-                } else if ($fieldType == 'DROPDOWN') {
-                    $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
-                } else if ($fieldType == 'DATE') {
-                    $custom_field['custom_field'][$count]["date_value"] = date('Y-m-d', strtotime($val->date_value));
-                } else if ($fieldType == 'TIME') {
-                    $custom_field['custom_field'][$count]["time_value"] = date('h:i A', strtotime($val->time_value));
-                } else if ($fieldType == 'COORDINATES') {
-                    $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
-                }
-                $count++;
-            }
-        }
-        return $custom_field;
-    }
-
-    private static function getContactData($user_id = null)
-    {
-        $UserContacts = TableRegistry::get('user_contacts');
-        $contactTypes = TableRegistry::get('contact_types');
-        $contactOptions = TableRegistry::get('contact_options');
-        $userContactsData = $UserContacts
+        $identityUsersResult = $securityUsers
             ->find()
             ->select([
-                'contact_value' => $UserContacts->aliasField('value'),
-                'contact_type_id' => $UserContacts->aliasField('contact_type_id'),
+                'id' => $securityUsers->aliasField('id'),
+                'username' => $securityUsers->aliasField('username'),
+                'password' => $securityUsers->aliasField('password'),
+                'openemis_no' => $securityUsers->aliasField('openemis_no'),
+                'first_name' => $securityUsers->aliasField('first_name'),
+                'middle_name' => $securityUsers->aliasField('middle_name'),
+                'third_name' => $securityUsers->aliasField('third_name'),
+                'last_name' => $securityUsers->aliasField('last_name'),
+                'preferred_name' => $securityUsers->aliasField('preferred_name'),
+                'email' => $securityUsers->aliasField('email'),
+                'mobile_number' => $securityUsers->aliasField('mobile_number'), // POCOR-9011
+                'address' => $securityUsers->aliasField('address'),
+                'postal_code' => $securityUsers->aliasField('postal_code'),
+                'date_of_death' => $securityUsers->aliasField('date_of_death'),
+                'external_reference' => $securityUsers->aliasField('external_reference'),
+                'last_login' => $securityUsers->aliasField('last_login'),
+                'photo_name' => $securityUsers->aliasField('photo_name'),
+                'photo_content' => $securityUsers->aliasField('photo_content'),
+                'preferred_language' => $securityUsers->aliasField('preferred_language'),
+                'address_area_id' => $securityUsers->aliasField('address_area_id'),
+                'birthplace_area_id' => $securityUsers->aliasField('birthplace_area_id'),
+                'gender_id' => $securityUsers->aliasField('gender_id'),
+                'date_of_birth' => $securityUsers->aliasField('date_of_birth'),
+                'nationality_id' => $securityUsers->aliasField('nationality_id'),
+                'identity_number' => $securityUsers->aliasField('identity_number'),
+                'super_admin' => $securityUsers->aliasField('super_admin'),
+                'status' => $securityUsers->aliasField('status'),
+                'is_student' => $securityUsers->aliasField('is_student'),
+                'is_staff' => $securityUsers->aliasField('is_staff'),
+                'is_guardian' => $securityUsers->aliasField('is_guardian'),
+                'Genders_id' => $genders->aliasField('id'),
+                'Genders_name' => $genders->aliasField('name'),
+                'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
+                'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
+                'MainNationalities_id' => $mainNationalities->aliasField('id'),
+                'MainNationalities_name' => $mainNationalities->aliasField('name'),
+                'area_name' => $areaAdministratives->aliasField('name'),
+                'area_code' => $areaAdministratives->aliasField('code'),
+                'birth_area_name' => 'birthAreaAdministratives.name',
+                'birth_area_code' => 'birthAreaAdministratives.code',
+                'MainIdentityTypes_number' => $userIdentities->aliasField('number'),
+            ])
+            ->innerJoin([$userIdentities->getAlias() => $userIdentities->getTable()], [
+                $userIdentities->aliasField('security_user_id') . ' = ' . $securityUsers->aliasField('id'),
+                $identityCondition
+            ])
+            ->leftJoin([$genders->getAlias() => $genders->getTable()], [
+                $genders->aliasField('id') . ' = ' . $securityUsers->aliasField('gender_id')
+            ])
+            ->leftJoin([$mainIdentityTypes->getAlias() => $mainIdentityTypes->getTable()], [
+                $mainIdentityTypes->aliasField('id') . ' = ' . $userIdentities->aliasField('identity_type_id')
+            ])
+            ->leftJoin([$userNationalities->getAlias() => $userNationalities->getTable()], [ //POCOR-8776 start
+                $userNationalities->aliasField('security_user_id') . ' = ' . $securityUsers->aliasField('id')
+            ])
+            ->leftJoin([$mainNationalities->getAlias() => $mainNationalities->getTable()], [
+                $mainNationalities->aliasField('id') . ' = ' . $userNationalities->aliasField('nationality_id'),
+                $userNationalities->aliasField('preferred = 1') // //POCOR-8776 end
+            ])
+            ->leftJoin([$areaAdministratives->getAlias() => $areaAdministratives->getTable()], [
+                $areaAdministratives->aliasField('id') . ' = ' . $securityUsers->aliasField('address_area_id')
+            ])
+            ->leftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->getTable()], [
+                'birthAreaAdministratives.id = ' . $securityUsers->aliasField('birthplace_area_id')
+            ])
+            ->where([$securityUsers->aliasField('super_admin') . ' <> ' => 1, $identityCondition])
+            ->group([$securityUsers->aliasField('id')])
+            ->disableHydration()
+            ->limit($limit)
+            ->page($page);
+
+        $identityUsersResult = $identityUsersResult ? (is_array($identityUsersResult) ? $identityUsersResult : $identityUsersResult->toArray()) : [];
+
+        return $identityUsersResult;
+    }
+
+    private static function buildUserInternalSearchResult($securityUser,
+                                                          $institutionId,
+                                                          $userTypeId,
+                                                          $institutionsTable,
+                                                          $institutionStaffTable): array
+    {
+        // POCOR-8231 unified table get
+        $nationalitiesTable = self::getDynamicTableInstance('FieldOption.Nationalities');
+        $identityTypesTable = self::getDynamicTableInstance('FieldOption.IdentityTypes');
+        $specialNeedsTable = self::getDynamicTableInstance('SpecialNeeds.SpecialNeedsAssessments');
+
+        if (is_resource($securityUser['photo_content'])) {
+            // Read the resource content
+            $content = stream_get_contents($securityUser['photo_content']);
+            // Encode the content to base64
+            $securityUser['photo_content'] = base64_encode($content);
+        }
+
+        $hasSpecialNeeds = $specialNeedsTable->find()
+                ->where(['security_user_id' => $securityUser['id']])
+                ->count() == 1;
+
+        $firstName = $securityUser['first_name'] ?? '';
+        $middleName = $securityUser['middle_name'] ?? '';
+        $thirdName = $securityUser['third_name'] ?? '';
+        $lastName = $securityUser['last_name'] ?? '';
+        $nameParts = array_filter([$firstName, $middleName, $thirdName, $lastName]);
+        $name = implode(' ', $nameParts);
+        $accountTypes = [];
+        if (!empty($securityUser['is_student'])) {
+            $accountTypes[] = 'Student';
+        }
+        if (!empty($securityUser['is_staff'])) {
+            $accountTypes[] = 'Staff';
+        }
+        if (!empty($securityUser['is_guardian'])) {
+            $accountTypes[] = 'Guardian';
+        }
+        $account_type = !empty($accountTypes) ? implode(', ', $accountTypes) : 'Others';
+        $contactData = self::getContactData($securityUser['id']);
+        // POCOR-8231 for photo
+
+        $userInternalSearchResult = [
+            'id' => $securityUser['id'],
+            'username' => $securityUser['username'],
+            'openemis_no' => $securityUser['openemis_no'],
+            'first_name' => $firstName,
+            'middle_name' => $middleName,
+            'third_name' => $thirdName,
+            'last_name' => $lastName,
+            'name' => $name,
+            'date_of_birth' => $securityUser['date_of_birth']->format('Y-m-d'),
+            'gender_id' => $securityUser['gender_id'],
+            'gender' => $securityUser['Genders_name'] ? __($securityUser['Genders_name']) : null,
+            'gender_name' => $securityUser['Genders_name'] ? __($securityUser['Genders_name']) : null,
+            'nationality' => $securityUser['MainNationalities_name'] ? __($securityUser['MainNationalities_name']) : null,
+            'nationality_id' => $securityUser['MainNationalities_id'] ? intval($securityUser['MainNationalities_id']) : null,
+            'identity_type' => $securityUser['MainIdentityTypes_name'] ? __($securityUser['MainIdentityTypes_name']) : null,
+            'identity_type_id' => $securityUser['MainIdentityTypes_id'] ? intval($securityUser['MainIdentityTypes_id']) : null,
+            'identity_number' => $securityUser['MainIdentityTypes_number'] ? __($securityUser['MainIdentityTypes_number']) : null,
+            'has_special_needs' => $hasSpecialNeeds,
+            'contact_data' => $contactData,
+            'contact_type_id' => $contactData['contact_type_id'],
+            'contact_type_name' => $contactData['contact_type_name'],
+            'contact_value' => $contactData['contact_value'],
+            'account_type' => $account_type,
+            // POCOR-8231 added missing data
+            'address_area_id' => $securityUser['address_area_id'],
+            'area_name' => $securityUser['area_name'],
+            'area_code' => $securityUser['area_code'],
+            'birthplace_area_id' => $securityUser['birthplace_area_id'],
+            'birth_area_name' => $securityUser['birth_area_name'],
+            'birth_area_code' => $securityUser['birth_area_code'],
+            'address' => $securityUser['address'],
+            'postal_code' => $securityUser['postal_code'],
+            'photo_name' => $securityUser['photo_name'],
+            'photo_content' => $securityUser['photo_content'],
+            'email' => $securityUser['email'], // POCOR-9011
+            'mobile_number' => $securityUser['mobile_number'], // POCOR-9011
+            // Add other fields as needed
+        ];
+
+        // Add institution details and other logic based on userTypeId
+        if ($userTypeId == self::STUDENT) {
+            $userInternalSearchResult = array_merge($userInternalSearchResult, self::getStudentDetails($securityUser['id'], $institutionId));
+        } elseif ($userTypeId == self::STAFF) {
+            $userInternalSearchResult = array_merge($userInternalSearchResult, self::getStaffDetails($securityUser['id'], $institutionId, $institutionStaffTable, $institutionsTable));
+        }
+
+        return $userInternalSearchResult;
+    }
+
+    /**
+     * Retrieves the contact data for a user. POCOR-8231
+     *
+     * @param int $userId
+     * @return array
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getContactData(int $userId): array
+    {
+        $userContacts = self::getDynamicTableInstance('user_contacts');
+        $contactTypes = self::getDynamicTableInstance('contact_types');
+        $contactOptions = self::getDynamicTableInstance('contact_options');
+
+        $userContactsData = $userContacts
+            ->find()
+            ->select([
+                'contact_value' => $userContacts->aliasField('value'),
+                'contact_type_id' => $userContacts->aliasField('contact_type_id'),
                 'contact_type_name' => $contactTypes->aliasField('name'),
                 'contact_option_name' => $contactOptions->aliasField('name'),
             ])
-            ->innerjoin(
-                [$contactTypes->alias() => $contactTypes->table()],
-                [$contactTypes->aliasField('id=') . $UserContacts->aliasField('contact_type_id')]
+            ->innerJoin(
+                [$contactTypes->getAlias() => $contactTypes->getTable()],
+                [$contactTypes->aliasField('id = ') . $userContacts->aliasField('contact_type_id')]
             )
-            ->innerjoin(
-                [$contactOptions->alias() => $contactOptions->table()],
-                [$contactOptions->aliasField('id=') . $contactTypes->aliasField('contact_option_id')]
+            ->innerJoin(
+                [$contactOptions->getAlias() => $contactOptions->getTable()],
+                [$contactOptions->aliasField('id = ') . $contactTypes->aliasField('contact_option_id')]
             )
             ->where([
-                $UserContacts->aliasField('security_user_id') => $user_id,
-                $UserContacts->aliasField('preferred') => 1
+                $userContacts->aliasField('security_user_id = ') . $userId,
+                $userContacts->aliasField('preferred = ') . 1
             ])
             ->first();
-        if (!empty($userContactsData)) {
-            $userContactsData['contact_type'] = $userContactsData['contact_type_name'] . ' (' . $userContactsData['contact_option_name'] . ')';
-        }
-        if (empty($userContactsData)) {
-            $userContactsData = [
-                'contact_value' => null,
-                'contact_type_id' => null,
-                'contact_type' => null
-            ];
-        }
-        return $userContactsData;
+
+        return $userContactsData ? $userContactsData->toArray() : [
+            'contact_value' => null,
+            'contact_type_id' => null,
+            'contact_type' => null,
+        ];
     }
 
-    public function initialize(array $config)
+    /**
+     * POCOR-8231
+     * Retrieves student details based on security user ID and institution ID.
+     *
+     * @param int $securityUserId The security user ID.
+     * @param int|null $institutionId The institution ID.
+     * @return array The student details.
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getStudentDetails(int $securityUserId, ?int $institutionId): array
     {
-        $this->table('security_users');
-        $this->entityClass('User.User');
+
+        $student = self::getStudent($securityUserId);
+        if (!$student) {
+            return [];
+        }
+        $isSameSchool = $isDiffSchool = 0;
+        if ($student['institution_id']) {
+            $isSameSchool = $student['institution_id'] == $institutionId ? 1 : 0;
+            $isDiffSchool = !$isSameSchool ? 1 : 0;
+        }
+        $pendingTransfer = self::getPendingTransfer($securityUserId);
+        $pendingWithdraw = self::getPendingWithdraw($securityUserId);
+// POCOR-8231 custom data not needed as it is got later
+//        $customDataArray = self::getStudentCustomData($securityUserId);
+
+        return [
+            'institution_id' => $student['institution_id'],
+            'institution_name' => $student['institution_name'],
+            'institution_code' => $student['institution_code'],
+            'current_enrol_institution_id' => $student['institution_id'],
+            'current_enrol_institution_name' => $student['institution_name'],
+            'current_enrol_institution_code' => $student['institution_code'],
+            'academic_period_id' => $student['academic_period_id'],
+            'current_enrol_academic_period_id' => $student['academic_period_id'],
+            'academic_period_year' => $student['academic_period_year'],
+            'current_enrol_academic_period_year' => $student['academic_period_year'],
+            'education_grade_id' => $student['education_grade_id'],
+            'current_enrol_education_grade_id' => $student['education_grade_id'],
+            'is_same_school' => $isSameSchool,
+            'is_diff_school' => $isDiffSchool,
+            'is_pending_transfer' => $pendingTransfer ? 1 : 0,
+            'pending_transfer_institution_name' => $pendingTransfer['institution_name'] ?? '',
+            'pending_transfer_institution_code' => $pendingTransfer['institution_code'] ?? '',
+            'pending_transfer_prev_institution_name' => $pendingTransfer['previous_institution_name'] ?? '',
+            'pending_transfer_prev_institution_code' => $pendingTransfer['previous_institution_code'] ?? '',
+            'is_pending_withdraw' => $pendingWithdraw ? 1 : 0,
+            'pending_withdraw_institution_name' => $pendingWithdraw['institution_name'] ?? '',
+            'pending_withdraw_institution_code' => $pendingWithdraw['institution_code'] ?? '',
+// POCOR-8231 removed as it is got later
+//            'custom_data' => $customDataArray,
+        ];
+    }
+
+    /**
+     * Retrieves student details for a given security user ID. POCOR-8231
+     *
+     * @param int $securityUserId
+     * @return array
+     * @throws \Exception If there is an error retrieving the student data
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getStudent(int $securityUserId): array
+    {
+        $institutionStudentsTable = self::getDynamicTableInstance('Institution.InstitutionStudents');
+        $studentStatusesTable = self::getDynamicTableInstance('Student.StudentStatuses');
+        $institutionsTable = self::getDynamicTableInstance('Institution.Institutions');
+
+        $statuses = $studentStatusesTable->findCodeList();
+        $studentStatusCurrent = $statuses['CURRENT'];
+
+        try {
+            $studentQuery = $institutionStudentsTable
+                ->find()
+                ->select([
+                    'institution_id' => $institutionStudentsTable->aliasField('institution_id'),
+                    'student_id' => $institutionStudentsTable->aliasField('student_id'),
+                    'student_status_id' => $institutionStudentsTable->aliasField('student_status_id'),
+                    'institution_name' => $institutionsTable->aliasField('name'),
+                    'institution_code' => $institutionsTable->aliasField('code'),
+                    'academic_period_id' => $institutionStudentsTable->aliasField('academic_period_id'),
+                    'academic_period_year' => $institutionStudentsTable->aliasField('start_year'),
+                    'education_grade_id' => $institutionStudentsTable->aliasField('education_grade_id')
+                ])
+                ->innerJoin([$institutionsTable->getAlias() => $institutionsTable->getTable()], [
+                    $institutionsTable->aliasField('id') . ' = ' . $institutionStudentsTable->aliasField('institution_id')
+                ])
+                ->where([
+                    $institutionStudentsTable->aliasField('student_id') => $securityUserId,
+                    $institutionStudentsTable->aliasField('student_status_id') => $studentStatusCurrent
+                ])
+                ->disableHydration();
+
+            $studentEntity = $studentQuery->first();
+            $result = $studentEntity ? (is_array($studentEntity) ? $studentEntity : $studentEntity->toArray()) : [];
+        } catch (\Exception $exception) {
+// POCOR-8231 to find where is the error
+            Log::debug(__FUNCTION__);
+            Log::debug('Error: ' . $exception->getMessage());
+            $result = [];
+        }
+
+        return $result;
+    }
+
+    /**
+     * POCOR-8231
+     * Gets a dynamic table instance with all associations.
+     *
+     * @param string $tableName The name of the table.
+     * @return \Cake\ORM\Table The table instance.
+     * @throws \Exception If the table instance cannot be retrieved.
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+
+        try {
+            // Try to get the table instance directly
+            return $locator->get($tableName);
+        } catch (\Exception $e) {
+            // POCOR-8231 to find where is the error
+            Log::debug(__FUNCTION__);
+            Log::debug('Error: ' . $e->getMessage());
+        }
+
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
+    /**
+     * Retrieves the pending transfer details for a given security user ID. POCOR-8231
+     *
+     * @param int $securityUserId
+     * @return array
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getPendingTransfer(int $securityUserId): array
+    {
+        $institutionsTable = self::getDynamicTableInstance('Institution.Institutions');
+        $prevInstitutionsTable = self::getDynamicTableInstance('Institution.Institutions');
+        $transfersTable = self::getDynamicTableInstance('Institution.InstitutionStudentTransfers');
+
+        $doneStatus = $transfersTable::DONE;
+
+        try {
+            $transfersQuery = $transfersTable
+                ->find()
+                ->select([
+                    'id' => $transfersTable->aliasField('id'),
+                    'institution_id' => $transfersTable->aliasField('institution_id'),
+                    'previous_institution_id' => $transfersTable->aliasField('previous_institution_id'),
+                    'student_id' => $transfersTable->aliasField('student_id'),
+                    'institution_name' => $institutionsTable->aliasField('name'),
+                    'institution_code' => $institutionsTable->aliasField('code'),
+                    'previous_institution_name' => $prevInstitutionsTable->aliasField('name'),
+                    'previous_institution_code' => $prevInstitutionsTable->aliasField('code'),
+                    'academic_period_id' => $transfersTable->aliasField('academic_period_id'),
+                ])
+                ->innerJoin([$institutionsTable->getAlias() => $institutionsTable->getTable()], [
+                    $institutionsTable->aliasField('id') . ' = ' . $transfersTable->aliasField('institution_id')
+                ])
+                ->innerJoin([$prevInstitutionsTable->getAlias() => $prevInstitutionsTable->getTable()], [
+                    $prevInstitutionsTable->aliasField('id') . ' = ' . $transfersTable->aliasField('previous_institution_id')
+                ])
+                ->matching('Statuses', function ($q) use ($doneStatus) {
+                    return $q->where([
+                        'Statuses.category <>' => $doneStatus,
+                    ]);
+                })
+                ->where([
+                    $transfersTable->aliasField('student_id') => $securityUserId,
+                ]);
+
+            $transferEntity = $transfersQuery->first();
+            $result = $transferEntity ? $transferEntity->toArray() : [];
+        } catch (\Exception $exception) {
+            // POCOR-8231 to find where is the error
+            Log::debug(__FUNCTION__);
+            Log::debug('Error: ' . $exception->getMessage());
+            $result = [];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Retrieves the pending withdraw details for a given security user ID. POCOR-8231
+     *
+     * @param int $securityUserId
+     * @return array
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getPendingWithdraw(int $securityUserId): array
+    {
+        $institutionsTable = self::getDynamicTableInstance('Institution.Institutions');
+        $withdrawsTable = self::getDynamicTableInstance('Institution.StudentWithdraw');
+
+        $doneStatus = $withdrawsTable::DONE;
+
+        try {
+            $withdrawsQuery = $withdrawsTable
+                ->find()
+                ->select([
+                    'institution_id' => $withdrawsTable->aliasField('institution_id'),
+                    'student_id' => $withdrawsTable->aliasField('student_id'),
+                    'institution_name' => $institutionsTable->aliasField('name'),
+                    'institution_code' => $institutionsTable->aliasField('code'),
+                    'academic_period_id' => $withdrawsTable->aliasField('academic_period_id'),
+                ])
+                ->innerJoin([$institutionsTable->getAlias() => $institutionsTable->getTable()], [
+                    $institutionsTable->aliasField('id') . ' = ' . $withdrawsTable->aliasField('institution_id')
+                ])
+                ->matching('Statuses', function ($q) use ($doneStatus) {
+                    return $q->where([
+                        'Statuses.category <>' => $doneStatus,
+                    ]);
+                })
+                ->where([
+                    $withdrawsTable->aliasField('student_id') => $securityUserId,
+                ]);
+
+            $withdrawEntity = $withdrawsQuery->first();
+            $result = $withdrawEntity ? $withdrawEntity->toArray() : [];
+        } catch (\Exception $exception) {
+            // POCOR-8231 to find where is the error
+            Log::debug(__FUNCTION__);
+            Log::debug('Error: ' . $exception->getMessage());
+            $result = [];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Retrieves the custom data for a student. POCOR-8231
+     *
+     * @param int $studentId
+     * @return array
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getStudentCustomData(int $studentId): array
+    {
+        $studentCustomFieldValuesTable = self::getDynamicTableInstance('student_custom_field_values');
+        $studentCustomFieldOptionsTable = self::getDynamicTableInstance('student_custom_field_options');
+
+        $studentCustomData = $studentCustomFieldValuesTable->find()
+            ->select([
+                'id' => $studentCustomFieldValuesTable->aliasField('id'),
+                'custom_id' => 'studentCustomField.id',
+                'student_id' => $studentCustomFieldValuesTable->aliasField('student_id'),
+                'student_custom_field_id' => $studentCustomFieldValuesTable->aliasField('student_custom_field_id'),
+                'text_value' => $studentCustomFieldValuesTable->aliasField('text_value'),
+                'number_value' => $studentCustomFieldValuesTable->aliasField('number_value'),
+                'decimal_value' => $studentCustomFieldValuesTable->aliasField('decimal_value'),
+                'textarea_value' => $studentCustomFieldValuesTable->aliasField('textarea_value'),
+                'date_value' => $studentCustomFieldValuesTable->aliasField('date_value'),
+                'time_value' => $studentCustomFieldValuesTable->aliasField('time_value'),
+                'option_value_text' => $studentCustomFieldOptionsTable->aliasField('name'),
+                'name' => 'studentCustomField.name',
+                'field_type' => 'studentCustomField.field_type',
+            ])
+            ->leftJoin(
+                ['studentCustomField' => 'student_custom_fields'],
+                [
+                    'studentCustomField.id = ' . $studentCustomFieldValuesTable->aliasField('student_custom_field_id')
+                ]
+            )
+            ->leftJoin(
+                [$studentCustomFieldOptionsTable->getAlias() => $studentCustomFieldOptionsTable->getTable()],
+                [
+                    $studentCustomFieldOptionsTable->aliasField('student_custom_field_id') . ' = ' . $studentCustomFieldValuesTable->aliasField('student_custom_field_id'),
+                    $studentCustomFieldOptionsTable->aliasField('id') . ' = ' . $studentCustomFieldValuesTable->aliasField('number_value')
+                ]
+            )
+            ->where([
+                $studentCustomFieldValuesTable->aliasField('student_id') => $studentId,
+            ])
+            ->toArray();
+
+        $customField = [];
+        foreach ($studentCustomData as $data) {
+            $fieldType = $data['field_type'];
+            $customFieldData = [
+                'id' => $data['custom_id'],
+                'name' => $data['name']
+            ];
+
+            switch ($fieldType) {
+                case 'TEXT':
+                    $customFieldData['text_value'] = $data['text_value'];
+                    break;
+                case 'CHECKBOX':
+                    $customFieldData['checkbox_value'] = $data['option_value_text'];
+                    break;
+                case 'NUMBER':
+                    $customFieldData['number_value'] = $data['number_value'];
+                    break;
+                case 'DECIMAL':
+                    $customFieldData['decimal_value'] = $data['decimal_value'];
+                    break;
+                case 'TEXTAREA':
+                    $customFieldData['textarea_value'] = $data['textarea_value'];
+                    break;
+                case 'DROPDOWN':
+                    $customFieldData['dropdown_value'] = $data['option_value_text'];
+                    break;
+                case 'DATE':
+                    $customFieldData['date_value'] = date('Y-m-d', strtotime($data['date_value']));
+                    break;
+                case 'TIME':
+                    $customFieldData['time_value'] = date('h:i A', strtotime($data['time_value']));
+                    break;
+                case 'COORDINATES':
+                    $customFieldData['coordinate_value'] = $data['text_value'];
+                    break;
+            }
+            $customField[] = $customFieldData;
+        }
+
+        return $customField;
+    }
+
+    /**
+     * POCOR-8231
+     * Retrieves staff details based on security user ID and institution ID.
+     *
+     * @param int $securityUserId The security user ID.
+     * @param int|null $institutionId The institution ID.
+     * @param \Cake\ORM\Table $institutionStaffTable The institution staff table instance.
+     * @param \Cake\ORM\Table $institutionsTable The institutions table instance.
+     * @return array The staff details.
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getStaffDetails(int $securityUserId, ?int $institutionId, $institutionStaffTable, $institutionsTable): array
+    {
+        // POCOR-8231 unified table get
+        $staffStatusesTable = self::getDynamicTableInstance('Staff.StaffStatuses');
+        $assignedStatus = $staffStatusesTable->getIdByCode('ASSIGNED');
+        // POCOR-8231 no search for institution if it is not given
+        $where = [
+            $institutionStaffTable->aliasField('staff_id') => $securityUserId,
+            $institutionStaffTable->aliasField('staff_status_id') => $assignedStatus
+        ];
+        $institutionStaffTbl = $institutionStaffTable
+            ->find()
+            ->select([
+                'institution_id' => $institutionStaffTable->aliasField('institution_id'),
+                'staff_id' => $institutionStaffTable->aliasField('staff_id'),
+                'institution_position_id' => $institutionStaffTable->aliasField('institution_position_id'),
+                'staff_status_id' => $institutionStaffTable->aliasField('staff_status_id'),
+                'institution_name' => $institutionsTable->aliasField('name'),
+                'institution_code' => $institutionsTable->aliasField('code')
+            ])
+            ->InnerJoin([$institutionsTable->getAlias() => $institutionsTable->getTable()], [
+                $institutionsTable->aliasField('id') . ' = ' . $institutionStaffTable->aliasField('institution_id')
+            ])
+            ->where($where)
+            ->toArray();
+        if($institutionId){
+            $thisInstitution = $institutionsTable->get($institutionId);
+            $where[$institutionStaffTable->aliasField('institution_id')] = $institutionId;
+        }
+        $sameInstitutionStaffTbl = $institutionStaffTable
+            ->find()
+            ->select([
+                'institution_id' => $institutionStaffTable->aliasField('institution_id'),
+                'staff_id' => $institutionStaffTable->aliasField('staff_id'),
+                'institution_position_id' => $institutionStaffTable->aliasField('institution_position_id'),
+                'staff_status_id' => $institutionStaffTable->aliasField('staff_status_id'),
+                'institution_name' => $institutionsTable->aliasField('name'),
+                'institution_code' => $institutionsTable->aliasField('code')
+            ])
+            ->InnerJoin([$institutionsTable->getAlias() => $institutionsTable->getTable()], [
+                $institutionsTable->aliasField('id') . ' = ' . $institutionStaffTable->aliasField('institution_id')
+            ])
+            ->where($where)
+            ->toArray();
+
+        $isSameSchool = $isDiffSchool = 0;
+        if (!empty($sameInstitutionStaffTbl)) {
+            $institutionStaffTbl = $sameInstitutionStaffTbl;
+        }
+        $positionArray = [];
+        // POCOR-8231-start
+        $isSameSchool = -1;
+        $isDiffSchool = -1;
+//        Log::debug(print_r($institutionStaffTbl, true));
+        foreach ($institutionStaffTbl as $staff) {
+            $positionArray[] = $staff->institution_position_id;
+            if ($staff->institution_id) {
+                if ($isSameSchool == -1) {
+                    $isSameSchool = $staff->institution_id == $institutionId ? 1 : 0;
+                }
+                if ($isDiffSchool == -1) {
+                    $isDiffSchool = !$isSameSchool ? 1 : 0;
+                }
+            }
+        }
+        // POCOR-8231 end fixed search same-school - other-school
+// POCOR-8231 removed custom data here
+//        $customDataArray = self::getStaffCustomData($securityUserId);
+        // POCOR-8231: start fixed this and that school names and ids for search and add
+        $arrResult = [
+            'institution_id' => $thisInstitution->id,
+            'institution_name' => $thisInstitution->name,
+            'institution_code' => $thisInstitution->code,
+            'current_enrol_institution_id' => $institutionStaffTbl[0]->institution_id ?? '',
+            'current_enrol_institution_name' => $institutionStaffTbl[0]->institution_name ?? '',
+            'current_enrol_institution_code' => $institutionStaffTbl[0]->institution_code ?? '',
+            'positions' => $positionArray,
+            'is_same_school' => $isSameSchool,
+            'is_diff_school' => $isDiffSchool,
+            // POCOR-8231 removed custom data in search
+//            'custom_data' => $customDataArray,
+        ];
+//        Log::debug(print_r($arrResult,true));
+        return $arrResult;
+        // POCOR-8231: end
+    }
+
+    /**
+     * Retrieves the custom data for a staff member. POCOR-8231
+     *
+     * @param int $staffId
+     * @return array
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getStaffCustomData(int $staffId): array
+    {
+        $staffCustomFieldValuesTable = self::getDynamicTableInstance('staff_custom_field_values');
+        $staffCustomFieldOptionsTable = self::getDynamicTableInstance('staff_custom_field_options');
+
+        $staffCustomData = $staffCustomFieldValuesTable->find()
+            ->select([
+                'id' => $staffCustomFieldValuesTable->aliasField('id'),
+                'custom_id' => 'staffCustomField.id',
+                'staff_id' => $staffCustomFieldValuesTable->aliasField('staff_id'),
+                'staff_custom_field_id' => $staffCustomFieldValuesTable->aliasField('staff_custom_field_id'),
+                'text_value' => $staffCustomFieldValuesTable->aliasField('text_value'),
+                'number_value' => $staffCustomFieldValuesTable->aliasField('number_value'),
+                'decimal_value' => $staffCustomFieldValuesTable->aliasField('decimal_value'),
+                'textarea_value' => $staffCustomFieldValuesTable->aliasField('textarea_value'),
+                'date_value' => $staffCustomFieldValuesTable->aliasField('date_value'),
+                'time_value' => $staffCustomFieldValuesTable->aliasField('time_value'),
+                'option_value_text' => $staffCustomFieldOptionsTable->aliasField('name'),
+                'name' => 'staffCustomField.name',
+                'field_type' => 'staffCustomField.field_type',
+            ])
+            ->leftJoin(
+                ['staffCustomField' => 'staff_custom_fields'],
+                [
+                    'staffCustomField.id = ' . $staffCustomFieldValuesTable->aliasField('staff_custom_field_id')
+                ]
+            )
+            ->leftJoin(
+                [$staffCustomFieldOptionsTable->getAlias() => $staffCustomFieldOptionsTable->getTable()],
+                [
+                    $staffCustomFieldOptionsTable->aliasField('staff_custom_field_id') . ' = ' . $staffCustomFieldValuesTable->aliasField('staff_custom_field_id'),
+                    $staffCustomFieldOptionsTable->aliasField('id') . ' = ' . $staffCustomFieldValuesTable->aliasField('number_value')
+                ]
+            )
+            ->where([
+                $staffCustomFieldValuesTable->aliasField('staff_id') => $staffId,
+            ])
+            ->toArray();
+
+        $customField = [];
+        foreach ($staffCustomData as $data) {
+            $fieldType = $data['field_type'];
+            $customFieldData = [
+                'id' => $data['custom_id'],
+                'name' => $data['name']
+            ];
+
+            switch ($fieldType) {
+                case 'TEXT':
+                    $customFieldData['text_value'] = $data['text_value'];
+                    break;
+                case 'CHECKBOX':
+                    $customFieldData['checkbox_value'] = $data['option_value_text'];
+                    break;
+                case 'NUMBER':
+                    $customFieldData['number_value'] = $data['number_value'];
+                    break;
+                case 'DECIMAL':
+                    $customFieldData['decimal_value'] = $data['decimal_value'];
+                    break;
+                case 'TEXTAREA':
+                    $customFieldData['textarea_value'] = $data['textarea_value'];
+                    break;
+                case 'DROPDOWN':
+                    $customFieldData['dropdown_value'] = $data['option_value_text'];
+                    break;
+                case 'DATE':
+                    $customFieldData['date_value'] = date('Y-m-d', strtotime($data['date_value']));
+                    break;
+                case 'TIME':
+                    $customFieldData['time_value'] = date('h:i A', strtotime($data['time_value']));
+                    break;
+                case 'COORDINATES':
+                    $customFieldData['coordinate_value'] = $data['text_value'];
+                    break;
+            }
+            $customField[] = $customFieldData;
+        }
+
+        return $customField;
+    }
+
+    // POCOR-5684
+
+    public function initialize(array $config): void
+    {
+        // echo "<pre>";print_r($_REQUEST);die;
+        $this->setTable('security_users');
+        $this->setEntityClass('User.User');
         parent::initialize($config);
 
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
         $this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
         $this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
-        $this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
-        $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
-
         $this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('Nationalities', ['className' => 'User.UserNationalities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
+        $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
+
         $this->hasMany('SpecialNeeds', ['className' => 'SpecialNeeds.SpecialNeedsAssessments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+
         $this->hasMany('InstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionStaff', ['className' => 'Institution.Staff', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('UserNationalities', ['className' => 'User.UserNationalities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
 
-        $this->hasMany('ExaminationCentreRoomsExaminationsInvigilators', ['className' => 'examination_centre_rooms_examinations_invigilators', 'foreignKey' => 'invigilator_id', 'dependent' => true]);
-        $this->hasMany('ExaminationCentreRoomsExaminationsStudents', ['className' => 'examination_centre_rooms_examinations_students', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('ExaminationCentresExaminationsInvigilators', ['className' => 'examination_centres_examinations_invigilators', 'foreignKey' => 'invigilator_id', 'dependent' => true]);
-        $this->hasMany('ExaminationCentresExaminationsStudents', ['className' => 'examination_centres_examinations_students', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('HistoricalStaffLeave', ['className' => 'historical_staff_leave', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('InstitutionAssociationStaff', ['className' => 'institution_association_staff', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('InstitutionAssociationStudent', ['className' => 'institution_association_student', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('InstitutionCases', ['className' => 'institution_cases', 'foreignKey' => 'assignee_id', 'dependent' => true]);
-        $this->hasMany('InstitutionClassStudents', ['className' => 'institution_class_students', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionClassesSecondaryStaff', ['className' => 'institution_classes_secondary_staff', 'foreignKey' => 'secondary_staff_id', 'dependent' => true]);
-        $this->hasMany('InstitutionCompetencyItemComments', ['className' => 'institution_competency_item_comments', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionCompetencyPeriodComments', ['className' => 'institution_competency_period_comments', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionCompetencyResults', ['className' => 'institution_competency_results', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('CounsellingsCounselor', ['className' => 'counsellings', 'foreignKey' => 'counselor_id', 'dependent' => true]);
-        $this->hasMany('CounsellingsRequester', ['className' => 'counsellings', 'foreignKey' => 'requester_id', 'dependent' => true]);
-        $this->hasMany('CounsellingsStudent', ['className' => 'counsellings', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionCurricularStaff', ['className' => 'institution_curricular_staff', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('InstitutionCurricularStudents', ['className' => 'institution_curricular_students', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionMealStudents', ['className' => 'institution_meal_students', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionOutcomeResults', ['className' => 'institution_outcome_results', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionOutcomeSubjectComments', ['className' => 'institution_outcome_subject_comments', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionPositions', ['className' => 'institution_positions', 'foreignKey' => 'assignee_id', 'dependent' => true]);
-        $this->hasMany('InstitutionQualityRubrics', ['className' => 'institution_quality_rubrics', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('InstitutionQualityVisits', ['className' => 'institution_quality_visits', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('ExaminationCentreRoomsExaminationsInvigilators', ['className' => 'Examination.ExaminationCentreRoomsExaminationsInvigilators', 'foreignKey' => 'invigilator_id', 'dependent' => true]);
+        $this->hasMany('ExaminationCentreRoomsExaminationsStudents', ['className' => 'Examination.ExaminationCentreRoomsExaminationsStudents', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('ExaminationCentresExaminationsInvigilators', ['className' => 'Examination.ExaminationCentresExaminationsInvigilators', 'foreignKey' => 'invigilator_id', 'dependent' => true]);
+        $this->hasMany('ExaminationCentresExaminationsStudents', ['className' => 'Examination.ExaminationCentresExaminationsStudents', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('HistoricalStaffLeave', ['className' => 'Historical.HistoricalStaffLeave', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionAssociationStaff', ['className' => 'Institution.InstitutionAssociationStaff', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('InstitutionAssociationStudent', ['className' => 'Student.InstitutionAssociationStudent', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('InstitutionCases', ['className' => 'Cases.InstitutionCases', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionClassesSecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'foreignKey' => 'secondary_staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionCompetencyItemComments', ['className' => 'Institution.InstitutionCompetencyItemComments', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionCompetencyPeriodComments', ['className' => 'Institution.InstitutionCompetencyPeriodComments', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionCompetencyResults', ['className' => 'Institution.InstitutionCompetencyResults', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('CounsellingsCounselor', ['className' => 'Institution.Counsellings', 'foreignKey' => 'counselor_id', 'dependent' => true]);
+        $this->hasMany('CounsellingsRequester', ['className' => 'Institution.Counsellings', 'foreignKey' => 'requester_id', 'dependent' => true]);
+        $this->hasMany('CounsellingsStudent', ['className' => 'Institution.Counsellings', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionCurricularStaff', ['className' => 'Institution.InstitutionCurricularStaff', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionCurricularStudents', ['className' => 'Institution.InstitutionCurricularStudents', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionMealStudents', ['className' => 'Institution.InstitutionMealStudents', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionOutcomeResults', ['className' => 'Institution.InstitutionOutcomeResults', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionOutcomeSubjectComments', ['className' => 'Institution.InstitutionOutcomeSubjectComments', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('InstitutionQualityRubrics', ['className' => 'Institution.InstitutionRubrics', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionQualityVisits', ['className' => 'Quality.InstitutionQualityVisits', 'foreignKey' => 'staff_id', 'dependent' => true]);
 //        $this->hasMany('InstitutionStaff', ['className' => 'institution_staff', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStaffAppraisalsAssignee', ['className' => 'institution_staff_appraisals', 'foreignKey' => 'assignee_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStaffAppraisals', ['className' => 'institution_staff_appraisals', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStaffAttendanceActivities', ['className' => 'institution_staff_attendance_activities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStaffAttendances', ['className' => 'institution_staff_attendances', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStaffDuties', ['className' => 'institution_staff_duties', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStaffLeave', ['className' => 'institution_staff_leave', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStaffPositionProfiles', ['className' => 'institution_staff_position_profiles', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStaffReleasesAssignee', ['className' => 'institution_staff_releases', 'foreignKey' => 'assignee_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStaffReleases', ['className' => 'institution_staff_releases', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStaffShifts', ['className' => 'institution_staff_shifts', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStaffTransfersAssignee', ['className' => 'institution_staff_transfers', 'foreignKey' => 'assignee_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStaffTransfers', ['className' => 'institution_staff_transfers', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentAbsenceDays', ['className' => 'institution_student_absence_days', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentAbsenceDetails', ['className' => 'institution_student_absence_details', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentAbsences', ['className' => 'institution_student_absences', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentAdmissionAssignee', ['className' => 'institution_student_admission', 'foreignKey' => 'assignee_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentAdmission', ['className' => 'institution_student_admission', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentRisks', ['className' => 'institution_student_risks', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentSurveys', ['className' => 'institution_student_surveys', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentTransfersAssignee', ['className' => 'institution_student_transfers', 'foreignKey' => 'assignee_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentTransfers', ['className' => 'institution_student_transfers', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentVisitRequestsAssignee', ['className' => 'institution_student_visit_requests', 'foreignKey' => 'assignee_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentVisitRequestsEvaluator', ['className' => 'institution_student_visit_requests', 'foreignKey' => 'evaluator_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentVisitRequestsStudent', ['className' => 'institution_student_visit_requests', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentVisitsEvaluator', ['className' => 'institution_student_visits', 'foreignKey' => 'evaluator_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentVisitsStudent', ['className' => 'institution_student_visits', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentWithdrawAssignee', ['className' => 'institution_student_withdraw', 'foreignKey' => 'assignee_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentWithdraw', ['className' => 'institution_student_withdraw', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffAppraisalsAssignee', ['className' => 'Institution.Appraisals', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffAppraisals', ['className' => 'Institution.Appraisals', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffAttendanceActivities', ['className' => 'User.InstitutionStaffAttendanceActivities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffAttendances', ['className' => 'Institution.InstitutionStaffAttendances', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffDuties', ['className' => 'Institution.InstitutionStaffDuties', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffLeave', ['className' => 'Institution.StaffLeave', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffReleasesAssignee', ['className' => 'Institution.InstitutionStaffReleases', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffReleases', ['className' => 'Institution.InstitutionStaffReleases', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffShifts', ['className' => 'Institution.InstitutionStaffShifts', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffTransfersAssignee', ['className' => 'Institution.InstitutionStaffTransfers', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffTransfers', ['className' => 'Institution.InstitutionStaffTransfers', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentAbsenceDays', ['className' => 'Institution.InstitutionStandardStudentAbsences', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentAbsenceDetails', ['className' => 'Student.StudentAbsences', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentAbsences', ['className' => 'Institution.StudentAttendanceSummary', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentAdmissionAssignee', ['className' => 'Institution.StudentAdmission', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentAdmission', ['className' => 'Institution.StudentAdmission', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentRisks', ['className' => 'Student.StudentRisks', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentSurveys', ['className' => 'Student.StudentSurveys', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentTransfersAssignee', ['className' => 'Institution.InstitutionStudentTransfers', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentTransfers', ['className' => 'Institution.InstitutionStudentTransfers', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentVisitRequestsAssignee', ['className' => 'Student.StudentVisitRequests', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentVisitRequestsEvaluator', ['className' => 'Student.StudentVisitRequests', 'foreignKey' => 'evaluator_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentVisitRequestsStudent', ['className' => 'Student.StudentVisitRequests', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentVisitsEvaluator', ['className' => 'Student.StudentVisits', 'foreignKey' => 'evaluator_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentVisitsStudent', ['className' => 'Student.StudentVisits', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentWithdrawAssignee', ['className' => 'Institution.StudentWithdraw', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentWithdraw', ['className' => 'Institution.StudentWithdraw', 'foreignKey' => 'student_id', 'dependent' => true]);
 //        $this->hasMany('InstitutionStudents', ['className' => 'institution_students', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentsReportCardsCommentsStaff', ['className' => 'institution_students_report_cards_comments', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentsReportCardsCommentsStudent', ['className' => 'institution_students_report_cards_comments', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentsTmp', ['className' => 'institution_students_tmp', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionSubjectStaff', ['className' => 'institution_subject_staff', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('InstitutionSubjectStudents', ['className' => 'institution_subject_students', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionTripPassengers', ['className' => 'institution_trip_passengers', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionVisitRequestsAssignee', ['className' => 'institution_visit_requests', 'foreignKey' => 'assignee_id', 'dependent' => true]);
-        $this->hasMany('MoodleApiCreatedUsers', ['className' => 'moodle_api_created_users', 'foreignKey' => 'core_user_id', 'dependent' => true]);
-        $this->hasMany('ReportCardEmailProcesses', ['className' => 'report_card_email_processes', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('ReportCardProcesses', ['className' => 'report_card_processes', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('ScholarshipApplicationAttachments', ['className' => 'scholarship_application_attachments', 'foreignKey' => 'applicant_id', 'dependent' => true]);
-        $this->hasMany('ScholarshipApplicationInstitutionChoices', ['className' => 'scholarship_application_institution_choices', 'foreignKey' => 'applicant_id', 'dependent' => true]);
-        $this->hasMany('ScholarshipApplications', ['className' => 'scholarship_applications', 'foreignKey' => 'applicant_id', 'dependent' => true]);
-        $this->hasMany('ScholarshipApplicationsAssignee', ['className' => 'scholarship_applications', 'foreignKey' => 'assignee_id', 'dependent' => true]);
-        $this->hasMany('ScholarshipFinancialAssistancesModified', ['className' => 'scholarship_financial_assistances', 'foreignKey' => 'modified_user_id', 'dependent' => true]);
-        $this->hasMany('ScholarshipFinancialAssistancesCreated', ['className' => 'scholarship_financial_assistances', 'foreignKey' => 'created_user_id', 'dependent' => true]);
-        $this->hasMany('ScholarshipRecipientAcademicStandings', ['className' => 'scholarship_recipient_academic_standings', 'foreignKey' => 'recipient_id', 'dependent' => true]);
-        $this->hasMany('ScholarshipRecipientActivities', ['className' => 'scholarship_recipient_activities', 'foreignKey' => 'recipient_id', 'dependent' => true]);
-        $this->hasMany('ScholarshipRecipientCollections', ['className' => 'scholarship_recipient_collections', 'foreignKey' => 'recipient_id', 'dependent' => true]);
-        $this->hasMany('ScholarshipRecipientDisbursements', ['className' => 'scholarship_recipient_disbursements', 'foreignKey' => 'recipient_id', 'dependent' => true]);
-        $this->hasMany('ScholarshipRecipientPaymentStructureEstimates', ['className' => 'scholarship_recipient_payment_structure_estimates', 'foreignKey' => 'recipient_id', 'dependent' => true]);
-        $this->hasMany('ScholarshipRecipientPaymentStructures', ['className' => 'scholarship_recipient_payment_structures', 'foreignKey' => 'recipient_id', 'dependent' => true]);
-        $this->hasMany('ScholarshipRecipients', ['className' => 'scholarship_recipients', 'foreignKey' => 'recipient_id', 'dependent' => true]);
-        $this->hasMany('SecurityGroupUsers', ['className' => 'security_group_users', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('SecurityUserPasswordRequests', ['className' => 'security_user_password_requests', 'foreignKey' => 'user_id', 'dependent' => true]);
-        $this->hasMany('StaffCustomFieldValues', ['className' => 'staff_custom_field_values', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('StaffCustomTableCells', ['className' => 'staff_custom_table_cells', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('StaffEmploymentStatuses', ['className' => 'staff_employment_statuses', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('StaffExtracurriculars', ['className' => 'staff_extracurriculars', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('StaffMemberships', ['className' => 'staff_memberships', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('StaffPayslips', ['className' => 'staff_payslips', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('StaffQualifications', ['className' => 'staff_qualifications', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('StaffReportCardEmailProcesses', ['className' => 'staff_report_card_email_processes', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('StaffReportCardProcesses', ['className' => 'staff_report_card_processes', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('StaffReportCards', ['className' => 'staff_report_cards', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('StaffSalaries', ['className' => 'staff_salaries', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('StaffTrainingApplicationsAssignee', ['className' => 'staff_training_applications', 'foreignKey' => 'assignee_id', 'dependent' => true]);
-        $this->hasMany('StaffTrainingApplications', ['className' => 'staff_training_applications', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('StaffTrainingNeedsAssignee', ['className' => 'staff_training_needs', 'foreignKey' => 'assignee_id', 'dependent' => true]);
-        $this->hasMany('StaffTrainingNeeds', ['className' => 'staff_training_needs', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('StaffTrainingSelfStudies', ['className' => 'staff_training_self_studies', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('StaffTrainings', ['className' => 'staff_trainings', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('StudentCustomFieldValues', ['className' => 'student_custom_field_values', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('StudentCustomTableCells', ['className' => 'student_custom_table_cells', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('StudentExtracurriculars', ['className' => 'student_extracurriculars', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('StudentFees', ['className' => 'student_fees', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('StudentGuardiansGuardian', ['className' => 'student_guardians', 'foreignKey' => 'guardian_id', 'dependent' => true]);
-        $this->hasMany('StudentGuardians', ['className' => 'student_guardians', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('StudentReportCardEmailProcesses', ['className' => 'student_report_card_email_processes', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('StudentReportCardProcesses', ['className' => 'student_report_card_processes', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('StudentReportCards', ['className' => 'student_report_cards', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('StudentStatusUpdates', ['className' => 'student_status_updates', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('TrainingCourses', ['className' => 'training_courses', 'foreignKey' => 'assignee_id', 'dependent' => true]);
-        $this->hasMany('TrainingSessionResults', ['className' => 'training_session_results', 'foreignKey' => 'assignee_id', 'dependent' => true]);
-        $this->hasMany('TrainingSessionTraineeResults', ['className' => 'training_session_trainee_results', 'foreignKey' => 'trainee_id', 'dependent' => true]);
-        $this->hasMany('TrainingSessionTrainers', ['className' => 'training_session_trainers', 'foreignKey' => 'trainer_id', 'dependent' => true]);
-        $this->hasMany('TrainingSessions', ['className' => 'training_sessions', 'foreignKey' => 'assignee_id', 'dependent' => true]);
-        $this->hasMany('TrainingSessionsTrainees', ['className' => 'training_sessions_trainees', 'foreignKey' => 'trainee_id', 'dependent' => true]);
-        $this->hasMany('UserActivities', ['className' => 'user_activities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserAttachments', ['className' => 'user_attachments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserAwards', ['className' => 'user_awards', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserBankAccounts', ['className' => 'user_bank_accounts', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserBodyMasses', ['className' => 'user_body_masses', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserComments', ['className' => 'user_comments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentsReportCardsCommentsStaff', ['className' => 'Institution.InstitutionStudentsReportCardsComments', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentsReportCardsCommentsStudent', ['className' => 'Institution.InstitutionStudentsReportCardsComments', 'foreignKey' => 'student_id', 'dependent' => true]);
+       // not found
+        // $this->hasMany('InstitutionStudentsTmp', ['className' => 'institution_students_tmp', 'foreignKey' => 'student_id', 'dependent' => true]);POCOR-8795
+        $this->hasMany('InstitutionSubjectStaff', ['className' => 'Staff.StaffSubjects', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionSubjectStudents', ['className' => 'Student.StudentSubjects', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionTripPassengers', ['className' => 'Student.StudentTransport', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionVisitRequestsAssignee', ['className' => 'Quality.VisitRequests', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('MoodleApiCreatedUsers', ['className' => 'MoodleApi.MoodleApiCreatedUsers', 'foreignKey' => 'core_user_id', 'dependent' => true]);
+        $this->hasMany('ReportCardEmailProcesses', ['className' => 'ReportCard.ReportCardEmailProcesses', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('ReportCardProcesses', ['className' => 'ReportCard.ReportCardProcesses', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'foreignKey' => 'applicant_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices', 'foreignKey' => 'applicant_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipApplications', ['className' => 'Profile.ScholarshipApplications', 'foreignKey' => 'applicant_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipApplicationsAssignee', ['className' => 'Profile.ScholarshipApplications', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipFinancialAssistancesModified', ['className' => 'Scholarship.ScholarshipFinancialAssistances', 'foreignKey' => 'modified_user_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipFinancialAssistancesCreated', ['className' => 'Scholarship.ScholarshipFinancialAssistances', 'foreignKey' => 'created_user_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipRecipientAcademicStandings', ['className' => 'Scholarship.RecipientAcademicStandings', 'foreignKey' => 'recipient_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipRecipientActivities', ['className' => 'Scholarship.RecipientActivities', 'foreignKey' => 'recipient_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipRecipientCollections', ['className' => 'Scholarship.RecipientCollections', 'foreignKey' => 'recipient_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipRecipientDisbursements', ['className' => 'Scholarship.RecipientDisbursements', 'foreignKey' => 'recipient_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipRecipientPaymentStructureEstimates', ['className' => 'Scholarship.RecipientPaymentStructureEstimates', 'foreignKey' => 'recipient_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipRecipientPaymentStructures', ['className' => 'Scholarship.RecipientPaymentStructures', 'foreignKey' => 'recipient_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipRecipients', ['className' => 'Scholarship.ScholarshipRecipients', 'foreignKey' => 'recipient_id', 'dependent' => true]);
+        $this->hasMany('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('SecurityUserPasswordRequests', ['className' => 'User.SecurityUserPasswordRequests', 'foreignKey' => 'user_id', 'dependent' => true]);
+        $this->hasMany('StaffCustomFieldValues', ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffCustomTableCells', ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffEmploymentStatuses', ['className' => 'Staff.EmploymentStatuses', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffExtracurriculars', ['className' => 'Staff.Extracurriculars', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffMemberships', ['className' => 'Staff.Memberships', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffPayslips', ['className' => 'Staff.Payslips', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffQualifications', ['className' => 'Staff.Qualifications', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffReportCardEmailProcesses', ['className' => 'ReportCard.StaffReportCardEmailProcesses', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffReportCardProcesses', ['className' => 'ReportCard.StaffReportCardProcesses', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffReportCards', ['className' => 'Institution.StaffReportCards', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffSalaries', ['className' => 'Staff.Salaries', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffTrainingApplicationsAssignee', ['className' => 'Institution.StaffTrainingApplications', 'foreignKey' => 'assignee_id', 'dependent' => true]); //need to ask
+        $this->hasMany('StaffTrainingApplications', ['className' => 'Institution.StaffTrainingApplications', 'foreignKey' => 'staff_id', 'dependent' => true]); //need to ask
+        $this->hasMany('StaffTrainingNeedsAssignee', ['className' => 'Staff.TrainingNeeds', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('StaffTrainingNeeds', ['className' => 'Staff.TrainingNeeds', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffTrainingSelfStudies', ['className' => 'Staff.Achievements', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('StaffTrainings', ['className' => 'Staff.StaffTrainings', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StudentCustomFieldValues', ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('StudentCustomTableCells', ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true]);
+       // Undefined property `request` association on
+        $this->hasMany('StudentExtracurriculars', ['className' => 'Student.Extracurriculars', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('StudentFees', ['className' => 'Institution.StudentFeesAbstract', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('StudentGuardiansGuardian', ['className' => 'Student.StudentGuardians', 'foreignKey' => 'guardian_id', 'dependent' => true]);
+        $this->hasMany('StudentGuardians', ['className' => 'Student.StudentGuardians', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('StudentReportCardEmailProcesses', ['className' => 'ReportCard.StudentReportCardEmailProcesses', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('StudentReportCardProcesses', ['className' => 'ReportCard.StudentReportCardProcesses', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('StudentReportCards', ['className' => 'Student.Profiles', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('StudentStatusUpdates', ['className' => 'Institution.StudentStatusUpdates', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('TrainingCourses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('TrainingSessionResults', ['className' => 'Training.TrainingSessionResults', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('TrainingSessionTraineeResults', ['className' => 'Training.TrainingSessionTraineeResults', 'foreignKey' => 'trainee_id', 'dependent' => true]);
+        $this->hasMany('TrainingSessionTrainers', ['className' => 'Training.TrainingSessionTrainers', 'foreignKey' => 'trainer_id', 'dependent' => true]);
+        $this->hasMany('TrainingSessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('TrainingSessionsTrainees', ['className' => 'Training.TrainingSessionsTrainees', 'foreignKey' => 'trainee_id', 'dependent' => true]);
+        $this->hasMany('UserActivities', ['className' => 'User.UserActivities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserAttachments', ['className' => 'User.Attachments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserAwards', ['className' => 'User.Awards', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserBankAccounts', ['className' => 'User.BankAccounts', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserBodyMasses', ['className' => 'Health.BodyMasses', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserComments', ['className' => 'User.Comments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
 //        $this->hasMany('UserContacts', ['className' => 'user_contacts', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserDemographics', ['className' => 'user_demographics', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserEmployments', ['className' => 'user_employments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserHealthAllergies', ['className' => 'user_health_allergies', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserHealthConsultations', ['className' => 'user_health_consultations', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserHealthFamilies', ['className' => 'user_health_families', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserHealthHistories', ['className' => 'user_health_histories', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserHealthImmunizations', ['className' => 'user_health_immunizations', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserHealthMedications', ['className' => 'user_health_medications', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserHealthTests', ['className' => 'user_health_tests', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserHealths', ['className' => 'user_healths', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserDemographics', ['className' => 'User.Demographics', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserEmployments', ['className' => 'User.UserEmployments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserHealthAllergies', ['className' => 'Health.Allergies', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserHealthConsultations', ['className' => 'Health.Consultations', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserHealthFamilies', ['className' => 'Health.Families', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserHealthHistories', ['className' => 'Health.Histories', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserHealthImmunizations', ['className' => 'Health.Immunizations', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserHealthMedications', ['className' => 'Health.Medications', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserHealthTests', ['className' => 'Health.Tests', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserHealths', ['className' => 'Health.Healths', 'foreignKey' => 'security_user_id', 'dependent' => true]);
 //        $this->hasMany('UserIdentities', ['className' => 'user_identities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserInsurances', ['className' => 'user_insurances', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserLanguages', ['className' => 'user_languages', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserInsurances', ['className' => 'Health.Insurances', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserLanguages', ['className' => 'User.UserLanguages', 'foreignKey' => 'security_user_id', 'dependent' => true]);
 //        $this->hasMany('UserNationalities', ['className' => 'user_nationalities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-//        $this->hasMany('UserSpecialNeedsAssessments', ['className' => 'user_special_needs_assessments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserSpecialNeedsDevices', ['className' => 'user_special_needs_devices', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserSpecialNeedsPlans', ['className' => 'user_special_needs_plans', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserSpecialNeedsReferrals', ['className' => 'user_special_needs_referrals', 'foreignKey' => 'referrer_id', 'dependent' => true]);
-        $this->hasMany('UserSpecialNeedsReferrals', ['className' => 'user_special_needs_referrals', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('UserSpecialNeedsServices', ['className' => 'user_special_needs_services', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('StudentBehaviours', ['className' => 'student_behaviours', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('StaffBehaviours', ['className' => 'staff_behaviours', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $this->hasMany('StaffLicensesAssignee', ['className' => 'staff_licenses', 'foreignKey' => 'assignee_id', 'dependent' => true]);
-        $this->hasMany('StaffLicenses', ['className' => 'staff_licenses', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('InstitutionStudentsReportCards', ['className' => 'institution_students_report_cards', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionTextbooks', ['className' => 'institution_textbooks', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('ExaminationStudentSubjectResults', ['className' => 'examination_student_subject_results', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('ExaminationCentresExaminationsSubjectsStudents', ['className' => 'examination_centres_examinations_subjects_students', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('ExaminationStudentSubjects', ['className' => 'examination_student_subjects', 'foreignKey' => 'student_id', 'dependent' => true]);
-        $this->hasMany('InstitutionAssets', ['className' => 'institution_assets', 'foreignKey' => 'user_id', 'dependent' => true]);
+//        $this->hasMany('UserSpecialNeedsAssessments', ['className' => 'SpecialNeeds.SpecialNeedsAssessments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserSpecialNeedsDevices', ['className' => 'SpecialNeeds.SpecialNeedsDevices', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserSpecialNeedsPlans', ['className' => 'SpecialNeeds.SpecialNeedsPlans', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserSpecialNeedsReferrals', ['className' => 'SpecialNeeds.SpecialNeedsReferrals', 'foreignKey' => 'referrer_id', 'dependent' => true]);
+        $this->hasMany('UserSpecialNeedsReferrals', ['className' => 'SpecialNeeds.SpecialNeedsReferrals', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserSpecialNeedsServices', ['className' => 'SpecialNeeds.SpecialNeedsServices', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        // Undefined property `controller`. You have not defined the `control
+        $this->hasMany('StudentBehaviours', ['className' => 'Student.StudentBehaviours', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('StaffBehaviours', ['className' => 'Staff.StaffBehaviours', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffLicensesAssignee', ['className' => 'Staff.Licenses', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('StaffLicenses', ['className' => 'Staff.Licenses', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentsReportCards', ['className' => 'Institution.InstitutionStudentsReportCards', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionTextbooks', ['className' => 'Institution.InstitutionTextbooks', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('ExaminationStudentSubjectResults', ['className' => 'Examination.ExaminationStudentSubjectResults', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('ExaminationCentresExaminationsSubjectsStudents', ['className' => 'Examination.ExaminationCentresExaminationsSubjectsStudents', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('ExaminationStudentSubjects', ['className' => 'Examination.ExaminationStudentSubjects', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionAssets', ['className' => 'Institution.InstitutionAssets', 'foreignKey' => 'user_id', 'dependent' => true]);
 
         $this->addBehavior('User.User');
         $this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
@@ -1186,25 +1301,69 @@ private static function getStudentCustomData($student_id = null)
                 '_function' => 'getNumberOfUsersByGender'
             ]
         ]);
-        $this->addBehavior('Configuration.Pull');
+        //$this->addBehavior('Configuration.Pull'); //comment cakephp4
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportUsers']);
         $this->addBehavior('ControllerAction.Image');
 
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Directory.Directories.id']);
-        $this->toggle('search', false);
+        $this->toggle('search', true);
         $this->setDeleteStrategy('restrict'); //POCOR-7083
     }
 
     public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
     {
+        // echo "<pre>";
+        // print_r( $primary);die;
         if ($primary) {
-            $schema = $this->schema();
+            $schema = $this->getSchema();
             $fields = $schema->columns();
+            foreach ($fields as $key => $field) {
+                if ($schema->getColumn($field)['type'] == 'binary') {
+                    unset($fields[$key]);
+                }
+            }
             return $query->select($fields);
         }
     }
 
-    public function implementedEvents()
+    // POCOR-5684
+    // public function onGetIdentityNumber(Event $event, Entity $entity)
+    // {
+    //     // Get user identity number
+    //     $users_ids = TableRegistry::get('user_identities');
+    //     $user_id_data = $users_ids->find()
+    //     ->select(['number'])
+    //     ->where([
+    //         $users_ids->aliasField('security_user_id') => $entity->id,
+    //     ])
+    //     ->first();
+    //     return $entity->identity_number = $user_id_data->number;
+    // }
+
+    // // POCOR-5684
+    // public function onGetIdentityTypeID(Event $event, Entity $entity)
+    // {
+    //     // Get User Identity Type id
+    //     $users_ids = TableRegistry::get('user_identities');
+    //     $user_id_data = $users_ids->find()
+    //     ->select(['identity_type_id'])
+    //     ->where([
+    //         $users_ids->aliasField('security_user_id') => $entity->id,
+    //     ])
+    //     ->first();
+
+    //     // Get Identity Type Name
+    //     $users_id_type = TableRegistry::get('identity_types');
+    //     $user_id_name = $users_id_type->find()
+    //     ->select(['name'])
+    //     ->where([
+    //         $users_id_type->aliasField('id') => $user_id_data->identity_type_id,
+    //     ])
+    //     ->first();
+    //     return $entity->identity_type_id = $user_id_name->name;
+    // }
+
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['AdvanceSearch.getCustomFilter'] = 'getCustomFilter';
@@ -1216,13 +1375,15 @@ private static function getStudentCustomData($student_id = null)
     public function validationNotEmptyNationality(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
+        $validator->setProvider('custom', $this);
         $validator->add('nationality');
         return $validator;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         $validator
             ->allowEmpty('postal_code')
             ->add('postal_code', 'ruleCustomPostalCode', [
@@ -1286,7 +1447,6 @@ private static function getStudentCustomData($student_id = null)
         }
     }
 
-    // POCOR-5684
 
     public function areaAdminstrativeAfterDelete(Event $event, $areaAdministrative)
     {
@@ -1335,8 +1495,6 @@ private static function getStudentCustomData($student_id = null)
 
     }
 
-    // POCOR-5684
-
     public function getCustomFilter(Event $event)
     {
         $filters['user_type'] = [
@@ -1351,53 +1509,22 @@ private static function getStudentCustomData($student_id = null)
         return $filters;
     }
 
-    // POCOR-5684
-    // public function onGetIdentityNumber(Event $event, Entity $entity)
-    // {
-    //     // Get user identity number
-    //     $users_ids = TableRegistry::get('user_identities');
-    //     $user_id_data = $users_ids->find()
-    //     ->select(['number'])
-    //     ->where([
-    //         $users_ids->aliasField('security_user_id') => $entity->id,
-    //     ])
-    //     ->first();
-    //     return $entity->identity_number = $user_id_data->number;
-    // }
-
-    // // POCOR-5684
-    // public function onGetIdentityTypeID(Event $event, Entity $entity)
-    // {
-    //     // Get User Identity Type id
-    //     $users_ids = TableRegistry::get('user_identities');
-    //     $user_id_data = $users_ids->find()
-    //     ->select(['identity_type_id'])
-    //     ->where([
-    //         $users_ids->aliasField('security_user_id') => $entity->id,
-    //     ])
-    //     ->first();
-
-    //     // Get Identity Type Name
-    //     $users_id_type = TableRegistry::get('identity_types');
-    //     $user_id_name = $users_id_type->find()
-    //     ->select(['name'])
-    //     ->where([
-    //         $users_id_type->aliasField('id') => $user_id_data->identity_type_id,
-    //     ])
-    //     ->first();
-    //     return $entity->identity_type_id = $user_id_name->name;
-    // }
-
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $options)
     {
-        if (!$this->isAdvancedSearchEnabled()) {
-            $event->stopPropagation();
-            return [];
-        } else {
-            $this->behaviors()->get('AdvanceSearch')->config([
+        // POCOR-8558 start
+        $referer = $this->request->getEnv('HTTP_REFERER');
+        $parsedUrl = parse_url($referer);
+
+        // Check if 'page' is set in the query string or 'AdvanceSearch' is present
+        if (isset($_GET['page']) || isset($_REQUEST['AdvanceSearch'])) {
+            $this->behaviors()->get('AdvanceSearch')->setConfig([
                 'showOnLoad' => 0,
             ]);
+        } else {
+            $event->stopPropagation();
+            return;
         }
+        // POCOR-8558 ends
 
         $conditions = [];
 
@@ -1409,7 +1536,7 @@ private static function getStudentCustomData($student_id = null)
         // POCOR-2547 sort list of staff and student by name
         $orders = [];
 
-        if (!isset($this->request->query['sort'])) {
+        if (!isset($this->request->getQuery['sort'])) {
             $orders = [
                 $this->aliasField('first_name'),
                 $this->aliasField('last_name')
@@ -1444,14 +1571,14 @@ private static function getStudentCustomData($student_id = null)
                             $typesIdentity->id => $UserIdentities->aliasField('number')
                         ])
                         ->leftJoin(
-                            [$UserIdentities->alias() => $UserIdentities->table()],
+                            [$UserIdentities->getAlias() => $UserIdentities->getTable()],
                             [
                                 $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('id'),
                                 $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id
                             ]
                         )
                         ->leftJoin(
-                            [$IdentityTypes->alias() => $IdentityTypes->table()],
+                            [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
                             [
                                 $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
                                 $IdentityTypes->aliasField('id = ') . $typesIdentity->id
@@ -1481,7 +1608,7 @@ public function getIdentityTypeData($value_selection)
 
     public function findStudentsInSchool(Query $query, array $options)
     {
-        $institutionIds = (array_key_exists('institutionIds', $options)) ? $options['institutionIds'] : [];
+        $institutionIds = (isset($options['institutionIds'])) ? $options['institutionIds'] : [];
         if (!empty($institutionIds)) {
             $query
                 ->join([
@@ -1521,7 +1648,7 @@ public function getIdentityTypeData($value_selection)
 
     public function findStaffInSchool(Query $query, array $options)
     {
-        $institutionIds = (array_key_exists('institutionIds', $options)) ? $options['institutionIds'] : [];
+        $institutionIds = (isset($options['institutionIds'])) ? $options['institutionIds'] : [];
         if (!empty($institutionIds)) {
             $query->join([
                 [
@@ -1560,16 +1687,20 @@ public function getIdentityTypeData($value_selection)
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->action == 'add') {
-            if ($this->controller->name != 'Students') {
+            if ($this->controller->getName() != 'Students') {
                 $this->field('user_type', ['type' => 'select', 'after' => 'photo_content']);
             } else {
-                $this->request->query['user_type'] = self::GUARDIAN;
+                //$this->request->query['user_type'] = self::GUARDIAN;
+                $this->request = $this->request->withQueryParams(['user_type' => self::GUARDIAN]);
             }
-            $userType = isset($this->request->data[$this->alias()]['user_type']) ? $this->request->data[$this->alias()]['user_type'] : $this->request->query('user_type');
+            $requestData = $this->request->getData();
+            $userType = isset($requestData[$this->getAlias()]['user_type']) ? $requestData[$this->getAlias()]['user_type'] : $this->request->getQuery('user_type');
             $this->field('openemis_no', ['user_type' => $userType]);
             switch ($userType) {
                 case self::STUDENT:
-                    $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
+                    $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities',
+//                        'Contacts'
+                    ]]);
                     $this->addBehavior('CustomField.Record', [
                         'model' => 'Student.Students',
                         'behavior' => 'Student',
@@ -1587,7 +1718,9 @@ public function getIdentityTypeData($value_selection)
                     ]);
                     break;
                 case self::STAFF:
-                    $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
+                    $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' => ['Identities', 'Nationalities',
+//                        'Contacts'
+                    ]]);
                     $this->addBehavior('CustomField.Record', [
                         'model' => 'Staff.Staff',
                         'behavior' => 'Staff',
@@ -1615,15 +1748,16 @@ public function getIdentityTypeData($value_selection)
             $this->field('identity_type_id', ['visible' => false]);
         }
         if ($this->action == 'edit') {
-            $this->hideOtherInformationSection($this->controller->name, 'edit');
+            $this->hideOtherInformationSection($this->controller->getName(), 'edit');
             $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
             $this->field('openemis_no', ['user_type' => $userType]);
             $this->addCustomUserBehavior($userType);
         }
         if ($this->action == 'view') {
-            $encodedParam = $this->request->params['pass'][1];
+            $encodedParam = $this->request->getAttribute('params')['pass'][1];
             $securityUserId = $this->ControllerAction->paramsDecode($encodedParam)['id'];
-            $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
+
+            $userInfo = TableRegistry::get('User.Users')->get($securityUserId);
             if ($userInfo->is_student) {
                 $userType = self::STUDENT;
                 $this->addCustomUserBehavior($userType);
@@ -1635,6 +1769,8 @@ public function getIdentityTypeData($value_selection)
                 $this->addCustomUserBehavior($userType);
             }
 
+        } elseif ( $this->action == 'index' && $this->Session->check('Directory')) {
+            $this->Session->delete('Directory');
         }
 
         // Start POCOR-5188
@@ -1656,7 +1792,6 @@ public function getIdentityTypeData($value_selection)
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
         // End POCOR-5188
-
     }
 
     public function hideOtherInformationSection($controller, $action)
@@ -1672,7 +1807,11 @@ public function getIdentityTypeData($value_selection)
     {
         switch ($userType) {
             case self::STUDENT:
-                $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
+                $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>
+                    ['Identities',
+                        'Nationalities',
+//                        'Contacts'
+                    ]]);
                 $this->addBehavior('CustomField.Record', [
                     'model' => 'Student.Students',
                     'behavior' => 'Student',
@@ -1683,14 +1822,18 @@ public function getIdentityTypeData($value_selection)
                     'formKey' => 'student_custom_form_id',
                     'filterKey' => 'student_custom_filter_id',
                     'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
-                    'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
+                    // 'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
                     'recordKey' => 'student_id',
                     'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
                     'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
                 ]);
                 break;
             case self::STAFF:
-                $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
+                $this->addBehavior('User.Mandatory', ['userRole' => 'Staff',
+                    'roleFields' => ['Identities',
+                        'Nationalities',
+//                        'Contacts'
+                    ]]);
                 $this->addBehavior('CustomField.Record', [
                     'model' => 'Staff.Staff',
                     'behavior' => 'Staff',
@@ -1720,12 +1863,11 @@ public function getIdentityTypeData($value_selection)
 
     public function onGetIdentityNumber(Event $event, Entity $entity)
     {
-
         // Case 1: if user has only one identity, show the same,
         // Case 2: if user has more than one identity and also has more than one nationality, and no one is linked to any nationality, then, check, if any nationality has default identity, then show that identity else show the first identity.
         // Case 3: if user has more than one identity (no one is linked to nationality), show the first
 
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_identities = $users_ids->find()
             ->select(['number', 'nationality_id'])
             ->where([
@@ -1733,7 +1875,7 @@ public function getIdentityTypeData($value_selection)
             ])
             ->all();
 
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_id_data = $users_ids->find()
             ->select(['number'])
             ->where([
@@ -1748,7 +1890,7 @@ public function getIdentityTypeData($value_selection)
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('nationalities');
+            $nationalities = TableRegistry::get('FieldOption.Nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -1769,7 +1911,7 @@ public function getIdentityTypeData($value_selection)
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('user_identities');
+                $users_ids = TableRegistry::get('User.Identities');
                 $user_id_data_nat = $users_ids->find()
                     ->select(['number'])
                     ->where([
@@ -1792,9 +1934,10 @@ public function getIdentityTypeData($value_selection)
         }
     }
 
+    // POCOR-5684
     public function onGetIdentityTypeID(Event $event, Entity $entity)
     {
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_identities = $users_ids->find()
             ->select(['number', 'nationality_id'])
             ->where([
@@ -1802,7 +1945,7 @@ public function getIdentityTypeData($value_selection)
             ])
             ->all();
 
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_id_data = $users_ids->find()
             ->select(['number', 'identity_type_id'])
             ->where([
@@ -1812,7 +1955,7 @@ public function getIdentityTypeData($value_selection)
 
         if (count($user_identities) == 1) {
             // Case 1
-            $users_id_type = TableRegistry::get('identity_types');
+            $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
             $user_id_name = $users_id_type->find()
                 ->select(['name'])
                 ->where([
@@ -1824,7 +1967,7 @@ public function getIdentityTypeData($value_selection)
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('nationalities');
+            $nationalities = TableRegistry::get('FieldOption.Nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -1845,7 +1988,7 @@ public function getIdentityTypeData($value_selection)
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('user_identities');
+                $users_ids = TableRegistry::get('User.Identities');
                 $user_id_data_nat = $users_ids->find()
                     ->select(['number', 'identity_type_id'])
                     ->where([
@@ -1859,7 +2002,7 @@ public function getIdentityTypeData($value_selection)
             }
             if (count($nationality_based_ids) > 0) {
                 // Case 2 - returning value
-                $users_id_type = TableRegistry::get('identity_types');
+                $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
                 $user_id_name = $users_id_type->find()
                     ->select(['name'])
                     ->where([
@@ -1869,60 +2012,67 @@ public function getIdentityTypeData($value_selection)
                 return $entity->identity_type_id = $user_id_name->name;
             } else {
                 // Case 3 - returning value, return again from Case 1
-                $users_id_type = TableRegistry::get('identity_types');
-                $user_id_name = $users_id_type->find()
-                    ->select(['name'])
-                    ->where([
-                        $users_id_type->aliasField('id') => $user_id_data->identity_type_id,
-                    ])
-                    ->first();
-                return $entity->identity_type_id = $user_id_name->name;
+                if(!empty( $user_id_data)){
+                    $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
+                    $user_id_name = $users_id_type->find()
+                        ->select(['name'])
+                        ->where([
+                            $users_id_type->aliasField('id') => $user_id_data->identity_type_id,
+                        ])
+                        ->first();
+                    return $entity->identity_type_id = $user_id_name->name;
+                }
             }
         }
     }
 
     public function addBeforeAction(Event $event)
     {
-        if (!isset($this->request->data[$this->alias()]['user_type'])) {
-            $this->request->data[$this->alias()]['user_type'] = $this->request->query('user_type');
+        $requestData = $this->request->getData();
+        if (!isset($requestData[$this->getAlias()]['user_type'])) {
+            // $this->request->data[$this->getAlias()]['user_type'] = $this->request->query('user_type');
+            $requestData['user_type'] = $this->request->getQuery('user_type');
+            $this->request = $this->request->withData($this->getAlias(), $requestData);
         }
     }
-
-    //POCOR-6248 starts
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         // need to find out order values because recordbehavior changes it
         $allOrderValues = [];
         foreach ($this->fields as $key => $value) {
-            $allOrderValues[] = (array_key_exists('order', $value) && !empty($value['order'])) ? $value['order'] : 0;
+            $allOrderValues[] = (isset($value['order']) && !empty($value['order'])) ? $value['order'] : 0;
         }
         $highestOrder = max($allOrderValues);
 
-        $userType = $this->request->query('user_type');
+        $userType = $this->request->getQuery('user_type');
 
         $openemisNo = $this->getUniqueOpenemisId();
 
         $this->fields['openemis_no']['value'] = $openemisNo;
         $this->fields['openemis_no']['attr']['value'] = $openemisNo;
-        // pr($this->request->data[$this->alias()]['username']);
-        if (!isset($this->request->data[$this->alias()]['username'])) {
-            $this->request->data[$this->alias()]['username'] = $openemisNo;
-        } elseif ($this->request->data[$this->alias()]['username'] == $this->request->data[$this->alias()]['openemis_no']) {
-            $this->request->data[$this->alias()]['username'] = $openemisNo;
-        } elseif (empty($this->request->data[$this->alias()]['username'])) {
+        // pr($this->request->data[$this->getAlias()]['username']);
+        $requestData = $this->request->getData();
+        $data['username'] = '';
+        if (!isset($requestData[$this->getAlias()]['username'])) {
+            $data['username'] = $openemisNo;
+        } elseif ($requestData[$this->getAlias()]['username'] == $requestData[$this->getAlias()]['openemis_no']) {
+            $data['username'] = $openemisNo;
+        } elseif (empty($requestData[$this->getAlias()]['username'])) {
             $entity->invalid('username', $openemisNo, true);
-            $this->request->data[$this->alias()]['username'] = $openemisNo;
+            $data['username'] = $openemisNo;
         }
+
         $this->field('username', ['order' => ++$highestOrder, 'visible' => true]);
-
-        if (!isset($this->request->data[$this->alias()]['password'])) {
-            $UsersTable = TableRegistry::get('User.Users');
-
+        $data['password'] = '';
+        if (!isset($requestData[$this->getAlias()]['password'])) {
+            // POCOR-8231 removed unnecessary call for user
             // Read the number of length of password from system config
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-            $this->request->data[$this->alias()]['password'] = $ConfigItems->getAutoGeneratedPassword();
+            $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
+            $data['password'] = $ConfigItems->getAutoGeneratedPassword();
         }
+        $this->request = $this->request->withData($this->getAlias(), $data);
+
         $this->field('password', ['order' => ++$highestOrder, 'visible' => true, 'attr' => ['autocomplete' => 'off']]);
         $this->field('nationality', ['attr' => ['required' => true]]);//POCOR-5987
         $this->field('identity_number', ['visible' => true]);
@@ -1934,7 +2084,7 @@ public function getIdentityTypeData($value_selection)
             'identity_type', 'identity_number',
             'username', 'password'
         ]);
-    }//POCOR-6248 ends
+    }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -1953,6 +2103,8 @@ public function getIdentityTypeData($value_selection)
             'url' => '#',
             'label' => '<i class="fa fa-search-plus"></i>',
         ];
+        if(isset($toolbarButtons['search']))//POCOr-8733
+           unset($toolbarButtons['search']);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -1967,15 +2119,16 @@ public function getIdentityTypeData($value_selection)
                 $icon = '<i class="fa fa-history"></i>';
                 $url = [
                     'plugin' => 'Directory',
-                    'controller' => 'DirectoryHistories',
-                    'action' => 'index'
+                    'controller' => 'Directories',
+                    'action' => 'Histories',
+                    'index'
                 ];
 
                 $buttons['history'] = $buttons['view'];
                 $buttons['history']['label'] = $icon . __('History');
                 $buttons['history']['url'] = $this->ControllerAction->setQueryString($url, [
                     'security_user_id' => $userId,
-                    'user_type' => $this->alias()
+                    'user_type' => $this->getAlias()
                 ]);
             }
             // end history button
@@ -1984,7 +2137,7 @@ public function getIdentityTypeData($value_selection)
         return $buttons;
     }
 
-    public function onUpdateFieldUserType(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldUserType(Event $event, array $attr, $action, ServerRequest $request)
     {
         $options = [
             self::STUDENT => __('Student'),
@@ -1994,25 +2147,28 @@ public function getIdentityTypeData($value_selection)
         ];
         $attr['options'] = $options;
         $attr['onChangeReload'] = 'changeUserType';
-        if (!$this->request->query('user_type')) {
-            $this->request->query['user_type'] = key($options);
+        if (!$this->request->getQuery('user_type')) {
+            //$this->request->Query['user_type'] = key($options);
+            $this->request = $this->request->withQueryParams(['user_type' => key($options)]);
         }
         return $attr;
     }
 
     public function addOnChangeUserType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        unset($this->request->query['user_type']);
+        unset($this->request->getQuery['user_type']);
 
         if ($this->request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $data)) {
-                if (array_key_exists('user_type', $data[$this->alias()])) {
-                    $this->request->query['user_type'] = $data[$this->alias()]['user_type'];
+            if (array_key_exists($this->getAlias(), $data)) {
+                if (array_key_exists('user_type', $data[$this->getAlias()])) {
+                    //$this->request->query['user_type'] = $data[$this->getAlias()]['user_type'];
+                    $this->request = $this->request->withQueryParams(['user_type' => $data[$this->getAlias()]['user_type']]);
+
                 }
             }
 
-            if (isset($data[$this->alias()]['custom_field_values'])) {
-                unset($data[$this->alias()]['custom_field_values']);
+            if (isset($data[$this->getAlias()]['custom_field_values'])) {
+                unset($data[$this->getAlias()]['custom_field_values']);
             }
 
             //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
@@ -2025,7 +2181,7 @@ public function getIdentityTypeData($value_selection)
         }
     }
 
-    public function onUpdateFieldPassword(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPassword(Event $event, array $attr, $action, ServerRequest $request)
     {
         // setting the tooltip message
         $tooltipMessagePassword = $this->getMessage('Users.tooltip_message_password');
@@ -2036,6 +2192,7 @@ public function getIdentityTypeData($value_selection)
 
         return $attr;
     }
+    //POCOR-7083 :: end
 
     protected function tooltipMessage($message)
     {
@@ -2046,7 +2203,7 @@ public function getIdentityTypeData($value_selection)
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
     {
-        $userType = $requestData[$this->alias()]['user_type'];
+        $userType = $requestData[$this->getAlias()]['user_type'];
         $type = [
             'is_student' => '0',
             'is_staff' => '0',
@@ -2069,12 +2226,20 @@ public function getIdentityTypeData($value_selection)
                 $type['is_guardian'] = 1;
                 break;
         }
-        $directoryEntity = array_merge($requestData[$this->alias()], $type);
-        $requestData[$this->alias()] = $directoryEntity;
+        $directoryEntity = array_merge($requestData[$this->getAlias()], $type);
+        $requestData[$this->getAlias()] = $directoryEntity;
     }
 
     public function indexAfterAction(Event $event)
     {
+        // echo "<pre>";print_r($_REQUEST);die;
+        // $data  = $event->getData();
+        // $datas = $data['2'];
+        // unset($datas['toolbarButtons']['view']['url']['?']);
+        // unset($datas['indexButtons']['view']['url']['?']);
+        // unset($datas['indexButtons']['view']['url']['page']);
+        // unset($datas['toolbarButtons']['view']['url']['page']);
+        // echo "<pre>";print_r($datas);exit;
         $this->fields = [];
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
 
@@ -2108,10 +2273,10 @@ public function getIdentityTypeData($value_selection)
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
+        // echo '<pre>';print_r($extra);die;
         if ($this->action == 'index') {
             $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
             //POCOR-6248 starts
-            if ($userType == self::STAFF || $userType == self::STUDENT) {
                 $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
                 $ConfigItem = $ConfigItemTable
                     ->find()
@@ -2190,18 +2355,16 @@ public function getIdentityTypeData($value_selection)
                 case self::OTHER:
                     $this->setFieldOrder(['photo_content', 'openemis_no', 'name', 'institution', 'date_of_birth']);
                     break;
+                default: //POCOR-8850
+                    $this->setFieldOrder(['photo_content', 'openemis_no', 'name', 'institution', 'date_of_birth']);
+                    break;
             }
-        }
     }
-
-    // for info tooltip
 
     public function onGetStudentStatus(Event $event, Entity $entity)
     {
         return __($entity->student_status_name);
     }
-
-//POCOR-7083 :: Start
 
     public function getNumberOfUsersByGender($params = [])
     {
@@ -2256,9 +2419,6 @@ public function getIdentityTypeData($value_selection)
             ]
         ]);
     }
-    //POCOR-7083 :: end
-
-    //POCOR-7224-HINDOL[start]
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
@@ -2316,7 +2476,6 @@ public function getIdentityTypeData($value_selection)
             $this->Session->write('Student.Students.id', $entity->id);
             $this->Session->write('Student.Students.name', $entity->name);
             $isSet = true;
-            $isSet = true;
         }
 
         if ($isStaff) {
@@ -2338,7 +2497,7 @@ public function getIdentityTypeData($value_selection)
 
     private function setupTabElements($entity)
     {
-        $id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
+        $id = !is_null($this->request->getQuery('id')) ? $this->request->getQuery('id') : 0;
 
         $options = [
             // 'userRole' => 'Student',
@@ -2346,10 +2505,9 @@ public function getIdentityTypeData($value_selection)
             // 'id' => $id,
             // 'userId' => $entity->id
         ];
-
         $tabElements = $this->controller->getUserTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -2368,33 +2526,42 @@ public function getIdentityTypeData($value_selection)
         $this->setupTabElements($entity);
     }
 
-        public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //POCOR-8059::start
         if ($entity->isNew()) {
             $entity->preferred_language = 'en';
-        } else {
-            if (!empty($entity->date_of_death)) {
+        }else{
+            if(!empty($entity->date_of_death)){
                 $dob = $entity->date_of_birth->i18nFormat('yyyy-MM-dd');
                 $dod = $entity->date_of_death->i18nFormat('yyyy-MM-dd');
-                if ($dob > $dod) {
+                if($dob > $dod){
                     $entity->dod_range = "greater";
                 }
 
-                if (isset($entity->dod_range)) {
+                if(isset($entity->dod_range)){
                     $event->stopPropagation();
-                    $this->Alert->warning('general.dodmsg', ['reset' => true]);
+                    $this->Alert->warning('general.dodmsg' , ['reset' => true]);
                     $url = $this->url('edit');
                     return $this->controller->redirect($url);
                 }
             }
         }
         //POCOR-8059 :: end
-        if (!$entity->isNew() && $entity->dirty('gender_id') && !$entity->is_student) {
-            $entity->errors('gender_id', __('Gender is not editable in Directories'));
-            return false;
+        //POCOR-8906 start
+        if (!$entity->isNew()) {
+            if (!$entity->is_student) {
+                $dirty = $entity->getDirty();
+                Log::debug(print_r($dirty,true));
+                if (in_array('gender_id', $dirty)) {
+                    $this->Alert->error(__('Gender is not editable in Directories') , ['type' => 'string', 'reset' => true]);
+                    $entity->setErrors(['gender_id', __('Gender is not editable in Directories')]);
+                    return false;
+                }
+            }
         }
-    }//POCOR-7072 ends
+        //POCOR-8906 end
+    }
 
     public function onGetInstitution(Event $event, Entity $entity)
     {
@@ -2449,24 +2616,20 @@ public function getIdentityTypeData($value_selection)
         }
     }
 
-    //POCOR-7224-HINDOL[end]
-
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-
-
         if ($this->hasAssociatedRecords($this, $entity, $extra)) {
-//            Inflector::humanize(Inflector::underscore());
+            //Inflector::humanize(Inflector::underscore());
             $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
             $event->stopPropagation();
             return $this->controller->redirect($this->url('remove'));
         } else {
             try {
-                TableRegistry::get('student_custom_field_values')->deleteAll(['student_id' => $entity->id]);
+                TableRegistry::get('StudentCustomField.StudentCustomFieldValues')->deleteAll(['student_id' => $entity->id]);
             } catch (\Exception $exception) {
                 $this->log($exception->getMessage(), 'error');
             }
-            $users = TableRegistry::get('security_users');
+            $users = TableRegistry::get('Security.Users');
             $user = $users->get($entity->id);
             if ($users->delete($user)) {
                 $this->Alert->success('general.delete.success', ['reset' => true]);
@@ -2475,14 +2638,67 @@ public function getIdentityTypeData($value_selection)
         }
     }
 
-    //POCOR-8012-n
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        if ($field == 'photo_content') {
+            return __('Photo Content');
+        } elseif ($field == 'openemis_id') {
+            return __('OpenEMIS ID');
+        } elseif ($field == 'first_name') {
+            return __('First Name');
+        } elseif ($field == 'middle_name') {
+            return __('Middle Name');
+        } elseif ($field == 'third_name') {
+            return __('Third Name');
+        } elseif ($field == 'last_name') {
+            return __('Last Name');
+        } elseif ($field == 'preferred_name') {
+            return __('Preferred Name');
+        } elseif ($field == 'gender_id') {
+            return __('Gender');
+        } elseif ($field == 'date_of_birth') {
+            return __('Date Of Birth');
+        } elseif ($field == 'email') {
+            return __('Email');
+        } elseif ($field == 'details') {
+            return __('Details');
+        } elseif ($field == 'address') {
+            return __('Address');
+        } elseif ($field == 'staff_id') {
+            return __('Staff');
+        } elseif ($field == 'start_date') {
+            return __('Start Date');
+        } elseif ($field == 'end_date') {
+            return __('End Date');
+        } elseif ($field == 'staff_status_id') {
+            return __('Staff Status');
+        } elseif ($field == 'passport_no') {
+            return __('Passport');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } elseif ($field == 'username') {
+            return __('Username');
+        } elseif ($field == 'address_area_id') {
+            return __('Address');
+        } elseif ($field == 'birthplace_area_id') {
+            return __('Birth Area');
+        } elseif ($field == 'username') {
+            return __('Username');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 
     private function checkUsersChildRecords($entity)
     {
         $result = false;
         $securityUserId = $entity->id ?? 0;
-
-
         // First count child records and after that delete main record if there is no any child record found
         // Records to delete from tables-
         // institution_class_students (student_id),
@@ -2511,39 +2727,39 @@ public function getIdentityTypeData($value_selection)
 
         if ($securityUserId) {
             // count all institution_class_students
-            $institutionClassStudents = TableRegistry::get('institution_class_students')
+            $institutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all user activities
-            $userActivities = TableRegistry::get('user_activities')
+            $userActivities = TableRegistry::get('User.UserActivities')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
             // count all student_custom_field_values
-            $studentCustomFieldValues = TableRegistry::get('student_custom_field_values')
+            $studentCustomFieldValues = TableRegistry::get('StudentCustomField.StudentCustomFieldValues')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_competency_results
-            $institutionCompetencyResults = TableRegistry::get('institution_competency_results')
+            $institutionCompetencyResults = TableRegistry::get('Institution.InstitutionCompetencyResults')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_student_absences
-            $institutionStudentAbsences = TableRegistry::get('institution_student_absences')
+            $institutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_student_absence_days
-            $institutionStudentAbsenceDays = TableRegistry::get('institution_student_absence_days')
+            $institutionStudentAbsenceDays = TableRegistry::get('Institution.InstitutionStudentAbsenceDays')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_student_absence_details
-            $institutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details')
+            $institutionStudentAbsenceDetails = TableRegistry::get('Institution.InstitutionStandardStudentAbsenceType')//need to ask
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_students
-            $institutionStudents = TableRegistry::get('institution_students')
+            $institutionStudents = TableRegistry::get('Institution.InstitutionStudents')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // student_risks_criterias
-            $students = TableRegistry::get('institution_student_risks');
+            $students = TableRegistry::get('Institution.InstitutionStudentRisks');
             $query = $students->find()->select(['id'])->where(['student_id =' => $securityUserId]);
 
             $studentRiskIds = [];
@@ -2553,54 +2769,54 @@ public function getIdentityTypeData($value_selection)
 
             $studentRisksCriterias = 0;
             if (count($studentRiskIds)) {
-                $studentRisksCriterias = TableRegistry::get('student_risks_criterias')
+                $studentRisksCriterias = TableRegistry::get('Institution.StudentRisksCriterias')
                     ->find()->where(['institution_student_risk_id IN' => $securityUserId])->count();
             }
 
             // count all institution_student_risks
-            $institutionStudentRisks = TableRegistry::get('institution_student_risks')
+            $institutionStudentRisks = TableRegistry::get('Institution.InstitutionStudentRisks')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_subject_students
-            $institutionSubjectStudents = TableRegistry::get('institution_subject_students')
+            $institutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all user_special_needs_devices
-            $userSpecialNeedsDevices = TableRegistry::get('user_special_needs_devices')
+            $userSpecialNeedsDevices = TableRegistry::get('SpecialNeeds.SpecialNeedsDevices')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
             // count all user_special_needs_referrals
-            $userSpecialNeedsReferrals = TableRegistry::get('user_special_needs_referrals')
+            $userSpecialNeedsReferrals = TableRegistry::get('SpecialNeeds.SpecialNeedsReferrals')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
             // count all user_special_needs_services
-            $userSpecialNeedsServices = TableRegistry::get('user_special_needs_services')
+            $userSpecialNeedsServices = TableRegistry::get('SpecialNeeds.SpecialNeedsServices')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
             // count all user_special_needs_services
-            $userSpecialNeedsAssessments = TableRegistry::get('user_special_needs_assessments')
+            $userSpecialNeedsAssessments = TableRegistry::get('SpecialNeeds.SpecialNeedsAssessments')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
 
             // count all institution_cases
-            $institutionCases = TableRegistry::get('institution_cases')
+            $institutionCases = TableRegistry::get('Cases.InstitutionCases')
                 ->find()->where(['assignee_id' => $securityUserId])->count();
 
             // count all institution_staff_shifts
-            $institutionStaffShifts = TableRegistry::get('institution_staff_shifts')
+            $institutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts')
                 ->find()->where(['staff_id' => $securityUserId])->count();
 
             //// POCOR-7179[START]
-            $userNationalities = TableRegistry::get('user_nationalities')
+            $userNationalities = TableRegistry::get('User.Nationalities')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
             // POCOR-7179[END]
 
             //POCOR-7540 start
             // count all institution_student_admission
-            $institutionStudentAdmission = TableRegistry::get('institution_student_admission')
+            $institutionStudentAdmission = TableRegistry::get('Institution.StudentAdmission')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_student_surveys and institution_student_survey_answers
-            $institutionStudentSurveys = TableRegistry::get('institution_student_surveys')
+            $institutionStudentSurveys = TableRegistry::get('Student.StudentSurveys')
                 ->find()->where(['student_id' => $securityUserId])->toArray();
 
 
@@ -2611,16 +2827,16 @@ public function getIdentityTypeData($value_selection)
 
             $institutionStudentSurveyAnswers = 0;
             if (count($institutionStudentSurveysIds)) {
-                $institutionStudentSurveyAnswers = TableRegistry::get('institution_student_survey_answers')
+                $institutionStudentSurveyAnswers = TableRegistry::get('Institution.InstitutionStudentSurveyAnswers')
                     ->find()->where(['institution_student_survey_id IN' => $institutionStudentSurveysIds])->count();
             }
 
             //count all security_group_users
-            $securityGroupUsers = TableRegistry::get('security_group_users')
+            $securityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
             //count all student_status_updates
-            $studentStatusUpdates = TableRegistry::get(' student_status_updates')
+            $studentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
             //POCOR-7540 end
@@ -2656,5 +2872,35 @@ public function getIdentityTypeData($value_selection)
         return $result;
     }
 
+    //POCOR-8743 Start
+    public function onGetModifiedUserId(Event $event, Entity $entity)
+    {
+        if(!empty($entity->modified_user_id)) {
+            $users = TableRegistry::get('Security.Users');
+            // POCOR-9083 start
+            try {
+                $user = $users->get($entity->modified_user_id);
+            } catch (\Exception $e) {
+                return $entity->modified_user_id; // Handle the absence of the user gracefully
+            }
+            // POCOR-9083 end
+            return $user->name;
+        }
+    }
 
+    public function onGetCreatedUserId(Event $event, Entity $entity)
+    {
+        $users = TableRegistry::get('Security.Users');
+        // POCOR-9083 start
+        if(!empty($entity->created_user_id)) {
+            try {
+                $user = $users->get($entity->created_user_id);
+            } catch (\Exception $e) {
+                return $entity->created_user_id; // Handle the absence of the user gracefully
+            }
+            return $user->name;
+        }
+    }
+    // POCOR-9083 end
+    //POCOR-8743 End
 }

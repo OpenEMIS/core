@@ -17,7 +17,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
     use IdGeneratorTrait;
     use PickerTrait;
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
         parent::initialize($config);
     }
 
@@ -29,9 +29,9 @@ class RenderRepeaterBehavior extends RenderBehavior {
         $RepeaterSurveyAnswers = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
 
         $model = $this->_table;
-        $session = $model->request->session();
-        $registryAlias = $model->registryAlias();
-        $debugInfo = $model->alias() . ' #'.$entity->id.' (Institution ID: ' . $entity->institution_id . ', Academic Period ID: ' . $entity->academic_period_id . ', Survey Form ID: ' . $entity->survey_form_id . ')';
+        $session = $model->request->getSession();
+        $registryAlias = $model->getRegistryAlias();
+        $debugInfo = $model->getAlias() . ' #'.$entity->id.' (Institution ID: ' . $entity->institution_id . ', Academic Period ID: ' . $entity->academic_period_id . ', Survey Form ID: ' . $entity->survey_form_id . ')';
 
         $value = '';
 
@@ -41,8 +41,9 @@ class RenderRepeaterBehavior extends RenderBehavior {
         $formKey = $attr['attr']['formKey'];
         $fieldId = $customField->id;
 
-        $form = $event->subject()->Form;
+        $form = $event->getSubject()->Form;
         $fieldPrefix = $attr['model'] . '.institution_repeater_surveys.' . $fieldId;
+        $form->create($entity, ['type' => 'post']);
         $form->unlockField($fieldPrefix);
         $unlockFields = [$attr['model'] . '.repeater_question_id'];
         $form->unlockField($attr['model'] . '.repeater_question_id');
@@ -54,7 +55,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
         // Get Survey Form ID
         if ($customField->has('params') && !empty($customField->params)) {
             $params = json_decode($customField->params, true);
-            if (array_key_exists('survey_form_id', $params)) {
+            if (isset($params['survey_form_id'])) {
                 $formId = $params['survey_form_id'];
             }
         }
@@ -63,7 +64,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
         if (!is_null($formId)) {
             $questions = $CustomFormsFields
                 ->find('all')
-                ->innerJoin([$CustomFields->alias() => $CustomFields->table()],
+                ->innerJoin([$CustomFields->getAlias() => $CustomFields->getTable()],
                     [
                         $CustomFields->aliasField('id = ') . $CustomFormsFields->aliasField($fieldKey),
                     ]
@@ -105,7 +106,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                         $session->delete($sessionKey);
                     }
                 } else if ($model->request->is(['post', 'put'])) {
-                    $requestData = $model->request->data;
+                    $requestData = $model->request->getData();
                     $submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
 
                     if ($submit == 'save') {
@@ -115,10 +116,10 @@ class RenderRepeaterBehavior extends RenderBehavior {
                         // from existing rows
                         $repeaters = $this->getRepeaters($model, $requestData, $fieldId);
 
-                        if (array_key_exists($model->alias(), $requestData)) {
+                        if (array_key_exists($model->getAlias(), $requestData)) {
                             // rely on repeater_question_id field added to InstitutionSurveys
-                            if (array_key_exists('repeater_question_id', $requestData[$model->alias()])) {
-                                $selectedFieldId = $requestData[$model->alias()]['repeater_question_id'];
+                            if (array_key_exists('repeater_question_id', $requestData[$model->getAlias()])) {
+                                $selectedFieldId = $requestData[$model->getAlias()]['repeater_question_id'];
                                 if ($fieldId == $selectedFieldId) {
                                     // add one more rows
                                     $repeaters[] = Text::uuid();
@@ -127,14 +128,14 @@ class RenderRepeaterBehavior extends RenderBehavior {
                         }
                     }
                 }
-                
+
                 if (!empty($repeaters)) {
                     $fieldTypes = $CustomFieldTypes
                         ->find('list', ['keyField' => 'code', 'valueField' => 'value'])
                         ->toArray();
 
                     $rowCount = 1;
-                    
+
                     //Get and build repeater error messages, repeater by repeater
                     $repeaterErrorObj = null;
                     foreach ($repeaters as $rowKey => $repeaterId) {
@@ -145,7 +146,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                 }
                             }
                         }
-                        
+
                         $rowPrefix = "$fieldPrefix.$repeaterId";
 
                         $rowData = [];
@@ -180,7 +181,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                             if($repeaterErrorObj){
                                 foreach ($repeaterErrorObj as $repeaterKey => $repeaterValue) {
                                     if($repeaterValue['survey_question_id'] == $questionId){
-                                        $fieldErrors = $repeaterValue->errors();
+                                        $fieldErrors = $repeaterValue->getErrors();
                                         foreach ($fieldErrors as $fieldErrorRule => $fieldErrorMessage) {
                                             foreach ($fieldErrorMessage as $key => $value) {
                                                 $errors = $value;
@@ -207,8 +208,8 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     // input mask for custom text
                                     if ($question['custom_field']->has('params') && !empty($question['custom_field']->params)) {
                                         $params = json_decode($question['custom_field']->params, true);
-                                        if (array_key_exists('input_mask', $params) && !empty($params['input_mask'])) {
-                                            $HtmlField = $event->subject();
+                                        if (isset($params['input_mask']) && !empty($params['input_mask'])) {
+                                            $HtmlField = $event->getSubject();
                                             $HtmlField->includes['jasny']['include'] = true;
                                             $cellOptions['data-mask'] = $params['input_mask'];
                                         }
@@ -225,8 +226,8 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
                                     $cellValue = !is_null($answerValue) ? $answerValue : '';
                                     break;
-                                case 'CHECKBOX':   
-                                    $answerValue = !is_null($answerObj['number_value']) ? $answerObj['number_value'] : null; 
+                                case 'CHECKBOX':
+                                    $answerValue = !is_null($answerObj['number_value']) ? $answerObj['number_value'] : null;
                                     $checkboxOptions = [];
                                     foreach ($question->custom_field->custom_field_options as $key => $obj) {
                                         $checkboxOptions[$obj->id] = $obj->name;
@@ -243,7 +244,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                         $option['hiddenField'] = false;
                                         $option['id'] =$attr['model'] . '_' . $attr['field'];
                                         $attr['fieldName'] = $cellPrefix.".".$fieldTypes[$questionType].".".$key;
-                                        if (array_key_exists('fieldName', $attr)) {
+                                        if (isset($attr['fieldName'])) {
                                             $option['id'] = $this->_domId($attr['fieldName']);
                                          }
                                         $option['kd-checkbox-radio'] = '';
@@ -315,7 +316,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     $attr['id'] = $attr['model'] . '_' . $attr['field'];
 
                                     $attr['fieldName'] = $cellPrefix.".".$fieldTypes[$questionType];
-                                    if (array_key_exists('fieldName', $attr)) {
+                                    if (isset($attr['fieldName'])) {
                                         $attr['id'] = $this->_domId($attr['fieldName']);
                                     }
 
@@ -324,7 +325,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                         $attr['default_date'] = $defaultDate;
                                     }
 
-                                    if (!array_key_exists('value', $attr)) {
+                                    if (!isset($attr['value'])) {
                                         if (!is_null($answerValue)) {
                                             if ($answerValue instanceof Time || $answerValue instanceof Date) {
                                                 $attr['value'] = $answerValue->format('d-m-Y');
@@ -334,7 +335,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                         } else if ($attr['default_date']) {
                                             $attr['value'] = date('d-m-Y');
                                         }
-                                    } else {    
+                                    } else {
                                         if ($attr['value'] instanceof Time || $answerValue instanceof Date) {
                                             $attr['value'] = $attr['value']->format('d-m-Y');
                                         } else {
@@ -344,8 +345,8 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
                                     $attr['null'] = !$attr['customField']['is_mandatory'];
 
-                                    $event->subject()->viewSet('datepicker', $attr);
-                                    $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
+                                    $event->getSubject()->viewSet('datepicker', $attr);
+                                    $cellInput = $event->getSubject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
                                     $cellValue = !is_null($answerValue) ? $this->_table->formatDate($answerValue) : '';
                                     if($errorInput){
                                         $cellInput .= $errorInput;
@@ -362,7 +363,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     $attr['fieldName'] = $cellPrefix.".".$fieldTypes[$questionType];
                                     $attr['id'] = $attr['model'] . '_' . $attr['field'];
 
-                                    if (array_key_exists('fieldName', $attr)) {
+                                    if (isset($attr['fieldName'])) {
                                         $attr['id'] = $this->_domId($attr['fieldName']);
                                     }
 
@@ -374,8 +375,8 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     }
 
                                     $attr['time_options'] = array_merge($_options, $attr['time_options']);
-                                  
-                                    if (!array_key_exists('value', $attr)) {
+
+                                    if (!isset($attr['value'])) {
                                         if (!is_null($answerValue)) {
                                             $attr['value'] = date('h:i A', strtotime($answerValue));
                                             $attr['time_options']['defaultTime'] = $attr['value'];
@@ -395,8 +396,8 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
                                     $attr['null'] = !$attr['customField']['is_mandatory'];
 
-                                    $event->subject()->viewSet('timepicker', $attr);
-                                    $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
+                                    $event->getSubject()->viewSet('timepicker', $attr);
+                                    $cellInput = $event->getSubject()->renderElement('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
                                     $cellValue = !is_null($answerValue) ? $this->_table->formatTime($answerValue) : '';
                                     if($errorInput){
                                         $cellInput .= $errorInput;
@@ -448,9 +449,9 @@ class RenderRepeaterBehavior extends RenderBehavior {
         $attr['tableCells'] = $tableCells;
 
         if ($action == 'view') {
-            $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
         } else if ($action == 'edit') {
-            $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
             $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
@@ -491,32 +492,56 @@ class RenderRepeaterBehavior extends RenderBehavior {
                     ])->andWhere([$RepeaterSurveys->aliasField('parent_form_id') => $surveyFormId])//POCOR-8223
                     ->all();
 
+                // if (!$surveyResults->isEmpty()) {
+                //     foreach ($surveyResults as $survey) {
+                //         $answersArray = [];
+                //         if ($survey->has('custom_field_values')) {
+                //             foreach ($survey->custom_field_values as $answer) {
+                //                 $answersArray[$answer->{$fieldKey}] = [
+                //                     'text_value' => $answer->text_value,
+                //                     'number_value' => $answer->number_value,
+                //                     'decimal_value' => $answer->decimal_value,
+                //                     'textarea_value' => $answer->textarea_value,
+                //                     'date_value' => $answer->date_value,
+                //                     'time_value' => $answer->time_value
+                //                 ];
+                //             }
+                //         }
+                //         $surveysArray[$customField->id][$survey->repeater_id] = $answersArray;
+                //         $surveysArray[$customField->id][$survey->repeater_id]['id'] = $survey->id;
+                //         $repeatersArray[$customField->id][] = $survey->repeater_id;
+                //     }
+                // }
+                //POCOR-8576 --START
                 if (!$surveyResults->isEmpty()) {
                     foreach ($surveyResults as $survey) {
                         $answersArray = [];
-                        if ($survey->has('custom_field_values')) {
-                            foreach ($survey->custom_field_values as $answer) {
-                                $answersArray[$answer->{$fieldKey}] = [
-                                    'text_value' => $answer->text_value,
-                                    'number_value' => $answer->number_value,
-                                    'decimal_value' => $answer->decimal_value,
-                                    'textarea_value' => $answer->textarea_value,
-                                    'date_value' => $answer->date_value,
-                                    'time_value' => $answer->time_value
-                                ];
+                        if ($formId == $survey['survey_form_id']) {
+                            if ($survey->has('custom_field_values')) {
+                                foreach ($survey->custom_field_values as $answer) {
+                                    $answersArray[$answer->{$fieldKey}] = [
+                                        'text_value' => $answer->text_value,
+                                        'number_value' => $answer->number_value,
+                                        'decimal_value' => $answer->decimal_value,
+                                        'textarea_value' => $answer->textarea_value,
+                                        'date_value' => $answer->date_value,
+                                        'time_value' => $answer->time_value
+                                    ];
+                                }
                             }
+                            $surveysArray[$customField->id][$survey->repeater_id] = $answersArray;
+                            $surveysArray[$customField->id][$survey->repeater_id]['id'] = $survey->id;
+                            $repeatersArray[$customField->id][] = $survey->repeater_id;
                         }
-                        $surveysArray[$customField->id][$survey->repeater_id] = $answersArray;
-                        $surveysArray[$customField->id][$survey->repeater_id]['id'] = $survey->id;
-                        $repeatersArray[$customField->id][] = $survey->repeater_id;
                     }
                 }
+                //POCOR-8576 --END
             }
         }
 
         $model = $this->_table;
-        $session = $model->request->session();
-        $registryAlias = $model->registryAlias();
+        $session = $model->request->getSession();
+        $registryAlias = $model->getRegistryAlias();
         $sessionKey = "$registryAlias.repeater_surveys";
         $session->write($sessionKey, $surveysArray);
         $repeaterSessionKey = "$registryAlias.repeaters";
@@ -552,7 +577,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                 'repeater_id' => $repeaterId
                             ];
                             // for edit record
-                            if (array_key_exists('id', $repeaterObj)) {
+                            if (isset($repeaterObj['id'])) {
                                 $surveyData['id'] = $repeaterObj['id'];
                                 unset($repeaterObj['id']);
                             }
@@ -598,7 +623,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     }
                                 }
                             }
-                            
+
                             $surveyData['custom_field_values'] = $answers;
                             $tmp[] = $surveyData;
                         }
@@ -663,10 +688,10 @@ class RenderRepeaterBehavior extends RenderBehavior {
     private function getRepeaters($model, $requestData, $fieldId) {
         $repeaters = [];
 
-        if (array_key_exists($model->alias(), $requestData)) {
-            if (array_key_exists('institution_repeater_surveys', $requestData[$model->alias()])) {
-                if (array_key_exists($fieldId, $requestData[$model->alias()]['institution_repeater_surveys'])) {
-                    foreach ($requestData[$model->alias()]['institution_repeater_surveys'][$fieldId] as $repeaterKey => $repeaterObj) {
+        if (array_key_exists($model->getAlias(), $requestData)) {
+            if (array_key_exists('institution_repeater_surveys', $requestData[$model->getAlias()])) {
+                if (array_key_exists($fieldId, $requestData[$model->getAlias()]['institution_repeater_surveys'])) {
+                    foreach ($requestData[$model->getAlias()]['institution_repeater_surveys'][$fieldId] as $repeaterKey => $repeaterObj) {
                         if ($repeaterKey == 'survey_form_id') { continue; }
                         $repeaters[] = $repeaterKey;
                     }

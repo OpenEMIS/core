@@ -36,6 +36,8 @@ $server = new Server(new Application(dirname(__DIR__) . '/config'));
 
 // Run the request/response through the application
 // and emit the response.
+
+//POCOR-8789
 try {
     $server->emit($server->run());
 } catch (Exception $ex) {
@@ -44,3 +46,4 @@ try {
     Log::write('error', $ex);
     throw $ex;
 }
+

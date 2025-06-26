@@ -20,10 +20,10 @@ class CurricularsTable extends AppTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         //POCOR-8028 removed academic period
-        $this->table('institution_curriculars');
+        $this->setTable('institution_curriculars');
         parent::initialize($config);
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -44,8 +44,8 @@ class CurricularsTable extends AppTable
         $institutionId = $requestData->institution_id;
         $InstitutionCurricularStaff = TableRegistry::get('Institution.InstitutionCurricularStaff');
         $InstitutionCurricularStudent = TableRegistry::get('Institution.InstitutionCurricularStudents');
-        $InstitutionCurricularPosition = TableRegistry::get('curricular_positions');
-        $InstitutionCurriculartypes = TableRegistry::get('curricular_types');
+        $InstitutionCurricularPosition = TableRegistry::get('FieldOption.CurricularPositions');
+        $InstitutionCurriculartypes = TableRegistry::get('FieldOption.CurricularTypes');
         $staff = TableRegistry::get('Security.Users');
         $student = TableRegistry::get('Security.Users');
         $Genders = TableRegistry::get('User.Genders');
@@ -109,30 +109,30 @@ class CurricularsTable extends AppTable
                 ],
             ])
             ->leftJoin(
-                    [$InstitutionCurricularStaff->alias() => $InstitutionCurricularStaff->table()],
+                    [$InstitutionCurricularStaff->getAlias() => $InstitutionCurricularStaff->getTable()],
                     [
                         $InstitutionCurricularStaff->aliasField('institution_curricular_id = ') . $this->aliasField('id'),
                     ]
                 )
             ->leftJoin(
-                    [$InstitutionCurricularStudent->alias() => $InstitutionCurricularStudent->table()],
+                    [$InstitutionCurricularStudent->getAlias() => $InstitutionCurricularStudent->getTable()],
                     [
                         $InstitutionCurricularStudent->aliasField('institution_curricular_id = ') . $this->aliasField('id')
                     ]
                 )
             ->leftJoin(
-                    [$InstitutionCurricularPosition->alias() => $InstitutionCurricularPosition->table()],
+                    [$InstitutionCurricularPosition->getAlias() => $InstitutionCurricularPosition->getTable()],
                     [
                         $InstitutionCurricularPosition->aliasField('id = ') . $InstitutionCurricularStudent->aliasField('curricular_position_id')
                     ]
                 )
              ->leftJoin(
-                    [$student->alias() => $student->table()],
+                    [$student->getAlias() => $student->getTable()],
                     [
                         $student->aliasField('id = ') . $InstitutionCurricularStudent->aliasField('student_id')
                     ])
              ->leftJoin(
-                    [$InstitutionCurriculartypes->alias() => $InstitutionCurriculartypes->table()],
+                    [$InstitutionCurriculartypes->getAlias() => $InstitutionCurriculartypes->getTable()],
                     [
                         $InstitutionCurriculartypes->aliasField('id = ') . $this->aliasField('curricular_type_id')
                     ])
@@ -273,7 +273,7 @@ class CurricularsTable extends AppTable
                         'last_name' => $staff->aliasField('last_name')
                     ])
                     ->leftJoin(
-                    [$staff->alias() => $staff->table()],
+                    [$staff->getAlias() => $staff->getTable()],
                     [
                         $staff->aliasField('id = ') . $InstitutionCurricularStaff->aliasField('staff_id'),
                     ])

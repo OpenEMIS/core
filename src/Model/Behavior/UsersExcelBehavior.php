@@ -41,29 +41,29 @@ class UsersExcelBehavior extends Behavior
         'auto_contain' => true
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->config('excludes', array_merge($this->config('default_excludes'), $this->config('excludes')));
-        if (!array_key_exists('filename', $config)) {
-            $this->config('filename', $this->_table->alias());
+        $this->getConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
+        if (!isset($config['filename'])) {
+            $this->getConfig('filename', $this->_table->getAlias());
         }
-        $folder = WWW_ROOT . $this->config('folder');
+        $folder = WWW_ROOT . $this->getConfig('folder');
 
         if (!file_exists($folder)) {
             umask(0);
             mkdir($folder, 0777);
         } else {
             // $delete = true;
-            // if (array_key_exists('delete', $settings) &&  $settings['delete'] == false) {
+            // if (isset($settings['delete']) &&  $settings['delete'] == false) {
             //  $delete = false;
             // }
             // if ($delete) {
             //  $this->deleteOldFiles($folder, $format);
             // }
         }
-        $pages = $this->config('pages');
+        $pages = $this->getConfig('pages');
         if ($pages !== false && empty($pages)) {
-            $this->config('pages', ['index', 'view']);
+            $this->getConfig('pages', ['index', 'view']);
         }
     }
 
@@ -90,6 +90,7 @@ class UsersExcelBehavior extends Behavior
         $break = false;
         $action = $this->_table->action;
         $pass = $this->_table->request->pass;
+
         if (in_array($action, $pass)) {
             unset($pass[array_search($action, $pass)]);
             $pass = array_values($pass);
@@ -110,8 +111,8 @@ class UsersExcelBehavior extends Behavior
     public function generateXLXS($settings = [])
     {
         $_settings = [
-            'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
-            'path' => WWW_ROOT . $this->config('folder') . DS,
+            'file' => $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
+            'path' => WWW_ROOT . $this->getConfig('folder') . DS,
             'download' => true,
             'purge' => true
         ];
@@ -130,10 +131,10 @@ class UsersExcelBehavior extends Behavior
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (is_callable($event->result)) {
-            $generate = $event->result;
+        if (is_callable($event->getResult())) {
+            $generate = $event->getResult();
         }
 
         $generate($_settings);
@@ -141,18 +142,18 @@ class UsersExcelBehavior extends Behavior
         $requestData = json_decode($settings['process']['params']);
         $userType = $requestData->user_type;
 
-        $StudentCustomFields = TableRegistry::get('StudentCustomFields');
+        $StudentCustomFields = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFields');
         $customFields = $StudentCustomFields->find()
                             ->select([
                                 'id' => $StudentCustomFields->aliasField('id'),
                                 'student_custom' => $StudentCustomFields->aliasField('name'),
                     ])->toArray();
-        
+
         $labelArray3 = [];
         foreach ($customFields as $key => $value) {
             $labelArray3[] = $value->student_custom;
         }
-        
+
         $labelArray = array("openEMIS_ID","first_name","middle_name","third_name","last_name","preferred_name","gender","date_of_birth","address","address_area","birth_area","nationality_name","identity_type","identity_number","email","postal_Code","user_type","username");
 
         $labelArray2 = array("staff_association_ID");
@@ -162,14 +163,14 @@ class UsersExcelBehavior extends Behavior
                 $headerRow[] = $this->getFields($this->_table, $settings, $label);
             }
         }
-        
+
         if ($userType == 'Staff') {
            $labelArray1 = array_merge($labelArray,$labelArray2);
                foreach($labelArray1 as $label) {
                     $headerRow[] = $this->getFields($this->_table, $settings, $label);
             }
         }
-        
+
         if ($userType == 'Student') {
            $labelArray4 = array_merge($labelArray,$labelArray3);
                 foreach($labelArray4 as $label) {
@@ -178,7 +179,7 @@ class UsersExcelBehavior extends Behavior
         }
 
         $data = $this->getData($settings);
-       
+
         $writer->writeSheetRow('UserList', $headerRow);
         foreach($data as $row) {
             if(array_filter($row)) {
@@ -212,7 +213,7 @@ class UsersExcelBehavior extends Behavior
         $requestData = json_decode($settings['process']['params']);
         $userId = $requestData->user_id;
         $userType = $requestData->user_type;
-        $Users = TableRegistry::get('Security.Users');
+        $Users = TableRegistry::getTableLocator()->get('Security.Users');
         $userList = $Users
                         ->find()
                         ->select([
@@ -267,23 +268,23 @@ class UsersExcelBehavior extends Behavior
                     if ($userType ==  'Others') {
                         $userList
                              ->where([$Users->aliasField('is_staff') => 0]);
-                    } 
+                    }
 
                     if ($userType == 'Guardian') {
-                        $userList 
+                        $userList
                             ->where([$Users->aliasField('is_guardian') => 1]);
-                    } 
+                    }
 
                     if ($userType == 'Staff') {
-                        $StaffCustomFieldValues = TableRegistry::get('StaffCustomFieldValues');
-                        $StaffCustomFields = TableRegistry::get('StaffCustomFields');
+                        $StaffCustomFieldValues = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFieldValues');
+                        $StaffCustomFields = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFields');
 
                         $userList
                         ->select(['staff_association' => $StaffCustomFieldValues->aliasField('text_value')])
-                        ->leftJoin([$StaffCustomFieldValues->alias() => $StaffCustomFieldValues->table()], [
+                        ->leftJoin([$StaffCustomFieldValues->getAlias() => $StaffCustomFieldValues->getTable()], [
                             $StaffCustomFieldValues->aliasField('staff_id = ') . $Users->aliasField('id'),
                         ])
-                        ->leftJoin([$StaffCustomFields->alias() => $StaffCustomFields->table()], [
+                        ->leftJoin([$StaffCustomFields->getAlias() => $StaffCustomFields->getTable()], [
                             $StaffCustomFields->aliasField('id = ') . $StaffCustomFieldValues->aliasField('staff_custom_field_id'),
                         ])
                         ->where([$Users->aliasField('is_staff') => 1]);
@@ -326,20 +327,20 @@ class UsersExcelBehavior extends Behavior
                                    }
 
                                    if ($userType == 'Student') {
-                                    $StudentCustomFieldValues = TableRegistry::get('StudentCustomFieldValues');
-                                    $StudentCustomFields = TableRegistry::get('StudentCustomFields');
+                                    $StudentCustomFieldValues = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues');
+                                    $StudentCustomFields = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFields');
 
                                     $customFieldData = $StudentCustomFieldValues->find()
                                             ->select([
                                             $StudentCustomFields->aliasField('name'),
                                             $StudentCustomFieldValues->aliasField('text_value')
                                     ])
-                                    ->rightJoin([$StudentCustomFields->alias() => $StudentCustomFields->table()], [
+                                    ->rightJoin([$StudentCustomFields->getAlias() => $StudentCustomFields->getTable()], [
                                         $StudentCustomFields->aliasField('id = ') . $StudentCustomFieldValues->aliasField('student_custom_field_id'),
                                     ])
                                     ->where([$StudentCustomFieldValues->aliasField('student_id =') => $value->id])
                                     ->toArray();
-                                    
+
                                     foreach ($customFieldData as $customField) {
                                         $result[$key][] = $customField->text_value;
                                     }
@@ -351,11 +352,11 @@ class UsersExcelBehavior extends Behavior
 
     private function getFields($table, $settings, $label)
     {
-        $language = I18n::locale();
-        $module = $this->_table->alias();
+        $language = I18n::getLocale();
+        $module = $this->_table->getAlias();
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $label, $language], true);
-        return $event->result;
+        return $event->getResult();
     }
 
     private function getFooter()
@@ -379,8 +380,8 @@ class UsersExcelBehavior extends Behavior
                 } else {
                     $event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr]);
                 }
-                if ($event->result) {
-                    $returnedResult = $event->result;
+                if ($event->getResult()) {
+                    $returnedResult = $event->getResult();
                     if (is_array($returnedResult)) {
                         $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                         $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
@@ -391,8 +392,8 @@ class UsersExcelBehavior extends Behavior
             } else {
                 $method = 'onExcelGet' . Inflector::camelize($field);
                 $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity], true);
-                if ($event->result) {
-                    $returnedResult = $event->result;
+                if ($event->getResult()) {
+                    $returnedResult = $event->getResult();
                     if (is_array($returnedResult)) {
                         $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                         $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
@@ -426,7 +427,7 @@ class UsersExcelBehavior extends Behavior
     {
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     return true;
                 }
             }
@@ -440,7 +441,7 @@ class UsersExcelBehavior extends Behavior
 
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     $relatedModel = $assoc;
                     break;
                 }
@@ -454,17 +455,17 @@ class UsersExcelBehavior extends Behavior
         $tableObj = $this->getAssociatedTable($table, $field);
         $key = null;
         if (is_object($tableObj)) {
-            $key = Inflector::underscore(Inflector::singularize($tableObj->alias()));
+            $key = Inflector::underscore(Inflector::singularize($tableObj->getAlias()));
         }
         return $key;
     }
 
     public function generate($settings = [])
     {
-        $language = I18n::locale();
-        $module = $this->_table->alias();
+        $language = I18n::getLocale();
+        $module = $this->_table->getAlias();
         //echo '<pre>';print_r($module);
-        
+
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, 'postal_code', $language], true);
         return $event;
     }
@@ -475,7 +476,7 @@ class UsersExcelBehavior extends Behavior
         foreach ($fields as $attr) {
             $field = $attr['field'];
             if ($this->isForeignKey($table, $field)) {
-                $contain[] = $this->getAssociatedTable($table, $field)->alias();
+                $contain[] = $this->getAssociatedTable($table, $field)->getAlias();
             }
         }
         $query->contain($contain);
@@ -504,7 +505,7 @@ class UsersExcelBehavior extends Behavior
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 0];
@@ -524,7 +525,7 @@ class UsersExcelBehavior extends Behavior
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $action = $this->_table->action;
-        if (in_array($action, $this->config('pages'))) {
+        if (in_array($action, $this->getConfig('pages'))) {
             $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
             $toolbarAttr = [
                 'class' => 'btn btn-xs btn-default',
@@ -563,7 +564,7 @@ class UsersExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if (in_array($action, $pages)) {
                 $toolbarButtons['export'] = $export;
             }
@@ -580,7 +581,7 @@ class UsersExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if ($pages != false) {
                 if (in_array($action, $pages)) {
                     $toolbarButtons['export'] = $export;

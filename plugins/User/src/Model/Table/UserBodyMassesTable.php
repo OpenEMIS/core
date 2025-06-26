@@ -16,14 +16,14 @@ use App\Model\Table\ControllerActionTable;
 class UserBodyMassesTable extends ControllerActionTable
 {
     const POWER = 2;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_body_masses');
+        $this->setTable('user_body_masses');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
-        
+
         $this->addBehavior('Health.Health');
 
         $this->toggle('search', false);
@@ -39,7 +39,7 @@ class UserBodyMassesTable extends ControllerActionTable
         // ]);//POCOR-6255 end
     }
     //POCOR-6255 start
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
@@ -55,7 +55,7 @@ class UserBodyMassesTable extends ControllerActionTable
         }
     }//POCOR-6255 end
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -146,7 +146,7 @@ class UserBodyMassesTable extends ControllerActionTable
 
     public function findIndex(Query $query, array $options)
     {
-        if (array_key_exists('sort', $options) && $options['sort'] == 'date') {
+        if (isset($options['sort']) && $options['sort'] == 'date') {
             $direction = $options['direction'];
             $query->order([$this->aliasField($options['sort']) => $direction, $this->aliasField('created') => 'desc']);
 
@@ -180,7 +180,7 @@ class UserBodyMassesTable extends ControllerActionTable
         $this->controller->changeStudentHealthHeader($this, $modelAlias, $userType);
 
 		// Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Student Body Mass','Students - Health');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Student Body Mass','Students - Health');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -219,14 +219,14 @@ class UserBodyMassesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
         $query->where([$this->aliasField('security_user_id') => $studentUserId])
         ->orderDesc($this->aliasField('id'));
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query){
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
         $query->where([$this->aliasField('security_user_id') => $studentUserId])
         ->orderDesc($this->aliasField('created'));

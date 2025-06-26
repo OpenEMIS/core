@@ -10,7 +10,7 @@ use App\Model\Table\AppTable;
 
 class LocalesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -23,7 +23,7 @@ class LocalesTable extends AppTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -63,7 +63,7 @@ class LocalesTable extends AppTable
     public function findAllLocale(Query $query, array $options)
     {
         return $query
-            ->hydrate(false)
+            ->enableHydration(false)
             ->formatResults(function ($results) {
                 $returnResult = [];
                 $results = $results->toArray();
@@ -79,11 +79,13 @@ class LocalesTable extends AppTable
 
     public function getLangDir($iso)
     {
-        $langDir = $this->find()
-            ->where([$this->aliasField('iso') => $iso])
-            ->extract('direction')
-            ->first();
+        $query = $this->find()
+        ->select(['direction']) // Make sure to select the 'direction' column
+        ->where([$this->aliasField('iso') => $iso]);
 
+        $result = $query->all(); // Execute the query
+
+        $langDir = $result->extract('direction')->first();
         return $langDir;
     }
 }

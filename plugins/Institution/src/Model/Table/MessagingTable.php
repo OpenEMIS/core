@@ -8,7 +8,7 @@ use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
@@ -20,7 +20,7 @@ use Cake\Auth\DefaultPasswordHasher;
 use Cake\Core\Configure;
 use Cake\Utility\Security;
 use Cake\Mailer\Email;
-use Cake\Network\Session;
+use Cake\Http\Session;
 /**
  * POCOR-7458 (to develop messaging functionality)
  * <author>megha.gupta@mail.valuecoders.com</author>
@@ -39,9 +39,9 @@ class MessagingTable extends ControllerActionTable
     const SEND = 1;
     public $recipientlevelOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('messaging');
+        $this->setTable('messaging');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->hasMany('MessagingSecurityRoles', ['className' => 'Institution.MessagingSecurityRoles','foreignKey'=>"message_id"]);
@@ -53,9 +53,14 @@ class MessagingTable extends ControllerActionTable
             '4' => __('Class'),
             '5' => __('Subject')
         ];
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Messaging' =>['id', 'academic_period_id']
+            ]
+        ]);
     }
-     public function validationDefault(Validator $validator) {
+     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return  $validator
                     ->add('security_role_id', 'custom', [
                         'rule' => function($value, $context) {
@@ -68,7 +73,7 @@ class MessagingTable extends ControllerActionTable
     {
         $this->field('message');
         $this->field('institution_id', ['visible' =>  ['index' => false, 'view' => false, 'edit' => false, 'add' => false]]);
-        $this->field('academic_period_id'); 
+        $this->field('academic_period_id');
         $this->field('created',['visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]]);
         $this->field('created_user_id', ['visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]]);
         $this->field('recipient_level_id');
@@ -76,11 +81,11 @@ class MessagingTable extends ControllerActionTable
         $this->field('security_role_id',['required'=>true,'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]]);
         $this->field('subject',['sort'=>false]);
         $this->field('status', ['visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]]);
-           
+
     }
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
-        $entity->institution_id  = $this->Session->read('Institution.Institutions.id');
+        $entity->institution_id  = $this->getInstitutionID();
     }
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
@@ -95,8 +100,9 @@ class MessagingTable extends ControllerActionTable
     }
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
-        $entity->institution_id = $this->Session->read('Institution.Institutions.id');
-        if ($this->request->params['pass'][0] == 'edit') {
+
+        $entity->institution_id = $this->getInstitutionID();
+        if ($this->request->getParam('pass')[0] == 'edit') {
             //deleting messaging_security_role entries
             $SecurityRoleData = $this->MessagingSecurityRoles->find()->where(['message_id' => $entity->id])->toArray();
             if ($SecurityRoleData) {
@@ -136,19 +142,21 @@ class MessagingTable extends ControllerActionTable
             }
             unset($SecurityRoleName);
         }
+
         //saving message_recipients entries
         if (!empty($studentData)) {
             foreach ($studentData as $key => $value) {
+                //echo "<pre>";print_r($value['student_email']);die;
                 if ($student) {
                     if (!empty($value['student_email'])) {
                         $RecipientEntity = ['message_id' => $entity->id, 'recipient_id' => $value['student_id']];
-
                         $RecipientEntity = $this->MessageRecipients->newEntity($RecipientEntity);
                         $saveData = $this->MessageRecipients->save($RecipientEntity);
                         unset($RecipientEntity);
                         unset($saveData);
                     }
                 }
+
                 if ($guardian) {
                     if (!empty($value['guardian_email'])) {
                         $RecipientEntity = ['message_id' => $entity->id, 'recipient_id' => $value['guardian_id']];
@@ -164,7 +172,7 @@ class MessagingTable extends ControllerActionTable
     public function addEditOnsendMessage(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
     {
 
-        $entity->institution_id = $this->Session->read('Institution.Institutions.id');
+        $entity->institution_id = $this->getInstitutionID();
         $patchOptions['validate'] = true;
         $entity = $this->patchEntity($entity, $data->getArrayCopy(), $patchOptions->getArrayCopy());
         $entity->recipient_group_id = $data['Messaging']['recipient_group_id'];
@@ -174,7 +182,7 @@ class MessagingTable extends ControllerActionTable
         $SecurityRoles = [];
 
         foreach ($entity->security_role_id['_ids'] as $key => $value) {
-            $SecurityRoles[] = strtolower(TableRegistry::get('security_roles')->get($value)->code);
+            $SecurityRoles[] = strtolower(TableRegistry::get('Security.SecurityRoles')->get($value)->code);
         }
         //for sending email and inserting message logs
         $emailList = [];
@@ -257,10 +265,12 @@ class MessagingTable extends ControllerActionTable
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
-      
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Institution.Messaging/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'periodOptions' => $academicPeriodOptions,
                 'selectedPeriod' => $extra['selectedAcademicPeriodOptions']
             ],
@@ -269,10 +279,10 @@ class MessagingTable extends ControllerActionTable
     }
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
+        if (isset($extra['selectedAcademicPeriodOptions'])) {
             $query->where([
                 $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions'],
-                $this->aliasField('institution_id') =>  $this->Session->read('Institution.Institutions.id')
+                $this->aliasField('institution_id') =>  $this->getInstitutionID()
             ], [], true);
         }
     }
@@ -281,7 +291,7 @@ class MessagingTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        if ($entity->status == "Send" || $entity->status == self::SEND) {
+        if ($entity->status == "Sent" || $entity->status == "Send" || $entity->status == self::SEND) {
             unset($buttons['edit']);
         }
         return $buttons;
@@ -312,7 +322,7 @@ class MessagingTable extends ControllerActionTable
     }
     public function onGetRecipientGroupId(Event $event, Entity $entity)
     {
-        $institution_id = $this->Session->read('Institution.Institutions.id');
+        $institution_id = $this->getInstitutionID();
         $academicPeriodId = $entity->academic_period_id;
         $option=$this->getRecipientGroupOptions($entity->recipient_level_id);
         $result= $option[$entity->recipient_group_id];
@@ -330,7 +340,8 @@ class MessagingTable extends ControllerActionTable
 
             $sendButton = [
                 [
-                    'name' => '<i class="fa fa-check"></i>' . __('Send'),
+                    //'name' => '<i class="fa fa-check"></i>' . __('Send'),
+                    'name' =>  __('Send'),
                     'attr' => [
                         'class' => 'btn btn-default btn-save',
                         'name' => 'submit',
@@ -350,7 +361,7 @@ class MessagingTable extends ControllerActionTable
         if ($entity->status == self::DRAFT) {
             return "Draft";
         } else if ($entity->status == self::SEND) {
-            return "Send";
+            return "Sent";
         }
     }
     public function onGetSecurityRoleId(Event $event, Entity $entity)
@@ -371,15 +382,36 @@ class MessagingTable extends ControllerActionTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
+            case 'academic_period_id':
+                return __('Academic Period');
             case 'created_user_id':
                 return __('Created By');
             case 'created':
                 return __('Created');
+            case 'institution_id':
+                return __('Institution');
+            case 'recipient_level_id':
+                return __('Recipient Level');
+            case 'recipient_group_id':
+                return __('Recipient Group');
+            case 'subject':
+                return __('Subject');
+             case 'message':
+                return __('Message');
+             case 'security_role_id':
+                return __('Security Role');
+            case 'status':
+                return __('Message status');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'modified':
+                return __('Modified ');
+
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-    public function onUpdateFieldRecipientLevelId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldRecipientLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit'
         ) {
@@ -391,15 +423,19 @@ class MessagingTable extends ControllerActionTable
 
         return $attr;
     }
-    public function onUpdateFieldRecipientGroupId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldRecipientGroupId(Event $event, array $attr, $action, ServerRequest $request)
     {
-      
+
         if (
             $action == 'add' || $action == 'edit'
         ) {
-            $recipient_level_id =$request->data['Messaging']['recipient_level_id'];
-            if($action=="edit"){
-                $entity = $this->get($this->paramsDecode($request['pass'][1])['id']);
+            $recipient_level_id =$request->getData()['Messaging']['recipient_level_id'];
+            if($action == "edit"){
+                if(!empty($request->getAttribute('params')['pass'][1])){
+                    $entity = $this->get($this->paramsDecode($request->getAttribute('params')['pass'][1])['id']);
+                }else{
+                    $entity = $this->get($this->paramsDecode($this->request->getAttribute('params')['?']['queryString'])['id']);
+                }
                 $recipient_level_id = $entity->recipient_level_id;
             }
             $attr['type'] = 'select';
@@ -410,7 +446,7 @@ class MessagingTable extends ControllerActionTable
 
         return $attr;
     }
-    public function onUpdateFieldSecurityRoleId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSecurityRoleId(Event $event, array $attr, $action, ServerRequest $request)
     {
 
         $entity = $attr['entity'];
@@ -427,16 +463,16 @@ class MessagingTable extends ControllerActionTable
         $attr['attr']['required'] = true;
         return $attr;
     }
-    public function onUpdateFieldMessage(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldMessage(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['type'] = 'text';
         return $attr;
     }
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit' || $action == "add") {
 
-            $selectedPeriod  = $this->getSelectedAcademicPeriod($this->request->query('period'));
+            $selectedPeriod  = $this->getSelectedAcademicPeriod($this->request->getQuery('period'));
             $attr['attr']['value'] = $this->AcademicPeriods->get($selectedPeriod)->name;
             $attr['type'] = 'readonly';
             $attr['value'] = $selectedPeriod;
@@ -444,10 +480,10 @@ class MessagingTable extends ControllerActionTable
         return $attr;
     }
     public function getRecipientGroupOptions($recipient_level_id){
-       
-        $institution_id=$this->Session->read('Institution.Institutions.id');
+
+        $institution_id=$this->getInstitutionID();
         $academicPeriodId =TableRegistry::get('AcademicPeriod.AcademicPeriods')->getCurrent();
-        
+
         $option=[];
         switch ($recipient_level_id) {
             case self::INSTITUTION:
@@ -481,7 +517,7 @@ class MessagingTable extends ControllerActionTable
             case "Subject":
                 $classData = $this->getClassOptions($institution_id, $academicPeriodId)->toArray();
                 foreach ($classData as $key => $value) {
-                    foreach($value->institution_subjects as $Key => $Value){ 
+                    foreach($value->institution_subjects as $Key => $Value){
                         $option[$value->id."-".$Value->id] = $value->name." ".$Value->name;
                     }
                 }
@@ -505,13 +541,14 @@ class MessagingTable extends ControllerActionTable
                 'education_grade_id' => 'EducationGrades.id',
                 'education_grade_name' => 'EducationGrades.name'
             ])
-            ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems']) 
+            ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
             ->where(['EducationSystems.academic_period_id' => $academicPeriodId,
                      'InstitutionGrades.institution_id' => $institution_id
             ])
             ->order(['EducationLevels.order' =>'ASC','EducationCycles.order'=>'ASC','EducationProgrammes.order' => 'ASC','EducationGrades.order' => 'ASC']); //POCOR-8021//POCOR-8048:modified
         return $query;
     }
+
     public function getClassOptions($institution_id, $academicPeriodId)
     {
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
@@ -523,25 +560,24 @@ class MessagingTable extends ControllerActionTable
         return $query;
 
     }
+
     private function getSelectedAcademicPeriod($request)
     {
         $selectedAcademicPeriod = '';
-
-        if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit'
+        if ($this->action == 'index' || $this->action == 'view' ||$this->action == 'edit'
         ) {
-            if (isset($request->query) && array_key_exists('period', $request->query)
+            if (!is_null($this->request->getQuery()) && array_key_exists('period', $this->request->getQuery())
             ) {
-                $selectedAcademicPeriod = $request->query['period'];
+                $selectedAcademicPeriod = $this->request->getQuery('period');
             } else {
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }
         } elseif ($this->action == 'add') {
-            $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+            $selectedAcademicPeriod = $selectedAcademicPeriod = $period = $this->request->getQuery('period') === null ? $this->AcademicPeriods->getCurrent() : $this->request->getQuery('period');
         }
 
         return $selectedAcademicPeriod;
-    } 
-    
+    }
     //POCOR-8016::modify query Start
     public function getRecipientList($entity)
     {
@@ -556,7 +592,7 @@ class MessagingTable extends ControllerActionTable
             } else if ($entity->recipient_level_id == 3) {
                 $where['InstitutionStudents.education_grade_id'] = $entity->recipient_group_id;
             }
-            
+
             $query = $InstitutionStudent->find()
                 ->select([
                     'student_openemis' => 'StudentInfo.openemis_no',
@@ -677,5 +713,4 @@ class MessagingTable extends ControllerActionTable
         return $query;
     }
     //POCOR-8016::End
-   
 }

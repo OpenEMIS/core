@@ -3,16 +3,16 @@ namespace Area\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\AppTable;
-use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
+use Cake\Http\ServerRequest;
 
 class AreaLevelsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->hasMany('Areas', ['className' => 'Area.Areas', 'foreign_key' => 'area_level_id']);
@@ -58,7 +58,7 @@ class AreaLevelsTable extends ControllerActionTable
     // 	$ConfigItemsTable->updateAll(['value' => $transferedValue], ['type' => 'Institution', 'code' => 'Institution_area_level_id', 'value' => $entity->id]);
     // }
 
-    public function onUpdateFieldLevel(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldLevel(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $query = $this->find();
@@ -81,7 +81,7 @@ class AreaLevelsTable extends ControllerActionTable
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         //check config
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $validateAreaLevel = $ConfigItems->value('institution_validate_area_level_id');
         if ($validateAreaLevel == $entity->level) {
             $extra['associatedRecords'][] = ['model' => 'System Configurations - Institution', 'count' => 1];
@@ -91,7 +91,7 @@ class AreaLevelsTable extends ControllerActionTable
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
         $listeners = [
-            TableRegistry::get('Configuration.ConfigItems')
+            TableRegistry::getTableLocator()->get('Configuration.ConfigItems')
         ];
 
         $this->dispatchEventToModels('Model.AreaLevel.afterDelete', [$entity], $this, $listeners);

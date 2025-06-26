@@ -5,14 +5,14 @@ use ArrayObject;
 use Exception;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
 use Cake\Console\Shell;
 
 class GenerateAllStaffReportCardsShell extends Shell
 {
     private $sleepTime = 5;
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('CustomExcel.StaffReportCards');
@@ -39,21 +39,21 @@ class GenerateAllStaffReportCardsShell extends Shell
                 ->order([
                     $this->StaffReportCardProcesses->aliasField('created'),
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->first();
 
             if (!empty($recordToProcess)) {
-                $this->out('Generating report card for Staff '.$recordToProcess['staff_id'].' ('. Time::now() .')');
+                $this->out('Generating report card for Staff '.$recordToProcess['staff_id'].' ('. FrozenTime::now() .')');
                 $this->StaffReportCardProcesses->updateAll(['status' => $this->StaffReportCardProcesses::RUNNING], [
                     'staff_profile_template_id' => $recordToProcess['staff_profile_template_id'],
                     'institution_id' => $recordToProcess['institution_id'],
                     'staff_id' => $recordToProcess['staff_id'],
                 ]);
-				
+
                 $excelParams = new ArrayObject([]);
                 $excelParams['className'] = 'CustomExcel.StaffReportCards';
                 $excelParams['requestQuery'] = $recordToProcess;
-				
+
                 try {
                     $this->StaffReportCards->renderExcelTemplate($excelParams);
                 } catch (\Exception $e) {
@@ -61,15 +61,20 @@ class GenerateAllStaffReportCardsShell extends Shell
                     $this->out($e->getMessage());
                 }
 
-                $this->out('End generating report card for Staff '.$recordToProcess['staff_id'].' ('. Time::now() .')');
-                $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
+                $this->out('End generating report card for Staff '.$recordToProcess['staff_id'].' ('. FrozenTime::now() .')');
+                $this->SystemProcesses->updateProcess($systemProcessId, FrozenTime::now(), $this->SystemProcesses::COMPLETED);
                 $this->recursiveCallToMyself($this->args);
             } else {
-                $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
+                $this->SystemProcesses->updateProcess($systemProcessId, FrozenTime::now(), $this->SystemProcesses::COMPLETED);
             }
         }
         try {
-            posix_kill(getmypid(), 9);
+            $pid = getmypid();
+            if (function_exists('posix_kill')) {
+                posix_kill($pid, 9);
+            } else {
+                exec("kill -15 $pid"); // Works on Unix-like systems
+            }
         } catch (\Exception $exception) {
             $this->out($exception->getMessage());
         }

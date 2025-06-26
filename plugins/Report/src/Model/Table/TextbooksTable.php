@@ -6,7 +6,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 
 class TextbooksTable extends AppTable  {
@@ -15,14 +15,14 @@ class TextbooksTable extends AppTable  {
     const NO_STUDENT = 1;
     const NO_STAFF = 2;
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
         parent::initialize($config);
 
         $this->belongsTo('Textbooks',           ['className' => 'Textbook.Textbooks', 'foreignKey' => ['textbook_id', 'academic_period_id']]);
         $this->belongsTo('AcademicPeriods',     ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades',     ['className' => 'Education.EducationGrades']);
         $this->belongsTo('EducationSubjects',   ['className' => 'Education.EducationSubjects']);
-        $this->belongsTo('AreaLevels', ['className' => 'AreaLevel.AreaLevels']);
+        $this->belongsTo('AreaLevels', ['className' => 'Area.AreaLevels']);
 
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
@@ -50,9 +50,9 @@ class TextbooksTable extends AppTable  {
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+        $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
         $attr['onChangeReload'] = true;
 
         return $attr;
@@ -71,7 +71,7 @@ class TextbooksTable extends AppTable  {
         }
         return $result;
     }
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = $this->AcademicPeriods->getYearList();
         $attr['default'] = $this->AcademicPeriods->getCurrent();
@@ -89,19 +89,19 @@ class TextbooksTable extends AppTable  {
             ]);
         }
     }
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
         return $events;
     }
-    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
+        if (isset($request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
             if (in_array($feature, ['Report.InstitutionTextbooks'
             ])) {
-                $Areas = TableRegistry::get('AreaLevel.AreaLevels');
+                $Areas = TableRegistry::getTableLocator()->get('Area.AreaLevels');
                 $entity = $attr['entity'];
 
                 if ($action == 'add') {
@@ -122,14 +122,14 @@ class TextbooksTable extends AppTable  {
         }
     }
 
-    public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAreaId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
 
             if (in_array($feature, ['Report.InstitutionTextbooks'
             ])) {
-                $Areas = TableRegistry::get('Area.Areas');
+                $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                 $entity = $attr['entity'];
 
                 if ($action == 'add') {
@@ -150,17 +150,17 @@ class TextbooksTable extends AppTable  {
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {   
-        $areaId = $request->data[$this->alias()]['area_id'];
-        $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
+        $areaId = $request->getData($this->getAlias())['area_id'];
+        $institutionTypeId = $request->getData($this->getAlias())['institution_type_id'];
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
             if (in_array($feature, ['Report.InstitutionTextbooks'
             ])) {
                 $institutionList = [];
-                if (array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
+                if (array_key_exists('institution_type_id', $request->getData($this->getAlias())) && !empty($request->getData($this->getAlias())['institution_type_id'])) {
                     $institutionQuery = $InstitutionsTable
                         ->find('list', [
                             'keyField' => 'id',
@@ -182,7 +182,7 @@ class TextbooksTable extends AppTable  {
                     }
 
                     $institutionList = $institutionQuery->toArray();
-                } elseif (!$institutionTypeId && array_key_exists('area_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['area_id']) && $areaId != -1) {
+                } elseif (!$institutionTypeId && array_key_exists('area_id', $request->getData($this->getAlias())) && !empty($request->getData($this->getAlias())['area_id']) && $areaId != -1) {
                     $institutionQuery = $InstitutionsTable
                         ->find('list', [
                             'keyField' => 'id',
@@ -276,4 +276,21 @@ class TextbooksTable extends AppTable  {
         }
     }
     /*POCOR-6176 Ends*/
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'area_level_id':
+                return __('Area Level');
+            case 'institution_id':
+                return __('Institution');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

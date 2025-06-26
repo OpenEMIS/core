@@ -9,6 +9,7 @@ use Cake\Cache\Cache;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\Filesystem\Folder;
+use Cake\Log\Log;
 
 class LabelsTable extends AppTable
 {
@@ -20,7 +21,29 @@ class LabelsTable extends AppTable
         $label = false;
         $keyFetch = $module.'.'.$field;
         $label = Cache::read($keyFetch, $this->defaultConfig);
-
+        // POCOR-9022 check if label is empty
+        if (!$label) {
+            if(!$field) {
+                $label = __('Not Set');
+            }
+            if(!$module) {
+                $label = __($field);
+            }
+            if (!empty($field) && !empty($module)) {
+                $entity = $this->find()
+                    ->where([
+                        $this->aliasField('module') => $module,
+                        $this->aliasField('field') => $field
+                    ])
+                    ->first();
+                if (!empty($entity)) {
+                    $label = $entity->name;
+                    $keyValue = self::concatenateLabel($entity);
+                    Cache::write($keyFetch, $keyValue, $this->defaultConfig);
+                }
+            }
+        }
+        // POCOR-9022 end
         if ($label !== false) {
             $label =  __(ucfirst($label));
         } else {
@@ -40,7 +63,6 @@ class LabelsTable extends AppTable
 
         $cacheFolder = new Folder(CACHE.'labels');
         $files = $cacheFolder->find();
-
         // ignore hidden files in linux - aka anything that starts with a dot will be ignored
         $filteredFiles = [];
         foreach ($files as $key => $value) {
@@ -57,7 +79,7 @@ class LabelsTable extends AppTable
                 $keyValue = self::concatenateLabel($eachLabel);
                 $keyArray[$keyCreation] = $keyValue;
             }
-
+            // echo "<pre>";print_r($keyArray);die;
             //Write multiple to cache
             $result = Cache::writeMany($keyArray, $this->defaultConfig);
         }
@@ -65,9 +87,14 @@ class LabelsTable extends AppTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        Cache::clear('labels');
+        Log::debug('LabelsTable::afterSave()');
         $keyFetch = $entity->module.'.'.$entity->field;
         $keyValue = self::concatenateLabel($entity);
+        Log::debug('LabelsTable::afterSave() keyFetch: '.$keyFetch);
+        Log::debug('LabelsTable::afterSave() keyValue: '.$keyValue);
         Cache::write($keyFetch, $keyValue, $this->defaultConfig);
+
     }
 
     public function concatenateLabel($entity)
@@ -104,7 +131,7 @@ class LabelsTable extends AppTable
         return $this->defaultConfig;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

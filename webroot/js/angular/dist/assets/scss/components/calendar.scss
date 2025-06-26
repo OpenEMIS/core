@@ -1,0 +1,372 @@
+@charset "UTF-8";
+
+@import "~angular-calendar/css/angular-calendar.css";
+@import "../general/variables.scss";
+@import "../general/classes.scss";
+
+/* Calendar V1.1.1 */
+
+.kdx-calendar {
+    min-width: 230px;
+
+    .cal-header {
+
+        font-size: $textSizeL;
+
+        .cal-weekend {
+            color: #8B0000;
+        }
+
+        @media #{$ipadMini} {
+            font-size: $textSizeS;
+        }
+    }
+
+    .cal-cell-row {
+        &:hover {
+            background-color: transparent;
+        }
+
+        .cal-cell {
+            position: relative;
+            width: 100%;
+
+            &:hover {
+                background-color: transparent;
+            }
+
+            .kdx-cal-cell-event-top {
+                margin-bottom: $margin5;
+            }
+
+            .kdx-cal-cell-event-bottom {
+
+                width: 100%;
+                margin-top: $margin5;
+
+                @media #{$ipadMini} {
+                    position: absolute;
+                    width: 100%;
+                    bottom: 8px;
+                }
+            }
+
+            .kdx-cal-day-event {
+                @extend .ellipsis;
+
+                @media #{$ipadMini} {
+                    line-height: 5px;
+                }
+            }
+
+            &.cal-open {
+                background-color: transparent;
+
+                .kdx-cal-cell-event-bottom {
+                    background-color: transparent;
+                }
+
+                &:before,
+                &:after {
+                    content: "";
+                    position: absolute;
+                    width: 0px;
+                    z-index: 1;
+                    left: 50%;
+                    margin-left: -11px;
+                }
+
+                &:before {
+                    bottom: 0;
+                    border: solid 11px transparent;
+                    border-bottom-color: #D3D3D3;
+                }
+                &:after {
+                    bottom: -2px;
+                    border: solid 11px transparent;
+                    border-bottom-color: $whiteColor;
+                }
+            }
+        }
+
+        .cal-cell-top {
+            position: relative;
+            min-height: 61px;
+
+            .rtl & {
+                position: relative;
+            }
+
+            .kdx-cal-view-more {
+
+                font-size: $textSizeXXS;
+                position: absolute;
+                top: 0;
+                left: 0;
+                color: #000;
+                background-color: #CCC;
+                padding: 2px 3px;
+                margin: 1px;
+                border: 1px solid #AAA;
+
+                @media #{$ipadMini} {
+                    font-size: 7px;
+                }
+
+                .rtl & {
+                    left: unset;
+                    right: 0;
+                }
+            }
+        }
+
+        .cal-day-cell {
+
+            padding-bottom: $padding10;
+            text-align: center;
+            min-height: 170px;
+            min-width: 40px;
+
+            @media #{$ipadMini} {
+                min-height: 130px;
+                max-height: 130px;
+                position: relative;
+            }
+
+            .cal-day-number {
+
+                font-size: $textSizeXL;
+                margin-top: $margin20;
+                display: table;
+                width: 100%;
+                text-align: right;
+
+                @media #{$web800View} {
+                    .rtl & {
+                        margin-right: -0.7em;
+                        text-align: left;
+                    }
+                }
+
+                @media #{$tabletLandscape} {
+                    text-align: center;
+                    margin: 16px auto;
+                    width: 100%;
+                    margin-top: $margin20;
+                }
+            }
+
+            &.cal-in-month .cal-day-number {
+                opacity: 1;
+            }
+
+            &:hover .cal-day-number {
+                font-weight: bold;
+            }
+
+            &.cal-today {
+                background: none;
+
+                &:hover .cal-day-number {
+                    color: $whiteColor;
+                }
+
+                .cal-day-number {
+
+                    color: $whiteColor;
+                    border-radius: 100%;
+                    height: 1.4em;
+                    width: 1.4em;
+                    text-align: center;
+                    line-height: 1.3em;
+
+                    @media #{$web800View} {
+                        .rtl & {
+                            float: left;
+                            margin-left: 0.7em;
+                        }
+                    }
+
+                    @media #{$tabletLandscape} {
+                        color: $whiteColor;
+                        border-radius: 100%;
+                        height: 1.4em;
+                        width: 1.4em;
+                        text-align: center;
+                        line-height: 1.3em;
+                        right: 50%;
+                        position: relative;
+                        margin: 21px -0.7em 16px auto;
+
+                        .rtl & {
+                            right: unset;
+                            float: left;
+                            left: 50%;
+                            margin: 21px auto 16px -0.7em;
+                        }
+                    }
+                }
+            }
+
+            &.highlight-cell-grey {
+                background-color: #EFEFEF;
+
+                &:hover {
+                    background-color: #EFEFEF;
+                }
+            }
+
+            &:not(:last-child) {
+                .rtl & {
+                    border-left: 1px solid #E1E1E1;
+                    border-right: none;
+                }
+            }
+
+            .kdx-cal-cell-event-top {
+
+                .rtl & {
+                    margin-bottom: $margin5;
+                    margin-top: 60px;
+                }
+            }
+        }
+    }
+
+    .cal-open-day-events {
+        background-color: $whiteColor;
+        box-shadow: none;
+        border-bottom: $lightGreyBorder;
+
+        div {
+            margin: 0.6em $noMargin;
+            position: relative;
+
+            .rtl & {
+                text-align: right;
+                direction: rtl;
+            }
+        }
+
+        .kdx-cal-close-open-event {
+            display: block;
+            font-size: 10px;
+            position: relative;
+            top: -10px;
+            float: right;
+            opacity: 0.5;
+            right: -10px;
+            color: #000;
+            width: 15px;
+            z-index: 999;
+            text-align: center;
+
+            .rtl & {
+                float: left;
+                right: unset;
+                left: -10px;
+            }
+
+            &:hover {
+                opacity: 1;
+            }
+        }
+
+        .cal-event {
+            display: none;
+        }
+
+        .cal-event-title {
+            color: #000;
+            display: table-row;
+            text-decoration: none;
+
+            .kdx-cal-day-event {
+
+                display: block;
+                width: 120px;
+                white-space: unset;
+
+                @media #{$ipadMini} {
+                    font-size: $bodyTextSize;
+                    color: $whiteColor;
+                    width: 90px;
+                }
+
+                &:hover+.kdx-cal-event-details {
+                    text-decoration: underline;
+                }
+            }
+
+            .kdx-cal-event-details {
+                display: table-cell;
+                font-size: $bodyTextSize;
+                border: 10px solid transparent;
+
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+        }
+    }
+
+    .kdx-cal-day-event {
+        color: $whiteColor;
+        padding: 0.1em;
+        border-radius: 0.2em;
+        font-size: $bodyTextSize;
+        text-align: center;
+        margin: 1px auto;
+        display: inline-block;
+        width: 90%;
+
+        @media #{$ipadMini} {
+            color: transparent;
+            display: block;
+            font-size: 0.8vw;
+            margin: 1px auto;
+            white-space: nowrap;
+            line-height: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+    }
+
+    .cal-week-view {
+        .kdx-cal-day-event {
+            width: 100%;
+            line-height: 25px;
+            font-size: 12px;
+            color: white;
+            text-align: center;
+        }
+        .cal-weekend {
+            color: #8B0000;
+        }
+        .cal-header {
+            @media #{$ipadMini} {
+                font-size: $bodyTextSize;
+            }
+
+            span {
+                @media #{$ipadMini} {
+                    font-size: 9px;
+                }
+            }
+        }
+    }
+
+    .cal-day-view {
+        .kdx-cal-day-event {
+            height: 100%;
+        }
+
+        .cal-time {
+            @media #{$ipadMini} {
+                font-size: $bodyTextSize;
+            }
+
+            font-size: $textSizeS;
+        }
+    }
+}

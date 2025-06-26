@@ -21,9 +21,9 @@ use App\Model\Traits\OptionsTrait;
 class ValidationReportTable extends AppTable  {
     use OptionsTrait;
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
 
-        $this->table('institutions');
+        $this->setTable('institutions');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);

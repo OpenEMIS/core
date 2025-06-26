@@ -9,12 +9,12 @@ use Cake\Core\Configure;
 
 class CachesController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeFilter($event);
         $this->Auth->allow(['clear', 'server', 'pull']);
@@ -26,7 +26,7 @@ class CachesController extends AppController
         Cache::clear(false, 'labels');
         Cache::clear(false, '_cake_core_');
         Cache::clear(false, '_cake_model_');
-        $Labels = TableRegistry::get('Labels');
+        $Labels = TableRegistry::getTableLocator()->get('Labels');
         $Labels->storeLabelsInCache();
 
         return $this->redirect($this->referer());

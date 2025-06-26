@@ -6,7 +6,7 @@ use ArrayObject;
 use Alert\Model\Behavior\AlertRuleBehavior;
 
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 
 class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
@@ -47,17 +47,17 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
         ]
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
-    { //echo "<pre>";print_r($data);die;
+    {
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
-                $validator = $model->validator();
+                $validator = $model->getValidator();
                 $validator->add('threshold', [
                     'ruleRange' => [
                         'rule' => ['range', 1, 30]
@@ -72,8 +72,8 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
         $this->onAlertRuleSetupFields($event, $entity);
     }
 
-    public function onUpdateFieldStudentAttendanceThreshold(Event $event, array $attr, $action, Request $request)
-    {// echo "hey";die;
+    public function onUpdateFieldStudentAttendanceThreshold(Event $event, array $attr, $action, ServerRequest $request)
+    {
         $attr['visible'] = true;
 
         // info tooltip

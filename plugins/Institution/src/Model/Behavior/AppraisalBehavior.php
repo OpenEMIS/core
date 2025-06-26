@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Institution\Model\Behavior;
 
 use ArrayObject;
@@ -8,18 +8,19 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
-use Cake\Utility\Inflector;
 use Cake\Utility\Hash;
 use Cake\Chronos\Date;
 use Cake\Chronos\Chronos;
+use Cake\Http\ServerRequest;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
+use Cake\Utility\Text;
 
-class AppraisalBehavior extends Behavior 
+class AppraisalBehavior extends Behavior
 {
     public $periodList = [];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
@@ -28,6 +29,8 @@ class AppraisalBehavior extends Behavior
         $events['ControllerAction.Model.addEdit.afterAction'] = 'addEditAfterAction';
         $events['ControllerAction.Model.edit.afterQuery'] = 'editAfterQuery';
         $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
+        $events['Model.excel.onExcelUpdateFields'] = ['callable' => 'onExcelUpdateFields', 'priority' => 110];
+        $events['Model.excel.onExcelRenderCustomField']  = 'onExcelRenderCustomField';
 
         return $events;
     }
@@ -51,7 +54,7 @@ class AppraisalBehavior extends Behavior
             $filename = $entity->file_content;
             return !empty($filename);
         };
-        $model->behaviors()->get('ControllerAction')->config(
+        $model->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             $showFunc
         );
@@ -92,8 +95,8 @@ class AppraisalBehavior extends Behavior
         $model->field('file_content', ['attr' => ['label' => __('Attachment')]]);
         $model->field('comment');
 
-        $entity = $model->newEntity();
-        $appraisalFormId = $model->request->data($model->aliasField('appraisal_form_id'));
+        $entity = $model->newEmptyEntity();
+        $appraisalFormId = $model->request->getData($model->aliasField('appraisal_form_id'));
         $model->printAppraisalCustomField($appraisalFormId, $entity);
     }
 
@@ -143,7 +146,7 @@ class AppraisalBehavior extends Behavior
             ->toArray();
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event,  $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['onChangeReload'] = true;
@@ -152,14 +155,14 @@ class AppraisalBehavior extends Behavior
         }
     }
 
-    public function onUpdateFieldAppraisalTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAppraisalTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $model = $this->_table;
         if ($action == 'add') {
             $attr['onChangeReload'] = true;
-            if ($request->data($model->aliasField('academic_period_id')) && $request->data($model->aliasField('appraisal_type_id'))) {
-                $appraisalTypeId = $request->data($model->aliasField('appraisal_type_id'));
-                $academicPeriodId = $request->data($model->aliasField('academic_period_id'));
+            if ($request->getData($model->aliasField('academic_period_id')) && $request->getData($model->aliasField('appraisal_type_id'))) {
+                $appraisalTypeId = $request->getData($model->aliasField('appraisal_type_id'));
+                $academicPeriodId = $request->getData($model->aliasField('academic_period_id'));
                 $this->periodList = $model->AppraisalPeriods->find('list')
                     ->innerJoinWith('AppraisalTypes')
                     ->where([
@@ -174,19 +177,22 @@ class AppraisalBehavior extends Behavior
         }
     }
 
-    public function onUpdateFieldAppraisalFormId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAppraisalFormId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $model = $this->_table;
         if ($action == 'add') {
-            if ($request->data($model->aliasField('appraisal_period_id'))) {
-                $appraisalPeriodId = $request->data($model->aliasField('appraisal_period_id'));
+            if ($request->getData($model->aliasField('appraisal_period_id'))) {
+                $appraisalPeriodId = $request->getData($model->aliasField('appraisal_period_id'));
                 $appraisalPeriodEntity = $model->AppraisalPeriods->get($appraisalPeriodId, ['contain' => ['AppraisalForms']]);
                 $attr['value'] = $appraisalPeriodEntity->appraisal_form_id;
                 $attr['attr']['value'] = $appraisalPeriodEntity->appraisal_form->code_name;
-                $request->data[$model->alias()]['appraisal_form_id'] = $appraisalPeriodEntity->appraisal_form_id;
+                $data = $this->_table->request->getData($model->getAlias()) ?? []; //POCOR-8688
+                $data['appraisal_form_id'] = $appraisalPeriodEntity->appraisal_form_id;
+                $this->_table->request = $this->_table->request->withData($model->getAlias(), $data);
+
             // This part ensures that the form belonging to the previously selected Appraisal Period will not populate at the bottom when user choose "Select" from the dropdown next. It should be empty.
             }else{
-                   $request->data[$model->alias()]['appraisal_form_id'] = "";
+                   $request->getData[$model->getAlias()]['appraisal_form_id'] = "";
             }
             return $attr;
         }
@@ -195,11 +201,11 @@ class AppraisalBehavior extends Behavior
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $model = $this->_table;
-        $errors = $entity->errors();
+        $errors = $entity->getErrors();
 
         $fileErrors = [];
-        $session = $model->request->session();
-        $sessionErrors = $model->registryAlias().'.parseFileError';
+        $session = $model->request->getSession();
+        $sessionErrors = $model->getRegistryAlias().'.parseFileError';
 
         if ($session->check($sessionErrors)) {
             $fileErrors = $session->read($sessionErrors);
@@ -254,17 +260,24 @@ class AppraisalBehavior extends Behavior
 
             $action = $model->action;
             $url = $model->url($action);
-           
+
             //section tab
             $formsCriterias = $query->toArray();
             foreach ($formsCriterias as $key => $formCritieria) {
                 if ($section != $formCritieria->section) {
                     $section = $formCritieria->section;
-                    $tabName = Inflector::slug($section);
+                    $tabName = Text::slug($section);
                     if (empty($tabElements)) {
                         $selectedAction = $tabName;
+                    } else { // POCOR-9123
+                        if (isset($url['?']) && $url['?'] != $tabName) {
+                            unset($url['?']);
+                        }
                     }
+
                     $url['tab_section'] = $tabName;
+                    $url['?']['tab_section'] = $tabName; // POCOR-9123
+
                     $tabElements[$tabName] = [
                         'url' => $url,
                         'text' => $section,
@@ -274,7 +287,7 @@ class AppraisalBehavior extends Behavior
             //end
 
             if (!empty($tabElements)) {
-                $queryTabSection = $model->request->query('tab_section');
+                $queryTabSection = $model->request->getQuery('tab_section');
                 if (!is_null($queryTabSection) && array_key_exists($queryTabSection, $tabElements)) {
                     $selectedAction = $queryTabSection;
                 }
@@ -299,7 +312,7 @@ class AppraisalBehavior extends Behavior
                         'criteria_name' => $formsCriteria->appraisal_criteria->name,
                         'is_mandatory' => $formsCriteria->is_mandatory
                     ]);
-                    
+
                     $this->appraisalCustomFieldExtra($details, $formsCriteria, $criteriaCounter, $entity);
                 }
             }
@@ -331,6 +344,11 @@ class AppraisalBehavior extends Behavior
                 $key = 'appraisal_text_answers';
                 $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
                 $attr['type'] = 'text';
+                $name = $criteria->field_type->name ?? null;
+                $action = $model->action;
+                if($action == "edit" || ($name == 'Note' && $action == 'add')) {
+                    $attr['attr']['disabled'] = true;
+                }
                 break;
             case 'DROPDOWN':
                 $key = 'appraisal_dropdown_answers';
@@ -377,4 +395,188 @@ class AppraisalBehavior extends Behavior
 
         $criteriaCounter[$fieldTypeCode]++;
     }
+
+    //POCOR-8627 Start
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    {
+        // Logic for reorder field in report Start
+        //Desired field order
+        $desiredOrder = [
+            "Status",
+            "Assignee",
+            "Academic Period",
+            "Appraisal Type",
+            "Appraisal Period",
+            "Appraisal Form",
+            "Appraisal Period From",
+            "Appraisal Period To",
+            "Date Appraised",
+            "Comment"
+        ];
+
+        // Fields to remove
+        $removeField = [
+            "File Name",
+            "Institution",
+            "Staff"
+        ];
+
+        // Create an associative array for easier reordering
+        $fieldsArray = iterator_to_array($fields);
+
+        // Filter out fields that need to be removed
+        $fieldsArray = array_filter($fieldsArray, function ($field) use ($removeField) {
+            return !in_array($field['label'], $removeField, true);
+        });
+
+        // Sort the fields based on the desired order
+        $sortedFields = [];
+        foreach ($desiredOrder as $label) {
+            foreach ($fieldsArray as $field) {
+                if ($field['label'] === $label) {
+                    $sortedFields[] = $field;
+                    break;
+                }
+            }
+        }
+
+        // Update the original $fields ArrayObject
+        $fields->exchangeArray($sortedFields);
+        //End
+        $recordId = $settings['id'];
+        $appraisalFormId = $recordId ? $this->_table->get($recordId)->appraisal_form_id : json_decode($settings['process']['params'] ?? '{}')->appraisal_form_id;
+        $staffAppraisalId = $recordId ? $this->_table->get($recordId)->id : -1;
+        $AppraisalFormsCriterias = TableRegistry::get('StaffAppraisal.AppraisalFormsCriterias');
+
+        if (!$appraisalFormId) {
+            return; // Exit if appraisal_form_id is not found
+        }
+
+        // Define contain settings once
+        $containSettings = [
+            'AppraisalCriterias' => [
+                'FieldTypes',
+                'AppraisalSliders',
+                'AppraisalNumbers',
+                'AppraisalDropdownOptions' => ['sort' => ['AppraisalDropdownOptions.order' => 'ASC']]
+            ],
+            'AppraisalTextAnswers' => fn($q) => $q->where(['AppraisalTextAnswers.institution_staff_appraisal_id' => $staffAppraisalId]),
+            'AppraisalSliderAnswers' => fn($q) => $q->where(['AppraisalSliderAnswers.institution_staff_appraisal_id' => $staffAppraisalId]),
+            'AppraisalDropdownAnswers' => fn($q) => $q->where(['AppraisalDropdownAnswers.institution_staff_appraisal_id' => $staffAppraisalId]),
+            'AppraisalNumberAnswers' => fn($q) => $q->where(['AppraisalNumberAnswers.institution_staff_appraisal_id' => $staffAppraisalId]),
+            'AppraisalScoreAnswers' => fn($q) => $q->where(['AppraisalScoreAnswers.institution_staff_appraisal_id' => $staffAppraisalId]),
+        ];
+
+        // Execute query with common conditions
+        $formsCriterias = $AppraisalFormsCriterias->find()
+            ->contain($containSettings)
+            ->where([$AppraisalFormsCriterias->aliasField('appraisal_form_id') => $appraisalFormId])
+            ->order([$AppraisalFormsCriterias->aliasField('order')])
+            ->toArray();
+
+        // Process form criteria
+        foreach ($formsCriterias as $formsCriteria) {
+            $fieldTypeCode = $formsCriteria->appraisal_criteria->field_type->code ?? '';
+            $fieldKey = ($fieldTypeCode === 'TEXTAREA') ? 'appraisal_text_answers' : strtolower("appraisal_{$fieldTypeCode}_answers");
+
+            $fields[] = [
+                'key' => $fieldKey,
+                'field' => $fieldTypeCode,
+                'type' => 'custom_field',
+                'label' => $formsCriteria->appraisal_criteria->name ?? '',
+                'appraisal_criteria_id' => $formsCriteria->appraisal_criteria_id
+            ];
+        }
+        $fields[] = [
+            'key' => 'StaffAppraisals',
+            'field' => 'modified_user_id',
+            'type' => 'string',
+            'label' => 'Modified By',
+        ];
+        $fields[] = [
+            'key' => 'StaffAppraisals',
+            'field' => 'modified',
+            'type' => 'date',
+            'label' => 'Modified On',
+        ];
+        $fields[] = [
+            'key' => 'StaffAppraisals',
+            'field' => 'created_user_id',
+            'type' => 'string',
+            'label' => 'Created By',
+        ];
+        $fields[] = [
+            'key' => 'StaffAppraisals',
+            'field' => 'created',
+            'type' => 'date',
+            'label' => 'Created On',
+        ];
+    }
+
+
+    public function onExcelRenderCustomField(Event $event, Entity $entity, array $attr)
+    {
+        $recordId = $entity['id'];
+        if(!empty( $recordId)) {
+            $entity = $this->_table->get($recordId);
+            $appraisalFormId = $entity->appraisal_form_id;
+            $criteriaCounter = new ArrayObject();
+            $staffAppraisalId = $entity->has('id') ? $entity->id : -1;
+            // retrieve all form criterias containing results
+            $AppraisalFormsCriterias = TableRegistry::get('StaffAppraisal.AppraisalFormsCriterias');
+            $query = $AppraisalFormsCriterias->find()
+            ->contain([
+                'AppraisalCriterias' => [
+                    'FieldTypes',
+                    'AppraisalSliders',
+                    'AppraisalNumbers',
+                    'AppraisalDropdownOptions' => ['sort' => ['AppraisalDropdownOptions.order' => 'ASC']]
+                ],
+                'AppraisalTextAnswers' => function ($q) use ($staffAppraisalId) {
+                    return $q->where(['AppraisalTextAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                },
+                'AppraisalSliderAnswers' => function ($q) use ($staffAppraisalId) {
+                    return $q->where(['AppraisalSliderAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                },
+                'AppraisalDropdownAnswers' => function ($q) use ($staffAppraisalId) {
+                    return $q->where(['AppraisalDropdownAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                },
+                'AppraisalNumberAnswers' => function ($q) use ($staffAppraisalId) {
+                    return $q->where(['AppraisalNumberAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                },
+                'AppraisalScoreAnswers' => function ($q) use ($staffAppraisalId) {
+                    return $q->where(['AppraisalScoreAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                }
+            ])
+            ->where([$AppraisalFormsCriterias->aliasField('appraisal_form_id') => $appraisalFormId])
+            ->where([$AppraisalFormsCriterias->aliasField('appraisal_criteria_id') =>  $attr['appraisal_criteria_id']])
+            ->order($AppraisalFormsCriterias->aliasField('order'));
+            $formsCriterias = $query->toArray();
+
+            foreach ($formsCriterias as $key => $formsCriteria) {
+                $fieldTypeCode = $formsCriteria->appraisal_criteria->field_type->code;
+                $fieldTypeCode = $formsCriteria->appraisal_criteria->field_type->code;
+
+                if($fieldTypeCode == 'SLIDER' && $attr['field'] == 'SLIDER') {
+                    return  $formsCriteria->appraisal_slider_answers[0]->answer;
+                }
+                if($fieldTypeCode == 'TEXTAREA' && $attr['field'] == 'TEXTAREA') {
+                    return  $formsCriteria->appraisal_text_answers[0]->answer;
+                }
+                if($fieldTypeCode == 'DROPDOWN' && $attr['field'] == 'DROPDOWN') {
+                    $answer = !empty($formsCriteria->appraisal_dropdown_answers[0]->answer) ? $formsCriteria->appraisal_dropdown_answers[0]->answer :0 ;
+                    $finalAns = isset($formsCriteria->appraisal_criteria->appraisal_dropdown_options[$answer -1 ]['name']) ? $formsCriteria->appraisal_criteria->appraisal_dropdown_options[$answer -1 ]['name'] :'';
+                    return  $finalAns;
+                }
+                if($fieldTypeCode == 'NUMBER' && $attr['field'] == 'NUMBER') {
+                    return  $formsCriteria->appraisal_number_answers[0]->answer;
+                }
+                if($fieldTypeCode == 'SCORE' && $attr['field'] == 'SCORE') {
+                    return  $formsCriteria->appraisal_score_answers[0]->answer;
+                }
+            }
+        }
+    }
+    //POCOR-8627 End
 }

@@ -5,9 +5,9 @@ use App\Model\Table\AppTable;
 
 class FloorCustomFormsFiltersTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('infrastructure_custom_forms_filters');
+        $this->setTable('infrastructure_custom_forms_filters');
         parent::initialize($config);
         $this->belongsTo('CustomForms', ['className' => 'Infrastructure.FloorCustomForms', 'foreignKey' => 'infrastructure_custom_form_id']);
         $this->belongsTo('CustomFilters', ['className' => 'Infrastructure.FloorTypes', 'foreignKey' => 'infrastructure_custom_filter_id']);

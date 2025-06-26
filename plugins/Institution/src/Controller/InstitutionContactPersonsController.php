@@ -30,7 +30,7 @@ class InstitutionContactPersonsController extends PageController
         return $event;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $session = $this->request->session();
         $institutionId = $this->getInstitutionID();
@@ -62,10 +62,10 @@ class InstitutionContactPersonsController extends PageController
 
         // set institution_id
         $page->get('institution_id')
-            ->setControlType('hidden') 
+            ->setControlType('hidden')
             ->setValue($institutionId);
     }
-     
+
     public function index()
     {
         parent::index();

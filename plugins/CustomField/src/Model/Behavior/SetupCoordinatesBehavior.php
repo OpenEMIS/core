@@ -12,7 +12,7 @@ use CustomField\Model\Behavior\SetupBehavior;
 class SetupCoordinatesBehavior extends SetupBehavior
 {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -20,10 +20,10 @@ class SetupCoordinatesBehavior extends SetupBehavior
     public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
     {
         $fieldType = '';
-        $requestData = $this->_table->request->data;
-        $alias = $this->_table->alias();
+        $requestData = $this->_table->request->getData();
+        $alias = $this->_table->getAlias();
         if (!empty($requestData)) {
-            $fieldType = (array_key_exists('field_type', $requestData[$alias]))? $requestData[$alias]['field_type']: null;
+            $fieldType = (isset($requestData[$alias]['field_type']))? $requestData[$alias]['field_type']: null;
         } else {
             if (!empty($entity)) {
                 $fieldType = $entity->field_type;

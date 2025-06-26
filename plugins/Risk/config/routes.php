@@ -1,7 +1,8 @@
 <?php
 use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Risk', ['plugin' => 'Risk'], function ($routes) {
-    Router::connect('/Risks', ['plugin' => 'Risk', 'controller' => 'Risks']);
-    Router::connect('/Risks/:action/*', ['plugin' => 'Risk', 'controller' => 'Risks']);
+Router::scope('/Risk', ['plugin' => 'Risk'], function (RouteBuilder $routes) {
+    $routes->connect('/Risks', ['plugin' => 'Risk', 'controller' => 'Risks']);
+    $routes->connect('/Risks/:action/*', ['plugin' => 'Risk', 'controller' => 'Risks']);
 });

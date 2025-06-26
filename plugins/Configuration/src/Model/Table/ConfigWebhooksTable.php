@@ -3,7 +3,7 @@ namespace Configuration\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -67,12 +67,13 @@ class ConfigWebhooksTable extends ControllerActionTable
         'role_create'           => 'Role Create',
         'role_delete'           => 'Role Delete',
         'education_structure_system_delete' => 'Education Structure System Delete',
+        'attendance_update' => 'Student Attendance Update',
     ];
 
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('webhooks');
+        $this->setTable('webhooks');
         parent::initialize($config);
         $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'webhook_id', 'joinType' => 'INNER']);
         $this->addBehavior('Configuration.ConfigItems');
@@ -82,10 +83,10 @@ class ConfigWebhooksTable extends ControllerActionTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         $validator
             ->add('name', 'ruleUnique', [
                 'rule' => 'validateUnique',
@@ -139,9 +140,9 @@ class ConfigWebhooksTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity)
     {
-        $this->request->data[$this->alias()]['triggered_event']['_ids'] = [];
+        $this->request->getData($this->getAlias())['triggered_event']['_ids'] = [];
         foreach ($entity->webhook_events as $event) {
-            $this->request->data[$this->alias()]['triggered_event']['_ids'][] = $event->event_key;
+            $this->request->getData($this->getAlias())['triggered_event']['_ids'][] = $event->event_key;
         }
     }
 
@@ -155,7 +156,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         $this->field('method', ['options' => $supportedMethod]);
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('triggered_event', [
             'type' => 'chosenSelect',
@@ -200,5 +201,34 @@ class ConfigWebhooksTable extends ControllerActionTable
             $returnString = $returnString . ', ' . __($this->eventKeyOptions[$event->event_key]);
         }
         return ltrim($returnString, ', ');
+    }
+
+    /**
+     * POCOR-8994
+     *  
+     * It retrieves the associated WebhookEvents for the current webhook record 
+     using the `id` from the query string
+     * The event keys are then used to pre-select options in the triggered_event chosenSelect dropdown
+     * */
+    public function editBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $queryString = $this->getQueryString();
+        $recordId = $queryString['id'];
+        $webhookEvents = TableRegistry::get('Configuration.WebhookEvents');
+        $record = $webhookEvents->find()
+            ->where([$webhookEvents->aliasField('webhook_id') => $recordId])
+            ->all(); 
+
+        $storeEvent = [];
+        foreach ($record as $val) {
+            $storeEvent[] = $val['event_key'];
+        }
+        $this->field('triggered_event', [
+                'type' => 'chosenSelect',
+                'options' => $this->eventKeyOptions,
+                'before' => 'description',
+                'attr' => ['required' => true,'value' =>  $storeEvent],
+               
+            ]);
     }
 }

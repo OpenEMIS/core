@@ -15,34 +15,64 @@ use Migrations\Migrations;
 use PDO;
 use PDOException;
 use Cake\Auth\DefaultPasswordHasher;
+use Cake\Core\Configure\Engine\PhpConfig;//POCOR-8308
+
 
 /**
  * DatabaseInstaller Form.
  */
 class DatabaseConnectionForm extends Form
 {
-    const CONFIG_TEMPLATE = "<?php
-return [
-    'Datasources' => [
-        'default' => [
-            'className' => 'Cake\Database\Connection',
-            'driver' => 'Cake\Database\Driver\Mysql',
-            'persistent' => false,
-            'host' => {host},
-            'port' => {port},
-            'username' => {user},
-            'password' => {pass},
-            'database' => {database},
-            'encoding' => 'utf8mb4',
-            'timezone' => 'UTC',
-            'cacheMetadata' => true,
-            'quoteIdentifiers' => true,
-            //'init' => ['SET GLOBAL innodb_stats_on_metadata = 0'],
-        ],
-    ],
-];
-";
+    //POCOR-8308 start
+    const CONFIG_TEMPLATE="<?php
 
+    return [
+
+        'debug' => filter_var(env('DEBUG',false), FILTER_VALIDATE_BOOLEAN),
+        'Security' => [
+            'salt' => env('SECURITY_SALT', '444db3ff8e6247fc30dd0d21414066d956d3f6340ff059927b40e4dddc1b880c'),
+        ],
+    
+        'Datasources' => [
+            'default' => [
+                'className' => 'Cake\Database\Connection',
+                'driver' => 'Cake\Database\Driver\Mysql',
+                'persistent' => false,
+                'host' => {host},
+                'port' => {port},
+                'username' => {user},
+                'password' => {pass},
+                'database' => {database},
+                'encoding' => 'utf8mb4',
+                'timezone' => 'UTC',
+                'cacheMetadata' => true,
+                'quoteIdentifiers' => true,
+            ],
+        ],
+        'EmailTransport' => [
+            'openemis' => [
+                'className' => 'Smtp',
+                'host' => 'smtp.gmail.com',
+                'port' => 587,
+                'timeout' => 30,
+                'username' => 'app@openemis.org',
+                'password' => '',
+                'client' => null,
+                'tls' => true,
+                'url' => env('EMAIL_TRANSPORT_DEFAULT_URL', null),
+            ],
+        ],
+
+        'Email' => [
+            'openemis' => [
+                'transport' => 'openemis',
+                'from' => ['app@openemis.org' => 'DoNotReply'],
+            ],
+        ]
+    ];
+    "
+    ;
+       //POCOR-8308 end
     private $app_extra_template = "<?php
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
@@ -121,7 +151,7 @@ return [
      * @param \Cake\Form\Schema $schema From schema
      * @return \Cake\Form\Schema
      */
-    protected function _buildSchema(Schema $schema)
+    protected function _buildSchema(Schema $schema): Schema
     {
         return $schema->addField('database_server_host', ['type' => 'string'])
             ->addField('database_server_port', ['type' => 'string'])
@@ -164,11 +194,12 @@ return [
      * @param array $data Form data.
      * @return bool
      */
-    protected function _execute(array $data)
+    protected function _execute(array $data): bool
     {   
         $current_time_limit = ini_get('max_execution_time');
         set_time_limit(300);
-       
+        $originalMemoryLimit = ini_get('memory_limit'); //POCOR-8308
+        ini_set('memory_limit', '1G'); //POCOR-8308
         $host = $data['database_server_host'];
         $port = $data['database_server_port'];
         $root = $data['database_admin_user'];
@@ -196,19 +227,30 @@ return [
         $template = str_replace('{host}', "'$host'", self::CONFIG_TEMPLATE);
         $template = str_replace('{port}', "'$port'", $template);
         $template = str_replace('{pass}', "'$dbPassword'", $template);
-        $dbFileHandle = fopen(CONFIG . 'datasource.php', 'w');
+        $dbFileHandle = fopen(CONFIG . 'app_local.php', 'w');
         $privateKeyHandle = fopen(CONFIG . 'private.key', 'w');
         $publicKeyHandle = fopen(CONFIG . 'public.key', 'w');
         $appExtraHandle = fopen(CONFIG . 'app_extra.php', 'w');
         $dbUserHostPermission = isset($data['datasource_user_host']) ? $data['datasource_user_host'] : $host;
         if ($dbFileHandle && $privateKeyHandle && $publicKeyHandle) {
-            $res = openssl_pkey_new(['private_key_bits' => 1024]);
-            openssl_pkey_export($res, $privKey);
-            fwrite($privateKeyHandle, $privKey);
+            //POCOR-8308 start
+            $config = [ 'private_key_bits' => 1024];
+            if (strncasecmp(PHP_OS, 'WIN', 3) == 0) {
+                $opensslConfigPath =  $_SERVER['OPENSSL_CONF'];
+                $apachePath = strstr($opensslConfigPath, 'apache', true);
+                $config['config']=$apachePath.'apache/conf/openssl.cnf';
+            }
+            $res = openssl_pkey_new($config);
+            $privateKey = '';
+            openssl_pkey_export($res, $privateKey, null, $config);
+            fwrite($privateKeyHandle, $privateKey);
             fclose($privateKeyHandle);
-            $pubKey = openssl_pkey_get_details($res);
+            $keyDetails = openssl_pkey_get_details($res);
+            $publicKey = $keyDetails['key'];
+            fwrite($publicKeyHandle, $publicKey);
             fwrite($publicKeyHandle, $pubKey['key']);
             fclose($publicKeyHandle);
+            //POCOR-8308 end
             $app_extra_text = $this->app_extra_template;
             if (Configure::read('installerSchool')) {
                 $app_extra_text .= $this->app_extra_school_mode;
@@ -225,62 +267,140 @@ return [
             fwrite($appExtraHandle, $app_extra_text);
             $this->createDb($pdo, $db);
             $this->createDbUser($pdo, $dbUserHostPermission, $dbUser, $dbPassword, $db);
+            $pdo_query = "SET GLOBAL sql_mode = REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', '')";
+            $stmt = $pdo->prepare($pdo_query);
+            $stmt->execute(); 
             $template = str_replace('{database}', "'$db'", $template);
             $template = str_replace('{user}', "'$dbUser'", $template);
             fwrite($dbFileHandle, $template);
             fclose($dbFileHandle);
+                //POCOR-8308 start
+            $configPath = CONFIG . 'app_local.php';
+            if (file_exists($configPath)) {
+                Configure::config('app_local', new PhpConfig());
+                Configure::load('app_local', 'app_local');
+            } else {
+                throw new \mysqli_sql_exception("app_local.php not found. Please ensure it exists in your config directory.");
+            }
 
-            Configure::load('datasource', 'default');
-            Configure::load('app_extra', 'default');
-            ConnectionManager::config(Configure::consume('Datasources'));
+            $datasources = Configure::read('Datasources');
+    
+            if (!$datasources || !isset($datasources['default'])) {
+                throw new \mysqli_sql_exception("Default database configuration not found in app_local.php");
+            }
+
+            if (ConnectionManager::getConfig('default')) {
+                ConnectionManager::drop('default');
+            }
+            ConnectionManager::setConfig('default', $datasources['default']);
+            //POCOR-8308 end
             $connection = ConnectionManager::get('default');
-       
             $dbConfig = $connection->config();
             $username = $dbConfig['username']; 
             $host = $dbConfig['host']; 
             $dbname = $dbConfig['database']; 
             $password = $dbConfig['password']; 
             $fileName = DATABASE_DUMP_FILE;
-            $conn = mysqli_connect($host, $username, $password, $dbname);
+            $port= isset($dbConfig['port'])?trim($dbConfig['port']):'3306';//POCOR-8308
+            $conn = mysqli_connect($host, $username, $password, $dbname,$port);//POCOR-8308
             // if (mysqli_connect_errno()) {
             //     echo "Failed to connect to MySQL: " . mysqli_connect_error();
             //     exit();
             //   }
-            $query = '';
+            // $query = '';
             $sqlScript = file(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
             
             
            
-            
-            foreach ($sqlScript as $line)   {
+            //POCOR-8308 start
+            // foreach ($sqlScript as $line)   {
                
-                $startWith = substr(trim($line), 0 ,2);
-                $endWith = substr(trim($line), -1 ,1);
-                $endWith3 = substr(trim($line), -3 ,3);
+            //     $line= trim($line);
+            //     $startWith = substr(trim($line), 0 ,2);
+            //     $endWith = substr(trim($line), -1 ,1);
+            //     $endWith3 = substr(trim($line), -3 ,3);
                
-                if (empty($line) || $startWith == '--' || $startWith == '/*' || $startWith == '//'||$endWith3=='*/;') {
-                    continue;
-                }
+            //     if (empty($line) || $startWith == '--' || $startWith == '/*' || $startWith == '//'||$endWith3=='*/;') {
+            //         continue;
+            //     }
+            //     if (stripos($line, 'DELIMITER') === 0) {
+            //         // Extract the new delimiter
+            //         $delimiter = str_replace('DELIMITER ', '', $trimmedLine);
+            //         continue; // Skip the delimiter line itself
+            //     }
                     
-                $query = $query . $line;
-                if ($endWith == ';') {
-                    // $max_allowed_packet=20777216;
-                    // mysqli_options($conn,MYSQLI_OPT_CONNECT_TIMEOUT,600);
-                    // mysqli_options($conn, MYSQLI_INIT_COMMAND, "SET GLOBAL max_allowed_packet=$max_allowed_packet");
-                    // mysqli_set_charset($conn, 'utf8');
-                    mysqli_query($conn,$query) or die('<div class="error-response sql-import-response">Problem in executing the SQL query <b>' . $query. '</b></div>');
-                    $query= '';     
-                }
+            //     $query = $query . $line;
+            //     if ($endWith == ';') {
+            //         // $max_allowed_packet=20777216;
+            //         mysqli_options($conn,MYSQLI_OPT_CONNECT_TIMEOUT,600);
+            //         // mysqli_options($conn, MYSQLI_INIT_COMMAND, "SET GLOBAL max_allowed_packet=$max_allowed_packet");
+            //         mysqli_set_charset($conn, 'utf8');
+            //         mysqli_query($conn,$query) or die('<div class="error-response sql-import-response">Problem in executing the SQL query <b>' . $query. '</b></div>');
+            //         $query= '';     
+            //     }
+            // }
+            $query = '';  // Initialize query storage
+            $delimiter = ';';  // Default delimiter is `;`
+
+            // Disable foreign key checks
+            if (!mysqli_query($conn, "SET FOREIGN_KEY_CHECKS=0;")) {
+                die('<div class="error-response sql-import-response">Failed to disable foreign key checks</div>');
             }
 
+            foreach ($sqlScript as $line) {
+                // Replace collation type
+                $line = str_replace('utf8mb4_0900_ai_ci', 'utf8mb4_general_ci', $line);
+                
+                // Trim the line to remove unnecessary spaces
+                $trimmedLine = trim($line);
+                $startWith = substr($trimmedLine, 0, 2);
+                $endWith = substr($trimmedLine, -strlen($delimiter), strlen($delimiter));
+                
+                // Skip comments and empty lines
+                if (empty($trimmedLine) || $startWith == '--' || $startWith == '/*' || $startWith == '//' || substr($trimmedLine, -3) == '*/;') {
+                    continue;
+                }
+
+                // Check if the line contains a new DELIMITER
+                if (stripos($trimmedLine, 'DELIMITER') === 0) {
+                    // Change the delimiter
+                    $delimiter = str_replace('DELIMITER ', '', $trimmedLine);
+                    continue; // Skip the DELIMITER line itself
+                }
+
+                // Append the current line to the query
+                $query .= $line . "\n";
+
+                // Execute the query if the line ends with the delimiter
+                if (substr($trimmedLine, -strlen($delimiter)) == $delimiter) {
+                    // Remove the delimiter from the query
+                    $query = str_replace($delimiter, '', $query);
+
+                    // Set MySQL options
+                    mysqli_options($conn, MYSQLI_OPT_CONNECT_TIMEOUT, 600);
+                    mysqli_set_charset($conn, 'utf8');
+                    $max_allowed_packet = 20777216;
+                    mysqli_options($conn, MYSQLI_OPT_CONNECT_TIMEOUT, 600);
+                    mysqli_options($conn, MYSQLI_INIT_COMMAND, "SET GLOBAL max_allowed_packet=$max_allowed_packet");
+                    
+                    // Execute the query
+                    if (!mysqli_query($conn, $query)) {
+                        die('<div class="error-response sql-import-response">Problem in executing the SQL query <b>' . $query . '</b></div>');
+                    }
+
+                    // Reset the query after execution
+                    $query = '';
+                }
+            }
+            //POCOR-8308 end
             // $result = exec('mysql -u'.$username.' -p'.$password.' --host'.$host.' '.$dbname.' < '.WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
             // $result = exec("/Applications/MAMP/Library/bin/mysql --host=localhost -u$username -p$password $db < prd_cor_zip.sql");
             $this->createUser($data['account_password']) && $this->createArea($data['area_code'], $data['area_name']);
             /*$sql = mysqli_connect($host, $username, $password, $dbname);
             $sqlSource = file_get_contents(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
             mysqli_multi_query($sql,$sqlSource);*/
-            Cache::clear(false, '_cake_model_');
-            Cache::clear(false, 'themes');
+            Cache::clear('_cake_model_');
+            // Cache::clear(false, 'themes');//POCOR-8308
             
             // $migrations = new Migrations();
             // $source = 'Snapshot' . DS . VERSION;
@@ -302,7 +422,8 @@ return [
             //     }
             // }
             set_time_limit($current_time_limit);
-            return false;
+            ini_set('memory_limit', $originalMemoryLimit);//POCOR-8308
+            return true;//POCOR-8308
            
         } else {
             set_time_limit($current_time_limit);
@@ -390,7 +511,7 @@ return [
                 'visible' => 1
             ];
             $entity = $AreasTable->newEntity($data);
-            return $AreasTable->save($entity);
+            return $AreasTable->save($entity,['skip_callbacks' => true]);//POCOR-8308
         }
     }
 

@@ -14,9 +14,9 @@ use App\Model\Table\AppTable;
  */
 class ReportTrainingNeedStatisticsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_training_needs');
+        $this->setTable('staff_training_needs');
         parent::initialize($config);
         $this->addBehavior('Excel', ['excludes' => []]);
         $this->addBehavior('Report.ReportList');
@@ -26,7 +26,7 @@ class ReportTrainingNeedStatisticsTable extends AppTable
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'

@@ -14,7 +14,7 @@ class UndoBehavior extends Behavior {
 	protected $model;
 	protected $statuses;
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 
 		$class = basename(str_replace('\\', '/', get_class($this)));
@@ -23,20 +23,20 @@ class UndoBehavior extends Behavior {
 		$this->_table->addUndoActions($class);
 		$this->undoAction = $class;
 
-		$this->statuses = $this->config('statuses');
-		$this->model = TableRegistry::get($this->config('model'));
+		$this->statuses = $this->getConfig('statuses');
+		$this->model = TableRegistry::get($this->getConfig('model'));
 	}
 
 	protected function getStudents($data) {
 		$list = [];
 
 		$currentStatus = $this->statuses['CURRENT'];
-		$infoMessage = $this->_table->getMessage($this->_table->alias().'.notUndo');
-
+		$infoMessage = $this->_table->getMessage($this->_table->getAlias().'.notUndo');
+		//echo "<pre>"; print_r($data); die;
 		foreach ($data as $key => $obj) {
-			$id = $obj['id'];	// uuid of current student record
-			$studentId = $obj['student_id'];
-			$startDate = $obj['start_date']->format('Y-m-d');
+		    $id = $obj['id'];    // UUID of the current student record
+		    $studentId = $obj['student_id'];
+		    $startDate = isset($obj['start_date']) ? $obj['start_date']->format('Y-m-d') : null;
 
 			// find student records across all institutions regardless periods and grades
 			// exclude itelf, exclude enrolled status and the start_date is from current record onwards
@@ -44,7 +44,7 @@ class UndoBehavior extends Behavior {
 				->find()
 				->where([
 					$this->model->aliasField('id <>') => $id,
-					$this->model->aliasField('student_id') => $studentId,
+					$this->model->aliasField('student_id IS') => $studentId,
 					$this->model->aliasField('start_date >') => $startDate,
 					$this->model->aliasField('student_status_id <>') => $currentStatus
 				])

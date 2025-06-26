@@ -6,7 +6,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Datasource\ConnectionManager;
 
 class UpdateUserDefaultIdentityNoShell extends Shell {
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
 	}
 

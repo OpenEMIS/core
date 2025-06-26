@@ -10,7 +10,7 @@ use StaffAppraisal\Model\Table\AppraisalAnswersTable;
 
 class AppraisalSliderAnswersTable extends AppraisalAnswersTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }

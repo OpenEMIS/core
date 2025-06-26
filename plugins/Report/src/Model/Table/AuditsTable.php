@@ -6,7 +6,7 @@ use DateTime;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
@@ -18,16 +18,17 @@ use Directory\Model\Table\DirectoriesTable as UserTypeOption;
 
 class AuditsTable extends AppTable
 { 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
+        $this->setTable('security_users');
         parent::initialize($config);
         $this->addBehavior('Report.ReportList');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         $validator
             ->add('report_start_date', [
                 'ruleCompareDate' => [
@@ -126,24 +127,25 @@ class AuditsTable extends AppTable
         $this->checkForDateFields($requestData);
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+            $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
             $attr['onChangeReload'] = true;
-            if (!(isset($this->request->data[$this->alias()]['feature']))) {
+            if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->data[$this->alias()]['feature'] = key($option);
+                $defaultFeatureValue = key($option);
+                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
             }
             return $attr;
         }
     }
 
-    public function onUpdateFieldUserType(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldUserType(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
             if (in_array($feature, ['Report.AuditUsers'])) {
                 $userTypeOptions = [
                     UserTypeOption::ALL => __('All Type'),
@@ -161,10 +163,10 @@ class AuditsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldSortBy(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSortBy(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
             if (in_array($feature, [
                 'Report.AuditLogins', 'Report.AuditLastLogins'
             ])) {
@@ -184,10 +186,10 @@ class AuditsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldReportStartDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldReportStartDate(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
             // Start POCOR-499
             if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles', 'Report.AuditUsers', 'Report.AuditLogins','Report.AuditLastLogins', 'Report.AuditInstitutions'])) {
                 $attr['type'] = 'date';
@@ -196,12 +198,12 @@ class AuditsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldReportEndDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldReportEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
             // Start POCOR-499
-            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles','Report.AuditUsers', 'Report.AuditLogins', 'Report.AuditLastLogins', 'Report.AuditInstitutions'])) {
+            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles','Report.AuditUsers', 'Report.AuditLogins','Report.AuditLastLogins', 'Report.AuditInstitutions'])) {
                 $attr['type'] = 'date';
                 $attr['value'] = Time::now();
             }
@@ -211,12 +213,34 @@ class AuditsTable extends AppTable
 
     private function checkForDateFields(ArrayObject $requestData)
     {
-        if (array_key_exists("report_start_date",$requestData[$this->alias()]) && !empty($requestData[$this->alias()]['report_start_date'])) {
-            $requestData[$this->alias()]['report_start_date'] = $requestData[$this->alias()]['report_start_date'].' 00:00:00';
+        if (array_key_exists("report_start_date",$requestData[$this->getAlias()]) && !empty($requestData[$this->getAlias()]['report_start_date'])) {
+            $requestData[$this->getAlias()]['report_start_date'] = $requestData[$this->getAlias()]['report_start_date'].' 00:00:00';
         }
 
-        if (array_key_exists("report_end_date",$requestData[$this->alias()]) && !empty($requestData[$this->alias()]['report_end_date'])) {
-            $requestData[$this->alias()]['report_end_date'] = $requestData[$this->alias()]['report_end_date'].' 23:59:59';
+        if (array_key_exists("report_end_date",$requestData[$this->getAlias()]) && !empty($requestData[$this->getAlias()]['report_end_date'])) {
+            $requestData[$this->getAlias()]['report_end_date'] = $requestData[$this->getAlias()]['report_end_date'].' 23:59:59';
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'report_start_date':
+                return __('Start Date');
+            case 'report_end_date':
+                return __('End Date');
+            case 'sort_by':
+                return __('Sort by');
+            case 'user_type':
+                return __('User Type');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

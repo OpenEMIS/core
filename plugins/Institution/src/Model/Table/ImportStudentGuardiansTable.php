@@ -16,7 +16,7 @@ class ImportStudentGuardiansTable extends AppTable
 {
     private $institutionId;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void // POCOR-8683
     {
         $this->table('import_mapping');
         parent::initialize($config);
@@ -24,7 +24,7 @@ class ImportStudentGuardiansTable extends AppTable
         $this->addBehavior('Institution.ImportStudent');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array // POCOR-8683
     {
         $events = parent::implementedEvents();
         $newEvent = [

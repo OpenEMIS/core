@@ -6,9 +6,9 @@ use App\Model\Table\AppTable;
 
 class RecipientPaymentStructureEstimatesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('scholarship_recipient_payment_structure_estimates');
+        $this->setTable('scholarship_recipient_payment_structure_estimates');
         parent::initialize($config);
 
 		$this->belongsTo('ScholarshipRecipients', ['className' => 'Scholarship.ScholarshipRecipients', 'foreignKey' => ['recipient_id', 'scholarship_id']]);
@@ -18,7 +18,7 @@ class RecipientPaymentStructureEstimatesTable extends AppTable
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -109,7 +109,7 @@ class RecipientPaymentStructureEstimatesTable extends AppTable
                     ]
                 ])
                 ->where([$sqlConditions[$conditionKey]])
-                ->hydrate(false)
+                ->disableHydration()
                 ->toArray();
         }
 

@@ -11,9 +11,9 @@ use Cake\ORM\TableRegistry;
 
 class PotentialStudentDuplicatesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users'); 
+        $this->setTable('security_users'); 
         parent::initialize($config);
 
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
@@ -98,14 +98,14 @@ class PotentialStudentDuplicatesTable extends AppTable
                 'DuplicateStudents.gender_id = ' . $this->aliasField('gender_id'),
                 'DuplicateStudents.date_of_birth = ' . $this->aliasField('date_of_birth')
             ])
-            ->leftJoin([$Students->alias() => $Students->table()], [
+            ->leftJoin([$Students->getAlias() => $Students->getTable()], [
                 $Students->aliasField('student_id') . ' = ' . $this->aliasField('id'),
                 $Students->aliasField('created') => $latestStudentSubquery
             ])
-            ->leftJoin([$Institutions->alias() => $Institutions->table()], [
+            ->leftJoin([$Institutions->getAlias() => $Institutions->getTable()], [
                 $Institutions->aliasField('id') . ' = ' . $Students->aliasField('institution_id')
             ])
-            ->leftJoin([$EducationGrades->alias() => $EducationGrades->table()], [
+            ->leftJoin([$EducationGrades->getAlias() => $EducationGrades->getTable()], [
                 $EducationGrades->aliasField('id') . ' = ' . $Students->aliasField('education_grade_id')
             ])
             ->where([$this->aliasField('is_student') => 1])
@@ -115,16 +115,20 @@ class PotentialStudentDuplicatesTable extends AppTable
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) { 
                 return $results->map(function ($row) { 
                     //For Education Programme
-                    $EducationProgramTable = TableRegistry::get('education_programmes');
-                    $EducationProgram = $EducationProgramTable->find()->where(['id'=> $row->education_programme_id])->first();
-                    $row['education_programme'] = $EducationProgram->name;
+                    $EducationProgramTable = TableRegistry::get('Education.EducationProgrammes');
+                    if(!empty($row->education_programme_id)){
+                        $EducationProgram = $EducationProgramTable->find()->where(['id'=> $row->education_programme_id])->first();
+                        $row['education_programme'] = $EducationProgram->name;
+                    }
                     //For Student Status
-                    $InstitutionStudentsTable = TableRegistry::get('institution_students');
+                    $InstitutionStudentsTable = TableRegistry::get('Institution.InstitutionStudents');
                     $InstitutionStudent = $InstitutionStudentsTable->find()->where(['student_id'=> $row->id])->order(['id'=>'ASC'])->first();
                     $student_status_id = $InstitutionStudent->student_status_id;
                     $StudentStatusTable = TableRegistry::get('student_statuses');
-                    $StudentStatus = $StudentStatusTable->find()->where(['id'=> $student_status_id])->first();
-                    $row['student_status'] = $StudentStatus->name;
+                    if(!empty($student_status_id)){
+                        $StudentStatus = $StudentStatusTable->find()->where(['id'=> $student_status_id])->first();
+                        $row['student_status'] = $StudentStatus->name;
+                    }
 
                     return $row;
                 });

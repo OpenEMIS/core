@@ -20,11 +20,11 @@ class AuditLoginsTable extends AppTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
+        $this->setTable('security_users');
         parent::initialize($config);
-        $this->entityClass('User.User');
+        $this->setEntityClass('User.User');
 
         $this->hasMany('Identities', ['className' => 'User.Identities',      'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('Nationalities', ['className' => 'User.UserNationalities',   'foreignKey' => 'security_user_id', 'dependent' => true]);
@@ -152,5 +152,5 @@ class AuditLoginsTable extends AppTable
         
         $fields->exchangeArray($newFields);
     }
-
+    
 }

@@ -1,0 +1,245 @@
+.tree-dropdown {
+    min-width: auto;
+    width: 100% !important;
+    float: none;
+    display: inline-block;
+    height: 30px;
+}
+
+.form-horizontal .tree-form {
+    width: 25%;
+    display: inline-block;
+    margin-bottom: 15px;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+multi-select-tree .helper-container {
+    display: none;
+}
+
+multi-select-tree tree-item .item-container {
+    display: inline-block;
+}
+
+multi-select-tree .active.disableNode {
+    background-color: #FFF !important;
+}
+
+multi-select-tree .disableNode .item-details {
+    cursor: no-drop;
+}
+
+multi-select-tree .item-container.selected {
+    background-color: transparent !important;
+    border: none !important;
+    color: #333;
+}
+
+multi-select-tree .tree-control {
+    position: relative;
+    width: 100%;
+}
+
+multi-select-tree .tree-control .tree-view {
+    display: flex;
+    border: 1px solid #CCC;
+    position: absolute;
+    top: 28px;
+    overflow: auto;
+    background-color: #FFF;
+    width: 100%;
+    z-index: 2;
+}
+
+multi-select-tree .tree-control .tree-view .tree-container{
+    padding: 0;
+    max-height: 300px;
+    flex: 1 0 auto;
+    background-color: #FFF;
+    white-space: nowrap;
+}
+
+multi-select-tree .tree-control .tree-input {
+    background-color: transparent;
+    background-image: none;
+    min-height: auto !important;
+    height: 30px !important;
+    border: 1px solid #CCC;
+    border-radius: 3px;
+    width: 100% !important;
+    display: block;
+}
+
+multi-select-tree .tree-control .tree-input:hover {
+    background-image: none;
+}
+
+multi-select-tree .tree-control .tree-input .selected-items{
+    display: none;
+}
+
+multi-select-tree .tree-selection-text {
+    position: absolute;
+    top: 0;
+    height: 30px;
+    line-height: 26px;
+    padding: 2px 20px 2px 10px;
+    pointer-events: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+multi-select-tree .tree-view li tree-item li {
+    /*margin-left: 25px !important;*/
+    padding-left: 25px !important;
+}
+
+multi-select-tree tree-item > li {
+    /*padding-left: 5px !important;*/
+    margin-left: auto !important;
+}
+
+multi-select-tree tree-item > li .expand {
+    border: none !important;
+
+}
+
+multi-select-tree .item-container {
+    cursor: pointer;
+    width: 100%;
+    position: relative;
+    padding: 0 5px;
+}
+
+multi-select-tree .item-container:hover {
+    border: none !important;
+    background-image: none !important;
+    color: #444 !important;
+}
+
+multi-select-tree .item-container .item-details label{
+    display: block;
+    background-color: transparent !important;
+    border: 0 !important;
+    font-weight: normal;
+    padding-left: 25px !important;
+    padding-right: 0 !important;
+    float: none;
+    pointer-events: none;
+    margin: 0 !important;
+}
+
+multi-select-tree .tree-checkbox + label:before {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/*multi-select-tree .item-container.disableNode .item-details label {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+*/
+multi-select-tree tree-item .active {
+    background-color: #DDD !important;
+    border: 0 !important;
+    border-radius: 0;
+}
+
+multi-select-tree .expand {
+    position: absolute;
+    width: 30px !important;
+    height: 30px !important;
+    line-height: 30px;
+    left: 0;
+}
+
+multi-select-tree .item-details {
+    padding-left: 30px;
+    margin-left: auto !important;
+    padding-top: 7px;
+    padding-bottom: 5px;
+}
+
+multi-select-tree .item-details .tree-checkbox {
+    margin: 4px !important;
+}
+
+multi-select-tree span.expand + .item-details {
+    margin-left: 0 !important;
+}
+
+.rtl multi-select-tree .item-details {
+/*  margin-left: auto !important;
+    margin-right: 30px !important;*/
+    padding-left: 0 !important;
+    padding-right: 30px;
+}
+
+.rtl multi-select-tree .tree-view li {
+    /*margin-right: 5px !important;*/
+    /*padding-right: 5px !important;*/
+    /*margin-left: auto !important;*/
+}
+
+.rtl multi-select-tree .expand {
+    left: auto;
+    right: 0;
+}
+
+.rtl multi-select-tree .tree-view li tree-item li {
+    padding-right: 25px !important;
+    padding-left: 0px !important;
+}
+
+.rtl multi-select-tree .tree-control .tree-view .item-container .item-details label{
+    padding-right: 25px !important;
+    padding-left: 0px !important;
+    cursor: pointer;
+}
+
+.rtl multi-select-tree .tree-control .tree-view .item-container .item-details input {
+    margin: 4px !important;
+}
+
+.rtl multi-select-tree .tree-control .tree-view .item-container .item-details label:before{
+    right: 0;
+    left: auto;
+    top: 1px;
+}
+
+.rtl multi-select-tree .tree-control .tree-view .item-container .item-details label:after{
+    right: 2px;
+    left: auto;
+    top: 3px;
+}
+
+.rtl multi-select-tree .fa-caret-right:before {
+    content: "\f0d9";
+}
+
+.rtl multi-select-tree .tree-control .tree-selection-text {
+    padding: 2px 10px 2px 20px;
+}
+
+
+/* Fix for advance search for tree in adv search  - To put styling in advance search component css */
+
+.adv-search multi-select-tree .tree-control .tree-input {
+    height: 25px !important;
+}
+
+.adv-search multi-select-tree .tree-control .tree-selection-text {
+    padding: 0 20px 0 10px;
+}
+
+.adv-search multi-select-tree .tree-control .tree-view {
+    top: 23px;
+}
+
+.rtl .adv-search multi-select-tree .tree-control .tree-selection-text {
+    padding: 0 10px 0 20px;
+}

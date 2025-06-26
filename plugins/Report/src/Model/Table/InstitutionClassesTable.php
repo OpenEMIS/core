@@ -10,6 +10,8 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Table; // POCOR-8929
+use Cake\Utility\Inflector; // POCOR-8929
 
 class InstitutionClassesTable extends AppTable
 {
@@ -19,9 +21,9 @@ class InstitutionClassesTable extends AppTable
 
     // POCOR-6606 ends <vikas.rathore@mail.valuecoders.com>
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_classes');
+        $this->setTable('institution_classes');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -49,6 +51,14 @@ class InstitutionClassesTable extends AppTable
         $this->addBehavior('Report.AreaList');//POCOR-7794
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.InstitutionSecurity');
+        // POCOR-9126 start
+        $this->addBehavior('Report.CustomFieldList', [
+            'model' => 'Institution.InstitutionClasses',
+            'formFilterClass' => null,
+            'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionClassesCustomFieldValues', 'foreignKey' => 'institution_class_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_class_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+        ]);
+        // POCOR-9126 end
     }
 
     public function beforeAction(Event $event)
@@ -105,7 +115,7 @@ class InstitutionClassesTable extends AppTable
         $areaId = $requestData->area_education_id;
         $areaLevelId = $requestData->area_level_id;//POCOR-7794
         $where = [];
-        if ($institution_id != 0) {
+        if ($institution_id > 0) { // POCOR-8929 escape null
             $where['Institutions.id'] = $institution_id;
         }
         //POCOR-7794 start
@@ -124,17 +134,12 @@ class InstitutionClassesTable extends AppTable
             $where['Institutions.area_id IN'] = $areaList;
         }
         //POCOR-7794 end
-        if ($gradesId != -1) {
+        if ($gradesId > -1) { // POCOR-8929 escape null
             $where['InstitutionClassGrades.education_grade_id'] = $gradesId;
         }
 
         $academic_period_id = $requestData->academic_period_id;
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-        $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
-        $classGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $InstitutionClassesSecondaryStaff = self::getDynamicTableInstance('Institution.InstitutionClassesSecondaryStaff'); // POCOR-8929 removed not used
         $query
             ->select([
                 $this->aliasField('id'),
@@ -224,7 +229,7 @@ class InstitutionClassesTable extends AppTable
                 'InstitutionClasses.id'
             ])
             ->order([
-                'AcademicPeriods.order',
+//                'AcademicPeriods.order', // removed not used
                 'Institutions.code',
                 'InstitutionClasses.id'
             ]);
@@ -246,17 +251,19 @@ class InstitutionClassesTable extends AppTable
                 }
                 $row['total_students'] = $maleCountByClass + $femaleCountByClass;
 
-                $areas1 = TableRegistry::get('areas');
+               //POCOR-8739 start
+                $areas1 = TableRegistry::getTableLocator()->get('Area.Areas');
                 $areasData = $areas1
                     ->find()
-                    ->where([$areas1->alias('code') => $row->area_code])
+                    ->where(['Areas.code' => $row->area_code])
                     ->first();
+                //POCOR-8739 end
                 $row['region_code'] = '';
                 $row['region_name'] = '';
-                if (!empty($areasData)) {
-                    $areas = TableRegistry::get('areas');
-                    $areaLevels = TableRegistry::get('area_levels');
-                    $institutions = TableRegistry::get('institutions');
+                if ($areasData->parent_id) { // POCOR-9070
+                    $areas = self::getDynamicTableInstance('Area.Areas'); // POCOR-8929
+                    $areaLevels = self::getDynamicTableInstance('area_levels'); // POCOR-8929
+                    $institutions = self::getDynamicTableInstance('institutions'); // POCOR-8929
                     $val = $areas
                         ->find()
                         ->select([
@@ -264,13 +271,13 @@ class InstitutionClassesTable extends AppTable
                             $areas1->aliasField('name'),
                         ])
                         ->leftJoin(
-                            [$areaLevels->alias() => $areaLevels->table()],
+                            [$areaLevels->getAlias() => $areaLevels->getTable()],
                             [
                                 $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
                             ]
                         )
                         ->leftJoin(
-                            [$institutions->alias() => $institutions->table()],
+                            [$institutions->getAlias() => $institutions->getTable()],
                             [
                                 $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
                             ]
@@ -320,14 +327,14 @@ class InstitutionClassesTable extends AppTable
             'key' => 'Areas.code',
             'field' => 'area_code',
             'type' => 'string',
-            'label' => __('District Code')
+            'label' => __('Area Code')
         ];
 
         $newFields[] = [
             'key' => 'Areas.name',
             'field' => 'area_name',
             'type' => 'string',
-            'label' => __('District Name')
+            'label' => __('Area Name')
         ];
 
         $newFields[] = [
@@ -426,7 +433,7 @@ class InstitutionClassesTable extends AppTable
      */
     private static function getStudentCountByClassAndGender($classId, $gender_id)
     {
-        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $InstitutionClassStudents = self::getDynamicTableInstance('Institution.InstitutionClassStudents'); // POCOR-8929
         $count = $InstitutionClassStudents
             ->find()
             ->contain('Users')
@@ -435,8 +442,57 @@ class InstitutionClassesTable extends AppTable
             })
             ->where([$InstitutionClassStudents->Users->aliasField('gender_id') => $gender_id])
             ->where([$InstitutionClassStudents->aliasField('institution_class_id') => $classId])
-            ->hydrate(false)
+            ->disableHydration() // POCOR-8929
             ->count();
         return $count;
+    }
+
+    /**
+     * POCOR-8929 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $alias, array $options = []): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($alias, $options);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $alias);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($alias);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias, $options);
     }
 }

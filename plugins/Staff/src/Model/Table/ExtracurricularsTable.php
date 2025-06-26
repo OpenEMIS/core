@@ -6,20 +6,22 @@ use Cake\Validation\Validator;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\ORM\TableRegistry;
 
 class ExtracurricularsTable extends AppTable {
 
-	public function initialize(array $config) {
-		$this->table('staff_extracurriculars');
+	public function initialize(array $config): void {
+		$this->setTable('staff_extracurriculars');
 		parent::initialize($config);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('ExtracurricularTypes', ['className' => 'FieldOption.ExtracurricularTypes']);
 		$this->addBehavior('Excel');
+        $this->addBehavior('User.UserTab');
+        $this->addBehavior('Staff.StaffTab');
 	}
 
 	public function beforeAction() {
@@ -61,7 +63,7 @@ class ExtracurricularsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('comment', $order++);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 
 		return $validator
@@ -71,24 +73,24 @@ class ExtracurricularsTable extends AppTable {
 		;
 	}
 	private function setupTabElements() {
-		$tabElements = $this->controller->getProfessionalTabElements();
+		$tabElements = $this->getProfessionalTabElements();
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
+		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
 	public function afterAction(Event $event, $data) {
 		$this->setupTabElements();
 	}
-	
-	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
+
+	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-		$session = $this->request->session();
+		$session = $this->getRequest()->getSession(); // POCOR-8683
         $staffId = $session->read('Staff.Staff.id');
-		
+
 		$Staff = TableRegistry::get('Security.Users');
-		
-         $query
+
+        $query
             ->select([
                 'name' =>  $this->aliasfield('name'),
 				'hours' =>  $this->aliasfield('hours'),
@@ -116,7 +118,7 @@ class ExtracurricularsTable extends AppTable {
                 ]
 			])
 			->leftJoin(
-				[$Staff->alias() => $Staff->table()],
+				[$Staff->getAlias() => $Staff->getTable()],
 				[
 					$Staff->aliasField('id = ') . $this->aliasField('staff_id')
 				]
@@ -125,48 +127,47 @@ class ExtracurricularsTable extends AppTable {
 				$this->aliasField('staff_id') => $staffId,
 			])
 			;
-			 
-    }
-	
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
-    {   
-        $cloneFields = $fields->getArrayCopy();
 
+    }
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    {
+        $cloneFields = $fields->getArrayCopy();
         $extraFields[] = [
             'key' => 'openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
             'label' => __('OpenEMIS ID')
         ];
-		
+
         $extraFields[] = [
             'key' => 'staff_name',
             'field' => 'staff_name',
             'type' => 'string',
             'label' => __('Staff Name')
         ];
-		
+
         $extraFields[] = [
             'key' => 'AcademicPeriods.name',
             'field' => 'academic_period',
             'type' => 'string',
             'label' => __('Academic Period')
         ];
-		
+
         $extraFields[] = [
             'key' => 'ExtracurricularTypes.name',
             'field' => 'extracurricular_type',
             'type' => 'string',
             'label' => __('Extracurricular Type')
         ];
-		
+
         $extraFields[] = [
             'key' => '',
             'field' => 'name',
             'type' => 'string',
             'label' => __('Name')
         ];
-		
+
 		$extraFields[] = [
             'key' => '',
             'field' => 'start_date',
@@ -180,38 +181,38 @@ class ExtracurricularsTable extends AppTable {
             'type' => 'date',
             'label' => __('End Date')
         ];
-		
+
         $extraFields[] = [
             'key' => '',
             'field' => 'hours',
             'type' => 'string',
             'label' => __('Hours')
-        ];		
-		
+        ];
+
         $extraFields[] = [
             'key' => '',
             'field' => 'points',
             'type' => 'string',
             'label' => __('Points')
-        ];	
-		
+        ];
+
         $extraFields[] = [
             'key' => '',
             'field' => 'location',
             'type' => 'string',
             'label' => __('Location')
         ];
-		
+
 		$extraFields[] = [
             'key' => '',
             'field' => 'comment',
             'type' => 'string',
             'label' => __('Comment')
         ];
-		
+
        $newFields = $extraFields;
        $fields->exchangeArray($newFields);
-       
+
    }
-   
+
 }

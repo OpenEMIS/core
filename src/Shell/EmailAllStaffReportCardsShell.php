@@ -12,7 +12,7 @@ use Cake\Console\Shell;
 class EmailAllStaffReportCardsShell extends Shell
 {
 	CONST EMAIL_TEMPLATE = 1;
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('SystemProcesses');
@@ -48,9 +48,9 @@ class EmailAllStaffReportCardsShell extends Shell
                         $this->StaffReportCardEmailProcesses->aliasField('created'),
                         $this->StaffReportCardEmailProcesses->aliasField('staff_id')
                     ])
-                    ->hydrate(false)
+                    ->disableHydration() // POCOR-8533
                     ->first();
-				
+
                 if (!empty($recordToProcess)) {
                     $this->out('Sending report card for Staff '.$recordToProcess['staff_id'].' ('. Time::now() .')');
 
@@ -102,7 +102,7 @@ class EmailAllStaffReportCardsShell extends Shell
                             $this->StaffReportCards->aliasField('status') => $this->StaffReportCards::PUBLISHED
                         ])
                         ->first();
-					
+
                     if (!empty($staffsReportCardEntity)) {
                         $emailProcessesObj = new ArrayObject([
                             'recipients' => '',
@@ -193,9 +193,9 @@ class EmailAllStaffReportCardsShell extends Shell
 		$modelAlias = $StaffReportCardEmailTable->registryAlias();
         $availablePlaceholders = $StaffReportCardEmailTable->getPlaceholders();
         $reportCardId = $staffsReportCardEntity->staff_profile_template_id;
-        $emailTemplateEntity = $this->EmailTemplates->getTemplate($modelAlias, self::EMAIL_TEMPLATE);		
+        $emailTemplateEntity = $this->EmailTemplates->getTemplate($modelAlias, self::EMAIL_TEMPLATE);
         $subject = $this->replacePlaceholders($emailTemplateEntity->subject, $availablePlaceholders, $staffsReportCardEntity);
-        
+
 		if (!empty($subject)) {
             $emailProcessesObj['subject'] = $subject;
         }
@@ -209,7 +209,7 @@ class EmailAllStaffReportCardsShell extends Shell
         $modelAlias = $StaffReportCardEmailTable->registryAlias();
         $availablePlaceholders = $StaffReportCardEmailTable->getPlaceholders();
         $reportCardId = $staffsReportCardEntity->staff_profile_template_id;
-        $emailTemplateEntity = $this->EmailTemplates->getTemplate($modelAlias, self::EMAIL_TEMPLATE);		
+        $emailTemplateEntity = $this->EmailTemplates->getTemplate($modelAlias, self::EMAIL_TEMPLATE);
         $message = $this->replacePlaceholders($emailTemplateEntity->message, $availablePlaceholders, $staffsReportCardEntity);
 
         if (!empty($message)) {
@@ -218,7 +218,7 @@ class EmailAllStaffReportCardsShell extends Shell
     }
 
     private function setAttachments(Entity $staffsReportCardEntity, ArrayObject $emailProcessesObj)
-    {        
+    {
 		$attachments = [];
         if ($staffsReportCardEntity->has('file_name') && !empty($staffsReportCardEntity->file_name) && $staffsReportCardEntity->has('file_content_pdf') && !empty($staffsReportCardEntity->file_content_pdf)) {
 			if(!empty($staffsReportCardEntity->staff_id)) {
@@ -256,7 +256,7 @@ class EmailAllStaffReportCardsShell extends Shell
                 $replace = sprintf($format, $placeholder);
 
                 if (!empty($availablePlaceholders)) {
-                    $value = Hash::get($vars, $placeholder);                    
+                    $value = Hash::get($vars, $placeholder);
                     $message = str_replace($replace, $value, $message);
                 }
             }

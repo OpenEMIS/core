@@ -24,9 +24,9 @@ class InstitutionStudentReportsTable extends AppTable
     const NO_STUDENT = 1;
     const NO_STAFF = 2;
     private $_dynamicFieldName = 'custom_field_data';
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_students');
+        $this->setTable('institution_students');
         parent::initialize($config);
         
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -52,7 +52,7 @@ class InstitutionStudentReportsTable extends AppTable
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
 
        
-        $AreaT = TableRegistry::get('areas');                    
+        $AreaT = TableRegistry::get('Area.Areas');                    
         //Level-1
         $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
         $childArea =[];
@@ -162,16 +162,16 @@ class InstitutionStudentReportsTable extends AppTable
                 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $InstitutionTypesTable = TableRegistry::get('institution_types');
+                $InstitutionTypesTable = TableRegistry::get('Institution.InstitutionTypes');
                 $institution_type = $InstitutionTypesTable->find('all',['conditions'=>['id'=>$row['institution_type_id']]])->first();
                 $row['institution_type'] = $institution_type->name;
 
-                $Users = TableRegistry::get('security_users');
-                $institutionStudents = TableRegistry::get('institution_students');
+                $Users = TableRegistry::get('Security.Users');
+                $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
                
-                $Guardians = TableRegistry::get('student_custom_field_values');
-                $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
-                $studentCustomFields = TableRegistry::get('student_custom_fields');
+                $Guardians = TableRegistry::get('StudentCustomField.StudentCustomFieldValues');
+                $studentCustomFieldOptions = TableRegistry::get('StudentCustomField.StudentCustomFieldOptions');
+                $studentCustomFields = TableRegistry::get('StudentCustomField.StudentCustomFields');
 
                 $guardianData = $Guardians->find()
                 ->select([
@@ -424,7 +424,7 @@ class InstitutionStudentReportsTable extends AppTable
             'type' => 'string',
             'label' => 'Preferred Language',
         ];
-        $InfrastructureCustomFields = TableRegistry::get('student_custom_fields');
+        $InfrastructureCustomFields = TableRegistry::get('StudentCustomField.StudentCustomFields');
         $customFieldData = $InfrastructureCustomFields->find()->select([
             'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
             'custom_field' => $InfrastructureCustomFields->aliasfield('name')

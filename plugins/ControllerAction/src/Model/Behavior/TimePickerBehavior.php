@@ -27,7 +27,7 @@ class TimePickerBehavior extends Behavior {
 	use PickerTrait;
 	
 	public function beforeSave(Event $event, Entity $entity) {
-		foreach ($this->config() as $field) {
+		foreach ($this->getConfig() as $field) {
 			if (!empty($entity->{$field})) {
 				$entity->{$field} = $this->convertForTimePicker($entity->{$field});
 			}

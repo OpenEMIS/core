@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use JWTAuth;
 
-class TrainingRepository
+class TrainingRepository  extends Controller
 {
 
     //POCOR-8100 start...
@@ -158,10 +158,18 @@ class TrainingRepository
             $data = [];
             $list = TrainingSession::select('training_sessions.*', 'training_courses.name as training_course_name', 'training_providers.name as training_provider_name')
                     ->with('trainingSessionTrainee:id,first_name,middle_name,third_name,last_name,openemis_no', 
-                        'trainingSessionEvaluator:id,first_name,middle_name,third_name,last_name,openemis_no'
+                        'trainingSessionEvaluator:id,first_name,middle_name,third_name,last_name,openemis_no,is_student,is_staff,is_guardian',
+                        'trainingSessionTrainers:id,first_name,middle_name,third_name,last_name,openemis_no,is_student,is_staff,is_guardian',
                     )
                     ->join('training_courses', 'training_sessions.training_course_id', '=', 'training_courses.id')
                     ->join('training_providers', 'training_sessions.training_provider_id', '=', 'training_providers.id');
+
+
+            //For POCOR-8526 Start...
+            if(isset($params['training_course_id'])){
+                $list = $list->where('training_course_id', $params['training_course_id']);
+            }
+            //For POCOR-8526 End...
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -179,6 +187,7 @@ class TrainingRepository
             return $data;
 
         } catch (\Exception $e) {
+            
             Log::error(
                 'Failed to fetch Training Sessions List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -194,13 +203,16 @@ class TrainingRepository
         try {
             $data = TrainingSession::select('training_sessions.*', 'training_courses.name as training_course_name', 'training_providers.name as training_provider_name')
                     ->with('trainingSessionTrainee:id,first_name,middle_name,third_name,last_name,openemis_no', 
-                        'trainingSessionEvaluator:id,first_name,middle_name,third_name,last_name,openemis_no'
+                        'trainingSessionEvaluator:id,first_name,middle_name,third_name,last_name,openemis_no,is_student,is_staff,is_guardian',
+                        'trainingSessionTrainers:id,first_name,middle_name,third_name,last_name,openemis_no,is_student,is_staff,is_guardian'
                     )
                     ->join('training_courses', 'training_sessions.training_course_id', '=', 'training_courses.id')
                     ->join('training_providers', 'training_sessions.training_provider_id', '=', 'training_providers.id')
                     ->where('training_sessions.id', $sessionId)
-                    ->first()
-                    ->toArray();
+                    ->first();
+            if(isset($data)){
+                $data = $data->toArray();
+            }
 
             return $data;
         } catch (\Exception $e) {

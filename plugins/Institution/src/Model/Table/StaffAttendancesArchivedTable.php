@@ -103,7 +103,7 @@ class StaffAttendancesArchivedTable extends ControllerActionTable
                 $StaffLeaveTable->aliasField('academic_period_id') => $academic_period_id,
                 $whereLeaveTable
             ])
-            ->hydrate(false)
+            ->disableHydration() // POCOR-8533
             ->toArray();
 
         $leaveByStaffIdRecords = Hash::combine($allStaffLeaves, '{n}.id', '{n}', '{n}.staff_id');

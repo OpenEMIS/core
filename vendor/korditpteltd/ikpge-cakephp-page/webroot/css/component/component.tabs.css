@@ -1,0 +1,399 @@
+/* TABS v.1.0.9 */
+
+.tab-content {
+    margin-top: -1px;
+}
+
+.ng-tabs .nav-tabs,
+.scroll_tabs_container {
+    height: 28px;
+    margin-bottom: 3px !important;
+    position: relative;
+}
+
+.ng-tabs .nav-tabs:after,
+.scroll_tabs_container:after {
+    display: block;
+    width: 100%;
+    height: 4px;
+    background: #F2F2F2;
+    position: absolute;
+    bottom: -5px;
+    text-align: center;
+    border-left: 1px solid #DDD;
+    border-right: 1px solid #DDD;
+    border-bottom: 1px solid #DDD;
+}
+
+.ng-tabs ul,
+.scroll_tabs_container div.scroll_tab_inner {
+    height: 30px;
+    padding: 0;
+    -webkit-border-top-left-radius: 3px;
+    border-top-left-radius: 3px;
+    -webkit-border-top-right-radius: 3px;
+    border-top-right-radius: 3px;
+}
+
+.ng-tabs ul li a {
+    margin: 0 2px 0 0 !important;
+    padding: 4px !important;
+}
+
+.ng-tabs ul li:active a {
+    padding: 4px 0 !important;
+}
+
+.chrome .ng-tabs .nav-tabs > li.active > a {
+    padding: 6px 0 !important;
+}
+
+.scroll_tabs_container div.scroll_tab_inner span {
+    background-color: transparent;
+    padding: 0 2px 0 0;
+    line-height: 29px;
+}
+
+.scroll_tabs_container .scroll_tab_left_button,
+.scroll_tabs_container .scroll_tab_right_button {
+    height: 32px;
+    background-color: #999 !important;
+    z-index: 1000;
+    color: #FFF !important;
+    border: 1px solid #6B6B6B !important;
+}
+
+.scroll_tabs_container .scroll_tab_left_button,
+.fuelux .wizard-buttons .btn-prev {
+    -moz-box-shadow: 7px 1px 3px -3px rgba(0, 0, 0, 0.1);
+    -webkit-box-shadow: 7px 1px 3px -3px rgba(0, 0, 0, 0.1);
+    box-shadow: 7px 1px 3px -3px rgba(0, 0, 0, 0.1);
+    background-color: #FFF;
+    color: #333;
+    z-index: 2;
+    border: 1px solid #DDD;
+    z-index: 0;
+}
+
+.scroll_tabs_container .scroll_tab_right_button,
+.fuelux .wizard-buttons .btn-next {
+    -moz-box-shadow: -7px 1px 2px -3px rgba(0, 0, 0, 0.1);
+    -webkit-box-shadow: -7px 1px 2px -3px rgba(0, 0, 0, 0.1);
+    box-shadow: -7px 1px 2px -3px rgba(0, 0, 0, 0.1);
+    background-color: #FFF;
+    color: #333;
+    border: 1px solid #DDD;
+    z-index: 0;
+}
+
+.scroll_tabs_container .scroll_tab_left_button::before,
+.scroll_tabs_container .scroll_tab_right_button::before {
+    line-height: 32px;
+    font-size: 15px;
+    padding: 8px 9px 6px;
+}
+
+.scroll_tabs_container .scroll_tab_left_button::before {
+    font-family: 'FontAwesome';
+    content: "\f0d9";
+    top: 10px;
+}
+
+.scroll_tabs_container .scroll_tab_right_button::before {
+    font-family: 'FontAwesome';
+    content: "\f0da";
+}
+
+.scroll_tabs_container .scroll_tab_left_button_over,
+.scroll_tabs_container .scroll_tab_right_button_over {
+    color: #6B6B6B;
+}
+
+.scroll_tabs_container .scroll_tab_left_button.scroll_tab_left_button_disabled,
+.scroll_tabs_container .scroll_tab_right_button.scroll_tab_right_button_disabled,
+.scroll_tabs_container .scroll_tab_left_button.scroll_tab_left_button_disabled:hover,
+.scroll_tabs_container .scroll_tab_right_button.scroll_tab_right_button_disabled:hover {
+    color: #C9C9C9 !important;
+    background-color: #F8F8F8 !important;
+    border-color: #DDD !important;
+}
+
+.horizontal-tabs span.tab-active a,
+.tab-active {
+    border-bottom: 0 !important;
+    font-weight: 500;
+    background-color: #F2F2F2;
+    background: none;
+    padding-bottom: 5px !important;
+}
+
+.horizontal-tabs {
+    color: #FFF;
+    border-bottom: 1px solid #DDD;
+    margin-bottom: 0;
+    line-height: 24px;
+}
+
+.horizontal-tabs span a,
+.horizontal-tabs span a:focus,
+.horizontal-tabs span a:visited {
+    padding: 6px 10px 5px;
+    -webkit-border-top-right-radius: 3px;
+    border-top-right-radius: 3px;
+    -webkit-border-top-left-radius: 3px;
+    border-top-left-radius: 3px;
+}
+
+.safari .horizontal-tabs span a,
+.safari .horizontal-tabs span a:focus,
+.safari .horizontal-tabs span a:visited {
+    line-height: 24px;
+}
+
+.horizontal-tabs span.tab-active a,
+.horizontal-tabs span.tab-active a:hover,
+.horizontal-tabs span.tab-active a:focus {
+    background-color: #F2F2F2 !important;
+    color: #333 !important;
+    border-top: 1px solid #DDD !important;
+    border-left: 1px solid #DDD !important;
+    border-right: 1px solid #DDD !important;
+    border-bottom: 1px solid #F2F2F2 !important;
+    transition: all 0.5s ease;
+    opacity: 1;
+    padding: 6px 10px;
+    text-decoration: none;
+}
+
+.horizontal-tabs span a:hover {
+    background: #6B6B6B;
+    color: #FFF;
+    text-decoration: none;
+    border-color: #6B6B6B;
+}
+
+.horizontal-tabs span a,
+.horizontal-tabs span a:focus {
+    background-color: #FFF;
+    color: #888;
+    border: 1px solid #DDD;
+    text-decoration: none !important;
+}
+
+.horizontal-tabs .nav-tabs,
+.scrolltabs .nav-tabs {
+    clear: both;
+    float: none;
+    margin: 0 !important;
+    z-index: 1;
+}
+
+.horizontal-tabs .nav-tabs > li > a,
+.scrolltabs .nav-tabs > li > a {
+    border: 1px solid #DDD;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.chrome .horizontal-tabs .nav-tabs > li > a,
+.chrome .scrolltabs .nav-tabs > li > a {
+    padding: 6px 10px;
+}
+
+.horizontal-tabs .nav-tabs .active,
+.scrolltabs .nav-tabs .active {
+    padding: 1px 0 0;
+    margin-bottom: -6px;
+}
+
+.horizontal-tabs .nav-tabs > li.active > a,
+.scrolltabs .nav-tabs > li.active > a,
+.horizontal-tabs .nav-tabs > li.active > a:focus,
+.scrolltabs .nav-tabs > li.active > a:focus,
+.horizontal-tabs .nav-tabs > li.active > a:hover,
+.scrolltabs .nav-tabs > li.active > a:hover {
+    border-bottom: 1px solid #F2F2F2;
+    background-color: #F2F2F2 !important;
+    margin-top: -1px;
+    padding: 5px 10px 6px !important;
+    color: #555 !important;
+    text-decoration: none;
+}
+
+.chrome .horizontal-tabs .nav-tabs > li.active > a,
+.chrome .scrolltabs .nav-tabs > li.active > a,
+.chrome .horizontal-tabs .nav-tabs > li.active > a:focus,
+.chrome .scrolltabs .nav-tabs > li.active > a:focus,
+.chrome .horizontal-tabs .nav-tabs > li.active > a:hover,
+.chrome .scrolltabs .nav-tabs > li.active > a:hover {
+    padding: 6px 10px 6px !important;
+}
+
+.horizontal-tabs .nav-tabs > li.active > a:focus,
+.scrolltabs .nav-tabs > li.active > a:focus {
+    border-left: 1px solid #DDD !important;
+}
+
+
+/*==========  Non-Mobile First Method  ==========*/
+
+
+/* Extra Small Devices, Phones */
+
+@media only screen and (max-width: 1024px) {
+    .horizontal-tabs,
+    .scroll_tabs_container div.scroll_tab_inner span {
+        line-height: 40px;
+    }
+    .ng-tabs .nav-tabs,
+    .scroll_tabs_container,
+    .scroll_tabs_container div.scroll_tab_inner,
+    .scroll_tabs_container .scroll_tab_left_button,
+    .scroll_tabs_container .scroll_tab_right_button {
+        height: 40px;
+    }
+    .ng-tabs .nav-tabs,
+    .chrome .scroll_tabs_container,
+    .chrome .scroll_tabs_container div.scroll_tab_inner,
+    .chrome .scroll_tabs_container .scroll_tab_left_button,
+    .chrome .scroll_tabs_container .scroll_tab_right_button,
+    .ng-tabs a,
+    .ng-tabs a:focus,
+    .ng-tabs a:hover {
+        height: 37px;
+    }
+    .horizontal-tabs .nav-tabs > li.active > a,
+    .scrolltabs .nav-tabs > li.active > a,
+    .horizontal-tabs .nav-tabs > li.active > a:focus,
+    .scrolltabs .nav-tabs > li.active > a:focus,
+    .horizontal-tabs .nav-tabs > li.active > a:hover,
+    .scrolltabs .nav-tabs > li.active > a:hover,
+    .horizontal-tabs .nav-tabs > li > a,
+    .scrolltabs .nav-tabs > li > a,
+    .chrome .horizontal-tabs .nav-tabs > li.active > a,
+    .chrome .scrolltabs .nav-tabs > li.active > a,
+    .chrome .horizontal-tabs .nav-tabs > li.active > a:focus,
+    .chrome .scrolltabs .nav-tabs > li.active > a:focus,
+    .chrome .horizontal-tabs .nav-tabs > li.active > a:hover,
+    .chrome .scrolltabs .nav-tabs > li.active > a:hover {
+        padding: 8px 10px !important;
+    }
+    .scroll_tabs_container div.scroll_tab_inner span,
+    .ng-tabs a {
+        font-size: 14px;
+    }
+    .scroll_tabs_container .scroll_tab_left_button::before,
+    .scroll_tabs_container .scroll_tab_right_button::before {
+        display: block;
+        height: 38px;
+        font-size: 18px !important;
+    }
+    .scroll_tabs_container .scroll_tab_left_button::before,
+    .rtl .scroll_tabs_container .scroll_tab_right_button::before {
+        padding: 4px 8px;
+    }
+    .scroll_tabs_container .scroll_tab_right_button::before,
+    .rtl .scroll_tabs_container .scroll_tab_left_button::before {
+        padding: 4px 10px;
+    }
+    .horizontal-tabs span.tab-active a,
+    .horizontal-tabs span.tab-active a:hover,
+    .horizontal-tabs span.tab-active a:focus,
+    .horizontal-tabs span a,
+    .horizontal-tabs span a:focus,
+    .horizontal-tabs span a:visited {
+        display: inline-block;
+        line-height: 25px;
+    }
+    .horizontal-tabs span.tab-active a,
+    .horizontal-tabs span.tab-active a:hover,
+    .horizontal-tabs span.tab-active a:focus {
+        line-height: 30px;
+    }
+    .chrome .horizontal-tabs span a,
+    .chrome .horizontal-tabs span a:focus,
+    .chrome .horizontal-tabs span a:visited,
+    .chrome .horizontal-tabs span.tab-active a,
+    .chrome .horizontal-tabs span.tab-active a:hover,
+    .chrome .horizontal-tabs span.tab-active a:focus {
+        line-height: 24px;
+    }
+}
+
+
+/* Only on Mobile Devices */
+
+.mobile .horizontal-tabs span a,
+.mobile .horizontal-tabs span a:focus,
+.mobile .horizontal-tabs span a:visited,
+.mobile .horizontal-tabs span.tab-active a,
+.mobile .horizontal-tabs span.tab-active a:hover,
+.mobile .horizontal-tabs span.tab-active a:focus {
+    line-height: 27px;
+}
+
+
+/* Only Chrome and Safari */
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+    .horizontal-tabs span a,
+    .horizontal-tabs span a:focus,
+    .horizontal-tabs span a:visited,
+    .horizontal-tabs span.tab-active a,
+    .horizontal-tabs span.tab-active a:hover,
+    .horizontal-tabs span.tab-active a:focus {
+        line-height: 30px;
+    }
+}
+
+
+/* For IE */
+
+@media all and (-ms-high-contrast: none),
+(-ms-high-contrast: active) {
+    .scroll_tabs_container div.scroll_tab_inner span {
+        line-height: 30px;
+    }
+}
+
+
+/* RTL */
+
+.rtl .horizontal-tabs span a,
+.rtl .horizontal-tabs span a:focus,
+.rtl .horizontal-tabs span a:visited,
+.rtl .horizontal-tabs span.tab-active a,
+.rtl .horizontal-tabs span.tab-active a:hover,
+.rtl .horizontal-tabs span.tab-active a:focus {
+    height: 30px;
+    line-height: 31px;
+    font-size: 14px;
+}
+
+.rtl .ng-tabs .nav-tabs,
+.rtl .scroll_tabs_container {
+    height: 30px;
+}
+
+
+@media only screen and (max-width: 1024px) {
+    .rtl .ng-tabs .nav-tabs,
+    .rtl .scroll_tabs_container,
+    .rtl .horizontal-tabs span a,
+    .rtl .horizontal-tabs span a:focus,
+    .rtl .horizontal-tabs span a:visited,
+    .rtl .horizontal-tabs span.tab-active a,
+    .rtl .horizontal-tabs span.tab-active a:hover,
+    .rtl .horizontal-tabs span.tab-active a:focus {
+        height: 32px;
+    }
+    .rtl .horizontal-tabs span a,
+    .rtl .horizontal-tabs span a:focus,
+    .rtl .horizontal-tabs span a:visited,
+    .rtl .horizontal-tabs span.tab-active a,
+    .rtl .horizontal-tabs span.tab-active a:hover,
+    .rtl .horizontal-tabs span.tab-active a:focus,
+    .rtl .horizontal-tabs, .scroll_tabs_container div.scroll_tab_inner span {
+        line-height: 20px;
+    }
+}

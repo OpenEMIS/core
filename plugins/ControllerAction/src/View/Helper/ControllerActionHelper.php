@@ -11,12 +11,14 @@ use Cake\I18n\I18n;
 use Cake\ORM\Table;
 use Cake\Utility\Security;
 use Cake\Utility\Text;
+use Cake\Http\Session;
 
 use ControllerAction\Model\Traits\SecurityTrait;
 
 class ControllerActionHelper extends Helper
 {
     use SecurityTrait;
+    protected $session;
     public $helpers = ['Html', 'ControllerAction.HtmlField', 'Form', 'Paginator', 'Label', 'Url'];
 
     public function getColumnLetter($columnNumber)
@@ -39,7 +41,7 @@ class ControllerActionHelper extends Helper
         $eventMap = $subject->implementedEvents();
         if (!array_key_exists($eventKey, $eventMap) && !is_null($method)) {
             if (method_exists($subject, $method) || $subject->behaviors()->hasMethod($method)) {
-                $subject->eventManager()->on($eventKey, [], [$subject, $method]);
+                $subject->getEventManager()->on($eventKey, [], [$subject, $method]);
             }
         }
     }
@@ -48,7 +50,7 @@ class ControllerActionHelper extends Helper
     {
         $this->onEvent($subject, $eventKey, $method);
         $event = new Event($eventKey, $this, $params);
-        return $subject->eventManager()->dispatch($event);
+        return $subject->getEventManager()->dispatch($event);
     }
 
     public function getFormTemplate()
@@ -89,14 +91,15 @@ class ControllerActionHelper extends Helper
 
         // save button
         $buttons[] = [
-            'name' => '<i class="fa fa-check"></i> ' . __('Save'),
+            //$btn = '<i class="fa fa-check"></i>',
+            'name' => ('Save'),
             'attr' => ['class' => 'btn btn-default btn-save', 'div' => false, 'name' => 'submit', 'value' => 'save']
         ];
 
         // cancel button
         $backBtn = $this->_View->get('backButton');
         $buttons[] = [
-            'name' => '<i class="fa fa-close"></i> ' . __('Cancel'),
+            'name' =>  __('Cancel'),
             'attr' => ['class' => 'btn btn-outline btn-cancel', 'escape' => false],
             'url' => !is_null($backBtn) ? $backBtn['url'] : []
         ];
@@ -119,7 +122,10 @@ class ControllerActionHelper extends Helper
         if ($buttons->count() > 0) {
             $html = '<div class="form-buttons"><div class="button-label"></div>';
             foreach ($buttons as $btn) {
-                if (!array_key_exists('url', $btn)) {
+                if (!isset($btn['url'])) {
+                    if (substr($btn['name'], 0, 12) === '<i class="fa') {
+                        $btn['attr']['escapeTitle'] = false;
+                    }
                     $html .= $this->Form->button($btn['name'], $btn['attr']);
                 } else {
                     $html .= $this->Html->link($btn['name'], $btn['url'], $btn['attr']);
@@ -127,7 +133,15 @@ class ControllerActionHelper extends Helper
             }
             $html .= '</div>';
         }
+
         return $html;
+    }
+
+    public function decodeEscapeHtmlEntity($encodedText)
+    {
+        $htmlInfo = str_replace('&#x2F;', '/', $encodedText);
+        $htmlInfo = html_entity_decode($htmlInfo, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        return $htmlInfo;
     }
 
     public function highlight($needle, $haystack)
@@ -145,7 +159,7 @@ class ControllerActionHelper extends Helper
     {
         $visible = false;
 
-        if (array_key_exists('visible', $attr)) {
+        if (isset($attr['visible'])) {
             $visibleField = $attr['visible'];
 
             if (is_bool($visibleField)) {
@@ -162,9 +176,9 @@ class ControllerActionHelper extends Helper
     public function locale($locale = null)
     {
         if (!empty($locale)) {
-            return I18n::locale($locale);
+            return I18n::getLocale($locale);
         } else {
-            return I18n::locale();
+            return I18n::getLocale();
         }
     }
 
@@ -179,7 +193,9 @@ class ControllerActionHelper extends Helper
 
         $tableHeaders = array();
         $table = null;
-        $session = $this->request->session();
+        $request = $this->_View->getRequest();
+        $session = $request->getSession();
+
         $language = $session->read('System.language');
 
         foreach ($fields as $field => $attr) {
@@ -193,16 +209,16 @@ class ControllerActionHelper extends Helper
 
                 if (!in_array($type, $excludedTypes)) {
                     if (is_null($table)) {
-                        $table = TableRegistry::get($attr['className']);
+                        $table = TableRegistry::getTableLocator()->get($attr['className']);
                     }
 
                     // attach event to get labels for fields
                     $event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $fieldModel, 'field' => $field, 'language' => $language]);
-                    $event = $table->eventManager()->dispatch($event);
+                    $event = $table->getEventManager()->dispatch($event);
                     // end attach event
 
-                    if ($event->result) {
-                        $label = __($event->result);
+                    if ($event->getResult()) {
+                        $label = __($event->getResult());
                     }
 
                     if ($attr['sort']) {
@@ -238,10 +254,26 @@ class ControllerActionHelper extends Helper
     public function getTableRow(Entity $entity, array $fields, $searchableFields = [])
     {
         $row = [];
-
+        $request = $this->_View->getRequest();
         $search = '';
-        if (isset($this->request->data['Search']) && array_key_exists('searchField', $this->request->data['Search'])) {
-            $search = $this->request->data['Search']['searchField'];
+        if ($request !== null && $request->getData('Search') !== null) {
+            $searchData = $request->getData('Search');
+
+            if (isset($searchData['searchField'])) {
+                $search = $request->getData('Search')['searchField'];
+            }
+        }
+
+
+        if (null !== $searchData && isset($searchData['searchField'])) {
+            $search = $request->getData('Search')['searchField'];
+        }
+        // display highlight value in result
+        if(empty($search)) {
+            $session = $request->getSession();
+            $alias = $request->getParam('plugin'). '.' .$request->getParam('action');
+            $alias = $session->check('search.search_alias') ? $session->read('search.search_alias') : $alias;
+            $search = $session->check($alias.'.search.key') ? $session->read($alias.'.search.key') : '';// dd($search);
         }
 
         $table = null;
@@ -254,7 +286,7 @@ class ControllerActionHelper extends Helper
             $type = $attr['type'];
 
             if (is_null($table)) {
-                $table = TableRegistry::get($attr['className']);
+                $table = TableRegistry::getTableLocator()->get($attr['className']);
             }
 
             // attach event for index columns
@@ -263,16 +295,16 @@ class ControllerActionHelper extends Helper
             $eventKey = 'ControllerAction.Model.' . $method;
 
             $event = new Event($eventKey, $this, [$entity]);
-            $event = $table->eventManager()->dispatch($event);
+            $event = $table->getEventManager()->dispatch($event);
 
             // end attach event
             $associatedFound = false;
-            if (strlen($event->result) > 0) {
+            if (strlen($event->getResult()) > 0) {
                 $allowedTranslation = ['string','text'];//array that will be translate
                 if (in_array($attr['type'], $allowedTranslation)) {
-                    $value = __($event->result);
+                    $value = __($event->getResult());
                 } else {
-                    $value = $event->result;
+                    $value = $event->getResult();
                 }
                 $entity->{$field} = $value;
             } elseif ($this->endsWith($field, '_id') || $this->isForeignKey($table, $field)) {
@@ -300,12 +332,13 @@ class ControllerActionHelper extends Helper
             if (isset($attr['tableColumnClass'])) {
                 $row[] = [$value, ['class' => $attr['tableColumnClass']]];
             } else {
-                $row[] =  __($value);
+                $row[] = (null !== ($stringValue = (string)$value)) ? __($stringValue) : $stringValue;
+
             }
         }
 
-        $model = TableRegistry::get($entity->source());
-        $primaryKeys = $model->primaryKey();
+        $model = TableRegistry::getTableLocator()->get($entity->getSource());
+        $primaryKeys = $model->getPrimaryKey();
         $primaryKeyValue = [];
         if (is_array($primaryKeys)) {
             foreach ($primaryKeys as $key) {
@@ -354,7 +387,7 @@ class ControllerActionHelper extends Helper
     }
 
     public function getPageOptions()
-    {   
+    {
         /**
         * This table call for get option value from configitemoption table.
         * @author Akshay patodi <akshay.patodi@mail.valuecoders.com>
@@ -362,12 +395,18 @@ class ControllerActionHelper extends Helper
         */
         //START: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
         $html = '';
-        $config = $this->_View->get('ControllerAction');  		
+        $alias = $this->_View->get('ControllerAction')['table']->getRegistryAlias();//POCOR-8677
+        $session = $this->_View->getRequest()->getSession();
+        $limit = $session->check($alias.'.search.limit') ? $session->read($alias.'.search.limit') : 0;
+
+        $config = $this->_View->get('ControllerAction');
         if (!is_null($config['pageOptions'])) {
-            $pageOptions = $config['pageOptions']; 
+            $pageOptions = $config['pageOptions'];
             if (!empty($pageOptions)) {
                 $html .= $this->Form->input('Search.limit', [
+                    'type' =>'select',
                     'label' => false,
+                    'value' => !empty($limit) ?  $limit : 0,//POCOR-8677
                     'options' => $pageOptions,
                     'onchange' => "$(this).closest('form').submit()",
                     'templates' => $this->getFormTemplate()
@@ -381,12 +420,13 @@ class ControllerActionHelper extends Helper
     public function getEditElements(Entity $data, $fields = [], $exclude = [])
     {
         $config = $this->_View->get('ControllerAction');
+
         $_fields = $config['fields'];
 
         $html = '';
-        $model = $config['table']->alias();
-        $displayFields = $_fields;
+        $model = $config['table']->getAlias();
 
+        $displayFields = $_fields;
         if (!empty($fields)) { // if we only want specific fields to be displayed
             foreach ($displayFields as $_field => $attr) {
                 if (!in_array($displayFields, $fields)) {
@@ -406,43 +446,43 @@ class ControllerActionHelper extends Helper
         $_attrDefaults = [
             'type' => 'string',
             'model' => $model,
-            'label' => true
+            'label' => '',
         ];
-
         $table = null;
-        $session = $this->request->session();
+        $session = $this->_View->getRequest()->getSession();
         $language = $session->read('System.language');
 
         foreach ($displayFields as $_field => $attr) {
             $_fieldAttr = array_merge($_attrDefaults, $attr);
             $visible = $this->isFieldVisible($_fieldAttr, 'edit');
             $label = false;
-
             if ($visible) {
                 $_type = $_fieldAttr['type'];
                 $_fieldModel = $_fieldAttr['model'];
                 $fieldName = $_fieldModel . '.' . $_field;
                 $options = isset($_fieldAttr['attr']) ? $_fieldAttr['attr'] : array();
 
-                if (is_null($table)) {
+                if (is_null($table) && isset($attr['className'])) { // POCOR-9227
                     $table = TableRegistry::get($attr['className']);
                 }
 
                 // attach event to get labels for fields
-                $event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language, 'autoHumanize' => true]);
-                $event = $table->eventManager()->dispatch($event);
-                // end attach event
-
-                if ($event->result) {
-                    $label = $event->result;
-                }
+                if ($table) { // POCOR-9227
+                    $event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language, 'autoHumanize' => true]);
+                    $event = $table->getEventManager()->dispatch($event);
+                    // end attach event
+                    if ($event->getResult()) {
+                        $label = $event->getResult();
+                    }
+                } // POCOR-9227
                 if ($label !== false) {
-                    if (!array_key_exists('label', $options)) {
+                    if (!isset($options['label'])) {
                         $_fieldAttr['label'] = $label;
                         $options['label'] = __($label);
                     } else {
                         $_fieldAttr['label'] = $options['label'];
                     }
+
                     if (is_array($_fieldAttr['label'])) { //to cater for label with array value
                         if (array_key_exists('text', $_fieldAttr['label'])) {
                             $_fieldAttr['label'] = __($_fieldAttr['label']['text']);
@@ -452,24 +492,25 @@ class ControllerActionHelper extends Helper
                     }
                 }
 
-                if (array_key_exists('autocomplete', $options) && $options['autocomplete'] == 'off') {
+                if (isset($options['autocomplete']) && $options['autocomplete'] == 'off') {
                     $html .= '<input style="display:none" type="text" name="'.$model.'['.$_field.']"/>';
                 }
                 $html .= $this->HtmlField->render($_type, 'edit', $data, $_fieldAttr, $options);
             }
         }
+
         $this->HtmlField->includes('edit', $table);
         return $html;
     }
 
     private function escapeHtmlSpecialCharacters(Entity $entity)
     {
-        $model = TableRegistry::get($entity->source());
+        $model = TableRegistry::getTableLocator()->get($entity->getSource());
         // For XSS
-        $schema = $model->schema();
+        $schema = $model->getSchema();
         $columns = $schema->columns();
         foreach ($columns as $key => $col) {
-            $fieldCol = $schema->column($col);
+            $fieldCol = $schema->getColumn($col);
             if ($fieldCol['type'] == 'string' || $fieldCol['type'] == 'text') {
                 if ($entity->has($col)) {
                     $htmlInfo = $this->HtmlField->escapeHtmlEntity($entity->{$col});
@@ -518,11 +559,11 @@ class ControllerActionHelper extends Helper
         );
 
         $table = null;
-        $session = $this->request->session();
+        //$session = $this->request->session(); //comment in cakephp4
+        $session = $this->_View->getRequest()->getSession();
         $language = $session->read('System.language');
         // For XSS
         $this->escapeHtmlSpecialCharacters($data);
-
         foreach ($displayFields as $_field => $attr) {
             $_rowClass = array('row');
             $_labelClass = array('col-xs-6 col-md-3 form-label'); // default bootstrap class for labels
@@ -539,16 +580,16 @@ class ControllerActionHelper extends Helper
                 $options = isset($_fieldAttr['attr']) ? $_fieldAttr['attr'] : array();
 
                 if (is_null($table)) {
-                    $table = TableRegistry::get($attr['className']);
+                    $table = TableRegistry::getTableLocator()->get($attr['className']);
                 }
 
                 // attach event to get labels for fields
                 $event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language]);
-                $event = $table->eventManager()->dispatch($event);
+                $event = $table->getEventManager()->dispatch($event);
                 // end attach event
 
-                if ($event->result) {
-                    $label = $event->result;
+                if ($event->getResult()) {
+                    $label = $event->getResult();
                 }
                 if (isset($options['label'])) {
                     $label = $options['label'];
@@ -558,11 +599,11 @@ class ControllerActionHelper extends Helper
                 if (is_array($label)) {
                     $cloneLabel = $label;
                     //get the label text
-                    if (array_key_exists('text', $cloneLabel)) {
+                    if (isset($cloneLabel['text'])) {
                         $label = $label['text'];
                     }
                     //get the label class (but styling only available for edit as of now)
-                    // if (array_key_exists('class', $cloneLabel)) {
+                    // if (isset($cloneLabel['class'])) {
                     //     $_fieldAttr['labelClass'] = $cloneLabel['class'];
                     // }
                 }
@@ -574,19 +615,19 @@ class ControllerActionHelper extends Helper
                 // end attach event
 
                 $associatedFound = false;
-                if ($event->result || is_int($event->result)) {
-                    $data->{$_field} = $event->result;
+                if ($event->getResult() || is_int($event->getResult())) {
+                    $data->{$_field} = $event->getResult();
                 } elseif ($this->endsWith($_field, '_id')) {
                     $associatedObject = '';
                     if (isset($table->CAVersion) && $table->CAVersion=='4.0') {
                         $associatedObject = $table->getAssociatedEntity($_field);
                     } else {
-                        $table = TableRegistry::get($attr['className']);
+                        $table = TableRegistry::getTableLocator()->get($attr['className']);
                         $associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($_field);
                     }
-
                     if (!empty($associatedObject) && $data->has($associatedObject)) {
-                        $value = __($data->{$associatedObject}->name);
+                        // $value = __($data->{$associatedObject}->name);
+                        $value = $data->{$associatedObject}->name;
                         $associatedFound = true;
                     }
                 }
@@ -614,18 +655,19 @@ class ControllerActionHelper extends Helper
 
                 if ($_fieldAttr['label']) {
                     $labelClass = implode(' ', $_labelClass);
-                    $rowContent = sprintf($_labelCol.$_valueCol, $labelClass, __($label), $valueClass, __($value));
+                    $rowContent = sprintf($_labelCol.$_valueCol, $labelClass, ($label), $valueClass, isset($value) ? ($value) : null);
                 } else { // no label
+                    $value = $value ?? ""; // POCOR-9235
                     $rowContent = sprintf($_valueCol, $valueClass, __($value));
                 }
-                if (!array_key_exists('override', $_fieldAttr)) {
+                if (!isset($_fieldAttr['override'])) {
                     $html .= sprintf($row, $rowClass, $rowContent);
                 } else {
                     $html .= sprintf($row, $rowClass, __($value));
                 }
             }
         }
-        
+
         $this->HtmlField->includes('view', $table);
         return $html;
     }
@@ -639,7 +681,7 @@ class ControllerActionHelper extends Helper
     {
         foreach ($model->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     return true;
                 }
             }

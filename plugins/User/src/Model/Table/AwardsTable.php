@@ -1,106 +1,69 @@
 <?php
+
 namespace User\Model\Table;
 
+use App\Model\Table\ControllerActionTable;
 use ArrayObject;
+use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
-
-use App\Model\Table\ControllerActionTable;
 
 class AwardsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_awards');
+        $this->setTable('user_awards');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+        $this->addBehavior('Staff.StaffTab');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Awards' =>['id']
+            ]
+        ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator;
     }
 
-    private function setupTabElements()
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
-        switch ($this->controller->name) {
-            case 'Students':
-                $tabElements = $this->controller->getAcademicTabElements();
-                $this->controller->set('tabElements', $tabElements);
-                $this->controller->set('selectedAction', $this->alias());
-                break;
-            /*POCOR-6267 starts*/
-            case 'GuardianNavs':
-                $tabElements = $this->controller->getAcademicTabElements();
-                $this->controller->set('tabElements', $tabElements);
-                $this->controller->set('selectedAction', $this->alias());
-                break;
-            /*POCOR-6267 ends*/
-            case 'Staff':
-                $tabElements = $this->controller->getProfessionalTabElements();
-                $this->controller->set('tabElements', $tabElements);
-                $this->controller->set('selectedAction', $this->alias());
-                break;
-            case 'Directories':
-            case 'Profiles':
-                $type = $this->request->query('type');
-                $options['type'] = $type;
-                $session = $this->request->session();
-                $isStaff = $session->read('Auth.User.is_staff');
-                if ($isStaff) {
-                    $tabElements = $this->controller->getProfessionalTabElements($options);
-                } else if ($this->action == 'index') {
-                    $tabElements = $this->controller->getAcademicTabElements($options);
-                } elseif ($type == 'student') {
-                    $tabElements = $this->controller->getAcademicTabElements($options);
-                } else {
-                    $tabElements = $this->controller->getProfessionalTabElements($options);
-                }
-
-                $this->controller->set('tabElements', $tabElements);
-                $this->controller->set('selectedAction', $this->alias());
-                break;
+        $queryString = $this->getQueryString();
+        $data['staff_id'] = $queryString['staff_id'];    
+		$this->field('security_user_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
+        if($this->request->getParam('controller') == 'Students' || $this->request->getParam('controller') == 'Directories'){
+            $this->field('security_user_id', ['type' => 'hidden', 'value' => $queryString['student_id']]);
         }
     }
-
-    //Function Uncommented for ask POCOR-6267
+    
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-	{
-		$session = $this->request->session();
-		if ($this->controller->name == 'Profiles') {
-			if ($session->read('Auth.User.is_guardian') == 1) {
-				$sId = $session->read('Student.ExaminationResults.student_id');
-			}else {
-				$sId = $session->read('Student.Students.id');
-			}
-			if (!empty($sId)) {
-				$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
-			} else {
-				$studentId = $session->read('Auth.User.id');
-			}
-		} else {
-                if(!empty($session->read('Staff.Staff.id'))){
-                    $studentId = $session->read('Staff.Staff.id'); //POCOR-7676
-                }else{
-                    $studentId = $session->read('Student.Students.id');
-                }
-		}
-        $query->where([$this->aliasField('security_user_id') => $studentId]);
+    {
+        $userId = $this->getUserID();
+        if(empty($userId)){
+            $queryString = $this->getQueryString();
+            $userId = isset($queryString['staff_id']) ? $queryString['staff_id'] : $queryString['student_id'] ;
+        }
+        if(empty($userId)){ //POCOR-8316
+            $userId = $this->Auth->user('id');
+        }
+
+        $query->where([$this->aliasField('security_user_id') => $userId]);
 
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Awards','Staff - Professional');       
-            if(!empty($is_manual_exist)){
+        if ($this->request->getParam('controller') == 'Staff') {
+            $is_manual_exist = $this->getManualUrl('Institutions', 'Awards', 'Staff - Professional');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -108,17 +71,17 @@ class AwardsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Students'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Awards','Students - Academic');       
-            if(!empty($is_manual_exist)){
+        } elseif ($this->request->getParam('controller') == 'Students') {
+            $is_manual_exist = $this->getManualUrl('Institutions', 'Awards', 'Students - Academic');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -127,15 +90,15 @@ class AwardsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Awards','Staff - Professional');       
-            if(!empty($is_manual_exist)){
+        } elseif ($this->request->getParam('controller') == 'Directories') {
+            $is_manual_exist = $this->getManualUrl('Directory', 'Awards', 'Staff - Professional');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
 
                 $helpBtn['url'] = $is_manual_exist['url'];
@@ -148,10 +111,90 @@ class AwardsTable extends ControllerActionTable
 
         }
         // End POCOR-5188
-	}
+    }
 
+    private function setupTabElements()
+    {
+        switch ($this->controller->getName()) {
+            case 'Students':
+                //$tabElements = $this->controller->getAcademicTabElements();
+                $tabElements = $this->getAcademicTabElements();
+                $this->controller->set('tabElements', $tabElements);
+                $this->controller->set('selectedAction', $this->getAlias());
+                break;
+            /*POCOR-6267 starts*/
+            case 'GuardianNavs':
+                $tabElements = $this->controller->getAcademicTabElements();
+                //$tabElements = $this->getAcademicTabElements();
+                if($this->controller->getName() == 'GuardianNavs') {
+                    $tabElements = $this->controller->getAcademicTabElements($options);
+                }
+                $this->controller->set('tabElements', $tabElements);
+                $this->controller->set('selectedAction', $this->getAlias());
+                break;
+            /*POCOR-6267 ends*/
+            case 'Staff':
+                //$tabElements = $this->controller->getProfessionalTabElements();
+                $tabElements = $this->getProfessionalTabElements();
+                $this->controller->set('tabElements', $tabElements);
+                $this->controller->set('selectedAction', $this->getAlias());
+                break;
+            case 'Directories':
+                //Shikha's Code[START]
+                $tabElements = $this->getProfessionalTabElements();
+                $type = $this->request->getQuery('type');
+                $options['type'] = $type;
+                if($type == 'student') {
+                    $tabElements = $this->controller->getAcademicTabElements($options);
+                }
+                $this->controller->set('tabElements', $tabElements);
+                $this->controller->set('selectedAction',$this->getAlias());
+                break;
+                //Shikha's Code[END]
+            case 'Profiles':
+                $type = $this->request->getQuery('type');
+                $options['type'] = $type;
+                $session = $this->request->getSession();
+                $isStaff = $session->read('Auth.User.is_staff');
+                if ($isStaff) {
+                    //$tabElements = $this->controller->getProfessionalTabElements($options);
+                    $tabElements = $this->getProfessionalTabElements($options);
+                } else if ($this->action == 'index') {
+                    //$tabElements = $this->controller->getAcademicTabElements($options);
+                    $tabElements = $this->getAcademicTabElements($options);
+                } elseif ($type == 'student') {
+                    //$tabElements = $this->controller->getAcademicTabElements($options);
+                    $tabElements = $this->getAcademicTabElements($options);
+                } else {
+                    //$tabElements = $this->controller->getProfessionalTabElements($options);
+                    $tabElements = $this->getProfessionalTabElements($options);
+                }
+
+                $this->controller->set('tabElements', $tabElements);
+                $this->controller->set('selectedAction', $this->getAlias());
+                break;
+        }
+    }
+
+    //Function Uncommented for ask POCOR-6267
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        if ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

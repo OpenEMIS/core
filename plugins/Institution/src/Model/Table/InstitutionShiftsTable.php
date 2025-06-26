@@ -7,7 +7,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Core\Configure;
@@ -20,7 +20,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 {
     use MessagesTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -30,7 +30,7 @@ class InstitutionShiftsTable extends ControllerActionTable
         $this->belongsTo('LocationInstitutions', ['className' => 'Institution.LocationInstitutions']);
         $this->belongsTo('PreviousShifts', ['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'previous_shift_id']);
 
-        $this->hasMany('InstitutionShiftPeriods', ['className' => 'InstitutionShiftPeriods', 'foreignKey' => 'institution_shift_period_id']); //POCOR-5281
+        $this->hasMany('InstitutionShiftPeriods', ['className' => 'Institution.InstitutionShiftPeriods', 'foreignKey' => 'institution_shift_period_id']); //POCOR-5281
         $this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_shift_id']);
         $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
         $this->addBehavior('OpenEmis.Autocomplete');
@@ -42,21 +42,25 @@ class InstitutionShiftsTable extends ControllerActionTable
             'InstitutionStaffAttendances' => ['index', 'add', 'edit']
         ]);
 
-        $this->behaviors()->get('ControllerAction')->config([
-            'actions' => ['search' => false],
-        ]);
+        $this->behaviors()->get('ControllerAction')->setConfig('actions.search', false);
         $this->setDeleteStrategy('restrict');
 
-        $this->addBehavior('ContactExcel', ['excludes' => ['start_time', 'end_time', 'academic_period_id', 'previous_shift_id'], 'pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour
-
+        // $this->addBehavior('ContactExcel', ['excludes' => ['start_time', 'end_time', 'academic_period_id', 'previous_shift_id'], 'pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour //Commented V4
+        $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => [
+                'Shifts' => ['id']
+            ]
+        ]);
     }
+
     //POCOR-8158
     public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $InsShiftPeriodTable = TableRegistry::get('institution_shift_periods');
-        $InsClassesDataTable = TableRegistry::get('institution_classes');
-        $InsShiftPeriodData = $InsShiftPeriodTable->find('all',['conditions'=> ['institution_shift_period_id'=> $entity->id]])->toArray();
-        $InsClassesData = $InsClassesDataTable->find('all',['conditions'=> ['institution_shift_id'=> $entity->id]])->toArray();
+        $InsShiftPeriodTable = TableRegistry::get('Institution.InstitutionShiftPeriods');
+        $InsClassesDataTable = TableRegistry::get('Institution.InstitutionClasses');
+        $InsShiftPeriodData = $InsShiftPeriodTable->find('all', ['conditions' => ['institution_shift_period_id' => $entity->id]])->toArray();
+        $InsClassesData = $InsClassesDataTable->find('all', ['conditions' => ['institution_shift_id' => $entity->id]])->toArray();
         if (!empty($InsClassesData) || !empty($InsShiftPeriodData)) {
             $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
             $event->stopPropagation();
@@ -65,41 +69,45 @@ class InstitutionShiftsTable extends ControllerActionTable
     }
     //POCOR-8158
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         $validator
             ->add('start_time', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'end_time', true]
             ])
+            //POCOR-9138
             //POCOR-7840 CHECK SHIFTS
-            ->add('shift_option_id',
-                'ruleSameShiftExists', [
-                    'rule' => function ($value, $context) {
-                        $context = isset($context['data']) ? $context['data'] : [];
-                        $shift_option_id = $value;
-                        $another_institution_id = isset($context['location_institution_id']) ? $context['location_institution_id'] : 0;
-                        $institution_id = isset($context['location_institution_id']) ? $context['location_institution_id'] : 0;
-                        $academic_period_id = isset($context['academic_period_id']) ? $context['academic_period_id'] : 0;;
-                        $institution_shifts = TableRegistry::get('institution_shifts');
-                        $where = [
-                            'shift_option_id' => $shift_option_id,
-                            'academic_period_id' => $academic_period_id,
-                            'OR' => [
-                                'location_institution_id IN' => [$institution_id, $another_institution_id],
-                                'institution_id  IN' => [$institution_id, $another_institution_id],
-                            ]
-                        ];
-                        $occupied = $institution_shifts->find('all')
-                            ->where($where)->count();
-                        if ($occupied) {
-                            return false;
-                        }
-                        return true;
-                    },
-                    'message' => __('This Shift Is Already In Use')
-                ])
+            // ->add(
+            //     'shift_option_id',
+            //     // 'ruleSameShiftExists',
+            //     // [
+            //     //     'rule' => function ($value, $context) {
+            //     //         $context = isset($context['data']) ? $context['data'] : [];
+            //     //         $shift_option_id = $value;
+            //     //         $another_institution_id = isset($context['location_institution_id']) ? $context['location_institution_id'] : 0;
+            //     //         $institution_id = isset($context['location_institution_id']) ? $context['location_institution_id'] : 0;
+            //     //         $academic_period_id = isset($context['academic_period_id']) ? $context['academic_period_id'] : 0;;
+            //     //         $institution_shifts = TableRegistry::get('Institution.InstitutionShifts');
+            //     //         $where = [
+            //     //             'shift_option_id' => $shift_option_id,
+            //     //             'academic_period_id' => $academic_period_id,
+            //     //             'OR' => [
+            //     //                 'location_institution_id IN' => [$institution_id, $another_institution_id],
+            //     //                 'institution_id  IN' => [$institution_id, $another_institution_id],
+            //     //             ]
+            //     //         ];
+            //     //         $occupied = $institution_shifts->find('all')
+            //     //             ->where($where)->count();
+            //     //         if ($occupied) {
+            //     //             return false;
+            //     //         }
+            //     //         return true;
+            //     //     },
+            //     //     'message' => __('This Shift Is Already In Use')
+            //     // ]
+            // )
             //Start:POCOR-5065 Commented that validation
             // ->add('start_time', 'ruleCheckShiftAvailable', [
             //         'rule' => ['checkShiftAvailable'],
@@ -116,7 +124,7 @@ class InstitutionShiftsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.ajaxInstitutionsAutocomplete'] = 'ajaxInstitutionsAutocomplete';
@@ -134,17 +142,19 @@ class InstitutionShiftsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(); //to show list of academic period for selection
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Institution.Shifts/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'periodOptions' => $academicPeriodOptions,
                 'selectedPeriodOption' => $extra['selectedAcademicPeriodOptions']
             ],
-            'order' => 3
+            'order' => 1
         ];
 
         //logic to remove 'add' button if the institution has received shift from other based on the academic period
@@ -163,15 +173,21 @@ class InstitutionShiftsTable extends ControllerActionTable
         $this->field('previous_shift_id', ['visible' => 'false']);
 
         $this->setFieldOrder([
-            'academic_period_id', 'shift_option_id', 'start_time', 'end_time', 'institution_id', 'period', 'location_institution_id' //POCOR-5281
+            'academic_period_id',
+            'shift_option_id',
+            'start_time',
+            'end_time',
+            'institution_id',
+            'period',
+            'location_institution_id' //POCOR-5281
         ]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        //echo $query; exit;
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-        if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
+        //echo $extra['selectedAcademicPeriodOptions']; exit;
+        $institutionId = $this->getInstitutionID();
+        if (isset($extra['selectedAcademicPeriodOptions'])) {
             $query->where([
                 'OR' => [
                     [$this->aliasField('location_institution_id') => $institutionId],
@@ -184,7 +200,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
-        $currentInstitutionId = $this->Session->read('Institution.Institutions.id');
+        $currentInstitutionId = $this->getInstitutionID();
         $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -214,7 +230,8 @@ class InstitutionShiftsTable extends ControllerActionTable
     //Start:POCOR-5281
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
-        $InstitutionShiftsTable = TableRegistry::get('student_attendance_per_day_periods');
+        $institutionId = $this->getInstitutionID();
+        $InstitutionShiftsTable = TableRegistry::getTableLocator()->get('Attendance.StudentAttendancePerDayPeriods');
         $shiftOptions = $InstitutionShiftsTable->find('list', ['keyField' => 'id', 'valueField' => 'name']);
         $this->field('period', [
             'type' => 'chosenSelect',
@@ -223,12 +240,13 @@ class InstitutionShiftsTable extends ControllerActionTable
             ]
         ]);
         $this->fields['period']['options'] = $shiftOptions;
+        $this->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
     }
 
     //End:POCOR-5281
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         if ($this->action == 'add') {
             $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
@@ -260,7 +278,6 @@ class InstitutionShiftsTable extends ControllerActionTable
                 return $row;
             });
         });
-
     }
     //End:POCOR-5281
 
@@ -272,12 +289,12 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $currentInstitutionId = $this->Session->read('Institution.Institutions.id');
+        $currentInstitutionId = $this->getInstitutionID();
         $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
 
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-
+        //echo "<pre>"; print_r($currentInstitutionId); die;
         // if ($this->isOccupier($institutionId, $entity->academic_period_id)) { //if occupier, then remove the 'delete / edit' button
         //     unset($toolbarButtonsArray['edit']);
         //     unset($toolbarButtonsArray['remove']);
@@ -300,7 +317,13 @@ class InstitutionShiftsTable extends ControllerActionTable
         $this->field('previous_shift_id', ['visible' => 'false']);
 
         $this->setFieldOrder([
-            'academic_period_id', 'shift_option_id', 'start_time', 'end_time', 'institution_id', 'period', 'location_institution_id' //POCOR-5281
+            'academic_period_id',
+            'shift_option_id',
+            'start_time',
+            'end_time',
+            'institution_id',
+            'period',
+            'location_institution_id' //POCOR-5281
         ]);
     }
 
@@ -313,28 +336,28 @@ class InstitutionShiftsTable extends ControllerActionTable
     public function onGetShiftOptionId(Event $event, Entity $entity)
     {
         if ($this->action == 'index') {
-            $ControllerActionHelper = $event->subject();
-            $htmlHelper = $event->subject()->Html;
-            $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Shifts', 'view'];
-            $url[] = $ControllerActionHelper->paramsEncode(['id' => $entity->id]);
+            $ControllerActionHelper = $event->getSubject();
+            $htmlHelper = $event->getSubject()->Html;
+            $url = ['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'Shifts', 'view'];
+            $url[] = $ControllerActionHelper->paramsEncode(['id' => $entity->id, 'institution_id' => $entity->institution_id]);
             return $htmlHelper->link(__($entity->shift_option->name), $url);
         }
     }
 
     public function onGetInstitutionId(Event $event, Entity $entity)
     {
-        $ControllerActionHelper = $event->subject();
-        return $event->subject()->Html->link($entity->institution->name, [
-            'plugin' => $this->controller->plugin,
-            'controller' => $this->controller->name,
+        $ControllerActionHelper = $event->getSubject();
+        return $event->getSubject()->Html->link($entity->institution->name, [
+            'plugin' => $this->controller->getPlugin(),
+            'controller' => $this->controller->getName(),
             'action' => 'dashboard',
-            $ControllerActionHelper->paramsEncode(['id' => $entity->institution_id])
+            $ControllerActionHelper->paramsEncode(['id' => $entity->institution_id, 'institution_id' => $entity->institution_id])
         ]);
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        if ($this->request->params['pass'][0] == 'add' || $this->request->params['pass'][0] == 'edit') {
+        if ($this->request->getParam('pass')[0] == 'add' || $this->request->getParam('pass')[0] == 'edit') {
             switch ($field) {
                 case 'location_institution_id':
                     return __('Owner');
@@ -348,16 +371,16 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function onGetLocationInstitutionId(Event $event, Entity $entity)
     {
-        $ControllerActionHelper = $event->subject();
-        return $event->subject()->Html->link($entity->location_institution->name, [
-            'plugin' => $this->controller->plugin,
-            'controller' => $this->controller->name,
+        $ControllerActionHelper = $event->getSubject();
+        return $event->getSubject()->Html->link($entity->location_institution->name, [
+            'plugin' => $this->controller->getPlugin(),
+            'controller' => $this->controller->getName(),
             'action' => 'dashboard',
-            $ControllerActionHelper->paramsEncode(['id' => $entity->location_institution_id])
+            $ControllerActionHelper->paramsEncode(['id' => $entity->location_institution_id, 'institution_id' => $entity->location_institution_id])
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $attr['type'] = 'readonly';
@@ -375,7 +398,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function onUpdateFieldShiftOptionId(Event $event, array $attr, $action, $request)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         // POCOR-7840 REFACTURED COMMON VARIABLES
         $selectedAcademicPeriod = $this->getSelectedAcademicPeriod($this->request);
         $checkisOccupier = $this->isOccupier($institutionId, $selectedAcademicPeriod);
@@ -421,9 +444,9 @@ class InstitutionShiftsTable extends ControllerActionTable
             // $attr['attr']['value'] = __($options[$attr['entity']->shift_option_id]);
             // $attr['value'] = $attr['entity']->shift_option_id;
             // POCOR-7840 MOVED TO TOP
-//            $institutionId = $this->Session->read('Institution.Institutions.id');
-//            $selectedAcademicPeriod = $this->getSelectedAcademicPeriod($this->request);
-//            $checkisOccupier = $this->isOccupier($institutionId, $selectedAcademicPeriod);
+            //            $institutionId = $this->getInstitutionID();
+            //            $selectedAcademicPeriod = $this->getSelectedAcademicPeriod($this->request);
+            //            $checkisOccupier = $this->isOccupier($institutionId, $selectedAcademicPeriod);
             // POCOR-7840 UNCOMMENTED AND EDITED
             $selectedShiftId = $attr['entity']->shift_option_id;
             $allOptions = $options
@@ -442,28 +465,36 @@ class InstitutionShiftsTable extends ControllerActionTable
             if (empty($options)) {
                 $this->Alert->warning('InstitutionShifts.allShiftsUsed');
             }
-            $attr['attr']['value'] = $selectedShiftId;
-            $attr['select'] = false;
-            $attr['value'] = $selectedShiftId;
+            //POCOR-9138 start
+            // $attr['attr']['value'] = $selectedShiftId;
+            // $attr['select'] = false;
+            // $attr['value'] = $selectedShiftId;
             // POCOR-7840 COMMENTED
-//            $options = $options
-//                        ->find('all', ['institution_id' => $institutionId, 'academic_period_id' => $selectedAcademicPeriod])
-//                        ->toArray();
+            //            $options = $options
+            //                        ->find('all', ['institution_id' => $institutionId, 'academic_period_id' => $selectedAcademicPeriod])
+            //                        ->toArray();
             // POCOR-7840 END
             $attr['options'] = $options;
             $attr['onChangeReload'] = 'changeShiftOption';
+            
+            $attr['type'] = 'readonly';
+            $attr['attr']['value'] = __($options[$attr['entity']->shift_option_id]);
+            $attr['value'] = $attr['entity']->shift_option_id;
+             //POCOR-9138 end
         }
         //pr($options);
         return $attr;
     }
 
-    public function onUpdateFieldStartTime(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStartTime(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if ($request->data) {
-            $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
+        if ($request->getData()) {
+            $submitData = $request->getData('submit');
+            $submit = $submitData ?? 'save';
+            //$submit = isset($request->getData('submit')) ? $request->getData('submit') : 'save';
             if ($submit == 'changeShiftOption') {
-                if (!empty($request->query['shiftoption'])) {
-                    $shiftOption = $request->query['shiftoption'];
+                if (!empty($request->getQuery('shiftoption'))) {
+                    $shiftOption = $request->getQuery('shiftoption');
                     $attr['value'] = $this->ShiftOptions->getStartEndTime($shiftOption, 'start')->format('H:i');
                     return $attr;
                 }
@@ -471,13 +502,16 @@ class InstitutionShiftsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEndTime(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEndTime(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if ($request->data) {
-            $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
+        if ($request->getData()) {
+            $submitData = $request->getData('submit');
+            $submit = $submitData ?? 'save';
+            //comment in cakephp4
+            //$submit = isset($request->getData('submit')) ? $request->getData('submit') : 'save';
             if ($submit == 'changeShiftOption') {
-                if (!empty($request->query['shiftoption'])) {
-                    $shiftOption = $request->query['shiftoption'];
+                if (!empty($request->getQuery('shiftoption'))) {
+                    $shiftOption = $request->getQuery['shiftoption'];
                     $attr['value'] = $this->ShiftOptions->getStartEndTime($shiftOption, 'end')->format('H:i');
                     return $attr;
                 }
@@ -487,7 +521,6 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function onUpdateFieldLocation(Event $event, array $attr, $action, $request)
     {
-
         $attr['options'] = ['CURRENT' => __('This Institution'), 'OTHER' => __('Other Institution')];
         if ($action == 'add') {
             if (!Configure::read('schoolMode')) {
@@ -500,29 +533,35 @@ class InstitutionShiftsTable extends ControllerActionTable
                 $attr['value'] = 'CURRENT';
             }
         } elseif ($action == 'edit') {
-            if ($attr['entity']->institution_id != $attr['entity']->location_institution_id) {
-                $attr['onChangeReload'] = 'changeLocation';
-                $attr['default'] = 'OTHER'; //set the default selected location as Current Institution
-                $attr['select'] = false;
-            } else if (!Configure::read('schoolMode')) {
-                $attr['onChangeReload'] = 'changeLocation';
-                $attr['default'] = 'CURRENT'; //set the default selected location as Current Institution
-                $attr['select'] = false;
-            } else {
-                $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $attr['options']['CURRENT'];
-                $attr['value'] = 'CURRENT';
-            }
+             //POCOR-9138 start
+
+            $attr['type'] = 'readonly';
+            $attr['attr']['value'] = $attr['options']['CURRENT'];
+            $attr['value'] = 'CURRENT';
+            // if ($attr['entity']->institution_id != $attr['entity']->location_institution_id) {
+            //     $attr['onChangeReload'] = 'changeLocation';
+            //     $attr['default'] = 'OTHER'; //set the default selected location as Current Institution
+            //     $attr['select'] = false;
+            // } else if (!Configure::read('schoolMode')) {
+            //     $attr['onChangeReload'] = 'changeLocation';
+            //     $attr['default'] = 'CURRENT'; //set the default selected location as Current Institution
+            //     $attr['select'] = false;
+            // } else {
+            //     $attr['type'] = 'readonly';
+            //     $attr['attr']['value'] = $attr['options']['CURRENT'];
+            //     $attr['value'] = 'CURRENT';
+            // }
+             //POCOR-9138 end
         }
         return $attr;
     }
 
     public function onUpdateFieldLocationInstitutionId(Event $event, array $attr, $action, $request)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         if ($action == 'add') {
-            if ($request->data) {
-                $data = $request->data[$this->alias()];
+            if ($request->getData()) {
+                $data = $request->getData($this->getAlias());
                 if ($data['location'] == 'OTHER') {
                     $attr['type'] = 'autocomplete';
                     $attr['target'] = ['key' => 'location_institution_id', 'name' => $this->aliasField('location_institution_id')];
@@ -548,10 +587,13 @@ class InstitutionShiftsTable extends ControllerActionTable
                 $attr['type'] = 'autocomplete';
                 $attr['target'] = ['key' => 'location_institution_id', 'name' => $this->aliasField('location_institution_id')];
             }
-            $Institutions = TableRegistry::get('Institution.Institutions');
-            $occupier = $Institutions->findById($attr['entity']->location_institution_id)->first();
-            $attr['attr']['value'] = $occupier->name;
-            $data = $request->data[$this->alias()];
+            if (isset($this->request->getData()['InstitutionShifts']['location_institution_id'])) {
+                $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+                // $occupier = $Institutions->findById($attr['entity']->location_institution_id)->first(); //Commented v4
+                $occupier = $Institutions->findById($this->request->getData()['InstitutionShifts']['location_institution_id'])->first();
+                $attr['attr']['value'] = $occupier->name;
+                $data = $request->getData($this->getAlias());
+            }
 
             if ($event->data[0]['entity']->institution_id != $event->data[0]['entity']->location_institution_id && $event->data[0]['entity']->location != 'CURRENT') {
                 //POCOR-6587 added one more condition to get data
@@ -590,12 +632,17 @@ class InstitutionShiftsTable extends ControllerActionTable
     public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        unset($request->query['period']);
+        $query = $request->getQuery();
+        if (isset($query['period'])) {
+            unset($query['period']);
+        }
+        // Set the modified query parameters back in the request
+        $request = $request->withQueryParams($query);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
-                    $request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
+            if (array_key_exists($this->alias(), $request->getData())) {
+                if (array_key_exists('academic_period_id', $request->getData($this->getAlias()))) {
+                    $request->query['period'] = $request->getData($this->getAlias())['academic_period_id'];
                 }
             }
         }
@@ -604,12 +651,26 @@ class InstitutionShiftsTable extends ControllerActionTable
     public function addEditOnChangeShiftOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        unset($request->query['shiftoption']);
+        $query = $request->getQuery();
+        // Unset the 'period' query parameter if it exists
+        if (isset($query['shiftoption'])) {
+            unset($query['shiftoption']);
+        }
 
+        // Set the modified query parameters back in the request
+        $request = $request->withQueryParams($query);
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('shift_option_id', $request->data[$this->alias()])) {
-                    $request->query['shiftoption'] = $request->data[$this->alias()]['shift_option_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('shift_option_id', $request->getData($this->getAlias()))) {
+                    $shiftOptionId = $request->getData($this->getAlias())['shift_option_id'];
+                    // Get the existing query parameters
+                    $queryParams = $request->getQueryParams();
+
+                    // Set the 'shiftoption' query parameter to the 'shift_option_id' value
+                    $queryParams['shiftoption'] = $shiftOptionId;
+
+                    // Create a new request with the updated query parameters
+                    $request = $request->withQueryParams($queryParams);
                 }
             }
         }
@@ -622,10 +683,9 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        //POCOR-6618 starts 
+        //POCOR-6618 starts
         if (!empty($entity->id) && $entity->location) { //this will work when edit any shift
-            $institutionShifts = TableRegistry::get('institution_shifts')
-                ->find()
+            $institutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts')->find()
                 ->where(['id' => $entity->id])->first();
             //location_institution_id belongs to `occupier` and  institution_id belongs to `owner`
             if ($entity->location == 'OTHER' && ($institutionShifts->location_institution_id == $this->request->data['InstitutionShifts']['location_institution_id'])) {
@@ -635,19 +695,19 @@ class InstitutionShiftsTable extends ControllerActionTable
                 $entity->institution_id = $entity->institution_id;
                 $entity->location_institution_id = $this->request->data['InstitutionShifts']['location_institution_id'];
             }
-            //when the occupier and the owner are same 
-            if ($entity->location == 'CURRENT' && ($this->request->data['InstitutionShifts']['institution_id'] == $institutionShifts->institution_id) && ($institutionShifts->institution_id == $institutionShifts->location_institution_id)) {
-                $entity->location_institution_id = $this->request->data['InstitutionShifts']['institution_id'];
+            //when the occupier and the owner are same
+            if ($entity->location == 'CURRENT' && ($this->request->getData('InstitutionShifts')['institution_id'] == $institutionShifts->institution_id) && ($institutionShifts->institution_id == $institutionShifts->location_institution_id)) {
+                $entity->location_institution_id = $this->request->getData('InstitutionShifts')['institution_id'];
             }
-        }//POCOR-6618 ends
+        } //POCOR-6618 ends
 
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //Start:POCOR-5281
-        $PeriodShiftTable = TableRegistry::get('institution_shift_periods');
-        if ($this->request->params['pass'][0] == 'edit') {
+        $PeriodShiftTable = TableRegistry::getTableLocator()->get('Institution.InstitutionShiftPeriods');
+        if ($this->request->getParam('pass')[0] == 'edit') {
             $PeriodShiftData = $PeriodShiftTable->find()->where(['institution_shift_period_id' => $entity->id])->toArray();
             foreach ($PeriodShiftData as $PeriodShiftDataEntity) {
                 $deleteEntity = $PeriodShiftTable->delete($PeriodShiftDataEntity);
@@ -660,7 +720,6 @@ class InstitutionShiftsTable extends ControllerActionTable
             ];
             $PeriodShift = $PeriodShiftTable->newEntity($PeriodShiftEntity);
             if ($PeriodShiftResult = $PeriodShiftTable->save($PeriodShift)) {
-
             }
         }
         //End:POCOR-5281
@@ -797,7 +856,7 @@ class InstitutionShiftsTable extends ControllerActionTable
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
 
-        $institutionClasses = TableRegistry::get('institution_units');
+        $institutionClasses = TableRegistry::getTableLocator()->get('institution_units');
         // $query11 = $institutionClasses->find('list',['keyField' => 'id', 'valueField' => 'name']);
         $query11 = $institutionClasses->find('all', ['fields' => ['id', 'name']]);
         echo json_encode($query11->toArray());
@@ -956,8 +1015,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function getOwnerList($selectedAcademicPeriodOptions)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-
+        $institutionId = $this->getInstitutionID();
         return $this->find()
             ->select([
                 'institution_id'
@@ -977,8 +1035,8 @@ class InstitutionShiftsTable extends ControllerActionTable
         $selectedAcademicPeriod = '';
 
         if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit') {
-            if (isset($request->query) && array_key_exists('period', $request->query)) {
-                $selectedAcademicPeriod = $request->query['period'];
+            if (!is_null($request->getQuery()) && array_key_exists('period', $request->getQuery())) {
+                $selectedAcademicPeriod = $request->getQuery('period');
             } else {
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }
@@ -995,11 +1053,11 @@ class InstitutionShiftsTable extends ControllerActionTable
         $this->controller->autoRender = false;
 
         if ($this->request->is(['ajax'])) {
-            $institutionId = $this->Session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
             $Institutions = $this->Institutions;
 
-            $term = trim($this->request->query['term']);
-            $selectedAcademicPeriod = trim($this->request->query['academicperiod']);
+            $term = trim($this->request->getQuery('term'));
+            $selectedAcademicPeriod = trim($this->request->getQuery('academicperiod'));
             $search = $term . '%';
 
             $query = $Institutions->find()
@@ -1010,7 +1068,7 @@ class InstitutionShiftsTable extends ControllerActionTable
                 ])
                 ->where([
                     'EXISTS (' .
-                    $this->find('list')
+                        $this->find('list')
                         ->where([
                             $this->aliasField('institution_id') . ' = ' . $Institutions->aliasField('id'),
                             'OR' => [ //if owner has shift for themself or for others
@@ -1019,7 +1077,7 @@ class InstitutionShiftsTable extends ControllerActionTable
                             ],
                             $this->aliasField('academic_period_id') . ' = ' . $selectedAcademicPeriod
                         ])
-                    . ')',
+                        . ')',
                     'OR' => [
                         $Institutions->aliasField('code') . ' LIKE ' => $search,
                         $Institutions->aliasField('name') . ' LIKE ' => $search
@@ -1053,28 +1111,30 @@ class InstitutionShiftsTable extends ControllerActionTable
         $this->field('location', [
             'after' => 'period', //POCOR-5281
             'visible' => [
-                'index' => false, 'view' => false, 'add' => true, 'edit' => true
+                'index' => false,
+                'view' => false,
+                'add' => true,
+                'edit' => true
             ],
             'entity' => $entity
         ]);
         $this->field('location_institution_id', [
             'type' => 'hidden',
-            'after' => 'institution_id',
+            'after' => 'location',
             'entity' => $entity
         ]);
         $this->field('previous_shift_id', ['visible' => 'false']);
-
     }
 
     public function findShiftTime(Query $query, array $options)
     {
         // if its students, it will have classId
         // it will used the classId to get the institutionId and get the shift time.
-        $classId = array_key_exists('institution_class_id', $options) ? $options['institution_class_id'] : null;
+        $classId = isset($options['institution_class_id']) ? $options['institution_class_id'] : null;
 
         // for staff, they dont have the classId, so will used the academic periodId and institutionId to get the shift time.
-        $academicPeriodId = array_key_exists('academic_period_id', $options) ? $options['academic_period_id'] : null;
-        $institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : null;
+        $academicPeriodId = isset($options['academic_period_id']) ? $options['academic_period_id'] : null;
+        $institutionId = isset($options['institution_id']) ? $options['institution_id'] : null;
 
         if (!is_null($classId)) {
             $InstitutionClasses = $this->InstitutionClasses;
@@ -1084,7 +1144,8 @@ class InstitutionShiftsTable extends ControllerActionTable
                 [
                     $InstitutionClasses->aliasField('institution_shift_id = ') . $this->aliasField('id'),
                     $InstitutionClasses->aliasField('id') => $classId
-                ]);
+                ]
+            );
         }
 
         $where = [];
@@ -1106,23 +1167,23 @@ class InstitutionShiftsTable extends ControllerActionTable
     {
         $staffId = $options['staff_id'];
         $institutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
-        $institutionStaff = TableRegistry::get('institution_staff');
+        $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $positions = TableRegistry::get('Institution.InstitutionPositions');
-        $shiftOption = TableRegistry::get('shift_options');
+        $shiftOption = TableRegistry::get('Institution.ShiftOptions');
         $staffShiftsData = $query
             ->leftJoin(
-                [$institutionStaffShifts->alias() => $institutionStaffShifts->table()],
+                [$institutionStaffShifts->getAlias() => $institutionStaffShifts->getTable()],
                 [
                     $institutionStaffShifts->aliasField('shift_id = ') . $this->aliasField('id')
                 ]
-            )->
-            leftJoin(
-                [$positions->alias() => $positions->table()],
+            )->leftJoin(
+                [$positions->getAlias() => $positions->getTable()],
                 [
                     $positions->aliasField('id = ') . $institutionStaff->aliasField('institution_position_id')
-                ])
+                ]
+            )
             ->leftJoin(
-                [$shiftOption->alias() => $shiftOption->table()],
+                [$shiftOption->getAlias() => $shiftOption->getTable()],
                 [
                     $shiftOption->aliasField('id = ') . $positions->aliasField('shift_id')
                 ]
@@ -1188,8 +1249,8 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
-        $academicPeriod = $this->request->query['period'];
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $academicPeriod = $this->request->getQuery('period');
+        $institutionId = $this->getInstitutionID();
 
         if (empty($academicPeriod)) {
             $academicPeriod = $this->InstitutionShifts->AcademicPeriods->getCurrent();
@@ -1198,13 +1259,13 @@ class InstitutionShiftsTable extends ControllerActionTable
         if ($academicPeriod != '') {
             $query
                 ->select(['academic_period' => 'AcademicPeriods.name', 'shift_name' => 'ShiftOptions.name', 'shift_start_time' => 'InstitutionShifts.start_time', 'shift_end_time' => 'InstitutionShifts.end_time', 'Owner' => 'Institutions.name', 'Occupier' => 'Institutions.name'])
-                ->LeftJoin([$this->Institutions->alias() => $this->Institutions->table()], [
+                ->LeftJoin([$this->Institutions->getAlias() => $this->Institutions->getTable()], [
                     $this->Institutions->aliasField('id') . ' = ' . 'InstitutionShifts.institution_id'
                 ])
-                ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()], [
+                ->LeftJoin([$this->AcademicPeriods->getAlias() => $this->AcademicPeriods->getTable()], [
                     $this->AcademicPeriods->aliasField('id') . ' = ' . 'InstitutionShifts.academic_period_id'
                 ])
-                ->LeftJoin([$this->ShiftOptions->alias() => $this->ShiftOptions->table()], [
+                ->LeftJoin([$this->ShiftOptions->getAlias() => $this->ShiftOptions->getTable()], [
                     $this->ShiftOptions->aliasField('id') . ' = ' . $this->InstitutionShifts->aliasField('shift_option_id')
                 ])
                 ->where([
@@ -1215,6 +1276,5 @@ class InstitutionShiftsTable extends ControllerActionTable
                     $this->aliasField('academic_period_id') => $academicPeriod
                 ]);
         }
-
     }
 }

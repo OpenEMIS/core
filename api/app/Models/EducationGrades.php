@@ -8,9 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 class EducationGrades extends Model
 {
     use HasFactory;
+    // ✅ Allow mass assignment
+    protected $fillable = ['id', 'code', 'name', 'admission_age', 'order', 'visible', 'education_stage_id', 'education_programme_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'education_stage_id', 'education_programme_id', 'modified_user_id', 'created_user_id'];
+    // ✅ Treat 'modified' and 'created' as timestamps
+    protected $dates = ['modified', 'created'];
 
     public $timestamps = false;
     protected $table = "education_grades";
+
+
+
+
+
+
 
 
     public function subjects()

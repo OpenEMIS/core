@@ -1,0 +1,33 @@
+<?php
+
+namespace Database\Factories\Api5;
+
+use App\Models\Api5\Labels;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+
+class LabelsFactory extends Factory
+{
+    protected $model = Labels::class;
+
+    public function definition(): array
+    {
+
+
+        return [
+    // 'id' => $this->faker->word(),
+    'module' => $this->faker->lexify(str_repeat("?", 100)),
+    'field' => $this->faker->lexify(str_repeat("?", 100)),
+    'module_name' => $this->faker->lexify(str_repeat("?", 100)),
+    'field_name' => $this->faker->lexify(str_repeat("?", 100)),
+    'code' => $this->faker->lexify(str_repeat("?", 50)),
+    'name' => $this->faker->lexify(str_repeat("?", 100)),
+    'visible' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
+    'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
+    'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
+];
+    }
+}

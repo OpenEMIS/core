@@ -17,7 +17,7 @@ class RenderStudentListBehavior extends RenderBehavior
 
     use IdGeneratorTrait;
     use PickerTrait;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -32,9 +32,9 @@ class RenderStudentListBehavior extends RenderBehavior
         $StudentSurveyAnswers = TableRegistry::get('Student.StudentSurveyAnswers');
 
         $model = $this->_table;
-        $session = $model->request->session();
-        $registryAlias = $model->registryAlias();
-        $debugInfo = $model->alias() . ' #'.$entity->id.' (Institution ID: ' . $entity->institution_id . ', Academic Period ID: ' . $entity->academic_period_id . ', Survey Form ID: ' . $entity->survey_form_id . ')';
+        $session = $model->request->getSession();
+        $registryAlias = $model->getRegistryAlias();
+        $debugInfo = $model->getAlias() . ' #'.$entity->id.' (Institution ID: ' . $entity->institution_id . ', Academic Period ID: ' . $entity->academic_period_id . ', Survey Form ID: ' . $entity->survey_form_id . ')';
 
         $value = '';
 
@@ -44,7 +44,7 @@ class RenderStudentListBehavior extends RenderBehavior
         $formKey = $attr['attr']['formKey'];
         $fieldId = $customField->id;
 
-        $form = $event->subject()->Form;
+        $form = $event->getSubject()->Form;
         $fieldPrefix = $attr['model'] . '.institution_student_surveys.' . $fieldId;
         $unlockFields = [];
         $unlockFields[] = $fieldPrefix.".institution_class";
@@ -58,7 +58,7 @@ class RenderStudentListBehavior extends RenderBehavior
         // Get Survey Form ID
         if ($customField->has('params') && !empty($customField->params)) {
             $params = json_decode($customField->params, true);
-            if (array_key_exists('survey_form_id', $params)) {
+            if (isset($params['survey_form_id'])) {
                 $formId = $params['survey_form_id'];
             }
         }
@@ -67,11 +67,11 @@ class RenderStudentListBehavior extends RenderBehavior
         $session->write('SurveyTabCount', count($entity['institution_student_surveys']));
         $tabCount = count($entity['institution_student_surveys']);
         $tabID = $attr['customField']['id']; //POCOR-7730
-        if($tabCount == 1){ 
+        if($tabCount == 1){
             if (!is_null($formId)) {
                 $questions = $CustomFormsFields
                     ->find('all')
-                    ->innerJoin([$CustomFields->alias() => $CustomFields->table()],
+                    ->innerJoin([$CustomFields->getAlias() => $CustomFields->getTable()],
                         [
                             $CustomFields->aliasField('id = ') . $CustomFormsFields->aliasField($fieldKey),
                         ]
@@ -87,11 +87,11 @@ class RenderStudentListBehavior extends RenderBehavior
                     ->where([$CustomFormsFields->aliasField($formKey) => $formId])
                     ->group([$CustomFormsFields->aliasField($fieldKey)])
                     ->toArray();
-    
+
                 if (!empty($questions)) {
                     $institutionId = $entity->institution_id;
                     $periodId = $entity->academic_period_id;
-    
+
                     // Classes Options
                     $classQuery = $Classes
                         ->find('list')
@@ -99,7 +99,7 @@ class RenderStudentListBehavior extends RenderBehavior
                             $Classes->aliasField('institution_id') => $institutionId,
                             $Classes->aliasField('academic_period_id') => $periodId
                         ]);
-    
+
                     if ($model->AccessControl->check(['Institutions', 'AllClasses', 'index'])) {
                         // All Classes
                         $classOptions = $classQuery->toArray();
@@ -109,11 +109,11 @@ class RenderStudentListBehavior extends RenderBehavior
                         $classQuery->where([
                             $Classes->aliasField('staff_id') => $userId
                         ]);
-    
+
                         $classOptions = $classQuery->toArray();
                     }
                     // End
-    
+
                     // Build table header
                     $headerHtml = __('OpenEMIS ID');
                     $headerHtml .= $form->hidden("$fieldPrefix.$formKey", ['value' => $formId]);
@@ -121,34 +121,34 @@ class RenderStudentListBehavior extends RenderBehavior
                     $tableHeaders[] = $headerHtml;
                     $tableHeaders[] = __('Student Name');
                     $colOffset = 2; // 0 -> OpenEMIS ID, 1 -> Student Name
-    
+
                     foreach ($questions as $colKey => $question) {
                         $questionName = !is_null($question->name) ? $question->name : $question->custom_field->name;
                         $tableHeaders[$colKey + $colOffset] = $questionName;
                     }
                     // End
-    
+
                     if (!empty($classOptions)) {
                         // Set selectedClass to session and read it back.
                         $selectedClass = key($classOptions);
                         $sessionKey = "$registryAlias.institution_student_surveys.$fieldId.institution_class";
-    
+
                         if ($model->request->is(['get'])) {
                             // Clear session if is not redirect from save
-                            $requestQuery = $model->request->query;
-                            if (array_key_exists('field_id', $requestQuery) && array_key_exists('class_id', $requestQuery)) {
+                            $requestQuery = $model->request->getQuery();
+                            if (isset($requestQuery['field_id']) && isset($requestQuery['class_id'])) {
                                 if ($requestQuery['field_id'] == $fieldId) {
                                     $session->write($sessionKey, $requestQuery['class_id']);
                                 }
                             }
                         } else if ($model->request->is(['post', 'put'])) {
-                            $requestData = $model->request->data;
+                            $requestData = $model->request->getData();
                             $submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
-    
-                            if (isset($requestData[$model->alias()]['institution_student_surveys'][$fieldId]['institution_class'])) {
-                                $session->write($sessionKey, $requestData[$model->alias()]['institution_student_surveys'][$fieldId]['institution_class']);
+
+                            if (isset($requestData[$model->getAlias()]['institution_student_surveys'][$fieldId]['institution_class'])) {
+                                $session->write($sessionKey, $requestData[$model->getAlias()]['institution_student_surveys'][$fieldId]['institution_class']);
                             }
-    
+
                             if ($submit == 'save') {
                             } else {
                                 // only reset values from sessions when reload
@@ -159,13 +159,13 @@ class RenderStudentListBehavior extends RenderBehavior
                                 }
                             }
                         }
-    
+
                         if ($session->check($sessionKey)) {
                             $selectedClass = $session->read($sessionKey);
                         }
                         // End
                         $model->advancedSelectOptions($classOptions, $selectedClass);
-    
+
                         // Students List
                         $studentQuery = $ClassStudents
                             ->find()
@@ -177,24 +177,24 @@ class RenderStudentListBehavior extends RenderBehavior
                                     $ClassStudents->aliasField('institution_class_id') => $selectedClass
                                 ]);
                         }
-    
+
                         $students = $studentQuery->toArray();
                         // End
-    
+
                         if (!empty($students)) {
                             $fieldTypes = $CustomFieldTypes
                                 ->find('list', ['keyField' => 'code', 'valueField' => 'value'])
                                 ->toArray();
-    
+
                             foreach ($students as $rowKey => $student) {
                                 $studentId = $student->student_id;
                                 $rowPrefix = "$fieldPrefix.$studentId";
-    
+
                                 $rowData = [];
                                 $rowInput = "";
-    
+
                                 if ($action == 'view') {
-                                    $rowData[] = $event->subject->Html->link($student->user->openemis_no, [
+                                    $rowData[] = $event->getSubject()->Html->link($student->user->openemis_no, [
                                         'plugin' => 'Institution',
                                         'controller' => 'Institutions',
                                         'action' => 'StudentUser',
@@ -207,7 +207,7 @@ class RenderStudentListBehavior extends RenderBehavior
                                         $rowInput .= $form->hidden($rowPrefix.".id", ['value' => $entity->institution_student_surveys[$fieldId][$studentId]['id']]);
                                         $unlockFields[] = $rowPrefix.".id";
                                     }
-    
+
                                     $rowData[] = $student->user->openemis_no . $rowInput;
                                     $rowData[] = $student->user->name;
                                 }
@@ -230,7 +230,7 @@ class RenderStudentListBehavior extends RenderBehavior
                                     $cellValue = "";
                                     $cellOptions = ['label' => false, 'value' => ''];
                                     $answerObj = null;
-    
+
                                     // put back answer value for edit and validation failed
                                     if (isset($entity->institution_student_surveys[$fieldId][$studentId][$questionId])) {
                                         //$answerObj = $entity->institution_student_surveys[$fieldId][$studentId][$questionId];
@@ -244,65 +244,65 @@ class RenderStudentListBehavior extends RenderBehavior
                                         ]])->first();
                                         //POCOR-7730
                                     }
-    
+
                                     switch ($questionType) {
                                         case 'TEXT':
                                             $answerObj = $entity->institution_student_surveys[$fieldId][$studentId][$questionId];
                                             $answerValue = !is_null($answerObj['text_value']) ? $answerObj['text_value'] : null;
-    
+
                                             $cellOptions['type'] = 'string';
                                             $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
-    
+
                                             $cellValue = !is_null($answerValue) ? $answerValue : '';
                                             break;
                                         case 'TEXTAREA':
                                             $answerObj = $entity->institution_student_surveys[$fieldId][$studentId][$questionId];
                                             $answerValue = !is_null($answerObj['textarea_value']) ? $answerObj['textarea_value'] : null;
-    
+
                                             $cellOptions['type'] = 'string';
                                             $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
-    
+
                                             $cellValue = !is_null($answerValue) ? $answerValue : '';
                                             break;
                                         case 'TIME':
                                             $answerObj = $entity->institution_student_surveys[$fieldId][$studentId][$questionId];
                                             $answerValue = !is_null($answerObj['time_value']) ? $answerObj['time_value'] : null;
-    
+
                                             $cellOptions['type'] = 'string';
                                             $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
-    
+
                                             $cellValue = !is_null($answerValue) ? $answerValue : '';
                                             break;
                                         case 'NUMBER':
                                             $answerObj = $entity->institution_student_surveys[$fieldId][$studentId][$questionId];
                                             $answerValue = !is_null($answerObj['number_value']) ? $answerObj['number_value'] : null;
-    
+
                                             $cellOptions['type'] = 'number';
                                             $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
-    
+
                                             $cellValue = !is_null($answerValue) ? $answerValue : '';
                                             break;
                                         case 'DECIMAL':
                                             $answerObj = $entity->institution_student_surveys[$fieldId][$studentId][$questionId];
                                             $answerValue = !is_null($answerObj['decimal_value']) ? $answerObj['decimal_value'] : null;
-    
+
                                             $cellOptions['type'] = 'number';
                                             $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
-    
+
                                             if ($question->has('custom_field') && $question->custom_field->has('params')) {
                                                 $params = json_decode($question->custom_field->params, true);
-    
+
                                                 $cellOptions['min'] = 0;
                                                 $step = $this->getStepFromParams($params);
                                                 if (!is_null($step)) {
                                                     $cellOptions['step'] = $step;
                                                 }
                                             }
-    
+
                                             $cellValue = !is_null($answerValue) ? $answerValue : '';
                                             break;
                                         case 'DROPDOWN':
-                                           
+
                                             $answerObj = $entity->institution_student_surveys[$fieldId][$studentId][$questionId];
                                             $answerValue = !is_null($answerObj['number_value']) ? $answerObj['number_value'] : null;
                                             $dropdownOptions = [];
@@ -314,13 +314,13 @@ class RenderStudentListBehavior extends RenderBehavior
                                                 }
                                             }
                                             $dropdownDefault = !is_null($dropdownDefault) ? $dropdownDefault : key($dropdownOptions);
-    
+
                                             // for edit
                                             $cellOptions['type'] = 'select';
                                             $cellOptions['default'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
                                             $cellOptions['value'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
                                             $cellOptions['options'] = $dropdownOptions;
-    
+
                                             // for view
                                             $cellValue = !is_null($answerValue) ? $dropdownOptions[$answerValue] : '';
                                             break;
@@ -328,28 +328,28 @@ class RenderStudentListBehavior extends RenderBehavior
                                         case 'DATE':
                                             $answerObj = $entity->institution_student_surveys[$fieldId][$studentId][$questionId];
                                             $answerValue = !is_null($answerObj['date_value']) ? $answerObj['date_value'] : null;
-    
+
                                             $_options = [
                                                 'format' => 'dd-mm-yyyy',
                                                 'todayBtn' => 'linked',
                                                 'orientation' => 'auto',
                                                 'autoclose' => true,
                                             ];
-    
+
                                             $attr['date_options'] = $_options;
                                             $attr['id'] = $attr['model'] . '_' . $attr['field'];
-    
+
                                             $attr['fieldName'] = $cellPrefix . "." . $fieldTypes[$questionType];
-                                            if (array_key_exists('fieldName', $attr)) {
+                                            if (isset($attr['fieldName'])) {
                                                 $attr['id'] = $this->_domId($attr['fieldName']);
                                             }
-    
+
                                             $defaultDate = false;
                                             if (!isset($attr['default_date'])) {
                                                 $attr['default_date'] = $defaultDate;
                                             }
-    
-                                            if (!array_key_exists('value', $attr)) {
+
+                                            if (!isset($attr['value'])) {
                                                 if (!is_null($answerValue)) {
                                                     if ($answerValue instanceof Time || $answerValue instanceof Date) {
                                                         $attr['value'] = $answerValue->format('d-m-Y');
@@ -359,7 +359,7 @@ class RenderStudentListBehavior extends RenderBehavior
                                                             $attr['value'] = date('d-m-Y', strtotime($answerValue));
                                                         }
                                                         //POCOR-7858 end
-                                                      
+
                                                     }
                                                 } else if ($attr['default_date']) {
                                                     $attr['value'] = date('d-m-Y');
@@ -371,15 +371,15 @@ class RenderStudentListBehavior extends RenderBehavior
                                                     $attr['value'] = date('d-m-Y', strtotime($attr['value']));
                                                 }
                                             }
-    
+
                                             $attr['null'] = !$attr['customField']['is_mandatory'];
-    
-                                            $event->subject()->viewSet('datepicker', $attr);
-                                            $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
+
+                                            $event->getSubject()->viewSet('datepicker', $attr);
+                                            $cellInput = $event->getSubject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
                                             $cellValue = !is_null($answerValue) ? $this->_table->formatDate($answerValue) : '';
                                             unset($attr['value']); // Need to unset so that it will not effect other Date or Time elements.
                                             break;
-    
+
                                         default:
                                             break;
                                     }
@@ -387,14 +387,14 @@ class RenderStudentListBehavior extends RenderBehavior
                                         $cellInput .= $form->input($cellPrefix . "." . $fieldTypes[$questionType], $cellOptions);
                                     }//POCOR-7660 end
                                     $unlockFields[] = $cellPrefix . "." . $fieldTypes[$questionType];
-    
+
                                     if ($action == 'view') {
                                         $rowData[$colKey+$colOffset] = $cellValue;
                                     } else if ($action == 'edit') {
                                         $rowData[$colKey+$colOffset] = $cellInput;
                                     }
                                 }
-    
+
                                 $tableCells[$rowKey] = $rowData;
                             }
                         } else {
@@ -417,7 +417,7 @@ class RenderStudentListBehavior extends RenderBehavior
             if (!is_null($formId)) {
                 $questions = $CustomFormsFields
                     ->find('all')
-                    ->innerJoin([$CustomFields->alias() => $CustomFields->table()],
+                    ->innerJoin([$CustomFields->getAlias() => $CustomFields->getTable()],
                         [
                             $CustomFields->aliasField('id = ') . $CustomFormsFields->aliasField($fieldKey),
                         ]
@@ -433,11 +433,11 @@ class RenderStudentListBehavior extends RenderBehavior
                     ->where([$CustomFormsFields->aliasField($formKey) => $formId])
                     ->group([$CustomFormsFields->aliasField($fieldKey)])
                     ->toArray();
-    
+
                 if (!empty($questions)) {
                     $institutionId = $entity->institution_id;
                     $periodId = $entity->academic_period_id;
-    
+
                     // Classes Options
                     $classQuery = $Classes
                         ->find('list')
@@ -445,7 +445,7 @@ class RenderStudentListBehavior extends RenderBehavior
                             $Classes->aliasField('institution_id') => $institutionId,
                             $Classes->aliasField('academic_period_id') => $periodId
                         ]);
-    
+
                     if ($model->AccessControl->check(['Institutions', 'AllClasses', 'index'])) {
                         // All Classes
                         $classOptions = $classQuery->toArray();
@@ -455,11 +455,11 @@ class RenderStudentListBehavior extends RenderBehavior
                         $classQuery->where([
                             $Classes->aliasField('staff_id') => $userId
                         ]);
-    
+
                         $classOptions = $classQuery->toArray();
                     }
                     // End
-    
+
                     // Build table header
                     $headerHtml = __('OpenEMIS ID');
                     $headerHtml .= $form->hidden("$fieldPrefix.$formKey", ['value' => $formId]);
@@ -467,22 +467,22 @@ class RenderStudentListBehavior extends RenderBehavior
                     $tableHeaders[] = $headerHtml;
                     $tableHeaders[] = __('Student Name');
                     $colOffset = 2; // 0 -> OpenEMIS ID, 1 -> Student Name
-    
+
                     foreach ($questions as $colKey => $question) {
                         $questionName = !is_null($question->name) ? $question->name : $question->custom_field->name;
                         $tableHeaders[$colKey + $colOffset] = $questionName;
                     }
                     // End
-    
+
                     if (!empty($classOptions)) {
                         // Set selectedClass to session and read it back.
                         $selectedClass = key($classOptions);
                         $sessionKey = "$registryAlias.institution_student_surveys.$fieldId.institution_class";
-    
+
                         if ($model->request->is(['get'])) {
                             // Clear session if is not redirect from save
                             $requestQuery = $model->request->query;
-                            if (array_key_exists('field_id', $requestQuery) && array_key_exists('class_id', $requestQuery)) {
+                            if (isset($requestQuery['field_id']) && isset($requestQuery['class_id'])) {
                                 if ($requestQuery['field_id'] == $fieldId) {
                                     $session->write($sessionKey, $requestQuery['class_id']);
                                 }
@@ -490,11 +490,11 @@ class RenderStudentListBehavior extends RenderBehavior
                         } else if ($model->request->is(['post', 'put'])) {
                             $requestData = $model->request->data;
                             $submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
-    
-                            if (isset($requestData[$model->alias()]['institution_student_surveys'][$fieldId]['institution_class'])) {
-                                $session->write($sessionKey, $requestData[$model->alias()]['institution_student_surveys'][$fieldId]['institution_class']);
+
+                            if (isset($requestData[$model->getAlias()]['institution_student_surveys'][$fieldId]['institution_class'])) {
+                                $session->write($sessionKey, $requestData[$model->getAlias()]['institution_student_surveys'][$fieldId]['institution_class']);
                             }
-    
+
                             if ($submit == 'save') {
                             } else {
                                 // only reset values from sessions when reload
@@ -505,13 +505,13 @@ class RenderStudentListBehavior extends RenderBehavior
                                 }
                             }
                         }
-    
+
                         if ($session->check($sessionKey)) {
                             $selectedClass = $session->read($sessionKey);
                         }
                         // End
                         $model->advancedSelectOptions($classOptions, $selectedClass);
-    
+
                         // Students List
                         $studentQuery = $ClassStudents
                             ->find()
@@ -523,22 +523,22 @@ class RenderStudentListBehavior extends RenderBehavior
                                     $ClassStudents->aliasField('institution_class_id') => $selectedClass
                                 ]);
                         }
-    
+
                         $students = $studentQuery->toArray();
                         // End
-    
+
                         if (!empty($students)) {
                             $fieldTypes = $CustomFieldTypes
                                 ->find('list', ['keyField' => 'code', 'valueField' => 'value'])
                                 ->toArray();
-    
+
                             foreach ($students as $rowKey => $student) {
                                 $studentId = $student->student_id;
                                 $rowPrefix = "$fieldPrefix.$studentId";
-    
+
                                 $rowData = [];
                                 $rowInput = "";
-    
+
                                 if ($action == 'view') {
                                     $rowData[] = $event->subject->Html->link($student->user->openemis_no, [
                                         'plugin' => 'Institution',
@@ -553,11 +553,11 @@ class RenderStudentListBehavior extends RenderBehavior
                                         $rowInput .= $form->hidden($rowPrefix.".id", ['value' => $entity->institution_student_surveys[$fieldId][$studentId]['id']]);
                                         $unlockFields[] = $rowPrefix.".id";
                                     }
-    
+
                                     $rowData[] = $student->user->openemis_no . $rowInput;
                                     $rowData[] = $student->user->name;
                                 }
-    
+
                                 foreach ($questions as $colKey => $question) {
                                     $questionId = $question->custom_field->id;
                                     $questionType = $question->custom_field->field_type;
@@ -575,7 +575,7 @@ class RenderStudentListBehavior extends RenderBehavior
                                     $cellValue = "";
                                     $cellOptions = ['label' => false, 'value' => ''];
                                     $answerObj = null;
-    
+
                                     // put back answer value for edit and validation failed
                                     if (isset($entity->institution_student_surveys[$fieldId][$studentId][$questionId])) {
                                         //$answerObj = $entity->institution_student_surveys[$fieldId][$studentId][$questionId];
@@ -589,18 +589,18 @@ class RenderStudentListBehavior extends RenderBehavior
                                         ]])->first();
                                         //POCOR-7730
                                     }
-    
+
                                     switch ($questionType) {
                                         case 'TEXT':
                                             // $answerObj = $entity->institution_student_surveys[$fieldId][$studentId][$questionId];
                                             // $answerValue = !is_null($answerObj['text_value']) ? $answerObj['text_value'] : null;
                                             $existFieldOption = $StudentSurveyAnswers->find()->where(['survey_question_id'=> $questionId,'parent_survey_question_id'=> $fieldId,'institution_student_survey_id'=>$studentsurvy->id ])->first(); //POCOR-7730
                                             $answerValue = !empty($existFieldOption->text_value) ? $existFieldOption->text_value : (!is_null($answerObj['text_value']) ? $answerObj['text_value'] : null); //POCOR-7730
-                                           
-    
+
+
                                             $cellOptions['type'] = 'string';
                                             $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
-    
+
                                             $cellValue = !is_null($answerValue) ? $answerValue : '';
                                             break;
                                         case 'TEXTAREA':
@@ -608,11 +608,11 @@ class RenderStudentListBehavior extends RenderBehavior
                                             // $answerValue = !is_null($answerObj['textarea_value']) ? $answerObj['textarea_value'] : null;
                                             $existFieldOption = $StudentSurveyAnswers->find()->where(['survey_question_id'=> $questionId,'parent_survey_question_id'=> $fieldId,'institution_student_survey_id'=>$studentsurvy->id ])->first(); //POCOR-7730
                                             $answerValue = !empty($existFieldOption->textarea_value) ? $existFieldOption->textarea_value : (!is_null($answerObj['textarea_value']) ? $answerObj['textarea_value'] : null); //POCOR-7730
-                                           
-    
+
+
                                             $cellOptions['type'] = 'string';
                                             $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
-    
+
                                             $cellValue = !is_null($answerValue) ? $answerValue : '';
                                             break;
                                         case 'TIME':
@@ -620,11 +620,11 @@ class RenderStudentListBehavior extends RenderBehavior
                                             // $answerValue = !is_null($answerObj['time_value']) ? $answerObj['time_value'] : null;
                                             $existFieldOption = $StudentSurveyAnswers->find()->where(['survey_question_id'=> $questionId,'parent_survey_question_id'=> $fieldId,'institution_student_survey_id'=>$studentsurvy->id ])->first(); //POCOR-7730
                                             $answerValue = !empty($existFieldOption->time_value) ? $existFieldOption->time_value : (!is_null($answerObj['time_value']) ? $answerObj['time_value'] : null); //POCOR-7730
-                                           
-    
+
+
                                             $cellOptions['type'] = 'string';
                                             $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
-    
+
                                             $cellValue = !is_null($answerValue) ? $answerValue : '';
                                             break;
                                         case 'NUMBER':
@@ -632,11 +632,11 @@ class RenderStudentListBehavior extends RenderBehavior
                                             // $answerValue = !is_null($answerObj['number_value']) ? $answerObj['number_value'] : null;
                                             $existFieldOption = $StudentSurveyAnswers->find()->where(['survey_question_id'=> $questionId,'parent_survey_question_id'=> $fieldId,'institution_student_survey_id'=>$studentsurvy->id ])->first(); //POCOR-7730
                                             $answerValue = !empty($existFieldOption->number_value) ? $existFieldOption->number_value : (!is_null($answerObj['number_value']) ? $answerObj['number_value'] : null); //POCOR-7730
-                                           
-    
+
+
                                             $cellOptions['type'] = 'number';
                                             $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
-    
+
                                             $cellValue = !is_null($answerValue) ? $answerValue : '';
                                             break;
                                         case 'DECIMAL':
@@ -644,28 +644,28 @@ class RenderStudentListBehavior extends RenderBehavior
                                             // $answerValue = !is_null($answerObj['decimal_value']) ? $answerObj['decimal_value'] : null;
                                             $existFieldOption = $StudentSurveyAnswers->find()->where(['survey_question_id'=> $questionId,'parent_survey_question_id'=> $fieldId,'institution_student_survey_id'=>$studentsurvy->id ])->first(); //POCOR-7730
                                             $answerValue = !empty($existFieldOption->decimal_value) ? $existFieldOption->decimal_value : (!is_null($answerObj['decimal_value']) ? $answerObj['decimal_value'] : null); //POCOR-7730
-    
+
                                             $cellOptions['type'] = 'number';
                                             $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
-    
+
                                             if ($question->has('custom_field') && $question->custom_field->has('params')) {
                                                 $params = json_decode($question->custom_field->params, true);
-    
+
                                                 $cellOptions['min'] = 0;
                                                 $step = $this->getStepFromParams($params);
                                                 if (!is_null($step)) {
                                                     $cellOptions['step'] = $step;
                                                 }
                                             }
-    
+
                                             $cellValue = !is_null($answerValue) ? $answerValue : '';
                                             break;
                                         case 'DROPDOWN':
                                             $existFieldOption = $StudentSurveyAnswers->find()->where(['survey_question_id'=> $questionId,'parent_survey_question_id'=> $fieldId,'institution_student_survey_id'=>$studentsurvy->id ])->first(); //POCOR-7730
                                             $answerValue = !empty($existFieldOption->number_value) ? $existFieldOption->number_value : (!is_null($answerObj['number_value']) ? $answerObj['number_value'] : null); //POCOR-7730
-                                           
-                                           
-    
+
+
+
                                             $dropdownOptions = [];
                                             $dropdownDefault = null;
                                             foreach ($question->custom_field->custom_field_options as $key => $obj) {
@@ -675,13 +675,13 @@ class RenderStudentListBehavior extends RenderBehavior
                                                 }
                                             }
                                             $dropdownDefault = !is_null($dropdownDefault) ? $dropdownDefault : key($dropdownOptions);
-    
+
                                             // for edit
                                             $cellOptions['type'] = 'select';
                                             $cellOptions['default'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
                                             $cellOptions['value'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
                                             $cellOptions['options'] = $dropdownOptions;
-    
+
                                             // for view
                                             $cellValue = !is_null($answerValue) ? $dropdownOptions[$answerValue] : '';
                                             break;
@@ -689,28 +689,28 @@ class RenderStudentListBehavior extends RenderBehavior
                                         case 'DATE':
                                             $answerObj = $entity->institution_student_surveys[$fieldId][$studentId][$questionId];
                                             $answerValue = !is_null($answerObj['date_value']) ? $answerObj['date_value'] : null;
-    
+
                                             $_options = [
                                                 'format' => 'dd-mm-yyyy',
                                                 'todayBtn' => 'linked',
                                                 'orientation' => 'auto',
                                                 'autoclose' => true,
                                             ];
-    
+
                                             $attr['date_options'] = $_options;
                                             $attr['id'] = $attr['model'] . '_' . $attr['field'];
-    
+
                                             $attr['fieldName'] = $cellPrefix . "." . $fieldTypes[$questionType];
-                                            if (array_key_exists('fieldName', $attr)) {
+                                            if (isset($attr['fieldName'])) {
                                                 $attr['id'] = $this->_domId($attr['fieldName']);
                                             }
-    
+
                                             $defaultDate = false;
                                             if (!isset($attr['default_date'])) {
                                                 $attr['default_date'] = $defaultDate;
                                             }
-    
-                                            if (!array_key_exists('value', $attr)) {
+
+                                            if (!isset($attr['value'])) {
                                                 if (!is_null($answerValue)) {
                                                     if ($answerValue instanceof Time || $answerValue instanceof Date) {
                                                         $attr['value'] = $answerValue->format('d-m-Y');
@@ -731,15 +731,15 @@ class RenderStudentListBehavior extends RenderBehavior
                                                     $attr['value'] = date('d-m-Y', strtotime($attr['value']));
                                                 }
                                             }
-    
+
                                             $attr['null'] = !$attr['customField']['is_mandatory'];
-    
-                                            $event->subject()->viewSet('datepicker', $attr);
-                                            $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
+
+                                            $event->getSubject()->viewSet('datepicker', $attr);
+                                            $cellInput = $event->getSubject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
                                             $cellValue = !is_null($answerValue) ? $this->_table->formatDate($answerValue) : '';
                                             unset($attr['value']); // Need to unset so that it will not effect other Date or Time elements.
                                             break;
-    
+
                                         default:
                                             break;
                                     }
@@ -747,14 +747,14 @@ class RenderStudentListBehavior extends RenderBehavior
                                         $cellInput .= $form->input($cellPrefix . "." . $fieldTypes[$questionType], $cellOptions);
                                     }//POCOR-7660 end
                                     $unlockFields[] = $cellPrefix . "." . $fieldTypes[$questionType];
-    
+
                                     if ($action == 'view') {
                                         $rowData[$colKey+$colOffset] = $cellValue;
                                     } else if ($action == 'edit') {
                                         $rowData[$colKey+$colOffset] = $cellInput;
                                     }
                                 }
-    
+
                                 $tableCells[$rowKey] = $rowData;
                             }
                         } else {
@@ -774,16 +774,16 @@ class RenderStudentListBehavior extends RenderBehavior
                 Log::write('debug', $debugInfo . ': Student List Survey Form ID is not configured.');
             }
         }
-        
+
 
         $attr['attr']['classOptions'] = $classOptions;
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
         if ($action == 'view') {
-            $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
         } else if ($action == 'edit') {
-            $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
             $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
@@ -845,8 +845,8 @@ class RenderStudentListBehavior extends RenderBehavior
         }
 
         $model = $this->_table;
-        $session = $model->request->session();
-        $registryAlias = $model->registryAlias();
+        $session = $model->request->getSession();
+        $registryAlias = $model->getRegistryAlias();
         $sessionKey = "$registryAlias.student_surveys";
         $session->write($sessionKey, $surveysArray);
 
@@ -863,18 +863,18 @@ class RenderStudentListBehavior extends RenderBehavior
                 $formKey = 'survey_form_id';
                 $StudentSurveys = TableRegistry::get('Student.StudentSurveys');
                 $StudentSurveyAnswers = TableRegistry::get('Student.StudentSurveyAnswers');
-    
+
                 $status = $entity->status_id;
                 $institutionId = $entity->institution_id;
                 $periodId = $entity->academic_period_id;
                 $parentFormId = $entity->{$formKey};
                 $parentIdd = (array_key_first($entity['institution_student_surveys']));//POCOR-7730
-    
+
                 foreach ($entity->institution_student_surveys as $fieldId => $fieldObj) {
                     $formId = $fieldObj[$formKey];
                     unset($fieldObj[$formKey]);
                     unset($fieldObj['institution_class']);
-    
+
                     // Logic to delete all answers before re-insert
                     $studentIds = array_keys($fieldObj);
                     $surveyIds = [];
@@ -890,7 +890,7 @@ class RenderStudentListBehavior extends RenderBehavior
                             ])
                             ->toArray();
                     }
-    
+
                     if (!empty($surveyIds)) {
                         $StudentSurveyAnswers->deleteAll([
                             $StudentSurveyAnswers->aliasField('institution_student_survey_id IN ') => $surveyIds//,
@@ -898,7 +898,7 @@ class RenderStudentListBehavior extends RenderBehavior
                         ]);
                     }
                     // End
-    
+
                     foreach ($fieldObj as $studentId => $studentObj) {
                         if (is_array($studentObj)) {
                             $surveyData = [
@@ -910,7 +910,7 @@ class RenderStudentListBehavior extends RenderBehavior
                                 'student_id' => $studentId
                             ];
                             // for edit record
-                            if (array_key_exists('id', $studentObj)) {
+                            if (isset($studentObj['id'])) {
                                 $surveyData['id'] = $studentObj['id'];
                                 unset($studentObj['id']);
                             }
@@ -926,7 +926,7 @@ class RenderStudentListBehavior extends RenderBehavior
                                 $dateValue = isset($answerObj['date_value']) && strlen($answerObj['date_value']) > 0 ? $answerObj['date_value'] : null;
                                 $timeValue = isset($answerObj['time_value']) && strlen($answerObj['time_value']) > 0 ? $answerObj['time_value'] : null;
                                 //POCOR-7730
-                                $duplicateData11 = $StudentSurveyAnswers->find()->where(['survey_question_id'=> $questionId,'parent_survey_question_id'=> $parentIdd,'institution_student_survey_id'=> $surveyData['id']])->toArray();
+                                $duplicateData11 = $StudentSurveyAnswers->find()->where(['survey_question_id'=> $questionId,'parent_survey_question_id'=> $parentIdd,'institution_student_survey_id IS'=> $surveyData['id']])->toArray();
                                 foreach($duplicateData11 as $dup){
                                     $StudentSurveyAnswers->delete($dup);
                                 }
@@ -935,19 +935,19 @@ class RenderStudentListBehavior extends RenderBehavior
                                     $answerObj = array_merge($answerObj, [
                                         $fieldKey => $questionId
                                     ]);
-    
+
                                     $answers[] = $answerObj;
                                     //$answers[$ir]['parent_survey_question_id'] = $parentIdd; //POCOR-7730
                                 }
                                 $ir++;
                             }
-    
+
                             $surveyData['custom_field_values'] = $answers;
                             $surveyEntity = $StudentSurveys->newEntity($surveyData);
                             // save student by student
                             if ($StudentSurveys->save($surveyEntity)) {
                             } else {
-                                Log::write('debug', $surveyEntity->errors());
+                                Log::write('debug', $surveyEntity->getErrors());
                             }
                         }
                     }
@@ -960,18 +960,18 @@ class RenderStudentListBehavior extends RenderBehavior
                 $formKey = 'survey_form_id';
                 $StudentSurveys = TableRegistry::get('Student.StudentSurveys');
                 $StudentSurveyAnswers = TableRegistry::get('Student.StudentSurveyAnswers');
-    
+
                 $status = $entity->status_id;
                 $institutionId = $entity->institution_id;
                 $periodId = $entity->academic_period_id;
                 $parentFormId = $entity->{$formKey};
                 $parentIdd = array_keys($entity['institution_student_surveys'])[0];//POCOR-7730
-    
+
                 foreach ($entity->institution_student_surveys as $fieldId => $fieldObj) {
                     $formId = $fieldObj[$formKey];
                     unset($fieldObj[$formKey]);
                     unset($fieldObj['institution_class']);
-    
+
                     // Logic to delete all answers before re-insert
                     $studentIds = array_keys($fieldObj);
                     $surveyIds = [];
@@ -987,7 +987,7 @@ class RenderStudentListBehavior extends RenderBehavior
                             ])
                             ->toArray();
                     }
-    
+
                     if (!empty($surveyIds)) {
                         $StudentSurveyAnswers->deleteAll([
                             $StudentSurveyAnswers->aliasField('institution_student_survey_id IN ') => $surveyIds,
@@ -995,7 +995,7 @@ class RenderStudentListBehavior extends RenderBehavior
                         ]);
                     }
                     // End
-    
+
                     foreach ($fieldObj as $studentId => $studentObj) {
                         if (is_array($studentObj)) {
                             $surveyData = [
@@ -1007,7 +1007,7 @@ class RenderStudentListBehavior extends RenderBehavior
                                 'student_id' => $studentId
                             ];
                             // for edit record
-                            if (array_key_exists('id', $studentObj)) {
+                            if (isset($studentObj['id'])) {
                                 $surveyData['id'] = $studentObj['id'];
                                 unset($studentObj['id']);
                             }
@@ -1032,11 +1032,11 @@ class RenderStudentListBehavior extends RenderBehavior
                                     $answerObj = array_merge($answerObj, [
                                         $fieldKey => $questionId
                                     ]);
-    
+
                                     $answers[] = $answerObj;
                                     $answers[$ir]['parent_survey_question_id'] = $parentIdd; //POCOR-7730
                                 }
-                               
+
                             }
                             $ir++;
                             $surveyData['custom_field_values'] = $answers;
@@ -1044,13 +1044,13 @@ class RenderStudentListBehavior extends RenderBehavior
                             // save student by student
                             if ($StudentSurveys->save($surveyEntity)) {
                             } else {
-                                Log::write('debug', $surveyEntity->errors());
+                                Log::write('debug', $surveyEntity->getErrors());
                             }
                         }
                     }
                 }
             }
         }
-        
+
     }
 }

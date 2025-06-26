@@ -8,12 +8,13 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\Http\ServerRequest;
 
 class SalariesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_salaries');
+        $this->setTable('staff_salaries');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -28,9 +29,15 @@ class SalariesTable extends ControllerActionTable
 
         // POCOR-4047 to get staff profile data
         $this->addBehavior('Institution.StaffProfile');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Salaries'=>['id']]
+        ]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Salaries'=>['id']]
+        ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
@@ -108,15 +115,15 @@ class SalariesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->Session;
-        if ($session->check('Staff.Staff.id')) {
-            $this->staffId = $session->read('Staff.Staff.id');
-        }
-
+        //$session = $this->Session;
+        //if ($session->check('Staff.Staff.id')) {
+        //    $this->staffId = $session->read('Staff.Staff.id');
+        //}
+        $this->staffId = $this->getStaffID();
         $this->fields['gross_salary']['attr'] = array('data-compute-variable' => 'true', 'data-compute-operand' => 'plus', 'maxlength' => 9);
         $this->fields['net_salary']['attr'] = array('data-compute-target' => 'true', 'readonly' => true);
 
-        if($this->request->params['controller'] == 'Staff'){
+        if($this->request->getAttribute('params')['controller'] == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Personal','Salaries','Staff - Finance');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -134,7 +141,7 @@ class SalariesTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Directories'){ 
+        }elseif($this->request->getAttribute('params')['controller'] == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Salary List','Staff - Finance');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -154,6 +161,9 @@ class SalariesTable extends ControllerActionTable
             }
 
         }
+        $queryString = $this->getQueryString();
+        $data['staff_id'] = $queryString['staff_id'];
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
@@ -168,16 +178,18 @@ class SalariesTable extends ControllerActionTable
                 if ($value->has('amount')) {
                     $totalAddition += $value->amount;
                 }
-                if ($value->has($SalaryAdditions->primaryKey())) {
-                    $present[] = $value->{$SalaryAdditions->primaryKey()};
+                if ($value->has($SalaryAdditions->getPrimaryKey())) {
+                    $present[] = $value->{$SalaryAdditions->getPrimaryKey()};
                 }
             }
         }
-        $deleteOptions = [
-            'staff_salary_id' => $entity->id,
-        ];
+        if(!empty($entity->id)){
+            $deleteOptions = [
+                'staff_salary_id' => $entity->id,
+            ];
+        }
         if (!empty($present)) {
-            $deleteOptions[$SalaryAdditions->primaryKey().' NOT IN'] = $present;
+            $deleteOptions[$SalaryAdditions->getPrimaryKey().' NOT IN'] = $present;
         }
         $SalaryAdditions->deleteAll($deleteOptions);
 
@@ -188,16 +200,18 @@ class SalariesTable extends ControllerActionTable
                 if ($value->has('amount')) {
                     $totalDeduction += $value->amount;
                 }
-                if ($value->has($SalaryDeductions->primaryKey())) {
-                    $present[] = $value->{$SalaryDeductions->primaryKey()};
+                if ($value->has($SalaryDeductions->getPrimaryKey())) {
+                    $present[] = $value->{$SalaryDeductions->getPrimaryKey()};
                 }
             }
         }
-        $deleteOptions = [
-            'staff_salary_id' => $entity->id,
-        ];
+        if(!empty($entity->id)){
+            $deleteOptions = [
+                'staff_salary_id' => $entity->id,
+            ];
+        }
         if (!empty($present)) {
-            $deleteOptions[$SalaryDeductions->primaryKey().' NOT IN'] = $present;
+            $deleteOptions[$SalaryDeductions->getPrimaryKey().' NOT IN'] = $present;
         }
         $SalaryDeductions->deleteAll($deleteOptions);
 
@@ -208,12 +222,12 @@ class SalariesTable extends ControllerActionTable
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        if (array_key_exists($this->alias(), $data)) {
-            if (!array_key_exists('salary_additions', $data[$this->alias()])) {
-                $data[$this->alias()]['salary_additions'] = [];
+        if (array_key_exists($this->getAlias(), $data)) {
+            if (!array_key_exists('salary_additions', $data[$this->getAlias()])) {
+                $data[$this->getAlias()]['salary_additions'] = [];
             }
-            if (!array_key_exists('salary_deductions', $data[$this->alias()])) {
-                $data[$this->alias()]['salary_deductions'] = [];
+            if (!array_key_exists('salary_deductions', $data[$this->getAlias()])) {
+                $data[$this->getAlias()]['salary_deductions'] = [];
             }
         }
     }
@@ -236,7 +250,8 @@ class SalariesTable extends ControllerActionTable
 
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $paramsPass = $this->paramsDecode($this->ControllerAction->paramsPass()[1]);
+        //$paramsPass = $this->paramsDecode($this->ControllerAction->getParam('Pass')[1]);cakephp 3
+        $paramsPass = $this->paramsDecode($this->request->getParam('pass.1'));
         $SalaryTransactions = TableRegistry::get('Staff.StaffSalaryTransactions');
         $findData = $SalaryTransactions->find()
                     ->select([
@@ -253,17 +268,17 @@ class SalariesTable extends ControllerActionTable
             }
             if (!empty($addition[0]) && empty($deduction[1])) {
                 $query->contain([
-                            'SalaryAdditions'
+                    'SalaryAdditions'
                 ]);
             } elseif (empty($addition[0]) && !empty($deduction[1])) {
                 $query->contain([
-                            'SalaryDeductions'
+                    'SalaryDeductions'
                 ]);
             } else {
-                   $query->contain([
-                        'SalaryAdditions',
-                        'SalaryDeductions'
-                    ]);    
+                $query->contain([
+                    'SalaryAdditions',
+                    'SalaryDeductions'
+                ]);    
             }
         }
     }
@@ -309,7 +324,7 @@ class SalariesTable extends ControllerActionTable
 
     public function addEditOnAddRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $data[$this->alias()]['salary_additions'][] = ['amount' => '0.00'];
+        $data[$this->getAlias()]['salary_additions'][] = ['amount' => '0.00'];
         $options['associated'] = [
             'SalaryAdditions' => ['validate' => false],
             //'SalaryDeductions' => ['validate' => false]
@@ -319,17 +334,17 @@ class SalariesTable extends ControllerActionTable
 
     public function addEditOnDeductRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $data[$this->alias()]['salary_deductions'][] = ['amount' => '0.00'];
+        $data[$this->getAlias()]['salary_deductions'][] = ['amount' => '0.00'];
         $options['associated'] = [
             //'SalaryAdditions' => ['validate' => false],
             'SalaryDeductions' => ['validate' => false]
         ];
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('gross_salary', 'ruleMoney', [
                 'rule' => ['money']
@@ -351,7 +366,7 @@ class SalariesTable extends ControllerActionTable
     private function setupTabElements()
     {
         $nonSchoolController = ['Directories', 'Profiles'];
-        if (in_array($this->controller->name, $nonSchoolController)) {
+        if (in_array($this->controller->getName(), $nonSchoolController)) {
             $options = [
                 'type' => 'staff'
             ];
@@ -360,11 +375,35 @@ class SalariesTable extends ControllerActionTable
             $tabElements = $this->controller->getFinanceTabElements();
         }
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function afterAction(Event $event)
     {
         $this->setupTabElements();
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'salary_date') {
+            return __('Salary Date');
+        } elseif ($field == 'gross_salary') {
+            return __('Gross Salary');
+        } elseif ($field == 'net_salary') {
+            return __('Net Salary');
+        } elseif ($field == 'comment') {
+            return __('Comment');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

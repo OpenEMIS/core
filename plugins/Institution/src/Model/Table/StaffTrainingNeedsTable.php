@@ -14,7 +14,7 @@ use Cake\Datasource\ConnectionManager; // POCOR-7158
 
 class StaffTrainingNeedsTable extends TrainingNeedsAppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     { 
         parent::initialize($config);
         $this->addBehavior('Workflow.Workflow');
@@ -22,10 +22,17 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
             'excludes' => ['reason','training_need_competency_id','training_need_sub_standard_id','training_priority_id'],
             'pages' => ['index'],
         ]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StaffTrainingNeeds' =>['id']
+            ]
+        ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        //echo "<pre>"; print_r($queryString); die;
         /** Start POCOR-7158 */
         $connection = ConnectionManager::get('default');
         $connection->execute('SET foreign_key_checks = 0');
@@ -36,7 +43,7 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
         $this->controller->changeUserHeader($this, $modelAlias, $userType);
 
         // redirect to staff index page if session not found
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $sessionKey = 'Staff.Staff.id';
 
         if (!$session->check($sessionKey)) {
@@ -44,6 +51,7 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
             $url['plugin'] = 'Institution';
             $url['controller'] = 'Institutions';
             $url['action'] = 'Staff';
+            $url['0'] = $encodedQueryString;
 
             $event->stopPropagation();
             $this->Alert->warning('general.notExists');
@@ -86,7 +94,7 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
     {
         $tabElements = $this->controller->getTrainingTabElements();
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     // POCOR-6137 start
@@ -148,5 +156,45 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
         ];
         $fields->exchangeArray($extraField);
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'type') {
+            return __('Type');
+        } elseif ($field == 'training_course_id') {
+            return __('Training Course');
+        } elseif ($field == 'course_code') {
+            return __('Course Code');
+        } elseif ($field == 'course_name') {
+            return __('Course Name');
+        } elseif ($field == 'course_description') {
+            return __('Course Description');
+        } elseif ($field == 'training_requirement_id') {
+            return __('Training Requirement');
+        } elseif ($field == 'training_priority_id') {
+            return __('Training Priority');
+        } elseif ($field == 'reason') {
+            return __('Reason');
+        } elseif ($field == 'status_id') {
+            return __('Status');
+        } elseif ($field == 'status_id') {
+            return __('Status');
+        } elseif ($field == 'training_need_category_id') {
+            return __('Training Need Category');
+        } elseif ($field == 'assignee_id') {
+            return __('Assignee');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
     // POCOR-6137 end
 }

@@ -12,9 +12,9 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
 {
     private $studentId;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_outcome_subject_comments');
+        $this->setTable('institution_outcome_subject_comments');
 
         parent::initialize($config);
         
@@ -40,17 +40,21 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);
+        $this->addBehavior('User.UserTab');
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        if ($this->controller->name == 'Directories') {
-            $this->studentId = $session->read('Directory.Directories.id');
-        } else if ($this->controller->name == 'Profiles') {
+        $queryString = $this->getQueryString();
+        $studentId = $queryString['student_id'];
+        $session = $this->request->getSession();
+        if ($this->controller->getName() == 'Directories') {
+            $this->studentId =  $this->getStudentID();
+        } else if ($this->controller->getName() == 'Profiles') {
             $this->studentId = $session->read('Auth.User.id');
         } else {
-            $this->studentId = $session->read('Student.Students.id');
+            //$this->studentId = $session->read('Student.Students.id');
+            $this->studentId = $studentId;            
         }
 
         $this->field('outcome_period_id', ['type' => 'integer']);
@@ -64,7 +68,7 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
     {
         // academic period filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period')) ? $this->request->query('academic_period') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period')) ? $this->request->getQuery('academic_period') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $conditions[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         // end
@@ -73,8 +77,8 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
         $InstitutionStudents = TableRegistry::get('Institution.Students');
         $studentGrades = $InstitutionStudents->find()
             ->where([
-                $InstitutionStudents->aliasField('student_id') => $this->studentId,
-                $InstitutionStudents->aliasField('academic_period_id') => $selectedAcademicPeriod
+                $InstitutionStudents->aliasField('student_id IS') => $this->studentId,
+                $InstitutionStudents->aliasField('academic_period_id IS') => $selectedAcademicPeriod
             ])
             ->extract('education_grade_id')
             ->toArray();
@@ -90,7 +94,7 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
                 ->toArray();
         }
 
-        $selectedTemplate = !is_null($this->request->query('template')) ? $this->request->query('template') : key($templateOptions);
+        $selectedTemplate = !is_null($this->request->getQuery('template')) ? $this->request->getQuery('template') : key($templateOptions);
         $this->controller->set(compact('templateOptions', 'selectedTemplate'));
         if (!empty($selectedTemplate)){
             $conditions[$this->aliasField('outcome_template_id')] = $selectedTemplate;
@@ -107,7 +111,7 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
             $periodOptions = ['0' => __('All Periods')] + $periodOptions;
         }
 
-        $selectedPeriod = !is_null($this->request->query('period')) ? $this->request->query('period') : 0;
+        $selectedPeriod = !is_null($this->request->getQuery('period')) ? $this->request->getQuery('period') : 0;
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
         if (!empty($selectedPeriod)){
             $conditions[$this->aliasField('outcome_period_id')] = $selectedPeriod;
@@ -128,14 +132,15 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
             $subjectOptions = ['0' => __('All Subjects')] + $subjectOptions;
         }
 
-        $selectedSubject = !is_null($this->request->query('subject')) ? $this->request->query('subject') : 0;
+        $selectedSubject = !is_null($this->request->getQuery('subject')) ? $this->request->getQuery('subject') : 0;
         $this->controller->set(compact('subjectOptions', 'selectedSubject'));
         if (!empty($selectedSubject)){
             $conditions[$this->aliasField('education_subject_id')] = $selectedSubject;
         }
         // end
-       
-        $extra['elements']['controls'] = ['name' => 'Student.Outcomes/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $extra['elements']['controls'] = ['name' => 'Student.Outcomes/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
         $extra['auto_contain_fields'] = [
             'OutcomePeriods' => ['code'],
             'EducationSubjects' => ['code'],
@@ -145,13 +150,13 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
 		$userData = $this->Session->read();
 		$studentId = $userData['Auth']['User']['id'];
 		/*POCOR-6267 starts*/
-        if (isset($this->controller->name) && $this->controller->name == 'GuardianNavs') {
-            $session = $this->request->session();
+        if ($this->controller->getName() != null && $this->controller->getName() == 'GuardianNavs') {
+            $session = $this->request->getSession();
             $studentId = $session->read('Student.Students.id');
         }
 
         //setting up condition for listing
-        if (isset($this->controller->name) && $this->request->controller == 'GuardianNavs') {
+        if ($this->controller->getName() != null && $this->controller->getName() == 'GuardianNavs') {
             $conditions[$this->aliasField('student_id')] = $studentId;
         }/*POCOR-6267 ends*/else {
             if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
@@ -195,5 +200,40 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
         $tabElements = $this->controller->getAcademicTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Outcomes');
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'outcome_period_id') {
+            return __('Outcome Period');
+        } elseif ($field == 'education_subject_id') {
+            return __('Education Subject');
+        } elseif ($field == 'comment') {
+            return __('Comment');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function getStudentID() {
+        $session = $this->request->getSession();
+        $student_id = $session->read('Directory.Directories.id');
+        if(empty($student_id) && isset($this->request->getParam('pass')[1])) {
+            $pass = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1]);
+            $student_id = isset($pass['student_id']) ? $pass['student_id']: '';
+        }
+        
+        if(empty($student_id) && isset($this->getQueryString()['student_id'])) {
+            $student_id = $this->getQueryString()['student_id'];
+        }
+        return $student_id;
     }
 }

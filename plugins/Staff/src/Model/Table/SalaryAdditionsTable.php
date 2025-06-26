@@ -5,15 +5,17 @@ use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
 class SalaryAdditionsTable extends AppTable {
-	public function initialize(array $config) {
-		$this->table('staff_salary_additions');
+	public function initialize(array $config):void
+	{
+		$this->setTable('staff_salary_additions');
 		parent::initialize($config);
 		
 		$this->belongsTo('SalaryAdditionTypes', ['className' => 'Staff.SalaryAdditionTypes']);
 		$this->belongsTo('Salaries', ['className' => 'Staff.Salaries']);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator
+	{
 		$validator = parent::validationDefault($validator);
 
 		return $validator

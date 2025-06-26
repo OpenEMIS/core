@@ -13,9 +13,9 @@ class RepeaterSurveysTable extends ControllerActionTable
 	private $surveyInstitutionId = null;
 	private $studentId = null;
 
-	public function initialize(array $config)
+	public function initialize(array $config): void
 	{
-		$this->table('institution_repeater_surveys');
+		$this->setTable('institution_repeater_surveys');
 		parent::initialize($config);
 		
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -43,7 +43,7 @@ class RepeaterSurveysTable extends ControllerActionTable
 		]);
 	}
 
-	public function implementedEvents()
+	public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.InstitutionSurveys.afterSave'] = 'institutionSurveyAfterSave';

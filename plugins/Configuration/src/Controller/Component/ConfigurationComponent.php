@@ -35,7 +35,7 @@ class ConfigurationComponent extends Component
     public $components = ['AccessControl'];
 
     // Is called before the controller's beforeFilter method.
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         foreach (array_keys($this->configOptions) as $key) {
             $this->AccessControl->addAccessMap($key);

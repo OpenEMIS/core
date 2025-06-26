@@ -8,8 +8,8 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
-use Cake\Network\Session;
+use Cake\Http\ServerRequest;
+use Cake\Http\Session;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Datasource\ConnectionManager;
@@ -21,9 +21,9 @@ use Cake\Datasource\ConnectionManager;
 class InstitutionStaffPositionProfileTable extends AppTable
 {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff');
+        $this->setTable('institution_staff');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
@@ -51,7 +51,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 
-        $controllerName = $this->controller->name;
+        $controllerName = $this->controller->getName();
         $institutions_crumb = __('Institutions');
         $parent_crumb       = __('Statistics');
         $reportName         = __('Standard');
@@ -68,12 +68,12 @@ class InstitutionStaffPositionProfileTable extends AppTable
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
     }
 
-    public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institution_id = $session->read('Institution.Institutions.id');
-        $request->data[$this->alias()]['current_institution_id'] = $institution_id;
-        $request->data[$this->alias()]['institution_id'] = $institution_id;
+        $this->request->getData[$this->getAlias()]['current_institution_id'] = $institution_id;
+        $this->request->getData[$this->getAlias()]['institution_id'] = $institution_id;
         if ($action == 'add') {
             $attr['value'] = 'xlsx';
             $attr['attr']['value'] = 'Excel';
@@ -82,23 +82,23 @@ class InstitutionStaffPositionProfileTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         $options = $options = $this->controller->getInstitutionStatisticStandardReportFeature();
         $attr['options'] = $options;
         $attr['onChangeReload'] = true;
-        if (!(isset($this->request->data[$this->alias()]['feature']))) {
+        if (!(isset($this->request->getData($this->alias())['feature']))) {
             $option = $attr['options'];
             reset($option);
-            $this->request->data[$this->alias()]['feature'] = key($option);
+            $this->request->getData($this->alias())['feature'] = key($option);
         }
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->data[$this->alias()]['feature'])) {
-            $feature                = $this->request->data[$this->alias()]['feature'];
+        if (isset($this->request->getData[$this->getAlias()]['feature'])) {
+            $feature                = $this->request->getData($this->alias())['feature'];
             $AcademicPeriodTable    = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $academicPeriodOptions  = $AcademicPeriodTable->getYearList();
             $currentPeriod          = $AcademicPeriodTable->getCurrent();
@@ -106,8 +106,8 @@ class InstitutionStaffPositionProfileTable extends AppTable
             $attr['type']           = 'select';
             $attr['select']         = false;
             $attr['onChangeReload'] = true;
-            if (empty($request->data[$this->alias()]['academic_period_id'])) {
-                $request->data[$this->alias()]['academic_period_id'] = $currentPeriod;
+            if (empty($this->request->getData[$this->getAlias()]['academic_period_id'])) {
+                $this->request->getData[$this->getAlias()]['academic_period_id'] = $currentPeriod;
             }
             return $attr;
         }
@@ -116,7 +116,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -131,7 +131,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
         $subject = TableRegistry::get('Institution.InstitutionSubjects');
         $academic_period = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $getyear = $academic_period->find('all')
-                   ->select(['name'=>$academic_period->aliasField('start_year')])
+                   ->select(['start_year'=>$academic_period->aliasField('start_year')])
                    ->where(['id'=>$academicPeriodId])
                    ->limit(1);
         foreach($getyear->toArray() as $val) {
@@ -222,14 +222,14 @@ class InstitutionStaffPositionProfileTable extends AppTable
 
             ])
             ->leftJoin(
-                [$academic_period->alias() => $academic_period->table()],
+                [$academic_period->getAlias() => $academic_period->getTable()],
                 [$academic_period->aliasField('id = ') . $academicPeriodId]
             )
             ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
                             $this->aliasfield('staff_id') . ' = '.'InstitutionSubjectStaff.staff_id',
                         ])
             ->leftJoin(
-                [$subject->alias() => $subject->table()],
+                [$subject->getAlias() => $subject->getTable()],
                 [$subject->aliasField('id = ') . 'InstitutionSubjectStaff.institution_subject_id']
             )
         ->group([$this->aliasfield('staff_id')])
@@ -447,14 +447,14 @@ class InstitutionStaffPositionProfileTable extends AppTable
                                 'identity_name' => $identityTypes->aliasField('name'),
                                 'identity_number' => $userIdentities->aliasField('number')
                             ])
-                            ->innerJoin([$identityTypes->alias() => $identityTypes->table()], [
+                            ->innerJoin([$identityTypes->getAlias() => $identityTypes->getTable()], [
                                 $identityTypes->aliasField('id = ') . $userIdentities->aliasField('identity_type_id')
                             ])
                             ->where([
                                 $identityTypes->aliasField('default') => 1,
                                 $userIdentities->aliasField('security_user_id') => $entity->staff_id
                             ])
-                            ->hydrate(false)->first();
+                            ->enableHydration(false)->first();
         if (!empty($getDefaultIdentity)) {
             $entity->custom_identity_number = $getDefaultIdentity['identity_number'];
             $entity->custom_identity_name   = $getDefaultIdentity['identity_name'];

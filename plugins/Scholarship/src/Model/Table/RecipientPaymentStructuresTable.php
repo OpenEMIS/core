@@ -17,9 +17,9 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
 {
     use IdGeneratorTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('scholarship_recipient_payment_structures');
+        $this->setTable('scholarship_recipient_payment_structures');
         parent::initialize($config);
 
         $this->belongsTo('ScholarshipRecipients', ['className' => 'Scholarship.ScholarshipRecipients', 'foreignKey' => ['recipient_id', 'scholarship_id']]);
@@ -33,11 +33,11 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
             'pages' => ['index'],
             'autoFields' => false
         ]);
-        
+
         $this->setDeleteStrategy('restrict');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
@@ -57,8 +57,8 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         $tabElements = $this->ScholarshipTabs->getScholarshipRecipientTabs();
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'PaymentStructures');
-        
-        $entity = $this->ScholarshipRecipients->get(['recipient_id' => $recipientId, 'scholarship_id' => $scholarshipId]);   
+
+        $entity = $this->ScholarshipRecipients->get(['recipient_id' => $recipientId, 'scholarship_id' => $scholarshipId]);
         if(empty($entity->approved_amount)) {
             $this->toggle('add', false);
             $this->Alert->warning($this->aliasField('noApprovedAmount'));
@@ -120,7 +120,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
             ->order(['academic_period_id', 'estimated_disbursement_date']);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $newArray = [];
         $newArray[] = [
@@ -228,7 +228,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         $entity->scholarship_recipient = $this->ScholarshipRecipients->get(['recipient_id' => $recipientId, 'scholarship_id' => $scholarshipId]);
         $entity->scholarship_id = $scholarshipId;
         $entity->scholarship = $this->Scholarships->get($scholarshipId);
-   
+
         $this->setupFields($entity);
     }
 
@@ -289,7 +289,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
             'attr' => ['label' => $this->Scholarships->addCurrencySuffix('Annual Award Amount')],
             'entity' => $entity
         ]);
-       
+
         $this->field('disbursement_category_id', [
             'type' => 'custom_disbursement_category',
             'after' => 'annual_award_amount'
@@ -410,18 +410,18 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
                     }
                 }
             } elseif ($this->request->is(['post', 'put'])) {
-            
+
                 $requestData = $this->request->data;
 
                 if (isset($requestData[$this->alias()]['recipient_payment_structure_estimates'])) {
                     foreach ($requestData[$this->alias()]['recipient_payment_structure_estimates'] as $key => $obj) {
                         $arrayPaymentStructureEstimates[] = $obj;
                     }
-                
+
                 }
 
             }
-            
+
             // options
             $DisbursementCategory = TableRegistry::get('Scholarship.DisbursementCategories');
             $disbursementCategoryOptions = $DisbursementCategory->getList()->toArray();
@@ -429,13 +429,13 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
             if (!empty($arrayPaymentStructureEstimates)) {
                 foreach ($arrayPaymentStructureEstimates as $key => $obj) {
                     $fieldPrefix = $attr['model'] . '.recipient_payment_structure_estimates.' . $cellCount++;
-                    
+
                     $cellData = $obj['scholarship_disbursement_category_name'];
                     $cellData .= $form->hidden($fieldPrefix.".scholarship_disbursement_category_id", ['value' => $obj['scholarship_disbursement_category_id']]);
                     $cellData .= $form->hidden($fieldPrefix.".scholarship_disbursement_category_name", ['value' => $obj['scholarship_disbursement_category_name']]);
                     $cellData .= $form->hidden($fieldPrefix.".recipient_id", ['value' => $obj['recipient_id']]);
                     $cellData .= $form->hidden($fieldPrefix.".scholarship_id", ['value' => $obj['scholarship_id']]);
-                
+
                     $value = $obj['estimated_disbursement_date'] ? $obj['estimated_disbursement_date'] : null;
                     $_options = [
                         'format' => 'dd-mm-yyyy',
@@ -446,17 +446,17 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
                     $attr['date_options'] = $_options;
 
                     $attr['fieldName'] = $fieldPrefix.".".'estimated_disbursement_date';
-                    
-                    if (array_key_exists('fieldName', $attr)) {
+
+                    if (isset($attr['fieldName'])) {
                         $attr['id'] = $this->_domId($attr['fieldName']);
                     }
 
                     $defaultDate = date('d-m-Y');
                     if (!isset($attr['default_date'])) {
                         $attr['default_date'] = $defaultDate;
-                    }   
+                    }
 
-                   if (!array_key_exists('value', $attr)) {
+                   if (!isset($attr['value'])) {
                         if (!is_null($value)) {
                             if ($value instanceof Time || $value instanceof Date) {
                                 $attr['value'] = $value->format('d-m-Y');
@@ -466,7 +466,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
                         } else if ($attr['default_date']) {
                             $attr['value'] = $attr['default_date'];
                         }
-                    } else {    
+                    } else {
                         if ($attr['value'] instanceof Time || $value instanceof Date) {
                             $attr['value'] = $attr['value']->format('d-m-Y');
                         } else {
@@ -475,7 +475,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
                     }
                     $attr['class'] = 'no-margin-bottom';
                     $event->subject()->viewSet('datepicker', $attr);
-                    $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);   
+                    $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
                     unset($attr['value']);
 
                     $amountCellData = $form->input("$fieldPrefix.estimated_amount", ['type' => 'number']);
@@ -486,7 +486,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
                     $rowData[] = $cellInput;
                     $rowData[] = $amountCellData;
                     $rowData[] = $commentCellData;
-                    
+
                     $rowData[] = '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
 
                     $tableCells[] = $rowData;
@@ -505,9 +505,9 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
-           
+
             $approvedAmt = $entity->scholarship_recipient->approved_amount;
-            
+
             $conditions = [
                 'recipient_id' => $entity->recipient_id,
                 'scholarship_id' => $entity->scholarship_id
@@ -525,7 +525,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
                 ->first();
 
             $balance = $approvedAmt - ($RecipientPaymentStructureEstimates->total_amount_used);
-             
+
             $attr['attr']['value'] =  $balance;
         }
 
@@ -548,17 +548,17 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
     {
         if (array_key_exists($this->alias(), $requestData)) {
             if (!array_key_exists('recipient_payment_structure_estimates', $requestData[$this->alias()])) {
-                    $requestData[$this->alias()]['recipient_payment_structure_estimates'] = []; 
-            } 
+                    $requestData[$this->alias()]['recipient_payment_structure_estimates'] = [];
+            }
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $data) 
-    {  
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
+    {
         $recipientId = $this->ControllerAction->getQueryString('recipient_id');
         $scholarshipId = $this->ControllerAction->getQueryString('scholarship_id');
 
-        $approvedAmt = $this->ScholarshipRecipients->get(['recipient_id' => $recipientId, 'scholarship_id' => $scholarshipId])->approved_amount;        
+        $approvedAmt = $this->ScholarshipRecipients->get(['recipient_id' => $recipientId, 'scholarship_id' => $scholarshipId])->approved_amount;
 
         $conditions = [
             'recipient_id' => $recipientId,
@@ -584,7 +584,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
                 $totalAmt += $obj['estimated_amount'];
             }
         }
-            
+
         if($totalAmt > $balance) {
             $entity->errors('balance_amount', __('Total Amount must not exceed Balance Amount'));
             return false;

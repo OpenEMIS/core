@@ -8,13 +8,13 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Controller\Controller;
 
 class GuardianStudentBehavior extends Behavior {
 	private $associatedModel;
 	public function initialize(array $config) {
-		$this->associatedModel = (array_key_exists('associatedModel', $config))? $config['associatedModel']: null;
+		$this->associatedModel = (isset($config['associatedModel']))? $config['associatedModel']: null;
 	}
 
 	public function beforeFind(Event $event, Query $query, $options) {
@@ -30,7 +30,7 @@ class GuardianStudentBehavior extends Behavior {
 			;
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$newEvents = [
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
@@ -165,7 +165,7 @@ class GuardianStudentBehavior extends Behavior {
 		// index without any named params
 		// else the 'new' url param will cause it to add it with previous settings (from institution site student / staff)
 		$action = $this->_table->ControllerAction->buttons['index']['url'];
-		if (array_key_exists('new', $action)) {
+		if (isset($action['new'])) {
 			$session = $this->controller->request->session();
 			$sessionVar = $this->_table->alias().'.add';
 			// $session->delete($sessionVar); // removeed... should be placed somewhere like index
@@ -181,13 +181,13 @@ class GuardianStudentBehavior extends Behavior {
 			if (array_key_exists(0, $entity->guardian_students)) {
 				$guardianId = $entity->guardian_students[0]->guardian_user_id;
 
-				if (array_key_exists('view', $buttons)) {
+				if (isset($buttons['view'])) {
 					$buttons['view']['url'][1] = $this->_table->ControllerAction->paramsEncode(['id' => $guardianId]);
 				}
-				if (array_key_exists('edit', $buttons)) {
+				if (isset($buttons['edit'])) {
 					$buttons['edit']['url'][1] = $this->_table->ControllerAction->paramsEncode(['id' => $guardianId]);
 				}
-				if (array_key_exists('remove', $buttons)) {
+				if (isset($buttons['remove'])) {
 					$buttons['remove']['attr']['field-value'] = $this->_table->ControllerAction->paramsEncode(['id' => $entity->guardian_students[0]->id]);
 				}
 			}

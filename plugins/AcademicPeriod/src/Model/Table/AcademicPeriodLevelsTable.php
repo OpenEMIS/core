@@ -3,14 +3,14 @@ namespace AcademicPeriod\Model\Table;
 
 use ArrayObject;
 
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 
 use App\Model\Table\ControllerActionTable;
 
 class AcademicPeriodLevelsTable extends ControllerActionTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 		$this->hasMany('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
@@ -57,7 +57,7 @@ class AcademicPeriodLevelsTable extends ControllerActionTable {
 		}
 	}
 
-	public function onUpdateFieldLevel(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldLevel(Event $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'add') {
 			$query = $this->find();
 			$results = $query
@@ -103,5 +103,26 @@ class AcademicPeriodLevelsTable extends ControllerActionTable {
 			unset($buttons['remove']);
 		}
     	return $buttons;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'level':
+                return __('Level');
+            case 'name':
+                return __('Name');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                    return __('Created By');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

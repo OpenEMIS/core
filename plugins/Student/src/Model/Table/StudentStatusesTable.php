@@ -8,7 +8,7 @@ class StudentStatusesTable extends AppTable {
 	public $PENDING_ADMISSION = -3;
 	public $PENDING_WITHDRAW = -4;
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 
 		$this->addBehavior('Restful.RestfulAccessControl', [

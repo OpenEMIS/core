@@ -7,13 +7,13 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Log\Log;
-
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
+use Cake\Http\ServerRequest;
+use Cake\Datasource\ConnectionManager;
 
 class AlertRulesTable extends ControllerActionTable
 {
@@ -25,7 +25,7 @@ class AlertRulesTable extends ControllerActionTable
     private $alertTypeFeatures = [];
     private $featureList = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -51,9 +51,11 @@ class AlertRulesTable extends ControllerActionTable
         $this->addBehavior('Alert.AlertRuleScholarshipApplication');
         $this->addBehavior('Alert.AlertRuleScholarshipDisbursement');
         $this->addBehavior('Alert.AlertRuleCaseEscalation');//POCOR-7642
+        $this->addBehavior('Alert.AlertRuleSystemUpdates');//POCOR-7642
+        $this->addBehavior('Alert.AlertRuleStudentAdmission');//POCOR-8869
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -73,7 +75,7 @@ class AlertRulesTable extends ControllerActionTable
                 if (!empty($thresholdConfig)) {
                     $thresholdArray = [];
                     foreach ($thresholdConfig as $field => $attr) {
-                        if (array_key_exists('type', $attr) && $attr['type'] == 'chosenSelect') {
+                        if (isset($attr['type']) && $attr['type'] == 'chosenSelect') {
                             $thresholdArray[$field] = $data[$field]['_ids'];
                         } else {
                             $thresholdArray[$field] = $data[$field];
@@ -85,7 +87,7 @@ class AlertRulesTable extends ControllerActionTable
         }
     }
 
-    public function afterSaveCommit(Event $event, Entity $entity) 
+    public function afterSaveCommit(Event $event, Entity $entity)
     {
         if ($entity->isNew()) {
             $feature = $entity->feature;
@@ -116,16 +118,17 @@ class AlertRulesTable extends ControllerActionTable
 
         // element control
         //POCOR-7558 start
-        $logsTable=TableRegistry::get('Alert.AlertLogs');
-        $featureOptions=$logsTable->getFeatureOptions();
+        $logsTable = TableRegistry::get('Alert.AlertLogs');
+        $featureOptions = $logsTable->getFeatureOptions();
         array_shift($featureOptions);
          //POCOR-7558 end
         if (!empty($featureOptions)) {
             $featureOptions = ['-1' => __('All Features')] + $featureOptions;
         }
-
+        $request = $this->request;
         $selectedFeature = $this->queryString('feature', $featureOptions);
-        $extra['selectedFeature'] = $selectedFeature;
+        // $extra['selectedFeature'] = $selectedFeature;
+        $extra['selectedFeature'] = $featureOptions;
 
         $extra['elements']['control'] = [
             'name' => 'Alert/controls',
@@ -139,7 +142,7 @@ class AlertRulesTable extends ControllerActionTable
         // end element control
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','AlertRules','Communications');       
+		$is_manual_exist = $this->getManualUrl('Administration','AlertRules','Communications');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -161,9 +164,8 @@ class AlertRulesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $selectedFeature = $extra['selectedFeature'];
-
-        if ($selectedFeature != -1) {
+        $selectedFeature = $this->request->getQuery('feature');
+        if ($selectedFeature != -1 && !empty($selectedFeature)) {
             $query->where(['feature' => $selectedFeature]);
         }
     }
@@ -259,14 +261,14 @@ class AlertRulesTable extends ControllerActionTable
         $origEntity = $this->get($entity->id);
         if ($origEntity->has('feature') && !empty($origEntity->feature)) {
             $event = $this->dispatchEvent('AlertRule.onGet.'.$origEntity->feature.'.Threshold', [$origEntity], $this);
-            if ($event->isStopped()) { return $event->result; }
-            if (!empty($event->result)) {
-                return $event->result;
+            if ($event->isStopped()) { return $event->getResult(); }
+            if (!empty($event->getResult())) {
+                return $event->getResult();
             }
         }
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         $featureOptions = $this->getFeatureOptions();
         if ($action == 'add') {
@@ -283,15 +285,33 @@ class AlertRulesTable extends ControllerActionTable
         return $attr;
     }
 
+    //POCOR-8690[START]
+    public function onUpdateFieldMethod(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add'||$action == 'edit') {
+            $entity = $attr['entity'];
+            if($entity->feature)
+            {
+            $attr['type'] = 'readonly';
+            $attr['value'] = $this->getMethod($entity->feature);;
+            $attr['attr']['value'] =$this->getMethod($entity->feature);;
+            }
+           
+        }
+
+        return $attr;
+    }
+    //POCOR-8690[END]
+
     public function addEditOnChangeFeature(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data)) {
-            $feature = $data[$this->alias()]['feature'];
-            $data[$this->alias()]['method'] = $this->getMethod($feature);
+            $feature = $data[$this->getAlias()]['feature'];
+            $data[$this->getAlias()]['method'] = $this->getMethod($feature);
         }
     }
 
-    public function onUpdateFieldEnabled(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEnabled(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['visible'] = false;
@@ -303,28 +323,61 @@ class AlertRulesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, Request $request)
+
+    public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if ($action == 'add' || $action == 'edit') {
-            $entity = $attr['entity'];
-
-            if ($entity->has('feature')) {
-                $feature = $entity->feature;
-
-                if (in_array($feature, ['ScholarshipApplication'])) {
-                    $attr['type'] = 'disabled';
-                    $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
-                    $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
-                } else {
-                    $roleOptions = $this->SecurityRoles
-                        ->find('list')
-                        ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->primaryKey()), $this->SecurityRoles->aliasField('name')])
-                        ->find('visible')
-                        ->find('order')
-                        ->toArray();
-
-                    $attr['type'] = 'chosenSelect';
-                    $attr['options'] = $roleOptions;
+        //POCOR-8869[START]
+        $admissionFeature = $this->request->getData()['AlertRules']['feature'];
+        if($admissionFeature == 'StudentAdmission'){
+            if ($action == 'add' || $action == 'edit') {
+                $entity = $attr['entity'];
+    
+                if ($entity->has('feature')) {
+                    $feature = $entity->feature;
+    
+                    if (in_array($feature, ['ScholarshipApplication'])) {
+                        $attr['type'] = 'disabled';
+                        $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
+                        $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
+                    } else {
+                        $roleOptions = $this->SecurityRoles
+                            ->find('list')
+                            ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->getPrimaryKey()), $this->SecurityRoles->aliasField('name')])
+                            ->find('visible')
+                            ->find('order')
+                            ->toArray();
+    
+                        $attr['type'] = 'chosenSelect';
+                        $attr['options'] = $roleOptions;
+                        $filteredRoles = array_filter($roleOptions, function ($role) {
+                            return $role === "Guardian";
+                        }, ARRAY_FILTER_USE_BOTH);
+                        $attr['options'] = $filteredRoles;
+                    }
+                }
+            }
+        }else{ //POCOR-8869[END]
+            if ($action == 'add' || $action == 'edit') {
+                $entity = $attr['entity'];
+    
+                if ($entity->has('feature')) {
+                    $feature = $entity->feature;
+    
+                    if (in_array($feature, ['ScholarshipApplication'])) {
+                        $attr['type'] = 'disabled';
+                        $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
+                        $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
+                    } else {
+                        $roleOptions = $this->SecurityRoles
+                            ->find('list')
+                            ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->getPrimaryKey()), $this->SecurityRoles->aliasField('name')])
+                            ->find('visible')
+                            ->find('order')
+                            ->toArray();
+    
+                        $attr['type'] = 'chosenSelect';
+                        $attr['options'] = $roleOptions;
+                    }
                 }
             }
         }
@@ -332,7 +385,7 @@ class AlertRulesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldThreshold(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldThreshold(Event $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
         if ($action == 'add') {
@@ -343,9 +396,9 @@ class AlertRulesTable extends ControllerActionTable
 
         if ($entity->has('feature') && !empty($entity->feature)) {
             $event = $this->dispatchEvent('AlertRule.UpdateField.'.$entity->feature.'.Threshold', [$attr, $action, $request], $this);
-            if ($event->isStopped()) { return $event->result; }
-            if (!empty($event->result)) {
-                $attr = $event->result;
+            if ($event->isStopped()) { return $event->getResult(); }
+            if (!empty($event->getResult())) {
+                $attr = $event->getResult();
 
             }
         }
@@ -357,7 +410,7 @@ class AlertRulesTable extends ControllerActionTable
     {
         if (!$entity->has('security_roles')) {
             $query = $this->find()
-                ->where([$this->aliasField($this->primaryKey()) => $entity->id])
+                ->where([$this->aliasField($this->getPrimaryKey()) => $entity->id])
                 ->contain(['SecurityRoles']);
 
             $data = $query->first();
@@ -386,7 +439,13 @@ class AlertRulesTable extends ControllerActionTable
         $this->field('rule_setup', ['type' => 'section']);
         $this->field('feature', ['type' => 'select', 'entity' => $entity]);
         $this->field('enabled', ['type' => 'select']);
-        $this->field('method', ['type' => 'readOnly', 'after' => 'threshold']);
+        //POCOR-8690[START]
+        // $this->field('method', ['type' => 'readOnly', 'after' => 'threshold']);
+        $this->field('method', [
+            'after' => 'threshold',
+            'entity' => $entity,
+        ]);
+        //POCOR-8690[END]
         $this->field('security_roles', ['after' => 'method', 'entity' => $entity]);
         $this->field('threshold', ['after' => 'security_roles', 'entity' => $entity]);
 
@@ -396,7 +455,7 @@ class AlertRulesTable extends ControllerActionTable
 
         if ($entity->has('feature') && !empty($entity->feature)) {
             $event = $this->dispatchEvent('AlertRule.'.$entity->feature.'.SetupFields', [$entity], $this);
-            if ($event->isStopped()) { return $event->result; }
+            if ($event->isStopped()) { return $event->getResult(); }
         }
     }
 
@@ -426,7 +485,7 @@ class AlertRulesTable extends ControllerActionTable
                 $attr['tableCells'] = $tableCells;
             }
 
-            return $event->subject()->renderElement('Alert/' . $fieldKey, ['attr' => $attr]);
+            return $event->getSubject()->renderElement('Alert/' . $fieldKey, ['attr' => $attr]);
         }
     }
 
@@ -445,16 +504,15 @@ class AlertRulesTable extends ControllerActionTable
         if (is_array($thresholdArray)) {
             $alertTypeDetails = $this->getAlertTypeDetailsByFeature($entity->feature);
             $thresholdConfig = $alertTypeDetails[$entity->feature]['threshold'];
-
             foreach ($thresholdArray as $field => $value) {
                 $entity->{$field} = $value;
 
-                if (array_key_exists($field, $thresholdConfig) && array_key_exists('type', $thresholdConfig[$field])) {
+                if (array_key_exists($field, (array)$thresholdConfig) && isset($thresholdConfig[$field]['type'])) {
                     $fieldType = $thresholdConfig[$field]['type'];
                     // for threshold with type chosenSelect type
                     if ($fieldType == 'chosenSelect') {
                         $lookupModel = $thresholdConfig[$field]['lookupModel'];
-                        if(isset($lookupModel)){//POCOR-7462 
+                        if(isset($lookupModel)){//POCOR-7462
                         $Model = TableRegistry::get($lookupModel);
                         if (is_array($value)) {
                             $entity->{$field} = [];
@@ -474,29 +532,120 @@ class AlertRulesTable extends ControllerActionTable
                             }
                         }
                         //POCOR-7462 end
+
+                        if($thresholdConfig[$field]['options']=="StudentAdmission.workflow_steps"){
+                            $Model = TableRegistry::get('Workflow.WorkflowSteps');
+                            $Workflows = TableRegistry::get('Workflow.Workflows');
+                            $WorkflowsData = $Workflows->find()
+                                    ->where(['code' => 'STUDENT-ADMISSION-1001'])
+                                    ->first();
+                            $ModelData = $Model->find()
+                                    ->where(['workflow_id' => $WorkflowsData->workflow_model_id, 'name' => 'Approved'])
+                                    ->first();
+                            $ModelDataId = $ModelData->id;
+                            if (is_array($value)) {
+                                $entity->{$field} = [];
+                                // foreach ($value as $modelId) {
+                                    $entity->{$field}[] = $Model->get($ModelDataId);
+                                // }
+                            }
+                        }
                         
-                    
                     }
                 }
             }
         }
-       
+
     }
      //POCOR-7558 start
     public function getLastRunDate(){
-        $systemProcess=TableRegistry::get('system_processes');
+        //POCOR-8575[START]
+        $connection = ConnectionManager::get('default');
+        $connection->execute("DELETE FROM system_processes WHERE `status` = 3;");
+        //POCOR-8575[END]
+        $systemProcess = TableRegistry::get('SystemProcesses');
         $data=$systemProcess->find()->select([
              'name'=> $systemProcess->aliasField('name'),
              'end_date'=> $systemProcess->aliasField('end_date'),
         ])->group([$systemProcess->aliasField('name')])
           ->order([$systemProcess->aliasField('end_date') => 'DESC'])
           ->toArray();
-        
+
         $result=[];
         foreach($data as $key=>$value){
             $result[$value['name']]= $value['end_date'];
         }
         return $result;
     }
-     //POCOR-7558 start
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'subject':
+                return __('Subject');
+            case 'status':
+                return __('Status');
+            case 'security_roles':
+                return __('Security Roles');
+            case 'method':
+                return __('Method');
+            case 'threshold':
+                return __('Threshold');
+            case 'enabled':
+                return __('Enabled');
+            case 'name':
+                return __('Name');
+            case 'enabled':
+                return __('Enabled');
+            case 'enabled':
+                return __('Enabled');
+            case 'created':
+                return __('Created On');
+            case 'created_user_id':
+                return __('Created By');
+            case 'modified':
+                return __('Modified On');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'message':
+                return __('Message');
+            case 'condition':
+                return __('Condition');
+            case 'message':
+                return __('Message');
+            case 'category':
+                return __('Category');
+            case 'license_type':
+                return __('License Type');
+            case 'training_categories':
+                return __('Training Category');
+            case 'workflow_steps':
+                return __('Workflow Step');
+            case 'employment_type':
+                return __('Employment Type');
+            case 'staff_leave_type':
+                return __('Staff Leave Type');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    ////POCOR-8341 start
+    // public function onUpdateFieldMethod(Event $event, array $attr, $action, ServerRequest $request)
+    // {
+    //     if ($action == 'add'||$action == 'edit') {
+    //         $entity = $attr['entity'];
+    //         if($entity->feature)
+    //         {
+    //         $attr['type'] = 'readonly';
+    //         $attr['value'] = $this->getMethod($entity->feature);;
+    //         $attr['attr']['value'] =$this->getMethod($entity->feature);;
+    //         }
+           
+    //     }
+
+    //     return $attr;
+    // }
+    //POCOR-8341 end 
 }

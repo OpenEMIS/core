@@ -13,13 +13,13 @@ use Cake\I18n\Time;
 
 class WorkflowReportBehavior extends Behavior
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->_table->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->_table->belongsTo('Assignees', ['className' => 'User.Users']);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.excel.onExcelBeforeQuery'] = 'onExcelBeforeQuery';
@@ -214,7 +214,7 @@ class WorkflowReportBehavior extends Behavior
                 $query->where(['Statuses.category' => $category]);
             }
             if ($requestData->model != 'Report.WorkflowStaffLicense') {
-                $query->leftJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()]);//POCOR-7433
+                $query->leftJoin([$InstitutionsTable->getAlias() => $InstitutionsTable->getTable()]);//POCOR-7433
             }
             //POCOR-7433(if condition)
             if ($conditions != []) {

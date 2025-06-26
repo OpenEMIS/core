@@ -7,21 +7,27 @@ use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use App\Model\Traits\OptionsTrait;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
 class BankAccountsTable extends ControllerActionTable
 {
     use OptionsTrait;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_bank_accounts');
+        $this->setTable('user_bank_accounts');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('BankBranches', ['className' => 'FieldOption.BankBranches']);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['BankAccounts' =>
+                ['id'],
+                
+            ]
+        ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -30,7 +36,7 @@ class BankAccountsTable extends ControllerActionTable
         $this->fields['active']['options'] = $this->getSelectOptions('general.yesno');
 
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){
+        if($this->request->getParam('controller') == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Institutions','Bank Accounts','Staff - Finance');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -48,7 +54,7 @@ class BankAccountsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Students'){
+        }elseif($this->request->getParam('controller') == 'Students'){
             $is_manual_exist = $this->getManualUrl('Institutions','Bank Accounts','Students - Finance');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -67,7 +73,7 @@ class BankAccountsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories' && $this->request->params['action'] == 'StaffBankAccounts'){ 
+        }elseif($this->request->getParam('controller') == 'Directories' && $this->request->getParam('action') == 'StaffBankAccounts'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Bank Accounts','Staff - Finance');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -86,7 +92,7 @@ class BankAccountsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories' && $this->request->params['action'] == 'StudentBankAccounts'){ 
+        }elseif($this->request->getParam('controller') == 'Directories' && $this->request->getParam('action') == 'StudentBankAccounts'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Bank Accounts','Students - Finance');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -129,13 +135,13 @@ class BankAccountsTable extends ControllerActionTable
     public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
         //to clear the bank option when toolbar button (back or list) clicked
-        $this->request->query['bank_option'] = '';
+        $this->request->getQuery['bank_option'] = '';
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
         $bankId = $this->BankBranches->get($entity->bank_branch_id)->bank_id;
-        $this->request->query['bank_option'] = $bankId;
+        $this->request->getQuery['bank_option'] = $bankId;
     }
 
 
@@ -145,7 +151,7 @@ class BankAccountsTable extends ControllerActionTable
         $this->setFieldOrder(['account_name', 'account_number', 'active', 'bank_name', 'bank_branch_id']);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -163,20 +169,33 @@ class BankAccountsTable extends ControllerActionTable
 
     private function setupTabElements()
     {
-        switch ($this->controller->name) {
+        
+        switch ($this->controller->getName()) {
             case 'Students':
                 $tabElements = $this->controller->getFinanceTabElements();
                 $this->controller->set('tabElements', $tabElements);
-                $this->controller->set('selectedAction', $this->alias());
+                $this->controller->set('selectedAction', $this->getAlias());
                 break;
             case 'Staff':
                 $tabElements = $this->controller->getFinanceTabElements();
                 $this->controller->set('tabElements', $tabElements);
-                $this->controller->set('selectedAction', $this->alias());
+                $this->controller->set('selectedAction', $this->getAlias());
                 break;
             case 'Directories':
+                $type = $this->request->getQuery('type');
+                if ($type == 'student') {
+                    $options = [
+                        'type' => $type
+                    ];
+                    $tabElements = $this->controller->getFinanceTabElements($options);
+                } else {
+                    $tabElements = $this->controller->getStaffFinanceTabElements();
+                }
+                $this->controller->set('tabElements', $tabElements);
+                $this->controller->set('selectedAction', $this->getAlias());
+                break;
             case 'Profiles':
-                $type = $this->request->query('type');
+                $type = $this->request->getQuery('type');
                 $options = [
                     'type' => $type
                 ];
@@ -187,7 +206,7 @@ class BankAccountsTable extends ControllerActionTable
                 }
 
                 $this->controller->set('tabElements', $tabElements);
-                $this->controller->set('selectedAction', $this->alias());
+                $this->controller->set('selectedAction', $this->getAlias());
                 break;
         }
     }
@@ -197,10 +216,9 @@ class BankAccountsTable extends ControllerActionTable
         $this->setupTabElements();
     }
 
-    public function onUpdateFieldBankName(Event $event, array $attr, $action, Request $request)
-    {
+    public function onUpdateFieldBankName(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add' || $action == 'edit') {
-            $bankId = $request->query('bank_option');
+            $bankId = $request->getQuery['bank_option'];
 
             $bankOptions = TableRegistry::get('FieldOption.Banks')
             ->find('list')
@@ -218,11 +236,11 @@ class BankAccountsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldBankBranchId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldBankBranchId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            if (array_key_exists('bank_option', $request->query)) {
-                $bankId = $request->query['bank_option'];
+            if (array_key_exists('bank_option', $request->getQuery)) {
+                $bankId = $request->getQuery['bank_option'];
                 $bankBranches = $this->BankBranches
                     ->find('list')
                     ->find('order')
@@ -239,14 +257,42 @@ class BankAccountsTable extends ControllerActionTable
     public function addEditOnChangeBank(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['bank_option']);
+        unset($request->getQuery['bank_option']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('bank_name', $request->data[$this->alias()])) {
-                    $request->query['bank_option'] = $request->data[$this->alias()]['bank_name'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('bank_name', $request->getData()[$this->getAlias()])) {
+                    $request->getQuery['bank_option'] = $request->getData()[$this->getAlias()]['bank_name'];
                 }
             }
         }
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'bank_name') {
+            return __('Bank Name');
+        } elseif ($field == 'bank_branch_id') {
+            return __('	Bank Branch');
+        } elseif ($field == 'account_name') {
+            return __('Account Name');
+        } elseif ($field == 'account_number') {
+            return __('Account Number');
+        } elseif ($field == 'active') {
+            return __('Active');
+        } elseif ($field == 'validation_rule') {
+            return __('Validation Rule');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

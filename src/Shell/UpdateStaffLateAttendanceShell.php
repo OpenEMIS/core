@@ -9,13 +9,14 @@ use Cake\ORM\Query;
 use Cake\I18n\Time;
 use Cake\Console\Shell;
 use Cake\Datasource\ConnectionManager;
+use Cake\Log\Log;
 
 class UpdateStaffLateAttendanceShell extends Shell
 {
     CONST SLEEP_TIME = 10;
     CONST ACADEMIC_PERIOD_ID = 18;
 
-    public function initialize()
+    public function initialize(): void
     {
         
         parent::initialize();
@@ -26,23 +27,41 @@ class UpdateStaffLateAttendanceShell extends Shell
     }
 
     //POCOR-7225 add institutionId, academicPeriodId , shiftOptionId in shell command, use in where condition
-    public function main($staffId, $date,$institutionId, $academicPeriodId, $shiftOptionId)
-    {   
+    //POCOR-9138 start
+    public function main($staffId, $date, $institutionId, $academicPeriodId, $shiftOptionId){
         try {
-
             $connection = ConnectionManager::get('default');
-            $connection->query("UPDATE `institution_shifts`
-                INNER JOIN `institution_staff_attendances`
-                ON `institution_staff_attendances`.time_in > `institution_shifts`.start_time OR `institution_staff_attendances`.time_in = `institution_shifts`.start_time
-                SET `institution_staff_attendances`.absence_type_id = CASE
-                WHEN `institution_staff_attendances`.time_in = `institution_shifts`.start_time   THEN 1 
-                WHEN `institution_staff_attendances`.time_in > `institution_shifts`.start_time   THEN 3
-                END
-                WHERE `institution_staff_attendances`.`staff_id` = $staffId AND `institution_shifts`.`institution_id` = $institutionId AND `institution_shifts`.`academic_period_id` = $academicPeriodId AND `institution_shifts`.`shift_option_id` = $shiftOptionId
-                       AND `institution_staff_attendances`.date= '" . $date . "'" );
-            
-            } catch (Exception $e) {
-                 pr($e->getMessage());
+
+            $query = "
+                UPDATE institution_staff_attendances AS isa
+                INNER JOIN institution_shifts AS isf
+                    ON isf.institution_id = :institution_id
+                    AND isf.academic_period_id = :academic_period_id
+                    AND isf.shift_option_id = :shift_option_id
+                    AND isa.date = :date
+                SET isa.absence_type_id = 
+                    CASE 
+                        WHEN TIME(isa.time_in) <= isf.start_time THEN 1  -- Early or On Time
+                        WHEN TIME(isa.time_in) > isf.start_time THEN 3   -- Late
+                        ELSE isa.absence_type_id                         -- Keep as is
+                    END
+                WHERE isa.staff_id = :staff_id
+            ";
+
+            $result = $connection->execute($query, [
+                'staff_id' => $staffId,
+                'date' => $date,
+                'institution_id' => $institutionId,
+                'academic_period_id' => $academicPeriodId,
+                'shift_option_id' => $shiftOptionId,
+            ]);
+            Log::write('debug', 'Updated rows: ' . $result->rowCount());
+
+        } catch (Exception $e) {
+            Log::write('error', 'Update Attendance Error: ' . $e->getMessage());
+            pr($e->getMessage()); 
+
         }
     }
+     //POCOR-9138 end
 }

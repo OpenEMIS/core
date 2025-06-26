@@ -6,7 +6,7 @@ use OAuth\Controller\AbstractOAuthController;
 
 class OAuthController extends AbstractOAuthController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadComponent('RequestHandler');
@@ -23,12 +23,12 @@ class OAuthController extends AbstractOAuthController
     protected function getApiCredential($payload)
     {
         $issuer = $payload->iss;
-        
+
         $credential = $this->ApiCredentials
             ->find()
             ->contain(['ApiScopes'])
             ->where([$this->ApiCredentials->aliasField('client_id') => $issuer])
-            ->hydrate(false)
+            ->disableHydration() // POCOR-8533
             ->first();
 
         if (!is_null($credential)) {

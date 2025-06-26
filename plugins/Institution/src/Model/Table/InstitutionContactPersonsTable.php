@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
@@ -15,20 +15,23 @@ use App\Model\Traits\OptionsTrait;
 
 class InstitutionContactPersonsTable extends ControllerActionTable {
     use OptionsTrait;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
 
         parent::initialize($config);
 	
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->addBehavior('ContactExcel', [ //POCOR-6889
-            'pages' => ['index']
-        ]);
+        // $this->addBehavior('ContactExcel', [ //POCOR-6889
+        //     'pages' => ['index']
+        // ]);
+        $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('Institution.InstitutionTab');       
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
 
         return $validator
             ->allowEmpty('telephone')
@@ -36,9 +39,18 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
                 'rule' => ['validateCustomPattern', 'institution_contact_person_telephone'],
                 'provider' => 'table'
             ])
+            ->add('telephone', 'ruleContactNumberPattern', [
+                'rule' => ['validateContactNumberPattern', 'validate_contact_person_telephone'],
+                'provider' => 'table',
+                'last' => true
+            ])
             ->allowEmpty('mobile_number')
             ->add('mobile_number', 'ruleCustomMobile', [
                 'rule' => ['validateCustomPattern', 'institution_contact_person_mobile'],
+                'provider' => 'table'
+            ])
+            ->add('mobile_number', 'ruleMobileNumberPattern', [
+                'rule' => ['validateMobileNumberPattern', 'validate_contact_person_mobile_number'],
                 'provider' => 'table'
             ])
             ->allowEmpty('fax')
@@ -58,7 +70,7 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->dirty('preferred')) {
+        if ($entity->getDirty('preferred')) {
             $institutionId = $entity->institution_id;
 
             if ($entity->preferred == 1) {
@@ -104,7 +116,7 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
     //START:POCOR-6889
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-    	$institutionId = $this->Session->read('Institution.Institutions.id');
+    	$institutionId = $this->getInstitutionID();
     	$query
     	->where([
             'institution_id' =>  $institutionId
@@ -140,7 +152,7 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
     }
 
 
-    public function onUpdateFieldPreferred(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreferred(Event $event, array $attr, $action, ServerRequest $request)
     {
 //        $functionName = __FUNCTION__;
 //        $this->log($functionName, 'debug');
@@ -160,5 +172,37 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
     }
 
     // End POCOR-5188
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        switch ($field) {
+            case 'contact_person':
+                return __('Contact Person');
+            case 'preferred':
+                return __('Preferred');
+            case 'designation':
+                return __('Designation');
+            case 'department':
+                return __('Department');
+            case 'telephone':
+                return __('Telephone');
+            case 'mobile_number':
+                return __('Mobile Number');
+            case 'fax':
+                return __('Fax');
+            case 'email':
+                return __('Email');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'modified':
+                return __('Modified');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
     
 }

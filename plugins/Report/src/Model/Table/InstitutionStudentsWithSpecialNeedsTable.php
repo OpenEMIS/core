@@ -15,9 +15,9 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
     private $_specialNeedDifficultyName = [];
     private $_comment = [];
     private $_dateOfAssessment = [];
-    
-    public function initialize(array $config) {
-        $this->table('institution_students');
+
+    public function initialize(array $config): void {
+        $this->setTable('institution_students');
         parent::initialize($config);
 
         $this->belongsTo('Users',           ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
@@ -52,25 +52,25 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
                 'special_need_difficulty_name' => $SpecialNeedDifficulties->aliasField('name'),
             ])
             ->leftJoin(
-                    [$SpecialNeedDifficulties->alias()=>$SpecialNeedDifficulties->table()],
+                    [$SpecialNeedDifficulties->getAlias() => $SpecialNeedDifficulties->getTable()],
                     [$SpecialNeedsAssessments->aliasField('special_need_difficulty_id')=>$SpecialNeedDifficulties->aliasField('id')])
             ->contain([
-                'Users',                
-                $SpecialNeedsTypes->alias(),
-                $SpecialNeedDifficulties->alias()
+                'Users',
+                $SpecialNeedsTypes->getAlias(),
+                $SpecialNeedDifficulties->getAlias()
             ])
-            
+
             ->where([
                 'Users.is_student' => 1
             ])
-            ->hydrate(false)
+            ->disableHydration() // POCOR-8533
             ->toArray();
 
         $studentIdList = Hash::extract($SpecialNeedsStudents, '{n}.security_user_id');
-        $specialNeedsNames=Hash::combine($SpecialNeedsStudents, '{n}.special_need_name', '{n}.special_need_name', '{n}.security_user_id');
-        $comment=Hash::combine($SpecialNeedsStudents, '{n}.comment', '{n}.comment', '{n}.security_user_id');
-        $dateOfAssessment=Hash::combine($SpecialNeedsStudents, '{n}.date_of_assessment', '{n}.date_of_assessment', '{n}.security_user_id');
-        $SpecialNeedsDifficultyName=Hash::combine($SpecialNeedsStudents, '{n}.special_need_difficulty_name', '{n}.special_need_difficulty_name', '{n}.security_user_id');
+        $specialNeedsNames = Hash::combine($SpecialNeedsStudents, '{n}.special_need_name', '{n}.special_need_name', '{n}.security_user_id');
+        $comment = Hash::combine($SpecialNeedsStudents, '{n}.comment', '{n}.comment', '{n}.security_user_id');
+        $dateOfAssessment = Hash::combine($SpecialNeedsStudents, '{n}.date_of_assessment', '{n}.date_of_assessment', '{n}.security_user_id');
+        $SpecialNeedsDifficultyName = Hash::combine($SpecialNeedsStudents, '{n}.special_need_difficulty_name', '{n}.special_need_difficulty_name', '{n}.security_user_id');
 
         $settings['student_id_list'] = $studentIdList;
         $this->_specialNeeds = $specialNeedsNames;
@@ -81,26 +81,26 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        
+
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $userId = $requestData->user_id;
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $userAreaCodes = $SecurityGroupUsers->getAreaCodesByUser($userId);
-        
+
         $Class = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-       
+
         if ($academicPeriodId !=0 ) {
             $query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
         }
-        
+
         $studentIdList = 0;
-        
+
         if(!empty($settings['student_id_list'])){
             $studentIdList = $settings['student_id_list'];
         }
-        
+
         $query
             ->select([
                 $this->aliasField('id'),
@@ -195,17 +195,17 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
                     ]
                 ]
             ])
-            ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+            ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->getTable()], [
                 $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                 $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                 $ClassStudents->aliasField('student_status_id = ') . $this->aliasField('student_status_id'),
                 $ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
             ])
-            ->leftJoin([$Class->alias() => $Class->table()], [
+            ->leftJoin([$Class->getAlias() => $Class->getTable()], [
                 $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
             ]);
-        
+
             if(!empty($userAreaCodes)){
                 $query->where([
                     'Users.id IN' => $studentIdList,
@@ -216,7 +216,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
                     'Users.id IN' => $studentIdList
                 ]);
             }
-                 
+
             $query->group([
                 'Users.id'
             ])
@@ -238,7 +238,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
         }
         return $age;
     }
-    
+
     public function onExcelGetDateOfAssessment(Event $event, Entity $entity)
     {
         $studentId = $entity->student_id;
@@ -249,13 +249,13 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
             foreach($dateOfAssessment as $date){
                 $newDateOffAssessment[] = date('F d, Y', strtotime($date));
             }
-            
+
             return implode(', ', $newDateOffAssessment);
         }
 
         return '';
     }
-    
+
     public function onExcelGetAllNationalities(Event $event, Entity $entity)
     {
         $return = [];
@@ -285,8 +285,8 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
 
         return '';
     }
-    
-    
+
+
     public function onExcelGetSpecialNeedDifficulty(Event $event, Entity $entity)
     {
         $studentId = $entity->student_id;
@@ -298,7 +298,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
 
         return '';
     }
-    
+
     public function onExcelGetComment(Event $event, Entity $entity)
     {
         $studentId = $entity->student_id;
@@ -310,7 +310,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
 
         return '';
     }
-    
+
     public function onExcelGetDate(Event $event, Entity $entity)
     {
         $studentId = $entity->student_id;
@@ -329,18 +329,18 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
         $identity = $IdentityType->getDefaultEntity();
 
         $requestData = json_decode($settings['process']['params']);
-        
+
         $userId = $requestData->user_id;
         $userSuperAdmin = $requestData->super_admin;
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $userAreaCodes = $SecurityGroupUsers->getAreaCodesByUser($userId);
-        
+
         $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
         $principalRoleId = $SecurityRoles->getPrincipalRoleId();
         $deputyPrincipalRoleId = $SecurityRoles->getDeputyPrincipalRoleId();
-        
+
         $showStatus = true;
-        
+
         if($userSuperAdmin){
             $showStatus = true;
         }elseif($principalRoleId){
@@ -350,7 +350,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
         }elseif(!empty ($userAreaCodes)){
             $showStatus = false;
         }
-                
+
         $newFields[] = [
             'key' => 'Institutions.code',
             'field' => 'code',
@@ -378,7 +378,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
             'type' => 'integer',
             'label' => '',
         ];
-        
+
         $newFields[] = [
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
@@ -386,15 +386,15 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
             'label' => __('OpenEMIS ID'),
             'formatting' => 'string'
         ];
-        
+
         $newFields[] = [
             'key' => 'Users.username',
             'field' => 'username',
             'type' => 'string',
             'label' => __('Username'),
             'formatting' => 'string'
-        ];        
-                
+        ];
+
         $newFields[] = [
             'key' => 'Users.identity_number',
             'field' => 'number',
@@ -416,35 +416,35 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
             'type' => 'date',
             'label' => ''
         ];
-        
+
         $newFields[] = [
             'key' => 'Institutions.area_code',
             'field' => 'area_code',
             'type' => 'string',
             'label' => __('Area Education Code')
         ];
-        
+
         $newFields[] = [
             'key' => 'Institutions.area_name',
             'field' => 'area_name',
             'type' => 'string',
             'label' => __('Area Education')
         ];
-        
+
         $newFields[] = [
             'key' => 'Institutions.area_administrative_code',
             'field' => 'area_administrative_code',
             'type' => 'string',
             'label' => __('Area Administrative Code')
         ];
-        
+
         $newFields[] = [
             'key' => 'Institutions.area_administrative_name',
             'field' => 'area_administrative_name',
             'type' => 'string',
             'label' => __('Area Administrative')
         ];
-        
+
         $newFields[] = [
             'key' => 'Age',
             'field' => 'age',
@@ -458,7 +458,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
             'type' => 'string',
             'label' => __('Student Status')
         ];
-        
+
         $newFields[] = [
             'key' => 'InstitutionSpecialNeedsStudents.student_id',
             'field' => 'student_id',
@@ -494,14 +494,14 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
             'type' => 'date',
             'label' => __('End Date')
         ];
-        
+
         $newFields[] = [
             'key' => 'InstitutionSpecialNeedsStudents.class_name',
             'field' => 'class_name',
             'type' => 'string',
             'label' => __('Class Name')
         ];
-        
+
         $newFields[] = [
             'key' => 'SpecialNeedsAssessments.date_of_assessment',
             'field' => 'date_of_assessment',
@@ -515,7 +515,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
             'type' => 'string',
             'label' => ''
         ];
-        
+
         if($showStatus){
             $newFields[] = [
                 'key' => 'SpecialNeedsAssessments.special_need_difficulty',

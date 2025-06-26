@@ -9,7 +9,7 @@ use CustomField\Model\Behavior\RenderBehavior;
 class RenderDropdownBehavior extends RenderBehavior {
 
     private $postedData = null;
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
         parent::initialize($config);
     }
 
@@ -47,7 +47,7 @@ class RenderDropdownBehavior extends RenderBehavior {
                 $value = $dropdownOptions[$savedValue];
             }
         } else if ($action == 'edit') {
-            $form = $event->subject()->Form;
+            $form = $event->getSubject()->Form;
             $unlockFields = [];
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
@@ -63,16 +63,17 @@ class RenderDropdownBehavior extends RenderBehavior {
                 $options['ng-init'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"] = "'.$selectedValue.'";';
             } else {
                 if (is_null($this->postedData)) {
-                    if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
-                        if (array_key_exists('custom_field_values', $this->_table->request->data[$this->_table->alias()])) {
-                            $questions = $this->_table->request->data[$this->_table->alias()]['custom_field_values'];
+                    $requestData = $this->_table->request->getData();
+                    if (array_key_exists($this->_table->getAlias(), $requestData instanceof \ArrayObject ? $requestData->getArrayCopy() : $requestData)) {
+                        if (array_key_exists('custom_field_values', (array) $this->_table->request->getData()[$this->_table->getAlias()])) {
+                            $questions = $this->_table->request->getData()[$this->_table->getAlias()]['custom_field_values'];
                             foreach ($questions as $question) {
                                 if (isset($question['number_value'])) {
-                                    if (array_key_exists($fieldKey, $question)) {
+                                    if (array_key_exists($fieldKey, $question instanceof \ArrayObject ? $question->getArrayCopy() : $question)) {
                                         $this->postedData[$question[$fieldKey]] = $question['number_value'];
                                     }
                                     // put data back when validation fails
-                                    if (array_key_exists($fieldId, $this->postedData)) {
+                                    if (array_key_exists($fieldId, $this->postedData instanceof \ArrayObject ? $this->postedData->getArrayCopy() : $this->postedData)) {
                                         $selectedValue = $this->postedData[$fieldId];
                                         $options['ng-init'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"] = "'.$selectedValue.'";';
                                     }
@@ -81,7 +82,7 @@ class RenderDropdownBehavior extends RenderBehavior {
                         }
                     }
                 } else {
-                    if (array_key_exists($fieldId, $this->postedData)) {
+                    if (array_key_exists($fieldId,  $this->postedData instanceof \ArrayObject ? $this->postedData->getArrayCopy() : $this->postedData)) {
                         $selectedValue = $this->postedData[$fieldId];
                         $options['ng-init'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"] = "'.$selectedValue.'";';
                     }

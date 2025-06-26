@@ -9,20 +9,20 @@ class InfrastructureUtilityTelephonesController extends PageController
 {
     private $academicPeriodOptions = [];
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
         $this->loadModel('AcademicPeriod.AcademicPeriods');
         // to disable actions if institution is not active
         $this->loadComponent('Institution.InstitutionInactive');
-
+        $this->loadComponent('Page.Page');
         $this->Page->disable(['search']); // to disable the search function
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
         $institutionName = $session->read('Institution.Institutions.name');
@@ -81,9 +81,9 @@ class InfrastructureUtilityTelephonesController extends PageController
             ->setOptions($this->academicPeriodOptions);
 
         // set queryString
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $queryString = $page->decode($requestQuery['querystring']);
-        $academicPeriodId = array_key_exists('academic_period_id', $queryString) ? $queryString['academic_period_id']: $this->AcademicPeriods->getCurrent();
+        $academicPeriodId = isset($queryString['academic_period_id']) ? $queryString['academic_period_id']: $this->AcademicPeriods->getCurrent();
         $page->setQueryString('academic_period_id', $academicPeriodId);
 
         parent::index();
@@ -122,11 +122,12 @@ class InfrastructureUtilityTelephonesController extends PageController
 
     private function getInstitutionID()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
         $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
-        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
-            $this->request->params['institutionId'] :
+        $getRequest = $this->request->getAttribute('params');
+        $encodedInstitutionID = isset($getRequest['institutionId']) ?
+            $getRequest['institutionId'] :
             $encodedInstitutionIDFromSession;
         try {
             $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];

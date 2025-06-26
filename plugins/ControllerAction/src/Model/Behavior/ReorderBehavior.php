@@ -15,7 +15,7 @@ class ReorderBehavior extends Behavior {
 		'filterValues' => null
 	];
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.reorder'] = 'reorder';
 		return $events;
@@ -29,10 +29,10 @@ class ReorderBehavior extends Behavior {
 		$controller->autoRender = false;
 
 		if ($request->is('ajax')) {
-			$primaryKey = $model->primaryKey();
-			$orderField = $this->config('orderField');
+			$primaryKey = $model->getPrimaryKey();
+			$orderField = $this->getConfig('orderField');
 
-			$encodedIds = json_decode($request->data("ids"));
+			$encodedIds = json_decode($request->getData("ids"));
 
 			$ids = [];
 			$idKeys = [];
@@ -50,24 +50,24 @@ class ReorderBehavior extends Behavior {
 					->select($orderField)
 					->where(['OR' => $idKeys])
 					->order([$model->aliasField($orderField)])
-					->hydrate(false)
+					->enableHydration(false)
 					->toArray();
 
 				$originalOrder = array_reverse($originalOrder);
 				foreach ($ids as $id) {
 					$orderValue = array_pop($originalOrder);
 					/** POCOR-6677 starts - storing order as per reorder numbering to overcome duplication of order no*/
-					if ($model->alias() == 'SecurityRoles') {
-						$model->updateAll([$orderField => $init], [$id]);
-						$init++; 
+					if ($model->getAlias() == 'SecurityRoles') {
+						$model->updateAll(["`$orderField`" => $init], [$id]); // POCOR-9140
+						$init++;
 					} else {
-						$model->updateAll([$orderField => $orderValue[$orderField]], [$id]);
+						$model->updateAll(["`$orderField`" => $orderValue[$orderField]], [$id]);
 					}
-					/** POCOR-6677 ends*/ 
+					/** POCOR-6677 ends*/
 				}
 
 				$event = $model->dispatchEvent('ControllerAction.Model.afterReorder', [$ids], $model);
-				if ($event->isStopped()) { return $event->result; }
+				if ($event->isStopped()) { return $event->getResult(); }
 			}
 		}
 		$mainEvent->stopPropagation();
@@ -77,10 +77,10 @@ class ReorderBehavior extends Behavior {
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		/** POCOR-6677 starts- added AND condition to not do anything when model is SecurityRoles*/
 		$model = $this->_table;
-		if ($entity->isNew() && $model->alias() != 'SecurityRoles') {
-			$orderField = $this->config('orderField');
-			$filter = $this->config('filter');
-			$filterValues = $this->config('filterValues');
+		if ($entity->isNew() && $model->getAlias() != 'SecurityRoles') {
+			$orderField = $this->getConfig('orderField');
+			$filter = $this->getConfig('filter');
+			$filterValues = $this->getConfig('filterValues');
 			$order = 0;
 
 			if (is_null($filter)) {
@@ -142,25 +142,25 @@ class ReorderBehavior extends Behavior {
 		}
 		$counter = 1;
 		foreach ($reorderItems as $key => $item) {
-			$table->updateAll([$orderField => $counter++], [$table->primaryKey() => $key]);
+            $table->updateAll(["`$orderField`" => $counter++], [$table->getPrimaryKey() => $key]); // POCOR-9140
 		}
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		/** POCOR-6677 starts- added AND condition to not do anything when model is SecurityRoles*/
 		$model = $this->_table;
-		if ($model->alias() != 'SecurityRoles') {
-			$orderField = $this->config('orderField');
-			$filter = $this->config('filter');
-			$filterValues = $this->config('filterValues');
+		if ($model->getAlias() != 'SecurityRoles') {
+			$orderField = $this->getConfig('orderField');
+			$filter = $this->getConfig('filter');
+			$filterValues = $this->getConfig('filterValues');
 			$this->updateOrder($entity, $orderField, $filter, $filterValues);
 		}
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-		$orderField = $this->config('orderField');
-		$filter = $this->config('filter');
-		$filterValues = $this->config('filterValues');
+		$orderField = $this->getConfig('orderField');
+		$filter = $this->getConfig('filter');
+		$filterValues = $this->getConfig('filterValues');
 		$this->updateOrder($entity, $orderField, $filter, $filterValues);
 	}
 }

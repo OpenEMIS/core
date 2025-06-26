@@ -6,17 +6,18 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
+use Cake\Event\EventInterface;
 
 class MapController extends AppController
 {
-	public function initialize()
+	public function initialize(): void
 	{
 		parent::initialize();
 
 		$this->attachAngularModules();
 	}
 
-	public function beforeFilter(Event $event)
+	public function beforeFilter(EventInterface $event)
 	{
 		parent::beforeFilter($event);
 
@@ -31,13 +32,13 @@ class MapController extends AppController
 
 
         // Start POCOR-5188
-        $manualTable = TableRegistry::get('Manuals');
-        $ManualContent =   $manualTable->find()->select(['url'])->where([
+        $manualTable = TableRegistry::getTableLocator()->get('Manuals');
+        $ManualContent = $manualTable->find()->select(['url'])->where([
                 $manualTable->aliasField('function') => 'Map',
                 $manualTable->aliasField('module') => 'Reports',
                 $manualTable->aliasField('category') => 'Reports',
                 ])->first();
-        
+
         if (!empty($ManualContent['url'])) {
             $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
         }else{
@@ -48,8 +49,8 @@ class MapController extends AppController
 
 	private function attachAngularModules()
 	{
-		$action = $this->request->action;
-
+		// echo "<pre>";print_r($this->request->getAttribute('params')['action']);die;
+		$action = $this->request->getAttribute('params')['action'];
 		switch ($action) {
 			case 'index':
 				$this->Angular->addModules([
@@ -59,4 +60,10 @@ class MapController extends AppController
 			break;
 		}
 	}
+
+	public function beforeRender(EventInterface $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+    }
 }

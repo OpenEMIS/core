@@ -7,13 +7,13 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 
 class RisksBehavior extends Behavior
 {
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
@@ -21,7 +21,7 @@ class RisksBehavior extends Behavior
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $alias = $this->_table->alias();
+        $alias = $this->_table->getAlias();
 
         $broadcaster = $this->_table;
         $listeners = [];
@@ -34,7 +34,7 @@ class RisksBehavior extends Behavior
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
-        $alias = $this->_table->alias();
+        $alias = $this->_table->getAlias();
 
         $broadcaster = $this->_table;
         $listeners = [];

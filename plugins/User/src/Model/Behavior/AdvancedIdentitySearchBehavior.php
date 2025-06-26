@@ -9,14 +9,14 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 
 class AdvancedIdentitySearchBehavior extends Behavior {
-	protected $_defaultConfig = [
+	protected $_defaultgetConfig = [
 		'associatedKey' => '',
 	];
 
-	public function initialize(array $config) {
-		$associatedKey = $this->config('associatedKey');
+	public function initialize(array $getConfig): void {
+		$associatedKey = $this->getConfig('associatedKey');
 		if (empty($associatedKey)) {
-			$this->config('associatedKey', $this->_table->aliasField('id'));
+			$this->setConfig('associatedKey', $this->_table->aliasField('id')); // POCOR-8779
 		}
 	}
 
@@ -30,7 +30,7 @@ class AdvancedIdentitySearchBehavior extends Behavior {
                         'UserIdentities' => [
                             'table' => 'user_identities',
                             'conditions' => [
-                                'UserIdentities.security_user_id = '.$this->config('associatedKey')
+                                'UserIdentities.security_user_id = '.$this->getConfig('associatedKey')
                             ]
                         ]
                     ])
@@ -49,7 +49,7 @@ class AdvancedIdentitySearchBehavior extends Behavior {
         return $query;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -77,7 +77,7 @@ class AdvancedIdentitySearchBehavior extends Behavior {
 
     public function getIdentityTypeOptions()
     {
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
 
         return  $IdentityTypes
                 ->find('list')

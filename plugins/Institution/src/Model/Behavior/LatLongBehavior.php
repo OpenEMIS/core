@@ -18,10 +18,10 @@ class LatLongBehavior extends Behavior
        // $LatLongPermission = $ConfigItems->value("latitude_longitude");
         $LatLongPermission = $ConfigItems->value("latitude_mandatory"); //POCOR-7045
         $LongPermission = $ConfigItems->value("longitude_mandatory"); //POCOR-7045
-        
+        $model = $this->_table; //POCOR-8082
         if ($LatLongPermission == self::MANDATORY && $LongPermission == self::MANDATORY) { //POCOR-7045
             $validator = new Validator();
-            return $validator
+            return $validator->setProvider('custom', $model) //POCOR-8082
                 ->allowEmpty('longitude')
                 ->add('longitude', 'ruleLongitude', [
                         'rule' => 'checkLongitude'
@@ -33,7 +33,7 @@ class LatLongBehavior extends Behavior
             ;
         } elseif ($LatLongPermission == self::NON_MANDATORY && $LongPermission == self::NON_MANDATORY) { //POCOR-7045
             $validator = new Validator();
-            return $validator
+            return $validator->setProvider('custom', $model) //POCOR-8082
                 ->allowEmpty('longitude')
                 ->add('longitude', 'ruleLongitude', [
                         'rule' => 'checkLongitude'
@@ -44,6 +44,7 @@ class LatLongBehavior extends Behavior
                 ]);
         } elseif ($LatLongPermission == self::EXCLUDED) {
             $validator = new Validator();
+            $validator->setProvider('custom', $model); //POCOR-8082
             return $validator;
         } else {
             Log::write('error', 'Configuration does not exist. Configuration value: ' . $LatLongPermission);

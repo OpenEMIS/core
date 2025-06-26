@@ -11,9 +11,9 @@ use App\Model\Table\AppTable;
 
 class NotRegisteredStudentsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_students');
+        $this->setTable('institution_students');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
@@ -34,7 +34,7 @@ class NotRegisteredStudentsTable extends AppTable
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -58,18 +58,18 @@ class NotRegisteredStudentsTable extends AppTable
 
         $query
             ->contain(['Users.Genders', 'Users.MainNationalities', 'Users.BirthplaceAreas', 'Users.AddressAreas', 'Users.SpecialNeeds.SpecialNeedsTypes', 'Institutions'])
-            ->leftJoin([$ExamCentreStudents->alias() => $ExamCentreStudents->table()], [
+            ->leftJoin([$ExamCentreStudents->getAlias() => $ExamCentreStudents->getTable()], [
                 $ExamCentreStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $ExamCentreStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                 $ExamCentreStudents->aliasField('examination_id = ') . $selectedExam
             ])
-            ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+            ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->getTable()], [
                 $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                 $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                 $ClassStudents->aliasField('student_status_id = ') . $currentStatus
             ])
-            ->leftJoin([$Class->alias() => $Class->table()], [
+            ->leftJoin([$Class->getAlias() => $Class->getTable()], [
                 $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id'),
             ])
             ->select(['openemis_no' => 'Users.openemis_no', 'first_name' => 'Users.first_name', 'middle_name' => 'Users.middle_name','last_name' => 'Users.last_name', 'gender_name' => 'Genders.name', 'nationality_name' => 'MainNationalities.name', 'dob' => 'Users.date_of_birth', 'birthplace_area' => 'BirthplaceAreas.name', 'address_area' => 'AddressAreas.name', 'class_name' => 'InstitutionClasses.name'])

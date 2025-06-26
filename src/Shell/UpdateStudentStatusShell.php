@@ -10,7 +10,7 @@ use Cake\Datasource\ConnectionManager;
 
 class UpdateStudentStatusShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Institution.StudentWithdraw');
@@ -18,7 +18,7 @@ class UpdateStudentStatusShell extends Shell
         $this->loadModel('SystemProcesses');
     }
 
-    public function main()
+    public function main(): void
     {
         if (!empty($this->args[0])) {
             $exit = false;

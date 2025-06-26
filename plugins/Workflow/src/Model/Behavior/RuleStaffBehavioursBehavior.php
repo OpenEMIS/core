@@ -25,7 +25,7 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
         ]
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -35,7 +35,7 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->rule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
-                $validator = $model->validator();
+                $validator = $model->getValidator();
                 $validator->add('behaviour_classification_id', 'notBlank', ['rule' => 'notBlank']);
                 $validator->requirePresence('behaviour_classification_id');
             }
@@ -46,11 +46,11 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
     {
         $model = $this->_table;
         if ($model->action == 'index' && $entity->has('rule')) {
-            $ruleConfig = $this->config('rule');
+            $ruleConfig = $this->getConfig('rule');
             $ruleArray = json_decode($entity->rule, true);
 
             $list = [];
-            if (array_key_exists('where', $ruleArray)) {
+            if (isset($ruleArray['where'])) {
                 $where = $ruleArray['where'];
                 foreach ($where as $field => $fieldValue) {
                     $label = Inflector::humanize($field);
@@ -60,7 +60,7 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
                     $value = __($label) . ': ';
 
                     if (isset($ruleConfig[$field]['lookupModel'])) {
-                        $lookupModel = $this->config('rule.'.$field.'.lookupModel');
+                        $lookupModel = $this->getConfig('rule.'.$field.'.lookupModel');
                         $modelTable = TableRegistry::get($lookupModel);
 
                         try {

@@ -14,7 +14,7 @@ class ApplicationSwitcherComponent extends Component {
     private $controller;
     private $productName;
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
         $this->productName = $config['productName'];
         $this->controller = $this->_registry->getController();
     }
@@ -29,10 +29,10 @@ class ApplicationSwitcherComponent extends Component {
     public function onUpdateProductList()
     {
         $displayProducts = [];
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         if (!$session->check('ConfigProductLists.list')) {
             // Change to generic table registry to read from config_product_lists table
-            $ConfigProductLists = TableRegistry::get('ConfigProductLists');
+            $ConfigProductLists = TableRegistry::getTableLocator()->get('Configuration.ConfigProductLists');
             $productListOptions = $ConfigProductLists->find()
                 ->select([
                     $ConfigProductLists->aliasField('name'),
@@ -40,7 +40,7 @@ class ApplicationSwitcherComponent extends Component {
                     $ConfigProductLists->aliasField('file_name'),
                     $ConfigProductLists->aliasField('file_content')
                 ])
-                ->hydrate(false)
+                //->hydrate(false)
                 ->toArray();
 
             $dir = new Folder(WWW_ROOT . 'img' . DS . 'product_list_logo', true);

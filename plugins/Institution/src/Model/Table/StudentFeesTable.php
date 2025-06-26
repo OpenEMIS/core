@@ -6,12 +6,13 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 
 use Cake\Log\Log;
+use Cake\ORM\Locator\TableLocator;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
@@ -31,9 +32,9 @@ class StudentFeesTable extends ControllerActionTable
     protected $InstitutionFeeEntity = null;
     protected $StudentFeesAbstract = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_students');
+        $this->setTable('institution_students');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
@@ -45,7 +46,17 @@ class StudentFeesTable extends ControllerActionTable
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 
         if ($this->behaviors()->has('ControllerAction')) {
-            $this->behaviors()->get('ControllerAction')->config([
+            // $this->behaviors()->get('ControllerAction')->config([
+            //     'actions' => [
+            //         'index' => true,
+            //         'view' => true,
+            //         'edit' => true,
+            //         'add' => false,
+            //         'remove' => false,
+            //         'reorder' => false
+            //     ],
+            // ]);
+            $this->behaviors()->get('ControllerAction')->setConfig([
                 'actions' => [
                     'index' => true,
                     'view' => true,
@@ -55,6 +66,7 @@ class StudentFeesTable extends ControllerActionTable
                     'reorder' => false
                 ],
             ]);
+            $this->addBehavior('Institution.InstitutionTab');
         }
 
         $this->addBehavior('User.AdvancedNameSearch');
@@ -63,8 +75,9 @@ class StudentFeesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $this->institutionId = $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        //$this->institutionId = $session->read('Institution.Institutions.id');
+        $this->institutionId = $this->getQueryString('institution_id');//POCOR-8360
 
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $this->currency = $ConfigItems->value('currency');
@@ -122,7 +135,7 @@ class StudentFeesTable extends ControllerActionTable
                 'data-compute-operand' => "plus"
             ]
         ]);
-     
+
         unset($this->StudentFeesAbstract->fields['modified_user_id']);
         unset($this->StudentFeesAbstract->fields['modified']);
         $this->StudentFeesAbstract->fields['created'] = false;
@@ -130,7 +143,7 @@ class StudentFeesTable extends ControllerActionTable
         $this->StudentFeesAbstract->setFieldOrder(['payment_date', 'amount', 'comments']);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Fees','Finance');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Fees','Finance');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -160,7 +173,7 @@ class StudentFeesTable extends ControllerActionTable
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
@@ -191,8 +204,9 @@ class StudentFeesTable extends ControllerActionTable
         if (empty($academicPeriodOptions)) {
             $this->Alert->warning('InstitutionQualityVisits.noPeriods');
         }
-        if (empty($this->request->query['academic_period_id'])) {
-            $this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+        if (empty($this->request->getQuery('academic_period_id'))) {
+            //$this->request->getQuery['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+            $this->request = $this->request->withQueryParams(['academic_period_id' => $this->AcademicPeriods->getCurrent()]);
         }
         $institutionId = $this->institutionId;
         $this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
@@ -209,37 +223,57 @@ class StudentFeesTable extends ControllerActionTable
         $this->_selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
         $this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId);
 
-        $this->InstitutionFeeEntity = $this->InstitutionFees
-            ->find()
-            ->contain(['InstitutionFeeTypes.FeeTypes'])
-            ->where([
-                'InstitutionFees.education_grade_id' => $this->_selectedEducationGradeId,
-                'InstitutionFees.academic_period_id' => $this->_selectedAcademicPeriodId,
-                'InstitutionFees.institution_id' => $this->institutionId
-            ])
-            ->first()
-            ;
+        $query = $this->InstitutionFees->find()
+                ->contain(['InstitutionFeeTypes.FeeTypes']);
 
-        $extra['elements']['custom'] = [
-            'name' => 'Institution.StudentFees/controls',
-            'data' => [
-                'academicPeriodOptions'=>$academicPeriodOptions,
-                'gradeOptions'=>$gradeOptions,
-            ],
-            'options' => [],
-             'order' => 0
-        ];
+        if ($this->_selectedEducationGradeId !== null) {
+            $query->where(['InstitutionFees.education_grade_id' => $this->_selectedEducationGradeId]);
+        }
+
+        if ($this->_selectedAcademicPeriodId !== null) {
+            $query->where(['InstitutionFees.academic_period_id' => $this->_selectedAcademicPeriodId]);
+        }
+
+        if ($this->institutionId !== null) {
+            $query->where(['InstitutionFees.institution_id' => $this->institutionId]);
+        }
+
+        $this->InstitutionFeeEntity = $query->first();
+
+
+            $queryString = $this->getQueryString();
+            $encodedQueryString = $this->paramsEncode($queryString);
+            $extra['elements']['custom'] = [
+                'name' => 'Institution.StudentFees/controls',
+                'data' => [
+                    'encodedQueryString' => $encodedQueryString,
+                    'academicPeriodOptions'=>$academicPeriodOptions,
+                    'gradeOptions'=>$gradeOptions,
+                ],
+                'options' => [],
+                 'order' => 0
+            ];
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query
-        ->where([
-            $this->aliasField('institution_id') => $this->institutionId,
-            $this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId,
-            $this->aliasField('education_grade_id') => $this->_selectedEducationGradeId,
-        ])
-        ;
+        $conditions = [];
+
+        if ($this->institutionId !== null) {
+            $conditions[$this->aliasField('institution_id')] = $this->institutionId;
+        }
+
+        if ($this->_selectedAcademicPeriodId !== null) {
+            $conditions[$this->aliasField('academic_period_id')] = $this->_selectedAcademicPeriodId;
+        }
+
+        if ($this->_selectedEducationGradeId !== null) {
+            $conditions[$this->aliasField('education_grade_id')] = $this->_selectedEducationGradeId;
+        }
+
+        // Apply conditions to the query
+        $query->where($conditions);
+
 
         if (!$this->InstitutionFeeEntity) {
             $this->Alert->warning('InstitutionFees.noProgrammeGradeFees');
@@ -332,7 +366,7 @@ class StudentFeesTable extends ControllerActionTable
         $this->fields['payments']['fields'] = $this->StudentFeesAbstract->fields;
         $this->fields['payments']['data'] = $this->_getPaymentRecords($entity);
         $this->fields['payments']['total'] = $this->onGetAmountPaid($event, $entity);
-         
+
         $this->setFieldOrder([
             'academic_period_id', 'education_programme', 'education_grade_id', 'openemis_no', 'student_id', 'fee_types', 'payments', 'outstanding_fee'
         ]);
@@ -346,15 +380,15 @@ class StudentFeesTable extends ControllerActionTable
     ******************************************************************************************************************/
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $requestData = $this->request->data;
-        if (isset($requestData[$this->alias()]['id'])) {
+        $requestData = $this->request->getData();
+        if (isset($requestData[$this->getAlias()]['id'])) {
             // pr($requestData);//die;
             // if ($requestData['submit']=='reload') {
-            $idKey = $this->aliasField($this->primaryKey());
-            if ($this->exists([$idKey => $requestData[$this->alias()]['id']])) {
+            $idKey = $this->aliasField($this->getPrimaryKey());
+            if ($this->exists([$idKey => $requestData[$this->getAlias()]['id']])) {
                 $entity = $this->find()
                         ->contain($this->_allAssociations())
-                        ->where([$idKey => $requestData[$this->alias()]['id']])
+                        ->where([$idKey => $requestData[$this->getAlias()]['id']])
                         ->first();
                 if ($entity) {
                     $this->_addActionSetup($event, $entity);
@@ -373,7 +407,7 @@ class StudentFeesTable extends ControllerActionTable
                 }
             }
             // }
-        } elseif (isset($this->request->params['pass'][1])) {
+        } elseif (isset($this->request->getAttribute('params')['pass'][1])) {
             $ids = empty($this->paramsPass(0)) ? [] : $this->paramsDecode($this->paramsPass(0));
             $idKeys = $this->getIdKeys($this, $ids);
 
@@ -496,15 +530,15 @@ class StudentFeesTable extends ControllerActionTable
         $institution_fee_id = $this->InstitutionFeeEntity->id;
         // die('addBeforeSave');
         $process = function ($model, $entity) use ($event, $data, $StudentFees, $student_id, $institution_fee_id) {
-            if (array_key_exists('StudentFeesAbstract', $data)) {
+            if (isset($data['StudentFeesAbstract'])) {
                 $fees = $StudentFees->newEntities($data['StudentFeesAbstract']);
                 $error = false;
                 $totalPaid = 0.00;
                 foreach ($fees as $key=>$fee) {
-                    if ($fee->errors()) {
-                        $error = $fee->errors();
-                        $data['StudentFeesAbstract'][$key]['errors'] = $error;
-                    }
+                    // if ($fee->getErors()) {
+                    //     $error = $fee->getErors();
+                    //     $data['StudentFeesAbstract'][$key]['errors'] = $error;
+                    // }
                     $totalPaid = (float)$totalPaid + (float)$fee->amount;
                     //    $fees[$key]->amount = number_format($data['StudentFeesAbstract'][$key]['amount'], 2);
                  //    if ($error) {
@@ -537,18 +571,19 @@ class StudentFeesTable extends ControllerActionTable
                     foreach ($error as $key=>$value) {
                         $errorMessage .= Inflector::classify($key);
                     }
-                    $model->log($error, 'debug');
+                    $model->log(print_r($error, true), 'debug');
                     /**
                      * unset all field validation except for "academic_period_id" to trigger validation error in ControllerActionComponent
                      */
                     foreach ($model->fields as $value) {
                         if ($value['field'] != 'academic_period_id') {
-                            $model->validator()->remove($value['field']);
+                            $model->getValidator()->remove($value['field']);
                         }
                     }
                     $model->fields['payments']['paymentFields'] = $fees;
                     $data['hasError'] = true;
-                    $model->request->data = $data->getArrayCopy();
+                    //$model->request->data = $data->getArrayCopy();
+                    $model->request = $model->request->withParsedBody($data->getArrayCopy());
                     return false;
                 }
             } else {
@@ -564,7 +599,7 @@ class StudentFeesTable extends ControllerActionTable
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        if (!array_key_exists('hasError', $data)) {
+        if (!isset($data['hasError'])) {
             $this->Alert->success('general.edit.success', ['reset' => true]);
             return $this->controller->redirect($this->url('view', true));
         }
@@ -581,7 +616,8 @@ class StudentFeesTable extends ControllerActionTable
                             'escape' => false,
                             'title' => 'Back'
                         ];
-        $this->controller->viewVars['backButton']['url'] = $extra['indexButtons']['view']['url'];
+        //$this->controller->viewVars['backButton']['url'] = $extra['indexButtons']['view']['url'];
+        $this->controller->viewBuilder()->getVars()['backButton']['url'] = $extra['indexButtons']['view']['url'];
     }
 
 
@@ -697,7 +733,7 @@ class StudentFeesTable extends ControllerActionTable
             'student_id' => $entity->student_id,
             'institution_fee_id' => $this->InstitutionFeeEntity->id,
         ];
-        $studenFee = $this->StudentFeesAbstract->newEntity();
+        $studenFee = $this->StudentFeesAbstract->newEmptyEntity();
         $studenFee = $this->StudentFeesAbstract->patchEntity($studenFee, $data, ['validate' => false]);
         if (!$requestData) {
             $studenFee->amount = number_format((float)$studenFee->amount, 2);
@@ -710,8 +746,8 @@ class StudentFeesTable extends ControllerActionTable
         $omitForeignKeys = ['modified_user_id', 'created_user_id'];
         $associations = [];
         foreach ($this->associations() as $assoc) {
-            if (!in_array($assoc->foreignKey(), $omitForeignKeys)) {
-                $associations[] = $assoc->target()->alias();
+            if (!in_array($assoc->getForeignKey(), $omitForeignKeys)) {
+                $associations[] = $assoc->getTarget()->getAlias();
             }
         }
         return $associations;
@@ -722,19 +758,19 @@ class StudentFeesTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
         $newButtons = [];
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $newButtons['view'] = $buttons['view'];
         }
-
-        if (array_key_exists('edit', $buttons)) {
+        $institutionId = $this->getQueryString('institution_id');
+        if (isset($buttons['edit'])) {
             $addPayment = $buttons['edit'];
             $addPayment['label'] = '<i class="fa kd-add"></i>' . __('Add Payment');
             $newButtons['addPayment'] = $addPayment;
             $newButtons['addPayment']['url'] = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'add',
-                $this->paramsEncode(['id' => $entity->id])
+                $this->paramsEncode(['id' => $entity->id, 'institution_id'=> $institutionId])
             ];
         }
 
@@ -742,13 +778,22 @@ class StudentFeesTable extends ControllerActionTable
     }
     //POCOR-6165 start
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
-     {  
+     {
         //added if acacdemic_period is not received
-        if (empty($this->request->query['academic_period_id'])) {
-            $this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+        if (empty($this->request->getQuery('academic_period_id'))) {
+            //$this->request->getQuery('academic_period_id') = $this->AcademicPeriods->getCurrent();
+            $this->request = $this->request->withQueryParams(['academic_period_id' => $this->AcademicPeriods->getCurrent()]);
         }
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-        $academicPeriod = $this->request->query['academic_period_id'];  
+        //$institutionId = $this->Session->read('Institution.Institutions.id');
+        //$institutionId  = $this->getInstitutionID();
+
+        $id = $this->request->getAttribute('params')['pass'][1];
+            $DecodedQueryString = $this->paramsDecode($id);
+            // print_r($DecodedQueryString);exit;
+            $institutionId = $DecodedQueryString['institution_id'];
+
+        //$institutionId = $this->request->getQuery('institution_id');
+        $academicPeriod = $this->request->getQuery('academic_period_id');
         $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($institutionId,  $academicPeriod);
         $educationGradeId = $this->queryString('education_grade_id', $gradeOptions);
         $this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId);
@@ -761,8 +806,8 @@ class StudentFeesTable extends ControllerActionTable
             ]),
             'openemis' =>$this->Users->aliasField('openemis_no')
            ])
-         
-        ->LeftJoin([$this->Users->alias() => $this->Users->table()],[
+
+        ->LeftJoin([$this->Users->getAlias() => $this->Users->getTable()],[
             $this->Users->aliasField('id').' = ' . 'StudentFees.student_id'
         ])
 
@@ -770,11 +815,13 @@ class StudentFeesTable extends ControllerActionTable
              'StudentFees.institution_id' =>  $institutionId,
              'StudentFees.education_grade_id' =>   $educationGradeId
         ]);
-       
+        //echo"<pre>";print_r($query);exit;
+
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
-                    
+
                     $InstitutionFees= TableRegistry::get('Institution.InstitutionFees');
+                    
                     $InstitutionFeeEntity = $InstitutionFees
                                              ->find()
                                              ->contain('InstitutionFeeTypes.FeeTypes')
@@ -784,41 +831,60 @@ class StudentFeesTable extends ControllerActionTable
                                                      'InstitutionFees.institution_id' => $row['institution_id']
                                              ])
                                              ->first();
-     
-                    $StudentFees= TableRegistry::get('student_fees');
-                    $StudentFeeEntity = $StudentFees
-                                            ->find()
-                                            ->select([
-                                                "amount"=> $StudentFees->find()->func()->sum('amount')
-                                            ])
-                                            ->where([
-                                                $StudentFees->aliasField('institution_fee_id') =>$InstitutionFeeEntity->id,
-                                                $StudentFees->aliasField('student_id') => $row['student_id']
 
-                                             ])
-                                             ->toArray();
-                  
-                    //total fee                         
+                    $tableLocator = new TableLocator();
+                    $StudentFees= $tableLocator->get('student_fees');
+
+                    //  $StudentFees= TableRegistry::getTableLocator()->get('Student.StudentFees');
+                    $StudentFeeEntity = $StudentFees
+                            ->find()
+                            ->select([
+                                "amount"=> $StudentFees->find()->func()->sum('amount')
+                            ])
+                            ->where([
+                                $StudentFees->aliasField('institution_fee_id') =>$InstitutionFeeEntity->id,
+                                $StudentFees->aliasField('student_id') => $row['student_id']
+
+                                ])
+                                ->toArray();
+
+                    //total fee
                     $row->total_fee='00';
-                    if(isset($InstitutionFeeEntity->total))
+                    if(isset($InstitutionFeeEntity->total)){
                         $row->total_fee=$InstitutionFeeEntity->total;
-                    
+                    }
                     //amount paid
                     $row->amount_paid="00";
-                    if($StudentFeeEntity[0]['amount']){
-                        $row->amount_paid=$StudentFeeEntity[0]['amount'];
+                    if(!empty($InstitutionFeeEntity)){
+                        $tableLocator = new TableLocator();
+                        $StudentFees= $tableLocator->get('student_fees');
+                        $StudentFeeEntity = $StudentFees
+                                                ->find()
+                                                ->select([
+                                                    "amount"=> $StudentFees->find()->func()->sum('amount')
+                                                ])
+                                                ->where([
+                                                    $StudentFees->aliasField('institution_fee_id') =>$InstitutionFeeEntity->id,
+                                                    $StudentFees->aliasField('student_id IS') => $row['student_id']
+
+                                                 ])
+                                                 ->toArray();
+                        if(!empty($StudentFeeEntity)){
+                            if($StudentFeeEntity[0]['amount']){
+                                $row->amount_paid=$StudentFeeEntity[0]['amount'];
+                            }
+                        }
                     }
-                    
                     //outstanding fee
                     $row['outstanding_fee']="00";
                     $row['outstanding_fee']= $row['total_fee']-$row['amount_paid'];
-                  
-                return $row;  
-                    
+
+                return $row;
+
            });
         });
-  
-         
+
+
    }
 
    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -844,14 +910,14 @@ class StudentFeesTable extends ControllerActionTable
             'type' => 'integer',
             'label' => __('Total Fee')
         ];
-       
+
         $extraField[] = [
             'key' => 'StudentFees.amount',
             'field' => 'amount_paid',
             'type' => 'integer',
             'label' => __('Amount Paid')
         ];
-        
+
         $extraField[] = [
             'key' => 'outstanding_fee',
             'field' => 'outstanding_fee',
@@ -862,5 +928,36 @@ class StudentFeesTable extends ControllerActionTable
     }
     //POCOR-6165 end
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'total_fee':
+                return __('Total Fee');
+            case 'registration_number':
+                return __('Registration Number');
+            case 'openemis_no':
+                return __('OpenEMIS ID');
+            case 'student_id':
+                return __('Student');
+            case 'date_of_birth':
+                return __('Date Of Birth');
+            case 'registration_start_date':
+                return __('Registration Start Date');
+            case 'registration_end_date':
+                return __('Registration End Date');
+            case 'description':
+                    return __('Description');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 
 }

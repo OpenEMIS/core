@@ -10,9 +10,9 @@ use Cake\ORM\TableRegistry;
 
 class StudentMealMarkedRecordsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('student_meal_marked_records');
+        $this->settable('student_meal_marked_records');
         parent::initialize($config);
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -46,7 +46,7 @@ class StudentMealMarkedRecordsTable extends AppTable
 
     public function afterSaveCommit(Event $event, Entity $entity)
     {
-        $MealRecords = TableRegistry::get('student_meal_marked_records');
+        $MealRecords = TableRegistry::get('Meal.StudentMealMarkedRecords');
         $MealRecords->dispatchEvent('Model.StudentMeals.afterSaveCommit', [$entity], $MealRecords);
     }
 }

@@ -8,8 +8,9 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
 class AchievementsTable extends AppTable {
-	public function initialize(array $config) {
-		$this->table('staff_training_self_studies');
+	public function initialize(array $config):void 
+	{
+		$this->setTable('staff_training_self_studies');
 		parent::initialize($config);
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('TrainingAchievementTypes', ['className' => 'Training.TrainingAchievementTypes', 'foreignKey' => 'training_achievement_type_id']);
@@ -25,7 +26,8 @@ class AchievementsTable extends AppTable {
 		]);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator 
+	{
 		$validator = parent::validationDefault($validator);
 
 		return $validator

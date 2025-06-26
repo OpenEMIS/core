@@ -7,7 +7,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 class ImportStudentBehavior extends Behavior 
 {
@@ -18,7 +18,7 @@ class ImportStudentBehavior extends Behavior
         'Institution.Institutions.ImportStudentExtracurriculars' => 'Import Extracurriculars'
     ];
 
-    public function implementedEvents()
+    public function implementedEvents():array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.add.beforeAction'] = 'addBeforeAction';
@@ -31,13 +31,13 @@ class ImportStudentBehavior extends Behavior
         $this->_table->ControllerAction->setFieldOrder(['feature', 'select_file']);
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $request = $this->_table->request;
-            $plugin = $request->params['plugin'];
-            $controller = $request->params['controller'];
-            $table = $this->_table->alias();
+            $plugin = $request->getAttribute('params')['plugin'];
+            $controller = $request->getAttribute('params')['controller'];
+            $table = $this->_table->getAlias();
             $selectedFeature =  $plugin . '.' . $controller . '.' . $table;
 
             $options = $this->getFeatureOptions();
@@ -56,8 +56,8 @@ class ImportStudentBehavior extends Behavior
         $table = $this->_table;
         $request = $this->_table->request;
 
-        if (isset($data) && isset($data[$table->alias()]) && !is_null($data[$table->alias()]['feature'])) {
-            $feature = explode('.', $data[$table->alias()]['feature']) ;
+        if (isset($data) && isset($data[$table->getAlias()]) && !is_null($data[$table->getAlias()]['feature'])) {
+            $feature = explode('.', $data[$table->getAlias()]['feature']) ;
             list($plugin, $controller, $action) = $feature;
             $institutionParams = $request->params['institutionId'];
 
@@ -69,7 +69,7 @@ class ImportStudentBehavior extends Behavior
                 'add'
             ];
 
-            $requestQuery = $request->query;
+            $requestQuery = $request->getQuery();
             if (!empty($requestQuery)) {
                 $url = array_merge($url, $requestQuery);
             }

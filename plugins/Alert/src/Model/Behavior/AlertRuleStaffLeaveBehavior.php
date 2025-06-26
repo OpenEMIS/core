@@ -7,7 +7,7 @@ use Alert\Model\Behavior\AlertRuleBehavior;
 
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 
 class AlertRuleStaffLeaveBehavior extends AlertRuleBehavior
@@ -71,7 +71,7 @@ class AlertRuleStaffLeaveBehavior extends AlertRuleBehavior
         ]
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }

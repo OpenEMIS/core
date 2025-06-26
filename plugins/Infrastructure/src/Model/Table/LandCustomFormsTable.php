@@ -3,14 +3,19 @@ namespace Infrastructure\Model\Table;
 
 use ArrayObject;
 use CustomField\Model\Table\CustomFormsTable;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
+use Cake\ORM\Locator\TableLocator;
+use Cake\ORM\Query;
 
 class LandCustomFormsTable extends CustomFormsTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $config['extra'] = [
+        $this->setTable('infrastructure_custom_forms');
+        parent::initialize($config);
+        // comment cakephp 4 start
+        /*$config['extra'] = [
             'fieldClass' => [
                 'className' => 'Infrastructure.LandCustomFields',
                 'joinTable' => 'infrastructure_custom_forms_fields',
@@ -27,25 +32,48 @@ class LandCustomFormsTable extends CustomFormsTable
                 'through' => 'Infrastructure.LandCustomFormsFilters',
                 'dependent' => true
             ]
-        ];
-        $this->table('infrastructure_custom_forms');
-        parent::initialize($config);
+        ];*/  // comment cakephp 4 end // 
+
+            // InfrastructureCustomFormsFields model
+            $this->belongsToMany('CustomForms', [
+                'className' => 'Infrastructure.LandCustomFields',
+                'joinTable' => 'infrastructure_custom_forms_fields',
+                'foreignKey' => 'infrastructure_custom_form_id',
+                'targetForeignKey' => 'infrastructure_custom_field_id',
+                'through' => 'Infrastructure.InfrastructureCustomFormsFields',
+                'dependent' => true
+            ]);
+
+            // LandCustomForms model
+            $this->belongsToMany('CustomForms', [
+                'className' => 'Infrastructure.LandTypes',
+                'joinTable' => 'infrastructure_custom_forms_filters',
+                'foreignKey' => 'infrastructure_custom_form_id',
+                'targetForeignKey' => 'infrastructure_custom_filter_id',
+                'through' => 'Infrastructure.LandCustomFormsFilters',
+                'dependent' => true
+            ]);
         $this->addBehavior('Infrastructure.Pages', ['module' => 'Land']);
         $this->setDeleteStrategy('restrict');
     }
 
-    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $selectedModule = !is_null($request->query('module')) ? $request->query('module') : '';
+        $selectedModule = !is_null($this->request->getQuery('module')) ? $this->request->getQuery('module') : '';
+        $tableLocator = new TableLocator();
+        $InfrastructureCustomForms = $tableLocator->get('InfrastructureCustomForms');
+        if($selectedModule == null){
+            $paramsPass = $this->request->getAttribute('params')['pass'][1];
+            $ModuleId = $this->paramsDecode($paramsPass)['id'];
+            $selectedModule = $InfrastructureCustomForms->find()->where([$InfrastructureCustomForms->aliasField('id') => $ModuleId])->first()->custom_module_id;
+        }
         $module = $this->CustomModules
             ->find()
             ->where([$this->CustomModules->aliasField('id') => $selectedModule])
             ->first();
-
         $attr['type'] = 'readonly';
         $attr['value'] = $selectedModule;
         $attr['attr']['value'] = $module->name;
-
         return $attr;
     }
 
@@ -56,5 +84,11 @@ class LandCustomFormsTable extends CustomFormsTable
             $query->where([$this->CustomModules->aliasField('code IN') => $this->getModules()]);
         }
         return $query;
+    } 
+
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        //echo "<pre>"; print_r($query->toArray());die;
     }
+
 }

@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
@@ -15,7 +15,7 @@ use App\Model\Table\ControllerActionTable;
 
 class RiskCriteriasTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Risks', ['className' => 'Risk.Risks', 'foreignKey' =>'risk_id']);
@@ -25,7 +25,7 @@ class RiskCriteriasTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -36,7 +36,8 @@ class RiskCriteriasTable extends ControllerActionTable
                 ]
             ])
             ->add('threshold', 'ruleCheckCriteriaThresholdRange', [
-                'rule' => ['checkCriteriaThresholdRange']
+                'rule' => [$this, 'checkCriteriaThresholdRange'],//POCOR-8516
+                'message' => __('Threshold is invalid.')
             ])
             ;
     }
@@ -53,25 +54,26 @@ class RiskCriteriasTable extends ControllerActionTable
 
         $activeRiskId = [];
         $activeRisksData = $InstitutionRisks->find()
+            ->contain('Risks')
             ->where([
                 'institution_id' => $options['institution_id'],
                 'OR' => [
                     ['status' => 2], // status == processing
                     ['status' => 3]  // status == completed
                 ]
-            ])
+            ])->where(['Risks.academic_period_id' => $options['academic_period_id']]) //POCOR-8276
             ->all();
 
         foreach ($activeRisksData as $activeRisks) {
             $activeRiskId [] = $activeRisks->risk_id;
-        }
-
+        } 
         return $query->contain('Risks')
             ->where([
+                'Risks.academic_period_id' => $options['academic_period_id'], //POCOR-8276
                 'criteria' => $options['criteria_key'],
                 $this->Risks->aliasField('id') . ' IN ' => $activeRiskId
-            ])
-            ->all();
+            ]);
+        
     }
 
     public function getTotalRisk($riskId)

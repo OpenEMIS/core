@@ -5,11 +5,12 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\TableRegistry;
 
 class OutcomeCriteriasTable extends ControllerActionTable
 {
@@ -17,7 +18,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
     private $templateId = null;
     private $gradeId = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -45,7 +46,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -58,7 +59,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery('queryString');
 
         if ($queryString) {
             $this->periodId = $this->getQueryString('academic_period_id');
@@ -71,12 +72,12 @@ class OutcomeCriteriasTable extends ControllerActionTable
             $this->controller->getOutcomeTemplateTabs(['queryString' => $queryString]);
 
             // set header
-            $header = $templateEntity->name . ' - ' . __(Inflector::humanize(Inflector::underscore($this->alias())));
+            $header = $templateEntity->name . ' - ' . __(Inflector::humanize(Inflector::underscore($this->getAlias())));
             $this->controller->set('contentHeader', $header);
 
         } else {
             $event->stopPropagation();
-            return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Templates']);
+            return $this->controller->redirect(['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'Templates']);
         }
     }
 
@@ -103,7 +104,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
             ->toArray();
         $subjectOptions = ['0' => '-- '.__('All Subjects').' --'] + $subjectOptions;
 
-        $selectedSubject = !is_null($this->request->query('subject')) ? $this->request->query('subject') : 0;
+        $selectedSubject = !is_null($this->request->getQuery('subject')) ? $this->request->getQuery('subject') : 0;
         if (!empty($selectedSubject)){
             $conditions[$this->aliasField('education_subject_id')] = $selectedSubject;
         }
@@ -139,11 +140,11 @@ class OutcomeCriteriasTable extends ControllerActionTable
 
     public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if ($this->request->query('criteriaForm')) {
-            $this->request->data[$this->alias()]['education_subject_id'] = $this->getQueryString('education_subject_id', 'criteriaForm');
-            $this->request->data[$this->alias()]['name'] = $this->getQueryString('name', 'criteriaForm');
-            $this->request->data[$this->alias()]['code'] = $this->getQueryString('code', 'criteriaForm');
-            $this->request->data[$this->alias()]['outcome_grading_type_id'] = $this->getQueryString('outcome_grading_type_id', 'criteriaForm');
+        if ($this->request->getQuery('criteriaForm')) {
+            $this->request->data[$this->getAlias()]['education_subject_id'] = $this->getQueryString('education_subject_id', 'criteriaForm');
+            $this->request->data[$this->getAlias()]['name'] = $this->getQueryString('name', 'criteriaForm');
+            $this->request->data[$this->getAlias()]['code'] = $this->getQueryString('code', 'criteriaForm');
+            $this->request->data[$this->getAlias()]['outcome_grading_type_id'] = $this->getQueryString('outcome_grading_type_id', 'criteriaForm');
         }
     }
 
@@ -180,7 +181,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
         $extra['redirect'] = $url;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'readonly';
@@ -190,7 +191,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldOutcomeTemplateId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldOutcomeTemplateId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'readonly';
@@ -200,7 +201,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
             $gradeId = $this->gradeId;
@@ -225,7 +226,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldOutcomeGradingTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldOutcomeGradingTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $defaultOptions = ['' => '-- '.__('Select').' --'];
@@ -250,13 +251,13 @@ class OutcomeCriteriasTable extends ControllerActionTable
 
     public function addOnChangeGradingType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        $competencyGradingTypeId = $data[$this->alias()]['outcome_grading_type_id'];
+        $competencyGradingTypeId = $data[$this->getAlias()]['outcome_grading_type_id'];
 
         if ($competencyGradingTypeId == 'createNew') {
             $criteriaParams = [
-                'education_subject_id' => $data[$this->alias()]['education_subject_id'],
-                'name' => $data[$this->alias()]['name'],
-                'code' => $data[$this->alias()]['code']
+                'education_subject_id' => $data[$this->getAlias()]['education_subject_id'],
+                'name' => $data[$this->getAlias()]['name'],
+                'code' => $data[$this->getAlias()]['code']
             ];
 
             // redirect to GradingTypes add page
@@ -268,4 +269,55 @@ class OutcomeCriteriasTable extends ControllerActionTable
             return $this->controller->redirect($url);
         }
     }
+
+     //POCOR-8875 start
+     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+     {
+        $LabelTable = TableRegistry::get('Labels');
+         if ($field == 'academic_period_id') {
+             return __('Academic Period');
+         } elseif ($field == 'name') {
+             return __('Name');
+         }elseif ($field == 'code') {
+            $codeName = $LabelTable->find()->where(['module_name' =>'Outcome -> Criterias' , 'field_name' =>'code'])->first();
+            if($codeName != null){
+               $codeName =  $codeName->name;
+            }
+            return  __((string)$codeName);
+         } elseif ($field == 'outcome_template_id') {
+             return __('Outcome Template');
+         } elseif ($field == 'education_subject_id') {
+             return __('Education Subject');
+         } elseif ($field == 'education_grade_id') {
+             return __('Education Grade');
+         } elseif ($field == 'outcome_grading_type_id') {
+             return __('Outcome Grading Type');
+         }  elseif ($field == 'modified_user_id') {
+             return __('Modified By');
+         } elseif ($field == 'modified') {
+             return __('Modified On');
+         } elseif ($field == 'created_user_id') {
+             return __('Created By');
+         } elseif ($field == 'created') {
+             return __('Created On');
+         } 
+         elseif ($field == 'code') {
+             $LabelsTable = TableRegistry::getTableLocator()->get('Labels');
+ 
+             $label = $LabelsTable->find()
+                 ->where([
+                     'module' => $module,
+                     'module_name' => 'Outcome -> Criterias',
+                     'field' => 'code'
+                 ])
+                 ->first();
+             
+             return $label ? $label->field_name : null;
+         } 
+         else {
+             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+         }
+     }
+     //POCOR-8875 end
+    
 }

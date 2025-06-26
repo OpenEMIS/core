@@ -21,6 +21,9 @@ use Cake\Network\Exception\InvalidCsrfTokenException;
 use Cake\Network\Request;
 use Cake\Network\Response;
 use Cake\Utility\Security;
+use Cake\Http\ServerRequest;
+use Cake\Http\ServerRequestFactory;
+use Cake\Controller\Component\CsrfComponent;
 
 /**
  * Provides CSRF protection & validation.
@@ -76,23 +79,23 @@ class CsrfComponent extends Component
      */
     public function startup(Event $event)
     {
-        $controller = $event->subject();
-        $request = $controller->request;
-        $response = $controller->response;
+        $controller = $event->getSubject();
+        $request = $controller->getRequest();
+        $response = $controller->getResponse();
         $cookieName = $this->_config['cookieName'];
 
         /* @var \Cake\Network\Request $request */
-        $cookieData = $request->cookie($cookieName);
-        if ($cookieData) {
-            $request->params['_csrfToken'] = $cookieData;
-        }
-
+        // $cookieData = $request->cookie($cookieName);
+        // if ($cookieData) {
+        //     $request->params['_csrfToken'] = $cookieData;
+        // }
+        $request = new ServerRequest();
         if ($request->is('requested')) {
             return;
         }
 
         if ($request->is('get') && $cookieData === null) {
-            $this->_setCookie($request, $response);
+            // $this->_setCookie($request, $response);
         }
         if ($request->is(['put', 'post', 'delete', 'patch']) || !empty($request->data)) {
             $this->_validateToken($request);
@@ -105,7 +108,7 @@ class CsrfComponent extends Component
      *
      * @return array
      */
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         return [
             'Controller.startup' => 'startup',
@@ -122,21 +125,21 @@ class CsrfComponent extends Component
      * @param \Cake\Network\Response $response The response object.
      * @return void
      */
-    protected function _setCookie(Request $request, Response $response)
-    {
-        $expiry = new Time($this->_config['expiry']);
-        $value = hash('sha512', Security::randomBytes(16), false);
+    // protected function _setCookie(Request $request, Response $response)
+    // {
+    //     $expiry = new Time($this->_config['expiry']);
+    //     $value = hash('sha512', Security::randomBytes(16), false);
 
-        $request->params['_csrfToken'] = $value;
-        $response->cookie([
-            'name' => $this->_config['cookieName'],
-            'value' => $value,
-            'expire' => $expiry->format('U'),
-            'path' => $request->webroot,
-            'secure' => $this->_config['secure'],
-            'httpOnly' => $this->_config['httpOnly'],
-        ]);
-    }
+    //     $request->params['_csrfToken'] = $value;
+    //     $response->cookie([
+    //         'name' => $this->_config['cookieName'],
+    //         'value' => $value,
+    //         'expire' => $expiry->format('U'),
+    //         'path' => $request->webroot,
+    //         'secure' => $this->_config['secure'],
+    //         'httpOnly' => $this->_config['httpOnly'],
+    //     ]);
+    // }
 
     /**
      * Validate the request data against the cookie token.

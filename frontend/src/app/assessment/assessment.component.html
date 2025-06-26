@@ -1,0 +1,27 @@
+<kd-progressloader *ngIf="displayLoading" configtype="small-spinner" [configvalue]="null"></kd-progressloader>
+<!-- <kd-breadcrumb [config]="breadcrumbList"></kd-breadcrumb> -->
+<kd-pageheader [config]='pageheader'></kd-pageheader>
+<!-- <div class="academic-term-section"> -->
+<!-- <select class="select-academic-term" (change)="changeTermData($event)">
+        <option [ngValue]="null" disabled>-- Select Academic Term --</option>
+        <option [value]="term?.id" *ngFor="let term of academicTerm">{{ term?.name }}</option>
+    </select> -->
+<div class="m-3">
+    <kd-view displayType="form" [inputData]="academicPeriod" [button]="filterButtons"
+        *ngIf="academicPeriod[0]?.options?.length > 0" (change)="changeTermData($event)"></kd-view>
+</div>
+<!-- </div> -->
+<div class="m-3">
+    <kd-tabs [config]="tabsListHtml" type="html" (activeState)="_selectTabs($event)" *ngIf="tabsListHtml.length > 0">
+        <div [ngSwitch]="_state">
+            <ng-container *ngFor="let tabList of tabsListHtml">
+                <div *ngSwitchCase="tabList.tabId">
+                    <kd-table [row]="_row" [column]="_column" [config]="_config" [api]="_tableApi"
+                        [editTable]="_editTable" [displayEditable]="_displayEditable"
+                        class="student-table-data"></kd-table>
+                </div>
+            </ng-container>
+            <div *ngSwitchDefault></div>
+        </div>
+    </kd-tabs>
+</div>

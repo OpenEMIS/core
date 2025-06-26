@@ -1,5 +1,5 @@
 angular
-    .module('map.ctrl', ['utils.svc', , 'map.svc'])
+    .module('map.ctrl', ['utils.svc' , 'map.svc'])
     .controller('MapCtrl', MapController);
 
 MapController.$inject = ['$scope', '$q', 'UtilsSvc', 'MapSvc'];
@@ -48,11 +48,13 @@ function MapController($scope, $q, UtilsSvc, MapSvc) {
     });
 
     function initMap(response) {
-        var zoomValue = response[0];
-        var centerLongitude = response[1];
-        var centerLatitude = response[2];
+        console.log("initMap");
+        console.log(response);
+        var zoomValue = response[0].toString();
+        var centerLongitude = response[1].toString();
+        var centerLatitude = response[2].toString();
 
-        var legendTitle = $scope.textConfig['institutionTypes'];
+        var legendTitle = $scope.textConfig;
 
         $scope.mapConfig = {
             zoom: {

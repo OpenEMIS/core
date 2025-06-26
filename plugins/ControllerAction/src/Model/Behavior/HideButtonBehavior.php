@@ -14,12 +14,12 @@ class HideButtonBehavior extends Behavior
 {
     private $action = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
 
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
 
@@ -34,10 +34,10 @@ class HideButtonBehavior extends Behavior
     {
         // button already hidden, user access from url
         $model = $this->_table;
-        $session = $model->request->session();
+        $session = $model->request->getSession();
 
         $sessionKey = 'HideButton.warning';
-        $session->write($sessionKey, $model->alias() .'.HideButton.warning');
+        $session->write($sessionKey, $model->getAlias() .'.HideButton.warning');
 
         $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', '0' => 'index'];
 

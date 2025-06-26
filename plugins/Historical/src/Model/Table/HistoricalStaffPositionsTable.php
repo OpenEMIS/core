@@ -8,14 +8,15 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
 class HistoricalStaffPositionsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('historical_staff_positions');
+        $this->setTable('historical_staff_positions');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -47,8 +48,8 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        if ($this->controller->name === 'Staff') {
-            $this->behaviors()->get('Historical')->config([
+        if ($this->controller->getName() === 'Staff') {
+            $this->behaviors()->get('Historical')->getConfig([
                 'originUrl' => [
                     'action' => 'Positions',
                     'index'
@@ -57,10 +58,10 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->allowEmpty('file_content')
             ->add('end_date', 'ruleCompareDateReverse', [
@@ -187,7 +188,7 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $TypesTable = TableRegistry::get('Institution.Types');
@@ -208,12 +209,15 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $institutionList = [];
-            if (isset($request->data[$this->alias()]) && array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
-                $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
+            if (
+                isset($this->request->getData()[$this->getAlias()]['institution_type_id']) &&
+                !empty($this->request->getData()[$this->getAlias()]['institution_type_id'])
+            ) {
+                $institutionTypeId = $this->request->getData()[$this->getAlias()]['institution_type_id'];
                 $institutionList = $this->Institutions
                     ->find('list', [
                         'keyField' => 'id',

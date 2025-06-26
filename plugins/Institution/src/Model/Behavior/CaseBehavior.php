@@ -12,12 +12,12 @@ use Cake\Routing\Router;
 
 class CaseBehavior extends Behavior
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
@@ -32,7 +32,7 @@ class CaseBehavior extends Behavior
 
         $broadcaster = $model;
         $listeners = [];
-        $listeners[] = TableRegistry::get('Cases.InstitutionCases');
+        $listeners[] = TableRegistry::getTableLocator()->get('Cases.InstitutionCases');
 
         if (!empty($listeners)) {
             $model->dispatchEventToModels('Model.LinkedRecord.afterSave', [$entity], $broadcaster, $listeners);
@@ -44,7 +44,7 @@ class CaseBehavior extends Behavior
         $model = $this->_table;
         $showFieldBefore = isset($model->fields['modified_user_id']) ? 'modified_user_id' : 'create__user_id';
         /*POCOR-6313 starts*/
-        if ($model->alias() == 'Absences') {
+        if ($model->getAlias() == 'Absences') {
             $model->field('linked_cases', [
                 'visible' => false
             ]);
@@ -63,7 +63,7 @@ class CaseBehavior extends Behavior
 
         $model = $this->_table;
         /*POCOR-6313 starts*/
-        if ($model->alias() != 'Absences') {
+        if ($model->getAlias() != 'Absences') {
             $model->field('linked_cases', [
                 'type' => 'custom_linked_cases',
                 'valueClass' => 'table-full-width',
@@ -134,13 +134,13 @@ class CaseBehavior extends Behavior
             $attr['tableCells'] = $tableCells;
         }
 
-        return $event->subject()->renderElement('Institution.Cases/linked_cases', ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Institution.Cases/linked_cases', ['attr' => $attr]);
     }
 
     public function getLinkedCaseQuery(Entity $entity)
     {
-        $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
-        $InstitutionCases = TableRegistry::get('Cases.InstitutionCases');
+        $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
+        $InstitutionCases = TableRegistry::getTableLocator()->get('Cases.InstitutionCases');
 
         $feature = $WorkflowRules->getFeatureByEntity($entity);
         $recordId = $entity->id;
@@ -149,10 +149,13 @@ class CaseBehavior extends Behavior
             ->find()
             ->contain(['Statuses', 'Assignees'])
             ->matching('LinkedRecords', function ($q) use ($feature, $recordId) {
-                return $q->where([
+                $q = $q->where([
                     'feature' => $feature,
-                    'record_id' => $recordId
                 ]);
+                if(!empty($recordId)) {
+                    $q = $q->where(['record_id' => $recordId]);
+                }
+                return $q;
             });
 
         return $query;

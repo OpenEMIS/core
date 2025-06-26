@@ -2,6 +2,7 @@
 namespace Report\Model\Table;
 use ArrayObject;
 use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
@@ -17,8 +18,8 @@ class ReportProgressTable extends AppTable  {
 	const COMPLETED = 0;
 	const PENDING = 1;
 
-	public function initialize(array $config) {
-		$this->table('report_progress');
+	public function initialize(array $config): void {
+		$this->setTable('report_progress');
 		parent::initialize($config);
 	}
 
@@ -55,17 +56,24 @@ class ReportProgressTable extends AppTable  {
 		$result = $this->save($newEntity);
 
 		if($fileFormat->format == 'zip'){
-			$expiryDate = new Time();
+			$expiryDate = new FrozenTime();
 			$expiryDate->addDays(5);
 			$this->updateAll(
 			['status' => self::PENDING, //POCOR-7939
                 'file_path' => null,
-                'expiry_date' => $expiryDate, 'modified' => new Time()],
+                'expiry_date' => $expiryDate, 'modified' => new FrozenTime()],
 			['id' => $result->id]
 		);
 		}
 		return $result->id;
 	}
+
+	// public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    // {
+	// 	$data = json_decode($entity->params, true);
+	// 	$data['format'] = 'xlsx';
+	// 	$entity->params = json_encode($data);
+	// }
 
 	public function generate($id, $fileFormat) {
 
@@ -93,7 +101,7 @@ class ReportProgressTable extends AppTable  {
 			}
 			
 			$shellCmd = $cmd . ' >> ' . $logs;
-			//print_r($shellCmd); die;
+			// print_r($shellCmd);die();
 			try {
 				$entity = $this->get($id);
 				$pid = exec($shellCmd);

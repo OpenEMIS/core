@@ -1,0 +1,79 @@
+@charset "UTF-8";
+/* Breadcrumb V1.2.0 */
+
+.kdx-breadcrumb {
+    position: relative;
+
+    &>ul {
+        background-color: transparent;
+        padding: $padding5 $noPadding;
+        margin: $noMargin $margin15;
+        border-bottom: $lightGreyBorder;
+        flex-wrap: nowrap;
+
+        li {
+            font-size: $bodyTextSize;
+            position: relative;
+            min-width: 0;
+            flex: 0 0 auto;
+
+            &+li {
+                margin-left: $margin5;
+                padding-left: $padding10;
+                &:before {
+                    font-family: $fontAwesome;
+                    content: "\f054";
+                    color: #AAA;
+                    font-size: $iconSizeXXS;
+                    font-weight: normal;
+                    position: absolute;
+                    left: 0px;
+                    margin: 3px 0;
+                }
+
+                .rtl & {
+                    margin-left: $noMargin;
+                    padding-left: $noPadding;
+                    margin-left: $margin5;
+                    padding-left: $padding10;
+                }
+            }
+            &:last-child {
+                color: #999;
+                flex: 0 1 auto;
+
+                span {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+            }
+        }
+    }
+
+    .temp-elem {
+        font-size: $bodyTextSize;
+        position: absolute;
+        z-index: -1;
+        top: 0;
+        left: 0;
+        min-width: 0;
+        display: block;
+        color: red;
+        width: auto;
+        margin-left: $margin5;
+        padding-left: $padding10;
+
+        &.first-item {
+            margin-left: $noMargin;
+            padding-left: $noPadding;
+        }
+
+        &>div {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+}

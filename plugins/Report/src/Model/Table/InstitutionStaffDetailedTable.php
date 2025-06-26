@@ -23,9 +23,9 @@ class InstitutionStaffDetailedTable extends AppTable
     use OptionsTrait;
     private $_dynamicFieldName = 'custom_field_data';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff');
+        $this->setTable('institution_staff');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
@@ -49,7 +49,7 @@ class InstitutionStaffDetailedTable extends AppTable
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -64,7 +64,7 @@ class InstitutionStaffDetailedTable extends AppTable
         $areaId = $requestData->area_education_id;
         $academicPeriodId = $requestData->academic_period_id;
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $InstitutionStaffTable = TableRegistry::get('institution_staff');
+        $InstitutionStaffTable = TableRegistry::get('Institution.InstitutionStaff');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $startDate = $periodEntity->start_date->format('Y-m-d');
         $endDate = $periodEntity->end_date->format('Y-m-d');
@@ -76,13 +76,13 @@ class InstitutionStaffDetailedTable extends AppTable
             $year  = $val['name'];
         }
         $custom_field = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
-        $StaffCustomFields = TableRegistry::get('staff_custom_fields');
+        $StaffCustomFields = TableRegistry::get('StaffCustomField.StaffCustomFields');
         $conditions = [];
         if ($institutionId != 0) {
-            $conditions[$this->aliasField('institution_id')]=$institutionId;
+            $conditions[$this->aliasField('institution_id')] = $institutionId;
         }
         if ($areaId != -1) {
-            $conditions[$this->aliasField('Institutions.area_id')]=$areaId;
+            $conditions[$this->aliasField('Institutions.area_id')] = $areaId;
         }
         if (!empty($academicPeriodId)) {
                 $conditions['OR'] = [
@@ -181,19 +181,19 @@ class InstitutionStaffDetailedTable extends AppTable
                         'position_title_teaching' => 'StaffPositionTitles.type'
                     ]
                 ]
-            ])->leftJoin([$custom_field->alias() => $custom_field->table()],
+            ])->leftJoin([$custom_field->getAlias() => $custom_field->getTable()],
                         [$custom_field->aliasField('staff_id  = ') . $this->aliasField('staff_id')])
-            ->leftJoin([$StaffCustomFields->alias() => $StaffCustomFields->table()],
+            ->leftJoin([$StaffCustomFields->getAlias() => $StaffCustomFields->getTable()],
                         [$StaffCustomFields->aliasField('id  = ') . $custom_field->aliasField('staff_custom_field_id')])
             ->where($conditions)
             ->group(['staff_id']);
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($year) {
             return $results->map(function ($row) use ($year){
                 $row['academic_period'] = $year;
-                $Guardians = TableRegistry::get('staff_custom_field_values');
-                $staffCustomFieldOptions = TableRegistry::get('staff_custom_field_options');
-                $staffCustomFields = TableRegistry::get('staff_custom_fields');
-                $staffCustomFormsFields = TableRegistry::get('staff_custom_forms_fields');
+                $Guardians = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
+                $staffCustomFieldOptions = TableRegistry::get('StaffCustomField.StaffCustomFieldOptions');
+                $staffCustomFields = TableRegistry::get('StaffCustomField.StaffCustomFields');
+                $staffCustomFormsFields = TableRegistry::get('StaffCustomField.StaffCustomFormsFields');
     
                     $guardianData = $Guardians->find()
                     ->select([
@@ -416,8 +416,8 @@ class InstitutionStaffDetailedTable extends AppTable
             'type' => 'date',
             'label' => __('Start Date')
         ];
-        $InfrastructureCustomFields = TableRegistry::get('staff_custom_fields');
-        $staffCustomFormsFields = TableRegistry::get('staff_custom_forms_fields');
+        $InfrastructureCustomFields = TableRegistry::get('StaffCustomField.StaffCustomFields');
+        $staffCustomFormsFields = TableRegistry::get('StaffCustomField.StaffCustomFormsFields');
             $customFieldData = $InfrastructureCustomFields->find()->select([
                 'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
                 'custom_field' => $InfrastructureCustomFields->aliasfield('name')

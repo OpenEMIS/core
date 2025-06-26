@@ -12,7 +12,7 @@ use Cake\ORM\TableRegistry;
 
 class YearBehavior extends Behavior
 {
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = 'beforeAction';
@@ -21,7 +21,7 @@ class YearBehavior extends Behavior
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $config = $this->config();
+        $config = $this->getConfig();
         foreach ($config as $date => $year) {
             if ($entity->has($date) && !empty($entity->{$date})) {
                 if ($entity->{$date} instanceof Date || $entity->{$date} instanceof Time) {
@@ -37,7 +37,7 @@ class YearBehavior extends Behavior
 
     public function beforeAction(Event $event)
     {
-        $config = $this->config();
+        $config = $this->getConfig();
         foreach ($config as $date => $year) {
             $this->_table->fields[$year]['visible'] = false;
         }
@@ -45,14 +45,15 @@ class YearBehavior extends Behavior
 
     public function getYearOptionsByConfig()
     {
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $lowestYear = $ConfigItems->value('lowest_year');
         $currentYear = date("Y");
-
-        for ($i=$currentYear; $i >= $lowestYear; $i--) {
-            $yearOptions[$i] = $i;
+        $yearOptions = [];
+        if(!empty($lowestYear)) {
+            for ($i=$currentYear; $i >= $lowestYear; $i--) {
+                $yearOptions[$i] = $i;
+            }
         }
-
         return $yearOptions;
     }
 }

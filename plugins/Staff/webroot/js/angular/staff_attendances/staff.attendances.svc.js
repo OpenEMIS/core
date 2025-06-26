@@ -137,14 +137,16 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         }
 
         columnDefs.push({
-            headerName: translateText.translated.Date,
+            // headerName: translateText.translated.Date,
+            headerName: 'Date',
             field: "date",
             filter: "text",
             menuTabs: []
         });
 
         columnDefs.push({
-            headerName: translateText.translated.TimeIn,
+            // headerName: translateText.translated.TimeIn,
+            headerName: 'Time In',
             field: "time_in",
             menuTabs: [],
             cellRenderer: function (params) {
@@ -155,7 +157,8 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         });
 
         columnDefs.push({
-            headerName: translateText.translated.TimeOut,
+            // headerName: translateText.translated.TimeOut,
+            headerName: 'Time Out',
             field: "time_out",
             menuTabs: [],
             cellRenderer: function (params) {

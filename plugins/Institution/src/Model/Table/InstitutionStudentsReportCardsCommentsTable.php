@@ -11,7 +11,7 @@ use App\Model\Table\ControllerActionTable;
 
 class InstitutionStudentsReportCardsCommentsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config):void
     {
         parent::initialize($config);
         $this->belongsTo('ReportCards', ['className' => 'ReportCard.ReportCards']);
@@ -36,7 +36,7 @@ class InstitutionStudentsReportCardsCommentsTable extends ControllerActionTable
         $this->addBehavior('Institution.StaffProfile');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;

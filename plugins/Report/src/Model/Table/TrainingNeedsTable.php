@@ -8,12 +8,13 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use Cake\Http\ServerRequest;
 
 class TrainingNeedsTable extends AppTable  
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_training_needs');
+        $this->setTable('staff_training_needs');
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('TrainingCourses', ['className' => 'Training.TrainingCourses']);
@@ -34,7 +35,7 @@ class TrainingNeedsTable extends AppTable
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -90,7 +91,7 @@ class TrainingNeedsTable extends AppTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
         $settings['identity'] = $identity;
 
@@ -254,8 +255,8 @@ class TrainingNeedsTable extends AppTable
     public function onExcelGetInstitutionCode(Event $event, Entity $entity)
     {
         //if ($entity->has('staff') && !empty($entity->staff)) { // POCOR-6597
-            $InstitutionStaff = TableRegistry::get('Institution.Staff');
-            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+            $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
+            $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
 
             $statuses = $StaffStatuses->findCodeList();
 
@@ -289,7 +290,7 @@ class TrainingNeedsTable extends AppTable
 
     /*public function onExcelGetIdentityType(Event $event, Entity $entity)
     {
-        $userIdentities = TableRegistry::get('user_identities');
+        $userIdentities = TableRegistry::getTableLocator()->get('user_identities');
         $userIdentitiesResult = $userIdentities->find()
                 ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
                 ->select([
@@ -327,7 +328,7 @@ class TrainingNeedsTable extends AppTable
 
     public function onExcelGetGender(Event $event, Entity $entity)
     {
-        $gender = TableRegistry::get('User.Genders');
+        $gender = TableRegistry::getTableLocator()->get('User.Genders');
         $gender_data = $gender->find()->select(['name'])->where([$gender->aliasField('id') => $entity->staff_user_gender_id])->first(); // POCOR-6597
         return $gender_data->name;
     }
@@ -340,8 +341,8 @@ class TrainingNeedsTable extends AppTable
     public function onExcelGetAreaName(Event $event, Entity $entity)
     {
         // if ($entity->has('staff') && !empty($entity->staff)) { // POCOR-6597
-            $InstitutionStaff = TableRegistry::get('Institution.Staff');
-            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+            $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
+            $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
             $statuses = $StaffStatuses->findCodeList();
             $query = $InstitutionStaff->find('all')
                     ->contain(['Institutions'])
@@ -355,7 +356,7 @@ class TrainingNeedsTable extends AppTable
                     ])
                     ->first();
             if (!empty($query)) {
-                $AreaTable = TableRegistry::get('Area.Areas');
+                $AreaTable = TableRegistry::getTableLocator()->get('Area.Areas');
                 $value = $AreaTable->find()->where([$AreaTable->aliasField('id') => $query->institution->area_id])->first();
                 if (empty($value)) {
                     return ' - ';
@@ -369,7 +370,7 @@ class TrainingNeedsTable extends AppTable
     public function onExcelGetOpenemisNo(Event $event, Entity $entity)
     {
         // START: POCOR-6597
-        $Users = TableRegistry::get('User.Users');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
         $user_data = $Users->findById($entity->user_id_id)->first();
         $entity->staff_full_name = $user_data->first_name .' '. $user_data->middle_name .' '. $user_data->third_name .' '. $user_data->last_name;
         $entity->staff_user_gender_id = $user_data->gender_id;
@@ -383,7 +384,7 @@ class TrainingNeedsTable extends AppTable
         
         if ($entity->has('institution_id') && $entity->has('staff')) {
             if(!empty($entity->institution_id) && !empty($entity->staff)) {
-                $StaffSubjects = TableRegistry::get('Staff.StaffSubjects');
+                $StaffSubjects = TableRegistry::getTableLocator()->get('Staff.StaffSubjects');
                 $query = $StaffSubjects->find()
                         ->contain([
                             'InstitutionSubjects.EducationSubjects'

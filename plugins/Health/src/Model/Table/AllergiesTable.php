@@ -4,7 +4,7 @@ namespace Health\Model\Table;
 use ArrayObject;
 
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
@@ -15,15 +15,20 @@ class AllergiesTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_health_allergies');
+        $this->setTable('user_health_allergies');
         parent::initialize($config);
 
         $this->belongsTo('AllergyTypes', ['className' => 'Health.AllergyTypes', 'foreignKey' => 'health_allergy_type_id']);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 
         $this->addBehavior('Health.Health');
+      //  $this->addBehavior('User.UserTab');
+        $this->addBehavior('Institution.InstitutionTab',  [
+            'appliedAction' => ['Allergies' =>['id']
+            ]
+        ]);
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
             'content' => 'file_content',
@@ -41,10 +46,10 @@ class AllergiesTable extends ControllerActionTable
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
-                
+
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Allergies','Staff - Health');       
+        if($this->request->getParam('controller') == 'Staff'){
+            $is_manual_exist = $this->getManualUrl('Institutions','Allergies','Staff - Health');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -53,7 +58,7 @@ class AllergiesTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -61,8 +66,8 @@ class AllergiesTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Students'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Allergies','Students - Health');       
+        }elseif($this->request->getParam('controller') == 'Students'){
+            $is_manual_exist = $this->getManualUrl('Institutions','Allergies','Students - Health');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -71,7 +76,7 @@ class AllergiesTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -80,8 +85,8 @@ class AllergiesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Allergies','Health');       
+        }elseif($this->request->getParam('controller') == 'Directories'){
+            $is_manual_exist = $this->getManualUrl('Directory','Allergies','Health');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -90,7 +95,7 @@ class AllergiesTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -99,9 +104,12 @@ class AllergiesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Profiles'){ 
-            $is_manual_exist = $this->getManualUrl('Personal','Allergies','Health');       
-            if(!empty($is_manual_exist)){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){
+            if ($extra->offsetExists('toolbarButtons') && $extra['toolbarButtons']['add']) {
+                unset($extra['toolbarButtons']['add']);
+            }
+            $is_manual_exist = $this->getManualUrl('Personal','Allergies','Health');
+            if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
@@ -109,7 +117,7 @@ class AllergiesTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -142,7 +150,8 @@ class AllergiesTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldSevere(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldSevere(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSevere(Event $event, array $attr, $action)
     {
         $attr['options'] = $this->getSelectOptions('general.yesno');
         return $attr;
@@ -153,9 +162,11 @@ class AllergiesTable extends ControllerActionTable
         $this->field('severe', ['after' => 'description']);
         $this->field('health_allergy_type_id', ['type' => 'select', 'after' => 'comment']);
         $this->field('file_content', ['after' => 'health_allergy_type_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $userID = $this->getUserID();
+        $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator->allowEmpty('file_content');
@@ -204,11 +215,7 @@ class AllergiesTable extends ControllerActionTable
 
     //POCOR-6131
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-        $session = $this->request->session();
-        // $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $studentUserId = $session->read('Student.Students.id');
-
-        // dump($_SESSION); die;
+        $userId = $this->getUserID();
         $query
         ->select([
             'severe_new' => "(CASE WHEN severe = 1 THEN 'Yes'
@@ -216,7 +223,26 @@ class AllergiesTable extends ControllerActionTable
         ])
         ->where([
             // $this->aliasField('security_user_id = ').$staffUserId
-            $this->aliasField('security_user_id') => $studentUserId
+            $this->aliasField('security_user_id') => $userId
         ]);
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'file_content') {
+            return __('Attachment');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    //POCOR-8293s
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+        $userId = $this->getUserID();
+        $query->where([ $this->aliasField('security_user_id') => $userId]);
+        return $query;
+    }
+
+
+
 }

@@ -9,10 +9,9 @@ use App\Controller\PageController;
 
 class UserHistoriesController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
-
         $this->loadModel('Institution.Institutions');
         $this->loadModel('Security.Users');
         $this->loadModel('User.UserHistories');
@@ -20,14 +19,17 @@ class UserHistoriesController extends PageController
         $this->Page->disable(['add', 'edit', 'view', 'delete']);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
-        $session = $this->request->session();
-        $institutionId = $this->getInstitutionID();
-        $institutionName = $session->read('Institution.Institutions.name');
-        $userId = $this->paramsDecode($this->request->query['queryString'])['security_user_id'];
+        $session = $this->request->getSession();
+        //$institutionId = $this->getInstitutionID();
+        //$institutionName = $session->read('Institution.Institutions.name');
+        $institutionId = $this->getQueryString('institution_id');
+        $activeInstitution = $this->Institutions->get($institutionId);
+        $institutionName = $activeInstitution->name;
+        $userId = $this->paramsDecode($this->request->getQuery('queryString'))['security_user_id'];
         $userName = $this->Users->get($userId)->name;
-        $userType = $this->paramsDecode($this->request->query['queryString'])['user_type'];
+        $userType = $this->paramsDecode($this->request->getQuery('queryString'))['user_type'];
 
         parent::beforeFilter($event);
 
@@ -77,19 +79,19 @@ class UserHistoriesController extends PageController
     public function setBreadCrumb($options)
     {
         $page = $this->Page;
-        $plugin = $this->plugin;
+        $plugin = $this->getPlugin();
 
-        $userId = array_key_exists('user_id', $options) ? $options['user_id'] : 0;
-        $userName = array_key_exists('user_name', $options) ? $options['user_name'] : '';
+        $userId = isset($options['user_id']) ? $options['user_id'] : 0;
+        $userName = isset($options['user_name']) ? $options['user_name'] : '';
         $encodedUserId = $this->paramsEncode(['id' => $userId]);
 
         if ($plugin == 'Institution') { // for student and staff
-            $institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : 0;
-            if (!$institutionId) {
-                $institutionId = $this->getInstitutionID();
-            }
-            $institutionName = array_key_exists('institution_name', $options) ? $options['institution_name'] : '';
-            $userType = array_key_exists('user_type', $options) ? $options['user_type'] : '';
+            $institutionId = isset($options['institution_id']) ? $options['institution_id'] : 0;
+            $paramsPass = $this->request->getAttribute('params')['institutionId'];
+            $institutionId = $this->paramsDecode($paramsPass)['id'];
+
+            $institutionName = isset($options['institution_name']) ? $options['institution_name'] : '';
+            $userType = isset($options['user_type']) ? $options['user_type'] : '';
             $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
             $pluralUserType = Inflector::pluralize($userType);
 
@@ -139,10 +141,9 @@ class UserHistoriesController extends PageController
         }
     }
 
-
     private function getInstitutionID()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
         $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
         $encodedInstitutionID = isset($this->request->params['institutionId']) ?

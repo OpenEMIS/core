@@ -9,7 +9,7 @@ class StudentReportCardEmailProcessesTable extends AppTable
     const SENT = 2;
     const ERROR = -1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 

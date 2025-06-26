@@ -17,16 +17,18 @@ class PasswordBehavior extends Behavior {
     private $checkOwnPassword = false;
     private $createRetype = false;
 
-    public function implementedEvents() {
+    public function implementedEvents() : array
+    {
         $events = parent::implementedEvents();
         $events['Model.buildValidator'] = ['callable' => 'buildValidator', 'priority' => 5];
         return $events;
     }
 
-    public function initialize(array $config) {
+    public function initialize(array $config) : void
+    {
         $this->targetField = $config['field'];
-        $this->checkOwnPassword = (array_key_exists('checkOwnPassword', $config))? $config['checkOwnPassword']: $this->checkOwnPassword;
-        $this->createRetype = (array_key_exists('createRetype', $config))? $config['createRetype']: $this->createRetype;
+        $this->checkOwnPassword = (isset($config['checkOwnPassword']))? $config['checkOwnPassword']: $this->checkOwnPassword;
+        $this->createRetype = (isset($config['createRetype']))? $config['createRetype']: $this->createRetype;
     }
 
     public function buildValidator(Event $event, Validator $validator, $name) {
@@ -38,18 +40,25 @@ class PasswordBehavior extends Behavior {
         $passwordHasNumber = $ConfigItems->value('password_has_number');
         $passwordHasNonAlpha = $ConfigItems->value('password_has_non_alpha');
 
+        $validator->setProvider('custom', $this);
+        //POCOR-8609
+
         $validator = $validator
-            ->add('retype_password' , [
-                'ruleCompare' => [
-                    'rule' => ['comparePasswords', $this->targetField]
-                ]
-            ]);
-        
+        ->add('retype_password', [
+            'ruleCompare' => [
+                //'rule' => ['comparePasswords', $this->targetField] //POCOR-8609
+                'rule' => function ($value, $context) {
+                    return isset($context['data']['password']) && $value === $context['data']['password'];
+                },
+                'last' => true
+            ]
+        ]);
+
         $this->_table->setValidationCode('username.ruleMinLength', 'User.Accounts');
         $this->_table->setValidationCode('username.ruleUnique', 'User.Accounts');
         $this->_table->setValidationCode('username.ruleCheckUsername', 'User.Accounts');
         $this->_table->setValidationCode('retype_password.ruleCompare', 'User.Accounts');
-        
+
         $validator->add($this->targetField, [
             'ruleCheckLength' => [
                 'rule'  => ['lengthBetween', $passwordMinLength, 50],
@@ -60,7 +69,10 @@ class PasswordBehavior extends Behavior {
 
         $validator->add($this->targetField, [
             'ruleNoSpaces' => [
-                'rule' => 'checkNoSpaces',
+                //'rule' => 'checkNoSpaces', //POCOR-8609
+                'rule' => function ($value, $context) {
+                        return !strrpos($value, " ");
+                    },
                 'message' => $this->_table->getMessage('User.Users.password.ruleNoSpaces'),
                 'provider' => 'custom'
             ],

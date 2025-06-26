@@ -4,12 +4,15 @@ namespace Scholarship\Model\Table;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
+use ArrayObject;
+use Cake\Event\Event;
+use Cake\ORM\Entity;
 
 class AttachmentTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('scholarship_attachment_types');
+        $this->setTable('scholarship_attachment_types');
         parent::initialize($config);
 
         $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'foreignKey' => 'scholarship_attachment_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -29,36 +32,83 @@ class AttachmentTypesTable extends ControllerActionTable
 
     public function findAvailableAttachmentTypes(Query $query, array $options)
     {
-        $applicantId = array_key_exists('applicant_id', $options) ? $options['applicant_id'] : null;
-        $scholarshipId = array_key_exists('scholarship_id', $options) ? $options['scholarship_id'] : null;
+        // Extract applicant_id and scholarship_id from options, if available
+        $applicantId = $options['applicant_id'] ?? null;
+        $scholarshipId = $options['scholarship_id'] ?? null;
 
+        // Load ApplicationAttachments and fetch existing attachment type IDs
         $ApplicationAttachmentsTable = TableRegistry::get('Scholarship.ApplicationAttachments');
-        $existingAttachmentTypeIds = $ApplicationAttachmentsTable->find()      
+        $existingAttachmentTypeIds = $ApplicationAttachmentsTable->find()
             ->where([
-                $ApplicationAttachmentsTable->aliasField('applicant_id') => $applicantId,
-                $ApplicationAttachmentsTable->aliasField('scholarship_id') => $scholarshipId
+                'applicant_id' => $applicantId,
+                'scholarship_id' => $scholarshipId
             ])
             ->extract('scholarship_attachment_type_id')
             ->toArray();
 
+        // Load ScholarshipsScholarshipAttachmentTypes and join with AttachmentTypes
         $ScholarshipsScholarshipAttachmentTypesTable = TableRegistry::get('Scholarship.ScholarshipsScholarshipAttachmentTypes');
         $query
-            ->select(['is_mandatory' => $ScholarshipsScholarshipAttachmentTypesTable->aliasField('is_mandatory')])
-            ->find('visible')
-            ->find('order')
-            ->innerJoin(
-                [$ScholarshipsScholarshipAttachmentTypesTable->alias() => $ScholarshipsScholarshipAttachmentTypesTable->table()],
+            ->select([
+                'id' => $this->aliasField('id'),
+                'name' => $this->aliasField('name'),
+                'is_mandatory' => $ScholarshipsScholarshipAttachmentTypesTable->aliasField('is_mandatory')
+            ])
+            ->leftJoin(
+                [$ScholarshipsScholarshipAttachmentTypesTable->getAlias() => $ScholarshipsScholarshipAttachmentTypesTable->getTable()],
                 [
-                    $ScholarshipsScholarshipAttachmentTypesTable->aliasField('scholarship_attachment_type_id = ') . $this->aliasField('id'),
+                    $ScholarshipsScholarshipAttachmentTypesTable->aliasField('scholarship_attachment_type_id') . ' = ' . $this->aliasField('id'),
                     $ScholarshipsScholarshipAttachmentTypesTable->aliasField('scholarship_id') => $scholarshipId
                 ]
             )
-            ->autoFields(true);
-
-        if ($existingAttachmentTypeIds) {
+            ->find('visible') 
+            ->find('order');  
+        // Exclude already existing attachment types
+        if (!empty($existingAttachmentTypeIds)) {
             $query->where([$this->aliasField('id NOT IN') => $existingAttachmentTypeIds]);
         }
 
-        return $query;
+        return $query; // Ensure the query is returned
+    }
+
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'visible':
+                return __('Visible');
+            case 'name':
+                return __('Name');
+            case 'international_code':
+                return __('International Code');
+            case 'national_code':
+                return __('National Code');
+            case 'editable':
+                return __('Editable');
+            case 'default':
+                return __('Default');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

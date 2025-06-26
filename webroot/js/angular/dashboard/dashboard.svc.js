@@ -258,7 +258,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
         return title;
     };
 
-   
+
 
     function getWorkbenchColumnDefs(cols) {
         // var menuTabs = [];
@@ -277,7 +277,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
                 menuTabs: menuTabs,
                 suppressSizeToFit: true,
                 filter: 'text',
-                
+
             });
         }
 
@@ -349,7 +349,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
                 floatingFilter: true,
                 // valueFormatter: dateFormatter,
                 // comparator: dateComparator,
-                // inRangeInclusive:true,	
+                // inRangeInclusive:true,
                 menuTabs: menuTabs,
                 field: "received_date",
                 filterParams: filterParams,
@@ -391,3 +391,4 @@ function DashboardSvc($q, $filter, KdDataSvc) {
             });
     };
 }
+

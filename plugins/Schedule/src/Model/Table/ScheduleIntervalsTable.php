@@ -10,12 +10,15 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
+use Cake\ORM\Locator\TableLocator;
+use DateTime;
 
 class ScheduleIntervalsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_schedule_intervals');
+        $this->setTable('institution_schedule_intervals');
         parent::initialize($config);
 
         $this->belongsTo('Institutions', [
@@ -32,31 +35,39 @@ class ScheduleIntervalsTable extends ControllerActionTable
         ]);
 
         $this->hasMany('Timeslots', [
-            'className' => 'Schedule.ScheduleTimeslots', 
-            'foreignKey' => 'institution_schedule_interval_id', 
-            'dependent' => true, 
+            'className' => 'Schedule.ScheduleTimeslots',
+            'foreignKey' => 'institution_schedule_interval_id',
+            'dependent' => true,
             'cascadeCallbacks' => true
         ]);
 
         $this->hasMany('Timetables', [
-            'className' => 'Schedule.ScheduleTimetables', 
-            'foreignKey' => 'institution_schedule_interval_id', 
-            'dependent' => true, 
+            'className' => 'Schedule.ScheduleTimetables',
+            'foreignKey' => 'institution_schedule_interval_id',
+            'dependent' => true,
             'cascadeCallbacks' => true
         ]);
 
-        
+
         $this->addBehavior('Restful.RestfulAccessControl', [
             'ScheduleTimetable' => ['index', 'view', 'edit']
         ]);
         $this->addBehavior('Schedule.Schedule');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['ScheduleIntervals' =>['id']
+            ]
+        ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
         $validator
+            // POCOR-8985 start
+            ->notEmptyString('name')
+            ->notEmptyString('institution_shift_id')
+            // POCOR-8985 end
             ->requirePresence('timeslots', 'create');
 
         return $validator;
@@ -67,6 +78,22 @@ class ScheduleIntervalsTable extends ControllerActionTable
         switch ($field) {
             case 'institution_shift_id':
                 return __('Shift');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'name':
+                return __('Name');
+            case 'institution_shift_id':
+                return __('Shift');
+            case 'intervals':
+                return __('Intervals');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -77,15 +104,15 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $query
             ->contain(['Shifts.ShiftOptions']);
 
-        if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
+        if (isset($extra['selectedAcademicPeriodOptions'])) {
             $query->where([
-                $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']  
+                $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
             ]);
         }
 
-        if (array_key_exists('selectedShiftOptions', $extra) && $extra['selectedShiftOptions'] != -1) {
+        if (isset($extra['selectedShiftOptions']) && $extra['selectedShiftOptions'] != -1) {
             $query->where([
-                $this->aliasField('institution_shift_id') => $extra['selectedShiftOptions']  
+                $this->aliasField('institution_shift_id') => $extra['selectedShiftOptions']
             ]);
         }
     }
@@ -100,17 +127,18 @@ class ScheduleIntervalsTable extends ControllerActionTable
         // filter options
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
-        $requestQuery = $this->request->query;
-        if (isset($requestQuery) && array_key_exists('period', $requestQuery)) {
-            $selectedPeriodId = $requestQuery['period'];
+        $requestQuery = $this->request->getQuery();
+
+        if (isset($requestQuery) && isset($requestQuery['period'])) {
+            $selectedPeriodId = $requestQuery['period']; // POCOR-8985
         } else {
             $selectedPeriodId = $this->AcademicPeriods->getCurrent();
         }
-        
+
         $shiftOptions = $this->getShiftOptions($selectedPeriodId, true);
 
-        if (isset($requestQuery) && array_key_exists('shift', $requestQuery)) {
-            $selectedShiftId = $requestQuery['shift'];
+        if (isset($requestQuery) && isset($requestQuery['shift'])) {
+            $selectedShiftId = $requestQuery['shift']; // POCOR-8985
         } else {
             $selectedShiftId = -1;
         }
@@ -118,9 +146,12 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $extra['selectedShiftOptions'] = $selectedShiftId;
         $extra['selectedAcademicPeriodOptions'] = $selectedPeriodId;
 
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Schedule.Intervals/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'periodOptions'=> $academicPeriodOptions,
                 'selectedPeriodOption'=> $extra['selectedAcademicPeriodOptions'],
                 'shiftOptions' => $shiftOptions,
@@ -131,7 +162,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Intervals','Schedules');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Intervals','Schedules');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -192,18 +223,21 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $intervalId = $data['id'];
          if(empty($intervalId)){
             // for updating of the start/end time of the timeslots on render
-            if (array_key_exists('submit', $data) && in_array($data['submit'], ['changeInterval', 'addTimeslot', 'changeShiftId', 'save']) && !empty($data['timeslots'])) {
+            if (isset($data['submit']) && in_array($data['submit'], ['changeInterval', 'addTimeslot', 'changeShiftId', 'save']) && !empty($data['timeslots'])) {
                 $institutionShiftId = $data['institution_shift_id'];
                 $startTime = $this->Shifts->get($institutionShiftId)->start_time;
+                if (!($startTime instanceof DateTime)) {
+                    $startTime = new DateTime($startTime);
+                }
 
                 $hasEmpty = false;
                 foreach ($data['timeslots'] as $i => $timeslot) {
                     if (!$hasEmpty) {
-                        if (array_key_exists('interval', $timeslot) && !empty($timeslot['interval'])) {
+                        if (isset($timeslot['interval']) && !empty($timeslot['interval'])) {
                             $timeslotInterval = $timeslot['interval'];
                             $data['timeslots'][$i]['start_time_add'] = $this->formatTime($startTime);
                             $modifyString = '+' . $timeslotInterval . ' minutes';
-                            $data['timeslots'][$i]['end_time_add'] = $this->formatTime($startTime->modify($modifyString));    
+                            $data['timeslots'][$i]['end_time_add'] = $this->formatTime($startTime->modify($modifyString));
                         } else {
                             $hasEmpty = true;
                         }
@@ -212,14 +246,14 @@ class ScheduleIntervalsTable extends ControllerActionTable
             }
 
             // for patching the order of the timeslots based on the array index
-            if (array_key_exists('timeslots', $data) && !empty($data['timeslots'])) {
+            if (isset($data['timeslots']) && !empty($data['timeslots'])) {
                 foreach ($data['timeslots'] as $i => $timeslot) {
                     $data['timeslots'][$i]['order'] = $i + 1;
                 }
             }
 
             // for adding timeslots end time validation as here will have all the informations needed to do the validations
-            if (array_key_exists('submit', $data) && $data['submit'] == 'save') {
+            if (isset($data['submit']) && $data['submit'] == 'save') {
                 $options['associated'] = [
                     'Timeslots' => ['validate' => true]
                 ];
@@ -227,30 +261,32 @@ class ScheduleIntervalsTable extends ControllerActionTable
                 $institutionShiftId = $data['institution_shift_id'];
                 $shiftEntity = $this->Shifts->get($institutionShiftId);
                 $shiftStartTime = $shiftEntity->start_time;
+                if (!($shiftStartTime instanceof \DateTime)) {
+                    $shiftStartTime = new \DateTime($shiftStartTime);
+                }
                 $shiftEndTime = $shiftEntity->end_time;
 
                 $timeslotList = [];
-                if (array_key_exists('timeslots', $data) && !empty($data['timeslots'])) {
+                if (isset($data['timeslots']) && !empty($data['timeslots'])) {
 
                     $hasEmpty = false;
                     $totalInterval = 0;
                     foreach ($data['timeslots'] as $i => $timeslot) {
                         if (!$hasEmpty) {
-                            if (array_key_exists('interval', $timeslot) && !empty($timeslot['interval'])) {
+                            if (isset($timeslot['interval']) && !empty($timeslot['interval'])) {
                                 $totalInterval += $timeslot['interval'];
                                 $timeslotList[$timeslot['order']] = $totalInterval;
                             } else {
                                 $hasEmpty = true;
                             }
-                        } 
+                        }
 
                         if ($hasEmpty) {
                             $timeslotList[$timeslot['order']] = null;
                         }
                     }
                 }
-        
-                $timeslotValidator = $this->Timeslots->validator();
+                $timeslotValidator = $this->Timeslots->getValidator();
                 $timeslotValidator
                     ->add('interval', 'checkEndTime', [
                         'rule' => function($value, $context) use ($shiftStartTime, $shiftEndTime, $timeslotList) {
@@ -260,8 +296,11 @@ class ScheduleIntervalsTable extends ControllerActionTable
                                 $intervalStartTime = clone $shiftStartTime;
                                 $modifyString = '+' . $totalInterval . ' minutes';
                                 $intervalEndTime = $intervalStartTime->modify($modifyString);
+                                if (!($shiftEndTime instanceof \DateTime)) {
+                                    $shiftEndTime = new \DateTime($shiftEndTime);
+                                }
                                 return $intervalEndTime <= $shiftEndTime;
-                            } 
+                            }
                             return true;
                         },
                         'on' => 'create',
@@ -276,7 +315,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
                 ];
             }
         }else{ //POCOR-8254
-            if (array_key_exists('submit', $data) && in_array($data['submit'], ['changeInterval', 'addTimeslot', 'changeShiftId', 'save']) && !empty($data['timeslots'])) {
+            if (isset($data['submit']) && in_array($data['submit'], ['changeInterval', 'addTimeslot', 'changeShiftId', 'save']) && !empty($data['timeslots'])) {
                 $institutionShiftId = $data['institution_shift_id'];
                 $startTime = $this->Shifts->get($institutionShiftId)->start_time;
 
@@ -284,23 +323,28 @@ class ScheduleIntervalsTable extends ControllerActionTable
                 foreach ($data['timeslots'] as $i => $timeslot) {
                     if (!$hasEmpty) {
                         $data['timeslots'][$i]['institution_schedule_interval_id'] = $intervalId;
-                        if (array_key_exists('interval', $timeslot) && !empty($timeslot['interval'])) {
+                        if (isset($timeslot['interval']) && !empty($timeslot['interval'])) {
                             $timeslotInterval = $timeslot['interval'];
                             $data['timeslots'][$i]['start_time_add'] = $this->formatTime($startTime);
                             $modifyString = '+' . $timeslotInterval . ' minutes';
-                            $data['timeslots'][$i]['end_time_add'] = $this->formatTime($startTime->modify($modifyString));    
+                            $data['timeslots'][$i]['end_time_add'] = $this->formatTime($startTime->modify($modifyString));
                         } else {
                             $hasEmpty = true;
                         }
                     }
                 }
             }
-            $scheduleId = $this->request['data']['ScheduleIntervals']['id'];
-            $timeslotList = $this->request['data']['ScheduleIntervals']['timeslots'];
-            $institutionSchedule =  TableRegistry::get('institution_schedule_timeslots');
+            // POCOR-8985 start
+             $alias = 'ScheduleIntervals';
+             $requestData = $this->request->getData();
+            $timeslotList = $requestData[$alias]['timeslots'];
+             // POCOR-8985 end
+            $tableLocator = new TableLocator();
+            $institutionSchedule = $tableLocator->get('institution_schedule_timeslots');
+            // $institutionSchedule =  TableRegistry::get('institution_schedule_timeslots');
             $findRecord = $institutionSchedule->find()
                         ->where(['institution_schedule_interval_id'=>$intervalId])->toArray();
-                       
+
             foreach ($findRecord as $value) {
                 foreach ($timeslotList as $val) {
                     $institutionScheduledata = $institutionSchedule->updateAll(
@@ -309,14 +353,14 @@ class ScheduleIntervalsTable extends ControllerActionTable
                     );
                 }
             }
-            if (array_key_exists('timeslots', $data) && !empty($data['timeslots'])) {
+            if (isset($data['timeslots']) && !empty($data['timeslots'])) {
                 foreach ($data['timeslots'] as $i => $timeslot) {
                     $data['timeslots'][$i]['order'] = $i + 1;
                 }
             }
 
             // for adding timeslots end time validation as here will have all the informations needed to do the validations
-            if (array_key_exists('submit', $data) && $data['submit'] == 'save') {
+            if (isset($data['submit']) && $data['submit'] == 'save') {
                 $options['associated'] = [
                     'Timeslots' => ['validate' => true]
                     ];
@@ -327,26 +371,26 @@ class ScheduleIntervalsTable extends ControllerActionTable
                     $shiftEndTime = $shiftEntity->end_time;
 
                     $timeslotList = [];
-                    if (array_key_exists('timeslots', $data) && !empty($data['timeslots'])) {
+                    if (isset($data['timeslots']) && !empty($data['timeslots'])) {
 
                         $hasEmpty = false;
                         $totalInterval = 0;
                         foreach ($data['timeslots'] as $i => $timeslot) {
                             if (!$hasEmpty) {
-                                if (array_key_exists('interval', $timeslot) && !empty($timeslot['interval'])) {
+                                if (isset($timeslot['interval']) && !empty($timeslot['interval'])) {
                                     $totalInterval += $timeslot['interval'];
                                     $timeslotList[$timeslot['order']] = $totalInterval;
                                 } else {
                                     $hasEmpty = true;
                                 }
-                            } 
+                            }
 
                             if ($hasEmpty) {
                                 $timeslotList[$timeslot['order']] = null;
                             }
                         }
                     }
-              
+
             }
         }
        // echo "<pre>"; print_r($data);die;
@@ -359,18 +403,18 @@ class ScheduleIntervalsTable extends ControllerActionTable
     }
 
     // OnUpdate Events
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $ScheduleIntervals = TableRegistry::get('Schedule.ScheduleIntervals');
         if ($action == 'add') {
-            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery['period']));
             $attr['options'] = $periodOptions;
             $attr['onChangeReload'] = true;
             $attr['default'] = $selectedPeriod;
         } else if ($action == 'edit') {
             //POCOR-8254 start
-            $scheduleId = $this->paramsDecode($request->params['pass'][1])['id'];
+            $scheduleId = $this->paramsDecode($request->getAttribute('params')['pass'][1])['id'];
             $academicPeriodId= $ScheduleIntervals->find()
                                     ->where(['id' => $scheduleId])
                                     ->first()->academic_period_id;
@@ -386,15 +430,15 @@ class ScheduleIntervalsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionShiftId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionShiftId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
         $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
         $ScheduleIntervals = TableRegistry::get('Schedule.ScheduleIntervals');
         if ($action == 'add') {
-            $requestData = $request->data;
-            if (isset($requestData) && isset($requestData[$this->alias()]) && array_key_exists('academic_period_id', $requestData[$this->alias()])) {
-                $selectedPeriodId = $requestData[$this->alias()]['academic_period_id'];
+            $requestData = $request->getData();
+            if (isset($requestData) && isset($requestData[$this->getAlias()]) && array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
+                $selectedPeriodId = $requestData[$this->getAlias()]['academic_period_id'];
             } else {
                 $selectedPeriodId = $this->AcademicPeriods->getCurrent();
             }
@@ -405,7 +449,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
             return $attr;
         } elseif ($action == 'edit') {
             //POCOR-8254 start
-            $scheduleId = $this->paramsDecode($request->params['pass'][1])['id'];
+            $scheduleId = $this->paramsDecode($request->getAttribute('params')['pass'][1])['id'];
             $InstitutionShiftId = $ScheduleIntervals->find()
                                     ->where(['id' => $scheduleId])
                                     ->first()->institution_shift_id;
@@ -429,12 +473,12 @@ class ScheduleIntervalsTable extends ControllerActionTable
     {
         $fieldKey = 'timeslots';
 
-        if (empty($data[$this->alias()][$fieldKey])) {
-            $data[$this->alias()][$fieldKey] = [];
+        if (empty($data[$this->getAlias()][$fieldKey])) {
+            $data[$this->getAlias()][$fieldKey] = [];
         }
 
-        if ($data->offsetExists($this->alias())) {
-            $data[$this->alias()][$fieldKey][] = [
+        if ($data->offsetExists($this->getAlias())) {
+            $data[$this->getAlias()][$fieldKey][] = [
                 'intervals' => '',
             ];
         }
@@ -446,17 +490,17 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
     public function addOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $data[$this->alias()]['institution_shift_id'] = '';
-        unset($data[$this->alias()]['timeslots']);
+        $data[$this->getAlias()]['institution_shift_id'] = '';
+        unset($data[$this->getAlias()]['timeslots']);
     }
 
     // Get Options
     public function getShiftOptions($academicPeriodId, $allShiftOption = false, $institutionId='')
     {
-        if($institutionId == '' && empty($institutionId)){
-            $institutionId = $this->Session->read('Institution.Institutions.id');
-        }
-        
+        if($institutionId == null){
+            $institutionId = $this->getInstitutionID();
+           }
+
         $shiftOptions = $this->Shifts
             ->find('list', [
                 'keyField' => 'id',
@@ -469,7 +513,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
             ->contain('ShiftOptions')
             ->where([
                 $this->Shifts->aliasField('academic_period_id') => $academicPeriodId,
-                $this->Shifts->aliasField('Institution_id') => $institutionId
+                $this->Shifts->aliasField('institution_id') => $institutionId // POCOR-8985
             ])
             ->toArray();
 
@@ -479,24 +523,30 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
         return $shiftOptions;
     }
-    
-    public function getStaffShiftOptions($academicPeriodId, $allShiftOption = false, $institutionId='')
+
+    public function getStaffShiftOptions($academicPeriodId, $allShiftOption = false, $institutionId = null)
     {
-        $shiftOptions = $this->Shifts
-            ->find('list', [
-                'keyField' => 'id',
-                'valueField' => 'name'
-            ])
-            ->select([
-                'id' => $this->Shifts->aliasField('id'),
-                'name' => 'ShiftOptions.name'
-            ])
-            ->contain('ShiftOptions')
-            ->where([
-                $this->Shifts->aliasField('academic_period_id') => $academicPeriodId,
-                $this->Shifts->aliasField('Institution_id') => $institutionId
-            ])
-            ->toArray();
+        $query = $this->Shifts->find('list', [
+            'keyField' => 'id',
+            'valueField' => 'name'
+        ])
+        ->select([
+            'id' => $this->Shifts->aliasField('id'),
+            'name' => 'ShiftOptions.name'
+        ])
+        ->contain('ShiftOptions');
+
+        $conditions = [
+            $this->Shifts->aliasField('academic_period_id') => $academicPeriodId
+        ];
+
+        if ($institutionId !== null) {
+            $conditions[$this->Shifts->aliasField('Institution_id')] = $institutionId;
+        } else {
+            $conditions[$this->Shifts->aliasField('Institution_id IS')] = null;
+        }
+
+        $shiftOptions = $query->where($conditions)->toArray();
 
         if (!empty($shiftOptions) && $allShiftOption) {
             $shiftOptions = ['-1' => '-- ' . __('All Shifts') . ' --'] + $shiftOptions;
@@ -504,6 +554,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
         return $shiftOptions;
     }
+
     public function getAcademicPeriodOptions($querystringPeriod)
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
@@ -521,18 +572,19 @@ class ScheduleIntervalsTable extends ControllerActionTable
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
          $entity['timeslots'] = array();
-            
+
     }
 
     //POCOR-8254
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
-        $timeslotList = $this->request['data']['ScheduleIntervals']['timeslots'];
-        $institutionSchedule = TableRegistry::get('institution_schedule_timeslots');
+        $timeslotList = $this->request->getData()['ScheduleIntervals']['timeslots'];
+        // $institutionSchedule = TableRegistry::get('institution_schedule_timeslots');
+        $tableLocator = new TableLocator();
+        $institutionSchedule = $tableLocator->get('institution_schedule_timeslots');
         $findRecord = $institutionSchedule->find()
             ->where(['institution_schedule_interval_id' => $entity->id])
             ->toArray();
-
         // Check if the number of records matches the number of timeslots
         if (count($findRecord) === count($timeslotList)) {
             foreach ($findRecord as $key => $value) {
@@ -543,9 +595,21 @@ class ScheduleIntervalsTable extends ControllerActionTable
                 );
             }
         } else {
-            return false;
+            //return false;
         }
 
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
 
 }

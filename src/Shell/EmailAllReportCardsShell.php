@@ -11,7 +11,7 @@ use Cake\Console\Shell;
 
 class EmailAllReportCardsShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('SystemProcesses');
@@ -49,7 +49,7 @@ class EmailAllReportCardsShell extends Shell
                         $this->ReportCardEmailProcesses->aliasField('created'),
                         $this->ReportCardEmailProcesses->aliasField('student_id')
                     ])
-                    ->hydrate(false)
+                    ->disableHydration() // POCOR-8533
                     ->first();
 
                 if (!empty($recordToProcess)) {
@@ -248,7 +248,7 @@ class EmailAllReportCardsShell extends Shell
     }
 
     private function setAttachments(Entity $studentsReportCardEntity, ArrayObject $emailProcessesObj)
-    {        
+    {
 		$attachments = [];
         if ($studentsReportCardEntity->has('file_name') && !empty($studentsReportCardEntity->file_name) && $studentsReportCardEntity->has('file_content_pdf') && !empty($studentsReportCardEntity->file_content_pdf)) {
 			if(!empty($studentsReportCardEntity->student_id)) {
@@ -286,7 +286,7 @@ class EmailAllReportCardsShell extends Shell
                 $replace = sprintf($format, $placeholder);
 
                 if (!empty($availablePlaceholders)) {
-                    $value = Hash::get($vars, $placeholder);                    
+                    $value = Hash::get($vars, $placeholder);
                     $message = str_replace($replace, $value, $message);
                 }
             }

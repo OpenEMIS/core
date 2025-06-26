@@ -10,7 +10,7 @@ use Report\Model\Table\ReportProgressTable as Process;
 
 class ReportShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Report.ReportProgress');
@@ -20,12 +20,12 @@ class ReportShell extends Shell
     {
 
         ini_set('memory_limit', '-1'); //  -1 is for infinite , By default it is 128M & it's not sufficient
-
         $id = $this->args[0];
 
 
         try {
             $entity = $this->ReportProgress->get($id);
+           // $this->out('Start Processing Record For Ehteram'.$entity);
             if ($entity->status == 1) {
                 $params = json_decode($entity->params, true);
                 $format = $params['format'];

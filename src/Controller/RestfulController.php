@@ -10,21 +10,22 @@ use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Core\Configure;
 use Firebase\JWT\JWT;
 use Restful\Controller\RestfulController as BaseController;
 use Page\Traits\EncodingTrait;
+use Cake\Event\EventInterface;
 
 class RestfulController extends BaseController
 {
     use EncodingTrait;
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadComponent('Csrf');
-        $this->Auth->config('authenticate', [
+        $this->Auth->setConfig('authenticate', [
             'Form' => [
                 'userModel' => 'User.Users',
                 'passwordHasher' => [
@@ -33,53 +34,53 @@ class RestfulController extends BaseController
                 ]
             ]
         ]);
-        $this->Auth->config('loginAction', [
+        $this->Auth->setConfig('loginAction', [
             'plugin' => 'User',
             'controller' => 'Users',
             'action' => 'login'
         ]);
-        $this->Auth->config('logoutRedirect', [
+        $this->Auth->setConfig('logoutRedirect', [
             'plugin' => 'User',
             'controller' => 'Users',
             'action' => 'login'
         ]);
 
         // do not load localization component if connecting from external system
-        if (!$this->request->header('authorization')) {
+        if (!$this->request->getHeader('authorization')) {
             $this->loadComponent('Localization.Localization', [
                 'productName' => 'OpenEMIS Core'
             ]);
         }
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
 
         $isBearer = false;
         $queryDatasource = true;
-        $authorisationHeader = $this->request->header('authorization');
+        $authorisationHeader = $this->request->getHeader('authorization');
         $token = '';
-        if ($authorisationHeader) {
-            $token = str_ireplace('Bearer ', '', $authorisationHeader);
-
+        if ($authorisationHeader && is_string($authorisationHeader)) {
+        // POCOR-8436 if authorisationHeader is a string, and not an empty array
             $tks = explode('.', $token);
             if (count($tks) == 3) {
                 list($headb64, $bodyb64, $cryptob64) = $tks;
                 $payload = JWT::jsonDecode(JWT::urlsafeB64Decode($bodyb64));
                 if (property_exists($payload, 'iss')) {
                     $queryDatasource = false;
-                    $this->Auth->config('storage', 'Memory');
+                    $this->Auth->setconfig('storage', 'Memory');
                 }
                 if (property_exists($payload, 'scope')) {
                     $this->controllerAction = $payload->scope;
                 }
-                
+
                 $isBearer = true;
             }
         }
 
-        $this->Auth->config('authenticate', [
+
+        $this->Auth->setConfig('authenticate', [
             'ADmad/JwtAuth.Jwt' => [
                 'parameter' => 'token',
                 'userModel' => 'User.Users',
@@ -94,12 +95,15 @@ class RestfulController extends BaseController
         ]);
 
         if (!empty($token) && true === $isBearer) {
-            $this->eventManager()->off($this->Csrf);
+            $this->getEventManager()->off($this->Csrf);
         }
-
-        if ($this->request->is(['put', 'post', 'delete', 'patch']) || !empty($this->request->data)) {
-            $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
-            $this->request->env('HTTP_X_CSRF_TOKEN', $token);
+        if ($this->request->is(['put', 'post', 'delete', 'patch']) || !empty($this->request->getData())) {
+             $header = $this->request->getHeaderLine('Authorization');
+            if ($header) {
+                $token = str_ireplace('Bearer ', '', $header);
+            }
+            //$token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
+            $this->request->withEnv('HTTP_X_CSRF_TOKEN', $token);
         }
     }
 

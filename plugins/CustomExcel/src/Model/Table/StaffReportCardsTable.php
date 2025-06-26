@@ -8,15 +8,16 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Inflector;
 use Cake\Utility\Security;
 use App\Model\Table\AppTable;
+use Cake\Datasource\ConnectionManager;//POCOR-9128
 
 class StaffReportCardsTable extends AppTable
 {
     private $fileType = 'xlsx';
     //private $fileType = 'pdf';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff');
+        $this->setTable('institution_staff');
         parent::initialize($config);
 
         $this->addBehavior('CustomExcel.StaffExcelReport', [
@@ -40,11 +41,15 @@ class StaffReportCardsTable extends AppTable
 				'StaffSubjects',
 				'StaffQualifications',
 				'StaffAwards',
+                'StaffLicense',//POCOR-9128
+                'InstitutionStaff',//POCOR-9128
+                'StaffLeave',//POCOR-9128
+                'StaffTraining'//POCOR-9128
             ]
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';
@@ -62,6 +67,10 @@ class StaffReportCardsTable extends AppTable
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffSubjects'] = 'onExcelTemplateInitialiseStaffSubjects';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffQualifications'] = 'onExcelTemplateInitialiseStaffQualifications';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffAwards'] = 'onExcelTemplateInitialiseStaffAwards';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffLicense'] = 'onExcelTemplateInitialiseStaffLicense';//POCOR-9128
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStaff'] = 'onExcelTemplateInitialiseInstitutionStaff';//POCOR-9128
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffLeave'] = 'onExcelTemplateInitialiseStaffLeave';//POCOR-9128
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffTraining'] = 'onExcelTemplateInitialiseStaffTraining';//POCOR-9128
 		return $events;
     }
 
@@ -130,14 +139,14 @@ class StaffReportCardsTable extends AppTable
                 $StaffReportCards->aliasField('staff_id') => $params['staff_id'],
             ])
             ->first();
-			
+
         // set filename
 		$fileName = $StaffReportCardData->institution->code . '_' . $StaffReportCardData->staff_template->code. '_' . $StaffReportCardData->staff->openemis_no . '_' . $StaffReportCardData->staff->name . '.' . $this->fileType;
         //$fileName = $StaffReportCardData->academic_period->name . '_' . $StaffReportCardData->staff_template->code. '_' . $StaffReportCardData->institution->name . '.' . $this->fileType;
 		$filepath = $extra['file_path'];
         $fileContent = file_get_contents($filepath);
         $status = $StaffReportCards::GENERATED;
-		
+
         // save file
         $StaffReportCards->updateAll([
             'status' => $status,
@@ -171,32 +180,32 @@ class StaffReportCardsTable extends AppTable
         $event->stopPropagation();
         return $controller->redirect($url);
     }
-    
+
 	public function onExcelTemplateInitialiseProfiles(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('staff_profile_template_id', $params)) {
+        if (isset($params['staff_profile_template_id'])) {
             $StaffTemplates = TableRegistry::get('ProfileTemplate.StaffTemplates');
             $entity = $StaffTemplates->get($params['staff_profile_template_id'], ['contain' => ['AcademicPeriods']]);
-			
+
             $extra['report_card_start_date'] = $entity->start_date;
             $extra['report_card_end_date'] = $entity->end_date;
 
             return $entity->toArray();
         }
     }
-	
+
 	public function onExcelTemplateInitialiseInstitutions(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params)) {
+        if (isset($params['institution_id'])) {
             $Institutions = TableRegistry::get('Institution.Institutions');
             $entity = $Institutions->get($params['institution_id'], ['contain' => ['AreaAdministratives', 'Types']]);
             return $entity;
         }
     }
-	
+
 	public function onExcelTemplateInitialiseStaffUsers(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+        if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
             $Staff = TableRegistry::get('Institution.Staff');
 
             $entity = $Staff
@@ -209,27 +218,39 @@ class StaffReportCardsTable extends AppTable
 					'address' => 'Users.address',
 					'date_of_birth' => 'Users.date_of_birth',
 					'identity_number' => 'Users.identity_number',
-					'staff_position_title' => 'Positions.StaffPositionTitles.staff_position_title',
+					// 'staff_position_title' => 'Positions.StaffPositionTitles.staff_position_title',
 					'gender' => 'Genders.name',
                 ])
-                ->contain([
+                ->join([
                     'Users' => [
-                        'fields' => [
-                            'identity_number',
-                            'first_name',
-                            'last_name',
-                            'photo_content',
-                            'email',
-                            'address',
-                            'date_of_birth',
-                        ]
+                        'table' => 'security_users',
+                        'type' => 'INNER',
+                        'conditions' => 'Users.id = Staff.staff_id'
                     ],
-					'Positions.StaffPositionTitles'=>[
-						'fields' => [
-							'staff_position_title' => 'StaffPositionTitles.name',
-						]
-					]
+                    'Genders' => [
+                        'table' => 'genders',
+                        'type' => 'INNER',
+                        'conditions' => 'Genders.id = Users.gender_id'
+                    ]
                 ])
+                // ->contain([
+                //     'Users' => [
+                //         'fields' => [
+                //             'identity_number',
+                //             'first_name',
+                //             'last_name',
+                //             'photo_content',
+                //             'email',
+                //             'address',
+                //             'date_of_birth',
+                //         ]
+                //     ],
+				// 	'Positions.StaffPositionTitles'=>[
+				// 		'fields' => [
+				// 			'staff_position_title' => 'StaffPositionTitles.name',
+				// 		]
+				// 	]
+                // ])
 				->matching('Users.Genders')
                 ->where([
                     $Staff->aliasField('institution_id') => $params['institution_id'],
@@ -251,10 +272,10 @@ class StaffReportCardsTable extends AppTable
             return $result;
         }
     }
-	
+
 	public function onExcelTemplateInitialiseStaffDemographics(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+        if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
             $Staff = TableRegistry::get('Institution.Staff');
 
             $entity = $Staff
@@ -282,10 +303,10 @@ class StaffReportCardsTable extends AppTable
             return $entity;
         }
     }
-	
+
 	public function onExcelTemplateInitialiseStaffContacts(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+        if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
             $UserContacts = TableRegistry::get('user_contacts');
 
             $entity = $UserContacts
@@ -301,10 +322,10 @@ class StaffReportCardsTable extends AppTable
             return $entity;
         }
     }
-	
+
 	public function onExcelTemplateInitialiseStaffNationalities(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+        if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
             $UserNationalities = TableRegistry::get('user_nationalities');
 
             $entity = $UserNationalities
@@ -325,10 +346,10 @@ class StaffReportCardsTable extends AppTable
             return $entity;
         }
     }
-	
+
 	public function onExcelTemplateInitialiseStaffSalaries(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+        if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
             $StaffSalaries = TableRegistry::get('staff_salaries');
 
             $entity = $StaffSalaries
@@ -343,10 +364,10 @@ class StaffReportCardsTable extends AppTable
             return $entity;
         }
     }
-	
+
 	public function onExcelTemplateInitialiseStaffAreas(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+        if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
             $SecurityUsers = TableRegistry::get('security_users');
 
             $entity = $SecurityUsers
@@ -374,13 +395,13 @@ class StaffReportCardsTable extends AppTable
             return $entity;
         }
     }
-	
+
 	public function onExcelTemplateInitialiseStaffClasses(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+        if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
             $InstitutionClasses = TableRegistry::get('institution_classes');
             $InstitutionClassesSecondaryStaff = TableRegistry::get('institution_classes_secondary_staff');
-			
+
 			$InstitutionClassesData = [];
             $InstitutionClassesData = $InstitutionClasses
                 ->find()
@@ -409,8 +430,8 @@ class StaffReportCardsTable extends AppTable
                     $InstitutionClasses->aliasField('institution_id') => $params['institution_id'],
                 ])
                 ->toArray();
-			
-			$SecondaryStaffData = [];	
+
+			$SecondaryStaffData = [];
             $SecondaryStaffData = $InstitutionClassesSecondaryStaff
                 ->find()
                 ->select([
@@ -421,7 +442,7 @@ class StaffReportCardsTable extends AppTable
 					'education_grade' => 'EducationGrades.name',
                 ])
 				->innerJoin(
-					[$InstitutionClasses->alias() => $InstitutionClasses->table()],
+					[$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()],
 					[
 						$InstitutionClasses->aliasField('id = ') .  $InstitutionClassesSecondaryStaff->aliasField('institution_class_id'),
 					]
@@ -444,8 +465,8 @@ class StaffReportCardsTable extends AppTable
                     $InstitutionClasses->aliasField('institution_id') => $params['institution_id'],
                 ])
                 ->toArray();
-				
-			$entity = array_merge($InstitutionClassesData,$SecondaryStaffData);	
+
+			$entity = array_merge($InstitutionClassesData,$SecondaryStaffData);
 			$result = [];
 			$total_students = 0;
 			foreach ($entity as $value) {
@@ -460,12 +481,12 @@ class StaffReportCardsTable extends AppTable
             return $result;
         }
     }
-	
+
 	public function onExcelTemplateInitialiseStaffSubjects(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+        if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
             $InstitutionSubjectStaff = TableRegistry::get('institution_subject_staff');
-			
+
 			$entity = [];
             $entity = $InstitutionSubjectStaff
                 ->find()
@@ -495,7 +516,7 @@ class StaffReportCardsTable extends AppTable
                     $InstitutionSubjectStaff->aliasField('institution_id') => $params['institution_id'],
                 ])
                 ->toArray();
-			
+
 			$result = [];
 			$total_students = 0;
 			foreach ($entity as $value) {
@@ -510,10 +531,10 @@ class StaffReportCardsTable extends AppTable
             return $result;
         }
     }
-	
+
 	public function onExcelTemplateInitialiseStaffQualifications(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+        if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
             $StaffQualifications = TableRegistry::get('staff_qualifications');
 
             $entity = $StaffQualifications->find()
@@ -542,10 +563,10 @@ class StaffReportCardsTable extends AppTable
             return $entity;
         }
     }
-	
+
 	public function onExcelTemplateInitialiseStaffAwards(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('staff_id', $params)) {
+        if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
             $UserAwards = TableRegistry::get('user_awards');
 
             $entity = $UserAwards->find()
@@ -561,5 +582,157 @@ class StaffReportCardsTable extends AppTable
             return $entity;
         }
     }
-	
+    //POCOR-9128 starts
+    public function onExcelTemplateInitialiseStaffLicense(Event $event, array $params, ArrayObject $extra)
+    {
+        if (empty($params['staff_id'])) {
+            return [];
+        }
+        $staffId = $params['staff_id'];
+        $connection = ConnectionManager::get('default');
+        $staffLicensesData = $connection->execute("SELECT 
+                                        license_types.name AS license_type_name,
+                                        IFNULL(license_classification_info.license_classification_names, '') AS license_classification_names,
+                                        staff_licenses.license_number,
+                                        staff_licenses.issue_date,
+                                        staff_licenses.expiry_date
+                                    FROM staff_licenses
+                                    INNER JOIN license_types 
+                                        ON license_types.id = staff_licenses.license_type_id
+                                    LEFT JOIN (
+                                        SELECT 
+                                            staff_licenses_classifications.staff_license_id,
+                                            GROUP_CONCAT(DISTINCT license_classifications.name) AS license_classification_names
+                                        FROM staff_licenses_classifications
+                                        INNER JOIN license_classifications 
+                                            ON license_classifications.id = staff_licenses_classifications.license_classification_id
+                                        GROUP BY staff_licenses_classifications.staff_license_id
+                                    ) AS license_classification_info 
+                                        ON license_classification_info.staff_license_id = staff_licenses.id
+                                    WHERE staff_licenses.security_user_id = " . $staffId . "
+                                    ORDER BY staff_licenses.expiry_date DESC")->fetchAll(\PDO::FETCH_ASSOC);
+        
+        $entity = $result = [];
+        if (!empty($staffLicensesData)) {
+            foreach ($staffLicensesData as $key => $data) {
+                $result = [
+                    'id' => $key,
+                    'type' => !empty($data['license_type_name']) ? $data['license_type_name'] : '',
+                    'classification' => !empty($data['license_classification_names']) ? $data['license_classification_names'] : '',
+                    'number' => !empty($data['license_number']) ? $data['license_number'] : '',
+                    'issue_date' => !empty($data['issue_date']) ? $data['issue_date'] : '',
+                    'expiry_date' => !empty($data['expiry_date']) ? $data['expiry_date'] : ''
+                ];
+                $entity[] = $result;
+            }
+        }
+        return $entity;
+    }
+    
+    public function onExcelTemplateInitialiseInstitutionStaff(Event $event, array $params, ArrayObject $extra)
+    {
+        if (empty($params['staff_id'])) {
+            return [];
+        }
+        $staffId = $params['staff_id'];
+        $connection = ConnectionManager::get('default');
+        $InstitutionStaffData = $connection->execute("SELECT institutions.name institution_name
+                                                    ,institution_positions.position_no staff_position
+                                                    ,staff_types.name staff_type_name
+                                                    ,institution_staff.start_date
+                                                    ,institution_staff.end_date
+                                                FROM institution_staff
+                                                INNER JOIN staff_types
+                                                ON staff_types.id = institution_staff.staff_type_id
+                                                INNER JOIN institution_positions
+                                                ON institution_positions.id = institution_staff.institution_position_id
+                                                INNER JOIN institutions
+                                                ON institutions.id = institution_staff.institution_id
+                                                WHERE institution_staff.staff_id = " . $staffId . " 
+                                                ORDER BY institution_staff.start_date DESC")->fetchAll(\PDO::FETCH_ASSOC);
+        
+        $entity = $result = [];
+        if (!empty($InstitutionStaffData)) {
+            foreach ($InstitutionStaffData as $key => $data) {
+                $result = [
+                    'id' => $key,
+                    'institution_name' => !empty($data['institution_name']) ? $data['institution_name'] : '',
+                    'position' => !empty($data['staff_position']) ? $data['staff_position'] : '',
+                    'staff_type' => !empty($data['staff_type_name']) ? $data['staff_type_name'] : '',
+                    'start_date' => !empty($data['start_date']) ? $data['start_date'] : '',
+                    'end_date' => !empty($data['end_date']) ? $data['end_date'] : ''
+                ];
+                $entity[] = $result;
+            }
+        }
+        return $entity;
+    }
+
+    public function onExcelTemplateInitialiseStaffLeave(Event $event, array $params, ArrayObject $extra)
+    {
+        if (empty($params['staff_id'])) {
+            return [];
+        }
+        $staffId = $params['staff_id'];
+        $connection = ConnectionManager::get('default');
+        $staffLeaveData = $connection->execute("SELECT staff_leave_types.name staff_leave_type
+                                                        ,institution_staff_leave.date_from
+                                                        ,institution_staff_leave.date_to
+                                                    FROM institution_staff_leave
+                                                    INNER JOIN staff_leave_types
+                                                    ON staff_leave_types.id = institution_staff_leave.staff_leave_type_id
+                                                    WHERE institution_staff_leave.staff_id = " . $staffId . " 
+                                                    ORDER BY institution_staff_leave.date_from DESC")->fetchAll(\PDO::FETCH_ASSOC);
+        
+        $entity = $result = [];
+        if (!empty($staffLeaveData)) {
+            foreach ($staffLeaveData as $key => $data) {
+                $result = [
+                    'id' => $key,
+                    'type' => !empty($data['staff_leave_type']) ? $data['staff_leave_type'] : '',
+                    'date_from' => !empty($data['date_from']) ? $data['date_from'] : '',
+                    'date_to' => !empty($data['date_to']) ? $data['date_to'] : ''
+                ];
+                $entity[] = $result;
+            }
+        }
+        return $entity;
+    }
+
+    public function onExcelTemplateInitialiseStaffTraining(Event $event, array $params, ArrayObject $extra)
+    {
+        if (empty($params['staff_id'])) {
+            return [];
+        }
+        $staffId = $params['staff_id'];
+        $connection = ConnectionManager::get('default');
+        $InstitutionStaffData = $connection->execute("SELECT staff_training_categories.name staff_training_category_name
+                                                ,training_field_of_studies.name training_field_of_study_name
+                                                ,staff_trainings.name staff_training_name
+                                                ,staff_trainings.completed_date
+                                                ,staff_trainings.credit_hours
+                                            FROM staff_trainings
+                                            INNER JOIN staff_training_categories
+                                            ON staff_training_categories.id = staff_trainings.staff_training_category_id
+                                            INNER JOIN training_field_of_studies
+                                            ON training_field_of_studies.id = staff_trainings.training_field_of_study_id
+                                            WHERE staff_trainings.staff_id = " . $staffId . "
+                                            ORDER BY staff_trainings.completed_date DESC")->fetchAll(\PDO::FETCH_ASSOC);
+        
+        $entity = $result = [];
+        if (!empty($InstitutionStaffData)) {
+            foreach ($InstitutionStaffData as $key => $data) {
+                $result = [
+                    'id' => $key,
+                    'category' => !empty($data['staff_training_category_name']) ? $data['staff_training_category_name'] : '',
+                    'field_of_study' => !empty($data['training_field_of_study_name']) ? $data['training_field_of_study_name'] : '',
+                    'name' => !empty($data['staff_training_name']) ? $data['staff_training_name'] : '',
+                    'completion_date' => !empty($data['completed_date']) ? $data['completed_date'] : '',
+                    'credit_hours' => !empty($data['credit_hours']) ? $data['credit_hours'] : ''
+                ];
+                $entity[] = $result;
+            }
+        }
+        return $entity;
+    }//POCOR-9128 ends
 }

@@ -6,16 +6,19 @@ use Cake\Validation\Validator;
 
 class ExaminationGradingOptionsTable extends ExaminationsAppTable {
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
         parent::initialize($config);
 
         $this->belongsTo('ExaminationGradingTypes', ['className' => 'Examination.ExaminationGradingTypes']);
         $this->hasMany('ExaminationStudentSubjectResults', ['className' => 'Examination.ExaminationStudentSubjectResults', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         if ($this->behaviors()->has('Reorder')) {
-            $this->behaviors()->get('Reorder')->config([
-                'filter' => 'examination_grading_type_id'
-            ]);
+            // $this->behaviors()->get('Reorder')->config([
+            //     'filter' => 'examination_grading_type_id'
+            // ]);
+            $reorderBehavior = $this->behaviors()->get('Reorder');
+            $reorderBehavior->setConfig('filter', 'examination_grading_type_id');
+
         }
 
         $this->fields['examination_grading_type_id']['type'] = 'hidden';
@@ -37,48 +40,48 @@ class ExaminationGradingOptionsTable extends ExaminationsAppTable {
         }
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
 
         $validator
             ->allowEmpty('code')
-            ->add('code', 'ruleUniqueCode', [
-                'rule' => ['checkUniqueCode', 'examination_grading_type_id'],
-                'last' => true
-            ])
-            ->add('code', 'ruleUniqueCodeWithinForm', [
-                'rule' => ['checkUniqueCodeWithinForm', $this->ExaminationGradingTypes],
-            ])
+            // ->add('code', 'ruleUniqueCode', [
+            //     'rule' => ['checkUniqueCode', 'examination_grading_type_id'],
+            //     'last' => true
+            // ])
+            // ->add('code', 'ruleUniqueCodeWithinForm', [
+            //     'rule' => ['checkUniqueCodeWithinForm', $this->ExaminationGradingTypes],
+            // ])
             ->requirePresence('name')
-            ->add('min', [
-                'ruleNotMoreThanMax' => [
-                    'rule' => ['checkMinNotMoreThanMax'],
-                ],
-                'ruleIsDecimal' => [
-                    'rule' => ['decimal', null],
-                ],
-                'ruleRange' => [
-                    'rule' => ['range', 0, 9999.99]
-                ]
-            ])
-            ->add('max', [
-                'ruleNotMoreThanGradingTypeMax' => [
-                    'rule' => ['checkNotMoreThanGradingTypeMax', $this->ExaminationGradingTypes],
-                    'provider' => 'table'
-                ],
-                'ruleIsDecimal' => [
-                    'rule' => ['decimal', null],
-                ],
-                'ruleRange' => [
-                    'rule' => ['range', 0, 9999.99]
-                ]
-            ])
+            // ->add('min', [
+            //     'ruleNotMoreThanMax' => [
+            //         'rule' => ['checkMinNotMoreThanMax'],
+            //     ],
+            //     'ruleIsDecimal' => [
+            //         'rule' => ['decimal', null],
+            //     ],
+            //     'ruleRange' => [
+            //         'rule' => ['range', 0, 9999.99]
+            //     ]
+            // ])
+            // ->add('max', [
+            //     'ruleNotMoreThanGradingTypeMax' => [
+            //         'rule' => ['checkNotMoreThanGradingTypeMax', $this->ExaminationGradingTypes],
+            //         'provider' => 'table'
+            //     ],
+            //     'ruleIsDecimal' => [
+            //         'rule' => ['decimal', null],
+            //     ],
+            //     'ruleRange' => [
+            //         'rule' => ['range', 0, 9999.99]
+            //     ]
+            // ])
             ;
         return $validator;
     }
 
     public static function checkNotMoreThanGradingTypeMax($maxValue, $ExaminationGradingTypes, array $globalData) {
-        $formData = $ExaminationGradingTypes->request->data[$ExaminationGradingTypes->alias()];
+        $formData = $ExaminationGradingTypes->request->data[$ExaminationGradingTypes->getAlias()];
         return intVal($maxValue) <= intVal($formData['max']);
     }
 }

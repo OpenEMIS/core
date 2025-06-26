@@ -16,9 +16,9 @@ use DateTime; // POCOR-7479
 
 class StudentAbsencesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_absence_details');
+        $this->setTable('institution_student_absence_details');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
@@ -53,7 +53,7 @@ class StudentAbsencesTable extends AppTable
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -68,10 +68,10 @@ class StudentAbsencesTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
-        $InstitutionSubjects = TableRegistry::get('institution_subjects');
-        $grades = TableRegistry::get('education_grades');
-        $academicPeriod = TableRegistry::get('academic_periods');
-        $securityUsers = TableRegistry::get('security_users');
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $grades = TableRegistry::get('Education.EducationGrades');
+        $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $securityUsers = TableRegistry::get('Security.Users');
         $selectedArea = $requestData->area_education_id;
         $conditions = [];
 
@@ -128,8 +128,6 @@ class StudentAbsencesTable extends AppTable
             }
                 $conditions['Institutions.area_id IN'] = $allselectedAreas;
         }
-
-
         $join = []; 
         $query
             ->select([
@@ -139,13 +137,17 @@ class StudentAbsencesTable extends AppTable
                 $this->aliasField('institution_class_id'),
                 $this->aliasField('absence_type_id'),
                 $this->aliasField('student_absence_reason_id'),
-                'get_date'=>$this->aliasField('date'),
+                'get_date' => $query->func()->DATE_FORMAT([
+                    $this->aliasField('date') => 'identifier',
+                    "'%Y-%m-%d'" => 'literal'
+                ]),//POCOR-8772
                 'default_identity_type'=> "(SELECT IFNULL(student_identities.identity_type, ''))",   
                 'identity_number'=> "(SELECT IFNULL(student_identities.identity_number, ''))",   
                 'address'=> "(SELECT IFNULL(Users.address, ''))",   
-                'contacts'=> "(SELECT IFNULL(contact_info.contacts, ''))",   
-                'period_name'=> "(SELECT IF(institution_subjects.name IS NOT NULL, '', IFNULL(period_info.period_name, '')))",   
-                'subject_name' =>"(SELECT IFNULL(institution_subjects.name, ''))",
+                'contacts'=> "(SELECT IFNULL(contact_info.contacts, ''))",
+                'period_name' => "(SELECT IF(InstitutionSubjects.name IS NOT NULL, '', IFNULL(period_info.period_name, CONCAT('Period ', " . $this->aliasField('period') . "))))", // POCOR-8902   
+                // 'period_name'=> "(SELECT IF(InstitutionSubjects.name IS NOT NULL, '', IFNULL(period_info.period_name, '')))",   
+                'subject_name' =>"(SELECT IFNULL(InstitutionSubjects.name, ''))",
                 'education_grade_name'=> $grades->aliasField('name'),
                 'academic_period' => $academicPeriod->aliasField('name'),
                 'student_name' => $query->func()->concat([
@@ -195,16 +197,16 @@ class StudentAbsencesTable extends AppTable
                     ]
                 ],
             ])
-             ->innerJoin([$grades->alias() => $grades->table()], [
+             ->innerJoin([$grades->getAlias() => $grades->getTable()], [
                 $grades->aliasField('id = ') . $this->aliasField('education_grade_id')
             ])
-            ->innerJoin([$academicPeriod->alias() => $academicPeriod->table()], [
+            ->innerJoin([$academicPeriod->getAlias() => $academicPeriod->getTable()], [
                 $academicPeriod->aliasField('id = ') . $this->aliasField('academic_period_id')
             ])
-             ->innerJoin([$securityUsers->alias() => $securityUsers->table()], [
+             ->innerJoin([$securityUsers->getAlias() => $securityUsers->getTable()], [
                 $securityUsers->aliasField('id = ') . $this->aliasField('student_id')
             ])
-            ->leftJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+            ->leftJoin([$InstitutionSubjects->getAlias() => $InstitutionSubjects->getTable()], [
                 $InstitutionSubjects->aliasField('id = ') . $this->aliasField('subject_id')
             ]);
 
@@ -221,8 +223,8 @@ class StudentAbsencesTable extends AppTable
                         ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id
                         INNER JOIN student_attendance_per_day_periods
                         ON student_attendance_per_day_periods.student_attendance_mark_type_id = student_attendance_mark_types.id)" ,
-                        'conditions' => ['period_info.education_grade_id = education_grades.id',
-                                        'period_info.academic_period_id = academic_periods.id',
+                        'conditions' => ['period_info.education_grade_id = EducationGrades.id',
+                                        'period_info.academic_period_id = AcademicPeriods.id',
                                         'period_info.period = ' . $this->aliasField('period'),
                                         ],  
             ];
@@ -237,7 +239,7 @@ class StudentAbsencesTable extends AppTable
                             ON identity_types.id = user_identities.identity_type_id
                             WHERE identity_types.default = 1
                             GROUP BY  user_identities.security_user_id)" ,
-                            'conditions' => ['student_identities.security_user_id = security_users.id']  
+                            'conditions' => ['student_identities.security_user_id = Users.id']  
             ];
 
             $join['contact_info'] = [
@@ -251,11 +253,12 @@ class StudentAbsencesTable extends AppTable
                             ON contact_options.id = contact_types.contact_option_id
                             WHERE user_contacts.preferred = 1
                             GROUP BY user_contacts.security_user_id)" ,
-                            'conditions' => ['contact_info.security_user_id = security_users.id']  
+                            'conditions' => ['contact_info.security_user_id = Users.id']  
             ];
             $query->where($conditions)
-            ->order(['Institutions.name','education_grades.name','InstitutionClasses.name']);
-            $query->join($join);      
+            ->order(['Institutions.name','EducationGrades.name','InstitutionClasses.name']);
+
+            $query->join($join);     
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -354,8 +357,9 @@ class StudentAbsencesTable extends AppTable
         $newFields[] = [
             'key' => 'get_date',
             'field' => 'get_date',
-            'type' => 'date',
-            'label' => __('Date')
+            'type' => 'string',  // Changed from 'date' to 'string'POCOR-8772
+            'label' => __('Date'),
+            'format' => '#'     // Prevents Excel from auto-formatting the date
         ];
         $newFields[] = [
             'key' => 'period_name',

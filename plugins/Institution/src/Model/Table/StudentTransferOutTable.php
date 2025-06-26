@@ -6,17 +6,19 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\I18n\Date;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Inflector;
+use Cake\Log\Log;
 
 
 class StudentTransferOutTable extends InstitutionStudentTransfersTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -25,19 +27,23 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         ]);
 
         if ($this->behaviors()->has('Workflow')) {
-            $this->behaviors()->get('Workflow')->config([
-                'institution_key' => 'previous_institution_id'
-            ]);
+            // $this->behaviors()->get('Workflow')->config([
+            //     'institution_key' => 'previous_institution_id'
+            // ]);
+            $workflowBehavior = $this->behaviors()->get('Workflow');
+            $workflowBehavior->setConfig('institution_key', 'previous_institution_id');
         }
 
         //$this->toggle('add', true);//POCOR-6925
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StudentTransferOut'=>['id']]
+        ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
-
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->notEmpty(['requested_date', 'workflow_assignee_id'])
             ->add('requested_date', [
@@ -45,16 +51,17 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     'rule' => ['inAcademicPeriod', 'previous_academic_period_id', []]
                 ],
                 'ruleCompareDate' => [
-                    'rule' => ['compareDate', 'start_date', false],
+                    'rule' => ['compareDate', 'start_date', true],
                     'on' => function ($context) {
                         return array_key_exists('start_date', $context['data']) && !empty($context['data']['start_date']);
                     }
                 ]
             ])
-            ->add('institution_id', 'rulecompareStudentGenderWithInstitution', [
-                'rule' => ['compareStudentGenderWithInstitution'],
-                'on' => 'create'
-            ])
+// POCOR-8946
+//            ->add('institution_id', 'rulecompareStudentGenderWithInstitution', [
+//                'rule' => ['compareStudentGenderWithInstitution'],
+//                'on' => 'create'
+//            ])
             ->add('student_id', [
                 'ruleNoNewWithdrawRequestInGradeAndInstitution' => [
                     'rule' => ['noNewWithdrawRequestInGradeAndInstitution'],
@@ -73,14 +80,14 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
             ]);
     }
 
-    public function validationBulkTransfer(Validator $validator)
+    public function validationBulkTransfer(Validator $validator): Validator
     {
         // requested_date is not relevent for transfer of promoted/graduated students
         $validator = $this->validationDefault($validator);
         return $validator->remove('requested_date');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['UpdateAssignee.onSetSchoolBasedConditions'] = 'onSetSchoolBasedConditions';
@@ -101,17 +108,18 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     {
         if ($student->isNew()) {
             // close other pending SENDING transfer applications (in same education system) if the student is successfully transferred in one school
-            $this->rejectPendingTransferRequests($this->registryAlias(), $student);
+            $this->rejectPendingTransferRequests($this->getRegistryAlias(), $student);
         }
     }
 
     // POCOR-3649
     public function associated(Event $event, ArrayObject $extra)
     {
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $this->Alert->error($this->aliasField('unableToTransfer'));
-        $currentEntity = $this->Session->read($this->registryAlias() . '.associated');
-        $action = $this->Session->read($this->registryAlias() . '.referralAction');
+        $currentEntity = $this->Session->read($this->getRegistryAlias() . '.associated');
+        $action = $this->Session->read($this->getRegistryAlias() . '.referralAction');
 
         $extra['config']['form'] = true;
         $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit'];
@@ -134,6 +142,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $toolbarButtonsArray['back']['attr'] = $toolbarAttr;
         $toolbarButtonsArray['back']['attr']['title'] = __('Back');
         $toolbarButtonsArray['back']['url'] = $this->url($action);
+        $toolbarButtonsArray['back']['url'][1] = $encodedQueryString;
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // end back button
 
@@ -146,7 +155,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     {
         $fieldKey = 'associated_records';
         $dataBetweenDate = [];
-        $sessionKey = $this->registryAlias() . '.associatedData';
+        $sessionKey = $this->getRegistryAlias() . '.associatedData';
 
         if ($this->Session->check($sessionKey)) {
             $dataBetweenDate = $this->Session->read($sessionKey);
@@ -166,13 +175,13 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 $attr['tableCells'] = $tableCells;
             }
         }
-        return $event->subject()->renderElement('StudentTransfer/' . $fieldKey, ['attr' => $attr]);;
+        return $event->getSubject()->renderElement('StudentTransfer/' . $fieldKey, ['attr' => $attr]);;
     }
 //POCOR-7881 commented out the function
 //    public function getDataBetweenDate($data, $alias)
 //    {
-//        $StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
-//        $StudentBehaviours = TableRegistry::get('Institution.StudentBehaviours');
+//        $StudentAbsences = self::getDynamicTableInstance('Institution.InstitutionStudentAbsences');
+//        $StudentBehaviours = self::getDynamicTableInstance('Institution.StudentBehaviours');
 //
 //        $relatedModels = [$StudentAbsences, $StudentBehaviours];
 //
@@ -184,8 +193,8 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 //        $dataBetweenDate = [];
 //
 //        foreach ($relatedModels as $model) {
-////            print_r($model->alias());die();
-//            switch ($model->alias()) {
+////            print_r($model->getAlias());die();
+//            switch ($model->getAlias()) {
 //                /*case 'InstitutionStudentAbsences':
 //                    $absenceCount = $model->find()
 //                        ->where([
@@ -196,7 +205,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 //                        ])
 //                        ->count();
 //                    if ($absenceCount) {
-//                        $dataBetweenDate[$model->alias()] = $absenceCount;
+//                        $dataBetweenDate[$model->getAlias()] = $absenceCount;
 //                    }
 //                    break;
 //                */
@@ -211,7 +220,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 //                        ])
 //                        ->count();
 //                    if ($behaviourCount) {
-//                        $dataBetweenDate[$model->alias()] = $behaviourCount;
+//                        $dataBetweenDate[$model->getAlias()] = $behaviourCount;
 //                    }
 //                    break;
 //            }
@@ -231,6 +240,9 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         /*if (isset($extra['toolbarButtons']['add'])) {
             unset($extra['toolbarButtons']['add']);
         }*/
+        $queryString = $this->getQueryString();
+        $queryString['id'] = 94;
+        $encodedQueryString = $this->paramsEncode($queryString);
 
         $this->field('start_date', ['type' => 'hidden']);
         $this->field('end_date', ['type' => 'hidden']);
@@ -241,7 +253,8 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $this->field('comment', ['type' => 'hidden']);
 
         $this->field('assignee_id', ['sort' => ['field' => 'assignee_id']]);
-        $this->field('institution_id', ['type' => 'integer', 'sort' => ['field' => 'Institutions.code']]);
+        $this->field('institution_id', ['type' => 'integer',
+            'sort' => ['field' => 'Institutions.code']]);
         $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'institution_id', 'academic_period_id', 'education_grade_id', 'requested_date']);
 
         // back button
@@ -260,6 +273,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $toolbarButtonsArray['back']['url']['controller'] = 'Institutions';
         $toolbarButtonsArray['back']['url']['action'] = 'Students';
         $toolbarButtonsArray['back']['url'][0] = 'index';
+        $toolbarButtonsArray['back']['url'][1] = $encodedQueryString;
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // End
 
@@ -275,14 +289,19 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $toolbarButtonsArray['bulkAdmission']['label'] = '<i class="fa kd-transfer"></i>';
         $toolbarButtonsArray['bulkAdmission']['attr']['title'] = __('Bulk Student Transfer Out');
         $toolbarButtonsArray['bulkAdmission']['url'] = $url;
+        $toolbarButtonsArray['bulkAdmission']['url'][1] = $encodedQueryString;
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // End bulk Student Transfer Out button POCOR-6028 end
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $paramInstitutionId = $this->request->getAttribute('params')['institutionId'];
+
+        $institutionId = $this->getQueryString('institution_id');
+        //$institutionId = isset($paramInstitutionId) ? $this->paramsDecode($paramInstitutionId)['id'] : $session->read('Institution.Institutions.id');
+        $institutionId = isset($paramInstitutionId) ? $this->paramsDecode($paramInstitutionId)['id'] : $institutionId;
 
         $query->find('InstitutionStudentTransferOut', ['institution_id' => $institutionId]);
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
@@ -318,9 +337,9 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
         //POCOR-5944 starts
         $statusId = $entity['status']->id;
-        $session = $this->request->session();
-        $institutionId = $this->request->pass[1];
-        $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+        $session = $this->request->getSession();
+        $institutionId = $this->request->getParam('pass')[1];
+        $WorkflowSteps = self::getDynamicTableInstance('Workflow.WorkflowSteps'); // POCOR-8946
         $editCheck = $WorkflowSteps->find()
             ->where([$WorkflowSteps->aliasField('id') => $statusId])
             ->first();
@@ -349,7 +368,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                         $button = [
                             'type' => 'hidden',
                             'attr' => $btnAttr,
-                            'url' => [0 => 'index']
+                            'url' => [0 => 'xrindexa']
                         ];
                         $button['url']['action'] = $attr['action'];
                         $button['attr']['title'] = $attr['title'];
@@ -381,7 +400,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                         $button = [
                             'type' => 'hidden',
                             'attr' => $btnAttr,
-                            'url' => [0 => 'index']
+                            'url' => [0 => 'indexasdew']
                         ];
                         $button['url']['action'] = $attr['action'];
                         $button['attr']['title'] = $attr['title'];
@@ -397,8 +416,12 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $studentId = $this->getQueryString('student_id');
+        $studentId = $this->getQueryString('institution_student_id');
         $userId = $this->getQueryString('user_id');
+
+        $queryString = $this->getQueryString();
+        $queryString['id'] = $userId;
+        $encodedQueryString = $this->paramsEncode($queryString);
 
         if (empty($studentId) || empty($userId)) {
             $event->stopPropagation();
@@ -410,11 +433,11 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 'controller' => 'Institutions',
                 'action' => 'StudentUser',
                 '0' => 'view',
-                '1' => $this->paramsEncode(['id' => $userId])
+                '1' => $encodedQueryString
             ];
             $extra['toolbarButtons']['back']['url'] = $extra['redirect'];
 
-            $Students = TableRegistry::get('Institution.Students');
+            $Students = self::getDynamicTableInstance('Institution.Students'); // POCOR-8946
             $institutionStudentEntity = $Students->get($studentId, [
                 'contain' => ['Users', 'Institutions', 'EducationGrades', 'AcademicPeriods']
             ]);
@@ -444,7 +467,8 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
                 if ($visible) {
                     $url = $this->url('view');
-                    $url[1] = $this->paramsEncode(['id' => $pendingTransfer->id]);
+                    $url[1] = $this->paramsEncode(['id' => $pendingTransfer->id,
+                        'institution_id' => $pendingTransfer->previous_institution_id]);
                     $event->stopPropagation();
                     return $this->controller->redirect($url);
                 } else {
@@ -455,8 +479,8 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
             } else {
                 // check pending withdraw
-                $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
-                $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+                $StudentWithdrawTable = self::getDynamicTableInstance('Institution.StudentWithdraw'); // POCOR-8946
+                $WorkflowModelsTable = self::getDynamicTableInstance('Workflow.WorkflowModels'); // POCOR-8946
                 $pendingWithdrawStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentWithdraw', 'PENDING');
 
                 $conditions = [
@@ -499,15 +523,15 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 //    {
 //        if (empty($entity->errors())) {
 //            // get the data between requested date and today date (if its back date)
-//            $dataBetweenDate = $this->getDataBetweenDate($requestData, $this->alias());
+//            $dataBetweenDate = $this->getDataBetweenDate($requestData, $this->getAlias());
 //
 //            if (!empty($dataBetweenDate)) {
 //                // redirect if have student data between date
 //                $url = $this->url('associated');
 //                $session = $this->Session;
-//                $session->write($this->registryAlias() . '.associated', $entity);
-//                $session->write($this->registryAlias() . '.associatedData', $dataBetweenDate);
-//                $session->write($this->registryAlias() . '.referralAction', $this->action);
+//                $session->write($this->getRegistryAlias() . '.associated', $entity);
+//                $session->write($this->getRegistryAlias() . '.associatedData', $dataBetweenDate);
+//                $session->write($this->getRegistryAlias() . '.referralAction', $this->action);
 //                $event->stopPropagation();
 //                return $this->controller->redirect($url);
 //            }
@@ -520,16 +544,16 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 //
 //        if (empty($entity->errors())) {
 //            // get the data between requested date and today date (if its back date)
-//            $dataBetweenDate = $this->getDataBetweenDate($requestData, $this->alias());
+//            $dataBetweenDate = $this->getDataBetweenDate($requestData, $this->getAlias());
 ////            print_r($dataBetweenDate);die();
 //
 //            if (!empty($dataBetweenDate)) {
 //                // redirect if have student data between date
 //                $url = $this->url('associated');
 //                $session = $this->Session;
-//                $session->write($this->registryAlias() . '.associated', $entity);
-//                $session->write($this->registryAlias() . '.associatedData', $dataBetweenDate);
-//                $session->write($this->registryAlias() . '.referralAction', $this->action);
+//                $session->write($this->getRegistryAlias() . '.associated', $entity);
+//                $session->write($this->getRegistryAlias() . '.associatedData', $dataBetweenDate);
+//                $session->write($this->getRegistryAlias() . '.referralAction', $this->action);
 //                $event->stopPropagation();
 //                return $this->controller->redirect($url);
 //            }
@@ -570,7 +594,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         ]);
     }
 
-    public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStudentId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve', 'associated'])) {
             $entity = $attr['entity'];
@@ -586,7 +610,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldPreviousAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreviousAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -604,7 +628,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldPreviousInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreviousInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -622,7 +646,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldPreviousEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreviousEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -640,7 +664,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldRequestedDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldRequestedDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         //Single transfer
         if (in_array($action, ['add', 'edit', 'approve', 'associated'])) {
@@ -660,8 +684,8 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     $enrolledStudent = true;
                 } else {
                     // using institution_student_transfer entity
-                    $Students = TableRegistry::get('Institution.Students');
-                    $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+                    $Students = self::getDynamicTableInstance('Institution.Students'); // POCOR-8946
+                    $StudentStatuses = self::getDynamicTableInstance('Student.StudentStatuses'); // POCOR-8946
                     $statuses = $StudentStatuses->findCodeList();
 
                     $studentEntity = $Students->find()
@@ -706,7 +730,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -717,7 +741,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -736,18 +760,19 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
      * @return array
      * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAreaId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
         $next_period_id = $entity->academic_period_id;
         $next_grade_id = $entity->education_grade_id;
         $institution_id = $entity->institution_id;
         if (in_array($action, ['add', 'edit', 'approve'])) {
-            $Areas = TableRegistry::get('Area.Areas');
-            $Institutions = TableRegistry::get('institutions');
-            $InstitutionGrades = TableRegistry::get('institution_grades');
-            $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
-
+            // POCOR-8943 start
+            $Areas = self::getDynamicTableInstance('Area.Areas');
+            $Institutions = self::getDynamicTableInstance('Institution.Institutions');
+            $InstitutionGrades = self::getDynamicTableInstance('Institution.InstitutionGrades');
+            $InstitutionStatuses = self::getDynamicTableInstance('Institution.Statuses');
+            // POCOR-8943 end
             if ($action == 'add') {
                 // using institution_student entity
                 $today = Date::now()->format('Y-m-d');
@@ -761,9 +786,9 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 $activeId = $InstitutionStatuses->getIdByCode('ACTIVE');
                 $areaOptions = $Areas
                     ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
-                    ->innerJoin([$Institutions->alias() => $Institutions->table()],
+                    ->innerJoin([$Institutions->getAlias() => $Institutions->getTable()],
                         [$Institutions->aliasField('area_id = ') . $Areas->aliasField('id')])
-                    ->innerJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()],
+                    ->innerJoin([$InstitutionGrades->getAlias() => $InstitutionGrades->getTable()],
                         [$InstitutionGrades->aliasField('institution_id = ') . $Institutions->aliasField('id')])
                     ->where([
                         $InstitutionGrades->aliasField('institution_id <>') => $institution_id,
@@ -802,17 +827,36 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
      * @return array
      * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         //single student
+        // POCOR-8946 start
         if (in_array($action, ['add', 'edit', 'approve'])) {
+            // POCOR-9012 start
             $entity = $attr['entity'];
+            $student_id = $entity->student_id;
+//            Log::write('debug', 'student_id: ' . $student_id);
+            $institution_id = $entity->institution_id;
+            if($student_id == null){
+                $student_id = $this->getQueryString('student_id');
+            }
+            if($student_id === null){
+                $attr['type'] = 'readonly';
+                $attr['value'] = $institution_id;
+                $attr['attr']['value'] = $entity->institution->code_name;
+                return $attr;
+            }
+            // POCOR-9012 end
+            $student_gender_id = $this->Users->get($student_id)->gender_id;
             $next_period_id = $entity->academic_period_id;
             $next_grade_id = $entity->education_grade_id;
-            $institution_id = $entity->institution_id;
-            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-            $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
-            $area_id = $request->data[$this->alias()]['area_id'];
+            $InstitutionGrades = self::getDynamicTableInstance('institution_grades');
+            $InstitutionStatuses = self::getDynamicTableInstance('Institution.Statuses');
+            $InstitutionGenders = self::getDynamicTableInstance('institution_genders');
+            $Genders = self::getDynamicTableInstance('genders');
+            $genderCode = $Genders->get($student_gender_id)->code;
+            $neededGenders = ['X', $genderCode];
+            $area_id = $request->getData($this->getAlias())['area_id'];
             $institutionOptions = [];
             if ($action == 'add') {
                 if (!is_null($next_period_id) && !is_null($next_grade_id)) {
@@ -824,14 +868,15 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                         $nextPeriodStartDate = date('Y-m-d', strtotime($nextPeriodData->start_date));
                     }
 
-                    $institutionQuery = $this->Institutions
+                    $Institutions = $this->Institutions;
+                    $institutionQuery = $Institutions
                         ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                         ->join([
-                            'table' => $InstitutionGrades->table(),
-                            'alias' => $InstitutionGrades->alias(),
+                            'table' => $InstitutionGrades->getTable(),
+                            'alias' => $InstitutionGrades->getAlias(),
                             'conditions' => [
                                 $InstitutionGrades->aliasField('institution_id = ') .
-                                $this->Institutions->aliasField('id'),
+                                $Institutions->aliasField('id'),
                                 $InstitutionGrades->aliasField('education_grade_id') => $next_grade_id,
                                 $InstitutionGrades->aliasField('start_date >=') => $nextPeriodStartDate,
                                 'OR' => [
@@ -839,21 +884,31 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                                     $InstitutionGrades->aliasField('end_date >=') => $today->format('Y-m-d')
                                 ]
                             ]
+                        ])->join([
+                            'table' => $InstitutionGenders->getTable(),
+                            'type' => 'INNER',
+                            'alias' => $InstitutionGenders->getAlias(),
+                            'conditions' => [
+                                $InstitutionGenders->aliasField('id = ') .
+                                $Institutions->aliasField('institution_gender_id'),
+                                $InstitutionGenders->aliasField('code IN ') => $neededGenders
+                            ]
                         ])
                         ->where([
-                            $this->Institutions->aliasField('id <>') => $institution_id,
-                            $this->Institutions->aliasField('institution_status_id') =>
+                            $Institutions->aliasField('id <>') => $institution_id,
+                            $Institutions->aliasField('institution_status_id') =>
                                 $InstitutionStatuses->getIdByCode('ACTIVE')
                         ])
-                        ->orderAsc($this->Institutions->aliasField('code'));
+                        ->orderAsc($Institutions->aliasField('code'));
 
                     if (!empty($area_id)) {
-                        $institutionQuery->where([$this->Institutions->aliasField('area_id')
+                        $institutionQuery->where([$Institutions->aliasField('area_id')
                         => $area_id]);
                     }
                     $institutionOptions = $institutionQuery->toArray();
                 }
 
+                // POCOR-8946 end
                 $attr['attr']['label'] = __('Institution');
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
@@ -877,7 +932,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 //
 //                $institutionOptions = $this->Institutions
 //                    ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
-//                    ->innerJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()], [
+//                    ->innerJoin([$InstitutionGrades->getAlias() => $InstitutionGrades->getTable()], [
 //                        $InstitutionGrades->aliasField('institution_id =') .
 //                        $this->Institutions->aliasField('id'),
 //                        $InstitutionGrades->aliasField('education_grade_id') =>
@@ -915,7 +970,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -931,7 +986,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -950,7 +1005,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
         if ($this->action == 'associated') {
-            $sessionKey = $this->registryAlias() . '.associatedData';
+            $sessionKey = $this->getRegistryAlias() . '.associatedData';
             if ($this->Session->check($sessionKey) && !empty($this->Session->read($sessionKey))) {
                 unset($buttons[0]);
                 unset($buttons[1]);
@@ -961,7 +1016,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->getRequest()->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -995,8 +1050,8 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->alias(), $this->Institutions->alias(), $this->PreviousInstitutions->alias(), $this->CreatedUser->alias(), 'Assignees'])
-            ->matching($Statuses->alias() . '.' . $StepsParams->alias(), function ($q) use ($Statuses, $StepsParams, $doneStatus, $outgoingInstitution) {
+            ->contain([$this->Users->getAlias(), $this->Institutions->getAlias(), $this->PreviousInstitutions->getAlias(), $this->CreatedUser->getAlias(), 'Assignees'])
+            ->matching($Statuses->getAlias() . '.' . $StepsParams->getAlias(), function ($q) use ($Statuses, $StepsParams, $doneStatus, $outgoingInstitution) {
                 return $q->where([
                     $Statuses->aliasField('category <> ') => $doneStatus,
                     $StepsParams->aliasField('name') => 'institution_owner',
@@ -1012,9 +1067,9 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                         'plugin' => 'Institution',
                         'controller' => 'Institutions',
                         'action' => 'StudentTransferOut',
-                        'view',
-                        $this->paramsEncode(['id' => $row->id]),
-                        'institution_id' => $row->previous_institution_id
+                        0 => 'view',
+                        1 => $this->paramsEncode(['id' => $row->id, 'institution_id' => $row->previous_institution_id]),
+
                     ];
 
                     if (is_null($row->modified)) {
@@ -1038,19 +1093,21 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     }
 
     //POCOR-6981
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (in_array($action, ['edit', 'add'])) {
+        if (in_array($action, ['edit', 'add', 'approve'])) { // POCOR-8411 start
             $workflowModel = 'Institutions > Student Transfer > Sending';
-            $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            // POCOR-8946 start
+            $workflowModelsTable = self::getDynamicTableInstance('Workflow.WorkflowModels');
+            $workflowStepsTable = self::getDynamicTableInstance('Workflow.WorkflowSteps');
+            $Workflows = self::getDynamicTableInstance('Workflow.Workflows');
+            // POCOR-8946 end
             $workModelId = $Workflows
                 ->find()
                 ->select(['id' => $workflowModelsTable->aliasField('id'),
                     'workflow_id' => $Workflows->aliasField('id'),
                     'is_school_based' => $workflowModelsTable->aliasField('is_school_based')])
-                ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                     [
                         $workflowModelsTable->aliasField('id') . ' = ' . $Workflows->aliasField('workflow_model_id')
                     ])
@@ -1065,19 +1122,21 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                 ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
+            /*$session = $request->getSession();
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
-            }
+            }*/
+            $institutionId  = $this->getInstitutionID();
             $institutionId = $institutionId;
+
             $assigneeOptions = [];
             if (!is_null($stepId)) {
-                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $WorkflowStepsRoles = self::getDynamicTableInstance('Workflow.WorkflowStepsRoles'); // POCOR-8946 end
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
                 if (!empty($stepRoles)) {
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $Areas = TableRegistry::get('Area.Areas');
-                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    $SecurityGroupUsers = self::getDynamicTableInstance('Security.SecurityGroupUsers'); // POCOR-8946 end
+                    $Areas = self::getDynamicTableInstance('Area.Areas'); // POCOR-8946 end
+                    $Institutions = self::getDynamicTableInstance('Institution.Institutions'); // POCOR-8946 end
                     if ($isSchoolBased) {
                         if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
@@ -1122,5 +1181,82 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
             return $attr;
         }
     }
+    private static function debug($something)
+    {
+        if (is_null($something)) {
+            $message = 'NULL';
+        } elseif (is_bool($something)) {
+            $message = $something ? 'TRUE' : 'FALSE';
+        } elseif (is_array($something) || is_object($something)) {
+            $message = json_encode($something, JSON_PRETTY_PRINT);
+        } else {
+            $message = (string)$something;
+        }
+
+        \Cake\Log\Log::debug($message);
+    }
+
+    /**
+     * @param string $tableName
+     * @return Table
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        $locator = TableRegistry::getTableLocator();;
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        // Parse plugin and table names if dot notation is used
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+    //POCOR-8642 -- START
+    public function getReceivingInstList($params) {
+        $receivingOptions = [];
+
+        $StudentTransferOut = self::getDynamicTableInstance('Institution.StudentTransferOut'); // POCOR-8946 end
+
+        $receivingOptions = $StudentTransferOut->find()
+            ->select(['institution_id'])
+            ->where([$StudentTransferOut->aliasField('id') => $params])
+            ->first();
+            if ($receivingOptions) {
+                $recvInstitution = $receivingOptions->institution_id; // Assign the institution_id to $newid
+            }
+        return $recvInstitution;
+    }
+    //POCOR-8642 -- END
 
 }

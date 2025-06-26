@@ -3,7 +3,7 @@ namespace Area\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\AppTable;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -12,7 +12,7 @@ use App\Model\Table\ControllerActionTable;
 
 class AreaAdministrativeLevelsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Countries', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'area_administrative_id']);
@@ -21,7 +21,7 @@ class AreaAdministrativeLevelsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -56,7 +56,7 @@ class AreaAdministrativeLevelsTable extends ControllerActionTable
         $this->fields['level']['type'] = 'hidden';
     }
 
-    public function onUpdateFieldLevel(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldLevel(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             list(, $selectedCountry) = array_values($this->getSelectOptions());
@@ -79,7 +79,7 @@ class AreaAdministrativeLevelsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAreaAdministrativeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAreaAdministrativeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             list(, $selectedCountry) = array_values($this->getSelectOptions());
@@ -114,7 +114,7 @@ class AreaAdministrativeLevelsTable extends ControllerActionTable
             ->where([$this->Countries->aliasField('area_administrative_level_id') => $levelId])
            // ->order([$this->Countries->aliasField('name')]) //POCOR-7256
             ->toArray();
-        $selectedCountry = !is_null($this->request->query('country')) ? $this->request->query('country') : key($countryOptions);
+        $selectedCountry = !is_null($this->request->getQuery('country')) ? $this->request->getQuery('country') : key($countryOptions);
 
         return compact('countryOptions', 'selectedCountry');
     }

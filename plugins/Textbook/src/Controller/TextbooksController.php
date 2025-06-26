@@ -10,7 +10,7 @@ use Cake\ORM\TableRegistry;
 
 class TextbooksController extends AppController
 {
-    public function initialize() {
+    public function initialize(): void {
         parent::initialize();
         $this->loadComponent('Paginator');
 

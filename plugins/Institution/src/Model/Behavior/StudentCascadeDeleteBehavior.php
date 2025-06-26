@@ -13,7 +13,7 @@ class StudentCascadeDeleteBehavior extends Behavior
     private $classIds = [];
     private $subjectIds = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -365,7 +365,7 @@ class StudentCascadeDeleteBehavior extends Behavior
         return $Classes
             ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
             ->innerJoin(
-                [$ClassGrades->alias() => $ClassGrades->table()],
+                [$ClassGrades->getAlias() => $ClassGrades->getTable()],
                 [
                     $ClassGrades->aliasField('institution_class_id = ') . $Classes->aliasField('id'),
                     $ClassGrades->aliasField('education_grade_id') => $entity->education_grade_id
@@ -389,7 +389,7 @@ class StudentCascadeDeleteBehavior extends Behavior
             $subjectIds = $Subjects
                 ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
                 ->innerJoin(
-                    [$ClassesSubjects->alias() => $ClassesSubjects->table()],
+                    [$ClassesSubjects->getAlias() => $ClassesSubjects->getTable()],
                     [
                         $ClassesSubjects->aliasField('institution_subject_id = ') . $Subjects->aliasField('id'),
                         $ClassesSubjects->aliasField('institution_class_id IN ') => $this->classIds

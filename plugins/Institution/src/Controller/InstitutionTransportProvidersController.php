@@ -4,7 +4,7 @@ namespace Institution\Controller;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use App\Controller\PageController;
-
+//@todo redo
 class InstitutionTransportProvidersController extends PageController
 {
     public function initialize()
@@ -15,9 +15,9 @@ class InstitutionTransportProvidersController extends PageController
         $this->loadComponent('Institution.InstitutionInactive');
     }
 
-	public function beforeFilter(Event $event)
+	public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
         $institutionName = $session->read('Institution.Institutions.name');
@@ -99,11 +99,11 @@ class InstitutionTransportProvidersController extends PageController
 
     private function getInstitutionID()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
         $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
-        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
-            $this->request->params['institutionId'] :
+        $encodedInstitutionID = isset($this->request->getAttribute('params')['institutionId']) ?
+            $this->request->getAttribute('params')['institutionId'] :
             $encodedInstitutionIDFromSession;
         try {
             $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];

@@ -11,18 +11,19 @@ use Cake\ORM\Query;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 
 class SamlAuthenticationBehavior extends Behavior
 {
     private $model;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->model = $this->_table;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = [
             'ControllerAction.Model.beforeAction' => 'beforeAction',
@@ -37,7 +38,7 @@ class SamlAuthenticationBehavior extends Behavior
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $entity->errors($entity->errors('saml'), null, true);
+        $entity->getErrors($entity->getErrors('saml'), null, true);
         $this->model->field('idp_entity_id', ['attr' => ['required' => true, 'label' => __('Identity Provider - Entity ID')]]);
         $this->model->field('idp_sso', ['attr' => ['required' => true, 'label' => __('Identity Provider - Single Signon Service')]]);
         $this->model->field('idp_sso_binding', ['attr' => ['required' => true, 'label' => __('Identity Provider - Single Signon Service Binding')]]);
@@ -52,17 +53,23 @@ class SamlAuthenticationBehavior extends Behavior
         $this->model->field('sp_name_id_format', ['attr' => ['label' => __('Service Provider - Name ID Format')]]);
         $this->model->field('sp_private_key', ['attr' => ['label' => __('Service Provider - Private Key')]]);
         // $this->model->field('sp_metadata', ['type' => 'hidden']);
-        if ($entity->errors('code')) {
+        if ($entity->getErrors('code')) {
             $code = uniqid('IDP');
-            $this->model->request->data[$this->alias()]['code'] = $code;
-            $entity->invalid('code', $code, true);
-            $entity->errors('sp_acs', $entity->errors('code'), true);
+            $this->model->request->getData()[$this->getAlias()]['code'] = $code;
+            //$entity->invalid('code', $code, true);
+            $entity->getErrors('sp_acs', $entity->getErrors('code'), true);
         }
-        $url = Router::url(['plugin' => null, 'controller' => null, 'action' => 'index'], true);
+        //POCOR-9004[START]
+        $controller = $this->table()->controller;
+        $pluginName = $controller->getRequest()->getParam('plugin');  // Extract Plugin
+        $controllerName = $controller->getRequest()->getParam('controller'); // Extract Controller
+        // $url = Router::url(['plugin' => null, 'controller' => null, 'action' => 'index'], true);
+        $url = Router::url(['plugin' => $pluginName, 'controller' => $controllerName, 'action' => 'index'], true);
+        //POCOR-9004[END]
         $this->model->fields['sp_entity_id']['value'] = $url;
         $this->model->fields['sp_entity_id']['attr']['value'] = $url;
 
-        $loginUrl = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'Saml', $this->model->request->data[$this->model->alias()]['code']], true);
+        $loginUrl = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'Saml', $this->model->request->getData()[$this->model->getAlias()]['code']], true);
         $this->model->fields['sp_acs']['value'] = $loginUrl;
         $this->model->fields['sp_acs']['attr']['value'] = $loginUrl;
 
@@ -81,20 +88,20 @@ class SamlAuthenticationBehavior extends Behavior
         $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'idp_entity_id', 'idp_sso', 'idp_sso_binding', 'idp_slo', 'idp_slo_binding', 'idp_x509cert', 'idp_cert_fingerprint', 'idp_cert_fingerprint_algorithm', 'sp_entity_id', 'sp_acs', 'sp_slo', 'sp_name_id_format', 'sp_private_key', 'allow_create_user', 'mapped_username', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role', 'mapped_email']);
     }
 
-    public function onUpdateFieldIdpSsoBinding(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldIdpSsoBinding(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            if (!isset($request->data[$this->model->alias()]['idp_sso_binding'])) {
-                $request->data[$this->model->alias()]['idp_sso_binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST';
+            if (!isset($request->getData()[$this->model->getAlias()]['idp_sso_binding'])) {
+                $request->getData()[$this->model->getAlias()]['idp_sso_binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST';
             }
         }
     }
 
-    public function onUpdateFieldIdpSloBinding(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldIdpSloBinding(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            if (!isset($request->data[$this->model->alias()]['idp_slo_binding'])) {
-                $request->data[$this->model->alias()]['idp_slo_binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect';
+            if (!isset($request->getData()[$this->model->getAlias()]['idp_slo_binding'])) {
+                $request->getData()[$this->model->getAlias()]['idp_slo_binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect';
             }
         }
     }
@@ -214,5 +221,10 @@ class SamlAuthenticationBehavior extends Behavior
     public function onGetSpMetadata(Event $event, Entity $entity)
     {
         return $entity->saml->sp_metadata;
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra = null)
+    {
+
     }
 }

@@ -6,40 +6,44 @@ use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use Cake\Core\Configure;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Utility\Security;
 use Cake\Validation\Validator;
+use Cake\ORM\Table; // POCOR-8849
+use Cake\Log\Log; // POCOR-8849
 
 class ConfigExternalDataSourceTable extends ControllerActionTable
 {
     public $id;
     public $authenticationType;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('config_items');
+        $this->setTable('config_items');
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
         $this->toggle('remove', false);
         $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'webhook_id', 'joinType' => 'INNER']);
     }
 
-    public function validationCustom(Validator $validator)
+    public function validationCustom(Validator $validator): Validator
     {
         $validator = $this->validationDefault($validator);
         return $validator->requirePresence('url', false);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator // POCOR-8849
     {
+
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this); // POCOR-8849
         //POCOR-6930, 7981 Starts
-        $requestData = $this->request['data'];
-        $alias = $this->alias();
+        $requestData = $this->request->getData(); // POCOR-8849
+        $alias = $this->getAlias(); // POCOR-8849
         $data = $requestData[$alias];
         $source = $data['label'];
         if ($source == 'Jordan CSPD') {
@@ -57,6 +61,13 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 ->requirePresence('url')
                 ->requirePresence('application_id')
                 ->requirePresence('secret_code');
+        } elseif ($source == 'OpenEMIS Core') {
+            return $validator
+                ->requirePresence('username')
+//                ->requirePresence('password')
+                ->requirePresence('api_url');
+//                ->requirePresence('application_id')
+//                ->requirePresence('secret_code');
         } else {//POCOR-6930, 7981 Ends
             return $validator
                 ->requirePresence('client_id')
@@ -69,14 +80,14 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         }
     }
 
-    public function validationOpenEMISIdentity(Validator $validator)
+    public function validationOpenEMISIdentity(Validator $validator): Validator // POCOR-8849
     {
         $validator = $this->validationDefault($validator);
         return $validator->requirePresence('url');
     }
 
     //POCOR-6930 Starts
-    public function validationJordanCSPD(Validator $validator)
+    public function validationJordanCSPD(Validator $validator): Validator // POCOR-8849
     {
         $validator = $this->validationDefault($validator);
         return $validator;
@@ -111,6 +122,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             $this->field('code', ['visible' => false]);
             $this->field('name', ['visible' => ['index' => true]]);
             $this->field('default_value', ['visible' => false]);
+            $this->field('value_selection', ['visible' => false]); // POCOR-8849
 
             $this->field('type', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
             $this->field('label', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
@@ -154,7 +166,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     {
         $tableHeaders = [__('Attribute Name'), __('Value')];
         $tableCells = [];
-        $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+        $ExternalDataSourceAttributes = self::getDynamicTableInstance('Configuration.ExternalDataSourceAttributes'); // POCOR-8849
         $attributes = $ExternalDataSourceAttributes
             ->find('list', [
                 'keyField' => 'attribute_field',
@@ -170,6 +182,10 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         }
 
         if ($action == 'view') {
+            if (isset($attributes['password'])) { // POCOR-8849
+                $attributes['password'] = '*****'; // POCOR-8849
+            } // POCOR-8849
+
             foreach ($attributes as $key => $obj) {
                 $rowData = [];
                 $rowData[] = __(Inflector::humanize($key));
@@ -180,14 +196,14 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->subject()->renderElement('Configuration.external_data_source', ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Configuration.external_data_source', ['attr' => $attr]); // POCOR-8849
     }
 
-    public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request) // POCOR-8849
     {
         // POCOR-7981 START
         if (in_array($action, ['edit'])) {
-            $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
+            $optionTable = self::getDynamicTableInstance('Configuration.ConfigItemOptions'); // POCOR-8849
             $options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
                 ->where([
                     'ConfigItemOptions.option_type' => 'completeness',
@@ -206,7 +222,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
     {
         // POCOR-7981 START
-        $alias = $this->alias();
+        $alias = $this->getAlias(); // POCOR-8849
         $data = $requestData[$alias];
         $source = $entity['name'];
 
@@ -258,8 +274,15 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
     {
         //POCOR-6930, 7981 Starts
-        $errors = $entity->errors();
+        $errors = $entity->getErrors(); // POCOR-8849
+//        dd(['entity' => $entity, 'patchOption' => $patchOption]);
         $source = $entity->name;
+        if(empty($entity->password)){
+            $entity->password = $entity->getOriginal('password');
+        }
+        if(empty($entity->api_key)){
+            $entity->api_key = $entity->getOriginal('api_key');
+        }
         if (!empty($errors)) {
             $errorMessage = 'Please enter the required details.';
             //POCOR-7981:starts
@@ -270,46 +293,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             //POCOR-7981:ends
             $this->Alert->error('general.externalSourceDataErr', ['reset' => true]);
         } else {//POCOR-6930 Ends
-            $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
-            $ExternalDataSourceAttributes->deleteAll(['external_data_source_type' => $source]);
-            $fields = [
-                'url',
-                'token_uri',
-                'record_uri',
-                'user_endpoint_uri',
-                'client_id',
-                'scope',
-                'first_name_mapping',
-                'middle_name_mapping',
-                'third_name_mapping',
-                'last_name_mapping',
-                'date_of_birth_mapping',
-                'external_reference_mapping',
-                'gender_mapping',
-                'identity_type_mapping',
-                'identity_number_mapping',
-                'nationality_mapping',
-                'address_mapping',
-                'postal_mapping',
-                'private_key',
-                'public_key',
-                'secret_code',
-                'application_id',
-            ];
-            // POCOR-7981 END
-
-            foreach ($fields as $field) {
-                if ($entity->has($field)) {
-                    $data = [
-                        'external_data_source_type' => $source,
-                        'attribute_field' => $field,
-                        'attribute_name' => $field,
-                        'value' => $entity->{$field}
-                    ];
-                    $newEntity = $ExternalDataSourceAttributes->newEntity($data);
-                    $ExternalDataSourceAttributes->save($newEntity);
-                }
-            }
+            $this->updateAttributes($source, $entity);
         }
     }
 
@@ -320,6 +304,26 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         $this->field('value', ['visible' => true, 'entity' => $entity]); // POCOR-7981
         $this->field('value_selection', ['visible' => false]); //POCOR-7981 not used field
         switch ($source) {
+            case 'OpenEMIS Core':
+                $this->field('api_url', ['type' => 'string', 'required' => 'required']);
+                $this->field('username', ['type' => 'string', 'required' => 'required']);
+                $this->field('password', ['type' => 'password', 'required' => 'required', 'attr' => ['value' => ''], 'autocomplete' => 'off']);
+                $this->field('api_key', ['type' => 'password', 'required' => 'required',  'attr' => ['value' => ''], 'autocomplete' => 'off']);
+                $this->field('first_name_mapping', ['type' => 'hidden']);
+                $this->field('middle_name_mapping', ['type' => 'hidden']);
+                $this->field('third_name_mapping', ['type' => 'hidden']);
+                $this->field('last_name_mapping', ['type' => 'hidden']);
+                $this->field('date_of_birth_mapping', ['type' => 'hidden']);
+                $this->field('external_reference_mapping', ['type' => 'hidden']);
+                $this->field('gender_mapping', ['type' => 'hidden']);
+                $this->field('identity_type_mapping', ['type' => 'hidden']);
+                $this->field('identity_number_mapping', ['type' => 'hidden']);
+                $this->field('nationality_mapping', ['type' => 'hidden']);
+                $this->field('address_mapping', ['type' => 'hidden']);
+                $this->field('postal_mapping', ['type' => 'hidden']);
+                $this->field('user_endpoint_uri', ['type' => 'hidden']);
+
+                break;
             // POCOR-7981
             case 'Custom':
                 $this->field('token_uri');
@@ -382,7 +386,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     //POCOR-7981:Start
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
+//        $optionTable = self::getDynamicTableInstance('Configuration.ConfigItemOptions');
         $query
             ->select(
                 [$this->aliasField('id'),
@@ -457,8 +461,9 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     {
         $id = $entity->id;
         $source = $entity->name;
+
         if (!empty($id)) {
-            $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+            $ExternalDataSourceAttributes = self::getDynamicTableInstance('Configuration.ExternalDataSourceAttributes'); // POCOR-8849
             $attributes = $ExternalDataSourceAttributes
                 ->find('list', [
                     'keyField' => 'attribute_field',
@@ -468,16 +473,17 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                     $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $source
                 ])
                 ->toArray();
+
             foreach ($attributes as $key => $value) {
-                $request = $this->request;
-                $request->data[$this->alias()][$key] = $value;
+                $entity->{$key} = $value; // POCOR-8849
             }
+
         }
     }
 
     protected function processAuthentication(&$attribute, $authenticationType)
     {
-        $ExternalDataSourceAttributesTable = TableRegistry::get('ExternalDataSourceAttributes');
+        $ExternalDataSourceAttributesTable = self::getDynamicTableInstance('ExternalDataSourceAttributes'); // POCOR-8849
         $attributesArray = $ExternalDataSourceAttributesTable->find()->where([$ExternalDataSourceAttributesTable->aliasField('external_data_source_type') => $authenticationType])->toArray();
         $attributeFieldsArray = $this->_table->array_column($attributesArray, 'attribute_field');
         foreach ($attribute as $key => $values) {
@@ -495,5 +501,117 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             $attribute[$key]['value'] = $attributeValue;
         }
     }
+    /** // POCOR-8849
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName . POCOR-8231
+     * @return \Cake\ORM\Table
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+
+        try {
+            // Try to get the table instance directly
+            return $locator->get($tableName);
+        } catch (\Exception $e) {
+            Log::debug('Error: ' . $e->getMessage());
+        }
+
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
     // POCOR-7981 END
+
+    /**
+     * @param mixed $source
+     * @param Entity $entity
+     * @return void
+     */
+    private function updateAttributes(mixed $source, Entity $entity): void
+    {
+        $ExternalDataSourceAttributes = self::getDynamicTableInstance('Configuration.ExternalDataSourceAttributes'); // POCOR-8849
+        $existingRecords = $ExternalDataSourceAttributes->find('list', [
+            'keyField' => 'attribute_field',
+            'valueField' => 'value'
+        ])->where(['external_data_source_type' => $source])->toArray();
+
+        $fields = [
+            'url', 'token_uri', 'record_uri', 'user_endpoint_uri', 'client_id', 'scope',
+            'username', 'password', 'api_url', 'api_key', 'first_name_mapping', 'middle_name_mapping',
+            'third_name_mapping', 'last_name_mapping', 'date_of_birth_mapping', 'external_reference_mapping',
+            'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping',
+            'address_mapping', 'postal_mapping', 'private_key', 'public_key', 'secret_code', 'application_id',
+            'gender_id_mapping', 'openemis_no_mapping'
+        ];
+
+        foreach ($fields as $field) {
+            if ($entity->has($field)) {
+                $newValue = $entity->{$field};
+                $currentValue = $existingRecords[$field] ?? null;
+
+                // Skip update if password or api_key is empty in entity but present in DB
+                if (in_array($field, ['password', 'api_key']) && empty($newValue) && !empty($currentValue)) {
+                    continue;
+                }
+
+                if ($newValue !== $currentValue) {
+                    $data = [
+                        'external_data_source_type' => $source,
+                        'attribute_field' => $field,
+                        'attribute_name' => $field,
+                        'value' => $newValue
+                    ];
+
+                    $existingEntity = $ExternalDataSourceAttributes->find()->where([
+                        'external_data_source_type' => $source,
+                        'attribute_field' => $field
+                    ])->first();
+
+                    if ($existingEntity) {
+                        $ExternalDataSourceAttributes->patchEntity($existingEntity, $data);
+                        $ExternalDataSourceAttributes->save($existingEntity);
+                    } else {
+                        $newEntity = $ExternalDataSourceAttributes->newEntity($data);
+                        $ExternalDataSourceAttributes->save($newEntity);
+                    }
+                }
+            }
+        }
+    }
+
 }

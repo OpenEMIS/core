@@ -18,9 +18,9 @@ class TrainingResultsTable extends AppTable
 
     CONST ACTIVE_STATUS = 1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('training_session_trainee_results');
+        $this->setTable('training_session_trainee_results');
         parent::initialize($config);
         $this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
         $this->belongsTo('Trainees', ['className' => 'User.Users', 'foreignKey' => 'trainee_id']);
@@ -33,7 +33,7 @@ class TrainingResultsTable extends AppTable
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -42,9 +42,9 @@ class TrainingResultsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $TrainingSessionResults = TableRegistry::get('Training.TrainingSessionResults');
-        $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
-        $WorkflowStatusesSteps = TableRegistry::get('Workflow.WorkflowStatusesSteps');
+        $TrainingSessionResults = TableRegistry::getTableLocator()->get('Training.TrainingSessionResults');
+        $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        $WorkflowStatusesSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowStatusesSteps');
         $requestData = json_decode($settings['process']['params']);
         $start_date   = $requestData->start_date; // POCOR-6596
         $session_name = $requestData->session_name; // POCOR-6596
@@ -173,7 +173,7 @@ class TrainingResultsTable extends AppTable
         // START : POCOR-6596
         $query->formatResults(function (ResultSetInterface $results) {
             return $results->map(function ($row) {
-                $training_result_types = TableRegistry::get('Training.TrainingResultTypes');
+                $training_result_types = TableRegistry::getTableLocator()->get('Training.TrainingResultTypes');
                 $customFieldData = $training_result_types->find()->select(['id','name','order'])->toArray();
                 if(!empty($customFieldData)) {
                     foreach($customFieldData as $data) {
@@ -314,7 +314,7 @@ class TrainingResultsTable extends AppTable
          * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
          * Ticket: POCOR-6596 START
          */
-        $training_result_types = TableRegistry::get('Training.TrainingResultTypes');
+        $training_result_types = TableRegistry::getTableLocator()->get('Training.TrainingResultTypes');
         $customFieldData = $training_result_types->find()->select(['id','name','order'])->toArray();
         if(!empty($customFieldData)) {
             foreach($customFieldData as $data) {
@@ -359,7 +359,7 @@ class TrainingResultsTable extends AppTable
 
     public function getInstitutionDetailByTraineeId($traineeId)
     {
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
 
         $institutionDetails = [];
         $institutionDetails = $InstitutionStaff->find()
@@ -373,10 +373,10 @@ class TrainingResultsTable extends AppTable
             ])
             ->first()
         ;
-		
+
         return $institutionDetails;
     }
- 
+
     /**
      * Concat the user name
      * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
@@ -384,7 +384,7 @@ class TrainingResultsTable extends AppTable
      */
     public function onExcelGetTraineeInfoTraineeName(Event $event, Entity $entity)
     {
-        return 
+        return
             $entity->trainee_info_first_name  . ' ' .
             $entity->trainee_info_middle_name . ' ' .
             $entity->trainee_info_third_name  . ' ' .
@@ -398,7 +398,7 @@ class TrainingResultsTable extends AppTable
      */
     public function onExcelGetIdentityType(Event $event, Entity $entity)
     {
-        $userIdentities = TableRegistry::get('user_identities');
+        $userIdentities = TableRegistry::getTableLocator()->get('User.UserIdentities');
         $userIdentitiesResult = $userIdentities->find()
             ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
             ->select([
@@ -407,7 +407,8 @@ class TrainingResultsTable extends AppTable
             ])
             ->where([$userIdentities->aliasField('security_user_id') => $entity->trainee_id])
             ->order([$userIdentities->aliasField('id DESC')])
-            ->hydrate(false)->toArray();
+            ->disableHydration() // POCOR-8533
+            ->toArray();
             $entity->custom_identity_number = '';
             $other_identity_array = [];
             if (!empty($userIdentitiesResult)) {

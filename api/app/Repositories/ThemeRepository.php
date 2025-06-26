@@ -8,14 +8,27 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use JWTAuth;
 
-class ThemeRepository
+class ThemeRepository extends Controller
 {
 
     public function getAllThemes($params)
     {
         try {
-            $list = Theme::get()->toArray();
-            return $list;
+            $list = new Theme();
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+            
+            if (isset($params['limit'])) {
+                $data = $list->paginate($params['limit']);
+            } else {
+                $data['data'] = $list->get()->toArray();
+            }
+            
+            return $data;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Themes List from DB',
@@ -26,7 +39,7 @@ class ThemeRepository
     }
 
 
-    public function getThemeId($id)
+    public function getThemeViaId($id)
     {
         try {
             $list = Theme::where('id', $id)->first();

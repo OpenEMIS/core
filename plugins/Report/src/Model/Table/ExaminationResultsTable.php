@@ -16,9 +16,9 @@ class ExaminationResultsTable extends AppTable
     private $totalMarks = 0;
     private $totalWeightedMark = 0;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('examination_centres_examinations_students');
+        $this->setTable('examination_centres_examinations_students');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -57,7 +57,8 @@ class ExaminationResultsTable extends AppTable
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            // POCOR-8919
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -153,7 +154,8 @@ class ExaminationResultsTable extends AppTable
 
         foreach ($examItems as $item) {
             $examItemId = $item->id;
-            $examItemCodeName = $item->code_name;
+// POCOR-8919
+            $examItemCodeName = $item->code_name ?? 'No Code Name';
             $weight = $item->weight;
 
             $label = __($examItemCodeName);

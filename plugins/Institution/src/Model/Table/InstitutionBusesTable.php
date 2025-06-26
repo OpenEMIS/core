@@ -13,7 +13,7 @@ use Transport\Model\Table\TransportStatusesTable as TransportStatuses;
 
 class InstitutionBusesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -32,16 +32,21 @@ class InstitutionBusesTable extends ControllerActionTable
 			'cascadeCallbacks' => true
 		]);
 
-        $this->displayField('plate_number');
+        $this->getDisplayField('plate_number');
         $this->addBehavior('Excel', [
             'excludes' => ['comment', 'institution_id'],
             'pages' => ['index'],
             'autoFields' => false
         ]); 
         
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionBuses' =>
+                ['institution_id']
+            ]
+        ]);
     }
 
-	public function validationDefault(Validator $validator)
+	public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -85,8 +90,9 @@ class InstitutionBusesTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         // POCOR-6168 start
-        $session = $this->request->session();
-        $institutionId  = $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        //$institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         // provider filter
         $transportProviders = $this->InstitutionTransportProviders
@@ -96,7 +102,7 @@ class InstitutionBusesTable extends ControllerActionTable
         ])
         ->toArray();
         $transportProviderOptions = [-1 => __('All Providers')] + $transportProviders;
-        $extra['transportProviders'] = $this->request->query('provider');  
+        $extra['transportProviders'] = $this->request->getQuery('provider');  
         // provider filter end
           
         // Transport Statuses
@@ -105,12 +111,16 @@ class InstitutionBusesTable extends ControllerActionTable
         ->toArray();
 
         $transportStatusOptions = [-1 => __('All Statuses')] + $transportStatuses;
-        $extra['transportStatuses'] = $this->request->query('status');    
+        $extra['transportStatuses'] = $this->request->getQuery('status');    
         // Transport Statuses end
+
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
 
         $extra['elements']['control'] = [
             'name' => 'Institution.Transport/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'transportProviderOptions'=> $transportProviderOptions,
                 'selectedtransportProvider'=> $extra['transportProviders'],
                 'transportStatusOptions'=> $transportStatusOptions,
@@ -150,8 +160,8 @@ class InstitutionBusesTable extends ControllerActionTable
     // POCOR-6168 For Filters
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $transportProviderId = $this->request->query('provider');
-        $transportStatusId = $this->request->query('status');
+        $transportProviderId = $this->request->getQuery('provider');
+        $transportStatusId = $this->request->getQuery('status');
         
         if($transportProviderId > 0){
             $query
@@ -172,10 +182,11 @@ class InstitutionBusesTable extends ControllerActionTable
     // POCOR-6168 For excel Filters
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
-        $session = $this->request->session();
-        $institutionId  = $session->read('Institution.Institutions.id');
-        $transportProviderId = $this->request->query('provider');
-        $transportStatusId = $this->request->query('status');
+        $session = $this->request->getSession();
+        //$institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
+        $transportProviderId = $this->request->getQuery('provider');
+        $transportStatusId = $this->request->getQuery('status');
 
         $query
         ->where([
@@ -200,7 +211,19 @@ class InstitutionBusesTable extends ControllerActionTable
 
    public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('institution_transport_provider_id', ['type' => 'select', 'after' => 'comment']);
+        //POCOR-8647 Start
+        //$this->field('institution_transport_provider_id', ['type' => 'select', 'after' => 'comment']);
+        $institutionId = $this->getInstitutionID();
+        $transportProviders = $this->InstitutionTransportProviders
+        ->find('optionList', [
+            'defaultOption' => false,
+            'institution_id' => $institutionId
+        ])
+        ->toArray();
+        $transportProviderOptions = ['' => '-- ' . __('Select Assignee') . ' --'] + $transportProviders;
+        $this->field('institution_transport_provider_id', ['type' => 'select','options' => $transportProviderOptions, 'after' => 'comment']); 
+        //POCOR-8647 End
+        
         $this->field('bus_type_id', ['type' => 'select', 'after' => 'institution_transport_provider_id']);
         $this->field('transport_status_id', ['type' => 'select', 'after' => 'bus_type_id']);
         /*$modelAlias = 'InstitutionBuses';
@@ -216,6 +239,16 @@ class InstitutionBusesTable extends ControllerActionTable
                 return __('Provider');
             case 'transport_status_id': 
                 return __('Status');
+            case 'comment': 
+                return __('Comment');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

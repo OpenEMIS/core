@@ -11,7 +11,7 @@ use Cake\I18n\Date;
 
 class InstitutionClassBehavior extends Behavior
 {
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         // priority has to be set at 100 so that Institutions->indexBeforePaginate will be triggered first
@@ -224,12 +224,16 @@ class InstitutionClassBehavior extends Behavior
             if (isset($options['controller'])) {
                 $controller = $options['controller'];
                 $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
-                if (is_array($event->result)) {
-                    $roles = $event->result;
+                if (is_array($event->getResult())) {
+                    $roles = $event->getResult();
                 }
             }
+            $currentUrl = $_SERVER['REQUEST_URI']; 
             if (!$AccessControl->check(['Institutions', 'AllClasses', $permission], $roles)) {
                 if ($AccessControl->check(['Institutions', 'Classes', $permission], $roles)) {
+                    if (strpos($currentUrl, 'ReportCardStatusProgress') !== false) { //POCOR-8773
+                        $query = $this->_table->find();
+                    }
                     $query
                         ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
                             'InstitutionClasses.id = InstitutionClassesSecondaryStaff.institution_class_id'
@@ -240,6 +244,13 @@ class InstitutionClassBehavior extends Behavior
                         // ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
                         //     'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
                         // ])
+                        /*->where(function ($exp, $query) use ($userId) { //POCOR-8773
+                            return $exp->or_([
+                                $this->_table->aliasField('staff_id') => $userId,
+                                'InstitutionClassesSecondaryStaff.secondary_staff_id' => $userId,
+                                $exp->isNotNull('InstitutionClassSubjects.institution_subject_id'),
+                            ]);
+                        });*/
                         ->where([
                         'OR' => [
                             [$this->_table->aliasField('staff_id') => $userId],
@@ -265,8 +276,8 @@ class InstitutionClassBehavior extends Behavior
         $controller = $this->_table->controller;
         $roles = [];
         $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
-        if ($event->result) {
-            $roles = $event->result;
+        if ($event->getResult()) {
+            $roles = $event->getResult();
         }
         $myClassesPermission = $AccessControl->check(['Institutions', 'Classes', $action], $roles);
         if ($myClassesPermission) {
@@ -283,8 +294,8 @@ class InstitutionClassBehavior extends Behavior
         $controller = $this->_table->controller;
         $roles = [];
         $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
-        if ($event->result) {
-            $roles = $event->result;
+        if ($event->getResult()) {
+            $roles = $event->getResult();
         }
         $allClassesPermission = $AccessControl->check(['Institutions', 'AllClasses', $action], $roles);
         if ($allClassesPermission) {

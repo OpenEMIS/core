@@ -12,16 +12,19 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\I18n\Time;
+use App\Model\Traits\OptionsTrait;
 
 use App\Model\Table\ControllerActionTable;
+use Cake\Log\Log;
 
 class IdentitiesTable extends ControllerActionTable
 {
     const ISPREFERRED = 1;
+    use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_identities');
+        $this->setTable('user_identities');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
@@ -31,11 +34,17 @@ class IdentitiesTable extends ControllerActionTable
             'Students' => ['index', 'add'],
             'Staff' => ['index', 'add']
         ]);
+        $this->addBehavior('Institution.InstitutionTab',
+            ['implementedMethods' => [
+                'setUserTabElements' => 'setUserTabElements',
+            ],
+            ]);
         $this->addBehavior('User.SetupTab');
+        $this->addBehavior('User.UserTab');
         $this->excludeDefaultValidations(['security_user_id']);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -48,18 +57,18 @@ class IdentitiesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $extra)
     {
-//        $this->log('beforeSave', 'debug');
-//        $this->log($entity, 'debug');
-//POCOR-8243
-        if(!isset($entity->security_user_id)) {
-            $queryString = $this->getQueryString();
-            if (isset($queryString['security_user_id'])) {
-                $entity->security_user_id = $queryString['security_user_id'];
-            }
-        }
+        //$this->log('beforeSave', 'debug');
+        //$this->log($entity, 'debug');
+        //POCOR-8243
         $options = [];
         $options['identity_type_id'] = $entity->identity_type_id;
         $options['identity_number'] = $entity->number;
+        if ($entity->isNew()) {
+            $userID = $this->getUserID();
+            if ($userID) {
+                $entity['security_user_id'] = $userID;
+            }
+        }
         $message = $this->checkCustomIdentityNumber($options);
         if ($message != "") {
             $message = __('Wrong identity number');
@@ -70,18 +79,27 @@ class IdentitiesTable extends ControllerActionTable
 
     public function afterSaveUsers(Event $event, Entity $entity)
     {
-//        $this->log('beforeSage', 'debug');
-//        $this->log($entity, 'debug');
+        //$this->log('beforeSage', 'debug');
+        //$this->log($entity, 'debug');
         //whichever identity type and number that came from import user, will be treat as new identity user record.
         $options = [];
-        $options['identity_type_id'] = $entity->identity_type_id;
-        $options['identity_number'] = $entity->identity_number;
+        $identity_type_id = $entity->identity_type_id;
+        $nationality_id = $entity->nationality_id;
+        $identity_number = $entity->identity_number;
+        if(!$identity_number || !$nationality_id || !$identity_type_id){
+            return;
+        }
+        $options['identity_type_id'] = $identity_type_id;
+        $options['identity_number'] = $identity_number;
 
         $message = $this->checkCustomIdentityNumber($options);
         if ($message == "") {
+
             $userIdentityEntity = $this->newEntity([
-                'identity_type_id' => $entity->identity_type_id,
-                'number' => $entity->identity_number,
+
+                'nationality_id' => $nationality_id,
+                'identity_type_id' => $identity_type_id,
+                'number' => $identity_number,
                 'security_user_id' => $entity->id,
                 'created_user_id' => 1,
                 'created' => new Time()
@@ -94,19 +112,18 @@ class IdentitiesTable extends ControllerActionTable
     {
         $pattern = '';
 
-
-        if (array_key_exists('identity_type_id', $options) && !empty($options['identity_type_id'])) {
+        if (isset($options['identity_type_id']) && !empty($options['identity_type_id'])) {
             $identityTypeId = $options['identity_type_id'];
         } else {
             return "";
         }
-        if (array_key_exists('identity_number', $options) && !empty($options['identity_number'])) {
+        if (isset($options['identity_number']) && !empty($options['identity_number'])) {
             $identityNumber = $options['identity_number'];
         } else {
             return "";
         }
 
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $IdentityTypesData = $IdentityTypes
             ->find()
             ->where([$IdentityTypes->aliasField('id') => $identityTypeId])
@@ -115,7 +132,6 @@ class IdentitiesTable extends ControllerActionTable
         if (!empty($IdentityTypesData->validation_pattern)) {
             $pattern = '/' . $IdentityTypesData->validation_pattern . '/';
         }
-
 
         // custom validation is nullable, have to cater for the null pattern.
         if (!empty($pattern) && !preg_match($pattern, $identityNumber)) {
@@ -128,13 +144,14 @@ class IdentitiesTable extends ControllerActionTable
     public function beforeAction($event, ArrayObject $extra)
     {
         $UserNationalityTable = TableRegistry::get('User.UserNationalities');
-        $users = TableRegistry::get('User.Users');
-        $userId = null;
-        $queryString = $this->getQueryString();
-        if (isset($queryString['security_user_id'])) {
-            $userId = $queryString['security_user_id'];
+        $users = TableRegistry::getTableLocator()->get('User.Users');
+        $userId = $this->getUserID();
+        if(empty($userId)) {
+            $queryString = $this->getQueryString();
+            if (isset($queryString['security_user_id'])) {
+                $userId = $queryString['security_user_id'];
+            }
         }
-
         /*POCOR-6396 starts*/
         if ($this->action == 'add' || $this->action == 'edit') {
             $checkUserNationality = $UserNationalityTable->find()
@@ -160,10 +177,18 @@ class IdentitiesTable extends ControllerActionTable
             }
         }
         /*POCOR-6396 starts*/
+        if($this->request->getParam('controller') == 'Staff') {
+            $this->field('security_user_id', ['attr' => ['value' => $userId], 'type' => 'hidden']);
+        }
         $this->fields['identity_type_id']['type'] = 'select';
         $this->fields['nationality_id']['type'] = 'select';
         $this->fields['nationality_id']['options'] = (!empty($NationalityOptions)) ? $NationalityOptions : ['' => $this->getMessage('general.select.noOptions')]; //POCOR-6396
-        $this->setFieldOrder(['identity_type_id', 'nationality_id', 'number', 'issue_date', 'expiry_date', 'issue_location', 'comments']);
+         // POCOR-8664 start
+         $this->fields['preferred']['type'] = 'select';
+         $this->fields['preferred']['options'] = $this->getSelectOptions('general.yesno');
+         // POCOR-8664 end
+        $this->setFieldOrder(['identity_type_id', 'nationality_id', 'number','preferred','issue_date', 'expiry_date', 'issue_location', 'comments']);
+
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -171,7 +196,7 @@ class IdentitiesTable extends ControllerActionTable
         $this->fields['comments']['visible'] = 'false';
 
         // Start POCOR-5188
-        if ($this->request->params['controller'] == 'Staff') {
+        if ($this->request->getParam('controller') == 'Staff') {
             $is_manual_exist = $this->getManualUrl('Institutions', 'Identities', 'Staff - General');
             if (!empty($is_manual_exist)) {
                 $btnAttr = [
@@ -189,7 +214,7 @@ class IdentitiesTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        } elseif ($this->request->params['controller'] == 'Students') {
+        } elseif ($this->request->getParam('controller') == 'Students') {
             $is_manual_exist = $this->getManualUrl('Institutions', 'Identities', 'Students - General');
             if (!empty($is_manual_exist)) {
                 $btnAttr = [
@@ -208,7 +233,7 @@ class IdentitiesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        } elseif ($this->request->params['controller'] == 'Directories') {
+        } elseif ($this->request->getParam('controller') == 'Directories') {
             $is_manual_exist = $this->getManualUrl('Directory', 'Identities', 'General');
             if (!empty($is_manual_exist)) {
                 $btnAttr = [
@@ -227,7 +252,7 @@ class IdentitiesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        } elseif ($this->request->params['controller'] == 'Profiles') {
+        } elseif ($this->request->getParam('controller') == 'Profiles') {
             $is_manual_exist = $this->getManualUrl('Personal', 'Identities', 'General');
             if (!empty($is_manual_exist)) {
                 $btnAttr = [
@@ -248,20 +273,12 @@ class IdentitiesTable extends ControllerActionTable
 
         }
         // End POCOR-5188
-
     }
 
     /*POCOR-6267 Starts*/
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $queryString = $this->getQueryString();
-        if (!empty($queryString['security_user_id'])) {
-            $userId = $queryString['security_user_id'];
-        } else {
-            $userId = $session->read('Student.Students.id');
-        }
-
+        $userId = $this->getUserID();
         $query->where([$this->aliasField('security_user_id') => $userId]);
     }
 
@@ -279,9 +296,10 @@ class IdentitiesTable extends ControllerActionTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('issue_date', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'expiry_date', false]
@@ -322,17 +340,19 @@ class IdentitiesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $extra)
     {
+        Log::debug(__FUNCTION__ . '1');
         if (!empty($entity->nationality_id)) {
-            $nationalitiesLookUp = TableRegistry::get('Nationalities')->get($entity->nationality_id);
+            $nationalitiesLookUp = TableRegistry::getTableLocator()->get('FieldOption.Nationalities')->get($entity->nationality_id);
             // if($nationalitiesLookUp->identity_type_id == $entity->identity_type_id){
             if ($nationalitiesLookUp) {
-                $user = TableRegistry::get('User.Users');
-                $preferredNationality = TableRegistry::get('User.UserNationalities')
+                $user = TableRegistry::getTableLocator()->get('User.Users');
+                $preferredNationality = TableRegistry::getTableLocator()->get('User.UserNationalities')
                     ->find()
                     ->where(['nationality_id' => $entity->nationality_id,
                         'preferred' => self::ISPREFERRED
                     ])
                     ->first();
+                Log::debug(__FUNCTION__ . '2');
 
                 $userDetail = $user->get($entity->security_user_id);
                 if (!empty($preferredNationality)) {
@@ -340,11 +360,13 @@ class IdentitiesTable extends ControllerActionTable
                 }
                 $userDetail->identity_type_id = $entity->identity_type_id;
                 $userDetail->identity_number = $entity->number;
+                Log::debug(__FUNCTION__ . '3');
+
                 $user->save($userDetail);
             }
         }
         try {
-            $Users = TableRegistry::get('User.Users');
+            $Users = TableRegistry::getTableLocator()->get('User.Users');
             //echo "<pre>";print_r($this->request);die();
             $result = $Users
                 ->find()
@@ -353,23 +375,47 @@ class IdentitiesTable extends ControllerActionTable
                 ->first();
             if ((($result['identity_number'] == null || $result['identity_number'] == '') && ($result['identity_type_id'] == null || $result['identity_type_id'] == ''))) {
                 $Users->updateAll(
-                    ['identity_number' => $entity->number, 'identity_type_id' => $entity->identity_type_id],    //field
+                    ['identity_number' => $entity->number,
+                        'identity_type_id' => $entity->identity_type_id],    //field
                     ['id' => $entity->security_user_id] //condition
                 );
             }
+            Log::debug(__FUNCTION__ . '4');
+
         } catch (\Exception $e) {
         }
 
-        $listeners = [
-            TableRegistry::get('User.Users')
-        ];
-        $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
+        // POCOR-8664 start
+        // $listeners = [
+        //     TableRegistry::getTableLocator()->get('User.Users')
+        // ];
+        // $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
+
+        if (($entity->isDirty('preferred') && $entity->preferred == 1) || $entity->preferred == 1) {
+            $identity = $this->find()
+                ->where([
+                    $this->aliasField('id !=') => $entity->id,
+                    // $this->aliasField('nationality_id') => $entity->nationality_id,
+                    $this->aliasField('security_user_id') => $entity->security_user_id
+                ]);
+            if (!empty($identity->toArray())) {
+                foreach ($identity->toArray() as $key => $value) {
+                    $value->preferred = 0;
+                    $this->save($value);
+                }
+            }
+            $listeners = [
+                TableRegistry::getTableLocator()->get('User.Users')
+            ];
+            $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
+        }
+        //POCOR-8664 end
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
         $listeners = [
-            TableRegistry::get('User.Users')
+            TableRegistry::getTableLocator()->get('User.Users')
         ];
         $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
     }
@@ -377,7 +423,7 @@ class IdentitiesTable extends ControllerActionTable
     public function getLatestDefaultIdentityNo($userId)
     {
         //check identity type that ties to the nationality
-        $UserNationalityTable = TableRegistry::get('User.UserNationalities');
+        $UserNationalityTable = TableRegistry::getTableLocator()->get('User.UserNationalities');
 
         $nationalityId = null;
         $identityType = $UserNationalityTable
@@ -408,6 +454,35 @@ class IdentitiesTable extends ControllerActionTable
             return ['nationality_id' => $nationalityId, 'identity_type_id' => $result->identity_type_id, 'identity_no' => $result->number];
         } else {
             return ['nationality_id' => $nationalityId, 'identity_type_id' => null, 'identity_no' => null];
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        if ($field == 'identity_type_id') {
+            return __('Identity Type');
+        } elseif ($field == 'nationality_id') {
+            return __('Nationality');
+        } elseif ($field == 'number') {
+            return __('Number');
+        } elseif ($field == 'issue_date') {
+            return __('Issue Date');
+        } elseif ($field == 'expiry_date') {
+            return __('Expiry Date');
+        } elseif ($field == 'issue_location') {
+            return __('Issuer');
+        } elseif ($field == 'comments') {
+            return __('Comments');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

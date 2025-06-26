@@ -29,7 +29,7 @@ class AlertLogsTable extends ControllerActionTable
 
     private $featureGrouping = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->featureGrouping = $this->getSelectOptions($this->aliasField('feature_grouping'));
@@ -38,7 +38,7 @@ class AlertLogsTable extends ControllerActionTable
         $this->toggle('edit', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Workflow.afterSave'] = 'alertAssigneeAfterSave';
@@ -64,10 +64,10 @@ class AlertLogsTable extends ControllerActionTable
             }
         }
 
-        $workflowModel = isset($modelName) ? $modelName : $recordEntity->source();
+        $workflowModel = isset($modelName) ? $modelName : $recordEntity->getSource();
         $model = TableRegistry::get($workflowModel);
-        $modelAlias = $model->alias();
-        $modelRegistryAlias = $model->registryAlias();
+        $modelAlias = $model->getAlias();
+        $modelRegistryAlias = $model->getRegistryAlias();
         $feature = __(Inflector::humanize(Inflector::underscore($modelAlias))); // feature for control filter
 
         $method = 'Email'; // method will be predefined
@@ -105,8 +105,7 @@ class AlertLogsTable extends ControllerActionTable
                     $lastExecutorName = $Users->get($lastExecutorId)->name;
                 }
 
-                $vars = $query->hydrate(false)->first();
-
+                $vars = $query->enableHydration(false)->first();
                 $vars['feature'] = $feature;
                 $vars['last_executor_id'] = $lastExecutorId;
                 $vars['last_executor_name'] = $lastExecutorName;
@@ -123,7 +122,9 @@ class AlertLogsTable extends ControllerActionTable
                     $defaultMessage = __('Your action is required for [${feature} Workflow].');
                     $defaultMessage .= "\n"; // line break
                     $defaultMessage .= "\n" . __('Status')      . ': ' . "\t \t"    . '${status.name}' ;
+                    $defaultMessage .= "\n"; // POCOR-8198 line break added
                     $defaultMessage .= "\n" . __('Sent By')     . ': ' . "\t \t"    . '${last_executor_name}' ;
+                    $defaultMessage .= "\n"; // POCOR-8198 line break added
                     $defaultMessage .= "\n" . __('Comments')    . ': ' . "\t"    . '${workflow_comment}' ;
 
                     $message = $this->getWorkflowEmailMessage($recordEntity);
@@ -179,7 +180,76 @@ class AlertLogsTable extends ControllerActionTable
                 $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['id' => $saveData->id])->first();
                 $this->triggerSendingAlertShell('SendingAlert', $result->feature, $result->id);
             }//POCOR-6023 ends
-           
+
+        }
+
+    }
+
+    public function insertSystemUpdateAlertLog($method, $feature, $email, $subject = null, $message = null)
+    {
+        $today = Time::now();
+        $todayDate = Date::now();
+
+        // general feature options from alertRules
+        $AlertRules = TableRegistry::get('Alert.AlertRules');
+        $alertFeatures = $AlertRules->getFeatureOptions();
+
+        // checksum hash($subject,$message)
+        $checksum = Security::hash($subject . ',' . $message, 'sha256');
+        // to update and add new records into the alert_logs
+        $result_checksum = TableRegistry::get('Alert.AlertLogs')->find()->where(['checksum' => $checksum])->first();
+        if(empty($result_checksum)){
+            $emailsArray = explode(", ", $email);
+            foreach($emailsArray AS $emailData){
+                $entity = $this->newEntity([
+                    'feature' => $feature,
+                    'method' => $method,
+                    'destination' => $emailData,
+                    'status' => 0,
+                    'subject' => $subject,
+                    'message' => $message,
+                    'checksum' => $checksum
+                ]);
+                $saveData = $this->save($entity);
+            }
+        }
+
+        if(!empty($saveData)){
+            // $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['id' => $saveData->id])->first();
+            $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['feature' => $feature])->all();
+            foreach($result AS $resultData){
+                $this->triggerSendingAlertShell('SendingAlert', $feature, $resultData['id']);
+            }
+        }
+
+    }
+
+    public function insertStudentAdmissionAlertLog($method, $feature, $email, $subject = null, $message = null)
+    {
+        $today = Time::now();
+        $todayDate = Date::now();
+
+        // general feature options from alertRules
+        $AlertRules = TableRegistry::get('Alert.AlertRules');
+        $alertFeatures = $AlertRules->getFeatureOptions();
+
+        // checksum hash($subject,$message)
+        $checksum = Security::hash($subject . ',' . $message, 'sha256');
+        // to update and add new records into the alert_logs
+        $entity = $this->newEntity([
+            'feature' => $feature,
+            'method' => $method,
+            'destination' => $email,
+            'status' => 0,
+            'subject' => $subject,
+            'message' => $message,
+            'checksum' => $checksum
+        ]);
+        $saveData = $this->save($entity);
+
+        if(!empty($saveData)){
+            $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['id' => $saveData->id])->first();
+            $this->triggerSendingAlertShell('SendingAlert', $result->feature, $result->id);
         }
 
     }
@@ -275,7 +345,7 @@ class AlertLogsTable extends ControllerActionTable
         // end element control
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Logs','Communications');       
+		$is_manual_exist = $this->getManualUrl('Administration','Logs','Communications');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -297,11 +367,11 @@ class AlertLogsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $selectedFeature = $extra['selectedFeature'];
+        //$selectedFeature = $extra['selectedFeature'];
         $featureOptions = $this->getFeatureOptions();
-
-        if ($selectedFeature != 'AllFeatures') {
-            $query->where([$this->aliasField('feature') => $selectedFeature]);
+        $selectedFeature = $this->request->getQuery('feature');
+        if ($selectedFeature != -1 && !empty($selectedFeature)) {
+            $query->where(['feature' => $selectedFeature]);
         }
     }
 
@@ -372,5 +442,31 @@ class AlertLogsTable extends ControllerActionTable
         $shellCmd = $cmd . ' >> ' . $logs;
         exec($shellCmd);
         Log::write('debug', $shellCmd);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'subject':
+                return __('Subject');
+            case 'status':
+                return __('Status');
+            case 'processed_date':
+                return __('Process Date');
+            case 'method':
+                return __('Method');
+            case 'destination':
+                return __('Destination');
+            case 'message':
+                return __('Message');
+            case 'created':
+                return __('Created By');
+            case 'created_user_id':
+                return __('Created On');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

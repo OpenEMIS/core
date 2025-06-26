@@ -6,13 +6,13 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
 use Cake\Utility\Inflector;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\Log\Log;
 
 // This file serves as an abstract class for StudentTransferIn and StudentTransferOut
@@ -27,9 +27,9 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     const INCOMING = 1;
     const OUTGOING = 2;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_transfers');
+        $this->setTable('institution_student_transfers');
         parent::initialize($config);
 
         // Mandatory data
@@ -70,7 +70,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         ]
     ];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
@@ -129,7 +129,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                     ['id' => $enrolledStudentRecord->id]
                 );
             } //POCOR-6230 Ends
-            
+
             //POCOR-6362 starts
             if($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED'] || $previousStudentRecord->student_status_id == $statuses['CURRENT']){
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -139,7 +139,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                            $AcademicPeriods->aliasField('id') => $entity->academic_period_id
                         ])
                         ->first();
-                
+
             }//POCOR-6362 ends
             // add new student record in the new institution
             $newStudent = [
@@ -147,7 +147,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                 'student_id' => $entity->student_id,
                 'education_grade_id' => $entity->education_grade_id,
                 'academic_period_id' => $entity->academic_period_id,
-                'start_date' => (($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED'] || $previousStudentRecord->student_status_id == $statuses['CURRENT']) && empty($entity->start_date)) ? $academicPeriod->start_date : $entity->start_date,//POCOR-6362 
+                'start_date' => (($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED'] || $previousStudentRecord->student_status_id == $statuses['CURRENT']) && empty($entity->start_date)) ? $academicPeriod->start_date : $entity->start_date,//POCOR-6362
                 'end_date' => (($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED'] || $previousStudentRecord->student_status_id == $statuses['CURRENT']) && empty($entity->end_date)) ? $academicPeriod->end_date : $entity->end_date,//POCOR-6362
                 'institution_id' => $entity->institution_id,
                 'previous_institution_student_id' => $previousStudentRecord->id
@@ -173,7 +173,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                     $Students->save($previousStudentRecord);
                 } /*POCOR-6542 ends*/
             }
-        } 
+        }
     }
 
     public function onCancel(Event $event, $id, Entity $workflowTransitionEntity)
@@ -233,7 +233,8 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     {
         $canAddButtons = false;
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
-        $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
+        $currentInstitutionId = $this->getInstitutionID();
+        /*$currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');*/
 
         if ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->institution_id) {
             $canAddButtons = $this->Institutions->isActive($entity->institution_id);
@@ -269,12 +270,14 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         $searchableFields[] = 'student_id';
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
-        $session = $this->request->session();
-        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $institutionId = $this->getInstitutionID();
+        /*$parmaInstitutionId = $this->request->getParam('institutionId');
+        $institutionId = isset($parmaInstitutionId) ? $this->paramsDecode($parmaInstitutionId)['id'] : $session->read('Institution.Institutions.id');*/
         $studentsUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId]), 'action' => 'Students'];
-        $previousTitle = Inflector::humanize(Inflector::underscore($this->alias()));
+        $previousTitle = Inflector::humanize(Inflector::underscore($this->getAlias()));
 
         $Navigation->substituteCrumb($previousTitle, 'Students', $studentsUrl);
         $Navigation->addCrumb($previousTitle);
@@ -289,7 +292,9 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     public function onGetStatusId(Event $event, Entity $entity)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
-        $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
+        /*$parmaInstitutionId = $this->request->getParam('institutionId');
+        $currentInstitutionId = isset($parmaInstitutionId) ? $this->paramsDecode($parmaInstitutionId)['id'] : $this->request->session()->read('Institution.Institutions.id');*/
+        $currentInstitutionId = $this->getInstitutionID();
 
         $belongsToCurrentInstitution = ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->institution_id) || ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id);
 
@@ -304,7 +309,11 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     public function onGetWorkflowStatus(Event $event, Entity $entity)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
-        $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
+        /*$parmaInstitutionId = $this->request->getParam('institutionId');
+        $currentInstitutionId = isset($parmaInstitutionId) ? $this->paramsDecode($parmaInstitutionId)['id'] : $this->request->session()->read('Institution.Institutions.id');*/
+        $parmaInstitutionId = $this->request->getParam('institutionId');
+        $getInstitutionId = $this->getInstitutionID();
+        $currentInstitutionId = isset($parmaInstitutionId) ? $this->paramsDecode($parmaInstitutionId)['id'] : $getInstitutionId;
 
         $belongsToCurrentInstitution = ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->institution_id) || ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id);
 
@@ -378,7 +387,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         // if the record changes institution_owner at least once, both institutions should be able to see the record
-        if (!$entity->isNew() && $entity->dirty('status_id')) {
+        if (!$entity->isNew() && $entity->getDirty('status_id')) {
             if (!$entity->all_visible) {
                 $currentInstitutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
                 $previousInstitutionOwner = $this->getWorkflowStepsParamValue($entity->getOriginal('status_id'), 'institution_owner');
@@ -389,7 +398,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
             }
         }
         else{
-            $this->updateAll(['all_visible' => 1], ['id' => $entity->id]);            
+            $this->updateAll(['all_visible' => 1], ['id' => $entity->id]);
         }
 
         //POCOR-6995 start
@@ -522,7 +531,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
             if (!empty($rejectedStepEntity)) {
                 $doneStatus = self::DONE;
                 $pendingTransfers = $this->find()
-                    ->innerJoinWith($this->Statuses->alias(), function ($q) use ($doneStatus) {
+                    ->innerJoinWith($this->Statuses->getAlias(), function ($q) use ($doneStatus) {
                         return $q->where(['category <> ' => $doneStatus]);
                     })
                     ->where([
@@ -566,7 +575,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     {
         $institutionId = $options['institution_id'];
         $incomingInstitution = self::INCOMING;
-        $pending = array_key_exists('pending_records', $options) ? $options['pending_records'] : false;
+        $pending = isset($options['pending_records']) ? $options['pending_records'] : false;
 
         $query
             ->matching('Statuses.WorkflowStepsParams', function ($q) {
@@ -590,7 +599,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     {
         $institutionId = $options['institution_id'];
         $outgoingInstitution = self::OUTGOING;
-        $pending = array_key_exists('pending_records', $options) ? $options['pending_records'] : false;
+        $pending = isset($options['pending_records']) ? $options['pending_records'] : false;
 
         $query
             ->matching('Statuses.WorkflowStepsParams', function ($q) {
@@ -609,5 +618,24 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
             $query->where(['Statuses.category <> ' => self::DONE]);
         }
         return $query;
-    } 
+    }
+
+    /**
+     * common function to get institution id
+     * @return string|null
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public
+    function getInstitutionID($debugString = "")
+    {
+        // POCOR-8115;
+        // institution_id should always be in query string, if not, die as an error
+        $institution_id =  $this->getQueryString('institution_id');
+        if (!$institution_id) {
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put institution_id into query string first');
+            }
+        }
+        return $institution_id;
+    }
 }

@@ -5,9 +5,9 @@ use CustomField\Model\Table\CustomFieldsTable;
 
 class RoomCustomFieldsTable extends CustomFieldsTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('infrastructure_custom_fields');
+        $this->setTable('infrastructure_custom_fields');
         $this->supportedFieldTypes = $this->getSupportedFieldTypesByModel('Institution.InstitutionRooms');
         parent::initialize($config);
         $this->hasMany('CustomFieldOptions', ['className' => 'Infrastructure.RoomCustomFieldOptions', 'foreignKey' => 'infrastructure_custom_field_id', 'dependent' => true, 'cascadeCallbacks' => true]);

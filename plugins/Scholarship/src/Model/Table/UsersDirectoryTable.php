@@ -6,9 +6,9 @@ use App\Model\Table\AppTable;
 
 class UsersDirectoryTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
+        $this->setTable('security_users');
         parent::initialize($config);
 
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
@@ -17,12 +17,13 @@ class UsersDirectoryTable extends AppTable
         $this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
         $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
-        $this->entityClass('User.User');
+        $this->setEntityClass('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
     }
 
     public function findIndex(Query $query, array $options)
     {
+        echo "<pre>";print_r($query->find('all')->toList());die;
         return $query->where([$this->aliasField('super_admin') => 0]);
     }
 

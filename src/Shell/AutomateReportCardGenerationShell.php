@@ -11,12 +11,12 @@ use Cake\Console\Shell;
 class AutomateReportCardGenerationShell extends Shell
 {
     CONST SLEEP_TIME = 5; // Default 30 seconds
-    CONST EXPIRY_TIME = 5; // 10 for maldives & others it would be 30 
+    CONST EXPIRY_TIME = 5; // 10 for maldives & others it would be 30
     CONST DEFAULT_ITERATION_TO_RUN = 40;  //  125 means 1hr for maldives for others 500 , this will run for 4 hours and each fault it finds, it resets back to 4 hours.
     CONST DEBUG = TRUE;
     CONST ACADEMIC_PERIOD_ID = 18;
 
-    public function initialize()
+    public function initialize(): void
     {
         if (self::DEBUG) {
             $this->out('initializing AutomateReportCardGenerationShell..' . ' (' . Time::now() .')');
@@ -81,7 +81,7 @@ class AutomateReportCardGenerationShell extends Shell
             $createdDate = $processData['created'];
 
             $expiryDate = clone($createdDate);
-            $expiryDate->addMinutes(self::EXPIRY_TIME); 
+            $expiryDate->addMinutes(self::EXPIRY_TIME);
             $today = Time::now();
 
             if ($expiryDate < $today) {
@@ -113,7 +113,7 @@ class AutomateReportCardGenerationShell extends Shell
                 $this->ReportCardProcesses->aliasField('created'),
                 $this->ReportCardProcesses->aliasField('student_id')
             ])
-            ->hydrate(false)
+            ->disableHydration() // POCOR-8533
             ->first();
 
         return $recordToProcess;

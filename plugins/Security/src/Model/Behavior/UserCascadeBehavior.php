@@ -10,9 +10,11 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Datasource\ConnectionManager;
+use Cake\ORM\Table; // POCOR-8683
+use Cake\Utility\Inflector; // POCOR-8683
 
 class UserCascadeBehavior extends Behavior {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		// $this->showSQL();
 	}
 
@@ -22,9 +24,9 @@ class UserCascadeBehavior extends Behavior {
 
         $body = [];
         $body = [
-        	'security_user_id' => $userId 
+        	'security_user_id' => $userId
         ];
-        
+
 		$Webhooks = TableRegistry::get('Webhook.Webhooks');
 		$Webhooks->triggerShell('security_user_delete', ['username' => ''], $body);
 	}
@@ -33,7 +35,7 @@ class UserCascadeBehavior extends Behavior {
 	// (tables that contains security_user_id, student_id, staff_id, guardian_id)
 	// excluding the one specified
 	private function cleanUserRecords($userId) {
-		$tables = ConnectionManager::get('default')->schemaCollection()->listTables();
+		$tables = ConnectionManager::get('default')->getSchemaCollection()->listTables();
 
 		// will update this table to set value to 0 instead of deleting
 		$excludes = ['institution_classes'];
@@ -43,15 +45,20 @@ class UserCascadeBehavior extends Behavior {
 			if ($this->_table->startsWith($table, 'z_')) { // to exclude all z_ prefix tables
 				continue;
 			}
+			if ($this->_table->startsWith($table, 'zz_')) { // POCOR-8683 to exclude all z_ prefix tables
+				continue;
+			}
+			if ($this->_table->startsWith($table, 'inserted_records')) { // POCOR-8683 to exclude all z_ prefix tables
+				continue;
+			}
 			try {
-				$tableObj = TableRegistry::get($table);
-				$columns = $tableObj->schema()->columns();
-
 				if (!in_array($table, $excludes)) {
+                    $tableObj = self::getDynamicTableInstance($table); // POCOR-8683
 					foreach ($fields as $field) {
-						if (in_array($field, $columns)) {
+                        $column = $tableObj->getSchema()->getColumn($field); // POCOR-8683
+                        if ($column) {
 							$tableObj->deleteAll([$field => $userId]);
-						}
+                        }
 					}
 				}
 			} catch (Exception $ex) {
@@ -59,7 +66,7 @@ class UserCascadeBehavior extends Behavior {
 			}
 		}
 
-		$table = TableRegistry::get('institution_classes');
+		$table = TableRegistry::get('Institution.InstitutionClasses');
 		$table->updateAll(
 			['staff_id' => 0],
 			['staff_id' => $userId]
@@ -67,7 +74,7 @@ class UserCascadeBehavior extends Behavior {
 	}
 
 	private function showSQL() {
-		$tables = ConnectionManager::get('default')->schemaCollection()->listTables();
+		$tables = ConnectionManager::get('default')->getSchemaCollection()->listTables(); // POCOR-8683
 
 		// will update this table to set value to 0 instead of deleting
 		$excludes = ['institution_classes'];
@@ -75,13 +82,13 @@ class UserCascadeBehavior extends Behavior {
 		pr('show sql');
 		foreach ($tables as $key => $table) {
 			try {
-				$tableObj = TableRegistry::get($table);
+				$tableObj = self::getDynamicTableInstance($table); // POCOR-8683
 				$columns = $tableObj->schema()->columns();
 
 				if (!in_array($table, $excludes)) {
 					foreach ($fields as $field) {
 						if (in_array($field, $columns)) {
-							echo 'DELETE FROM ' . $table . ' WHERE NOT EXISTS (SELECT 1 FROM security_users WHERE security_users.id = ' . $table . '.' . $field . ');<br>';
+							echo 'DELETE FROM ' . $tableObj->getTable() . ' WHERE NOT EXISTS (SELECT 1 FROM security_users WHERE security_users.id = ' . $table . '.' . $field . ');<br>'; // POCOR-8683
 						}
 					}
 				}
@@ -90,4 +97,49 @@ class UserCascadeBehavior extends Behavior {
 			}
 		}
 	}
+
+    /*
+     * POCOR-8683
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
 }

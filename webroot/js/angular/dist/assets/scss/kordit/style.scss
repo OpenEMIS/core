@@ -1,0 +1,752 @@
+/* KORDIT FONT PACK v.1.0.15 */
+
+@import "variables";
+
+@font-face {
+  font-family: 'kordit-fonts';
+  src:  url('#{$icomoon-font-path}/kordit-fonts.eot?wij8r7');
+  src:  url('#{$icomoon-font-path}/kordit-fonts.eot?wij8r7#iefix') format('embedded-opentype'),
+    url('#{$icomoon-font-path}/kordit-fonts.ttf?wij8r7') format('truetype'),
+    url('#{$icomoon-font-path}/kordit-fonts.woff?wij8r7') format('woff'),
+    url('#{$icomoon-font-path}/kordit-fonts.svg?wij8r7##kordit-fonts') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^="kd-"], [class*=" kd-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'kordit-fonts' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.kd-403-error {
+  &:before {
+    content: $kd-403-error; 
+  }
+}
+.kd-404-error {
+  &:before {
+    content: $kd-404-error; 
+  }
+}
+.kd-add-column {
+  &:before {
+    content: $kd-add-column; 
+  }
+}
+.kd-add-multiple {
+  &:before {
+    content: $kd-add-multiple; 
+  }
+}
+.kd-add-row {
+  &:before {
+    content: $kd-add-row; 
+  }
+}
+.kd-add-tab {
+  &:before {
+    content: $kd-add-tab; 
+  }
+}
+.kd-add {
+  &:before {
+    content: $kd-add; 
+  }
+}
+.kd-administration {
+  &:before {
+    content: $kd-administration;     
+    color: #999;
+  }
+}
+.kd-align-center {
+  &:before {
+    content: $kd-align-center; 
+  }
+}
+.kd-align-left {
+  &:before {
+    content: $kd-align-left; 
+  }
+}
+.kd-align-right {
+  &:before {
+    content: $kd-align-right; 
+  }
+}
+.kd-alphabet {
+  &:before {
+    content: $kd-alphabet; 
+  }
+}
+.kd-alphanumeric {
+  &:before {
+    content: $kd-alphanumeric; 
+  }
+}
+.kd-approve {
+  &:before {
+    content: $kd-approve; 
+  }
+}
+.kd-arrow-down {
+  &:before {
+    content: $kd-arrow-down;     
+    color: #666;
+  }
+}
+.kd-arrow-first {
+  &:before {
+    content: $kd-arrow-first;     
+    color: #666;
+  }
+}
+.kd-arrow-last {
+  &:before {
+    content: $kd-arrow-last;     
+    color: #666;
+  }
+}
+.kd-arrow-up {
+  &:before {
+    content: $kd-arrow-up;     
+    color: #666;
+  }
+}
+.kd-assessment {
+  &:before {
+    content: $kd-assessment; 
+  }
+}
+.kd-assign {
+  &:before {
+    content: $kd-assign; 
+  }
+}
+.kd-attendance {
+  &:before {
+    content: $kd-attendance; 
+  }
+}
+.kd-audio {
+  &:before {
+    content: $kd-audio; 
+  }
+}
+.kd-axis {
+  &:before {
+    content: $kd-axis; 
+  }
+}
+.kd-back {
+  &:before {
+    content: $kd-back; 
+  }
+}
+.kd-behaviour-o {
+  &:before {
+    content: $kd-behaviour-o; 
+  }
+}
+.kd-bg-color {
+  &:before {
+    content: $kd-bg-color; 
+  }
+}
+.kd-border-color {
+  &:before {
+    content: $kd-border-color; 
+  }
+}
+.kd-border-radius {
+  &:before {
+    content: $kd-border-radius; 
+  }
+}
+.kd-border-width {
+  &:before {
+    content: $kd-border-width; 
+  }
+}
+.kd-bubble {
+  &:before {
+    content: $kd-bubble; 
+  }
+}
+.kd-check {
+  &:before {
+    content: $kd-check; 
+  }
+}
+.kd-class {
+  &:before {
+    content: $kd-class; 
+  }
+}
+.kd-clear {
+  &:before {
+    content: $kd-clear; 
+  }
+}
+.kd-close-round {
+  &:before {
+    content: $kd-close-round; 
+  }
+}
+.kd-close {
+  &:before {
+    content: $kd-close; 
+  }
+}
+.kd-comment {
+  &:before {
+    content: $kd-comment; 
+  }
+}
+.kd-compile {
+  &:before {
+    content: $kd-compile; 
+  }
+}
+.kd-cross {
+  &:before {
+    content: $kd-cross; 
+  }
+}
+.kd-customize {
+  &:before {
+    content: $kd-customize; 
+  }
+}
+.kd-dashboard_icon {
+  &:before {
+    content: $kd-dashboard_icon; 
+  }
+}
+.kd-data_collection_icon {
+  &:before {
+    content: $kd-data_collection_icon; 
+  }
+}
+.kd-data_management_icon {
+  &:before {
+    content: $kd-data_management_icon; 
+  }
+}
+.kd-dimensions {
+  &:before {
+    content: $kd-dimensions; 
+  }
+}
+.kd-disable-text {
+  &:before {
+    content: $kd-disable-text; 
+  }
+}
+.kd-download-fail {
+  &:before {
+    content: $kd-download-fail; 
+  }
+}
+.kd-download-success {
+  &:before {
+    content: $kd-download-success; 
+  }
+}
+.kd-download {
+  &:before {
+    content: $kd-download; 
+  }
+}
+.kd-draggable-line {
+  &:before {
+    content: $kd-draggable-line; 
+  }
+}
+.kd-draggable {
+  &:before {
+    content: $kd-draggable; 
+  }
+}
+.kd-dropout {
+  &:before {
+    content: $kd-dropout; 
+  }
+}
+.kd-edit {
+  &:before {
+    content: $kd-edit; 
+  }
+}
+.kd-ellipsis {
+  &:before {
+    content: $kd-ellipsis; 
+  }
+}
+.kd-enable-text {
+  &:before {
+    content: $kd-enable-text; 
+  }
+}
+.kd-export {
+  &:before {
+    content: $kd-export; 
+  }
+}
+.kd-font-color {
+  &:before {
+    content: $kd-font-color; 
+  }
+}
+.kd-frame {
+  &:before {
+    content: $kd-frame; 
+  }
+}
+.kd-graduate {
+  &:before {
+    content: $kd-graduate; 
+  }
+}
+.kd-grid-line {
+  &:before {
+    content: $kd-grid-line; 
+  }
+}
+.kd-grid {
+  &:before {
+    content: $kd-grid;     
+    color: #555;
+  }
+}
+.kd-guardian {
+  &:before {
+    content: $kd-guardian; 
+  }
+}
+.kd-header-col {
+  &:before {
+    content: $kd-header-col; 
+  }
+}
+.kd-header-row-col {
+  &:before {
+    content: $kd-header-row-col; 
+  }
+}
+.kd-header-row {
+  &:before {
+    content: $kd-header-row; 
+  }
+}
+.kd-hover {
+  &:before {
+    content: $kd-hover; 
+  }
+}
+.kd-html {
+  &:before {
+    content: $kd-html; 
+  }
+}
+.kd-iframe {
+  &:before {
+    content: $kd-iframe; 
+  }
+}
+.kd-image {
+  &:before {
+    content: $kd-image; 
+  }
+}
+.kd-import {
+  &:before {
+    content: $kd-import; 
+  }
+}
+.kd-institutions {
+  &:before {
+    content: $kd-institutions; 
+  }
+}
+.kd-items {
+  &:before {
+    content: $kd-items; 
+  }
+}
+.kd-key {
+  &:before {
+    content: $kd-key; 
+  }
+}
+.kd-label {
+  &:before {
+    content: $kd-label; 
+  }
+}
+.kd-legend {
+  &:before {
+    content: $kd-legend; 
+  }
+}
+.kd-lists {
+  &:before {
+    content: $kd-lists; 
+  }
+}
+.kd-marker-fill-color {
+  &:before {
+    content: $kd-marker-fill-color; 
+  }
+}
+.kd-marker-line {
+  &:before {
+    content: $kd-marker-line; 
+  }
+}
+.kd-mobile_icon {
+  &:before {
+    content: $kd-mobile_icon; 
+  }
+}
+.kd-null {
+  &:before {
+    content: $kd-null; 
+  }
+}
+.kd-numeric {
+  &:before {
+    content: $kd-numeric; 
+  }
+}
+.kd-openemis {
+  &:before {
+    content: $kd-openemis; 
+  }
+}
+.kd-packages {
+  &:before {
+    content: $kd-packages; 
+  }
+}
+.kd-play {
+  &:before {
+    content: $kd-play; 
+  }
+}
+.kd-plot {
+  &:before {
+    content: $kd-plot; 
+  }
+}
+.kd-preview {
+  &:before {
+    content: $kd-preview; 
+  }
+}
+.kd-process-error {
+  &:before {
+    content: $kd-process-error; 
+  }
+}
+.kd-process {
+  &:before {
+    content: $kd-process; 
+  }
+}
+.kd-user-profile-shadow {
+  &:before {
+    content: $kd-user-profile-shadow; 
+  }
+}
+.kd-user-profile {
+  &:before {
+    content: $kd-user-profile; 
+  }
+}
+.kd-publish {
+  &:before {
+    content: $kd-publish; 
+  }
+}
+.kd-reason {
+  &:before {
+    content: $kd-reason; 
+  }
+}
+.kd-reassign {
+  &:before {
+    content: $kd-reassign; 
+  }
+}
+.kd-redo {
+  &:before {
+    content: $kd-redo; 
+  }
+}
+.kd-reject {
+  &:before {
+    content: $kd-reject; 
+  }
+}
+.kd-release {
+  &:before {
+    content: $kd-release; 
+  }
+}
+.kd-remove {
+  &:before {
+    content: $kd-remove; 
+  }
+}
+.kd-reorder {
+  &:before {
+    content: $kd-reorder; 
+  }
+}
+.kd-reports {
+  &:before {
+    content: $kd-reports; 
+  }
+}
+.kd-resolution {
+  &:before {
+    content: $kd-resolution; 
+  }
+}
+.kd-results {
+  &:before {
+    content: $kd-results; 
+  }
+}
+.kd-role {
+  &:before {
+    content: $kd-role; 
+  }
+}
+.kd-save {
+  &:before {
+    content: $kd-save; 
+  }
+}
+.kd-series {
+  &:before {
+    content: $kd-series; 
+  }
+}
+.kd-server-shadow {
+  &:before {
+    content: $kd-server-shadow; 
+  }
+}
+.kd-server {
+  &:before {
+    content: $kd-server; 
+  }
+}
+.kd-shipment {
+  &:before {
+    content: $kd-shipment; 
+  }
+}
+.kd-sort-alphabet-asc {
+  &:before {
+    content: $kd-sort-alphabet-asc; 
+  }
+}
+.kd-sort-alphabet-desc {
+  &:before {
+    content: $kd-sort-alphabet-desc; 
+  }
+}
+.kd-sort-date-asc {
+  &:before {
+    content: $kd-sort-date-asc; 
+  }
+}
+.kd-sort-date-desc {
+  &:before {
+    content: $kd-sort-date-desc; 
+  }
+}
+.kd-staff {
+  &:before {
+    content: $kd-staff; 
+  }
+}
+.kd-status {
+  &:before {
+    content: $kd-status; 
+  }
+}
+.kd-students {
+  &:before {
+    content: $kd-students; 
+  }
+}
+.kd-tab {
+  &:before {
+    content: $kd-tab; 
+  }
+}
+.kd-tablet {
+  &:before {
+    content: $kd-tablet; 
+  }
+}
+.kd-text-bold {
+  &:before {
+    content: $kd-text-bold; 
+  }
+}
+.kd-text-center-align {
+  &:before {
+    content: $kd-text-center-align; 
+  }
+}
+.kd-text-italic {
+  &:before {
+    content: $kd-text-italic; 
+  }
+}
+.kd-text-justify-align {
+  &:before {
+    content: $kd-text-justify-align; 
+  }
+}
+.kd-text-left-align {
+  &:before {
+    content: $kd-text-left-align; 
+  }
+}
+.kd-text-right-align {
+  &:before {
+    content: $kd-text-right-align; 
+  }
+}
+.kd-text-underline {
+  &:before {
+    content: $kd-text-underline; 
+  }
+}
+.kd-title {
+  &:before {
+    content: $kd-title; 
+  }
+}
+.kd-transfer {
+  &:before {
+    content: $kd-transfer; 
+  }
+}
+.kd-trash {
+  &:before {
+    content: $kd-trash; 
+  }
+}
+.kd-undo {
+  &:before {
+    content: $kd-undo; 
+  }
+}
+.kd-unpublish {
+  &:before {
+    content: $kd-unpublish; 
+  }
+}
+.kd-upload-download {
+  &:before {
+    content: $kd-upload-download; 
+  }
+}
+.kd-upload-success {
+  &:before {
+    content: $kd-upload-success; 
+  }
+}
+.kd-upload {
+  &:before {
+    content: $kd-upload; 
+  }
+}
+.kd-user-role {
+  &:before {
+    content: $kd-user-role; 
+  }
+}
+.kd-user {
+  &:before {
+    content: $kd-user; 
+  }
+}
+.kd-validate-col {
+  &:before {
+    content: $kd-validate-col; 
+  }
+}
+.kd-validate-row {
+  &:before {
+    content: $kd-validate-row; 
+  }
+}
+.kd-vertical-align-bottom {
+  &:before {
+    content: $kd-vertical-align-bottom; 
+  }
+}
+.kd-vertical-align-middle {
+  &:before {
+    content: $kd-vertical-align-middle; 
+  }
+}
+.kd-vertical-align-top {
+  &:before {
+    content: $kd-vertical-align-top; 
+  }
+}
+.kd-video {
+  &:before {
+    content: $kd-video; 
+  }
+}
+.kd-web_icon {
+  &:before {
+    content: $kd-web_icon; 
+  }
+}
+.kd-wrapper {
+  &:before {
+    content: $kd-wrapper; 
+  }
+}
+.kd-x-axis-grid-line {
+  &:before {
+    content: $kd-x-axis-grid-line; 
+  }
+}
+.kd-x-axis {
+  &:before {
+    content: $kd-x-axis; 
+  }
+}
+.kd-y-axis-grid-line {
+  &:before {
+    content: $kd-y-axis-grid-line; 
+  }
+}
+.kd-y-axis {
+  &:before {
+    content: $kd-y-axis; 
+  }
+}
+

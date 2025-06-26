@@ -16,17 +16,18 @@ class ConfigItemsBehavior extends Behavior
     private $model;
     private $selectedType;
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction'];
+        $events['Model.custom.onUpdateToolbarButtons'] =  ['callable' => 'onUpdateToolbarButtons'];//POCOR-8751
         if ($this->isCAv4()) {
             $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];
         }
         return $events;
     }
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->model = $this->_table;
     }
@@ -38,12 +39,12 @@ class ConfigItemsBehavior extends Behavior
 
     public function buildSystemConfigFilters()
     {
-
         $toolbarElements = [
             ['name' => 'Configuration.controls', 'data' => [], 'options' => []]
         ];
         $this->model->controller->set('toolbarElements', $toolbarElements);
         $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+
 
         $typeList = $ConfigItem
             ->find('list', [
@@ -53,48 +54,79 @@ class ConfigItemsBehavior extends Behavior
             ->order('type')
             ->where([$ConfigItem->aliasField('visible') => 1])
             ->toArray();
-            //echo"<pre>";print_r($typeList); die;
-             $typeLists = $ConfigItem
-            ->find('all', [
-                // 'fields' => 'label','type'
 
-            ])
-            ->order('label')
-            ->where([$ConfigItem->aliasField('visible') => 1,'type' => 'Coordinates'])
-            ->toArray();
-            //echo"<pre>";print_r($typeLists); die;
         $typeOptions = array_keys($typeList);
         foreach ($typeOptions as $key => $value) {
-
             $value = $value != 'Authentication' ? $value : 'Sso';
-            // echo"<pre>";print_r($value); die;
             if (in_array($value, (array) Configure::read('School.excludedPlugins'))) {
                 unset($typeOptions[$key]);
             }
         }
+        //POCOR-8883 code logic change start
         $selectedType = $this->model->queryString('type', $typeOptions);
-
         $this->selectedType = $selectedType;
-        $this->model->request->query['type_value'] = $typeOptions[$selectedType];
-        $this->model->advancedSelectOptions($typeOptions, $selectedType);
-        $this->model->controller->set('typeOptions', $typeOptions);
-        $controlElement = $toolbarElements[0];
-        $controlElement['data'] = ['typeOptions' => $typeOptions];
-        $controlElement['order'] = 1;
-
-        return $controlElement;
+        $typeValue = $typeOptions[$selectedType];
+        if(empty($typeValue)){
+           $typeValue = $this->model->request->getQueryParams()['type'];
+        }
+        //POCOR-8951 start
+        if($typeValue == 'Themes'){
+            $productThemes = $ConfigItem
+                ->find('list', [
+                    'keyField' => 'code',
+                    'valueField' => 'name'
+                ])
+                ->order('type')
+                ->where([$ConfigItem->aliasField('type') => 'Online Services'])
+                ->toArray();
+            $this->model->request = $this->model->request->withQueryParams(
+                array_merge($this->model->request->getQueryParams(),
+                ['type_value' => $typeValue]));
+            $this->model->advancedSelectOptions($typeOptions, $selectedType);
+            $this->model->controller->set('typeOptions', $typeOptions);
+            $controlElement = $toolbarElements[0];
+            $selectedProduct = $this->model->request->getQueryParams()['online_service'] ?? 'openemis_core';
+            $controlElement['data'] = [
+                'typeOptions' => $typeOptions,
+                'productThemes' => $productThemes,
+                'selectedProduct' => $selectedProduct];
+            $controlElement['order'] = 1;
+            return $controlElement;
+            //POCOR-8951 end
+        }elseif($typeValue !== 'Custom Validation'){
+            $this->model->request = $this->model->request->withQueryParams(['type_value' => $typeValue]);
+            $this->model->advancedSelectOptions($typeOptions, $selectedType);
+            $this->model->controller->set('typeOptions', $typeOptions);
+            $controlElement = $toolbarElements[0];
+            $controlElement['data'] = ['typeOptions' => $typeOptions];
+            $controlElement['order'] = 1;
+            return $controlElement;
+        }else{
+            if ($typeValue !== null) {
+                $queryParams = $this->model->request->getQueryParams();
+                $queryParams['type'] = $selectedType;
+                $queryParams['type_value'] = $typeValue;
+                $this->model->request = $this->model->request->withQueryParams($queryParams);
+            }
+            $this->model->advancedSelectOptions($typeOptions, $selectedType);
+            $this->model->controller->set('typeOptions', $typeOptions);
+            $controlElement = $toolbarElements[0];
+            $controlElement['data'] = ['typeOptions' => $typeOptions];
+            $controlElement['order'] = 1;
+            return $controlElement;
+            //POCOR-8883 end
+        }
     }
 
     public function checkController()
     {
-        //print_r('hi'); die;
-        $typeValue = $this->model->request->query['type_value'];
+        $typeValue = $this->model->request->getQuery('type_value');
 
         $typeValue = Inflector::camelize($typeValue, ' ');
         $action = '';
         if ($this->isCAv4()) {
             $url = $this->model->url('index');
-            $action = $this->model->request->params['action'];
+            $action = $this->model->request->getParam('action');
         } else {
             $url = $this->model->controller->ControllerAction->url('index');
             $action = $this->model->action;
@@ -116,10 +148,20 @@ class ConfigItemsBehavior extends Behavior
         if($typeValue == 'ExternalDataSource-Exams'){
             $typeValue = 'ExternalDataSourceExams';
         }
+        if($typeValue == 'ExternalDataSource-LMS'){ //POCOR-8386
+            $typeValue = 'ExternalDataSourceLMS';
+        }
         //POCOR-7531 start
          // End POCOR-7507
 
+        // Start POCOR-8689
+         if($typeValue == 'DefaultInstitutionsForAutomatedStudentEnrolme'){
+            $typeValue = 'AutomatedStudentEnrollment';
+        }
+        // Start POCOR-8689
+
         if (method_exists($this->model->controller, $typeValue) && $action != $typeValue) {
+
             $url['action'] = $typeValue;
             $url['type_value'] = $typeValue;  // POCOR-7507
             $this->model->controller->redirect($url);
@@ -128,7 +170,8 @@ class ConfigItemsBehavior extends Behavior
                 'plugin' => 'Configuration',
                 'controller' => 'Configurations',
                 'action' => 'index',
-                'type' => $this->selectedType]);
+                '?' => ['type' => $this->selectedType] //POCOR-8883
+            ]);
         }
     }
     public function beforeAction(Event $event, $extra)
@@ -146,4 +189,33 @@ class ConfigItemsBehavior extends Behavior
             $this->checkController();
         }
     }
+    //POCOR-8751 start
+    /**
+     * Handles updating the toolbar buttons during the action.
+     *
+     * @param Event $event The event triggered during the action.
+     * @param ArrayObject $buttons The existing buttons for the action.
+     * @param ArrayObject $toolbarButtons The toolbar buttons that will be modified.
+     * @param array $attr Additional attributes or options for the action.
+     * @param string $action The action being performed (e.g., 'view', 'edit').
+     * @param bool $isFromModel Flag indicating if the action is originating from a model.
+     */
+
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
+        if ($this->_table->action == 'view') {
+            $session = $this->_table->request->getSession();
+            $key = $session->read('Configuration.ConfigItems.primaryKey.id');
+            $entity =  TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->get($key);
+            if($entity->code=="edition" && $entity->type=="System"){
+                if (isset($toolbarButtons['edit'])) {
+                    unset($toolbarButtons['edit']);
+                }
+            }
+        }
+
+    }
+     //POCOR-8751 end
+
 }
+

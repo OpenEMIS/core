@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
+use Cake\Http\ServerRequest;
 
 /**
  * Generate the "Trainers Sessions" Report
@@ -17,9 +18,9 @@ use Cake\ORM\TableRegistry;
  */
 class TrainersSessionsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('training_sessions');
+        $this->setTable('training_sessions');
         parent::initialize($config);
         $this->addBehavior('Excel', ['excludes' => []]);
         $this->addBehavior('Report.ReportList');
@@ -28,7 +29,7 @@ class TrainersSessionsTable extends AppTable
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -37,7 +38,7 @@ class TrainersSessionsTable extends AppTable
 
     public function onExcelGetIdentityType(Event $event, Entity $entity)
     {
-        $userIdentities = TableRegistry::get('User.Identities');
+        $userIdentities = TableRegistry::getTableLocator()->get('User.Identities');
         $userIdentitiesResult = $userIdentities->find()
                 ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
                 ->select([
@@ -46,7 +47,8 @@ class TrainersSessionsTable extends AppTable
                 ])
                 ->where([$userIdentities->aliasField('security_user_id') => $entity->trainer_id])
                 ->order([$userIdentities->aliasField('id DESC')])
-                ->hydrate(false)->toArray();
+                ->disableHydration() // POCOR-8533
+            ->toArray();
                 $entity->custom_identity_number = '';
                 $other_identity_array = [];
                 if (!empty($userIdentitiesResult)) {
@@ -130,7 +132,7 @@ class TrainersSessionsTable extends AppTable
             ],
             ' ' => [
                 'type' => 'left',
-                'table' => '(SELECT qualification_specialisations.name,staff_qualifications.staff_id FROM staff_qualifications 
+                'table' => '(SELECT qualification_specialisations.name,staff_qualifications.staff_id FROM staff_qualifications
                 INNER JOIN staff_qualifications_specialisations ON staff_qualifications_specialisations.staff_qualification_id = staff_qualifications.id
                 INNER JOIN qualification_specialisations ON qualification_specialisations.id =staff_qualifications_specialisations.qualification_specialisation_id) AS staff_qualification_info',
                 'conditions' => ['staff_qualification_info.staff_id = TrainingSessionTrainers.trainer_id']

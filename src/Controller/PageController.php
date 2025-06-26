@@ -1,5 +1,6 @@
 <?php
 namespace App\Controller;
+//use Cake\Controller\Controller;
 
 use Cake\Event\Event;
 use Page\Controller\PageController as BaseController;
@@ -7,12 +8,13 @@ use Cake\ORM\Entity;
 use Page\Model\Entity\PageElement;
 use Cake\Routing\Router;
 use Cake\ORM\TableRegistry;//POCOR-7534
+use Cake\Http\ServerRequest;
 
 class PageController extends BaseController
 {
-    public $helpers = ['Page.Page'];
+    //public $helpers = ['Page.Page'];
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
@@ -23,10 +25,10 @@ class PageController extends BaseController
             'created' => 'Created On',
             'created_user_id' => 'Created By'
         ];
-
-        $this->Page->config('sequence', 'order');
-        $this->Page->config('is_visible', 'visible');
-        $this->Page->config('labels', $labels);
+         $this->loadComponent('Page.Page');
+         $this->Page->getConfig('sequence');
+         $this->Page->getConfig('is_visible', 'visible');
+         $this->Page->getConfig('labels', $labels);
 
         $this->loadComponent('Page.RenderLink');
         $this->loadComponent('RenderDate');
@@ -34,7 +36,7 @@ class PageController extends BaseController
         $this->loadComponent('RenderDatetime');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.beforeRender'] = ['callable' => 'beforeRender', 'priority' => 5];
@@ -42,28 +44,32 @@ class PageController extends BaseController
         return $events;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeFilter($event);
         //POCOR-7534 Starts comment it only for POCOR-7534 ticket's given urls in task
-        $session = $this->request->session();
+        $serverRequest = $this->request;
+        $session = $this->request->getSession();
+
         $superAdmin = $session->read('Auth.User.super_admin');
-        if($superAdmin == 0){ 
+
+        if($superAdmin == 0){
             $UserData = $session->read('Auth.User')['id'];
-            $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+            $GroupRoles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
             $userRole = $GroupRoles->find()
                         ->contain('SecurityRoles')
                         ->order(['SecurityRoles.order'])
                         ->where([
-                            $GroupRoles->aliasField('security_user_id') => $UserData
+                            // $GroupRoles->aliasField('security_user_id') => $UserData
+                            $GroupRoles->aliasField('security_user_id') => 2
                         ])
                         ->group([$GroupRoles->aliasField('security_role_id')])
                         ->toArray();
-            
-            if(!empty($this->request->params['controller']) && !empty($userRole)){
+
+            if(!empty($this->request->getParam('controller') && !empty($userRole))){
                 $RoleIds = [];
                 foreach ($userRole as $Role_key => $Role_val) {  $RoleIds[] = $Role_val->security_role_id; }
-                $SecurityFunctionIds = $this->getIdBySecurityFunctionName($this->request->params['action'], $this->request->params['controller']);
+                $SecurityFunctionIds = $this->getIdBySecurityFunctionName($this->request->getParam('action'), $this->request->getParam('controller'));
                 if(!empty($SecurityFunctionIds)){
                     $result = $this->checkAuthrizationForRoles($SecurityFunctionIds, $RoleIds);
                     if($result == 0){
@@ -78,7 +84,7 @@ class PageController extends BaseController
         $page = $this->Page;
         $request = $this->request;
         $action = $request->action;
-        $ext = $this->request->params['_ext'];
+        $ext = $serverRequest->getAttribute('params')['_ext'];
 
         if ($ext != 'json') {
             if ($request->is(['put', 'post'])) {
@@ -86,7 +92,12 @@ class PageController extends BaseController
             }
             $this->set('menuItemSelected', [$this->name]);
 
-            if ($page->isAutoRender() && in_array($action, ['index', 'view', 'add', 'edit', 'delete'])) {
+            // if ($page->isAutoRender() && in_array($action, ['index', 'view', 'add', 'edit', 'delete'])) {
+            //     $viewFile = 'Page.Page/' . $action;
+            //     $this->viewBuilder()->template($viewFile);
+            // }
+
+            if (in_array($action, ['index', 'view', 'add', 'edit', 'delete'])) {
                 $viewFile = 'Page.Page/' . $action;
                 $this->viewBuilder()->template($viewFile);
             }
@@ -99,233 +110,233 @@ class PageController extends BaseController
             if($actionParam == 'Users'){
                 $name = 'Users';
             }else if(($actionParam == 'UserGroups' || $actionParam == 'SystemGroups')){
-                $name = 'Groups';  
+                $name = 'Groups';
             }else if($actionParam == 'Roles'){
                 $name = ($this->request->query['type'] == 'system') ? 'System Roles' : 'User Roles';
             }else if($actionParam == 'Accounts'){
-                $name = 'Accounts';  
+                $name = 'Accounts';
             }else if($actionParam == 'UserGroupsList'){
-                $name = 'User Group List';  
+                $name = 'User Group List';
             }
         }else if($controllerParam == 'Credentials'){
             if($actionParam == 'add' || $actionParam == 'index' || $actionParam == 'view' || $actionParam == 'edit' ||  $actionParam == 'delete'){
-                $name = 'Credentials';  
+                $name = 'Credentials';
             }
         }else if($controllerParam == 'Areas'){
             if($actionParam == 'Levels' || $actionParam == 'AdministrativeLevels'){
-                $name = 'Area Levels';  
+                $name = 'Area Levels';
             }else if($actionParam == 'Areas' || $actionParam == 'Administratives'){
-                $name = 'Areas';  
+                $name = 'Areas';
             }
         }else if($controllerParam == 'AcademicPeriods'){
             if($actionParam == 'Levels'){
-                $name = 'Academic Period Levels';  
+                $name = 'Academic Period Levels';
             }else if($actionParam == 'Periods'){
-                $name = 'Academic Periods';  
+                $name = 'Academic Periods';
             }
         }else if($controllerParam == 'Educations'){
             if($actionParam == 'Systems'){
-                $name = 'Education Systems';  
+                $name = 'Education Systems';
             }else if($actionParam == 'Levels'){
-                $name = 'Education Levels';  
+                $name = 'Education Levels';
             }else if($actionParam == 'Cycles'){
-                $name = 'Education Cycles';  
+                $name = 'Education Cycles';
             }else if($actionParam == 'Programmes'){
-                $name = 'Education Programmes';  
+                $name = 'Education Programmes';
             }else if($actionParam == 'Grades'){
-                $name = 'Education Grades';  
+                $name = 'Education Grades';
             }else if($actionParam == 'Stages' || $actionParam == 'GradeSubjects'){
-                $name = 'Setup';  
+                $name = 'Setup';
             }
         }else if($controllerParam == 'Attendances'){
             if($actionParam == 'StudentMarkTypes' || $actionParam == 'StudentMarkTypeStatuses'){
-                $name = 'Attendances';  
+                $name = 'Attendances';
             }
         }else if($controllerParam == 'FieldOptions'){
             $actionParam = $this->request->params['pass'][0];
             if(($actionParam == '' || $actionParam == 'index') || $actionParam == 'view' || $actionParam == 'edit' || $actionParam == 'add'  || $actionParam == 'remove' ||  $actionParam == 'transfer'){
-                $name = 'Setup';  
+                $name = 'Setup';
             }
         }else if($controllerParam == 'Labels'){
             if($actionParam == '' || $actionParam == 'index' || $actionParam == 'view' || $actionParam == 'edit'){
-                $name = 'Labels';  
+                $name = 'Labels';
             }
         }else if($controllerParam == 'Configurations'){
             if($actionParam == '' || $actionParam == 'index' || $actionParam == 'view' || $actionParam == 'edit'){
-                $name = 'Configurations';  
+                $name = 'Configurations';
             }else if($actionParam == 'AuthSystemAuthentications'){
-                $name = 'Authentication';  
+                $name = 'Authentication';
             }else if($actionParam == 'ExternalDataSource'){
-                $name = 'External Data Source';  
+                $name = 'External Data Source';
             }else if($actionParam == 'ProductLists'){
-                $name = 'Product Lists';  
+                $name = 'Product Lists';
             }else if($actionParam == 'Webhooks'){
-                $name = 'Webhooks';  
+                $name = 'Webhooks';
             }
         }else if($controllerParam == 'Themes'){
             $controllerParam = 'Configurations';
             if($actionParam == '' || $actionParam == 'index' || $actionParam == 'view' || $actionParam == 'edit'){
-                $name = 'Configurations';  
+                $name = 'Configurations';
             }
         }else if($controllerParam == 'Notices'){
             if($actionParam == '' || $actionParam == 'index' || $actionParam == 'view' || $actionParam == 'edit' || $actionParam == 'delete'){
-                $name = 'Notices';  
+                $name = 'Notices';
             }
         }else if($controllerParam == 'Risks'){
             if($actionParam == 'Risks'){
-                $name = 'Risks';  
+                $name = 'Risks';
             }
         }else if($controllerParam == 'InstitutionCustomFields'){
             if($actionParam == 'Fields' || $actionParam == 'Pages'){
-                $name = 'Institution';  
+                $name = 'Institution';
             }
         }else if($controllerParam == 'StudentCustomFields'){
             if($actionParam == 'Fields' || $actionParam == 'Pages'){
-                $name = 'Student';  
+                $name = 'Student';
             }
         }else if($controllerParam == 'StaffCustomFields'){
             if($actionParam == 'Fields' || $actionParam == 'Pages'){
-                $name = 'Staff';  
+                $name = 'Staff';
             }
         }else if($controllerParam == 'Infrastructures'){
             if($actionParam == 'Fields' || $actionParam == 'Pages' || $actionParam == 'LandPages' || $actionParam == 'LandTypes' || $actionParam == 'BuildingPages' || $actionParam == 'BuildingTypes' || $actionParam == 'FloorPages' || $actionParam == 'FloorTypes' || $actionParam == 'RoomPages' || $actionParam == 'RoomTypes'){
-                $name = 'Infrastructure';  
+                $name = 'Infrastructure';
             }
         }else if($controllerParam == 'Locales'){
             if($actionParam == '' || $actionParam == 'index' || $actionParam == 'view' || $actionParam == 'edit' || $actionParam == 'delete'){
-                $name = 'Languages';  
+                $name = 'Languages';
             }
         }else if($controllerParam == 'LocaleContents'){
             if($actionParam == '' || $actionParam == 'index' || $actionParam == 'view' || $actionParam == 'edit' || $actionParam == 'delete'){
-                $name = 'Translations';  
+                $name = 'Translations';
             }
         }else if($controllerParam == 'ProfileTemplates'){
             if($actionParam == 'Institutions' || $actionParam == 'InstitutionProfiles'){
-                $name = 'Institutions';  
+                $name = 'Institutions';
             }else if($actionParam == 'Staff' || $actionParam == 'StaffProfiles'){
-                $name = 'Staff';  
+                $name = 'Staff';
             }else if($actionParam == 'Students' || $actionParam == 'StudentProfiles'){
-                $name = 'Students';  
+                $name = 'Students';
             }else if($actionParam == 'Classes' || $actionParam == 'ClassesProfiles'){
-                $name = 'Classes';  
+                $name = 'Classes';
             }
         }else if($controllerParam == 'Surveys'){
             if($actionParam == 'Questions'){
-                $name = 'Questions';  
+                $name = 'Questions';
             }else if($actionParam == 'Forms'){
-                $name = 'Forms';  
+                $name = 'Forms';
             }else if($actionParam == 'Status'){
-                $name = 'Status';  
+                $name = 'Status';
             }else if($actionParam == 'Rules'){
-                $name = 'Rules';  
+                $name = 'Rules';
             }
         }else if($controllerParam == 'Rubrics'){
             if($actionParam == 'Templates' || $actionParam == 'Sections' ||  $actionParam == 'Criterias' || $actionParam == 'Options'){
-                $name = 'Setup';  
+                $name = 'Setup';
             }else if($actionParam == 'Status'){
-                $name = 'Status';  
+                $name = 'Status';
             }
         }else if($controllerParam == 'Alerts'){
             if($actionParam == 'Alerts'){
-                $name = 'Alerts';  
+                $name = 'Alerts';
             }else if($actionParam == 'Logs'){
-                $name = 'Logs';  
+                $name = 'Logs';
             }else if($actionParam == 'AlertRules'){
-                $name = 'AlertRules';  
+                $name = 'AlertRules';
             }
         }else if($controllerParam == 'Trainings'){
             if($actionParam == 'Courses'){
-                $name = 'Courses';  
+                $name = 'Courses';
             }else if($actionParam == 'Sessions' || $actionParam == 'ImportTrainees'){
-                $name = 'Sessions';  
+                $name = 'Sessions';
             }else if($actionParam == 'Results' || $actionParam == 'ImportTrainingSessionTraineeResults'){
-                $name = 'Results';  
+                $name = 'Results';
             }else if($actionParam == 'Applications'){
-                $name = 'Applications';  
+                $name = 'Applications';
             }
         }else if($controllerParam == 'Competencies'){
             if($actionParam == 'Templates' || $actionParam == 'Items' || $actionParam == 'Criterias'){
-                $name = 'Competency Setup';  
+                $name = 'Competency Setup';
             }else if($actionParam == 'Periods'){
-                $name = 'Periods';  
+                $name = 'Periods';
             }else if($actionParam == 'GradingTypes'){
-                $name = 'GradingTypes';  
+                $name = 'GradingTypes';
             }else if($actionParam == 'ImportCompetencyTemplates'){
-                $name = 'Import Competency Templates';  
+                $name = 'Import Competency Templates';
             }
         }else if($controllerParam == 'Outcomes'){
             if($actionParam == 'Templates' || $actionParam == 'ImportOutcomeTemplates' || $actionParam == 'Criterias'){
-                $name = 'Outcome Setup';  
+                $name = 'Outcome Setup';
             }else if($actionParam == 'Periods'){
-                $name = 'Periods';  
+                $name = 'Periods';
             }else if($actionParam == 'GradingTypes'){
-                $name = 'Grading Types';  
+                $name = 'Grading Types';
             }
         }else if($controllerParam == 'Assessments'){
             if($actionParam == 'Assessments'){
-                $name = 'Assessments';  
+                $name = 'Assessments';
             }else if($actionParam == 'GradingTypes' || $actionParam == 'GradingOptions'){
-                $name = 'Grading Types';  
+                $name = 'Grading Types';
             }else if($actionParam == 'Status'){
-                $name = 'Status';  
+                $name = 'Status';
             }else if($actionParam == 'AssessmentPeriods'){
-                $name = 'Assessment Periods';  
+                $name = 'Assessment Periods';
             }
         }else if($controllerParam == 'ReportCards'){
             if($actionParam == 'Templates'){
-                $name = 'Templates';  
+                $name = 'Templates';
             }else if($actionParam == 'ReportCardEmail'){
-                $name = 'Email Templates';  
+                $name = 'Email Templates';
             }else if($actionParam == 'Processes'){
-                $name = 'Processes';  
+                $name = 'Processes';
             }
         }else if($controllerParam == 'Examinations'){
             if($actionParam == 'Exams'){
-                $name = 'Exams';  
+                $name = 'Exams';
             }else if($actionParam == 'GradingTypes'){
-                $name = 'Grading Types';  
+                $name = 'Grading Types';
             }else if($actionParam == 'ExamCentres' || $actionParam == 'ExamCentreExams'){
-                $name = 'Exam Centres';  
+                $name = 'Exam Centres';
             }else if($actionParam == 'ImportExaminationCentreRooms'){
-                $name = 'Import Examination Rooms';  
+                $name = 'Import Examination Rooms';
             }else if($actionParam == 'RegisteredStudents' || $actionParam == 'RegistrationDirectory' || $actionParam == 'BulkStudentRegistration'){
-                $name = 'Registered Students';  
+                $name = 'Registered Students';
             }else if($actionParam == 'NotRegisteredStudents' || $actionParam == 'RegistrationDirectory' || $actionParam == 'BulkStudentRegistration'){
-                $name = 'Not Registered Students';  
+                $name = 'Not Registered Students';
             }else if($actionParam == 'ExamResults' || $actionParam == 'Results'){
-                $name = 'Results';  
+                $name = 'Results';
             }else if($actionParam == 'ImportResults'){
-                $name = 'Import Results';  
+                $name = 'Import Results';
             }else if($actionParam == 'ExamCentreLinkedInstitutions'){
-                $name = 'Exam Centre Invigilators';  
+                $name = 'Exam Centre Invigilators';
             }else if($actionParam == 'ExamCentreInvigilators'){
-                $name = 'Exam Centre Linked Institutions';  
+                $name = 'Exam Centre Linked Institutions';
             }else if($actionParam == 'ExamCentreSubjects'){
-                $name = 'Exam Centre Subjects';  
+                $name = 'Exam Centre Subjects';
             }else if($actionParam == 'ExamCentreRooms'){
-                $name = 'Exam Centre Rooms';  
+                $name = 'Exam Centre Rooms';
             }else if($actionParam == 'ExamCentreStudents'){
-                $name = 'Exam Centre Students';  
+                $name = 'Exam Centre Students';
             }
         }else if($controllerParam == 'Scholarships'){
             if($actionParam == 'Scholarships'){
-                $name = 'Scholarships';  
+                $name = 'Scholarships';
             }else if($actionParam == 'Applications'){
-                $name = 'Applications';  
+                $name = 'Applications';
             }else if($actionParam == 'Identities'){
-                $name = 'Identities';  
+                $name = 'Identities';
             }else if($actionParam == 'Nationalities'){
-                $name = 'Nationalities';  
+                $name = 'Nationalities';
             }else if($actionParam == 'Contacts'){
-                $name = 'Contacts';  
+                $name = 'Contacts';
             }else if($actionParam == 'Guardians'){
-                $name = 'Guardians';  
+                $name = 'Guardians';
             }else if($actionParam == 'Histories'){
-                $name = 'Histories';  
+                $name = 'Histories';
             }else if($actionParam == 'RecipientPaymentStructures'){
-                $name = 'Payment Structures';  
+                $name = 'Payment Structures';
             }else if($actionParam == 'RecipientPayments'){
-                $name = 'Disbursements';  
+                $name = 'Disbursements';
             }
         }else if($controllerParam == 'UsersDirectory'){
             if($actionParam == '' || $actionParam == 'index' || $actionParam == 'view' || $actionParam == 'edit'){
@@ -405,7 +416,7 @@ class PageController extends BaseController
             }
         }
         $module = 'Administration';
-        $SecurityFunctionsTbl = TableRegistry::get('security_functions');
+        $SecurityFunctionsTbl = TableRegistry::getTableLocator()->get('security_functions');
         $SecurityFunctionsData = $SecurityFunctionsTbl->find()->where([
                                         $SecurityFunctionsTbl->aliasField('name') => $name,
                                         $SecurityFunctionsTbl->aliasField('controller') => $controllerParam,
@@ -420,7 +431,7 @@ class PageController extends BaseController
 
     public function checkAuthrizationForRoles($securityFunctionsId, $roleId)
     {
-        $SecurityRoleFunctionsTbl = TableRegistry::get('security_role_functions');
+        $SecurityRoleFunctionsTbl = TableRegistry::getTableLocator()->get('security_role_functions');
         $SecurityRoleFunctionsTblData = $SecurityRoleFunctionsTbl->find()->where([
                                             $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $roleId,
                                             $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $securityFunctionsId,
@@ -437,10 +448,12 @@ class PageController extends BaseController
         return $flag;
     }//POCOR-7534 Ends
 
-    public function beforeRender(Event $event)
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeRender($event);
         $this->initializeToolbars();
+        $this->viewBuilder()->addHelper('Page.Page');
+
     }
 
     public function onRenderBinary(Event $event, Entity $entity, PageElement $element)
@@ -454,7 +467,7 @@ class PageController extends BaseController
                 $primaryKey = $entity->primaryKey;
                 $source = isset($attributes['source']) ? $attributes['source'] : $entity->source();
                 if (isset($attributes['keyField'])) {
-                    $key = TableRegistry::get($source)->primaryKey();
+                    $key = TableRegistry::getTableLocator()->get($source)->primaryKey();
                     if (!is_array($key)) {
                         $primaryKey = $this->encode([$key => $entity->{$attributes['keyField']}]);
                     }
@@ -474,7 +487,7 @@ class PageController extends BaseController
                     ], true);
                 }
             } else {
-                switch ($this->request->param('action')) {
+                switch ($this->request->getParam('action')) {
                     case 'view':
                         $fileName = $entity->{$fileNameField};
                         $pathInfo = pathinfo($fileName);
@@ -489,7 +502,7 @@ class PageController extends BaseController
                         $primaryKey = $entity->primaryKey;
                         $source = isset($attributes['source']) ? $attributes['source'] : $entity->source();
                         if (isset($attributes['keyField'])) {
-                            $key = TableRegistry::get($source)->primaryKey();
+                            $key = TableRegistry::getTableLocator()->get($source)->getPrimaryKey();
                             if (!is_array($key)) {
                                 $primaryKey = $this->encode([$key => $entity->{$attributes['keyField']}]);
                             }
@@ -533,12 +546,12 @@ class PageController extends BaseController
                 }
             }
         } else {
-            switch ($this->request->param('action')) {
+            switch ($this->request->getParam('action')) {
                 case 'view':
                     $primaryKey = $entity->primaryKey;
                     $source = isset($attributes['source']) ? $attributes['source'] : $entity->source();
                     if (isset($attributes['keyField'])) {
-                        $key = TableRegistry::get($source)->primaryKey();
+                        $key = TableRegistry::getTableLocator()->get($source)->primaryKey();
                         if (!is_array($key)) {
                             $primaryKey = $this->encode([$key => $entity->{$attributes['keyField']}]);
                         }
@@ -563,6 +576,7 @@ class PageController extends BaseController
             }
         }
     }
+
 
     private function initializeToolbars()
     {
@@ -719,7 +733,7 @@ class PageController extends BaseController
                     'options' => []
                 ]);
                 break;
-            
+
             default:
                 break;
         }

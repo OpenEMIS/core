@@ -44,7 +44,7 @@ class StudentAbsencesExcelBehavior extends Behavior
     public function initialize(array $config)
     {
         $this->config('excludes', array_merge($this->config('default_excludes'), $this->config('excludes')));
-        if (!array_key_exists('filename', $config)) {
+        if (!isset($config['filename'])) {
             $this->config('filename', $this->_table->alias());
         }
         $folder = WWW_ROOT . $this->config('folder');
@@ -54,7 +54,7 @@ class StudentAbsencesExcelBehavior extends Behavior
             mkdir($folder, 0777);
         } else {
             // $delete = true;
-            // if (array_key_exists('delete', $settings) &&  $settings['delete'] == false) {
+            // if (isset($settings['delete']) &&  $settings['delete'] == false) {
             //  $delete = false;
             // }
             // if ($delete) {
@@ -146,13 +146,13 @@ class StudentAbsencesExcelBehavior extends Behavior
 
         $data = $this->getData($settings);
         $writer->writeSheetRow('StudentAbsences', $headerRow);
-        
+
         foreach($data as $row) {
             if(array_filter($row)) {
                 $writer->writeSheetRow('StudentAbsences', $row);
             }
         }
-        
+
         $blankRow[] = [];
         $footer = $this->getFooter();
         $writer->writeSheetRow('StudentAbsences', $blankRow);
@@ -209,7 +209,7 @@ class StudentAbsencesExcelBehavior extends Behavior
             $startDate = $periodEntity->start_date->format('Y-m-d');
             $endDate = $periodEntity->end_date->format('Y-m-d');
         }
-        
+
         $record = $InstitutionStudentAbsenceDetails->find()
                 ->select([
                     'student_id' => 'Users.id',
@@ -238,17 +238,17 @@ class StudentAbsencesExcelBehavior extends Behavior
                         " ",
                         'GuardianUser.last_name' => 'literal'
                     ])
-                ]) 
+                ])
                 ->contain([
                     'AbsenceTypes',
-                    'Institutions',               
+                    'Institutions',
                     'InstitutionClasses',
                     'EducationGrades',
                     'AcademicPeriods'
-                ])     
+                ])
                 ->leftJoin([$Users->alias() => $Users->table()],[
                         $Users->aliasField('id = ') . $InstitutionStudentAbsenceDetails->aliasField('student_id')
-                ])      
+                ])
                 ->leftJoin([$Genders->alias() => $Genders->table()], [
                         $Genders->aliasField('id = ') . $Users->aliasField('gender_id')
                 ])
@@ -309,7 +309,7 @@ class StudentAbsencesExcelBehavior extends Behavior
                     $result[$key][] = $value->institution_name;
                     $result[$key][] = $value->institution_code;
                     $result[$key][] = date("d-m-Y", strtotime($value->date));
-                    
+
                     //attendance per day
                     if ($value->period != 0 && $value->isSubject == 0 ) {
                         //START:POCOR-6725
@@ -346,7 +346,7 @@ class StudentAbsencesExcelBehavior extends Behavior
                     $subjectList = '';
                     if (isset($arr)) {
                         $subjectList  = implode(',', $arr);
-                    } 
+                    }
                     $result[$key][] = $subjectList;
                     $result[$key][] = $value->absence_type;
                     $result[$key][] = $value->institution_class;
@@ -380,7 +380,7 @@ class StudentAbsencesExcelBehavior extends Behavior
                         foreach ($detail as $val) {
                             $data[] = $val['value'];
                         }
-                    } 
+                    }
                     $contact = '';
                     if (isset($data)) {
                         $contact  = implode(',', $data);
@@ -507,7 +507,7 @@ class StudentAbsencesExcelBehavior extends Behavior
         $language = I18n::locale();
         $module = $this->_table->alias();
         //echo '<pre>';print_r($module);
-        
+
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, 'postal_code', $language], true);
         return $event;
     }

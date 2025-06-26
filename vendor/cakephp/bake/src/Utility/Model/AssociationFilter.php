@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         0.1.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://www.opensource.org/licenses/mit-license.php MIT License
  */
 namespace Bake\Utility\Model;
 
@@ -20,20 +22,18 @@ use Exception;
 
 /**
  * Utility class to filter Model Table associations
- *
  */
 class AssociationFilter
 {
-
     /**
      * Detect existing belongsToMany associations and cleanup the hasMany aliases based on existing
      * belongsToMany associations provided
      *
      * @param \Cake\ORM\Table $table Table
-     * @param array $aliases array of aliases
-     * @return array $aliases
+     * @param string[] $aliases array of aliases
+     * @return string[] $aliases
      */
-    public function filterHasManyAssociationsAliases(Table $table, array $aliases)
+    public function filterHasManyAssociationsAliases(Table $table, array $aliases): array
     {
         $belongsToManyJunctionsAliases = $this->belongsToManyJunctionAliases($table);
 
@@ -43,46 +43,46 @@ class AssociationFilter
     /**
      * Get the array of junction aliases for all the BelongsToMany associations
      *
-     * @param Table $table Table
-     * @return array junction aliases of all the BelongsToMany associations
+     * @param \Cake\ORM\Table $table Table
+     * @return string[] Junction aliases of all the BelongsToMany associations
      */
-    public function belongsToManyJunctionAliases(Table $table)
+    public function belongsToManyJunctionAliases(Table $table): array
     {
         $extractor = function ($val) {
-            return $val->junction()->alias();
+            return $val->junction()->getAlias();
         };
 
-        return array_map($extractor, $table->associations()->type('BelongsToMany'));
+        return array_map($extractor, $table->associations()->getByType('BelongsToMany'));
     }
 
     /**
      * Returns filtered associations for controllers models. HasMany association are filtered if
      * already existing in BelongsToMany
      *
-     * @param Table $model The model to build associations for.
+     * @param \Cake\ORM\Table $model The model to build associations for.
      * @return array associations
      */
-    public function filterAssociations(Table $model)
+    public function filterAssociations(Table $model): array
     {
         $belongsToManyJunctionsAliases = $this->belongsToManyJunctionAliases($model);
         $keys = ['BelongsTo', 'HasOne', 'HasMany', 'BelongsToMany'];
         $associations = [];
 
         foreach ($keys as $type) {
-            foreach ($model->associations()->type($type) as $assoc) {
-                $target = $assoc->target();
-                $assocName = $assoc->name();
-                $alias = $target->alias();
+            foreach ($model->associations()->getByType($type) as $assoc) {
+                $target = $assoc->getTarget();
+                $assocName = $assoc->getName();
+                $alias = $target->getAlias();
                 //filter existing HasMany
                 if ($type === 'HasMany' && in_array($alias, $belongsToManyJunctionsAliases)) {
                     continue;
                 }
                 $targetClass = get_class($target);
-                list(, $className) = namespaceSplit($targetClass);
+                [, $className] = namespaceSplit($targetClass);
 
                 $navLink = true;
                 $modelClass = get_class($model);
-                if ($modelClass !== 'Cake\ORM\Table' && $targetClass === $modelClass) {
+                if ($modelClass !== Table::class && $targetClass === $modelClass) {
                     $navLink = false;
                 }
 
@@ -93,14 +93,14 @@ class AssociationFilter
 
                 try {
                     $associations[$type][$assocName] = [
-                        'property' => $assoc->property(),
+                        'property' => $assoc->getProperty(),
                         'variable' => Inflector::variable($assocName),
-                        'primaryKey' => (array)$target->primaryKey(),
-                        'displayField' => $target->displayField(),
-                        'foreignKey' => $assoc->foreignKey(),
+                        'primaryKey' => (array)$target->getPrimaryKey(),
+                        'displayField' => $target->getDisplayField(),
+                        'foreignKey' => $assoc->getForeignKey(),
                         'alias' => $alias,
                         'controller' => $className,
-                        'fields' => $target->schema()->columns(),
+                        'fields' => $target->getSchema()->columns(),
                         'navLink' => $navLink,
                     ];
                 } catch (Exception $e) {

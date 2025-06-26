@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use Exception;
 
 class TreeShell extends Shell {
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
 	}
 

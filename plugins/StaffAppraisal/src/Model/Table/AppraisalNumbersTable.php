@@ -16,13 +16,13 @@ class AppraisalNumbersTable extends AppTable
     const LESS_THAN_OR_EQUAL = 'less_than_equal';
     const BETWEEN = 'between';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AppraisalCriterias', ['className' => 'StaffAppraisal.AppraisalCriterias']);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
 
         return $validator
@@ -78,10 +78,10 @@ class AppraisalNumbersTable extends AppTable
 
         return $ruleOptions;
     }
- 
+
     public function updateData(ArrayObject $data)
     {
-        if (array_key_exists('appraisal_number', $data)) {
+        if (isset($data['appraisal_number'])) {
             $validationRuleType = $data['appraisal_number']['validation_rule'];
             $minInclusive = '';
             $maxInclusive = '';

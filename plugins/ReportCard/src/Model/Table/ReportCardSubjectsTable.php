@@ -12,7 +12,7 @@ use App\Model\Table\ControllerActionTable;
 
 class ReportCardSubjectsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('ReportCards', ['className' => 'ReportCard.ReportCards']);
@@ -40,6 +40,7 @@ class ReportCardSubjectsTable extends ControllerActionTable
            $orWhere[$staffSubject->aliasField('staff_id')] = $staffId;
            //$orWhere[$InstitutionClasses->aliasField('staff_id')] = $staffId;//POCOR-6809 - commented condition as it's not compulsory to have same staff for class and subject
         }
+        
         return $query
                 ->select([
                     'education_subject_id' => $this->aliasField('education_subject_id'),
@@ -50,24 +51,24 @@ class ReportCardSubjectsTable extends ControllerActionTable
                     'staff_id' => $staffSubject->aliasField('staff_id'),//POCOR-6734
                 ])
                 ->innerJoinWith('EducationSubjects')
-                ->innerJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+                ->innerJoin([$InstitutionSubjects->getAlias() => $InstitutionSubjects->getTable()], [
                     $InstitutionSubjects->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id')
-                ])->leftJoin([$staffSubject->alias() => $staffSubject->table()], [
+                ])->leftJoin([$staffSubject->getAlias() => $staffSubject->getTable()], [
                     $staffSubject->aliasField('institution_subject_id = ') . $InstitutionSubjects->aliasField('id'),
                 ])
-                ->innerJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
+                ->innerJoin([$InstitutionClassSubjects->getAlias() => $InstitutionClassSubjects->getTable()], [
                     $InstitutionClassSubjects->aliasField('institution_subject_id = ') . $InstitutionSubjects->aliasField('id'),
                     $InstitutionClassSubjects->aliasField('institution_class_id = ') . $classId,
                     $InstitutionClassSubjects->aliasField('status > 0 ')
                 ])
-                ->leftJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+                ->leftJoin([$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()], [
                     $InstitutionClasses->aliasField('id = ') . $InstitutionClassSubjects->aliasField('institution_class_id'),
                 ])
                 ->where([
                     $this->aliasField('report_card_id') => $reportCardId,
                 ])
-                ->orWhere([$orWhere])
-                ->group([$InstitutionSubjects->alias('name')])
+                // ->orWhere([$orWhere])
+                //->group([$InstitutionSubjects->aliasField('name')]) //POCOR-9032
                 ->order([$this->EducationSubjects->aliasField('order')]);
     }
 }

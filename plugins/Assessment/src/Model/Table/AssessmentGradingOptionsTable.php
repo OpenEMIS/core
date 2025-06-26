@@ -5,7 +5,7 @@ use Cake\Validation\Validator;
 
 class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 
 		$this->belongsTo('AssessmentGradingTypes', ['className' => 'Assessment.AssessmentGradingTypes']);
@@ -28,16 +28,16 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 	}
 
 	public function getFormFields($action = 'edit') {
-		if ($action=='edit') {
+		if ($action =='edit') {
 			return ['code'=>'', 'name'=>'', 'description'=>'', 'min'=>'', 'max'=>'', 'assessment_grading_type_id'=>'', 'id'=>'','point' => ''];
 		} else {
 			return ['code'=>'', 'name'=>'', 'description'=>'', 'min'=>'', 'max'=>'','point'=>'']; //POCOR-7318 add point field
 		}
 	}
 
-	public function validationDefault(Validator $validator) {
+	/*public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
-
+		$validator->setProvider('custom', $this);
 		$validator
 			->allowEmpty('code')
 			//->allowEmpty('point')
@@ -80,10 +80,10 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 			])
 			;
 		return $validator;
-	}
+	}*/
 
 	public static function checkNotMoreThanGradingTypeMax($maxValue, $AssessmentGradingTypes, array $globalData) {
-		$formData = $AssessmentGradingTypes->request->data[$AssessmentGradingTypes->alias()];
+		$formData = $AssessmentGradingTypes->request->getData()[$AssessmentGradingTypes->getAlias()];
         return intVal($maxValue) <= intVal($formData['max']);
     }
 }

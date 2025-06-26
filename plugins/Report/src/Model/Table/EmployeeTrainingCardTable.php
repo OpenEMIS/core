@@ -13,7 +13,7 @@ use Cake\Datasource\ResultSetInterface;
 * Add New Feature Employe traning Cart Report
 * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
 * @ticket POCOR-6592
-* 
+*
 */
 
 class EmployeeTrainingCardTable extends AppTable
@@ -25,13 +25,13 @@ class EmployeeTrainingCardTable extends AppTable
     CONST WITHDRAWN_STATUS = 2;
     private $_dynamicFieldName = 'result_type';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('training_sessions');
+        $this->setTable('training_sessions');
         parent::initialize($config);
         $this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
         $this->belongsTo('Trainees', ['className' => 'User.Users', 'foreignKey' => 'trainee_id']);
-        
+
         $this->addBehavior('Excel', [
             'autoFields' => false
         ]);
@@ -41,7 +41,7 @@ class EmployeeTrainingCardTable extends AppTable
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -49,8 +49,8 @@ class EmployeeTrainingCardTable extends AppTable
     }
 
     public function onExcelGetIdentityType(Event $event, Entity $entity)
-    {   
-        $userIdentities = TableRegistry::get('user_identities');
+    {
+        $userIdentities = TableRegistry::getTableLocator()->get('User.UserIdentities');
         $userIdentitiesResult = $userIdentities->find()
                 ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
                 ->select([
@@ -59,7 +59,8 @@ class EmployeeTrainingCardTable extends AppTable
                 ])
                 ->where([$userIdentities->aliasField('security_user_id') => $entity->userid])
                 ->order([$userIdentities->aliasField('id DESC')])
-                ->hydrate(false)->toArray();
+                ->disableHydration() // POCOR-8533
+            ->toArray();
                 $entity->custom_identity_number = '';
                 $other_identity_array = [];
                 if (!empty($userIdentitiesResult)) {
@@ -87,8 +88,8 @@ class EmployeeTrainingCardTable extends AppTable
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
-    {   
-        $requestData = json_decode($settings['process']['params']); 
+    {
+        $requestData = json_decode($settings['process']['params']);
         $staffid =  $requestData->guardian_id;
         $join = [];
         $where = [];
@@ -120,7 +121,7 @@ class EmployeeTrainingCardTable extends AppTable
         $join['trainee_institution'] = [
             'type' => 'left',
             'table' => '( SELECT institutions.name, institution_staff.staff_id FROM institution_staff INNER JOIN institutions ON institutions.id = institution_staff.institution_id AND institution_staff.staff_status_id = 1 )',
-            'conditions' => ['trainee_institution.staff_id = TrainingSessionsTrainees.trainee_id'],  
+            'conditions' => ['trainee_institution.staff_id = TrainingSessionsTrainees.trainee_id'],
         ];
         $join['TrainingSessionTraineeResults'] = [
             'type' => 'left',
@@ -138,7 +139,7 @@ class EmployeeTrainingCardTable extends AppTable
         $join[' '] = [
             'type' => 'left',
             'table' => '( SELECT qualification_specialisations.name qualification_specialisations_name ,staff_qualifications.staff_id ,qualification_titles.name qualification_titles_name FROM staff_qualifications INNER JOIN staff_qualifications_specialisations ON staff_qualifications_specialisations.staff_qualification_id = staff_qualifications.id INNER JOIN qualification_specialisations ON qualification_specialisations.id = staff_qualifications_specialisations.qualification_specialisation_id INNER JOIN qualification_titles ON qualification_titles.id = staff_qualifications.qualification_title_id INNER JOIN qualification_levels ON qualification_levels.id = qualification_titles.qualification_level_id WHERE staff_id = '.$staffid.' ORDER BY qualification_levels.order ASC LIMIT 1) AS StaffQualificationInfo ',
-            'conditions' => ['StaffQualificationInfo.staff_id = TrainingSessionsTrainees.trainee_id'],   
+            'conditions' => ['StaffQualificationInfo.staff_id = TrainingSessionsTrainees.trainee_id'],
         ];
 
         $where['SecurityStaffUsers.id'] = $staffid;
@@ -159,12 +160,12 @@ class EmployeeTrainingCardTable extends AppTable
 
         $query->select($selectable);
         // END : Selectable fields
-        $query->where($where); 
+        $query->where($where);
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
         {
             return $results->map(function ($row)
             {
-                $training_session_trainee_results = TableRegistry::get('training_session_trainee_results');
+                $training_session_trainee_results = TableRegistry::getTableLocator()->get('Training.TrainingSessionTraineeResults');
                 $trainingSessionTraineeResultData = $training_session_trainee_results
                                 ->find()
                                 ->where([
@@ -172,9 +173,9 @@ class EmployeeTrainingCardTable extends AppTable
                                     $training_session_trainee_results->aliasField('training_session_id') => $row['training_session_id'],
                                 ])
                                 ->first();
-                                
+
                 if(!empty($trainingSessionTraineeResultData)){
-                    $training_result_types = TableRegistry::get('training_result_types');
+                    $training_result_types = TableRegistry::getTableLocator()->get('Training.TrainingResultTypes');
                     $trainingResultTypesData = $training_result_types->find()->select([
                         'trainingResultTypes_id' => $training_result_types->aliasfield('id'),
                         'trainingResultTypes_name' => $training_result_types->aliasfield('name')
@@ -184,20 +185,20 @@ class EmployeeTrainingCardTable extends AppTable
                             $trainingResultTypes_id = $data->trainingResultTypes_id;
                             $trainingResultTypes_name = $data->trainingResultTypes_name;
                             if($trainingResultTypes_name == 'Exam'){
-                                $row[$this->_dynamicFieldName.'_'.$data->trainingResultTypes_id] = !empty($trainingSessionTraineeResultData->result) ? $trainingSessionTraineeResultData->result : '-'; 
+                                $row[$this->_dynamicFieldName.'_'.$data->trainingResultTypes_id] = !empty($trainingSessionTraineeResultData->result) ? $trainingSessionTraineeResultData->result : '-';
                             }
                             if($trainingResultTypes_name == 'Attendance'){
-                                $row[$this->_dynamicFieldName.'_'.$data->trainingResultTypes_id] = !empty($trainingSessionTraineeResultData->attendance_days) ? $trainingSessionTraineeResultData->attendance_days : '-';  
+                                $row[$this->_dynamicFieldName.'_'.$data->trainingResultTypes_id] = !empty($trainingSessionTraineeResultData->attendance_days) ? $trainingSessionTraineeResultData->attendance_days : '-';
                             }
                             if($trainingResultTypes_name == 'Certificate'){
-                                $row[$this->_dynamicFieldName.'_'.$data->trainingResultTypes_id] = !empty($trainingSessionTraineeResultData->certificate_number) ? $trainingSessionTraineeResultData->certificate_number : '-';  
+                                $row[$this->_dynamicFieldName.'_'.$data->trainingResultTypes_id] = !empty($trainingSessionTraineeResultData->certificate_number) ? $trainingSessionTraineeResultData->certificate_number : '-';
                             }
                             if($trainingResultTypes_name == 'Practical'){
-                                $row[$this->_dynamicFieldName.'_'.$data->trainingResultTypes_id] = !empty($trainingSessionTraineeResultData->practical) ? $trainingSessionTraineeResultData->practical : '-'; 
+                                $row[$this->_dynamicFieldName.'_'.$data->trainingResultTypes_id] = !empty($trainingSessionTraineeResultData->practical) ? $trainingSessionTraineeResultData->practical : '-';
                             }
                         }
                     }
-                }             
+                }
 
                 $fullname = [];
                 $fullname[] = $row['first_name'];
@@ -206,8 +207,8 @@ class EmployeeTrainingCardTable extends AppTable
                 }
                 if(!empty($row['third_name'])){
                     $fullname[] = $row['third_name'];
-                } 
-                $fullname[] = $row['last_name'];  
+                }
+                $fullname[] = $row['last_name'];
 
                 $row['staff_name'] = implode(" ", $fullname);
                 return $row;
@@ -273,12 +274,12 @@ class EmployeeTrainingCardTable extends AppTable
             'label' => __('Training Courses')
         ];
         //START: POCOR-6592 training result types
-        $training_result_types = TableRegistry::get('training_result_types');
+        $training_result_types = TableRegistry::getTableLocator()->get('Training.TrainingResultTypes');
         $trainingResultTypesData = $training_result_types->find()->select([
             'trainingResultTypes_id' => $training_result_types->aliasfield('id'),
             'trainingResultTypes_name' => $training_result_types->aliasfield('name')
         ])->toArray();
-        
+
         if(!empty($trainingResultTypesData)) {
             foreach($trainingResultTypesData as $data) {
                 $trainingResultTypes_id = $data->trainingResultTypes_id;
@@ -299,7 +300,7 @@ class EmployeeTrainingCardTable extends AppTable
     {
         if ($entity->has('status')) {
             $status = $entity->status;
-            
+
             if ($status == self::ACTIVE_STATUS) {
                 return 'Active';
             } else if ($status == self::WITHDRAWN_STATUS) {

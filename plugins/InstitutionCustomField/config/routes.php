@@ -1,7 +1,8 @@
 <?php
 use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/InstitutionCustomFields', ['plugin' => 'InstitutionCustomField'], function ($routes) {
+$routes->scope('/InstitutionCustomFields', ['plugin' => 'InstitutionCustomField'], function (RouteBuilder $routes) {
 	Router::connect('/InstitutionCustomFields', ['plugin' => 'InstitutionCustomField', 'controller' => 'InstitutionCustomFields']);
 	Router::connect('/InstitutionCustomFields/:action/*', ['plugin' => 'InstitutionCustomField', 'controller' => 'InstitutionCustomFields']);
 });

@@ -7,6 +7,8 @@ use Cake\Utility\Inflector;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
 use Cake\I18n\I18n;
+use Cake\Http\ServerRequest;
+use Cake\Http\Session\SessionInterface;
 
 class OpenEmisComponent extends Component
 {
@@ -44,7 +46,7 @@ class OpenEmisComponent extends Component
     ];
 
     // Is called before the controller's beforeFilter method.
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->productName = $config['productName'];
         $this->productLogo = isset($config['productLogo']) ? $config['productLogo'] : null;
@@ -57,11 +59,11 @@ class OpenEmisComponent extends Component
     public function startup(Event $event)
     {
         $controller = $this->controller;
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
 
         $theme = $this->getTheme();
         $controller->set('theme', $theme);
-        $controller->set('homeUrl', $this->config('homeUrl'));
+        $controller->set('homeUrl', $this->getConfig('homeUrl'));
         $controller->set('headerMenu', $this->getHeaderMenu());
         $controller->set('SystemVersion', $this->getCodeVersion());
         $controller->set('footerText', $this->footerText);
@@ -70,19 +72,22 @@ class OpenEmisComponent extends Component
         $controller->set('lastModified', $this->lastModified);
         $brand = Configure::read('schoolMode') ? 'OpenSMIS' : 'OpenEMIS';
         $controller->set('footerBrand', $brand);
-        $controller->set('dateLanguage', I18n::locale());
-
+        //$controller->set('dateLanguage', I18n::locale());
+        $controller->set('dateLanguage', I18n::getLocale());
+ 
         //Retriving the panel width size from session
         if ($session->check('System.layout')) {
+
             $layout = $session->read('System.layout');
             $controller->set('SystemLayout_leftPanel', 'width:'.$layout['panelLeft'].'px');
             $controller->set('SystemLayout_rightPanel', 'width:'.$layout['panelRight'].'px');
         } else {
+
             $controller->set('SystemLayout_leftPanel', 'width: 10%');
             $controller->set('SystemLayout_rightPanel', 'width: 90%');
         }
-        if (file_exists(CONFIG . 'datasource.php')) {
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        if (file_exists(CONFIG . 'app_local.php')) {
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $footer = $ConfigItems->value('footer');
             $controller->set('footerText', $footer);
         }
@@ -92,18 +97,19 @@ class OpenEmisComponent extends Component
     private function getTheme()
     {
         $controller = $this->controller;
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
 
         $theme = 'OpenEmis.themes/';
         $product = '';
         $css = Configure::read('debug') ? '/layout' : '/layout.min';
-        if ($this->config('theme') == 'auto') {
-            $query = $this->request->query;
+        if ($this->getConfig('theme') == 'auto') {
+            $query = $this->request->getQuery();
 
             if (isset($query['theme'])) {
                 $product = $query['theme'];
                 $theme .= $product . $css;
                 $session->write('theme.layout', $theme);
+
                 $session->write('theme.product', $product);
             } else {
                 $theme = $session->read('theme.layout');
@@ -113,29 +119,34 @@ class OpenEmisComponent extends Component
                 $this->productName .= ' ' . Inflector::camelize($product);
             }
         } else {
-            $theme .= $this->config('theme') . $css;
+            $theme .= $this->getConfig('theme') . $css;
         }
         return $theme;
     }
 
     private function getHeaderMenu()
     {
-        $headerMenu = $this->config('headerMenu');
+        $headerMenu = $this->getConfig('headerMenu');
         return $headerMenu;
     }
 
     public function getCodeVersion()
     {
         $path = 'version';
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $version = '';
-
         if (file_exists($path)) {
             $version = file_get_contents($path);
             $session->write('System.version', $version);
         } else if ($session->check('System.version')) {
             $version = $session->read('System.version');
         }
+        
         return $version;
+
     }
+
+    
 }
+
+?>

@@ -3,8 +3,6 @@ namespace System\Model\Table;
 
 use ArrayObject;
 use InvalidArgumentException;
-
-use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -13,12 +11,14 @@ use Cake\Mailer\Email;
 use Cake\I18n\Time;
 use Cake\Http\Client;
 use Cake\Log\Log;
-
+use Cake\Http\ServerRequest;
+use Cake\Http\Response;
+use Cake\Mailer\Mailer;
 use App\Model\Table\ControllerActionTable;
 
 class SystemUpdatesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -30,7 +30,7 @@ class SystemUpdatesTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.updates'] = 'updates';
@@ -61,6 +61,7 @@ class SystemUpdatesTable extends ControllerActionTable
             ->first();
 
         $maxId = $latestVersion->id;
+        
         if ($latestVersion->status == 2) {
             $this->updateAll(
                 [
@@ -79,25 +80,34 @@ class SystemUpdatesTable extends ControllerActionTable
         $api = $domain . '/restful/v2/System-SystemUpdates.json?_fields=id,version,date_released&_limit=50&_order=-id';
 
         $http = new Client();
+
+        // New Code [START]
         $response = $http->get($api);
+        $response = $response->getBody()->getContents();
+        // New Code [END]
+
+        //Old Code[START]
+        // $response = $http->get($api);
+        //Old Code[END]
 
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $supportEmails = $ConfigItems->value('version_support_emails');
         $emails = explode(',', $supportEmails);
-
-        $host = $this->request->env('HTTP_HOST');
+        $request = new ServerRequest();
+        $get_response = new Response();
+        $host = $request->getUri()->getHost();
         $subject = 'Core Upgrade Request Failed - ' . $host;
-
-        if ($response->getStatusCode() == 200) {
-            $jsonResponse = json_decode($response->body(), true);
+        if ($get_response->getStatusCode() == 200) {
+            // $jsonResponse = json_decode($response->body(), true);
+            $jsonResponse = json_decode($response, true);
             $data = array_reverse($jsonResponse['data']);
-
             foreach ($data as $item) {
                 if ($item['id'] > $maxId) {
                     $entity = $this->newEntity([
                         'id' => $item['id'],
                         'version' => $item['version'],
                         'date_released' => $item['date_released'],
+                        'status' => 1, //POCOR-8891
                         'created' => Time::now(),
                     ]);
                     $result = $this->save($entity);
@@ -116,13 +126,12 @@ class SystemUpdatesTable extends ControllerActionTable
 
             $version = trim(file_get_contents(WWW_ROOT . 'version'));
             $entity = $this->find()->where(['version' => $version])->first();
-
             if (!is_null($entity)) {
                 $this->updateAll(
                     [
-                        'date_approved' => $entity->date_released,
-                        'approved_by' => 1,
-                        'status' => 2
+                        'date_approved' => null, //POCOR-8940
+                        'approved_by' => 0, //POCOR-8940
+                        'status' => 1
                     ], [
                         'id <=' => $entity->id,
                         'status' => 1
@@ -149,7 +158,7 @@ class SystemUpdatesTable extends ControllerActionTable
         $extra['toolbarButtons']['changelog'] = $changelogBtn;
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Updates','Updates');       
+		$is_manual_exist = $this->getManualUrl('Administration','Updates','Updates');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -171,8 +180,8 @@ class SystemUpdatesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $queryParams = $this->request->query;
-        if (!array_key_exists('sort', $queryParams)) {
+        $queryParams = $this->request->getQuery();
+        if (!isset($queryParams['sort'])) {
             $query->order([$this->aliasField('date_released') => 'DESC', $this->aliasField('version') => 'DESC']);
         }
 
@@ -181,7 +190,7 @@ class SystemUpdatesTable extends ControllerActionTable
 
             $updateBtn['attr']['title'] = __('Update');
             $updateBtn['label'] = '<i class="fa fa-refresh"></i>';
-            $updateBtn['url'] = ['controller' => $this->controller->name, 'action' => 'Updates', 'updates'];
+            $updateBtn['url'] = ['controller' => $this->controller->getName(), 'action' => 'Updates', 'updates'];
 
             $extra['toolbarButtons']['update'] = $updateBtn;
         }
@@ -193,7 +202,7 @@ class SystemUpdatesTable extends ControllerActionTable
             $name = str_replace('Save', 'Update', $buttons[0]['name']);
             $buttons[0]['name'] = $name;
 
-            $buttons[1]['url'] = ['controller' => $this->controller->name, 'action' => 'Updates', 'index'];
+            $buttons[1]['url'] = ['controller' => $this->controller->getName(), 'action' => 'Updates', 'index'];
         }
     }
 
@@ -210,14 +219,14 @@ class SystemUpdatesTable extends ControllerActionTable
         if ($this->request->is(['post', 'put'])) {
             $emails = explode(',', $supportEmails);
 
-            $host = $this->request->env('HTTP_HOST');
+            $host = $this->request->getEnv('HTTP_HOST');
             $subject = 'Core Upgrade Request - ' . $host;
 
-            $email = new Email('openemis');
+            $email = new Mailer('openemis');//POCOR-8783
             $email
-            ->to($emails)
-            ->subject($subject)
-            ->send($subject);
+                ->setTo($emails) 
+                ->setSubject($subject) 
+                ->deliver($subject); 
 
             $this->updateAll(['date_approved' => Time::now(), 'approved_by' => $this->Auth->user('id'), 'status' => 2], ['status' => 1]);
             $this->Alert->show('Your update request has been submitted.', 'success');
@@ -240,10 +249,38 @@ class SystemUpdatesTable extends ControllerActionTable
                 'element' => 'System.description'
             ]);
 
-            $entity = $this->newEntity();
+            $entity =$this->newEntity([]); //POCOR-8783
 
             $this->controller->set('data', $entity);
             return $entity;
+        }
+    }
+
+     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'version':
+                return __('Version');
+            case 'date_released':
+                return __('Date Released');
+            case 'date_approved':
+                return __('Date Approved');
+            case 'status':
+                return __('Status');
+            case 'approved_by':
+                return __('Approved By');
+            case 'name':
+                return __('Name');
+            case 'international_code':
+                return __('International Code');
+            case 'national_code':
+                return __('National Code');
+            case 'editable':
+                return __('Editable');
+            case 'default':
+                return __('Default');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

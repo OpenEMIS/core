@@ -1,0 +1,761 @@
+@charset "UTF-8";
+@import "./variables.scss";
+
+/* Themes v.1.0.4 */
+
+/*-------- {{ Start of Theme Colors }} --------*/
+
+$analyzerBgColor: #CC3300;
+$assessmentsBgColor: #006699;
+$communityBgColor: #00CCFF;
+$connectBgColor: #666699;
+$coreBgColor: #6699CC;
+$datamanagerBgColor: #993366;
+$dashboardBgColor: #990000;
+$examsBgColor: #003366;
+$identityBgColor: #6666FF;
+$insightBgColor: #9966CC;
+$integratorBgColor: #CC6699;
+$learningBgColor: #0099FF;
+$logisticsBgColor: #003399;
+$modellingBgColor: #FF3366;
+$monitoringBgColor: #CC0066;
+$schoolBgColor: #3366CC;
+$visualizerBgColor: #CC9933;
+$styleguideBgColor: #000000;
+
+$blackBgColor: #000000;
+$blueBgColor: #000033;
+$midnightBlueBgColor: #000066;
+$blueNavyBlueBgColor: #000099;
+$darkWashedBlueBgColor: #0000CC;
+$blue1BgColor: #0000FF;
+$deepFirGreenBgColor: #003300;
+$mainlyGreenBgColor: #003333;
+$darkBlueMidnightBgColor: #003366;
+$blue2BgColor: #003399;
+$kleinBlueBgColor: #0033CC;
+$blue3BgColor: #0033FF;
+$green1BgColor: #006600;
+$green2BgColor: #006633;
+$mosqueGreenBgColor: #006666;
+$ceruleanBlueBgColor: #006699;
+$navyBlue1BgColor: #0066CC;
+$navyBlue2BgColor: #0066FF;
+$green3BgColor: #009900;
+$pigmentGreenBgColor: #009933;
+$shamrockGreenBgColor: #009966;
+$persianGreenBgColor: #009999;
+$pacificBlueBgColor: #0099CC;
+$dodgerBlueBgColor: #0099FF;
+$freeSpeechGreenBgColor: #00CC00;
+$darkPastelGreenBgColor: #00CC33;
+$caribbeanGreenBgColor: #00CC99;
+$freeSpeechGreen1BgColor: #00CC00;
+$deepSkyBlue1BgColor: #00CCFF;
+$limeYellowBgColor: #00FF00;
+$freeSpeechGreen2BgColor: #00FF33;
+$springGreen1BgColor: #00FF66;
+$mediumSpringGreen1BgColor: #00FF99;
+$brightTurquoiseBgColor: #00FFCC;
+$aqua1BgColor: #00FFFF;
+$sealBrownBgColor: #330000;
+$mardiGrasBgColor: #330033;
+$persianIndigoBgColor: #330066;
+$persianIndigo1BgColor: #330099;
+$mediumBlue1BgColor: #3300CC;
+$hanPurpleBgColor: #3300FF;
+$karakaBgColor: #333300;
+$nightRiderBgColor: #333333;
+$deepKoamaruBgColor: #333366;
+$darkSlateBlue1BgColor: #333399;
+$persianBlueBgColor: #3333CC;
+$neonBlueBgColor: #3333FF;
+$verdunGreenBgColor: #336600;
+$sanFelixBgColor: #336633;
+$taxBreakBgColor: #336666;
+$lochmaraBgColor: #336699;
+$royalBlue1BgColor: #3366CC;
+$royalBlue2BgColor: #3366FF;
+$laPalmaBgColor: #339900;
+$forestGreen1BgColor: #339933;
+$eucalyptusBgColor: #339966;
+$javaBgColor: #339999;
+$summerSkyBgColor: #3399CC;
+$dodgerBlue1BgColor: #3399FF;
+$kellyGreenBgColor: #33CC00;
+$limeGreen1BgColor: #33CC33;
+$mediumSeaGreen1BgColor: #33CC66;
+$shamrockBgColor: #33CC99;
+$mediumTurquoise1BgColor: #33CCCC;
+$summerSky1BgColor: #33CCFF;
+$harlequinBgColor: #33FF00;
+$limeGreen2BgColor: #33FF33;
+$screaminGreenBgColor: #33FF66;
+$mediumSpringGreen2BgColor: #33FF99;
+$turquoise1BgColor: #33FFCC;
+$aqua2BgColor: #33FFFF;
+$maroon1BgColor: #660000;
+$tyrianPurpleBgColor: #660033;
+$purple1BgColor: #660066;
+$indigo1BgColor: #660099;
+$purpleHeartBgColor: #6600CC;
+$electricIndigoBgColor: #6600FF;
+$bakersChocolateBgColor: #663300;
+$persianPlumBgColor: #663333;
+$seanceBgColor: #663366;
+$royalPurpleBgColor: #663399;
+$purpleHeart1BgColor: #6633CC;
+$hanPurple1BgColor: #6633FF;
+$oliveGreenBgColor: #666600;
+$verdigrisBgColor: #666633;
+$dimGray1BgColor: #666666;
+$scampiBgColor: #666699;
+$slateBlue1BgColor: #6666CC;
+$mediumSlateBlue1BgColor: #6666FF;
+$christiBgColor: #669900;
+$limeadeBgColor: #669933;
+$laurelBgColor: #669966;
+$cadetBlue1BgColor: #669999;
+$pictonBlueBgColor: #6699CC;
+$cornFlowerBlue1BgColor: #6699FF;
+$kellyGreen1BgColor: #66CC00;
+$appleBgColor: #66CC33;
+$fernBgColor: #66CC66;
+$silverTreeBgColor: #66CC99;
+$downyBgColor: #66CCCC;
+$mayaBlueBgColor: #66CCFF;
+$brightGreenBgColor: #66FF00;
+$brightGreen1BgColor: #66FF33;
+$screaminGreen1BgColor: #66FF66;
+$lightGreen1BgColor: #66FF99;
+$aquamarine1BgColor: #66FFCC;
+$babyBlueBgColor: #66FFFF;
+$darkRed1BgColor: #990000;
+$carmineBgColor: #990033;
+$eggplantBgColor: #990066;
+$darkMagenta1BgColor: #990099;
+$darkViolet1BgColor: #9900CC;
+$electricPurpleBgColor: #9900FF;
+$saddleBrown1BgColor: #993300;
+$milanoRedBgColor: #993333;
+$lipstickBgColor: #993366;
+$vividVioletBgColor: #993399;
+$darkOrchid1BgColor: #9933CC;
+$blueViolet1BgColor: #9933FF;
+$goldenBrownBgColor: #996600;
+$maiTaiBgColor: #996633;
+$copperRoseBgColor: #996666;
+$violetBlueBgColor: #996699;
+$amethystBgColor: #9966CC;
+$lightSlateBlueBgColor: #9966FF;
+$citrusBgColor: #999900;
+$highballBgColor: #999933;
+$avocadoBgColor: #999966;
+$nobelBgColor: #999999;
+$blueBellBgColor: #9999CC;
+$portageBgColor: #9999FF;
+$citrus1BgColor: #99CC00;
+$yellowGreen1BgColor: #99CC33;
+$olivineBgColor: #99CC66;
+$darkSeaGreen1BgColor: #99CC99;
+$morningGloryBgColor: #99CCCC;
+$lightSkyBlue1BgColor: #99CCFF;
+$springBudBgColor: #99FF00;
+$greenYellow1BgColor: #99FF33;
+$feijoaBgColor: #99FF66;
+$mintGreenBgColor: #99FF99;
+$magicMintBgColor: #99FFCC;
+$electricBlueBgColor: #99FFFF;
+$freeSpeechRedBgColor: #CC0000;
+$crimson1BgColor: #CC0033;
+$ruby1BgColor: #CC0066;
+$mediumVioletRed1BgColor: #CC0099;
+$deepMagentaBgColor: #CC00CC;
+$electricPurple1BgColor: #CC00FF;
+$harleyDavidsonOrangeBgColor: #CC3300;
+$persianRedBgColor: #CC3333;
+$ceriseBgColor: #CC3366;
+$deepCeriseBgColor: #CC3399;
+$fuchsia1BgColor:#CC3399;
+$electricPurple2BgColor: #CC33FF;
+$tenneBgColor: #CC6600;
+$ecstasyBgColor: #CC6633;
+$indianRed1BgColor: #CC6666;
+$hopbushBgColor: #CC6699;
+$orchid1BgColor: #CC66CC;
+$heliotropeBgColor: #CC66FF;
+$gambogeBgColor: #CC9900;
+$fuelYellowBgColor: #CC9933;
+$fallowBgColor: #CC9966;
+$petiteOrchidBgColor: #CC9999;
+$lilacBgColor: #CC99CC;
+$mauveBgColor: #CC99FF;
+$laRiojaBgColor: #CCCC00;
+$wattleBgColor: #CCCC33;
+$wildWillowBgColor: #CCCC66;
+$greenMistBgColor: #CCCC99;
+$veryLightGrayBgColor: #CCCCCC;
+$lavenderBlueBgColor: #CCCCFF;
+$electricLimeBgColor: #CCFF00;
+$pearBgColor: #CCFF33;
+$mindaroBgColor: #CCFF66;
+$reefBgColor: #CCFF99;
+$blueRomanceBgColor: #CCFFCC;
+$lightCyan1BgColor: #CCFFFF;
+$red1BgColor: #FF0000;
+$torchRedBgColor: #FF0033;
+$razzmatazzBgColor: #FF0066;
+$hollywoodCeriseBgColor: #FF0099;
+$hotMagentaBgColor: #FF00CC;
+$magenta1BgColor: #FF00FF;
+$scarletBgColor: #FF3300;
+$redOrangeBgColor: #FF3333;
+$radicalRedBgColor: #FF3366;
+$wildStrawberryBgColor: #FF3399;
+$razzleDazzleRoseBgColor: #FF33CC;
+$magenta2BgColor: #FF33FF;
+$safetyOrangeBgColor: #FF6600;
+$outrageousOrangeBgColor: #FF6633;
+$bittersweetBgColor: #FF6666;
+$brilliantRoseBgColor: #FF6699;
+$neonPinkBgColor: #FF66CC;
+$pinkFlamingoBgColor: #FF66FF;
+$orangePeelBgColor: #FF9900;
+$neonCarrotBgColor: #FF9933;
+$atomicTangerineBgColor: #FF9966;
+$monaLisaBgColor: #FF9999;
+$carnationPinkBgColor: #FF99CC;
+$violet1BgColor: #FF99FF;
+$tangerineYellowBgColor: #FFCC00;
+$sunglowBgColor: #FFCC33;
+$grandisBgColor: #FFCC66;
+$peachOrangeBgColor: #FFCC99;
+$cosmosBgColor: #FFCCCC;
+$snuffBgColor: #FFCCFF;
+$yellow1BgColor: #FFFF00;
+$gorseBgColor: #FFFF33;
+$laserLemonBgColor: #FFFF66;
+$canaryBgColor: #FFFF99;
+$cream1BgColor: #FFFFCC;
+$white1BgColor: #FFFFFF;
+
+$analyzerBg: "../../img/background-image/login/bg-visualizer.jpg";
+// $assessmentsBg: "../../img/background-image/login/bg-assessments.jpg";
+$assessmentsBg : "../../img/background-image/login/bg-assessments.jpg";
+$communityBg: "";
+$connectBg: "";
+$coreBg: "../../img/background-image/login/bg-core.jpg";
+$datamanagerBg: "../../img/background-image/login/bg-datamanager.jpg";
+$dashboardBg: "../../img/background-image/login/bg-dashboard.jpg";
+$examsBg: "../../img/background-image/login/bg-exams.jpg";
+$identityBg: "../../img/background-image/login/bg-identity.jpg";
+$insightBg: "../../img/background-image/login/bg-insight.jpg";
+$integratorBg: "../../img/background-image/login/bg-integrator.jpg";
+$learningBg: "";
+$logisticsBg: "../../img/background-image/login/bg-logistics.jpg";
+$modellingBg: "";
+$monitoringBg: "";
+$schoolBg: "../../img/background-image/login/bg-school.jpg";
+$visualizerBg: "../../img/background-image/login/bg-visualizer.jpg";
+$styleguideBg: "";
+
+$themes: (analyzer, $analyzerBgColor, $analyzerBg, false),
+(assessments, $assessmentsBgColor, $assessmentsBg, false),
+(community, $communityBgColor, $communityBg, false),
+(connect, $connectBgColor, $connectBg, false),
+(core, $coreBgColor, $coreBg, false),
+(datamanager, $datamanagerBgColor, $datamanagerBg, false),
+(dashboard, $dashboardBgColor, $dashboardBg, false),
+(exams, $examsBgColor, $examsBg, false),
+(identity, $identityBgColor, $identityBg, false),
+(insight, $insightBgColor, $insightBg, false),
+(integrator, $integratorBgColor, $integratorBg, false),
+(learning, $learningBgColor, $learningBg, false),
+(logistics, $logisticsBgColor, $logisticsBg, false),
+(modelling, $modellingBgColor, $modellingBg, false),
+(monitoring, $monitoringBgColor, $monitoringBg, false),
+(school, $schoolBgColor, $schoolBg, false),
+(visualizer, $visualizerBgColor, $visualizerBg, false),
+
+(darkBlack, $blackBgColor, $styleguideBg, false),
+(mainlyBlue, $blueBgColor, $styleguideBg, false),
+(navyMidnightBlue, $midnightBlueBgColor, $styleguideBg, false),
+(blueNavyBlue, $blueNavyBlueBgColor, $styleguideBg, false),
+(darkWashedBlue, $darkWashedBlueBgColor, $styleguideBg, false),
+(blue1, $blue1BgColor, $styleguideBg, false),
+(deepFirGreen, $deepFirGreenBgColor, $styleguideBg, false),
+(mainlyGreen, $mainlyGreenBgColor, $styleguideBg, false),
+(darkBlueMidnight, $darkBlueMidnightBgColor, $styleguideBg, false),
+(blue2, $blue2BgColor, $styleguideBg, false),
+(kleinBlue, $kleinBlueBgColor, $styleguideBg, false),
+(blue3, $blue3BgColor, $styleguideBg, false),
+(green1, $green1BgColor, $styleguideBg, false),
+(green2, $green2BgColor, $styleguideBg, false),
+(mosqueGreen, $mosqueGreenBgColor, $styleguideBg, false),
+(ceruleanBlue, $ceruleanBlueBgColor, $styleguideBg, false),
+(navyBlue1, $navyBlue1BgColor, $styleguideBg, false),
+(navyBlue2, $navyBlue2BgColor, $styleguideBg, false),
+(green3, $green3BgColor, $styleguideBg, false),
+(pigmentGreen, $pigmentGreenBgColor, $styleguideBg, false),
+(shamrockGreen, $shamrockGreenBgColor, $styleguideBg, false),
+(persianGreen, $persianGreenBgColor, $styleguideBg, false),
+(pacificBlue, $pacificBlueBgColor, $styleguideBg, false),
+(dodgerBlue1,$dodgerBlueBgColor, $styleguideBg, false),
+(freeSpeechGreen, $freeSpeechGreenBgColor, $styleguideBg, false),
+(darkPastelGreen, $darkPastelGreenBgColor, $styleguideBg, false),
+(caribbeanGreen, $caribbeanGreenBgColor, $styleguideBg, false),
+(freeSpeechGreen1, $freeSpeechGreen1BgColor, $styleguideBg, false),
+(deepSkyBlue1, $deepSkyBlue1BgColor, $styleguideBg, false),
+(limeYellow, $limeYellowBgColor, $styleguideBg, false),
+(freeSpeechGreen2, $freeSpeechGreen2BgColor, $styleguideBg, false),
+(springGreen1, $springGreen1BgColor, $styleguideBg, false),
+(mediumSpringGreen1, $mediumSpringGreen1BgColor, $styleguideBg, false),
+(brightTurquoise, $brightTurquoiseBgColor, $styleguideBg, false),
+(aqua1, $aqua1BgColor, $styleguideBg, false),
+(sealBrown, $sealBrownBgColor, $styleguideBg, false),
+(mardiGras, $mardiGrasBgColor, $styleguideBg, false),
+(persianIndigo, $persianIndigoBgColor, $styleguideBg, false),
+(persianIndigo1, $persianIndigo1BgColor, $styleguideBg, false),
+(mediumBlue1, $mediumBlue1BgColor, $styleguideBg, false),
+(hanPurple, $hanPurpleBgColor, $styleguideBg, false),
+(karaka, $karakaBgColor, $styleguideBg, false),
+(nightRider, $nightRiderBgColor, $styleguideBg, false),
+(deepKoamaru, $deepKoamaruBgColor, $styleguideBg, false),
+(darkSlateBlue1, $darkSlateBlue1BgColor, $styleguideBg, false),
+(persianBlue, $persianBlueBgColor, $styleguideBg, false),
+(neonBlue, $neonBlueBgColor, $styleguideBg, false),
+(verdunGreen, $verdunGreenBgColor, $styleguideBg, false),
+(sanFelix, $sanFelixBgColor, $styleguideBg, false),
+(taxBreak, $taxBreakBgColor, $styleguideBg, false),
+(lochmara, $lochmaraBgColor, $styleguideBg, false),
+(royalBlue1, $royalBlue1BgColor, $styleguideBg, false),
+(royalBlue2, $royalBlue2BgColor, $styleguideBg, false),
+(laPalma, $laPalmaBgColor, $styleguideBg, false),
+(forestGreen1, $forestGreen1BgColor, $styleguideBg, false),
+(eucalyptus, $eucalyptusBgColor, $styleguideBg, false),
+(java, $javaBgColor, $styleguideBg, false),
+(summerSky, $summerSkyBgColor, $styleguideBg, false),
+(dodgerBlue1, $dodgerBlue1BgColor, $styleguideBg, false),
+(kellyGreen, $kellyGreenBgColor, $styleguideBg, false),
+(limeGreen1, $limeGreen1BgColor, $styleguideBg, false),
+(mediumSeaGreen1, $mediumSeaGreen1BgColor, $styleguideBg, false),
+(shamrock, $shamrockBgColor, $styleguideBg, false),
+(mediumTurquoise1, $mediumTurquoise1BgColor, $styleguideBg, false),
+(summerSky1, $summerSky1BgColor, $styleguideBg, false),
+(harlequin, $harlequinBgColor, $styleguideBg, false),
+(limeGreen2, $limeGreen2BgColor, $styleguideBg, false),
+(screaminGreen, $screaminGreenBgColor, $styleguideBg, false),
+(mediumSpringGreen2, $mediumSpringGreen2BgColor, $styleguideBg, false),
+(turquoise1, $turquoise1BgColor, $styleguideBg, false),
+(aqua2, $aqua2BgColor, $styleguideBg, false),
+(maroon1, $maroon1BgColor, $styleguideBg, false),
+(tyrianPurple, $tyrianPurpleBgColor, $styleguideBg, false),
+(purple1, $purple1BgColor, $styleguideBg, false),
+(indigo1, $indigo1BgColor, $styleguideBg, false),
+(purpleHeart, $purpleHeartBgColor, $styleguideBg, false),
+(electricIndigo, $electricIndigoBgColor, $styleguideBg, false),
+(bakersChocolate, $bakersChocolateBgColor, $styleguideBg, false),
+(persianPlum, $persianPlumBgColor, $styleguideBg, false),
+(seance, $seanceBgColor, $styleguideBg, false),
+(royalPurple, $royalPurpleBgColor, $styleguideBg, false),
+(purpleHeart1, $purpleHeart1BgColor, $styleguideBg, false),
+(hanPurple1, $hanPurple1BgColor, $styleguideBg, false),
+(oliveGreen, $oliveGreenBgColor, $styleguideBg, false),
+(verdigris, $verdigrisBgColor, $styleguideBg, false),
+(dimGray1, $dimGray1BgColor, $styleguideBg, false),
+(scampi, $scampiBgColor, $styleguideBg, false),
+(slateBlue1, $slateBlue1BgColor, $styleguideBg, false),
+(mediumSlateBlue1, $mediumSlateBlue1BgColor, $styleguideBg, false),
+(christi, $christiBgColor, $styleguideBg, false),
+(limeade, $limeadeBgColor, $styleguideBg, false),
+(laurel, $laurelBgColor, $styleguideBg, false),
+(cadetBlue1, $cadetBlue1BgColor, $styleguideBg, false),
+(pictonBlue, $pictonBlueBgColor, $styleguideBg, false),
+(cornFlowerBlue1, $cornFlowerBlue1BgColor, $styleguideBg, false),
+(kellyGreen1, $kellyGreen1BgColor, $styleguideBg, false),
+(apple, $appleBgColor, $styleguideBg, false),
+(fern, $fernBgColor, $styleguideBg, false),
+(silverTree, $silverTreeBgColor, $styleguideBg, false),
+(downy, $downyBgColor, $styleguideBg, false),
+(mayaBlue, $mayaBlueBgColor, $styleguideBg, false),
+(brightGreen, $brightGreenBgColor, $styleguideBg, false),
+(brightGreen1, $brightGreen1BgColor, $styleguideBg, false),
+(screaminGreen1, $screaminGreen1BgColor, $styleguideBg, false),
+(lightGreen1, $lightGreen1BgColor, $styleguideBg, false),
+(aquamarine1, $aquamarine1BgColor, $styleguideBg, false),
+(babyBlue, $babyBlueBgColor, $styleguideBg, false),
+(darkRed1, $darkRed1BgColor, $styleguideBg, false),
+(carmine, $carmineBgColor, $styleguideBg, false),
+(eggplant, $eggplantBgColor, $styleguideBg, false),
+(darkMagenta1, $darkMagenta1BgColor, $styleguideBg, false),
+(darkViolet1, $darkViolet1BgColor, $styleguideBg, false),
+(electricPurple, $electricPurpleBgColor, $styleguideBg, false),
+(saddleBrown1, $saddleBrown1BgColor, $styleguideBg, false),
+(milanoRed, $milanoRedBgColor, $styleguideBg, false),
+(lipstick, $lipstickBgColor, $styleguideBg, false),
+(vividViolet, $vividVioletBgColor, $styleguideBg, false),
+(darkOrchid1, $darkOrchid1BgColor, $styleguideBg, false),
+(blueViolet1, $blueViolet1BgColor, $styleguideBg, false),
+(goldenBrown, $goldenBrownBgColor, $styleguideBg, false),
+(maiTai, $maiTaiBgColor, $styleguideBg, false),
+(copperRose, $copperRoseBgColor, $styleguideBg, false),
+(violetBlue, $violetBlueBgColor, $styleguideBg, false),
+(amethyst, $amethystBgColor, $styleguideBg, false),
+(lightSlateBlue, $lightSlateBlueBgColor, $styleguideBg, false),
+(citrus, $citrusBgColor, $styleguideBg, false),
+(highball, $highballBgColor, $styleguideBg, false),
+(avocado, $avocadoBgColor, $styleguideBg, false),
+(nobel, $nobelBgColor, $styleguideBg, false),
+(blueBell, $blueBellBgColor, $styleguideBg, false),
+(portage, $portageBgColor, $styleguideBg, false),
+(citrus1, $citrus1BgColor, $styleguideBg, false),
+(yellowGreen1, $yellowGreen1BgColor, $styleguideBg, false),
+(olivine, $olivineBgColor, $styleguideBg, false),
+(darkSeaGreen1, $darkSeaGreen1BgColor, $styleguideBg, false),
+(morningGlory, $morningGloryBgColor, $styleguideBg, false),
+(lightSkyBlue1, $lightSkyBlue1BgColor, $styleguideBg, false),
+(springBud, $springBudBgColor, $styleguideBg, false),
+(greenYellow1, $greenYellow1BgColor, $styleguideBg, false),
+(feijoa, $feijoaBgColor, $styleguideBg, false),
+(mintGreen, $mintGreenBgColor, $styleguideBg, false),
+(magicMint, $magicMintBgColor, $styleguideBg, false),
+(electricBlue, $electricBlueBgColor, $styleguideBg, false),
+(freeSpeechRed, $freeSpeechRedBgColor, $styleguideBg, false),
+(crimson1, $crimson1BgColor, $styleguideBg, false),
+(ruby1, $ruby1BgColor, $styleguideBg, false),
+(mediumVioletRed1, $mediumVioletRed1BgColor, $styleguideBg, false),
+(deepMagenta, $deepMagentaBgColor, $styleguideBg, false),
+(electricPurple1, $electricPurple1BgColor, $styleguideBg, false),
+(harleyDavidsonOrange, $harleyDavidsonOrangeBgColor, $styleguideBg, false),
+(persianRed, $persianRedBgColor, $styleguideBg, false),
+(cerise, $ceriseBgColor, $styleguideBg, false),
+(deepCerise, $deepCeriseBgColor, $styleguideBg, false),
+(fuchsia1, $fuchsia1BgColor, $styleguideBg, false),
+(electricPurple2, $electricPurple2BgColor, $styleguideBg, false),
+(tenne, $tenneBgColor, $styleguideBg, false),
+(ecstasy, $ecstasyBgColor, $styleguideBg, false),
+(indianRed1, $indianRed1BgColor, $styleguideBg, false),
+(hopbush, $hopbushBgColor, $styleguideBg, false),
+(orchid1, $orchid1BgColor, $styleguideBg, false),
+(heliotrope, $heliotropeBgColor, $styleguideBg, false),
+(gamboge, $gambogeBgColor, $styleguideBg, false),
+(fuelYellow, $fuelYellowBgColor, $styleguideBg, false),
+(fallow, $fallowBgColor, $styleguideBg, false),
+(petiteOrchid, $petiteOrchidBgColor, $styleguideBg, false),
+(lilac, $lilacBgColor, $styleguideBg, false),
+(mauve, $mauveBgColor, $styleguideBg, false),
+(laRioja, $laRiojaBgColor, $styleguideBg, false),
+(wattle, $wattleBgColor, $styleguideBg, false),
+(wildWillow, $wildWillowBgColor, $styleguideBg, false),
+(greenMist, $greenMistBgColor, $styleguideBg, false),
+(veryLightGray, $veryLightGrayBgColor, $styleguideBg, false),
+(lavenderBlue, $lavenderBlueBgColor, $styleguideBg, false),
+(electricLime, $electricLimeBgColor, $styleguideBg, false),
+(pear, $pearBgColor, $styleguideBg, false),
+(mindaro, $mindaroBgColor, $styleguideBg, false),
+(reef, $reefBgColor, $styleguideBg, false),
+(blueRomance, $blueRomanceBgColor, $styleguideBg, false),
+(lightCyan1, $lightCyan1BgColor, $styleguideBg, false),
+(red1, $red1BgColor, $styleguideBg, false),
+(torchRed, $torchRedBgColor, $styleguideBg, false),
+(razzmatazz, $razzmatazzBgColor, $styleguideBg, false),
+(hollywoodCerise, $hollywoodCeriseBgColor, $styleguideBg, false),
+(hotMagenta, $hotMagentaBgColor, $styleguideBg, false),
+(magenta1, $magenta1BgColor, $styleguideBg, false),
+(scarlet, $scarletBgColor, $styleguideBg, false),
+(redOrange, $redOrangeBgColor, $styleguideBg, false),
+(radicalRed, $radicalRedBgColor, $styleguideBg, false),
+(wildStrawberry, $wildStrawberryBgColor, $styleguideBg, false),
+(razzleDazzleRose, $razzleDazzleRoseBgColor, $styleguideBg, false),
+(magenta2, $magenta2BgColor, $styleguideBg, false),
+(safetyOrange, $safetyOrangeBgColor, $styleguideBg, false),
+(outrageousOrange, $outrageousOrangeBgColor, $styleguideBg, false),
+(bittersweet, $bittersweetBgColor, $styleguideBg, false),
+(brilliantRose, $brilliantRoseBgColor, $styleguideBg, false),
+(neonPink, $neonPinkBgColor, $styleguideBg, false),
+(pinkFlamingo, $pinkFlamingoBgColor, $styleguideBg, false),
+(orangePeel, $orangePeelBgColor, $styleguideBg, false),
+(neonCarrot, $neonCarrotBgColor, $styleguideBg, false),
+(atomicTangerine, $atomicTangerineBgColor, $styleguideBg, false),
+(monaLisa, $monaLisaBgColor, $styleguideBg, false),
+(carnationPink, $carnationPinkBgColor, $styleguideBg, false),
+(violet1, $violet1BgColor, $styleguideBg, false),
+(tangerineYellow, $tangerineYellowBgColor, $styleguideBg, false),
+(sunglow, $sunglowBgColor, $styleguideBg, false),
+(grandis, $grandisBgColor, $styleguideBg, false),
+(peachOrange, $peachOrangeBgColor, $styleguideBg, false),
+(cosmos, $cosmosBgColor, $styleguideBg, false),
+(snuff, $snuffBgColor, $styleguideBg, false),
+(yellow1, $yellow1BgColor, $styleguideBg, false),
+(gorse, $gorseBgColor, $styleguideBg, false),
+(laserLemon, $laserLemonBgColor, $styleguideBg, false),
+(canary, $canaryBgColor, $styleguideBg, false),
+(cream1, $cream1BgColor, $styleguideBg, false),
+(white1, $white1BgColor, $styleguideBg, false),
+
+(styleguide, $styleguideBgColor, $styleguideBg, true);
+
+
+@each $productName,
+$color,
+$bgImg,
+$isMixWhite in $themes {
+
+    .openemis-#{$productName},
+    body {
+        //BACKGROUND
+        .kdx-navbar,
+        .btn,
+        .dropdown-menu .btn,
+        .content-area .btn-text,
+        .btn-color,
+        .toolbar .btn-icon:before,
+        .progressbar-wrapper .progress-bar {
+            background-color: $color;
+        }
+        .kdx-login .kdx-body-wrapper {
+            @if $bgImg !='' {
+                background-image: url($bgImg);
+            }
+            @else {
+                background-color: $lightGreyColor;
+                background-image: none;
+            }
+            .kdx-login-container .kdx-title {
+                background-color: $color;
+            }
+        }
+        .kdx-input-autocomplete .ui-state-highlight,
+        .kdx-input-autocomplete .ui-widget-content .ui-state-highlight,
+        .kdx-input-autocomplete .ui-widget-header .ui-state-highlight,
+        .kdx-text-input .ui-state-highlight,
+        .kdx-text-input .ui-widget-content .ui-state-highlight,
+        .kdx-text-input .ui-widget-header .ui-state-highlight,
+        .kdx-input-with-btn+.kdx-input-loader-wrapper,
+        .rtl .kdx-input-with-btn+.kdx-input-loader-wrapper,
+        .kdx-text-input .ui-autocomplete-dd .ui-autocomplete-dropdown.ui-corner-all,
+        .kdx-wizard .kdx-step-selected .kdx-step-icon,
+        .kdx-slider .kdx-slider-track-fill,
+        .kdx-slider .kdx-slider-thumb,
+        .kdx-slider .kdx-sliderthumb:before {
+            background-color: $color !important;
+        }
+
+        .kdx-mindmap .kdx-mindmap-node.kdx-mindmap-node-active .kdx-mindmap-node-wrapper,
+        .kdx-mindmap .kdx-mindmap-link.kdx-mindmap-link-active {
+            stroke: $color !important;
+        }
+
+        .kdx-mindmap #arrowEndActive.kdx-mindmap-link-active,
+        .kdx-mindmap #arrowStartActive.kdx-mindmap-link-active {
+            fill: $color !important;
+        }
+
+        .btn:hover,
+        .btn-color:hover,
+        .btn-text,
+        .btn-outline:hover,
+        .content-area .btn-text:hover,
+        .dropdown-menu .btn:hover,
+        .kdx-navbar .kdx-btn-group-wrapper .btn-group:hover,
+        .kdx-navbar .kdx-btn-group-wrapper .btn-group .btn:hover,
+        .kdx-navbar .kdx-user-profile .btn:hover,
+        .kdx-left-menu .panel-group .nav li a:hover,
+        .kdx-tabs .scroll-left:hover,
+        .kdx-tabs .scroll-right:hover,
+        .action-btn:hover,
+        .action-btn:active,
+        .action-btn:focus,
+        .ui-autocomplete-dd .ui-autocomplete-dropdown.ui-corner-all:hover,
+        .ui-autocomplete-dd .ui-autocomplete-dropdown.ui-corner-all:focus,
+        .kdx-calendar .cal-month-view .cal-day-cell.cal-today .cal-day-number {
+            background-color: getMixColor($isMixWhite, $color);
+        } //BORDER
+        .kdx-tabs .scroll-left:hover,
+        .kdx-tabs .scroll-right:hover,
+        .kdx-calendar .cal-month-view .cal-day-cell.cal-today .cal-day-number {
+            border: 1px solid getMixColor($isMixWhite, $color);
+        }
+        .ag-filter-checkbox .ag-icon-checkbox-unchecked:before,
+        .ag-filter-checkbox .ag-icon-checkbox-indeterminate:before,
+        .ag-filter-checkbox .ag-icon-checkbox-checked:before,
+        [type="checkbox"]:checked:hover+label:before,
+        [type="checkbox"]:not(:checked):hover+label:before,
+        [type="checkbox"]:checked:hover+.ag-cell-value:before,
+        [type="checkbox"]:not(:checked):hover+.ag-cell-value:before,
+        [type="checkbox"]:checked:hover+.ag-filter-value:before,
+        [type="checkbox"]:not(:checked):hover+.ag-filter-value:before,
+        [type="radio"]:checked:hover+label:before,
+        [type="radio"]:not(:checked):hover+label:before,
+        [type="radio"]:checked:hover+.ag-cell-value:before,
+        [type="radio"]:not(:checked):hover+.ag-cell-value:before,
+        [type="radio"]:checked:hover+.ag-filter-value:before,
+        [type="radio"]:not(:checked):hover+.ag-filter-value:before,
+        [type="checkbox"]:checked+label:before,
+        [type="checkbox"]:checked+.ag-cell-value:before,
+        [type="checkbox"]:checked+.ag-filter-value:before,
+        [type="radio"]:checked+label:before,
+        [type="radio"]:checked+.ag-cell-value:before,
+        [type="radio"]:checked+.ag-filter-value:before,
+        .kdx-table .stg-theme .ag-tool-panel .ag-icon-checkbox-checked,
+        .kdx-table .stg-theme .ag-tool-panel .ag-icon-checkbox-unchecked,
+        .kdx-table .stg-theme .ag-tool-panel .ag-icon-checkbox-indeterminate,
+        .kdx-table .stg-theme .ag-tool-panel .ag-column-drop span.ag-column-drop-cell {
+            border: 1px solid getMixColor($isMixWhite, $color) !important;
+        }
+        [type="checkbox"]+label:hover:before,
+        [type="radio"]+label:hover:before,
+        .ag-cell-value:hover:before {
+            border: 1px solid $color !important;
+        }
+        .input-single-btn .btn:hover,
+        .input-double-btn .btn:hover {
+            border-right: 1px solid getMixColor($isMixWhite, $color);
+        }
+        .ag-paging-button:hover,
+        .action-btn:hover {
+            border: 1px solid getMixColor($isMixWhite, $color) !important;
+        } //BACKGROUND + BORDER + COLOR
+        .btn-outline,
+        .kdx-page-header .btn,
+        .toolbar .btn,
+        .kdx-search-wrapper .kdx-search-icon:hover {
+            background-color: $whiteColor;
+            border: 1px solid getMixColor($isMixWhite, $color);
+            &:hover {
+                background-color: getMixColor($isMixWhite, $color) !important;
+                color: $whiteColor !important;
+            }
+        }
+
+        .btn-outline:not(:disabled):not(.disabled).active,
+        .btn-outline:not(:disabled):not(.disabled):active{
+            background-color: $color;
+            @if $isMixWhite==true {
+                color: $whiteColor !important;
+            }
+        }
+        .kdx-tabs .nav-item a:hover,
+        .ag-paging-button:hover,
+        .kdx-text-input .ui-state-highlight:hover,
+        .kdx-text-input .ui-widget-content .ui-state-highlight:hover,
+        .kdx-text-input .ui-widget-header .ui-state-highlight:hover {
+            background-color: getMixColor($isMixWhite, $color) !important;
+            border: 1px solid getMixColor($isMixWhite, $color);
+            color: $whiteColor !important;
+        } //COLOR
+        .btn-outline:hover,
+        .toolbar .btn-icon:hover,
+        .dropdown-item:hover,
+        ngb-datepicker.dropdown-menu table td .bg-primary,
+        ngb-datepicker table td .bg-primary:hover,
+        .input-single-btn .btn:hover,
+        .input-single-btn .btn:focus,
+        .input-double-btn .btn:hover,
+        .input-double-btn .btn:focus,
+        .btn:focus,
+        .btn-icon:focus,
+        .btn-text:focus,
+        .kdx-text-input .ui-autocomplete-dd .ui-autocomplete-dropdown.ui-corner-all:hover,
+        ngb-datepicker.dropdown-menu .ngb-dp-day .bg-primary,
+        &>.ui-menu .ui-menuitem-link:hover {
+            background-color: getMixColor($isMixWhite, $color) !important;
+            color: $whiteColor !important;
+        }
+        .important-note a,
+        .kdx-navbar .kdx-user-thumbnail i,
+        .panel-breadcrumb li a:hover,
+        .breadcrumb.panel-breadcrumb li a:hover,
+        .openemis-icon,
+        .ui-treenode-label label,
+        .kdx-table .stg-theme .ag-tool-panel .ag-icon-checkbox-checked:before,
+        .kdx-table .stg-theme .ag-tool-panel .ag-icon-checkbox-unchecked:before,
+        .kdx-table .stg-theme .ag-tool-panel .ag-icon-checkbox-indeterminate:before,
+        .kdx-table .stg-theme .ag-tool-panel .ag-column-drop span.ag-column-drop-cell {
+            color: $color;
+        }
+
+        .kdx-wizard .step-selected .step-label,
+        .kdx-visualization .kdx-visualization-menu-item-wrapper {
+            color: $color !important;
+        }
+
+        .section-header h6 {
+            color: getMixColor($isMixWhite, $color);
+        }
+        .toolbar .btn-icon,
+        .btn-outline,
+        .panel-breadcrumb li a,
+        .breadcrumb.panel-breadcrumb li a,
+        .kdx-page-header .btn,
+        .toolbar .btn,
+        .kdx-tabs .scroll-left,
+        .kdx-tabs .scroll-right,
+        .ag-filter-checkbox .ag-icon-checkbox-unchecked:after,
+        .ag-filter-checkbox .ag-icon-checkbox-indeterminate:after,
+        .ag-filter-checkbox .ag-icon-checkbox-checked:after,
+        [type="checkbox"]:not(:checked)+label:after,
+        [type="checkbox"]:checked+label:after,
+        [type="checkbox"]:not(:checked)+.ag-cell-value:after,
+        [type="checkbox"]:checked+.ag-cell-value:after,
+        [type="checkbox"]:not(:checked)+.ag-filter-value:after,
+        [type="checkbox"]:checked+.ag-filter-value:after,
+        [type="radio"]:not(:checked)+label:after,
+        [type="radio"]:checked+label:after,
+        [type="radio"]:not(:checked)+.ag-cell-value:after,
+        [type="radio"]:checked+.ag-cell-value:after,
+        [type="radio"]:not(:checked)+.ag-filter-value:after,
+        [type="radio"]:checked+.ag-filter-value:after,
+        .ag-paging-button,
+        .kdx-timepicker .kdx-timepicker-wrapper .ngb-tp .chevron.bottom:after,
+        .kdx-timepicker .kdx-timepicker-wrapper .ngb-tp .chevron:after,
+        ngb-datepicker.ngb-dp-navigation-chevron,
+        ngb-datepicker.ngb-dp-day .btn-light:hover,
+        .ui-treenode-label label:hover,
+        .ui-tree .ui-tree-toggler:hover,
+        .input-loader,
+        .kdx-calendar .cal-cell-row .cal-cell:hover .cal-day-number {
+            color: getMixColor($isMixWhite, $color);
+        }
+        .important-note a:hover,
+        .kdx-search-wrapper>.btn.btn-icon:last-child:hover,
+        .kdx-left-menu .panel-group .nav li a.selected,
+        .kdx-left-menu .panel-group .nav li a.selected:hover,
+        .kdx-left-menu .panel-group .nav li a.accordion-toggle.expand,
+        .kdx-left-menu .panel-group .nav li a.accordion-toggle.expand:after,
+        .kdx-fileinput .btn-remove:hover,
+        .input-single-btn .btn,
+        .input-double-btn .btn,
+        ngb-datepicker.dropdown-menu .ngb-dp-weekday {
+            color: getMixColor($isMixWhite, $color) !important;
+        }
+        .btn:before,
+        .kdx-navbar .kdx-btn-group-wrapper .btn-group .btn:before,
+        .kdx-navbar .kdx-user-profile .btn:before,
+        .kdx-left-menu .panel-group .nav li a:before,
+        .kdx-tabs .nav-tabs .nav-item a.nav-link:before,
+        .btn-outline:before {
+            background-color: rgba(225, 225, 225, 0.1) !important;
+        }
+        .spinner {
+            border-top: 4px solid $color;
+        }
+        .kdx-load-page .kdx-loader {
+            border-top: 5px solid $color;
+        }
+        @media #{$tabletLandscape} {
+            .kdx-navbar .kdx-btn-group-wrapper .btn-group:hover {
+                color: getMixColor($isMixWhite, $color);
+            }
+        }
+    }
+}
+
+@function getMixColor($isMixWhite, $color) {
+    $mixColor: black;
+    @if $isMixWhite==true {
+        $mixColor: white;
+    }
+    @return mix($mixColor, $color, 20%);
+}

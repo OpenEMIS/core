@@ -31,7 +31,7 @@ trait UtilityTrait
         if ($camelizedString) {
             $header = Inflector::humanize(Inflector::underscore($camelizedString));
         } else {
-            $header = Inflector::humanize(Inflector::underscore($this->alias()));
+            $header = Inflector::humanize(Inflector::underscore($this->getAlias()));
         }
         return __($header);
     }
@@ -57,7 +57,7 @@ trait UtilityTrait
         }
 
         if (!is_null($request)) {
-            $query = $request->query;
+            $query = $request->getQuery();
 
             if (isset($query[$key])) {
                 $value = $query[$key];
@@ -66,7 +66,7 @@ trait UtilityTrait
             if (!array_key_exists($value, $options)) {
                 foreach ($options as $i => $val) {
                     if (is_array($val)) {
-                        if (array_key_exists('value', $val) && array_key_exists('text', $val)) { // cake format ['value', 'text']
+                        if (isset($val['value']) && isset($val['text'])) { // cake format ['value', 'text']
                             if (is_null($defaultValue)) {
                                 $defaultValue = $val['value'];
                             }
@@ -101,17 +101,17 @@ trait UtilityTrait
                     $value = $defaultValue;
                 }
             }
-            $request->query[$key] = $value;
+            $request->getQuery[$key] = $value;
         }
         return $value;
     }
 
     public function advancedSelectOptions(&$options, &$selected, $params = [])
     {
-        $callable = array_key_exists('callable', $params) ? $params['callable'] : null;
-        $message = array_key_exists('message', $params) ? $params['message'] : '';
-        $defaultValue = array_key_exists('defaultValue', $params) ? $params['defaultValue'] : null;
-        $selectOption = array_key_exists('selectOption', $params)? $params['selectOption'] : true;
+        $callable = isset($params['callable']) ? $params['callable'] : null;
+        $message = isset($params['message']) ? $params['message'] : '';
+        $defaultValue = isset($params['defaultValue']) ? $params['defaultValue'] : null;
+        $selectOption = isset($params['selectOption'])? $params['selectOption'] : true;
 
         // Check if the selected key is empty. If it is not empty then change the selected to null and get
         // the first available from the list
@@ -123,7 +123,7 @@ trait UtilityTrait
         }
         foreach ($options as $id => $val) {
             if (is_array($val)) {
-                if (array_key_exists('value', $val) && array_key_exists('text', $val)) { // cake format ['value', 'text']
+                if (isset($val['value']) && isset($val['text'])) { // cake format ['value', 'text']
 
                     // may or may not happen so won't write logic for it yet
                 } else { // option group exists
@@ -161,7 +161,7 @@ trait UtilityTrait
                     }
                 }
             } else { // normal array
-                $label = __($val);
+                $label = __((string)$val);
                 if (strlen($id) > 0) {
                     $options[$id] = ['value' => $id, 'text' => $label];
                 }

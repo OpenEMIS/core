@@ -9,6 +9,7 @@ use Cake\Event\Event;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Log\Log;
 use Cake\Utility\Hash;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -23,9 +24,9 @@ class StudentOutcomesTable extends ControllerActionTable
     private $subjectId = null;
     private $studentId = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_classes');
+        $this->setTable('institution_classes');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -64,10 +65,13 @@ class StudentOutcomesTable extends ControllerActionTable
             'autoFields' => false
         ]);
 
-
         $this->toggle('add', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StudentOutcomes' =>['id']
+            ]
+        ]);
     }
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
@@ -80,8 +84,8 @@ class StudentOutcomesTable extends ControllerActionTable
 
         if (!is_null($outcomeTemplateId) && !is_null($academicPeriodId) &&
             !is_null($classId) && !is_null($institutionId) && !is_null($educationGradeId)) {
-            $OutcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
-            $EducationSubjectsTable = TableRegistry::get('Education.EducationSubjects');
+            $OutcomeCriteriasTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
+            $EducationSubjectsTable = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
 
             $criteriaList = $OutcomeCriteriasTable
                 ->find()
@@ -92,7 +96,7 @@ class StudentOutcomesTable extends ControllerActionTable
                     'education_subject_name' => $EducationSubjectsTable->aliasField('name')
                 ])
                 ->contain([
-                    $EducationSubjectsTable->alias()
+                    $EducationSubjectsTable->getAlias()
                 ])
                 ->where([
                     $OutcomeCriteriasTable->aliasField('academic_period_id') => $academicPeriodId,
@@ -123,12 +127,12 @@ class StudentOutcomesTable extends ControllerActionTable
         $educationGradeId = $settings['education_grade_id'];
         $criteriaList =  $settings['criteria_list_entities'];
         
-        $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-        $UsersTable = TableRegistry::get('User.Users');
-        $InstitutionOutcomeResultsTable = TableRegistry::get('Institution.InstitutionOutcomeResults');
-        $OutcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
-        $OutcomeGradingOptionsTable = TableRegistry::get('Outcome.OutcomeGradingOptions');
-        $OutcomePeriodsTable = TableRegistry::get('Outcome.OutcomePeriods');
+        $InstitutionClassStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
+        $InstitutionOutcomeResultsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionOutcomeResults');
+        $OutcomeCriteriasTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
+        $OutcomeGradingOptionsTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeGradingOptions');
+        $OutcomePeriodsTable = TableRegistry::getTableLocator()->get('Outcome.OutcomePeriods');
 
         // Class Student table - get all students in the class for the outcome
         $studentList = $InstitutionClassStudentsTable
@@ -141,7 +145,7 @@ class StudentOutcomesTable extends ControllerActionTable
                 $UsersTable->aliasField('last_name'),
                 $UsersTable->aliasField('preferred_name')
             ])
-            ->contain($UsersTable->alias())
+            ->contain($UsersTable->getAlias())
             ->where([
                 $InstitutionClassStudentsTable->aliasField('institution_id') => $institutionId,
                 $InstitutionClassStudentsTable->aliasField('academic_period_id') => $academicPeriodId,
@@ -175,9 +179,9 @@ class StudentOutcomesTable extends ControllerActionTable
 
             ])
             ->contain([
-                $OutcomeCriteriasTable->alias(),
-                $OutcomeGradingOptionsTable->alias(),
-                $OutcomePeriodsTable->alias()
+                $OutcomeCriteriasTable->getAlias(),
+                $OutcomeGradingOptionsTable->getAlias(),
+                $OutcomePeriodsTable->getAlias()
             ])
             ->where([
                 $InstitutionOutcomeResultsTable->aliasField('student_id IN') => $studentIdList,
@@ -364,6 +368,7 @@ class StudentOutcomesTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $entity->institution_id = $this->getInstitutionID();
         $params = [
             'class_id' => $entity->institution_class_id,
             'institution_id' => $entity->institution_id,
@@ -377,6 +382,7 @@ class StudentOutcomesTable extends ControllerActionTable
             $buttons['view']['url'] = $this->setQueryString($url, $params);
         }
 
+        $entity->academic_period_id = isset($entity->academic_period_id) ? $entity->academic_period_id : $entity->academic_period->id;
         $enabledOutcomePeriodsCount = $this->enableEditButton($entity->outcome_template_id, $entity->academic_period_id);
 
         if ($enabledOutcomePeriodsCount > 0) {
@@ -436,14 +442,16 @@ class StudentOutcomesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $Outcomes = TableRegistry::get('Outcome.OutcomeTemplates');
-        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-        $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
+        $Outcomes = TableRegistry::getTableLocator()->get('Outcome.OutcomeTemplates');
+        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
+        $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
 
         $query
             ->select([
+                'id' => $this->aliasField('id'),
                 'institution_class_id' => $this->aliasField('id'),
+                'name' => $this->aliasField('name'),
                 'education_grade_id' => $Outcomes->aliasField('education_grade_id'),
                 'outcome_template_id' => $Outcomes->aliasField('id'),
                 'outcome_template' => $query->func()->concat([
@@ -452,24 +460,25 @@ class StudentOutcomesTable extends ControllerActionTable
                     $Outcomes->aliasField('name') => 'literal',
                 ])
             ])
-            ->innerJoin([$this->ClassGrades->alias() => $this->ClassGrades->table()], [
+            ->innerJoin([$this->ClassGrades->getAlias() => $this->ClassGrades->getTable()], [
                 $this->ClassGrades->aliasField('institution_class_id = ') . $this->aliasField('id')
             ])
-            ->innerJoin([$Outcomes->alias() => $Outcomes->table()], [
+            ->innerJoin([$Outcomes->getAlias() => $Outcomes->getTable()], [
                 $Outcomes->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                 $Outcomes->aliasField('education_grade_id = ') . $this->ClassGrades->aliasField('education_grade_id')
             ])
-            ->innerJoin([$this->EducationGrades->alias() => $this->EducationGrades->table()], [
+            ->innerJoin([$this->EducationGrades->getAlias() => $this->EducationGrades->getTable()], [
                 $this->EducationGrades->aliasField('id = ') . $Outcomes->aliasField('education_grade_id')
             ])
-            ->innerJoin([$EducationProgrammes->alias() => $EducationProgrammes->table()], [
+            ->innerJoin([$EducationProgrammes->getAlias() => $EducationProgrammes->getTable()], [
                 $EducationProgrammes->aliasField('id = ') . $this->EducationGrades->aliasField('education_programme_id')
             ])
             ->group([
                 $this->aliasField('id'),
                 $Outcomes->aliasField('id')
             ])
-            ->autoFields(true);
+            //->autoFields(true)
+            ;
 
         $extra['options']['order'] = [
             $EducationProgrammes->aliasField('order') => 'asc',
@@ -480,8 +489,8 @@ class StudentOutcomesTable extends ControllerActionTable
         ];
 
         // For filtering all classes and my classes
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $institutionId = $this->getInstitutionID();
         $AccessControl = $this->AccessControl;
         $userId = $session->read('Auth.User.id');
 
@@ -541,8 +550,9 @@ class StudentOutcomesTable extends ControllerActionTable
 
         // Academic period filter
         $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedPeriod = !is_null($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent();
+        $selectedPeriod = !is_null($this->request->getQuery('period')) ? $this->request->getQuery('period') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
+
         $query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
         // End
 
@@ -568,14 +578,15 @@ class StudentOutcomesTable extends ControllerActionTable
             }
         }
 
-        $selectedOutcome = !is_null($this->request->query('outcome')) ? $this->request->query('outcome') : 0;
+        $selectedOutcome = !is_null($this->request->getQuery('outcome')) ? $this->request->getQuery('outcome') : 0;
         $this->controller->set(compact('outcomeOptions', 'selectedOutcome'));
         if (!empty($selectedOutcome)) {
             $query->where([$Outcomes->aliasField('id') => $selectedOutcome]);
         }
         // End
-
-        $extra['elements']['controls'] = ['name' => 'Institution.StudentOutcomes/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $extra['elements']['controls'] = ['name' => 'Institution.StudentOutcomes/controls', 'data' => ['encodedQueryString' => $encodedQueryString,], 'options' => [], 'order' => 1];
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
@@ -584,8 +595,12 @@ class StudentOutcomesTable extends ControllerActionTable
             return __('Class Name');
         } elseif ($field == 'total_male_students') {
             return  __('Male Students');
-        } elseif ($field == 'total_female_students') {
+        }elseif ($field == 'total_female_students') {
             return  __('Female Students');
+        }elseif ($field == 'academic_period_id') {
+            return  __('Academic Period');
+        }elseif ($field == 'education_grade') {
+            return  __('Education Grade');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -606,14 +621,14 @@ class StudentOutcomesTable extends ControllerActionTable
             $period = $entity->academic_period->id;
         }
         
-        $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-        $Users = TableRegistry::get('Security.Users');
-        $Genders = TableRegistry::get('User.Genders');
+        $InstitutionClassStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $Users = TableRegistry::getTableLocator()->get('Security.Users');
+        $Genders = TableRegistry::getTableLocator()->get('User.Genders');
         $count = $InstitutionClassStudentsTable->find()
-                ->leftJoin([$Users->alias() => $Users->table()], [
+                ->leftJoin([$Users->getAlias() => $Users->getTable()], [
                     $Users->aliasField('id').' = ' . $InstitutionClassStudentsTable->aliasField('student_id')
                 ])
-                ->leftJoin([$Genders->alias() => $Genders->table()], [
+                ->leftJoin([$Genders->getAlias() => $Genders->getTable()], [
                     $Genders->aliasField('id').' = ' . $Users->aliasField('gender_id')
                 ])
                 ->where([
@@ -641,14 +656,14 @@ class StudentOutcomesTable extends ControllerActionTable
             $period = $entity->academic_period->id;
         }
 
-        $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-        $Users = TableRegistry::get('Security.Users');
-        $Genders = TableRegistry::get('User.Genders');
+        $InstitutionClassStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $Users = TableRegistry::getTableLocator()->get('Security.Users');
+        $Genders = TableRegistry::getTableLocator()->get('User.Genders');
         $count = $InstitutionClassStudentsTable->find()
-                ->leftJoin([$Users->alias() => $Users->table()], [
+                ->leftJoin([$Users->getAlias() => $Users->getTable()], [
                     $Users->aliasField('id').' = ' . $InstitutionClassStudentsTable->aliasField('student_id')
                 ])
-                ->leftJoin([$Genders->alias() => $Genders->table()], [
+                ->leftJoin([$Genders->getAlias() => $Genders->getTable()], [
                     $Genders->aliasField('id').' = ' . $Users->aliasField('gender_id')
                 ])
                 ->where([
@@ -699,7 +714,7 @@ class StudentOutcomesTable extends ControllerActionTable
     public function onGetOutcomeTemplate(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
-            $OutcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
+            $OutcomeTemplates = TableRegistry::getTableLocator()->get('Outcome.OutcomeTemplates');
             $template = $OutcomeTemplates->find()
                 ->where([
                     $OutcomeTemplates->aliasField('id') => $this->outcomeTemplateId,
@@ -717,7 +732,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $params = $this->getQueryString();
 
         if (!is_null($this->academicPeriodId) && !is_null($this->outcomeTemplateId)) {
-            $OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
+            $OutcomePeriods = TableRegistry::getTableLocator()->get('Outcome.OutcomePeriods');
             $results = $OutcomePeriods->find()
                 ->where([
                     $OutcomePeriods->aliasField('academic_period_id') => $this->academicPeriodId,
@@ -763,25 +778,24 @@ class StudentOutcomesTable extends ControllerActionTable
         $baseUrl = $this->url($this->action, false);
 
         $params = $this->getQueryString();
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $AccessControl = $this->AccessControl;
-        $session = $this->request->session();
         if (!empty($params['student_id'])) {
            $studentId = $params['student_id'];
         } else {
            $studentId = $userId[0];
         }
         
-        $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-        $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+        $InstitutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
+        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+        $EducationSubjects = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
         $gradeId = $this->gradeId;
         $academicPeriodId = $this->academicPeriodId;
         $institutionId = $this->institutionId;
         $classId = $this->classId;
 
         if (!is_null($gradeId)) {
-            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+            $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
             $subjectList = $EducationSubjects
                                 ->find()
                                 ->select([
@@ -789,10 +803,10 @@ class StudentOutcomesTable extends ControllerActionTable
                                     $EducationSubjects->aliasField('code'),
                                     $EducationSubjects->aliasField('name')
                                 ])
-                                ->innerJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+                                ->innerJoin([$InstitutionSubjects->getAlias() => $InstitutionSubjects->getTable()], [
                                    $InstitutionSubjects->aliasField('education_subject_id = ') . $EducationSubjects->aliasField('id')
                                 ])
-                                ->innerJoin([$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()], [
+                                ->innerJoin([$InstitutionSubjectStudents->getAlias() => $InstitutionSubjectStudents->getTable()], [
                                    $InstitutionSubjectStudents->aliasField('institution_subject_id = ') . $InstitutionSubjects->aliasField('id')
                                 ])
                                 ->where([$InstitutionSubjectStudents->aliasField('student_id') => $studentId, $InstitutionSubjects->aliasField('academic_period_id') => $academicPeriodId ])//6004 add academic_period_id condition
@@ -835,7 +849,7 @@ class StudentOutcomesTable extends ControllerActionTable
 
 		$gradeId = $this->gradeId;
         if (!is_null($this->classId)) {
-            $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
             $Users = $ClassStudents->Users;
             $StudentStatuses = $ClassStudents->StudentStatuses;
             $statuses = $StudentStatuses->findCodeList();
@@ -917,9 +931,10 @@ class StudentOutcomesTable extends ControllerActionTable
             $tableHeaders[] = $attr['subject_options'][$this->subjectId]['name'] . ' ' . __('Criteria');
             $tableHeaders[] = $attr['student_options'][$this->studentId]['name'];
 
-            $OutcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
-            $OutcomeResults = TableRegistry::get('Institution.InstitutionOutcomeResults');
-            $SubjectComments = TableRegistry::get('Institution.InstitutionOutcomeSubjectComments');
+            $OutcomeCriterias = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
+            $OutcomeResults = TableRegistry::getTableLocator()->get('Institution.InstitutionOutcomeResults');
+            $SubjectComments = TableRegistry::getTableLocator()->get('Institution.InstitutionOutcomeSubjectComments');
+            $SubjectStudent = TableRegistry::getTableLocator()->get('Student.StudentSubjects');//POCOR-8435
 
             $criteriaResults = $OutcomeCriterias->find()
                 ->select([
@@ -928,7 +943,7 @@ class StudentOutcomesTable extends ControllerActionTable
                     $OutcomeCriterias->aliasField('outcome_grading_type_id'),
                     $OutcomeResults->aliasField('outcome_grading_option_id')
                 ])
-                ->leftJoin([$OutcomeResults->alias() => $OutcomeResults->table()], [
+                ->leftJoin([$OutcomeResults->getAlias() => $OutcomeResults->getTable()], [
                     $OutcomeResults->aliasField('outcome_template_id = ') . $OutcomeCriterias->aliasField('outcome_template_id'),
                     $OutcomeResults->aliasField('education_grade_id = ') . $OutcomeCriterias->aliasField('education_grade_id'),
                     $OutcomeResults->aliasField('education_subject_id = ') . $OutcomeCriterias->aliasField('education_subject_id'),
@@ -949,9 +964,9 @@ class StudentOutcomesTable extends ControllerActionTable
             if (!empty($criteriaResults)) {
                 foreach ($criteriaResults as $criteriaObj) {
                     $result = '';
-                    if (!empty($criteriaObj->{$OutcomeResults->alias()}['outcome_grading_option_id'])) {
+                    if (!empty($criteriaObj->{$OutcomeResults->getAlias()}['outcome_grading_option_id'])) {
                         $gradingTypeId = $criteriaObj->outcome_grading_type_id;
-                        $gradingOptionId = $criteriaObj->{$OutcomeResults->alias()}['outcome_grading_option_id'];
+                        $gradingOptionId = $criteriaObj->{$OutcomeResults->getAlias()}['outcome_grading_option_id'];
                         $result = $gradingTypes[$gradingTypeId][$gradingOptionId];
                     }
 
@@ -980,14 +995,33 @@ class StudentOutcomesTable extends ControllerActionTable
                     $SubjectComments->aliasField('academic_period_id') => $this->academicPeriodId
                 ])
                 ->first();
+            //POCOR-8435 start(for displaying final result for outcome)
+            $subjectFinalResult = $SubjectStudent->find()
+                ->select([$SubjectStudent->aliasField('outcome_result')])
+                ->where([
+                    $SubjectStudent->aliasField('student_id') => $this->studentId,
+                    $SubjectStudent->aliasField('education_grade_id') => $this->gradeId,
+                    $SubjectStudent->aliasField('education_subject_id') => $this->subjectId,
+                    $SubjectStudent->aliasField('institution_id') => $this->institutionId,
+                    $SubjectStudent->aliasField('academic_period_id') => $this->academicPeriodId
+                ])
+                ->first();
 
             // table footers
             $comments = '';
+            $final_result = '';
+
             if (!empty($subjectComment) && $subjectComment->comments != '') {
                 $comments = $subjectComment->comments;
             }
-            $tableFooters[] = __('Comments');
-            $tableFooters[] = $comments;
+            if (!empty($subjectFinalResult) && $subjectFinalResult->outcome_result != null) {
+                $final_result = $subjectFinalResult->outcome_result;
+            }
+            $tableFooters = [
+                [__('Comments'), $comments],
+                [__('Final Result'), $final_result],
+            ];
+             //POCOR-8435 end(for displaying final result for outcome)
         } else {
             // table headers
             $tableHeaders[] = __('Outcome Criteria');
@@ -1003,12 +1037,12 @@ class StudentOutcomesTable extends ControllerActionTable
         $attr['tableFooters'] = $tableFooters;
 
         $event->stopPropagation();
-        return $event->subject()->renderElement('Institution.StudentOutcomes/outcome_criterias', ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Institution.StudentOutcomes/outcome_criterias', ['attr' => $attr]);
     }
 
     private function getOutcomeGradingTypes()
     {
-        $OutcomeGradingTypes = TableRegistry::get('Outcome.OutcomeGradingTypes');
+        $OutcomeGradingTypes = TableRegistry::getTableLocator()->get('Outcome.OutcomeGradingTypes');
         $results = $OutcomeGradingTypes->find()
             ->contain('GradingOptions')
             ->toArray();
@@ -1028,7 +1062,7 @@ class StudentOutcomesTable extends ControllerActionTable
     private function enableEditButton($outcomeTemplateId, $academicPeriodId)
     {
         $todayDate = date("Y-m-d");
-        $OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
+        $OutcomePeriods = TableRegistry::getTableLocator()->get('Outcome.OutcomePeriods');
         $enabledOutcomePeriodsCount = $OutcomePeriods->find()
             ->where([
                 $OutcomePeriods->aliasField('date_enabled <= ') => $todayDate,

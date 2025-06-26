@@ -1,0 +1,17 @@
+using migration paths 
+ - /var/www/html/openemis.org/bs-moe-uat/core/config/Migrations
+using seed paths 
+using environment default
+using adapter mysql
+using database prd_cor_bs_moe
+ordering by creation time
+
+All Done. Took 0.1198s
+
+Dumps the current schema of the database to be used while baking a diff
+
+using migration paths 
+ - /var/www/html/openemis.org/bs-moe-uat/core/config/Migrations
+using seed paths 
+Writing dump file `/var/www/html/openemis.org/bs-moe-uat/core/config/Migrations/schema-dump-default.lock`...
+Dump file `/var/www/html/openemis.org/bs-moe-uat/core/config/Migrations/schema-dump-default.lock` was successfully written

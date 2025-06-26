@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
 
@@ -16,7 +16,7 @@ use App\Model\Table\ControllerActionTable;
 
 class InstitutionStudentRisksTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
@@ -31,9 +31,10 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         // for search
@@ -76,6 +77,9 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
         $this->field('openEMIS_ID');
         $this->field('risk_id',['visible' => false]);
         $this->field('average_risk',['visible' => false]);
@@ -85,10 +89,10 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         $this->field('total_risk', ['sort' => true]);
         $this->field('academic_period_id',['visible' => false]);
 
-        $session = $this->request->session();
-        $requestQuery = $this->request->query;
+        $session = $this->request->getSession();
+        $requestQuery = $this->request->getQuery();
         $params = $this->paramsDecode($requestQuery['queryString']);
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $params['institution_id'];
 
         // back buttons
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
@@ -96,7 +100,8 @@ class InstitutionStudentRisksTable extends ControllerActionTable
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'Risks',
-            'index'
+            '0' => 'index',
+            '1' => $encodedQueryString,
         ];
         $toolbarButtonsArray['back'] = $this->getButtonTemplate();
         $toolbarButtonsArray['back']['label'] = '<i class="fa kd-back"></i>';
@@ -144,11 +149,11 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $params = $this->paramsDecode($requestQuery['queryString']);
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $params['institution_id'];
         $academicPeriodId = $params['academic_period_id'];
         $classId = $extra['selectedClass'];
 
@@ -193,6 +198,8 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $this->field('name');
         $this->field('grade');
         $this->field('class');
@@ -205,15 +212,17 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         $this->field('created', ['visible' => false]);
 
         // BreadCrumb
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $params = $this->paramsDecode($requestQuery['queryString']);
 
         $riskId = $params['risk_id'];
         $academicPeriodId = $params['academic_period_id'];
+
         $url = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
-            'action' => 'InstitutionStudentRisks'
+            'action' => 'InstitutionStudentRisks',
+            '0' => $encodedQueryString,
         ];
 
         $risksUrl = $this->setQueryString($url, [
@@ -221,11 +230,11 @@ class InstitutionStudentRisksTable extends ControllerActionTable
             'academic_period_id' => $academicPeriodId
         ]);
 
-        $this->Navigation->substituteCrumb('Institution Student Risks', 'Institution Student Risks', $risksUrl);
+        $this->Navigation->substituteCrumb('Institution Student Risks', 'Institution Student Risks', );
 
         // Header
         $studentName = $entity->user->first_name . ' ' . $entity->user->last_name;
-        $header = $studentName . ' - ' . __(Inflector::humanize(Inflector::underscore($this->alias())));
+        $header = $studentName . ' - ' . __(Inflector::humanize(Inflector::underscore($this->getAlias())));
 
         $this->controller->set('contentHeader', $header);
     }
@@ -289,9 +298,10 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
     public function afterSaveOrDelete(Event $mainEvent, Entity $afterSaveOrDeleteEntity)
     {
+
         $role = null;
         $user_id = null;
-        $criteriaModel = $afterSaveOrDeleteEntity->source();
+        $criteriaModel = $afterSaveOrDeleteEntity->getSource();
         // on student admission this will be updated (student gender, guardians, student repeated)
         $consolidatedModel = ['Institution.StudentUser', 'Student.Guardians', 'Institution.IndividualPromotion'];
 
@@ -331,105 +341,124 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         if (!empty($institutionId)) {
             $criteriaRecord = $this->Risks->getCriteriaByModel($criteriaModel, $institutionId);
 
-            foreach ($criteriaRecord as $criteriaDataKey => $criteriaDataObj) {
-                // to get the risks criteria to get the value on the student_risk_criterias
-                $risksCriteriaResults = $RiskCriterias->find('ActiveRiskCriteria', ['criteria_key' => $criteriaDataKey, 'institution_id' => $institutionId]);
+            if(!empty($criteriaRecord)){
+                foreach ($criteriaRecord as $criteriaDataKey => $criteriaDataObj) {
+                    // to get the risks criteria to get the value on the student_risk_criterias
+                    $risksCriteriaResults = $RiskCriterias->find('ActiveRiskCriteria', ['criteria_key' => $criteriaDataKey, 'institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId])->all();
 
-                if (!$risksCriteriaResults->isEmpty()) {
-                    foreach ($risksCriteriaResults as $key => $risksCriteriaData) {
-                        $riskId = $risksCriteriaData->risk_id;
-                        $threshold = $risksCriteriaData->threshold;
-                        $operator = $risksCriteriaData->operator;
-                        $criteria = $risksCriteriaData->criteria;
+                    if ($risksCriteriaResults->count() > 0) {
+                        foreach ($risksCriteriaResults as $key => $risksCriteriaData) {
+                            $riskId = $risksCriteriaData->risk_id;
+                            $threshold = $risksCriteriaData->threshold;
+                            $operator = $risksCriteriaData->operator;
+                            $criteria = $risksCriteriaData->criteria;
 
-                        $params = new ArrayObject([
-                            'institution_id' => $institutionId,
-                            'student_id' => $studentId,
-                            'academic_period_id' => $academicPeriodId,
-                            'criteria_name' => $criteriaDataKey
-                        ]);
+                            $params = new ArrayObject([
+                                'institution_id' => $institutionId,
+                                'student_id' => $studentId,
+                                'academic_period_id' => $academicPeriodId,
+                                'criteria_name' => $criteriaDataKey
+                            ]);
 
-                        $event = $criteriaTable->dispatchEvent('Model.InstitutionStudentRisks.calculateRiskValue', [$params], $this);
+                            $event = $criteriaTable->dispatchEvent('Model.InstitutionStudentRisks.calculateRiskValue', [$params], $this);
 
-                        if ($event->isStopped()) {
-                            $mainEvent->stopPropagation();
-                            return $event->result;
-                        }
-
-                        $valueIndexData = $event->result;
-                        // if the condition fulfilled then the value will be saved as its value, if not saved as null
-                        switch ($operator) {
-                            case 1: // '<='
-                                if($valueIndexData <= $threshold){
-                                    $valueIndex = $valueIndexData;
-                                } else {
-                                    $valueIndex = null;
-                                }
-                                break;
-
-                            case 2: // '>='
-                                if($valueIndexData >= $threshold){
-                                    $valueIndex = $valueIndexData;
-                                } else {
-                                    $valueIndex = null;
-                                }
-                                break;
-
-                            case 3: // '='
-                            case 11: // for status Repeated
-                                // value risk is an array (valueRisk[threshold] = value)
-                                if ($threshold = $valueIndexData) {
-                                    $valueIndex = 'True';
-                                } else {
-                                    $valueIndex = null;
-                                }
-                                break;
-                        }
-
-                        // saving association to student_risks_criterias
-                        $criteriaData = [
-                            'value' => $valueIndex,
-                            'risk_criteria_id' => $risksCriteriaData->id
-                        ];
-
-                        $conditions = [
-                            $this->aliasField('academic_period_id') => $academicPeriodId,
-                            $this->aliasField('institution_id') => $institutionId,
-                            $this->aliasField('student_id') => $studentId,
-                            $this->aliasField('risk_id') => $riskId
-                        ];
-
-                        if ($criteria == 'SpecialNeeds') {
-                            if (isset($afterSaveOrDeleteEntity->trigger_from) && $afterSaveOrDeleteEntity->trigger_from == 'shell') {
-                            } else {
-                                $conditions = [
-                                    $this->aliasField('academic_period_id') => $academicPeriodId,
-                                    $this->aliasField('student_id') => $studentId,
-                                    $this->aliasField('risk_id') => $riskId
-                                ];
+                            if ($event->isStopped()) {
+                                $mainEvent->stopPropagation();
+                                return $event->getResult();
                             }
-                        }
 
-                        $institutionStudentRisksResults = $this->find()
-                            ->where([$conditions])
-                            ->all();
+                            $valueIndexData = $event->getResult();
+                            // if the condition fulfilled then the value will be saved as its value, if not saved as null
+                            switch ($operator) {
+                                case 1: // '<='
+                                    if($valueIndexData <= $threshold){
+                                        $valueIndex = $valueIndexData;
+                                    } else {
+                                        $valueIndex = null;
+                                    }
+                                    break;
 
-                        // to update and add new records into the institution_student_risks
-                        if (!$institutionStudentRisksResults->isEmpty()) {
-                            // $entity = $institutionStudentRisksResults->first();
-                            foreach ($institutionStudentRisksResults as $institutionStudentRisksResultsObj) {
-                                $entity = $institutionStudentRisksResultsObj;
+                                case 2: // '>='
+                                    if($valueIndexData >= $threshold){
+                                        $valueIndex = $valueIndexData;
+                                    } else {
+                                        $valueIndex = null;
+                                    }
+                                    break;
 
-                                $studentRisksCriteriaResults = $this->StudentRisksCriterias->find()
-                                    ->where([
-                                        $this->StudentRisksCriterias->aliasField('institution_student_risk_id') => $entity->id,
-                                        $this->StudentRisksCriterias->aliasField('risk_criteria_id') => $risksCriteriaData->id
-                                    ])->all();
-                                // find id from db
-                                if (!$studentRisksCriteriaResults->isEmpty()) {
-                                    $criteriaEntity = $studentRisksCriteriaResults->first();
-                                    $criteriaData['id'] = $criteriaEntity->id;
+                                case 3: // '='
+                                case 11: // for status Repeated
+                                    // value risk is an array (valueRisk[threshold] = value)
+                                    if ($threshold = $valueIndexData) {
+                                        $valueIndex = 'True';
+                                    } else {
+                                        $valueIndex = null;
+                                    }
+                                    break;
+                            }
+
+                            // saving association to student_risks_criterias
+                            $criteriaData = [
+                                'value' => $valueIndex,
+                                'risk_criteria_id' => $risksCriteriaData->id
+                            ];
+
+                            $conditions = [
+                                $this->aliasField('academic_period_id') => $academicPeriodId,
+                                $this->aliasField('institution_id') => $institutionId,
+                                $this->aliasField('student_id') => $studentId,
+                                $this->aliasField('risk_id') => $riskId
+                            ];
+
+                            if ($criteria == 'SpecialNeeds') {
+                                if (isset($afterSaveOrDeleteEntity->trigger_from) && $afterSaveOrDeleteEntity->trigger_from == 'shell') {
+                                } else {
+                                    $conditions = [
+                                        $this->aliasField('academic_period_id') => $academicPeriodId,
+                                        $this->aliasField('student_id') => $studentId,
+                                        $this->aliasField('risk_id') => $riskId
+                                    ];
                                 }
+                            }
+
+                            $institutionStudentRisksResults = $this->find()
+                                ->where([$conditions])
+                                ->all();
+
+                            // to update and add new records into the institution_student_risks
+                            if (!$institutionStudentRisksResults->isEmpty()) {
+                                // $entity = $institutionStudentRisksResults->first();
+                                foreach ($institutionStudentRisksResults as $institutionStudentRisksResultsObj) {
+                                    $entity = $institutionStudentRisksResultsObj;
+
+                                    $studentRisksCriteriaResults = $this->StudentRisksCriterias->find()
+                                        ->where([
+                                            $this->StudentRisksCriterias->aliasField('institution_student_risk_id') => $entity->id,
+                                            $this->StudentRisksCriterias->aliasField('risk_criteria_id') => $risksCriteriaData->id
+                                        ])->all();
+                                    // find id from db
+                                    if (!$studentRisksCriteriaResults->isEmpty()) {
+                                        $criteriaEntity = $studentRisksCriteriaResults->first();
+                                        $criteriaData['id'] = $criteriaEntity->id;
+                                    }
+
+                                    $data = [];
+                                    $data['student_risks_criterias'][] = $criteriaData;
+
+                                    $patchOptions = ['validate' => false];
+                                    $entity = $this->patchEntity($entity, $data, $patchOptions);
+
+                                    $this->save($entity);
+                                }
+                            } else {
+                                $entity = $this->newEntity([
+                                    'average_risk' => 0,
+                                    'total_risk' => 0,
+                                    'academic_period_id' => $academicPeriodId,
+                                    'institution_id' => $institutionId,
+                                    'student_id' => $studentId,
+                                    'risk_id' => $riskId
+                                ]);
 
                                 $data = [];
                                 $data['student_risks_criterias'][] = $criteriaData;
@@ -439,23 +468,6 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
                                 $this->save($entity);
                             }
-                        } else {
-                            $entity = $this->newEntity([
-                                'average_risk' => 0,
-                                'total_risk' => 0,
-                                'academic_period_id' => $academicPeriodId,
-                                'institution_id' => $institutionId,
-                                'student_id' => $studentId,
-                                'risk_id' => $riskId
-                            ]);
-
-                            $data = [];
-                            $data['student_risks_criterias'][] = $criteriaData;
-
-                            $patchOptions = ['validate' => false];
-                            $entity = $this->patchEntity($entity, $data, $patchOptions);
-
-                            $this->save($entity);
                         }
                     }
                 }
@@ -464,8 +476,8 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
 		$InstitutionStudents = TableRegistry::get('Institution.Students');
 		$eventAction = explode('.', $mainEvent->name);
-		
-		if(!empty($eventAction[2]) && ($eventAction[2] == 'afterSave')) {  
+
+		if(!empty($eventAction[2]) && ($eventAction[2] == 'afterSave')) {
 			$bodyData = $InstitutionStudents->find('all',
 							[ 'contain' => [
 								'Institutions',
@@ -484,7 +496,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 							$InstitutionStudents->aliasField('student_id') => $studentId
 						]);
 
-			if (!empty($bodyData)) { 
+			if (!empty($bodyData)) {
 				foreach ($bodyData as $key => $value) {
                     $user = $value->user;
                     $user_id = $user->id;
@@ -522,7 +534,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                         $birthplaceArea = null;
                     }
                     $role = $user->is_student;
-					
+
 					$contactValue = [];
 					$contactType = [];
 					if(!empty($user['contacts'])) {
@@ -539,7 +551,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                             }
 						}
 					}
-					
+
 					$identityNumber = [];
 					$identityType = [];
 					if(!empty($user['identities'])) {
@@ -556,7 +568,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                             }
 						}
 					}
-					
+
 					$username = $user->username;
                     $institution = $value->institution;
                     $institution_id = $institution->id;
@@ -581,17 +593,17 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 				}
 			}
 			$bodys = array();
-			$bodys = [   
+			$bodys = [
 				'security_users_id' => !empty($user_id) ? $user_id : NULL,
 				'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
-				'security_users_first_name' =>	!empty($first_name) ? (str_replace("'","`",$first_name)) : NULL,
-				'security_users_middle_name' => !empty($middle_name) ? (str_replace("'","`",$middle_name)) : NULL,
-				'security_users_third_name' => !empty($third_name) ? (str_replace("'","`",$third_name)) : NULL,
-				'security_users_last_name' => !empty($last_name) ? (str_replace("'","`",$last_name)) : NULL,
-				'security_users_preferred_name' => !empty($preferred_name) ? (str_replace("'","`",$preferred_name)) : NULL,
+				'security_users_first_name' =>	!empty($first_name) ? $first_name : NULL,
+				'security_users_middle_name' => !empty($middle_name) ? $middle_name : NULL,
+				'security_users_third_name' => !empty($third_name) ? $third_name : NULL,
+				'security_users_last_name' => !empty($last_name) ? $last_name : NULL,
+				'security_users_preferred_name' => !empty($preferred_name) ? $preferred_name : NULL,
 				'security_users_gender' => !empty($gender) ? $gender : NULL,
 				'security_users_date_of_birth' => !empty($dateOfBirth) ? date("d-m-Y", strtotime($dateOfBirth)) : NULL,
-				'security_users_address' => !empty($address) ? (str_replace("'","`",$address)) : NULL,
+				'security_users_address' => !empty($address) ? $address : NULL,
 				'security_users_postal_code' => !empty($postalCode) ? $postalCode : NULL,
 				'area_administrative_name_birthplace' => !empty($addressArea) ? $addressArea : NULL,
 				'area_administrative_name_address' => !empty($birthplaceArea) ? $birthplaceArea : NULL,
@@ -602,22 +614,22 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 				'user_identities_number' => !empty($identityNumber) ? $identityNumber : NULL,
 				'security_user_username' => !empty($username) ? $username : NULL,
 				'institutions_id' => !empty($institution_id) ? $institution_id : NULL,
-				'institutions_code' => !empty($institutionCode) ? (str_replace("'","`",$institutionCode)) : NULL,
-				'institutions_name' => !empty($institutionName) ? (str_replace("'","`",$institutionName)) : NULL,
+				'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
+				'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
 				'academic_period_code' => !empty($academicCode) ? $academicCode : NULL,
 				'academic_period_name' => !empty($academicGrade) ? $academicGrade : NULL,
 				'education_grade_name' => !empty($educationGrade) ? $educationGrade : NULL,
 				'student_status_name' => !empty($studentStatus) ? $studentStatus : NULL,
 				'institution_students_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
 				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
-                'role_name' => ($role == 1) ? 'student' : NULL	
+                'role_name' => ($role == 1) ? 'student' : NULL
 			];
             $custom_field = array();
 			if($user_id){
             //POCOR-7078 start
-            $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
-            $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
-            $studentCustomFields = TableRegistry::get('student_custom_fields');
+            $studentCustomFieldValues = TableRegistry::get('StudentCustomField.StudentCustomFieldValues');
+            $studentCustomFieldOptions = TableRegistry::get('StudentCustomField.StudentCustomFieldOptions');
+            $studentCustomFields = TableRegistry::get('StudentCustomField.StudentCustomFields');
             $studentCustomData = $studentCustomFieldValues->find()
                 ->select([
                         'id'                             => $studentCustomFieldValues->aliasField('id'),
@@ -639,14 +651,16 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                         'studentCustomField.id = '.$studentCustomFieldValues->aliasField('student_custom_field_id')
                     ])
                     ->leftJoin(
-                    [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
+                    [$studentCustomFieldOptions->getAlias() => $studentCustomFieldOptions->getTable()],
                     [
                         $studentCustomFieldOptions->aliasField('student_custom_field_id = ') . $studentCustomFieldValues->aliasField('student_custom_field_id'),
                         $studentCustomFieldOptions->aliasField('id = ') . $studentCustomFieldValues->aliasField('number_value')
                     ])
                     ->where([
                     $studentCustomFieldValues->aliasField('student_id') => $user_id,
-                    ])->hydrate(false)->toArray();
+                    ])
+                ->disableHydration() // POCOR-8533
+                ->toArray();
 
             $count = 0;
             if(!empty($studentCustomData)){
@@ -837,14 +851,14 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->subject()->renderElement('Risk.Risks/' . $fieldKey, ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Risk.Risks/' . $fieldKey, ['attr' => $attr]);
     }
 
 
     public function getStudentId($criteriaTable, $afterSaveOrDeleteEntity)
     {
         $studentId = null;
-        switch ($criteriaTable->alias()) {
+        switch ($criteriaTable->getAlias()) {
             case 'Students': // The student_id is the Id
                 $studentId = $afterSaveOrDeleteEntity->id;
                 break;
@@ -860,7 +874,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
     public function getAcademicPeriodId($criteriaTable, $afterSaveOrDeleteEntity)
     {
         // afterDelete $afterSaveOrDeleteEntity doesnt have academicPeriodId, every model also have different date
-        switch ($criteriaTable->alias()) {
+        switch ($criteriaTable->getAlias()) {
             case 'InstitutionStudentAbsences': // have start date and end date
                 $startDate = $afterSaveOrDeleteEntity->date;
                 $endDate = $afterSaveOrDeleteEntity->date;
@@ -888,7 +902,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
     public function getInstitutionId($criteriaTable, $afterSaveOrDeleteEntity, $academicPeriodId)
     {
         $institutionId = null;
-        switch ($criteriaTable->alias()) {
+        switch ($criteriaTable->getAlias()) {
             case 'Students':
                 // guardian will have student_id, while gender only have id
                 $studentId = !empty($afterSaveOrDeleteEntity->student_id) ? $afterSaveOrDeleteEntity->student_id : $afterSaveOrDeleteEntity->id;
@@ -908,4 +922,37 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
         return $institutionId;
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'student_id':
+                return __('Student');
+            case 'total_risk':
+                return __('Total Risk');
+            case 'generated_by':
+                return __('Generated');
+            case 'status_id':
+                return __('Status');
+            case 'name':
+                return __('Name');
+            case 'number_of_risk_index':
+                return __('Number Of Risk Index');
+            case 'education_subject_id':
+                return __('Education Subject');
+            case 'textbook_id':
+                return __('Textbooks');
+            case 'allocated_to':
+                return __('Allocation');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    /*public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+       $queryString = $this->getQueryString();
+       $academicPeriodId = $queryString['academic_period_id'];
+       $query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
+    }*/
 }

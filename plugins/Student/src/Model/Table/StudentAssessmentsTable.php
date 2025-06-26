@@ -12,9 +12,9 @@ use Cake\Core\Configure;
 
 class StudentAssessmentsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('assessment_item_results');
+        $this->setTable('assessment_item_results');
         parent::initialize($config);
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
@@ -32,6 +32,7 @@ class StudentAssessmentsTable extends ControllerActionTable
             $this->addBehavior('Risk.Risks');
         }
         $this->addBehavior('Import.ImportLink');
+        
     }
 
     public function getTemplateOptions($period, $templateQuerystring)
@@ -69,10 +70,10 @@ class StudentAssessmentsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($this->request->query('period')));
+        $session = $this->request->getSession();
+        list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($this->request->getQuery('period')));
         $extra['selectedPeriod'] = $selectedPeriod;
-        list($templateOptions, $selectedTemplate) = array_values($this->getTemplateOptions($selectedPeriod, $this->request->query('template')));
+        list($templateOptions, $selectedTemplate) = array_values($this->getTemplateOptions($selectedPeriod, $this->request->getQuery('template')));
         $extra['selectedTemplate'] = $selectedTemplate;
         $extra['elements']['control'] = [
             'name' => 'Assessment.controls',
@@ -98,7 +99,7 @@ class StudentAssessmentsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->where([$this->aliasField('assessment_id') => $extra['selectedTemplate']]); //show assessment period based on the selected assessment.
+        $query->where([$this->aliasField('assessment_id IS') => $extra['selectedTemplate']]); //show assessment period based on the selected assessment.
         if ($extra['selectedTemplate'] != 'empty') {
             $extra['toolbarButtons']['editAcademicTerm'] = [
                 'url' => [

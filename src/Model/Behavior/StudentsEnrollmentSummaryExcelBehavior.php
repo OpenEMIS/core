@@ -33,22 +33,22 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         'auto_contain' => true
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->config('excludes', array_merge($this->config('default_excludes'), $this->config('excludes')));
-        if (!array_key_exists('filename', $config)) {
-            $this->config('filename', $this->_table->alias());
+        $this->setConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes'))); // POCOR-8981
+        if (!isset($config['filename'])) {
+            $this->setConfig('filename', $this->_table->getAlias());
         }
-        $folder = WWW_ROOT . $this->config('folder');
+        $folder = WWW_ROOT . $this->getConfig('folder');
 
         if (!file_exists($folder)) {
             umask(0);
             mkdir($folder, 0777);
-        } 
+        }
 
-        $pages = $this->config('pages');
+        $pages = $this->getConfig('pages'); // POCOR-8981
         if ($pages !== false && empty($pages)) {
-            $this->config('pages', ['index', 'view']);
+            $this->setConfig('pages', ['index', 'view']);
         }
     }
 
@@ -95,8 +95,8 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
     public function generateXLXS($settings = [])
     {
         $_settings = [
-            'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
-            'path' => WWW_ROOT . $this->config('folder') . DS,
+            'file' => $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
+            'path' => WWW_ROOT . $this->getConfig('folder') . DS,
             'download' => true,
             'purge' => true
         ];
@@ -115,22 +115,22 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (is_callable($event->result)) {
-            $generate = $event->result;
+        if (is_callable($event->getResult())) {
+            $generate = $event->getResult();
         }
 
         $generate($_settings);
 
-        $labelArray = array("Name","Code","Academic Period","Education Grade","Gender","Number of Students","Student Status");  //POCOR-6712
-        
+        $labelArray = array("Name","Code","Academic Period","Education Programme","Education Grade","Gender","Number of Students","Student Status");  //POCOR-6712
+
         foreach($labelArray as $label) {
             $headerRow[] = $this->getFields($this->_table, $settings, $label);
         }
 
         $data = $this->getData($settings);
-       
+
         $writer->writeSheetRow('InstitutionList', $headerRow);
         foreach($data as $row) {
             if(array_filter($row)) {
@@ -166,12 +166,14 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         $academicPeriodId = $requestData->academic_period_id;
         $areaEducationId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
-        $AcademicPeriods = TableRegistry::get('academic_periods');
-        $Institutions = TableRegistry::get('institutions');
-        $StudentsEnrollmentSummary = TableRegistry::get('institution_students');
+        $education_programme_id = $requestData->education_programme_id;
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $StudentsEnrollmentSummary = TableRegistry::get('Institution.InstitutionStudents');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
         $area_id_array=[];
         if(!empty($areaEducationId)){
-            $Areas = TableRegistry::get('Areas');
+            $Areas = TableRegistry::get('Area.Areas');
             if($areaEducationId == -1){
                 $regionAreaArr = $Areas->find()->All();
             }else{
@@ -181,7 +183,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                             ->where($conditions)
                             ->All();
             }
-            
+
             if(!empty($regionAreaArr)){
                 foreach ($regionAreaArr as $reg_val) {
                     $area_id_array[$reg_val->id] = $reg_val->id;
@@ -195,17 +197,21 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                             $area_id_array[$dist_val->id] = $dist_val->id;
                         }
                     }
-                                        
+
                 }
             }
         }
-        $areaEducationId = $area_id_array;    
+        $areaEducationId = $area_id_array;
         $conditions = [];
         if($areaEducationId != -1){
             $conditions['Areas.id IN '] = $areaEducationId;
         }
         if(!empty($institutionId) && $institutionId > 0){
             $conditions[$Institutions->aliasfield('id')] = $institutionId;
+        }
+        $conditionEdn = [];
+        if($education_programme_id != -1){
+            $conditionEdn[$EducationGrades->aliasfield('education_programme_id')] = $education_programme_id; //POCOR-8867
         }
         $institutionsList = $Institutions
                                 ->find()
@@ -226,7 +232,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         if(!empty($institutionsList)){
             $i = 0;
             foreach ($institutionsList as $ins_key => $ins_value) {
-               
+
                 $instStudData = $StudentsEnrollmentSummary
                                 ->find()
                                 ->select([
@@ -235,6 +241,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                     'academic_period_name' => 'AcademicPeriods.name',
                                     'gender_name' =>'Genders.name',
                                     'education_grade_name' => 'EducationGrades.name',
+                                    'edu_pro' => 'EducationProgrammes.name',
                                     'status_name' => 'StudentStatuses.name',
                                     'first_name' => 'Users.first_name',
                                     'last_name' => 'Users.last_name',
@@ -242,7 +249,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                     'openemis_no' => 'Users.openemis_no',
                                     'end_date' => $StudentsEnrollmentSummary->aliasField('end_date')
                                     // 'count'=> $StudentsEnrollmentSummary->find()->func()->count('DISTINCT '.$StudentsEnrollmentSummary->aliasField('student_id'))
-                                    
+
                                  ])
                                 ->leftJoin(['Users' => 'security_users'], [
                                                 'Users.id = ' . $StudentsEnrollmentSummary->aliasfield('student_id')
@@ -256,6 +263,9 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 ->leftJoin(['EducationGrades' => 'education_grades'], [
                                                 $StudentsEnrollmentSummary->aliasfield('education_grade_id').' = ' . 'EducationGrades.id'
                                             ])
+                                ->leftJoin(['EducationProgrammes' => 'education_programmes'], [
+                                                 'EducationGrades.education_programme_id = ' . 'EducationProgrammes.id' //POCOR-8867
+                                            ])
                                 ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
                                                 $StudentsEnrollmentSummary->aliasfield('academic_period_id').' = ' . 'AcademicPeriods.id'
                                             ])
@@ -264,21 +274,25 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 ])
                                 ->where([
                                     'Genders.id IS NOT NULL', 'AcademicPeriods.id' => $academicPeriodId,
-                                    $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id,
+                                     $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id,
+                                     $StudentsEnrollmentSummary->aliasfield('student_status_id') => 1,
+                                     $conditionEdn,
+                                     
                                     //POCOR-6620[START]
                                     //$StudentsEnrollmentSummary->aliasfield('student_status_id') => $enrolledStatus  //POCOR-6712
                                     //POCOR-6620[END]
                                 ]);
+                               // echo "<pre>";print_r($instStudData);exit;
                                 // if ($institutionId > 0) {
                                 //     $instStudData->where([$StudentsEnrollmentSummary->aliasfield('student_status_id') => $enrolledStatus]);
                                 // }
                                 $instStudData
                                 //->group(['EducationGrades.id', 'Genders.id', 'StudentStatuses.id'])
-                                ->hydrate(false)
+                                ->enableHydration(false)
                                 ->toArray();
-                
+
                 if(!empty($instStudData)){
-                    foreach ($instStudData as $key => $value) {                        
+                    foreach ($instStudData as $key => $value) {
                         if ( isset($check_data_consitency[$value['academic_period_name']][$value['institution_name']][$value['openemis_no']]) ) {
                             $end_date_check = $check_data_consitency[$value['academic_period_name']][$value['institution_name']][$value['openemis_no']];
                             if ($end_date_check < $value['end_date']->format('Y-m-d')) {
@@ -289,6 +303,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                     !empty($value['education_grade_name']) ? $value['education_grade_name'] : ' 0',
                                     !empty($value['gender_name'])          ? $value['gender_name']          : ' 0',
                                     !empty($value['status_name'])          ? $value['status_name']          : ' 0',    //POCOR-6712
+                                    !empty($value['edu_pro']) ? $value['edu_pro'] : ' 0', //POCOR-8867
                                 ];
                                 $check_data_consitency[$value['academic_period_name']][$value['institution_name']][$value['openemis_no']] = $value['end_date']->format('Y-m-d');
                             }
@@ -301,12 +316,13 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 !empty($value['education_grade_name']) ? $value['education_grade_name'] : ' 0',
                                 !empty($value['gender_name'])          ? $value['gender_name']          : ' 0',
                                 !empty($value['status_name'])          ? $value['status_name']          : ' 0',    //POCOR-6712
+                                !empty($value['edu_pro']) ? $value['edu_pro'] : ' 0', //POCOR-8867
 
                             ];
                         }
                         $i++;
                     }
-                }                
+                }
             }
         }
 
@@ -318,9 +334,11 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                     'institution_name' => $user[0],
                     'year' => $user[2],
                     'status_name' => $user[5],   //POCOR-6712
+                    'EduProg' => $user[6], //POCOR-8867
                 ];
             }
         }
+
         $final_result = [];
         foreach ( $prepare_result_array as $institution_code => $institution_code_data) {
             foreach ( $institution_code_data as $grade => $grade_data ) {
@@ -330,10 +348,12 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                             $status_data['institution_name'],
                             $institution_code,
                             $status_data['year'],
+                            $status_data['EduProg'], //POCOR-8867
                             $grade,
                             $gender,
                             $status_data['count'],
                             $status_data['status_name'],   //POCOR-6712
+                            
                         ];
                      }
                 }
@@ -370,11 +390,11 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
     //POCOR-5863 ends
     private function getFields($table, $settings, $label)
     {
-        $language = I18n::locale();
-        $module = $this->_table->alias();
+        $language = I18n::getLocale();
+        $module = $this->_table->getAlias();
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $label, $language], true);
-        return $event->result;
+        return $event->getResult();
     }
 
     private function getFooter()
@@ -398,8 +418,8 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                 } else {
                     $event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr]);
                 }
-                if ($event->result) {
-                    $returnedResult = $event->result;
+                if ($event->getResult()) {
+                    $returnedResult = $event->getResult();
                     if (is_array($returnedResult)) {
                         $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                         $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
@@ -410,8 +430,8 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
             } else {
                 $method = 'onExcelGet' . Inflector::camelize($field);
                 $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity], true);
-                if ($event->result) {
-                    $returnedResult = $event->result;
+                if ($event->getResult()) {
+                    $returnedResult = $event->getResult();
                     if (is_array($returnedResult)) {
                         $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                         $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
@@ -473,16 +493,16 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         $tableObj = $this->getAssociatedTable($table, $field);
         $key = null;
         if (is_object($tableObj)) {
-            $key = Inflector::underscore(Inflector::singularize($tableObj->alias()));
+            $key = Inflector::underscore(Inflector::singularize($tableObj->getAlias()));
         }
         return $key;
     }
 
     public function generate($settings = [])
     {
-        $language = I18n::locale();
-        $module = $this->_table->alias();
-        
+        $language = I18n::getLocale();
+        $module = $this->_table->getAlias();
+
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, 'postal_code', $language], true);
         return $event;
     }
@@ -522,7 +542,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 0];
@@ -581,7 +601,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if (in_array($action, $pages)) {
                 $toolbarButtons['export'] = $export;
             }
@@ -598,7 +618,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if ($pages != false) {
                 if (in_array($action, $pages)) {
                     $toolbarButtons['export'] = $export;

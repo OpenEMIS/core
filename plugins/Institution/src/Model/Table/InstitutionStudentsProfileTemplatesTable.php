@@ -17,9 +17,9 @@ class InstitutionStudentsProfileTemplatesTable extends ControllerActionTable
      CONST GENERATED = 3;
      CONST PUBLISHED = 4;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-		$this->table('student_report_cards');
+		$this->setTable('student_report_cards');
         parent::initialize($config);
         $this->belongsTo('StudentTemplates', ['className' => 'ProfileTemplate.StudentTemplates', 'foreignKey' => 'student_profile_template_id']);
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'student_id']);

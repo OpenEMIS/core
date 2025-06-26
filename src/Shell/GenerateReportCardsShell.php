@@ -12,7 +12,7 @@ class GenerateReportCardsShell extends Shell
 {
     private $sleepTime = 5;
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('CustomExcel.ReportCards');
@@ -48,7 +48,7 @@ class GenerateReportCardsShell extends Shell
                         $this->ReportCardProcesses->aliasField('created'),
                         $this->ReportCardProcesses->aliasField('student_id')
                     ])
-                    ->hydrate(false)
+                    ->disableHydration() // POCOR-8533
                     ->first();
 
                 if (!empty($recordToProcess)) {

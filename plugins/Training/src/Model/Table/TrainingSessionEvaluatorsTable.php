@@ -9,13 +9,14 @@ class TrainingSessionEvaluatorsTable extends AppTable {
 	const INTERNAL = 'INTERNAL';
 	const EXTERNAL = 'EXTERNAL';
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void
+	{
 		parent::initialize($config);
 		$this->belongsTo('TrainingSessions', ['className' => 'Training.TrainingSessions']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'evaluator_id']);
 	}
 
-	public function validationDefault(Validator $validator)
+	public function validationDefault(Validator $validator): Validator
 	{
 		$validator = parent::validationDefault($validator);
 

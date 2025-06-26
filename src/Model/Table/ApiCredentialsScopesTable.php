@@ -8,7 +8,7 @@ use App\Model\Table\AppTable;
 
 class ApiCredentialsScopesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 

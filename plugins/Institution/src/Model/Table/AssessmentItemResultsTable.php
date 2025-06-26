@@ -12,15 +12,17 @@ use Cake\Event\Event;
 use Cake\Utility\Text;
 use Cake\Core\Configure;
 use App\Model\Traits\MessagesTrait;
+use Cake\ORM\Table; // POCOR-8578
+use Cake\Utility\Inflector; // POCOR-8578
 
 class AssessmentItemResultsTable extends AppTable
 {
     use OptionsTrait;
     use MessagesTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('assessment_item_results');
+        $this->setTable('assessment_item_results');
         parent::initialize($config);
 
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
@@ -40,7 +42,7 @@ class AssessmentItemResultsTable extends AppTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -71,7 +73,7 @@ class AssessmentItemResultsTable extends AppTable
         if ($entity->isNew()) {
             $entity->id = Text::uuid();
         }
-    
+
         //$this->getAssessmentGrading($entity); // 5664
     }
 
@@ -85,7 +87,7 @@ class AssessmentItemResultsTable extends AppTable
         }
 
         $listeners = [
-            TableRegistry::get('Institution.InstitutionSubjectStudents')
+            self::getDynamicTableInstance('Institution.InstitutionSubjectStudents') // POCOR-8578
         ];
 
         $this->dispatchEventToModels('Model.AssessmentResults.afterSave', [$entity], $this, $listeners);
@@ -148,7 +150,7 @@ class AssessmentItemResultsTable extends AppTable
      */
     public function getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId)
     {
-        $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents'); // POCOR-8578
 
         $query = $this
             ->find()
@@ -173,7 +175,8 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('education_subject_id') => $subjectId,
                 $this->aliasField('student_id') => $studentId,
             ])
-            ->hydrate(false);
+            ->disableHydration() // POCOR-8533
+        ;
 
         $results = $query->toArray();
         $returnArray = [];
@@ -256,7 +259,7 @@ class AssessmentItemResultsTable extends AppTable
             $assessmentId = $entity->assessment_id;
             $assessmentPeriodId = $entity->assessment_period_id;
 
-            $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
+            $AssessmentItemsGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentItemsGradingTypes'); // POCOR-8578
             $assessmentItemsGradingTypeEntity = $AssessmentItemsGradingTypes
                 ->find()
                 ->contain('AssessmentGradingTypes.GradingOptions')
@@ -310,4 +313,54 @@ class AssessmentItemResultsTable extends AppTable
 
         return $totalMarks;
     }
+
+    /**
+     * POCOR-8391 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
 }

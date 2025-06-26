@@ -11,6 +11,7 @@ use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\ConnectionManager;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
+use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -20,9 +21,9 @@ class CurrentAssessmentsTable extends ControllerActionTable
     private $institutionId = null;
     private $studentId = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('assessment_item_results');
+        $this->setTable('assessment_item_results');
         parent::initialize($config);
 
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
@@ -41,21 +42,30 @@ class CurrentAssessmentsTable extends ControllerActionTable
         $this->toggle('search', false);
 
         $this->addBehavior('Restful.RestfulAccessControl');
+
+        $this->addBehavior('Institution.InstitutionTab');
+        //$this->addBehavior('Student.StudentTab');
+        $this->addBehavior('Excel',[
+            'excludes' => ['id','education_subject_id','academic_period_id','assessment_id','assessment_period_id','institution_classes_id','institution_id','assessment_grading_option_id','student_id','education_grade_id','marks'],
+            'pages' => ['index'],
+        ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $contentHeader = $this->controller->viewVars['contentHeader'];
+        //$contentHeader = $this->controller->viewVars['contentHeader'];
+        $contentHeader = $this->controller->viewBuilder()->getVars()['contentHeader'];
         list($studentName, $module) = explode(' - ', $contentHeader);
         $module = __('Assessments');
         $contentHeader = $studentName . ' - ' . $module;
         $this->controller->set('contentHeader', $contentHeader);
         $this->controller->Navigation->substituteCrumb(__('Student Assessment'), $module);
-        $session = $this->controller->request->session();
-        if ($session->check('Institution.Institutions.id')) {
+       // $session = $this->controller->request->getSession();
+        $institutionId = $this->getInstitutionID();
+       /* if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
-        }
-        $studentId = $this->Session->read('Student.Students.id');
+        }*/
+        $studentId = $this->getStudentID();
         $this->institutionId = $institutionId;
         $this->studentId = $studentId;
     }
@@ -77,11 +87,12 @@ class CurrentAssessmentsTable extends ControllerActionTable
 
         $this->setFieldOrder(['assessment_period_name', 'assessments_name', 'education_subject_name', 'marks', 'total_mark']);
 
-        //add controls with ctp
-
+        //add controls with php
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['controls'] = [
             'name' => 'Student.Assessments/controls',
-            'data' => [],
+            'data' => ['encodedQueryString' => $encodedQueryString],
             'options' => [],
             'order' => 1];
 
@@ -98,7 +109,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
     {
         //POCOR-7201[START]
         $session = $this->Session;
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $studentId = $this->studentId;
         //POCOR-7201[END]
         $query->contain('Assessments');
@@ -138,9 +149,19 @@ class CurrentAssessmentsTable extends ControllerActionTable
         // Academic Periods filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $selectedAcademicPeriod =
-            !is_null($this->request->query('academic_period_id'))
-                ? $this->request->query('academic_period_id')
+            !is_null($this->request->getQuery('academic_period_id'))
+                ? $this->request->getQuery('academic_period_id')
                 : $this->AcademicPeriods->getCurrent();
+        // POCOR-8224 start
+        $selectedAssessment =
+            !is_null($this->request->getQuery('assessment_id'))
+                ? $this->request->getQuery('assessment_id')
+                : -1;
+        $selectedAssessmentPeriod =
+            !is_null($this->request->getQuery('assessment_period_id'))
+                ? $this->request->getQuery('assessment_period_id')
+                : -1;
+        // POCOR-8224 end
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 //        $where[$this->aliasField('institution_id')] = $institutionId;  // POCOR-7201
@@ -205,8 +226,16 @@ class CurrentAssessmentsTable extends ControllerActionTable
             "education_subject_id" => $entity->education_subject_id,
             "assessment_period_id" => $entity->assessment_period_id,
             'assessment_id' => $entity->assessment_id];
-        $marks = $ItemResults::getLastMark($options);
-        return round($marks[0]['marks'], 2);
+        $exemptions = $ItemResults::getLastExemptions($options);
+        // POCOR-8224 start
+        if(!empty($exemptions)){
+            $mark = 'EXEMPT';
+        }else{
+            $marks = $ItemResults::getLastMark($options);
+            $mark = round($marks[0]['marks'], 2);
+        }
+        return $mark;
+        // POCOR-8224 start
     }
 
     /**
@@ -228,15 +257,42 @@ class CurrentAssessmentsTable extends ControllerActionTable
             "assessment_period_id" => -1,
             'assessment_id' => $entity->assessment_id];
         $marks = $ItemResults::getLastMark($options);
-        $last_results = array_column($marks, 'marks');
-        $sum_results = array_sum($last_results);
+
+        //POCOR-8224 start
+        // Fetch exemptions from getLastExemptions
+        $exemptions = $ItemResults::getLastExemptions($options);
+
+        // Extract relevant identifiers from exemptions: education_subject_id and assessment_period_id
+        $exempt_combination = array_map(function($exemption) {
+            return $exemption['education_subject_id'] . '-' . $exemption['assessment_period_id'];
+        }, $exemptions);
+
+        // Filter results to exclude the ones that match both education_subject_id and assessment_period_id in exemptions
+        $filtered_results = [];
+        foreach ($marks as $mark) {
+            // Create a key for the current mark for comparison
+            $mark_combination = $mark['education_subject_id'] . '-' . $mark['assessment_period_id'];
+
+            // If the combination is not in the exemptions, include the mark
+            if (!in_array($mark_combination, $exempt_combination)) {
+                $filtered_results[] = $mark['marks'];
+            }
+//            else{
+//                $filtered_results[] = 0;
+//            }
+        }
+
+        // Sum the filtered results
+        $sum_results = array_sum($filtered_results);
+        // Return the rounded sum of the results
+        //POCOR-8224 end
         return round($sum_results, 2);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $institutionId = $entity->institution_class->institution_id;
             $url = [
                 'plugin' => 'Institution',
@@ -247,7 +303,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
                 'institution_id' => $institutionId,
             ];
 
-            if ($this->controller->name == 'Directories') {
+            if ($this->controller->getName() == 'Directories') {
                 $url = [
                     'plugin' => 'Directory',
                     'controller' => 'Directories',
@@ -274,7 +330,8 @@ class CurrentAssessmentsTable extends ControllerActionTable
     {
         //POCOR-7474-HINDOL
         $options['type'] = 'student';
-        $tabElements = $this->controller->getAcademicTabElements($options);
+        //$tabElements = $this->controller->getAcademicTabElements($options);
+        $tabElements = $this->getAcademicTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Assessments');
     }
@@ -285,16 +342,16 @@ class CurrentAssessmentsTable extends ControllerActionTable
             $btnAttr = $this->getButtonAttr();
         }
         $customButton = [];
-        if (array_key_exists('_ext', $url)) {
+        if (isset($url['_ext'])) {
             unset($customButton['url']['_ext']);
         }
-        if (array_key_exists('pass', $url)) {
+        if (isset($url['pass'])) {
             unset($customButton['url']['pass']);
         }
-        if (array_key_exists('paging', $url)) {
+        if (isset($url['paging'])) {
             unset($customButton['url']['paging']);
         }
-        if (array_key_exists('filter', $url)) {
+        if (isset($url['filter'])) {
             unset($customButton['url']['filter']);
         }
         $customButton['type'] = 'button';
@@ -375,7 +432,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
                 'student_id =' . $studentId],
         ];
         $table_name = 'assessment_item_results';
-        $is_archive_exists = ArchiveConnections::hasArchiveRecords($table_name, $where);
+        $is_archive_exists = ArchiveConnections::getArchiveAssessments($table_name, $where);
         return $is_archive_exists;
         //POCOR-7526::End
         return $is_archive_exists;
@@ -391,7 +448,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
     private function setAcademicPeriodOptions($institutionId, $studentId, $selectedAcademicPeriod)
     {
     // Academic Periods filter
-        $ItemResults = TableRegistry::get('assessment_item_results');
+        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
         $years_arr = $ItemResults->find()
             ->select('academic_period_id')
             ->distinct('academic_period_id')
@@ -414,13 +471,13 @@ class CurrentAssessmentsTable extends ControllerActionTable
     }
 
     /**
-     * @param Query $selectedAcademicPeriod
-     * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @param $selectedAcademicPeriod
+     * @param $selectedAssessment
+     * @return int|mixed|string|null
      */
     private function setAssessmentOptions($selectedAcademicPeriod, $selectedAssessment = -1)
     {
-        $ItemResults = TableRegistry::get('assessment_item_results');
+        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
         $assessments_arr = $ItemResults->find()
             ->select('assessment_id')
             ->distinct('assessment_id')
@@ -444,6 +501,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
     }
 
     /**
+     * POCOR-8224 changes
      * @param int $selectedAssessment
      * @param int $selectedAssessmentPeriod
      * @return int|string|null
@@ -451,19 +509,19 @@ class CurrentAssessmentsTable extends ControllerActionTable
      */
     private function setAssessmentPeriodOptions($selectedAssessment = -1, $selectedAssessmentPeriod = -1)
     {
-        $ItemResults = TableRegistry::get('assessment_item_results');
+        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
         $assessment_periods_arr = $ItemResults->find()
-            ->select('assessment_id')
-            ->distinct('assessment_id')
+            ->select('assessment_period_id')
+            ->distinct('assessment_period_id')
             ->where(['student_id' => $this->studentId])
             ->toArray();
-        $assessment_periods_ids = array_column($assessment_periods_arr, 'assessment_id');
+        $assessment_periods_ids = array_column($assessment_periods_arr, 'assessment_period_id');
         if(sizeof($assessment_periods_ids) == 0){
             $assessment_periods_ids = [0];
         }
         $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
         $where = [$AssessmentPeriods->aliasField('id IN') => $assessment_periods_ids];
-        if ($selectedAssessment != '-1') {
+        if ($selectedAssessment > 0) {
             $where[$AssessmentPeriods->aliasField('assessment_id')] = $selectedAssessment;
         }
         $AssessmentPeriodsOptions = $AssessmentPeriods
@@ -476,4 +534,159 @@ class CurrentAssessmentsTable extends ControllerActionTable
         return $selectedAssessmentPeriod;
     }
 
+    //POCOR-8137 Start
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    {
+        $institutionId = $this->getInstitutionID();
+        $studentId = $this->studentId;
+        $query->contain('Assessments');
+        $query->contain('AssessmentPeriods');
+        $query->contain('EducationSubjects');
+        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+        $query->contain('Assessments');
+        $query->contain('AssessmentPeriods');
+        $query->contain('EducationSubjects');
+        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+        $query->find('all', [
+            'fields' => [
+                'id' => $this->aliasField('id'),
+                'academic_period_id' => $this->aliasField('academic_period_id'),
+                'assessment_period_id' => 'AssessmentPeriods.id',
+                'assessment_period_name' => 'AssessmentPeriods.name',
+                'assessment_period_term' => 'AssessmentPeriods.academic_term',
+                'assessment_id' => 'Assessments.id',
+                'assessment_name' => 'Assessments.name',
+                'assessment_code' => 'Assessments.code',
+                'education_grade_id' => $this->aliasField('education_grade_id'),
+                'education_subject_name' => 'EducationSubjects.name',
+                'education_subject_id' => 'EducationSubjects.id',
+                'student_id' => $this->aliasField('student_id'),
+                'institution_id' => $this->aliasField('institution_id'),
+                'marks' => $this->aliasField('marks'),
+            ]
+        ])
+        ->group([
+            $this->aliasField('student_id'),
+            $this->aliasField('education_subject_id'),
+            $this->aliasField('assessment_id'),
+            $this->aliasField('assessment_period_id'),
+            $AssessmentPeriods->aliasField('academic_term'),
+        ]);
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $selectedAcademicPeriod =
+            !is_null($this->request->getQuery('academic_period_id'))
+                ? $this->request->getQuery('academic_period_id')
+                : $this->AcademicPeriods->getCurrent();
+        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
+        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        $selectedAcademicPeriod = $this->setAcademicPeriodOptions($institutionId, $studentId, $selectedAcademicPeriod);
+
+        if (!empty($selectedAcademicPeriod)) {
+            $selectedAssessment = $this->setAssessmentOptions($selectedAcademicPeriod, $selectedAssessment);
+            $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+
+        }
+        if (!empty($selectedAssessment)) {
+            $selectedAssessmentPeriod = $this->setAssessmentPeriodOptions($selectedAssessment, $selectedAssessmentPeriod);
+            if ($selectedAssessment != null) {
+                if ($selectedAssessment != -1) {
+                    $where[$this->aliasField('assessment_id')] = $selectedAssessment;
+                }
+            }
+
+        }
+        if (!empty($selectedAssessmentPeriod)) {
+            if ($selectedAssessmentPeriod != null) {
+                if ($selectedAssessmentPeriod != -1) {
+                    $where[$this->aliasField('assessment_period_id')] = $selectedAssessmentPeriod;
+                }
+            }
+        }
+        $where[$this->aliasField('institution_id')] = $institutionId;
+        $where[$this->aliasField('student_id')] = $studentId;
+        $query->find('all')->where([$where]);
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $fields[] = [
+            'key' => 'CurrentAssessments.User.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => 'OpenEMIS ID',
+        ];
+        $fields[] = [
+            'key' =>  'CurrentAssessments.student_id',
+            'field' => 'student_id',
+            'type' => 'string',
+            'label' => 'Student Name',
+        ];
+        $fields[] = [
+            'key' => 'CurrentAssessments.academic_period_id',
+            'field' => 'academic_period_id',
+            'type' => 'string',
+            'label' => 'Academic Period',
+        ];
+        $fields[] = [
+            'key' => 'CurrentAssessments.assessment_id',
+            'field' => 'assessment_id',
+            'type' => 'string',
+            'label' => 'Assessment Name',
+        ];
+        $fields[] = [
+            'key' => 'CurrentAssessments.assessment_period_id',
+            'field' => 'assessment_period_id',
+            'type' => 'string',
+            'label' => 'Assessment Periods',
+        ];
+        $fields[] = [
+            'key' => 'CurrentAssessments.education_subject_id',
+            'field' => 'education_subject_id',
+            'type' => 'string',
+            'label' => 'Education Subjects',
+        ];
+        $fields[] = [
+            'key' => 'CurrentAssessments.marks',
+            'field' => 'marks',
+            'type' => 'integer',
+            'label' => 'Marks',
+        ];
+        $fields[] = [
+            'key' => 'Assessment.AssessmentItemResults',
+            'field' => 'total_mark',
+            'type' => 'string',
+            'label' => 'Total Marks',
+        ];
+    }
+    
+    public function onExcelGetOpenemisNo(Event $event, Entity $entity)
+    {
+        return $entity->user->openemis_no;
+    }
+
+    public function onExcelGetAssessmentId(Event $event, Entity $entity)
+    {
+        return $entity->assessment_name . ' - ' . $entity->assessment_code . ' - ' . $entity->assessment_name;
+    }
+
+    public function onExcelGetAssessmentPeriodId(Event $event, Entity $entity)
+    {
+        return $entity->assessment_period_term . ' - ' . $entity->assessment_period_name;
+    }
+
+    public function onExcelGetTotalMark(Event $event, Entity $entity)
+    {
+        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+        $options = ["student_id" => $entity->student_id,
+            "academic_period_id" => $entity->academic_period_id,
+            "education_grade_id" => $entity->education_grade_id,
+            "education_subject_id" => $entity->education_subject_id,
+            "assessment_period_id" => -1,
+            'assessment_id' => $entity->assessment_id];
+        $marks = $ItemResults::getLastMark($options);
+        $last_results = array_column($marks, 'marks');
+        $sum_results = array_sum($last_results);
+        return round($sum_results, 2);
+    }
+    //POCOR-8137 END
 }

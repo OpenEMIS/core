@@ -5,17 +5,17 @@ use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
 class TrainingSessionTraineeResultsTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 		$this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
 		$this->belongsTo('Trainees', ['className' => 'User.Users', 'foreignKey' => 'trainee_id']);
 		$this->belongsTo('TrainingResultTypes', ['className' => 'Training.TrainingResultTypes']);
 	}
 
-    public function validationDefault(Validator $validator) 
+    public function validationDefault(Validator $validator): Validator 
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('result', 'ruleMaxLength', [
                 'rule' => ['maxLength', 10]

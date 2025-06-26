@@ -7,8 +7,8 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
-use Cake\Network\Session;
+use Cake\Http\ServerRequest;
+use Cake\Http\Session;
 
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -18,9 +18,9 @@ class InstitutionStaffTable extends AppTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff');
+        $this->setTable('institution_staff');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
@@ -45,7 +45,7 @@ class InstitutionStaffTable extends AppTable
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -63,7 +63,7 @@ class InstitutionStaffTable extends AppTable
         $areaLevelId = $requestData->area_level_id;//POCOR-7794
         $academicPeriodId = $requestData->academic_period_id;
 
-        if ($statusId != 0) {
+        if ($statusId != 0 && $statusId != -1) {
             $query->where([
                 $this->aliasField('staff_status_id') => $statusId
             ]);
@@ -127,11 +127,6 @@ class InstitutionStaffTable extends AppTable
                 'Institutions.Providers' => [
                     'fields' => [
                         'institution_provider' => 'Providers.name',
-                    ]
-                ],
-                'Institutions.Ownerships' => [
-                    'fields' => [
-                        'institution_ownership' => 'Ownerships.name', //POCOR-7919
                     ]
                 ],
                 'Institutions.Areas' => [
@@ -292,10 +287,10 @@ class InstitutionStaffTable extends AppTable
             $ClassesTable = TableRegistry::get('Institution.InstitutionClasses');
             $ClassesSecondaryStaffTable = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
             //Start:POCOR-6714
-            $EducationGrades = TableRegistry::get('education_grades');
-            $subStaffTable = TableRegistry::get('institution_subject_staff');
-            $InsSubTable = TableRegistry::get('institution_subjects');
-            $AcademicTable = TableRegistry::get('academic_periods');
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $subStaffTable = TableRegistry::get('Institution.InstitutionSubjectStaff');
+            $InsSubTable = TableRegistry::get('Institution.InstitutionSubjects');
+            $AcademicTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 	     
 	        $AcademicData = $AcademicTable->find()->where(['id'=> $entity->academic_period_id])->first();
             $startDateYear = $AcademicData->start_year;
@@ -418,14 +413,7 @@ class InstitutionStaffTable extends AppTable
             'type' => 'integer',
             'label' => '',
         ];
-        //POCOR-7919 :: start
-        $newFields[] = [
-            'key' => 'Institutions.institution_ownership_id',
-            'field' => 'institution_ownership',
-            'type' => 'integer',
-            'label' => '',
-        ];
-        //POCOR-7919 :: end
+
         $newFields[] = [
             'key' => 'Institutions.institution_type_id',
             'field' => 'institution_type',
@@ -625,7 +613,6 @@ class InstitutionStaffTable extends AppTable
         $ContactOptionsTable = TableRegistry::get('User.ContactOptions');
         $options = $ContactOptionsTable->find('list')
             ->where([$ContactOptionsTable->aliasField('code IN') => $displayContactOptions])
-            ->order('order')
             ->toArray();
 
         $ContactTypesTable = TableRegistry::get('User.ContactTypes');

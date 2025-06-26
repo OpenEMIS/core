@@ -15,7 +15,7 @@ use App\Model\Traits\HtmlTrait;
 
 class RisksTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -28,9 +28,11 @@ class RisksTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->addBehavior('Excel', ['pages' => ['index']]);
+
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.generate'] = 'generate';
@@ -49,15 +51,17 @@ class RisksTable extends ControllerActionTable
 
         // element control
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
 
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Risks/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'academicPeriodOptions'=>$academicPeriodOptions,
                 'selectedAcademicPeriod'=>$selectedAcademicPeriodId
             ],
@@ -67,7 +71,7 @@ class RisksTable extends ControllerActionTable
         // end element control
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Risks','Students');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Risks','Students');
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
@@ -76,7 +80,7 @@ class RisksTable extends ControllerActionTable
                 'escape' => false,
                 'target'=>'_blank'
             ];
-    
+
             $helpBtn['url'] = $is_manual_exist['url'];
             $helpBtn['type'] = 'button';
             $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -89,14 +93,16 @@ class RisksTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        
+
         $query->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']]);
     }
 
     public function generate(Event $event, ArrayObject $extra)
     {
-        $Risks = TableRegistry::get('Risk.Risks');
-        $requestQuery = $this->request->query;
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $Risks = TableRegistry::getTableLocator()->get('Risk.Risks');
+        $requestQuery = $this->request->getQuery();
         $params = $this->paramsDecode($requestQuery['queryString']);
 
         $institutionId = $params['institution_id'];
@@ -140,8 +146,9 @@ class RisksTable extends ControllerActionTable
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'Risks',
-            'index',
-            'academic_period_id' => $params['academic_period_id']
+            'academic_period_id' => $params['academic_period_id'],
+            '0' => 'index',
+            '1' => $encodedQueryString
         ];
 
         $event->stopPropagation();
@@ -171,7 +178,7 @@ class RisksTable extends ControllerActionTable
     public function onGetGeneratedBy(Event $event, Entity $entity)
     {
         $riskId = $entity->id;
-        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $record = $this->getInstitutionIndexesRecords($riskId, $institutionId)->first();
 
@@ -179,7 +186,7 @@ class RisksTable extends ControllerActionTable
         if (isset($record->generated_by)) {
             $generatedById = $record->generated_by;
 
-            $Users = TableRegistry::get('Security.Users');
+            $Users = TableRegistry::getTableLocator()->get('Security.Users');
             $userName = $Users->get($generatedById)->first_name . ' ' . $Users->get($generatedById)->last_name;
         }
 
@@ -189,7 +196,7 @@ class RisksTable extends ControllerActionTable
     public function onGetGeneratedOn(Event $event, Entity $entity)
     {
         $riskId = $entity->id;
-        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $record = $this->getInstitutionIndexesRecords($riskId, $institutionId)->first();
 
@@ -203,9 +210,9 @@ class RisksTable extends ControllerActionTable
 
     public function onGetStatus(Event $event, Entity $entity)
     {
-        $Risks = TableRegistry::get('Risk.Risks');
+        $Risks = TableRegistry::getTableLocator()->get('Risk.Risks');
         $riskId = $entity->id;
-        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $record = $this->getInstitutionIndexesRecords($riskId, $institutionId)->first();
 
@@ -215,22 +222,28 @@ class RisksTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $institutionId = $this->getInstitutionID();
         $userId = $session->read('Auth.User.id');
         $riskId = $entity->id;
 
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $url = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
-                'action' => 'InstitutionStudentRisks'
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
+                'action' => 'InstitutionStudentRisks',
+                 0 => 'index', // POCOR-8276 - change view to index action
+                 1 => $encodedQueryString
+
             ];
 
             $buttons['view']['url'] = $this->setQueryString($url, [
                 'risk_id' => $entity->id,
-                'academic_period_id' => $entity->academic_period_id
+                'academic_period_id' => $entity->academic_period_id,
+                'institution_id' => $institutionId
             ]);
 
             // generate button
@@ -249,7 +262,8 @@ class RisksTable extends ControllerActionTable
                     'user_id' => $userId,
                     'risk_id' => $riskId,
                     'academic_period_id' => $entity->academic_period_id,
-                    'action' => 'index'
+                    'action' => 'index',
+                    'institution_id' => $institutionId
                 ]);
             }
             // end generate button
@@ -258,34 +272,34 @@ class RisksTable extends ControllerActionTable
         return $buttons;
     }
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
-    { 
-    
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-        $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
-    
-        $User = TableRegistry::get('security_users');
+    {
+
+        $institutionId = $this->getInstitutionID();
+        $academicPeriod = ($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
+
+        $User = TableRegistry::getTableLocator()->get('User.Users');
 		$query
-		->select(['name' => 'Risks.name', 
+		->select(['name' => 'Risks.name',
         'generated_by' => $User->find()->func()->concat([
             'first_name' => 'literal',
             " ",
             'last_name' => 'literal'
-        ]), 
+        ]),
         'generated_on' => 'InstitutionRisks.generated_on',
-        'risk_index' => "(SELECT SUM(risk_value) FROM ".$this->RiskCriterias->table()." WHERE risk_id = Risks.id)",
+        'risk_index' => "(SELECT SUM(risk_value) FROM ".$this->RiskCriterias->getTable()." WHERE risk_id = Risks.id)",
         'status' => "(SELECT CASE WHEN status = 1 THEN 'Not Generated'
-        WHEN status = 2 THEN 'Processing' 
-        WHEN status = 3 THEN 'Generated'  
-        ELSE 'Not Generated' END AS status 
-        FROM ".$this->InstitutionRisks->table()." where risk_id = Risks.id AND institution_id = ".$institutionId.")"
+        WHEN status = 2 THEN 'Processing'
+        WHEN status = 3 THEN 'Generated'
+        ELSE 'Not Generated' END AS status
+        FROM ".$this->InstitutionRisks->getTable()." where risk_id = Risks.id AND institution_id = ".$institutionId.")"
         ])
-		->LeftJoin([$this->RiskCriterias->alias() => $this->RiskCriterias->table()],[
+		->LeftJoin([$this->RiskCriterias->getAlias() => $this->RiskCriterias->getTable()],[
 			$this->RiskCriterias->aliasField('risk_id').' = ' . 'Risks.id'
         ])
-        ->LeftJoin([$this->InstitutionRisks->alias() => $this->InstitutionRisks->table()],[
+        ->LeftJoin([$this->InstitutionRisks->getAlias() => $this->InstitutionRisks->getTable()],[
 			$this->InstitutionRisks->aliasField('risk_id').' = ' . 'Risks.id'
         ])
-        ->LeftJoin([$User->alias() => $User->table()],[
+        ->LeftJoin([$User->getAlias() => $User->getTable()],[
 			$User->aliasField('id').' = ' . $this->InstitutionRisks->aliasField('generated_by')
         ])
         ->where(['Risks.academic_period_id' =>  $academicPeriod,
@@ -293,20 +307,20 @@ class RisksTable extends ControllerActionTable
         ])
         ->group([
             $this->RiskCriterias->aliasField('risk_id')
-            
+
         ]);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-     
+
         $extraField[] = [
             'key' =>  'Risks.name',
             'field' => 'name',
             'type' => 'string',
             'label' => __('Name')
         ];
-        
+
         $extraField[] = [
             'key' =>  "",
             'field' => 'risk_index',
@@ -336,4 +350,30 @@ class RisksTable extends ControllerActionTable
         ];
         $fields->exchangeArray($extraField);
     }
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'name':
+                return __('Name');
+            case 'number_of_risk_index':
+                return __('Number Of Risk Index');
+            case 'generated_by':
+                return __('Generated By');
+            case 'generated_on':
+                return __('Generated On');
+            case 'status':
+                return __('Status');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                    return __('Created By');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

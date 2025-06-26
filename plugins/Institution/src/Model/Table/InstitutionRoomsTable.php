@@ -1,5 +1,4 @@
 <?php
-
 namespace Institution\Model\Table;
 
 use ArrayObject;
@@ -7,17 +6,15 @@ use DateTime;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use Cake\I18n\Date;
-use Cake\Log\Log;
 use Cake\ORM\ResultSet;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Routing\Router;
-
 class InstitutionRoomsTable extends ControllerActionTable
 {
     use OptionsTrait;
@@ -33,7 +30,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     private $canUpdateDetails = true;
     private $currentAcademicPeriod = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -57,7 +54,8 @@ class InstitutionRoomsTable extends ControllerActionTable
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
-        $this->addBehavior('CustomField.Record', [
+        //comment cakephp4
+        /*$this->addBehavior('CustomField.Record', [
             'fieldKey' => 'infrastructure_custom_field_id',
             'tableColumnKey' => null,
             'tableRowKey' => null,
@@ -69,7 +67,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             'recordKey' => 'institution_room_id',
             'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_room_id', 'dependent' => true],
             'tableCellClass' => null
-        ]);
+        ]);*/
         $this->addBehavior('Institution.InfrastructureShift');
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
@@ -82,28 +80,32 @@ class InstitutionRoomsTable extends ControllerActionTable
             'ScheduleTimetable' => ['index']
         ]);
         $this->setDeleteStrategy('restrict');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionRooms'=>['id','institution_floor_id']]
+        ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('code', [
                 'ruleUnique' => [
 //                    'rule' => ['validateUnique', ['scope' => ['start_date', 'institution_id', 'academic_period_id']]],
-                    /**POCOR-8060 - start_date can be empty*/
+                    //POCOR-8060 - start_date can be empty
                     'rule' => ['validateUnique', ['scope' => ['institution_id', 'academic_period_id']]],
                     'provider' => 'table'
                 ]
             ])
-            /**POCOR-8060 - start_date can be not within Academic Period*/
+            //POCOR-8060 - start_date can be not within Academic Period
 //            ->add('start_date', [
 //                'ruleInAcademicPeriod' => [
 //                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
 //                ]
 //            ])
             ->add('end_date', [
-                /**POCOR-8060 - end_date can be not within Academic Period*/
+                //POCOR-8060 - end_date can be not within Academic Period
 //                'ruleInAcademicPeriod' => [
 //                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
 //                ],
@@ -126,9 +128,20 @@ class InstitutionRoomsTable extends ControllerActionTable
 
                 return false;
             })
+            ->allowEmpty('area') //POCOR-8523
             ->add('area', 'ruleValidateCustomLandSize', [
-                'rule' => ['validateCustomLandSize', 'Maximum_institution_infrastructure_room_size'],
-                'provider' => 'table'
+                'rule' => function ($value, $context) {
+                    // Check if datatype is 'copy'
+                    if (isset($context['data']['datatype']) && $context['data']['datatype'] == 'copy') {
+                        // Skip validation when datatype is 'copy'
+                        return true;
+                    }
+
+                    // Proceed with validation when datatype is not 'copy'
+                    return $this->validateCustomLandSize($value, 'Maximum_institution_infrastructure_room_size', $context);
+                },
+                'provider' => 'table',
+                'last' => true
             ])
             ->requirePresence('new_start_date', function ($context) {
                 if (array_key_exists('change_type', $context['data'])) {
@@ -140,7 +153,10 @@ class InstitutionRoomsTable extends ControllerActionTable
 
                 return false;
             })
-            ->notEmpty('room_type_id');
+            ->notEmpty('room_type_id')
+            ->notEmpty('infrastructure_ownership_id')
+            ->notEmpty('infrastructure_condition_id')
+            ->notEmpty('accessibility');
     }
 
     public function validationSavingByAssociation(Validator $validator)
@@ -158,7 +174,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $query
             ->find('inUse', ['institution_id' => $institution->institution_class->institution_shift->institution_id, 'academic_period_id' => $academicPeriodId])
             ->contain(['RoomTypes'])
-            ->where(['RoomTypes.classification' => 1])// classification 1 is equal to Classroom, 0 is Non_Classroom
+            ->where(['RoomTypes.classification' => 1]) // classification 1 is equal to Classroom, 0 is Non_Classroom
             ->order(['RoomTypes.order', $this->aliasField('code'), $this->aliasField('name')])
             ->formatResults(function ($results) {
                 $returnArr = [];
@@ -169,17 +185,17 @@ class InstitutionRoomsTable extends ControllerActionTable
             });
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.AcademicPeriods.afterSave'] = 'academicPeriodAfterSave';
+        $events['ControllerAction.Model.add.beforeAction'] = 'addDeleteBeforeAction';
         return $events;
     }
 
     // POCOR-8060::start
     private function setLastDateForStartDate(&$data)
     {
-
         if (isset($data['start_date']) && isset($data['end_date'])) {
             if ($data['start_date'] > $data['end_date']) {
                 if ($data['change_type'] == self::END_OF_USAGE) {
@@ -189,7 +205,6 @@ class InstitutionRoomsTable extends ControllerActionTable
                 }
             }
         }
-
     }
 
     private function setLastDateForEmptyStartDate(&$data)
@@ -205,19 +220,20 @@ class InstitutionRoomsTable extends ControllerActionTable
         self::setLastDateForEmptyStartDate($data);
     }
 
+
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //Start:POCOR-7597
-        if (!empty($entity['institution_floor_id'])) {
+        if(!empty($entity['institution_floor_id'])){
             $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
             $InstitutionFloor = $InstitutionFloors->get($entity['institution_floor_id']);
         }
-        if ($entity['area'] >= $InstitutionFloor['area']) {
-            if (Router::getRequest()->params['action'] == "CopyData") {
+        if($entity['area'] >= $InstitutionFloor['area']){
+            if (Router::getRequest()->getParam('action') == "CopyData") {
             }//POCOR_7657
             else {
-                $this->Alert->warning('InstitutionRooms.sizeGreater', ['reset' => true]);
-                return false;
+            $this->Alert->warning('InstitutionRooms.sizeGreater', ['reset' => true]);
+            return false;
             }
         }
         //End:POCOR-7597
@@ -278,6 +294,30 @@ class InstitutionRoomsTable extends ControllerActionTable
     {
         if ($field == 'institution_id') {
             return __('Owner');
+        } else if ($field == 'room_status_id'){
+            return __('Room Status');
+        } else if($field == 'start_date'){
+            return __('Start Date');
+        } else if($field == 'end_date'){
+            return __('End Date');
+        } else if($field == 'comment'){
+            return __('Comment');
+        } elseif ($field == 'to_be_deleted') {
+            return __('To be Deleted ');
+        } elseif ($field == 'associated_records') {
+            return __('Associated Records');
+        } else if ($field == 'modified'){
+            return __('Modified');
+        } else if ($field == 'modified_user_id'){
+            return __('Modified By');
+        } else if ($field == 'created'){
+            return __('Created');
+        } else if ($field == 'created_user_id'){
+            return __('Created By');
+        } else if ($field == 'new_room_type'){
+            return __('New Room Type');
+        } else if ($field == 'new_start_date'){
+            return __('New Start Date');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -286,10 +326,9 @@ class InstitutionRoomsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
         // unset edit_type so that will always default to Update Details
         foreach ($buttons as $action => $attr) {
-            if (array_key_exists('url', $attr) && array_key_exists('edit_type', $attr['url'])) {
+            if (isset($attr['url']) && array_key_exists('edit_type', $attr['url'])) {
                 unset($buttons[$action]['url']['edit_type']);
             }
         }
@@ -305,7 +344,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $this->Navigation->substituteCrumb(__('Institution Rooms'), __('Institution Rooms'));
     }
 
-    public function onUpdateFieldInstitutionFloorId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionFloorId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['type'] = 'hidden';
         if ($action == 'add') {
@@ -405,9 +444,9 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
-        $sessionKey = $this->registryAlias() . '.warning';
+        $sessionKey = $this->getRegistryAlias() . '.warning';
         if ($session->check($sessionKey)) {
             $warningKey = $session->read($sessionKey);
             $this->Alert->warning($warningKey);
@@ -422,9 +461,9 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
-        $sessionKey = $this->registryAlias() . '.warning';
+        $sessionKey = $this->getRegistryAlias() . '.warning';
         if ($session->check($sessionKey)) {
             $warningKey = $session->read($sessionKey);
             $this->Alert->warning($warningKey);
@@ -436,30 +475,31 @@ class InstitutionRoomsTable extends ControllerActionTable
     {
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
-        $session = $this->request->session();
-        $sessionKey = $this->registryAlias() . '.warning';
+        $session = $this->request->getSession();
+        $sessionKey = $this->getRegistryAlias() . '.warning';
         if (!$isEditable) {
             $inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
             $endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
 
             if ($entity->room_status_id == $inUseId) {
-                $session->write($sessionKey, $this->alias() . '.in_use.restrictEdit');
+                $session->write($sessionKey, $this->getAlias().'.in_use.restrictEdit');
             } elseif ($entity->room_status_id == $endOfUsageId) {
-                $session->write($sessionKey, $this->alias() . '.end_of_usage.restrictEdit');
+                $session->write($sessionKey, $this->getAlias().'.end_of_usage.restrictEdit');
             }
 
             $url = $this->url('index', 'QUERY');
             $event->stopPropagation();
             return $this->controller->redirect($url);
         } else {
-            $selectedEditType = $this->request->query('edit_type');
+            //$selectedEditType = $this->request->getQuery('edit_type');
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 $today = new DateTime();
                 $diff = date_diff($entity->start_date, $today);
 
                 // Not allowed to change room type in the same day
                 if ($diff->days == 0) {
-                    $session->write($sessionKey, $this->alias() . '.change_in_room_type.restrictEdit');
+                    $session->write($sessionKey, $this->getAlias().'.change_in_room_type.restrictEdit');
 
                     $url = $this->url('edit');
                     $url['edit_type'] = self::UPDATE_DETAILS;
@@ -478,12 +518,12 @@ class InstitutionRoomsTable extends ControllerActionTable
         $endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
 
         if (!$isDeletable) {
-            $session = $this->request->session();
-            $sessionKey = $this->registryAlias() . '.warning';
+            $session = $this->request->getSession();
+            $sessionKey = $this->getRegistryAlias() . '.warning';
             if ($entity->room_status_id == $inUseId) {
-                $session->write($sessionKey, $this->alias() . '.in_use.restrictDelete');
+                $session->write($sessionKey, $this->getAlias().'.in_use.restrictDelete');
             } elseif ($entity->room_status_id == $endOfUsageId) {
-                $session->write($sessionKey, $this->alias() . '.end_of_usage.restrictDelete');
+                $session->write($sessionKey, $this->getAlias().'.end_of_usage.restrictDelete');
             }
 
             $url = $this->url('index', 'QUERY');
@@ -491,7 +531,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             return $this->controller->redirect($url);
         }
 
-        $extra['excludedModels'] = [$this->CustomFieldValues->alias()];
+        //$extra['excludedModels'] = [$this->CustomFieldValues->getAlias()];//POCOR-7485
 
         // check if the same room is copy from / copy to other academic period, then not allow user to delete
         //POCOR-5330 starts
@@ -515,10 +555,10 @@ class InstitutionRoomsTable extends ControllerActionTable
             ->all();
 
         if (!$results->isEmpty()) {
-            $extra['excludedModels'][] = $this->Subjects->alias();
+            $extra['excludedModels'][] = $this->Subjects->getAlias();
 
             foreach ($results as $obj) {
-                $title = $this->alias() . ' - ' . $obj->academic_period_name;
+                $title = $this->getAlias() . ' - ' . $obj->academic_period_name;
                 $extra['associatedRecords'][] = [
                     'model' => $title,
                     'count' => $obj->count
@@ -548,7 +588,8 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity)
     {
-        $selectedEditType = $this->request->query('edit_type');
+        //$selectedEditType = $this->request->getQuery('edit_type');
+        $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
         if ($selectedEditType == self::END_OF_USAGE || $selectedEditType == self::CHANGE_IN_TYPE) {
             foreach ($this->fields as $field => $attr) {
                 if ($this->startsWith($field, 'custom_') || $this->startsWith($field, 'section_')) {
@@ -558,13 +599,14 @@ class InstitutionRoomsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldChangeType(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldChangeType(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view' || $action == 'add') {
             $attr['visible'] = false;
         } elseif ($action == 'edit') {
             $editTypeOptions = $this->getSelectOptions('InstitutionInfrastructure.change_types');
-            $selectedEditType = $this->queryString('edit_type', $editTypeOptions);
+            //$selectedEditType = $this->setQueryString('edit_type', $editTypeOptions);
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             $this->advancedSelectOptions($editTypeOptions, $selectedEditType);
             $this->controller->set(compact('editTypeOptions'));
 
@@ -581,7 +623,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldRoomStatusId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldRoomStatusId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
             $attr['type'] = 'select';
@@ -633,7 +675,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     //     return $attr;
     // }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
@@ -654,7 +696,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'index' || $action == 'view') {
             if (!empty($this->getOwnerInstitutionId())) {
@@ -665,7 +707,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCode(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $parentId = $this->getQueryString('institution_floor_id');
@@ -680,10 +722,11 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldName(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldName(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
-            $selectedEditType = $request->query('edit_type');
+            //$selectedEditType = $request->getQuery('edit_type');
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'readonly';
             }
@@ -692,29 +735,30 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldRoomTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldRoomTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $classificationOptions = $this->getSelectOptions('RoomTypes.classifications');
             $roomTypeOptions = $this->RoomTypes
-                ->find('list', [
-                    'keyField' => 'id',
-                    'valueField' => 'name',
-                    'groupField' => function ($roomType) use ($classificationOptions) {
-                        return $classificationOptions[$roomType->classification];
-                    }
-                ])
-                ->find('visible')
-                ->order([
-                    $this->RoomTypes->aliasField('classification') => 'ASC',
-                    $this->RoomTypes->aliasField('order') => 'ASC'
-                ])
-                ->toArray();
+                    ->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'name',
+                        'groupField' => function ($roomType) use ($classificationOptions) {
+                            return $classificationOptions[$roomType->classification];
+                        }
+                    ])
+                    ->find('visible')
+                    ->order([
+                        $this->RoomTypes->aliasField('classification') => 'ASC',
+                        $this->RoomTypes->aliasField('order') => 'ASC'
+                    ])
+                    ->toArray();
 
             $attr['options'] = $roomTypeOptions;
             $attr['onChangeReload'] = 'changeRoomType';
         } elseif ($action == 'edit') {
-            $selectedEditType = $request->query('edit_type');
+            //$selectedEditType = $request->getQuery('edit_type');
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::END_OF_USAGE) {
                 $attr['type'] = 'hidden';
             } else {
@@ -729,50 +773,64 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
     {
-        //POCOR-8060 no restrictions for start date
-        if ($action == 'edit') {
-            $entity = $attr['entity'];
-            if (!empty($entity->start_date)) {
-                $attr['type'] = 'readonly';
-                $sDate = $entity->start_date;
-                $attr['value'] = $sDate->format('Y-m-d');
-                $attr['attr']['value'] = $this->formatDate($sDate);
-                $attr['visible'] = true;
-                $attr['type'] = 'readonly';
+        if ($action == 'add') {
+            $startDate = $this->currentAcademicPeriod->start_date->format('d-m-Y');
+            /* restrict Start Date from start until end of academic period
+            $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
+            */
+            // temporary restrict until today until have better solution
+            $today = new DateTime();
+            $endDate = $today->format('d-m-Y');
 
-            }
+            $attr['date_options']['startDate'] = $startDate;
+            $attr['date_options']['endDate'] = $endDate;
+        } elseif ($action == 'edit') {
+            $entity = $attr['entity'];
+            //POCOR-8655 Start
+            $startDate = $this->currentAcademicPeriod->start_date->format('d-m-Y');
+            $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
+            $attr['date_options']['startDate'] = $startDate;
+            $attr['date_options']['endDate'] = $endDate;
+            //$attr['type'] = 'readonly';
+            //POCOR-8655 End
+            $attr['value'] = $entity->start_date->format('Y-m-d');
+            $attr['attr']['value'] = $this->formatDate($entity->start_date);
         }
 
         return $attr;
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
             $attr['visible'] = false;
         } elseif ($action == 'add') {
             $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
-            /**POCOR-8060 - end_date can be not within Academic Period*/
-            $today = new DateTime();
-            if ($endDate < $today) {
-                $endDate = $today->format('d-m-Y');
-            }
+
             $attr['type'] = 'hidden';
             $attr['value'] = $endDate;
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
-            $selectedEditType = $request->query('edit_type');
+
+            //$selectedEditType = $request->getQuery('edit_type');
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::END_OF_USAGE) {
-                $sDate = $entity->start_date;
+                /* restrict End Date from start date until end of academic period
+                $startDate = $entity->start_date->format('d-m-Y');
+                $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
+
+                $attr['date_options']['startDate'] = $startDate;
+                $attr['date_options']['endDate'] = $endDate;
+                */
+
+                // temporary restrict to today until have better solution
                 $today = new DateTime();
-                if($today >= $sDate){
-                    $sDate = $today;
-                }
+
                 $attr['type'] = 'readonly';
-                $attr['value'] = $sDate->format('Y-m-d');
-                $attr['attr']['value'] = $this->formatDate($sDate);
+                $attr['value'] = $today->format('Y-m-d');
+                $attr['attr']['value'] = $this->formatDate($today);
             } else {
                 $attr['type'] = 'hidden';
                 $attr['value'] = $entity->end_date->format('Y-m-d');
@@ -782,7 +840,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAccessibility(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAccessibility(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit' || $action == 'add') {
             $attr['options'] = $this->accessibilityOptions;
@@ -791,10 +849,11 @@ class InstitutionRoomsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldInfrastructureConditionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInfrastructureConditionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
-            $selectedEditType = $request->query('edit_type');
+            //$selectedEditType = $request->getQuery('edit_type');
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
             }
@@ -803,7 +862,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldSubjects(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSubjects(Event $event, array $attr, $action, ServerRequest $request)
     {
         // POCOR-3849 Subjects field will only be shown if the room belongs to a room type of Classroom classification
         $entity = $attr['entity'];
@@ -821,10 +880,11 @@ class InstitutionRoomsTable extends ControllerActionTable
         // end POCOR-3849
 
         if ($action == 'add' || $action == 'edit') {
-            $session = $request->session();
+            $session = $request->getSession();
 
             if ($session->check('Institution.Institutions.id') && !is_null($this->currentAcademicPeriod)) {
-                $institutionId = $session->read('Institution.Institutions.id');
+                //$institutionId = $session->read('Institution.Institutions.id');
+                $institutionId = $this->getInstitutionID();
                 $academicPeriodId = $this->currentAcademicPeriod->id;
 
                 $attr['options'] = $this->getSubjectOptions(['institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId]);
@@ -838,12 +898,13 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldNewRoomType(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNewRoomType(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
 
-            $selectedEditType = $request->query('edit_type');
+            //$selectedEditType = $request->getQuery('edit_type');
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 $classificationOptions = $this->getSelectOptions('RoomTypes.classifications');
                 $roomTypeOptions = $this->RoomTypes
@@ -869,12 +930,13 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldNewStartDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNewStartDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
 
-            $selectedEditType = $request->query('edit_type');
+            //$selectedEditType = $request->getQuery('edit_type');
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 /* restrict End Date from start date until end of academic period
                 $startDateObj = $entity->start_date->copy();
@@ -906,17 +968,18 @@ class InstitutionRoomsTable extends ControllerActionTable
     public function addEditOnChangeRoomType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['type']);
+        unset($request->getQuery['type']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('room_type_id', $request->data[$this->alias()])) {
-                    $selectedType = $request->data[$this->alias()]['room_type_id'];
-                    $request->query['type'] = $selectedType;
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('room_type_id', $request->getData($this->getAlias()))) {
+                    $selectedType = $request->getData($this->getAlias())['room_type_id'];
+                    //$request->getQuery['type'] = $selectedType;
+                    $this->request = $this->request->withQueryParams(['type' => $selectedType]);
                 }
 
-                if (array_key_exists('custom_field_values', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['custom_field_values']);
+                if (array_key_exists('custom_field_values', $request->getData($this->getAlias()))) {
+                    unset($request->getData($this->getAlias())['custom_field_values']);
                 }
             }
         }
@@ -925,22 +988,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     private function setupFields(Entity $entity)
     {
         $this->setFieldOrder([
-            'change_type',
-            'academic_period_id',
-            'institution_id',
-            'code',
-            'name',
-            'room_type_id',
-            'room_status_id',
-            'start_date',
-            'start_year',
-            'end_date',
-            'end_year',
-            'infrastructure_condition_id',
-            'previous_institution_room_id',
-            'area',
-            'new_room_type',
-            'new_start_date'
+            'change_type', 'academic_period_id', 'institution_id', 'code', 'name', 'room_type_id', 'room_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_institution_room_id','area', 'new_room_type', 'new_start_date'
         ]);
 
         $this->field('change_type');
@@ -954,7 +1002,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $this->field('start_date', ['entity' => $entity]);
 
         //POCOR-6760[start]
-        if ($entity->room_status_id != self::END_OF_USAGE) {
+        if($entity->room_status_id != self::END_OF_USAGE) {
             $this->field('end_date', ['entity' => $entity]);
         }
         //POCOR-6760[end]
@@ -964,9 +1012,9 @@ class InstitutionRoomsTable extends ControllerActionTable
         $this->field('subjects', [
             'type' => 'chosenSelect',
             'fieldNameKey' => 'subjects',
-            'fieldName' => $this->alias() . '.subjects._ids',
+            'fieldName' => $this->getAlias() . '.subjects._ids',
             'placeholder' => $this->getMessage($this->aliasField('select_subject')),
-            'valueWhenEmpty' => '<span>&lt;' . __('No Subject Allocated') . '&gt;</span>',
+            'valueWhenEmpty' => '<span>&lt;'.__('No Subject Allocated').'&gt;</span>',
             'entity' => $entity
         ]);
         $this->field('new_room_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);
@@ -992,7 +1040,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         // has Parent then get the ID of the parent then followed by counter
         $parentData = $this->InstitutionFloors->find()
             ->where([
-                $this->InstitutionFloors->aliasField($this->InstitutionFloors->primaryKey()) => $parentId
+                $this->InstitutionFloors->aliasField($this->InstitutionFloors->getPrimaryKey()) => $parentId
             ])
             ->first();
 
@@ -1002,7 +1050,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $lastRecord = $this->find()
             ->where([
                 $this->aliasField('institution_floor_id') => $parentId,
-                $this->aliasField('code') . " LIKE '" . $codePrefix . "%'"
+                $this->aliasField('code')." LIKE '" . $codePrefix . "%'"
             ])
             ->order($this->aliasField('code DESC'))
             ->first();
@@ -1014,7 +1062,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $codeSuffix = intval($lastSuffix) + 1;
 
         // if 1 character prepend '0'
-        $codeSuffix = (strlen($codeSuffix) == 1) ? '0' . $codeSuffix : $codeSuffix;
+        $codeSuffix = (strlen($codeSuffix) == 1) ? '0'.$codeSuffix : $codeSuffix;
         $autoGenerateCode = $codePrefix . $codeSuffix;
 
         return $autoGenerateCode;
@@ -1022,23 +1070,31 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     private function addBreadcrumbElement()
     {
+        $params = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($params);
         $entity = $this->InstitutionFloors->get($this->getQueryString('institution_floor_id'), ['contain' => ['InstitutionBuildings.InstitutionLands']]);
         $url = $this->url('index');
         if (isset($url[1])) {
             unset($url[1]);
         }
+        $institutionId = $this->getQueryString('institution_id');
+
         $buildingUrl = $url;
         $buildingUrl['action'] = 'InstitutionBuildings';
+        $buildingUrl[1] = $encodedQueryString;
         $buildingUrl = $this->setQueryString($buildingUrl, [
             'institution_land_id' => $entity->institution_building->institution_land->id,
-            'institution_land_name' => $entity->institution_building->institution_land->code
+            'institution_land_name' => $entity->institution_building->institution_land->code,
+            'institution_id' => $institutionId
         ]);
 
         $floorUrl = $url;
         $floorUrl['action'] = 'InstitutionFloors';
+        $floorUrl[1] = $encodedQueryString;
         $floorUrl = $this->setQueryString($floorUrl, [
             'institution_building_id' => $entity->institution_building->id,
-            'institution_building_name' => $entity->institution_building->name
+            'institution_building_name' => $entity->institution_building->name,
+            'institution_id' => $institutionId
         ]);
 
         $crumbs[] = [
@@ -1052,7 +1108,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $crumbs[] = [
             'name' => $this->getQueryString('institution_floor_name')
         ];
-        $toolbarElements = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => compact('crumbs'), 'options' => [], 'order' => 1];
+        $toolbarElements = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => ['encodedQueryString' => $encodedQueryString, 'crumbs'=>$crumbs], 'options' => [], 'order' => 1];
 
         return $toolbarElements;
     }
@@ -1073,7 +1129,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
 
         if ($entity->room_status_id == $inUseId) {
-            // If is in use, not allow to delete if the rooms is appear in other academic period
+        // If is in use, not allow to delete if the rooms is appear in other academic period
             $count = $this
                 ->find()
                 ->where([
@@ -1148,9 +1204,14 @@ class InstitutionRoomsTable extends ControllerActionTable
     public function getPeriodOptions($params = [])
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
-        if (is_null($this->request->query('period_id'))) {
-            $this->request->query['period_id'] = $this->AcademicPeriods->getCurrent();
+        $periodId = $this->request->getQuery('period_id');
+
+        if (is_null($periodId)) {
+            $periodId = $this->AcademicPeriods->getCurrent();
         }
+
+        $this->request = $this->request->withQueryParams(['period_id' => $periodId]);
+
         $selectedPeriod = $this->queryString('period_id', $periodOptions);
         $this->advancedSelectOptions($periodOptions, $selectedPeriod);
 
@@ -1159,7 +1220,7 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function getTypeOptions($params = [])
     {
-        $withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
+        $withAll = isset($params['withAll']) ? $params['withAll'] : false;
 
         $typeOptions = $this->RoomTypes
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
@@ -1167,6 +1228,10 @@ class InstitutionRoomsTable extends ControllerActionTable
             ->toArray();
         if ($withAll && count($typeOptions) > 1) {
             $typeOptions = ['-1' => __('All Room Types')] + $typeOptions;
+        }
+        if (!is_null($this->request->getAttribute('params')['?']['type'])) {
+            $type = $this->request->getAttribute('params')['?']['type'];
+            $this->request = $this->request->withQueryParams(['type' => $type]);
         }
         $selectedType = $this->queryString('type', $typeOptions);
         $this->advancedSelectOptions($typeOptions, $selectedType);
@@ -1176,8 +1241,8 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function getStatusOptions($params = [])
     {
-        $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
-        $withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        $withAll = isset($params['withAll']) ? $params['withAll'] : false;
 
         $statusOptions = $this->RoomStatuses
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
@@ -1185,6 +1250,10 @@ class InstitutionRoomsTable extends ControllerActionTable
             ->toArray();
         if ($withAll && count($statusOptions) > 1) {
             $statusOptions = ['-1' => __('All Statuses')] + $statusOptions;
+        }
+        if (!is_null($this->request->getAttribute('params')['?']['status'])) {
+            $status = $this->request->getAttribute('params')['?']['status'];
+            $this->request = $this->request->withQueryParams(['status' => $status]);
         }
         $selectedStatus = $this->queryString('status', $statusOptions);
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
@@ -1194,8 +1263,8 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function getSubjectOptions($params = [])
     {
-        $institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : null;
-        $academicPeriodId = array_key_exists('academic_period_id', $params) ? $params['academic_period_id'] : null;
+        $institutionId = isset($params['institution_id']) ? $params['institution_id'] : null;
+        $academicPeriodId = isset($params['academic_period_id']) ? $params['academic_period_id'] : null;
 
         $options = [];
 
@@ -1243,8 +1312,8 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function findInUse(Query $query, array $options)
     {
-        $institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : null;
-        $academicPeriodId = array_key_exists('academic_period_id', $options) ? $options['academic_period_id'] : null;
+        $institutionId = isset($options['institution_id']) ? $options['institution_id'] : null;
+        $academicPeriodId = isset($options['academic_period_id']) ? $options['academic_period_id'] : null;
         $inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
 
         $query->where([
@@ -1291,5 +1360,25 @@ class InstitutionRoomsTable extends ControllerActionTable
                     ->execute();
             }
         }
+    }
+
+    public function addDeleteBeforeAction(Event $event, ArrayObject $extra)
+    {
+
+        $model = $this;
+        $url = $model->url('index');
+        $institutionID = $this->getInstitutionID();
+        if (isset($url[2])) {
+            unset($url[2]);
+        }
+        //$queryString['id'] = $institutionID;
+        $queryString = $model->getQueryString();
+
+
+        unset($queryString['id']);
+
+        $queryString['institution_id'] = $institutionID;
+        $url[1] = $model->paramsEncode($queryString);
+        $extra['redirect'] = $url;
     }
 }

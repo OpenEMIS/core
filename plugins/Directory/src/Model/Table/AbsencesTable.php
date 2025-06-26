@@ -6,16 +6,16 @@ use Cake\Validation\Validator;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
-use Cake\ORM\Query; 
+use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 
 use App\Model\Table\ControllerActionTable;
 
 class AbsencesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_absences');
+        $this->setTable('institution_student_absences');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -29,7 +29,7 @@ class AbsencesTable extends AppTable
 
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -63,26 +63,26 @@ class AbsencesTable extends AppTable
         // $this->fields['student_absence_reason_id']['type'] = 'select';
         $this->fields['institution_student_absence_day_id']['visible'] = false;
         // POCOR-5245
-        $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery['queryString'];
         if ($queryString) {
             $event->stopPropagation();
-            $condition = $this->paramsDecode($queryString);            
-            $entity = $this->get($condition['id']);            
+            $condition = $this->paramsDecode($queryString);
+            $entity = $this->get($condition['id']);
             $institutionStudentAbsenceDaysEntity = $this->InstitutionStudentAbsenceDays->get($entity->institution_student_absence_day_id);
             $this->InstitutionStudentAbsenceDays->delete($institutionStudentAbsenceDaysEntity);
             TableRegistry::get('InstitutionStudentAbsenceDetails')
                     ->deleteAll(['student_id'=>$entity->student_id,
                             'date'=>$entity->date,
-                            ]);            
-            
+                            ]);
+
             $this->delete($entity);
             $this->Alert->success('StudentAbsence.deleteRecord', ['reset'=>true]);
-            return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Absences','index']);
+            return $this->controller->redirect(['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'Absences','index']);
         }
     }
 
     public function indexBeforeAction(Event $event)
-    {  
+    {
        // $query = $this->request->query;
 
 
@@ -106,12 +106,12 @@ class AbsencesTable extends AppTable
         // $this->ControllerAction->setFieldOrder('time', $order++);
         // $this->ControllerAction->setFieldOrder('student_absence_reason_id', $order++);
     }
-    
+
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         parent::onUpdateActionButtons($event, $entity, $buttons);
-        
-        if (array_key_exists('view', $buttons)) {
+
+        if (isset($buttons['view'])) {
             $institutionId = $entity->institution->id;
             $url = [
                 'plugin' => 'Institution',
@@ -124,13 +124,13 @@ class AbsencesTable extends AppTable
             $buttons['view']['url'] = $url;
 
             // POCOR-1893 unset the view button on profiles controller
-            if ($this->controller->name == 'Profiles') {
+            if ($this->controller->getName() == 'Profiles') {
                 unset($buttons['view']);
             }
             // end POCOR-1893
         }
-        
-        if (array_key_exists('remove', $buttons)) {
+
+        if (isset($buttons['remove'])) {
             $institutionId = $entity->institution->id;
             $url = [
                 'plugin' => 'Student',
@@ -142,7 +142,7 @@ class AbsencesTable extends AppTable
             $buttons['remove']['url'] = $url;
 
             // POCOR-5245 unset the view button on profiles controller
-            if ($this->controller->name == 'Profiles') {
+            if ($this->controller->getName() == 'Profiles') {
                 unset($buttons['remove']);
             }
             // end POCOR-5245
@@ -150,7 +150,7 @@ class AbsencesTable extends AppTable
 
         return $buttons;
     }
-    
+
     private function setupTabElements()
     {
         $options['type'] = 'student';
@@ -168,8 +168,8 @@ class AbsencesTable extends AppTable
     {
         $userData = $this->Session->read();
 
-       if ($userData['Auth']['User']['is_guardian'] == 1) { 
-            $sId = $userData['Student']['ExaminationResults']['student_id']; 
+       if ($userData['Auth']['User']['is_guardian'] == 1) {
+            $sId = $userData['Student']['ExaminationResults']['student_id'];
             if ($sId) {
                 $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
             }
@@ -185,7 +185,7 @@ class AbsencesTable extends AppTable
                 $where[$this->aliasField('student_id')] = $studentId;
             }
         }
-        
+
         $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
             $query
                 ->find('all')
@@ -205,5 +205,5 @@ class AbsencesTable extends AppTable
             )
             ->where($where);
     }
-    
+
 }

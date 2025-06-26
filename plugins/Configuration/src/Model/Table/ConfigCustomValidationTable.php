@@ -12,9 +12,9 @@ use Cake\ORM\Entity;
 
 class ConfigCustomValidationTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('config_items');
+        $this->setTable('config_items');
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
         $this->toggle('add', false);

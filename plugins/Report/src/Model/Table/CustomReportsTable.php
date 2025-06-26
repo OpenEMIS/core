@@ -9,6 +9,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+use Cake\Http\ServerRequest;
 
 class CustomReportsTable extends AppTable
 {
@@ -18,9 +19,9 @@ class CustomReportsTable extends AppTable
 
     private $formatOptions = [];
 
-	public function initialize(array $config)
+	public function initialize(array $config): void
 	{
-		$this->table('reports');
+		$this->setTable('reports');
 		parent::initialize($config);
 
         $this->addBehavior('Report.ReportList');
@@ -40,7 +41,7 @@ class CustomReportsTable extends AppTable
         ];
 	}
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';
@@ -50,7 +51,7 @@ class CustomReportsTable extends AppTable
         return $events;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator->notEmpty('feature');
@@ -58,10 +59,10 @@ class CustomReportsTable extends AppTable
 
 	public function beforeAction(Event $event)
 	{
-		$controllerName = $this->controller->name;
+		$controllerName = $this->controller->getName();
 		$reportName = __('Custom');
 
-		$this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
+		$this->controller->Navigation->substituteCrumb($this->getAlias(), $reportName);
 		$this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
 	}
 
@@ -71,19 +72,19 @@ class CustomReportsTable extends AppTable
         $this->ControllerAction->field('feature', ['type' => 'select', 'select' => false]);
        // $this->ControllerAction->field('format');
 
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $id = $this->request->data[$this->alias()]['feature'];
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $id = $this->request->getData($this->getAlias())['feature'];
             $customReportData = $this->find()
                 ->where([$this->aliasField('id') => $id])
                 ->first();
 
             // filters
             if (!empty($customReportData) && !empty($customReportData->filter)) {
-                $validator = $this->validator();
+                $validator = $this->getValidator();
                 $filters = json_decode($customReportData->filter, true);
 
                 // academic period filter
-                if (array_key_exists('academic_period_id', $filters)) {
+                if (isset($filters['academic_period_id'])) {
                     // add validation
                     $validator->notEmpty('academic_period_id');
                     $this->ControllerAction->field('academic_period_id');
@@ -92,29 +93,29 @@ class CustomReportsTable extends AppTable
 
                 //START: POCOR-7069
                 // Institution Type filter
-                if (array_key_exists('institution_type_id', $filters)) {
+                if (isset($filters['institution_type_id'])) {
                     // add validation
                     $validator->notEmpty('institution_type_id');
                     $this->ControllerAction->field('institution_type_id');
                     unset($filters['institution_type_id']);
                 }
                 // Institution  filter
-                if (array_key_exists('institution_id', $filters)) {
+                if (isset($filters['institution_id'])) {
                     // add validation
                     $validator->notEmpty('institution_id');
                     $this->ControllerAction->field('institution_id');
                     unset($filters['institution_id']);
                 }
                 // edication grade filter
-                if (array_key_exists('education_grade_id', $filters)) {
+                if (isset($filters['education_grade_id'])) {
                     // add validation
                     $validator->notEmpty('education_grade_id');
                     $this->ControllerAction->field('education_grade_id');
                     unset($filters['education_grade_id']);
                 }
-                
+
                 // education subject filter
-                if (array_key_exists('education_subject_id', $filters)) {
+                if (isset($filters['education_subject_id'])) {
                     // add validation
                     $validator->notEmpty('education_subject_id');
                     $this->ControllerAction->field('education_subject_id');
@@ -133,19 +134,19 @@ class CustomReportsTable extends AppTable
                 // other filters
                 foreach ($filters as $field => $filterData) {
                     if ($toReset) {
-                        unset($this->request->data[$this->alias()][$field]);
+                        unset($this->request->getData($this->getAlias())[$field]);
                     }
                     if (isset($this->request->data["submit"]) && $field == $this->request->data["submit"]) {
                         $toReset = true;
                     }
 
-                    $fieldType = array_key_exists('fieldType', $filterData) ? $filterData['fieldType'] : 'select';
+                    $fieldType = isset($filterData['fieldType']) ? $filterData['fieldType'] : 'select';
                     $fieldParams = [];
                     $fieldParams['type'] = $fieldType;
 
                     if ($fieldType == 'select' || $fieldType == 'chosenSelect') {
                         // get options
-                        $queryParams = $this->request->data[$this->alias()];
+                        $queryParams = $this->request->getData($this->getAlias());
                         $queryParams['user_id'] = $this->Auth->user('id');
                         $queryParams['super_admin'] = $this->Auth->user('super_admin');
                         $byaccess = false;
@@ -153,8 +154,8 @@ class CustomReportsTable extends AppTable
                         $options = $this->buildQuery($filterData, $queryParams, $byaccess, $toSql);
 
                         // add additional options
-                        if (array_key_exists('options', $filterData)) {
-                            if (array_key_exists('options_condition', $filterData)) {
+                        if (isset($filterData['options'])) {
+                            if (isset($filterData['options_condition'])) {
                                 // only allow options if conditions met
                                 if ($this->checkOptionCondition($filterData["options_condition"], $queryParams)) {
                                     foreach ($filterData['options'] as $value => $option) {
@@ -177,13 +178,13 @@ class CustomReportsTable extends AppTable
                             $fieldParams['attr'] = ['multiple' => false];
                         }
 
-                        if (!(isset($this->request->data[$this->alias()][$field]))) {
-                            $this->request->data[$this->alias()][$field] = key($options);
+                        if (!(isset($this->request->getData($this->getAlias())[$field]))) {
+                            $this->request->getData($this->getAlias())[$field] = key($options);
                         }
                     }
 
                     // add validation for fields
-                    $validate = array_key_exists('validate', $filterData) ? filter_var($filterData['validate'], FILTER_VALIDATE_BOOLEAN) : true;
+                    $validate = isset($filterData['validate']) ? filter_var($filterData['validate'], FILTER_VALIDATE_BOOLEAN) : true;
                     if ($validate) {
                         $fieldParams['required'] = true;
                         $validator->notEmpty($field);
@@ -195,17 +196,17 @@ class CustomReportsTable extends AppTable
         }
     }
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+	public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         ini_set('memory_limit', '-1');
         if ($action == 'add') {
-            $queryParams = isset($this->request->data[$this->alias()]) ? $this->request->data[$this->alias()] : [];
+            $queryParams = (null !== $this->request->getData($this->getAlias())) ? $this->request->getData($this->getAlias()) : [];
             $queryParams['user_id'] = $this->Auth->user('id');
             $queryParams['super_admin'] = $this->Auth->user('super_admin');
 
             $customReports = $this
                 ->find(
-                    'list', 
+                    'list',
                     ["valueField" => function ($row) {
                             return $row;
                     }]
@@ -228,20 +229,22 @@ class CustomReportsTable extends AppTable
 
             $attr['options'] = $reportOptions;
             $attr['onChangeReload'] = true;
-            if (!(isset($this->request->data[$this->alias()]['feature']))) {
+            $option = $this->controller->getFeatureOptions($this->getAlias());
+            if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->data[$this->alias()]['feature'] = key($option);
+                $defaultFeatureValue = key($option);
+                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
             }
             return $attr;
         }
     }
 
-    public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            if (isset($this->request->data[$this->alias()]['feature']) && !empty($this->request->data[$this->alias()]['feature'])) {
-                $reportId = $this->request->data[$this->alias()]['feature'];
+            if (isset($this->request->getData($this->getAlias())['feature']) && !empty($this->request->getData($this->getAlias())['feature'])) {
+                $reportId = $this->request->getData($this->getAlias())['feature'];
                 $format = $this->get($reportId)->format;
 
                 $key = $this->formatOptions[$format]['key'];
@@ -259,7 +262,7 @@ class CustomReportsTable extends AppTable
     }
 
     // academic period filter
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -280,7 +283,7 @@ class CustomReportsTable extends AppTable
     {
         $str = $this->get($params['feature'])->name;
         $reportName = str_replace(' ', '_', $str);
-        $this->behaviors()->get('ExcelReport')->config([
+        $this->behaviors()->get('ExcelReport')->setConfig([
             'filename' => $reportName
         ]);
     }
@@ -304,15 +307,15 @@ class CustomReportsTable extends AppTable
     {
         $params = $settings['requestQuery'];
         $customReportData = $this->get($params['feature']);
-		
+
 		if(!empty($params['start_date'])) {
-			$params['start_date'] = date("Y-m-d", strtotime($params['start_date']));	
+			$params['start_date'] = date("Y-m-d", strtotime($params['start_date']));
 		}
 		if(!empty($params['end_date'])) {
-			$params['end_date'] = date("Y-m-d", strtotime($params['end_date']));	
+			$params['end_date'] = date("Y-m-d", strtotime($params['end_date']));
 		}
-		
-        //if (array_key_exists('requestQuery', $settings)) {
+
+        //if (isset($settings['requestQuery'])) {
         if (isset($settings['requestQuery'])) {    //POCOR-8126
             $jsonQuery = json_decode($customReportData->query, true);
 
@@ -325,7 +328,7 @@ class CustomReportsTable extends AppTable
     }
 
     /*POCOR-6451 starts- institution filter*/
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $InstitutionsTable = TableRegistry::get('Institution.Institutions');
@@ -345,7 +348,7 @@ class CustomReportsTable extends AppTable
             }
 
             $institutionList = $institutionQuery->toArray();
-           
+
             $attr['onChangeReload'] = true;
             if (count($institutionList) > 1) {
                 //$attr['options'] = [0 => __('All Institutions')] + $institutionList;
@@ -362,7 +365,7 @@ class CustomReportsTable extends AppTable
     /*POCOR-6451 ends*/
 
     // Institution Type filter POCOR-7069
-    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $TypesTable = TableRegistry::get('Institution.Types');
@@ -381,7 +384,7 @@ class CustomReportsTable extends AppTable
     }
 
     // POCOR-7096 education grade filter
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -395,7 +398,7 @@ class CustomReportsTable extends AppTable
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
             $grades = TableRegistry::get('Institution.InstitutionGrades');
             $institutions = TableRegistry::get('Institution.Institutions');
-            
+
             //POCOR-7178 start
             $conditions = [];
             if (!empty($selectedPeriod)) {
@@ -409,21 +412,21 @@ class CustomReportsTable extends AppTable
             }
             //POCOR-7178 end
             if(!empty($selectedPeriod)){ // POCOR-7241
-                $periodGrades = $EducationGrades->find('list', ['keyField' => 'id', 
+                $periodGrades = $EducationGrades->find('list', ['keyField' => 'id',
                                 'valueField' => 'programme_grade_name'])
                             ->find('visible')
                             ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
-                            ->LeftJoin([$grades->alias() => $grades->table()],[
+                            ->LeftJoin([$grades->getAlias() => $grades->getTable()],[
                                 $grades->aliasField('education_grade_id').' = ' . $EducationGrades->aliasField('id')
                             ])
-                            ->LeftJoin([$institutions->alias() => $institutions->table()],[
+                            ->LeftJoin([$institutions->getAlias() => $institutions->getTable()],[
                                 $institutions->aliasField('id').' = ' . $grades->aliasField('institution_id')
                             ])
                             ->where($conditions)
                             ->order([$EducationGrades->aliasField('id')])
                             ->toArray();
             }
-            
+
             $attr['onChangeReload'] = true;
             $attr['options'] = $periodGrades;
             $attr['type'] = 'select';
@@ -433,8 +436,8 @@ class CustomReportsTable extends AppTable
         }
     }
 
-    // POCOR-7069 education sujbect filter 
-    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
+    // POCOR-7069 education sujbect filter
+    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $selectedPeriod = $request->data['CustomReports']['academic_period_id'];
@@ -460,6 +463,16 @@ class CustomReportsTable extends AppTable
             $attr['select'] = true;
             $attr['required'] = true;
             return $attr;
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

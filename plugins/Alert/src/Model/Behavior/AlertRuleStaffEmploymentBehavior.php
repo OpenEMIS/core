@@ -70,7 +70,7 @@ class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
         ]
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -80,7 +80,7 @@ class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
-                $validator = $model->validator();
+                $validator = $model->getValidator(); // POCOR-8533
                 $validator->add('value', [
                     'ruleRange' => [
                         'rule' => ['range', 1, 365],

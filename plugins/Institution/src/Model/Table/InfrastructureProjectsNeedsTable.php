@@ -12,7 +12,7 @@ use Cake\ORM\Entity;
 
 class InfrastructureProjectsNeedsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 

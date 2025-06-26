@@ -3,11 +3,11 @@ namespace Meal\Model\Table;
 //POCOR-7363
 use App\Model\Table\ControllerActionTable;
 
-class MealFooRecordsTable extends ControllerActionTable
+class MealFoodRecordsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('meal_food_records');
+        $this->setTable('meal_food_records');
         parent::initialize($config);        
        
     }

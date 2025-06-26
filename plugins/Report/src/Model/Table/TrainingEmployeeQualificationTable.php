@@ -17,13 +17,13 @@ use Cake\Datasource\ConnectionManager;
  * POCOR-6598
  * Generate Employee Qualification Report
  * get array data
- */ 
+ */
 class TrainingEmployeeQualificationTable extends AppTable
 {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff');
+        $this->setTable('institution_staff');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
@@ -41,13 +41,13 @@ class TrainingEmployeeQualificationTable extends AppTable
             'pages' => false,
             'autoFields' => false
         ]);
-        
+
     }
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -81,7 +81,7 @@ class TrainingEmployeeQualificationTable extends AppTable
                 'level' => 'QualificationLevels.name',
                // 'subject' => 'EducationFieldOfStudies.name',
                 'status_of_hiring' => 'Statuses.name',
-              
+
             ])
             ->contain([
                 'Institutions' => [
@@ -90,7 +90,7 @@ class TrainingEmployeeQualificationTable extends AppTable
                         'name'=>'Institutions.name'
                     ]
                 ],
-                
+
                 'Institutions.Providers' => [
                     'fields' => [
                         'institution_provider' => 'Providers.name',
@@ -101,7 +101,7 @@ class TrainingEmployeeQualificationTable extends AppTable
                         'area_name' => 'Areas.name'
                     ]
                 ],
-                
+
                 'Users' => [
                     'fields' => [
                         //'Users.id', // this field is required for Identities and IdentityTypes to appear
@@ -118,7 +118,7 @@ class TrainingEmployeeQualificationTable extends AppTable
                         'gender' => 'Genders.name'
                     ]
                 ],
-                
+
                 'StaffTypes' => [
                     'fields' => [
                         'StaffTypes.name'
@@ -144,36 +144,42 @@ class TrainingEmployeeQualificationTable extends AppTable
                         'position_title' => 'StaffPositionTitles.name',
                     ]
                 ],
-                
+                'Positions.StaffPositionGrades' => [
+                    'fields' => [
+                        'functional_class' => 'StaffPositionGrades.name',
+
+                    ]
+                ],
+
             ])/*->innerJoin(
                 [$workflows->alias() => $workflows->table()],
                 [$workflows->aliasField('id = ') . $position->aliasField('status_id')]
             )*/
             ->group(['Users.id'])
             ->leftJoin(
-                [$qualification->alias() => $qualification->table()],
+                [$qualification->getAlias() => $qualification->getTable()],
                 [$qualification->aliasField('staff_id = ') . $this->aliasfield('staff_id')]
             )->leftJoin(
-                [$qualificationtitle->alias() => $qualificationtitle->table()],
+                [$qualificationtitle->getAlias() => $qualificationtitle->getTable()],
                 [$qualificationtitle->aliasField('id = ') . $qualification->aliasField('qualification_title_id')]
             )->leftJoin(
-                [$qualificationCountry->alias() => $qualificationCountry->table()],
+                [$qualificationCountry->getAlias() => $qualificationCountry->getTable()],
                 [$qualificationCountry->aliasField('id = ') . $qualification->aliasField('qualification_country_id')]
             )->leftJoin(
-                [$educationFieldOfStudy->alias() => $educationFieldOfStudy->table()],
+                [$educationFieldOfStudy->getAlias() => $educationFieldOfStudy->getTable()],
                 [$educationFieldOfStudy->aliasField('id = ') . $qualification->aliasField('education_field_of_study_id')]
             )
             ->leftJoin(
-                [$qualificationlevel->alias() => $qualificationlevel->table()],
+                [$qualificationlevel->getAlias() => $qualificationlevel->getTable()],
                 [$qualificationlevel->aliasField('id = ') . $qualificationtitle->aliasField('qualification_level_id')]
             );
-    
+
     }
 
-    
 
-    
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
 
         $newFields[] = [
@@ -263,7 +269,7 @@ class TrainingEmployeeQualificationTable extends AppTable
             'type' => 'string',
             'label' => __('Functional class')
         ];
-        
+
 
         $newFields[] = [
             'key' => 'employment_status',
@@ -361,7 +367,8 @@ class TrainingEmployeeQualificationTable extends AppTable
             ])
             ->where([$userIdentities->aliasField('security_user_id') => $entity->staff_id])
             ->order([$userIdentities->aliasField('id DESC')])
-            ->hydrate(false)->toArray();
+            ->disableHydration() // POCOR-8533
+            ->toArray();
             $entity->custom_identity_number = '';
             $other_identity_array = [];
             if (!empty($userIdentitiesResult)) {
@@ -389,7 +396,7 @@ class TrainingEmployeeQualificationTable extends AppTable
     }
 
     /**
-    * Get staff highest qualification 
+    * Get staff highest qualification
     */
     public function onExcelGetStaffQualifications(Event $event, Entity $entity)
     {
@@ -421,7 +428,7 @@ class TrainingEmployeeQualificationTable extends AppTable
                     $titleid[] = $val['id'];
                     $level_id[] = $val['level_id'];
                 }
-                
+
                // if(count(array_unique($level)) < count($level)){
                 if((count(array_unique($level)) === 1 && !empty($titleid))){
                     $staffQualificationdata = $qualificationtitle->find('all')
@@ -450,7 +457,7 @@ class TrainingEmployeeQualificationTable extends AppTable
                             $entity->qualification_institution = $value['qualification_institution'];
                             $entity->gpa = $value['gpa'];
                         }
-                        
+
                     }
 
                 }else{
@@ -473,10 +480,10 @@ class TrainingEmployeeQualificationTable extends AppTable
                                     ->select([
                                             'title_name' => $qualificationtitle->aliasField('name'),
                                             'title_id' => $qualificationtitle->aliasField('id')
-                                            
+
                                         ])
                                     ->where([$qualificationtitle->aliasField('id') => $tittle]);
-                                    
+
                                 $staffdata_ss = $staffQualificationdata2->toArray();
                                 foreach($staffdata_ss as $key=>$val)
                                 {
@@ -503,7 +510,7 @@ class TrainingEmployeeQualificationTable extends AppTable
                     ->select([
                             'quali_id' => $qualificationtitle->aliasField('id'),
                             'level_id' => $qualificationtitle->aliasField('qualification_level_id'),
-                           
+
                         ])
                     ->where([$qualificationLevel->aliasField('id IN') => $level_id,
                         $qualificationtitle->aliasField('id IN') => $titleid])
@@ -545,13 +552,13 @@ class TrainingEmployeeQualificationTable extends AppTable
                                     $entity->qualification_institution = $value['qualification_institution'];
                                     $entity->gpa = $value['gpa'];
                                 }
-                            }   
-                         
+                            }
+
 
                 }  } }
 
             }
-                
+
         }
             return $entity->staff_qualification;
     }
@@ -573,7 +580,7 @@ class TrainingEmployeeQualificationTable extends AppTable
     }
 
     /*
-    * Get staff highest level 
+    * Get staff highest level
     */
     public function onExcelGetStaffLevel(Event $event, Entity $entity)
     {
@@ -638,30 +645,30 @@ class TrainingEmployeeQualificationTable extends AppTable
                         {
                             $entity->staff_level = $val['level_name'];
                             return $entity->staff_level;
-                        }   
+                        }
                     }
 
                 }
             }
-                
+
             }
             return '';
     }
     /**
-    * Get staff other qualification 
+    * Get staff other qualification
     */
     public function onExcelGetSubMajor(Event $event, Entity $entity)
     {
-        $qualification = TableRegistry::get('Staff.Qualifications');
-        $qualificationtitlespecial = TableRegistry::get('FieldOption.QualificationSpecialisations');
-        $qualificationspecial = TableRegistry::get('staff_qualifications_specialisations');
+        $qualification = TableRegistry::getTableLocator()->get('Staff.Qualifications');
+        $qualificationtitlespecial = TableRegistry::getTableLocator()->get('FieldOption.QualificationSpecialisations');
+        $qualificationspecial = TableRegistry::getTableLocator()->get('Staff.QualificationsSpecialisations');
         $submajor = $qualificationspecial->find()
             ->innerJoin(
-                [$qualification->alias() => $qualification->table()],
+                [$qualification->getAlias() => $qualification->getTable()],
                 [$qualification->aliasField('id = ') . $qualificationspecial->aliasField('staff_qualification_id')]
             )
             ->innerJoin(
-                [$qualificationtitlespecial->alias() => $qualificationtitlespecial->table()],
+                [$qualificationtitlespecial->getAlias() => $qualificationtitlespecial->getTable()],
                 [$qualificationtitlespecial->aliasField('id = ') .$qualificationspecial->aliasField('qualification_specialisation_id')]
             )
             ->select([
@@ -677,7 +684,7 @@ class TrainingEmployeeQualificationTable extends AppTable
                 $entity->sub_major = '';
                 foreach ($data as $key => $val) {
                     $specialisationss[$val['id']] = $val['name'];
-                
+
                 }
             $entity->sub_major =  implode(', ', array_values($specialisationss));
             return $entity->sub_major;
@@ -686,7 +693,7 @@ class TrainingEmployeeQualificationTable extends AppTable
     }
 
     /**
-    * Get staff subject 
+    * Get staff subject
     */
     public function onExcelGetStaffSubject(Event $event, Entity $entity)
     {
@@ -695,11 +702,11 @@ class TrainingEmployeeQualificationTable extends AppTable
         $educationSubjects = TableRegistry::get('Education.EducationSubjects');
         $subjectRecord = $StaffSubjects->find()
             ->innerJoin(
-                [$qualification->alias() => $qualification->table()],
+                [$qualification->getAlias() => $qualification->getTable()],
                 [$qualification->aliasField('id = ') . $StaffSubjects->aliasField('staff_qualification_id')]
             )
             ->innerJoin(
-                [$educationSubjects->alias() => $educationSubjects->table()],
+                [$educationSubjects->getAlias() => $educationSubjects->getTable()],
                 [$educationSubjects->aliasField('id = ') .$StaffSubjects->aliasField('education_subject_id')]
             )
             ->select([
@@ -713,7 +720,7 @@ class TrainingEmployeeQualificationTable extends AppTable
                 $entity->subject = '';
                 foreach ($data as $key => $val) {
                     $staffSubjects[$val['name']] = $val['name'];
-                
+
                 }
             $entity->subject =  implode(', ', array_values($staffSubjects));
             return $entity->subject;

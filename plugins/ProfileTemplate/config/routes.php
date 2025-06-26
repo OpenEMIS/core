@@ -1,5 +1,6 @@
 <?php
 use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
 Router::scope('/ProfileTemplates', ['plugin' => 'ProfileTemplate'], function ($routes) {
     Router::connect('/ProfileTemplates', ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates']);

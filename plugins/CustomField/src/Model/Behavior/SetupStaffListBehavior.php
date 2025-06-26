@@ -10,10 +10,10 @@ use Cake\Validation\Validator;
 use CustomField\Model\Behavior\SetupBehavior;
 
 /**
- * 
+ *
  * This class is used to setup staff list in surveys
  * @author Megha Gupta <megha.gupta@mail.valuecoders.com>
- * 
+ *
  */
 class SetupStaffListBehavior extends SetupBehavior
 {
@@ -22,7 +22,7 @@ class SetupStaffListBehavior extends SetupBehavior
     private $CustomForms = null;
     private $formOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -32,7 +32,7 @@ class SetupStaffListBehavior extends SetupBehavior
         $this->formOptions = $this->CustomForms
             ->find('list')
             ->innerJoin(
-                [$this->CustomModules->alias() => $this->CustomModules->table()],
+                [$this->CustomModules->getAlias() => $this->CustomModules->getTable()],
                 [
                     $this->CustomModules->aliasField('id = ') . $this->CustomForms->aliasField('custom_module_id'),
                     $this->CustomModules->aliasField('model') => $this->module
@@ -49,21 +49,28 @@ class SetupStaffListBehavior extends SetupBehavior
     public function onSetStaffListElements(Event $event, Entity $entity)
     {
         $model = $this->_table;
-
+        $request = $model->request;
         if ($model->request->is(['get'])) {
             if (isset($entity->id)) {
                 // view / edit
                 if ($entity->has('params') && !empty($entity->params)) {
                     $params = json_decode($entity->params, true);
-                    if (array_key_exists('survey_form_id', $params)) {
+                    if (isset($params['survey_form_id'])) {
                         $formId = $params['survey_form_id'];
-                        $model->request->query['survey_form'] = $formId;
+                        //$model->request->query['survey_form'] = $formId; //POCOR-8420
+                        $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['survey_form' => $formId]));
+                        $entity->survey_form = $formId;
+                        $model->request = $request;
                         $entity->survey_form = $formId;
                     }
                 }
             } else {
                 // add
-                unset($model->request->query['survey_form']);
+                //unset($model->request->query['survey_form']); //POCOR-8420
+                $queryParams = $request->getQueryParams();
+                unset($queryParams['survey_form']);
+                $request = $request->withQueryParams($queryParams);
+                $model->request = $request;
             }
         }
 

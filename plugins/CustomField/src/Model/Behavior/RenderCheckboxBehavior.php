@@ -8,7 +8,7 @@ use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderCheckboxBehavior extends RenderBehavior
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -51,7 +51,7 @@ class RenderCheckboxBehavior extends RenderBehavior
                 $value = implode(', ', $answers);
             }
         } elseif ($action == 'edit') {
-            $form = $event->subject()->Form;
+            $form = $event->getSubject()->Form;
             $unlockFields = [];
 
             $html = '';
@@ -68,14 +68,14 @@ class RenderCheckboxBehavior extends RenderBehavior
                 $html .= $form->checkbox("$fieldPrefix.number_value.$key", $option);
                 $unlockFields[] = "$fieldPrefix.number_value.$key";
                 $html .= '<label class="selection-label" style="padding:0 20px 0 0!important;">'. $value .'</label>';//POCOR-7950
-                
+
                 $html .= '</div>';
             }
             $html .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
             $unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
 
             $attr['output'] = $html;
-            $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
             $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 

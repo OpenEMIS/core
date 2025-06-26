@@ -13,6 +13,8 @@ use Cake\Event\Event;
 use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Http\ServerRequest;
+use Cake\Datasource\ConnectionManager; //POCOR-9023
 
 class TrainingCoursesTable extends ControllerActionTable
 {
@@ -28,7 +30,7 @@ class TrainingCoursesTable extends ControllerActionTable
 
     private $targetPopulationSelection = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -95,12 +97,11 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
-
         $this->targetPopulationSelection = $this->getSelectOptions($this->aliasField('target_population_selection'));
         $this->SENTooltipMessage = $this->getMessage('Training.TrainingCourses.special_education_needs');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -139,6 +140,9 @@ class TrainingCoursesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        //POCOR-9023
+        $connection = ConnectionManager::get('default');
+        $connection->execute('SET foreign_key_checks = 0');
         // Type / Visible
         $visible = ['index' => false, 'view' => true, 'edit' => true, 'add' => true];
         $this->field('description', ['visible' => $visible]);
@@ -241,18 +245,54 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
+    //POCOR-9023 -- changes made for array_key_exists() issue.
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $keywords = ['target_populations', 'training_providers', 'result_types'];
-        foreach ($keywords as $key => $value) {
-            if (array_key_exists($this->alias(), $requestData) && array_key_exists($value, $requestData[$this->alias()])) {
-                if ($requestData[$this->alias()][$value] != self::SELECT_ALL_TARGET_POPULATIONS && array_key_exists('_ids', $requestData[$this->alias()][$value]) && empty($requestData[$this->alias()][$value]['_ids'])) {
-                    $requestData[$this->alias()][$value] = [];
+
+        // Convert ArrayObject to an array
+        $requestDataArray = $requestData->getArrayCopy();
+
+        foreach ($keywords as $value) {
+            if (
+                array_key_exists($this->getAlias(), $requestDataArray) &&
+                is_array($requestDataArray[$this->getAlias()]) && // Ensure it's an array
+                array_key_exists($value, $requestDataArray[$this->getAlias()])
+            ) {
+                if (
+                    $requestDataArray[$this->getAlias()][$value] != self::SELECT_ALL_TARGET_POPULATIONS &&
+                    is_array($requestDataArray[$this->getAlias()][$value]) && // Ensure it's an array
+                    array_key_exists('_ids', $requestDataArray[$this->getAlias()][$value]) &&
+                    empty($requestDataArray[$this->getAlias()][$value]['_ids'])
+                ) {
+                    $requestData[$this->getAlias()][$value] = [];
                 }
             }
         }
 
-        $newOptions = ['associated' => ['TargetPopulations' ,'TrainingProviders', 'ResultTypes', 'CoursePrerequisites', 'Specialisations']]; //so during patch entity, it can get the necessary datas
+        //Validating the training_course_category_id before assigning
+        if (
+            array_key_exists($this->getAlias(), $requestDataArray) &&
+            is_array($requestDataArray[$this->getAlias()]) && 
+            !empty($requestDataArray[$this->getAlias()]['training_course_category_id'])
+        ) {
+            $categoryId = $requestDataArray[$this->getAlias()]['training_course_category_id'];
+
+            // Check if category exists
+            $exists = $this->TrainingCourseCategories->exists(['id' => $categoryId]);
+
+            if (!$exists) {
+                throw new Exception("Invalid training_course_category_id: $categoryId does not exist.");
+            }
+        }
+
+        //Merging the new associated options for patching entity
+        $newOptions = [
+            'associated' => [
+                'TargetPopulations', 'TrainingProviders', 'ResultTypes', 'CoursePrerequisites', 'Specialisations'
+            ]
+        ];
+
         $arrayOptions = $patchOptions->getArrayCopy();
         $arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
         $patchOptions->exchangeArray($arrayOptions);
@@ -260,14 +300,14 @@ class TrainingCoursesTable extends ControllerActionTable
 
     public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        unset($this->request->query['course']);
+        unset($this->request->getQuery['course']);
 
         $entity->target_population_selection = self::SELECT_TARGET_POPULATIONS;
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->query['course'] = $entity->id;
+        $this->request->getQuery['course'] = $entity->id;
 
         $isSelectAll = $this->checkIsSelectAll($entity);
 
@@ -282,11 +322,11 @@ class TrainingCoursesTable extends ControllerActionTable
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->TargetPopulations->alias(),
-            $this->TrainingProviders->alias(),
-            $this->CoursePrerequisites->alias(),
-            $this->Specialisations->alias(),
-            $this->ResultTypes->alias(),
+            $this->TargetPopulations->getAlias(),
+            $this->TrainingProviders->getAlias(),
+            $this->CoursePrerequisites->getAlias(),
+            $this->Specialisations->getAlias(),
+            $this->ResultTypes->getAlias(),
         ];
     }
     // End POCOR-3989
@@ -297,7 +337,7 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->setAllTargetPopulations($entity);
     }
 
-    public function onUpdateFieldSpecialEducationNeeds(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSpecialEducationNeeds(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit' || $action == 'add') {
             $SENOptions = $this->getSelectOptions('general.yesno');
@@ -307,7 +347,7 @@ class TrainingCoursesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldCreditHours(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCreditHours(Event $event, array $attr, $action, ServerRequest $request)
     {
         $creditHours = TableRegistry::get('Configuration.ConfigItems')->value('training_credit_hour');
 
@@ -318,7 +358,7 @@ class TrainingCoursesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTargetPopulationSelection(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTargetPopulationSelection(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['options'] = $this->targetPopulationSelection;
@@ -329,15 +369,15 @@ class TrainingCoursesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTargetPopulations(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTargetPopulations(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $requestData = $request->data;
+        $requestData = $request->getData();
         $entity = $attr['entity'];
         $staffPositionTitleOptions = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
 
         $targetPopulationSelection = null;
-        if (isset($requestData[$this->alias()]['target_population_selection'])) {
-            $targetPopulationSelection = $requestData[$this->alias()]['target_population_selection'];
+        if (isset($requestData[$this->getAlias()]['target_population_selection'])) {
+            $targetPopulationSelection = $requestData[$this->getAlias()]['target_population_selection'];
         } else {
             $targetPopulationSelection = $entity->target_population_selection;
         }
@@ -353,7 +393,7 @@ class TrainingCoursesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingProviders(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTrainingProviders(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['options'] = TableRegistry::get('Training.TrainingProviders')->getList()->toArray();
@@ -362,12 +402,12 @@ class TrainingCoursesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCoursePrerequisites(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCoursePrerequisites(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $Courses = TableRegistry::get('Training.TrainingCourses');
 
-            $id = $request->query('course');
+            $id = $request->getQuery('course');
             $excludes = [];
             if (!is_null($id)) {
                 $excludes[$id] = $id;
@@ -380,7 +420,7 @@ class TrainingCoursesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldSpecialisations(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSpecialisations(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['options'] = TableRegistry::get('Training.TrainingSpecialisations')->getList()->toArray();
@@ -389,7 +429,7 @@ class TrainingCoursesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldResultTypes(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldResultTypes(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['options'] = TableRegistry::get('Training.TrainingResultTypes')->getList()->toArray();
@@ -443,7 +483,6 @@ class TrainingCoursesTable extends ControllerActionTable
                     'escape' => false, //disable the htmlentities (on LabelWidget) so can show html on label.
                     'class' => 'tooltip-desc' //css class for label
                 ]
-
             ]
         ]);
 
@@ -459,7 +498,7 @@ class TrainingCoursesTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->getRequest()->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -481,8 +520,8 @@ class TrainingCoursesTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->CreatedUser->alias(),'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->CreatedUser->getAlias(),'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
@@ -523,6 +562,44 @@ class TrainingCoursesTable extends ControllerActionTable
         if ($field == 'special_education_needs') {
             $tooltipMessage = __('');
             return __('SEN') . '&nbsp;&nbsp;<i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="' . __($this->SENTooltipMessage) . '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+        } else if ($field == 'status_id') {
+            return __('Status');
+        } else if ($field == 'assignee_id') {
+            return __('Assignee');
+        } else if ($field == 'code') {
+            return __('Code');
+        } else if ($field == 'name') {
+            return __('Name');
+        } else if ($field == 'credit_hours') {
+            return __('Credit Hours');
+        } else if ($field == 'description') {
+            return __('Description');
+        } else if ($field == 'objective') {
+            return __('Objective');
+        } else if ($field == 'training_level_id') {
+            return __('Training Level');
+        } else if ($field == 'training_requirement_id') {
+            return __('Training Requirement');
+        } else if ($field == 'target_population_selection') {
+            return __('Target Population Selection');
+        } else if ($field == 'target_populations') {
+            return __('Target Populations');
+        } else if ($field == 'training_providers') {
+            return __('Training Providers');
+        } else if ($field == 'course_prerequisites') {
+            return __('Course Prerequisites');
+        } else if ($field == 'specialisations') {
+            return __('Specialisations');
+        } else if ($field == 'result_types') {
+            return __('Result Types');
+        } else if ($field == 'modified') {
+            return __('Modified');
+        } else if ($field == 'modified_user_id') {
+            return __('Modified By');
+        } else if ($field == 'created') {
+            return __('Created');
+        } else if ($field == 'created_user_id') {
+            return __('Created By');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -591,23 +668,24 @@ class TrainingCoursesTable extends ControllerActionTable
     }
     
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Administration > Training > Courses';
-            $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::get('Workflow.workflowSteps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
                             'workflow_id'=>$Workflows->aliasField('id'),
                             'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                                 [
                                     $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
                                 ])
                             ->where([$workflowModelsTable->aliasField('name')=>$workflowModel])->first();
+
             $workflowId = $workModelId->workflow_id;
             $isSchoolBased = $workModelId->is_school_based;
             $workflowStepsOptions = $workflowStepsTable
@@ -618,7 +696,7 @@ class TrainingCoursesTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
+            $session = $request->getSession();
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
             }
@@ -663,10 +741,12 @@ class TrainingCoursesTable extends ControllerActionTable
                         $assigneeQuery = $SecurityGroupUsers
                                 ->find('userList', ['where' => $where])
                                 ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
+
                         $assigneeOptions = $assigneeQuery->toArray();
                     }
                 }
             }
+            
             $attr['type'] = 'chosenSelect';
             $attr['attr']['multiple'] = false;
             $attr['select'] = false;

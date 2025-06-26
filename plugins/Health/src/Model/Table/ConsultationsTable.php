@@ -1,24 +1,25 @@
 <?php
+
 namespace Health\Model\Table;
-
 use ArrayObject;
-
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\Entity;
 
 class ConsultationsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_health_consultations');
+        $this->setTable('user_health_consultations');
         parent::initialize($config);
 
         $this->belongsTo('ConsultationTypes', ['className' => 'Health.ConsultationTypes', 'foreignKey' => 'health_consultation_type_id']);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 
         $this->addBehavior('Health.Health');
+        $this->addBehavior('User.UserTab');
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
             'content' => 'file_content',
@@ -27,29 +28,30 @@ class ConsultationsTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
-        $this->addBehavior('Excel',[
+        $this->addBehavior('Excel', [
             'excludes' => [],
             'pages' => ['index'],
         ]);
     }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
 
-                
+
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Consultations','Staff - Health');       
-            if(!empty($is_manual_exist)){
+        if ($this->request->getParam('controller') == 'Staff') {
+            $is_manual_exist = $this->getManualUrl('Institutions', 'Consultations', 'Staff - Health');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -57,17 +59,17 @@ class ConsultationsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Students'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Consultations','Students - Health');       
-            if(!empty($is_manual_exist)){
+        } elseif ($this->request->getParam('controller') == 'Students') {
+            $is_manual_exist = $this->getManualUrl('Institutions', 'Consultations', 'Students - Health');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -76,17 +78,17 @@ class ConsultationsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Consultations','Health');       
-            if(!empty($is_manual_exist)){
+        } elseif ($this->request->getParam('controller') == 'Directories') {
+            $is_manual_exist = $this->getManualUrl('Directory', 'Consultations', 'Health');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -95,17 +97,17 @@ class ConsultationsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Profiles'){ 
-            $is_manual_exist = $this->getManualUrl('Personal','Consultations','Health');       
-            if(!empty($is_manual_exist)){ 
+        } elseif ($this->request->getParam('controller') == 'Profiles') {
+            $is_manual_exist = $this->getManualUrl('Personal', 'Consultations', 'Health');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -117,20 +119,23 @@ class ConsultationsTable extends ControllerActionTable
         }
         // End POCOR-5188
     }
+
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
-        $this->field('file_content', ['after' => 'health_consultation_type_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('file_content', ['after' => 'health_consultation_type_id', 'attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('health_consultation_type_id', ['type' => 'select', 'after' => 'treatment']);
-        $this->field('file_content', ['after' => 'health_consultation_type_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('file_content', ['after' => 'health_consultation_type_id', 'attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $userID = $this->getUserID();
+        $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator->allowEmpty('file_content');
@@ -140,53 +145,72 @@ class ConsultationsTable extends ControllerActionTable
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
-            'key'   => 'date',
+            'key' => 'date',
             'field' => 'date',
-            'type'  => 'date',
+            'type' => 'date',
             'label' => __('Date')
         ];
 
         $extraField[] = [
-            'key'   => 'description',
+            'key' => 'description',
             'field' => 'description',
-            'type'  => 'string',
+            'type' => 'string',
             'label' => __('Description')
         ];
 
         $extraField[] = [
-            'key'   => 'treatment',
+            'key' => 'treatment',
             'field' => 'treatment',
-            'type'  => 'string',
+            'type' => 'string',
             'label' => __('Treatment')
         ];
 
         $extraField[] = [
-            'key'   => 'health_consultation_type_id',
+            'key' => 'health_consultation_type_id',
             'field' => 'health_consultation_type_id',
-            'type'  => 'string',
+            'type' => 'string',
             'label' => __('Health Consultation Type')
         ];
 
         $extraField[] = [
-            'key'   => 'file_name',
+            'key' => 'file_name',
             'field' => 'file_name',
-            'type'  => 'string',
+            'type' => 'string',
             'label' => __('File Name')
         ];
 
         $fields->exchangeArray($extraField);
     }
-    
+
     // POCOR-6131
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-        $session = $this->request->session();
-        // $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $studentUserId = $session->read('Student.Students.id');
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $userID = $this->getUserID();
 
         $query
-        ->where([
-            // $this->aliasField('security_user_id = ').$staffUserId
-            $this->aliasField('security_user_id') => $studentUserId
-        ]);
+            ->where([
+                // $this->aliasField('security_user_id = ').$staffUserId
+                $this->aliasField('security_user_id') => $userID
+            ]);
     }
+
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        if ($field == 'file_content') {
+            return __('Attachment');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    //POCOR-8293
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+        $userId = $this->getUserID();
+        $query->where([ $this->aliasField('security_user_id') => $userId]);
+        return $query;
+    }
+
+
+
 }

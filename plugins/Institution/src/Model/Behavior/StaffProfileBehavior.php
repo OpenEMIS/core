@@ -7,7 +7,7 @@ use Cake\Event\Event;
 
 class StaffProfileBehavior extends Behavior
 {
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.StaffPositionProfiles.getAssociatedModelData'] = 'staffPositionProfilesGetAssociatedModelData';
@@ -17,7 +17,7 @@ class StaffProfileBehavior extends Behavior
     public function staffPositionProfilesGetAssociatedModelData(Event $event, ArrayObject $params)
     {
         $model = $this->_table;
-        $alias = $model->alias();
+        $alias = $model->getAlias();
         $query = $model->find();
 
         $staffId = $params['staff_id'];
@@ -33,7 +33,7 @@ class StaffProfileBehavior extends Behavior
                 $query->contain(['AcademicPeriods'])
                     ->where([
                         $model->aliasField('staff_id') => $staffId,
-                        $model->aliasField('is_homeroom') => 1, //POCOR-5070
+                        //$model->aliasField('is_homeroom') => 1, //POCOR-5070 //POCOR-8447
                         $model->aliasField('institution_id') => $institutionId,
                         'AcademicPeriods.start_date <= ' => $newStartDate
                     ])

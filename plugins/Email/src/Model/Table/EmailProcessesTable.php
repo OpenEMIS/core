@@ -23,7 +23,7 @@ class EmailProcessesTable extends AppTable
 
     public function sendEmail($id = 0)
     {
-    	if ($this->exists([$this->primaryKey() =>$id])) {
+    	if ($this->exists([$this->getPrimaryKey() =>$id])) {
     		$entity = $this->find()
 	 			->contain([
 	 				'EmailProcessAttachments'

@@ -1,15 +1,32 @@
 <?php
 namespace App\Model\Traits;
+use Cake\ORM\TableRegistry;
+use Cake\Collection\Collection;
 
 trait OptionsTrait
 {
     public function getSelectOptions($code)
     {
+        // $WorkFlows = TableRegistry::get("WorkFlow.WorkFlows" );
+        // $WorkFlowData = $WorkFlows->find('all')->where(['code' => "STUDENT-ADMISSION-1001"])->extract('id')->first();
+        // $WorkFlowSteps = TableRegistry::get('WorkFlow.WorkFlowSteps');
+        // $WorkFlowStepData = $WorkFlowSteps->find('all')->where(['workflow_id' => $WorkFlowData])->toArray();
+        // $workflowStepsDataArr = (new Collection($WorkFlowStepData))
+        //                     ->combine('id', 'name')
+        //                     ->toArray();
+
+        // $workflowDataSelected = [];
+        // foreach ($workflowStepsDataArr as $key => $value) {
+        //     if ($value === 'Approved') {
+        //         $workflowDataSelected[$key] =$value;
+        //     }
+        // }
         $options = [
             'general' => [
                 'active' => [1 => __('Active'), 0 => __('Inactive')],
                 'yesno' => [1 => __('Yes'), 0 => __('No')],
                 'enabledisable' => [1 => __('Enabled'), 0 => __('Disabled')],
+                'overallresult' => [1 => __('Academic Period'), 0 => __('Assessment Period')],
             ],
             'Authentication' => [
                 'yesno' => [0 => __('No'), 1 => __('Yes')]
@@ -30,6 +47,9 @@ trait OptionsTrait
             'AssessmentGradingTypes' => [
                 'result_type' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades'), 'DURATION' => ('Duration')]
             ],
+            'GpaGradingTypes' => [
+                'result_type' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades'), 'DURATION' => ('Duration')]
+            ], //POCOR-8222
             'ExaminationGradingTypes' => [
                 'result_type' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')]
             ],
@@ -219,6 +239,14 @@ trait OptionsTrait
                         ]
                     ],
                 //POCOR-7462 end
+                
+                //POCOR-8869 start
+                'StudentAdmission' => [
+                    'workflow_steps' => [
+                        1 => __('Approved'),
+                    ]
+                ],
+                //POCOR-8869 end
             ],
             
         ];

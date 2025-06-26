@@ -7,7 +7,7 @@ use Cake\Console\Shell;
 use Cake\Utility\Text;
 class EducationStructureCopyShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         $this->loadModel('Education.EducationSystem');
         parent::initialize();
@@ -50,25 +50,26 @@ class EducationStructureCopyShell extends Shell
                                     $EducationSystemTable->aliasField('name')=>$educationsystem->name,
                                      ])->first();
                 if(empty($existingRecord)){
-                        
-                        $newRecord=$EducationSystemTable->newEntity(array(
-                                            'name'=> $educationsystem->name,
-                                            'academic_period_id'=>$copyTo,
-                                            'order'=>$educationsystem->order,
-                                            'visible'=>$educationsystem->visible,
-                                            'modified_user_id'=>'',
-                                            'modified'=>'',
-                                            'created_user_id'=>$educationsystem->created_user_id,
-                                            'created'=>$educationsystem->created));
-                        if($resEntity=$EducationSystemTable->save($newRecord)){//saving education system
-                                $savedId=$resEntity->id;
-                                //copy education levels
-                                $education_levels = TableRegistry::get('education_levels');
-                                $educationLevelsData = $education_levels
-                                ->find()
-                                ->where([$education_levels->aliasField('education_system_id') =>$educationsystem->id])
-                                ->All()
-                                ->toArray();
+                    $connection = $EducationSystemTable->getConnection();
+                    $connection->getDriver()->enableAutoQuoting(true); 
+                    $newRecord=$EducationSystemTable->newEntity(array(
+                        'name'=> $educationsystem->name,
+                        'academic_period_id'=> (int)$copyTo,
+                        'order'=>$educationsystem->order,
+                        'visible'=>$educationsystem->visible,
+                        'modified_user_id'=>'',
+                        'modified'=>'',
+                        'created_user_id'=>$educationsystem->created_user_id,
+                        'created'=>$educationsystem->created));
+                    if($resEntity=$EducationSystemTable->save($newRecord)){//saving education system
+                        $savedId=$resEntity->id;
+                        //copy education levels
+                        $education_levels = TableRegistry::get('education_levels');
+                        $educationLevelsData = $education_levels
+                            ->find()
+                            ->where([$education_levels->aliasField('education_system_id') =>$educationsystem->id])
+                            ->All()
+                            ->toArray();
                         if(!empty($educationLevelsData)){
                                 $level_data_arr = [];
                                 $cycle_data_arr = [];
@@ -76,6 +77,8 @@ class EducationStructureCopyShell extends Shell
                                 $grade_data_arr = [];
                                 $sub_data_arr = [];
                                 $newLevelEntites = $newCycleEntites = [];
+                                $education_levels_connection = $education_levels->getConnection();
+                                $education_levels_connection->getDriver()->enableAutoQuoting(true); 
                                 foreach ($educationLevelsData as $level_key => $level_val) {
                                                 //level data
                                         $level_data_arr[$level_key]['name'] = $level_val['name'];
@@ -100,6 +103,8 @@ class EducationStructureCopyShell extends Shell
                                                                     ->all()
                                                                     ->toArray();
                                             if(!empty($educationCyclesData)){
+                                                $education_cycles_connection = $education_cycles->getConnection();
+                                                $education_cycles_connection->getDriver()->enableAutoQuoting(true); 
                                                 foreach ($educationCyclesData as $cycle_key => $cycle_val) {
                                                      $cycle_data_arr[$level_key][$cycle_key]['name'] = $cycle_val['name'];
                                                      $cycle_data_arr[$level_key][$cycle_key]['admission_age'] = $cycle_val['admission_age'];
@@ -123,6 +128,8 @@ class EducationStructureCopyShell extends Shell
                                                                                             ->All()
                                                                                             ->toArray();
                                                             if(!empty($educationProgrammesData)){
+                                                                $education_programmes_connection = $education_programmes->getConnection();
+                                                                $education_programmes_connection->getDriver()->enableAutoQuoting(true); 
                                                                 foreach ($educationProgrammesData as $prog_key => $prog_val) {
                                                                   $prog_data_arr[$level_key][$cycle_key][$prog_key]['code'] = $prog_val['code'];
                                                                   $prog_data_arr[$level_key][$cycle_key][$prog_key]['name'] = $prog_val['name'];
@@ -148,6 +155,8 @@ class EducationStructureCopyShell extends Shell
                                                                                                         ->toArray();
                                     
                                                                             if (!empty($nextProgrammesData)) {
+                                                                                    $EducationProgrammesNextProgrammesTable_connection = $EducationProgrammesNextProgrammesTable->getConnection();
+                                                                                    $EducationProgrammesNextProgrammesTable_connection->getDriver()->enableAutoQuoting(true); 
                                                                                     foreach ($nextProgrammesData as $nextProgramekey => $value) {
                                                                                        $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['id'] = Text::uuid();
                                                                                         $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['education_programme_id'] = $program_result->id;
@@ -168,6 +177,8 @@ class EducationStructureCopyShell extends Shell
                                                                                                             ->toArray();
                                     
                                                                             if(!empty($educationGradesData)){
+                                                                                    $education_grades_connection = $education_grades->getConnection();
+                                                                                    $education_grades_connection->getDriver()->enableAutoQuoting(true); 
                                                                                 foreach ($educationGradesData as $grade_key => $grade_val) {
                                                                                     $grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['code'] = $grade_val['code'];
                                                                                     $grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['name'] = $grade_val['name'];
@@ -221,7 +232,7 @@ class EducationStructureCopyShell extends Shell
                                         }//level ends
                                 }
                         } //if educationLevelsData         
-                        }//if EducationSystemTabledata end
+                    }//if EducationSystemTabledata end
             
                 }//existing record end
                       

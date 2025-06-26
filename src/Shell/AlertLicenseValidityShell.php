@@ -11,7 +11,7 @@ use App\Shell\AlertShell;
 
 class AlertLicenseValidityShell extends AlertShell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
@@ -48,7 +48,7 @@ class AlertLicenseValidityShell extends AlertShell
                             $this->Staff->aliasField('staff_id') => $vars['user']['id'],
                             $this->Staff->StaffStatuses->aliasField('code') => 'ASSIGNED'
                         ])
-                        ->hydrate(false)
+                        ->disableHydration() // POCOR-8533
                         ->all();
 
                     if (!empty($institutionStaffRecords)) {

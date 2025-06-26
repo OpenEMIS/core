@@ -8,19 +8,20 @@ use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\Utility\Text;
 use Cake\Log\Log;
+use Throwable;
 
 use App\Model\Table\AppTable;
 
 class SystemErrorsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        parent::initialize($config);
 
+        parent::initialize($config);
         $this->belongsTo('CreatedUser', ['className' => 'Security.Users', 'foreignKey' => 'created_user_id']);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.onGetAllowedActions'] = 'onGetAllowedActions';
@@ -32,7 +33,7 @@ class SystemErrorsTable extends AppTable
         return ['index'];
     }
 
-    public function insertError(Exception $ex)
+    public function insertError(Throwable $ex)
     {
         $msg = $ex->getMessage();
         $trace = $ex->getTraceAsString();
@@ -46,6 +47,9 @@ class SystemErrorsTable extends AppTable
             $clientIp = $_SERVER['HTTP_X_FORWARDED_FOR'];
         }
 
+        if($code == 0) { //POCOR-8676
+            $code = 404;
+        }
         $entity = $this->newEntity([
             'id' => Text::uuid(),
             'code' => $code,

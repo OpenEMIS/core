@@ -3,7 +3,7 @@ namespace Workflow\Model\Behavior;
 
 use ArrayObject;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
@@ -15,7 +15,7 @@ class TransferBehavior extends Behavior
     private $transferWorkflowIds = [];
     private $institutionTypeOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -32,6 +32,7 @@ class TransferBehavior extends Behavior
                 ->matching('WorkflowModels', function ($q) use ($transferWorkflowModels) {
                     return $q->where(['model IN' => $transferWorkflowModels]);
                 })
+                ->all()
                 ->extract('id')
                 ->toArray();
 
@@ -41,7 +42,7 @@ class TransferBehavior extends Behavior
         ];
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index.afterAction'] = 'indexAfterAction';
@@ -52,7 +53,7 @@ class TransferBehavior extends Behavior
         return $events;
     }
 
-    public function validationTransferWorkflow(Validator $validator)
+    public function validationTransferWorkflow(Validator $validator) : Validator
     {
         $validator = $this->_table->validationDefault($validator);
         return $validator->notEmpty('institution_owner');
@@ -60,8 +61,8 @@ class TransferBehavior extends Behavior
 
     public function indexAfterAction(Event $event, $data)
     {
-        if (!is_null($this->_table->request->query('workflow'))) {
-            $selectedWorkflowId = $this->_table->request->query('workflow');
+        if (!is_null($this->_table->request->getQuery('workflow'))) {
+            $selectedWorkflowId = $this->_table->request->getQuery('workflow');
             $this->setupInstitutionOwnerField($selectedWorkflowId);
         }
     }
@@ -69,8 +70,8 @@ class TransferBehavior extends Behavior
     public function addAfterAction(Event $event, Entity $entity)
     {
         $model = $this->_table;
-        if (isset($model->request->data[$model->alias()]['workflow_id']) && !empty($model->request->data[$model->alias()]['workflow_id'])) {
-            $selectedWorkflowId = $model->request->data[$model->alias()]['workflow_id'];
+        if (isset($model->request->getData()[$model->getAlias()]['workflow_id']) && !empty($model->request->getData()[$model->getAlias()]['workflow_id'])) {
+            $selectedWorkflowId = $model->request->getData()[$model->getAlias()]['workflow_id'];
             $this->setupInstitutionOwnerField($selectedWorkflowId);
         }
     }

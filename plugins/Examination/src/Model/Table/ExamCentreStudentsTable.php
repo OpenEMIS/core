@@ -6,7 +6,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
 use Cake\Utility\Text;
 use Cake\I18n\Time;
@@ -21,8 +21,8 @@ class ExamCentreStudentsTable extends ControllerActionTable {
     private $examCentreId;
     private $identityType;
 
-    public function initialize(array $config) {
-        $this->table('examination_centres_examinations_students');
+    public function initialize(array $config): void {
+        $this->setTable('examination_centres_examinations_students');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
@@ -59,7 +59,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->toggle('remove', false);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -69,7 +69,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
             ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
@@ -78,9 +78,9 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
-        $this->queryString = $request->query['queryString'];
+        $this->queryString = $this->request->getQuery['queryString'];
         $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
         $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $this->queryString];
 
@@ -93,7 +93,9 @@ class ExamCentreStudentsTable extends ControllerActionTable {
     {
         $this->controller->getExamCentresTab();
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
-
+        if($this->examCentreId == null){
+            $this->examCentreId = 1;
+        }
         // Set the header of the page
         $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
         $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Students'));
@@ -161,7 +163,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
             ->toArray();
 
         $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
-        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : -1;
+        $selectedExamination = !is_null($this->request->getQuery('examination_id')) ? $this->request->getQuery('examination_id') : -1;
         $this->controller->set(compact('examinationOptions', 'selectedExamination'));
         if ($selectedExamination != -1) {
            $where[$this->aliasField('examination_id')] = $selectedExamination;
@@ -173,7 +175,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
             ->where([$ExamCentreRooms->aliasField('examination_centre_id') => $this->examCentreId])
             ->toArray();
         $roomOptions = ['0' => __('All Rooms'), '-1' => __('Students without Room')] + $roomOptions;
-        $selectedRoom = !is_null($this->request->query('examination_centre_room_id')) ? $this->request->query('examination_centre_room_id') : 0;
+        $selectedRoom = !is_null($this->request->getQuery('examination_centre_room_id')) ? $this->request->getQuery('examination_centre_room_id') : 0;
         $this->controller->set(compact('roomOptions', 'selectedRoom'));
 
         if ($selectedRoom > 0) {
@@ -254,7 +256,33 @@ class ExamCentreStudentsTable extends ControllerActionTable {
                 return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
             }
         } else {
+            if ($field == 'registration_number') {
+            return __('Registration Number');
+        } elseif ($field == 'student_id') {
+            return __('Student');
+        } elseif ($field == 'nationalities') {
+            return __('Nationality');
+        } elseif ($field == 'institution_id') {
+            return __('Institution');
+        } elseif ($field == 'examination_id') {
+            return __('Examination');
+        } elseif ($field == 'room') {
+            return __('Room');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'code') {
+            return __('Code');
+        }elseif ($field == 'name') {
+            return __('Name');
+        } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
         }
     }
 
@@ -320,14 +348,14 @@ class ExamCentreStudentsTable extends ControllerActionTable {
     }
 
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['value'] = $attr['entity']->academic_period_id;
         $attr['attr']['value'] = $attr['entity']->academic_period->name;
         return $attr;
     }
 
-    public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $openemisNo = $attr['entity']->user->openemis_no;
@@ -337,7 +365,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStudentId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $student = $attr['entity']->user->name;
         $attr['value'] = $attr['entity']->student_id;
@@ -345,7 +373,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($attr['entity']->has('institution') && !empty($attr['entity']->institution)) {
             $institution = $attr['entity']->institution->code_name;
@@ -357,7 +385,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $examination = $attr['entity']->examination->code_name;
         $attr['value'] = $attr['entity']->examination_id;
@@ -365,7 +393,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $examinationCentre = $attr['entity']->examination_centre->code_name;
         $attr['value'] = $attr['entity']->examination_centre_id;
@@ -373,7 +401,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldExaminationCentreRoomId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldExaminationCentreRoomId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
 
@@ -400,12 +428,12 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        if (isset($data[$this->alias()]['examination_centre_room_id']) && !empty($data[$this->alias()]['examination_centre_room_id'])) {
-            $data[$this->alias()]['examination_centre_rooms_examinations_students'][] = [
-                'examination_centre_id' => $data[$this->alias()]['examination_centre_id'],
-                'student_id' => $data[$this->alias()]['student_id'],
-                'examination_id' => $data[$this->alias()]['examination_id'],
-                'examination_centre_room_id' => $data[$this->alias()]['examination_centre_room_id']
+        if (isset($data[$this->getAlias()]['examination_centre_room_id']) && !empty($data[$this->getAlias()]['examination_centre_room_id'])) {
+            $data[$this->getAlias()]['examination_centre_rooms_examinations_students'][] = [
+                'examination_centre_id' => $data[$this->getAlias()]['examination_centre_id'],
+                'student_id' => $data[$this->getAlias()]['student_id'],
+                'examination_id' => $data[$this->getAlias()]['examination_id'],
+                'examination_centre_room_id' => $data[$this->getAlias()]['examination_centre_room_id']
             ];
         }
     }
@@ -414,11 +442,11 @@ class ExamCentreStudentsTable extends ControllerActionTable {
     {
         // manually delete hasMany roomStudents data
         $fieldKey = 'examination_centre_rooms_examinations_students';
-        if (!array_key_exists($fieldKey, $data[$this->alias()])) {
-            $data[$this->alias()][$fieldKey] = [];
+        if (!array_key_exists($fieldKey, $data[$this->getAlias()])) {
+            $data[$this->getAlias()][$fieldKey] = [];
         }
 
-        $currentRoomIds = array_column($data[$this->alias()][$fieldKey], 'examination_centre_room_id');
+        $currentRoomIds = array_column($data[$this->getAlias()][$fieldKey], 'examination_centre_room_id');
         $originalRooms = $entity->extractOriginal([$fieldKey])[$fieldKey];
 
         foreach ($originalRooms as $key => $room) {
@@ -456,7 +484,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
             ])
             ->matching('Users')
             ->innerJoin(
-                [$SubjectStudents->alias() => $SubjectStudents->table()],
+                [$SubjectStudents->getAlias() => $SubjectStudents->getTable()],
                 [
                     $SubjectStudents->aliasField('examination_id = ') . $this->aliasField('examination_id'),
                     $SubjectStudents->aliasField('examination_centre_id = ') . $this->aliasField('examination_centre_id'),
@@ -465,7 +493,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
                 ]
             )
             ->leftJoin(
-                [$ItemResults->alias() => $ItemResults->table()],
+                [$ItemResults->getAlias() => $ItemResults->getTable()],
                 [
                     $ItemResults->aliasField('examination_id = ') . $this->aliasField('examination_id'),
                     $ItemResults->aliasField('examination_centre_id = ') . $this->aliasField('examination_centre_id'),
