@@ -396,17 +396,17 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                                 }
                             }
                         }
-
+                       
                     }
                     //Superrole[START]
 
                     //Principle Case[START]
                     if((getCurrentUserRole.length == 1 && getCurrentUserRole[0] == 'PRINCIPAL')){
                         //POCOR-8987[START]
-
+                       
                         if (((allCommentsViewRequired == 1) && (allCommentsEditRequired == 1)) || (allCommentsViewRequired == 1)) {//POCOR-6800 add vm.allCommentsEditRequired //POCOR-6814
-
-                            if ((principalCommentsRequired == 1)) {
+                          
+                            if ((principalCommentsRequired == 1)) {    
                                 editable = (angular.isObject(principalPermission) && principalPermission.length > 0 && principalEditCommentsRequired ==1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && principalEditCommentsRequired ==1) || (allCommentsEditRequired == 1) || (principalEditCommentsRequired ==1);//POCOR-8007 add principalEditCommentsRequired
                                 tabs.push({
                                     tabName: "Principal",
@@ -415,7 +415,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                                     editable: editable
                                 });
                             }
-                            if ((homeroomTeacherCommentsRequired == 1)) {
+                            if ((homeroomTeacherCommentsRequired == 1)) {    
                                 editable = (angular.isObject(homeroomTeacherPermission) && homeroomTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-8007 add homeroomTeacherEditCommentsRequired
                                 tabs.push({
                                     tabName: "Homeroom Teacher",
@@ -452,7 +452,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     if((getCurrentUserRole.length == 1 && getCurrentUserRole[0] == 'HOMEROOM_TEACHER')){
                         //POCOR-8987 start
                         if (((allCommentsViewRequired == 1) && (allCommentsEditRequired == 1)) || (allCommentsViewRequired == 1)) {//POCOR-6800 add vm.allCommentsEditRequired //POCOR-6814
-                            if ((principalCommentsRequired == 1)) {
+                            if ((principalCommentsRequired == 1)) {    
                                 editable = (angular.isObject(principalPermission) && principalPermission.length > 0 && principalEditCommentsRequired ==1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && principalEditCommentsRequired ==1) || (allCommentsEditRequired == 1) || (principalEditCommentsRequired ==1);//POCOR-8007 add principalEditCommentsRequired
                                 tabs.push({
                                     tabName: "Principal",
@@ -461,7 +461,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                                     editable: editable
                                 });
                             }
-                            if ((homeroomTeacherCommentsRequired == 1)) {
+                            if ((homeroomTeacherCommentsRequired == 1)) {    
                                 editable = (angular.isObject(homeroomTeacherPermission) && homeroomTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-8007 add homeroomTeacherEditCommentsRequired
                                 tabs.push({
                                     tabName: "Homeroom Teacher",
@@ -540,8 +540,8 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     if((getCurrentUserRole[0] == 'HOMEROOM_TEACHER')){
                         //POCOR-8987 start
                         if (((allCommentsViewRequired == 1) && (allCommentsEditRequired == 1)) || (allCommentsViewRequired == 1)) {//POCOR-6800 add vm.allCommentsEditRequired //POCOR-6814
-                            if ((principalCommentsRequired == 1)) {
-                                editable = (angular.isObject(principalPermission) && principalPermission.length > 0 && principalEditCommentsRequired ==1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && principalEditCommentsRequired ==1) || (allCommentsEditRequired == 1) || (principalEditCommentsRequired ==1);//POCOR-8007 add principalEditCommentsRequired
+                            if ((principalCommentsRequired == 1)) {  
+                                editable = (angular.isObject(principalPermission) && principalPermission.length > 0 && principalEditCommentsRequired ==1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && principalEditCommentsRequired ==1) || (allCommentsEditRequired == 1) || (principalEditCommentsRequired ==1);//POCOR-8007 add principalEditCommentsRequired  
                                 tabs.push({
                                     tabName: "Principal",
                                     type: roles.PRINCIPAL,
@@ -549,7 +549,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                                     editable: editable
                                 });
                             }
-                            if ((homeroomTeacherCommentsRequired == 1)) {
+                            if ((homeroomTeacherCommentsRequired == 1)) {    
                                 editable = (angular.isObject(homeroomTeacherPermission) && homeroomTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-8007 add homeroomTeacherEditCommentsRequired
                                 tabs.push({
                                     tabName: "Homeroom Teacher",
@@ -805,7 +805,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                         }
 
                     }
-
+                    
                 }
                 //Superrole[END]
 
@@ -1598,31 +1598,12 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
     };
 
     function getRowData(academicPeriodId, institutionId, institutionClassId, educationGradeId, reportCardId, commentCodeOptions, tab, limit, page) {
-        // Log all input parameters
-        console.log('Sending parameters:', {
-            academic_period_id: academicPeriodId,
-            institution_id: institutionId,
-            institution_class_id: institutionClassId,
-            education_grade_id: educationGradeId,
-            report_card_id: reportCardId,
-            type: tab.type,
-            education_subject_id: tab.education_subject_id,
-            institution_subject_id: tab.id
-        });
         var success = function(response, deferred) {
-            // Log raw response
-            console.log('Received response:', response);
-
             if (angular.isDefined(response.data.error)) {
-                console.error('Error from server:', response.data.error);
                 deferred.reject(response.data.error);
             } else {
                 var reportCardStudents = response.data.data;
-                var isSubjectTab = (tab.type == roles.TEACHER);
-
-                // Extra log for this specific case
-                console.log('Parsed reportCardStudents:', reportCardStudents);
-                console.log('Tab type:', tab.type, '| isSubjectTab:', isSubjectTab);
+                var isSubjectTab = (tab.type == roles.TEACHER) ? true : false;
 
                 if (angular.isObject(reportCardStudents) && reportCardStudents.length > 0) {
                     var studentId = null;
@@ -1684,7 +1665,6 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     response.data.data = rowData;
                     deferred.resolve(response);
                 } else {
-                    console.warn('No student data returned for this tab:', tab);
                     deferred.resolve(response);
                 }
             }
