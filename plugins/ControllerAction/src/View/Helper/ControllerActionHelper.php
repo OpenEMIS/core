@@ -657,6 +657,7 @@ class ControllerActionHelper extends Helper
                     $labelClass = implode(' ', $_labelClass);
                     $rowContent = sprintf($_labelCol.$_valueCol, $labelClass, ($label), $valueClass, isset($value) ? ($value) : null);
                 } else { // no label
+                    $value = $value ?? ""; // POCOR-9235
                     $rowContent = sprintf($_valueCol, $valueClass, __($value));
                 }
                 if (!isset($_fieldAttr['override'])) {
