@@ -1,5 +1,6 @@
 ### [4.30.1] - 2025-06-26
 - Bug Fixed: Institutions>Performance>Assessment>Report: Report is still showing 0,00 even when marks are not entered
+- Bug Fixed: Institutions > Performance > Competencies: User is unable to view the competencies he has permissions to
 
 ### [4.30.0] - 2025-06-25
 - Implemented: Develop a configuration to change the overall mark and total mark in the report card comments feature between academic period and assessment period
