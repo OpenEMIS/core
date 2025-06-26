@@ -977,6 +977,7 @@ class InstitutionClassStudentsTable extends AppTable
                 $ReportCards->aliasField('id') => $reportCardId
             ])
             ->all();
+        // POCOR-9233 start
         $ReportCardSubjects = self::getDynamicTableInstance('ReportCard.ReportCardSubjects');
         $reportCardSubjectsEntity = $ReportCardSubjects->find()
             ->select([
@@ -1034,7 +1035,7 @@ class InstitutionClassStudentsTable extends AppTable
                     ) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data
 
                         $studentId = $row->student_id;
-
+// POCOR-9233 end
                         if (!$reportCardEntity->isEmpty()) {
                             $row->reportCardStartDate = NULL;
                             $row->reportCardEndDate = NULL;
@@ -1044,7 +1045,7 @@ class InstitutionClassStudentsTable extends AppTable
                             $row->overallResult = $reportCardEntity->first()['overall_result'];
                         }
                         // To get the report card template subjects
-
+// POCOR-9233 moved up
                         // Check if the student belongs to any subject
                         $subjectStudentsEntities = $SubjectStudents->find()
                             ->select([
@@ -1059,9 +1060,9 @@ class InstitutionClassStudentsTable extends AppTable
                             ->group([
                                 'education_subject_id'
                             ])
-                            ->disableHydration()
+                            ->disableHydration() // POCOR-9233
                             ->all();
-
+// POCOR-9233 moved up
 
                         // If subjectStudentsEntities is not empty mean the student have a subject
                         if (!$subjectStudentsEntities->isEmpty()) {
@@ -1154,7 +1155,7 @@ class InstitutionClassStudentsTable extends AppTable
         } elseif ($type == 'HOMEROOM_TEACHER') {
             $query
                 ->select(['comments' => $StudentReportCards->aliasfield('homeroom_teacher_comments')])
-                ->formatResults(function (ResultSetInterface $results) use (
+                ->formatResults(function (ResultSetInterface $results) use ( // POCOR-9233 start
                     $academicPeriodId,
                     $institutionId,
                     $SubjectStudents,
@@ -1182,10 +1183,10 @@ class InstitutionClassStudentsTable extends AppTable
                         $reportCardEntity,
                         $reportCardSubjectsEntity,
                         $assessment_id
-                    ) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data
+                    ) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data // POCOR-9233 end
 
                         $studentId = $row->student_id;
-
+// POCOR-9233 moved up
                         if (!$reportCardEntity->isEmpty()) {
                             $row->reportCardStartDate = NULL;
                             $row->reportCardEndDate = NULL;
@@ -1193,7 +1194,7 @@ class InstitutionClassStudentsTable extends AppTable
                             $row->reportCardEndDate = $reportCardEntity->first()['end_date'];
                         }
 
-
+// POCOR-9233 moved up
                         // Check if the student belongs to any subject
                         $subjectStudentsEntities = $SubjectStudents->find()
                             ->select([
@@ -1210,7 +1211,7 @@ class InstitutionClassStudentsTable extends AppTable
                             ])
                             ->enableHydration(false)
                             ->all();
-
+// POCOR-9233 moved up
                         // If subjectStudentsEntities is not empty mean the student have a subject
                         if (!$subjectStudentsEntities->isEmpty()) {
 
@@ -1323,7 +1324,7 @@ class InstitutionClassStudentsTable extends AppTable
                     $Staff->aliasField('id = ') . $ReportCardsComments->aliasField('staff_id')
                 ])
                 ->where([$SubjectStudents->aliasField('institution_subject_id') => $institutionSubjectId])
-                ->formatResults(function (ResultSetInterface $results) use (
+                ->formatResults(function (ResultSetInterface $results) use ( // POCOR-9233 start
                     $academicPeriodId,
                     $institutionId,
                     $SubjectStudents,
@@ -1352,10 +1353,10 @@ class InstitutionClassStudentsTable extends AppTable
                         $reportCardEntity,
                         $reportCardSubjectsEntity,
                         $assessment_id
-                    ) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data
+                    ) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data // POCOR-9233 end
 
                         $studentId = $row->student_id;
-
+// POCOR-9233 moved up
                         if (!$reportCardEntity->isEmpty()) {
                             $row->reportCardStartDate = NULL;
                             $row->reportCardEndDate = NULL;
@@ -1386,7 +1387,7 @@ class InstitutionClassStudentsTable extends AppTable
                         if (!$subjectStudentsEntities->isEmpty()) {
 
                             $studentEntity = $subjectStudentsEntities->first();
-
+// POCOR-9233 moved up
                             // Getting all the subject marks based on report card start/end date
                             //POCOR-9201[START]
                             if ($row->overallResult == 0) {
