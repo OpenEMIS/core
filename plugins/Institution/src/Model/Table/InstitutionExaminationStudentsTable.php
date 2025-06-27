@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Institution\Model\Table;
 
 use ArrayObject;

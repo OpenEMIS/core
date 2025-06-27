@@ -7,8 +7,8 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
-use Cake\Network\Session;
+use Cake\Http\ServerRequest;
+use Cake\Http\Session;
 
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -63,7 +63,7 @@ class InstitutionStaffTable extends AppTable
         $areaLevelId = $requestData->area_level_id;//POCOR-7794
         $academicPeriodId = $requestData->academic_period_id;
 
-        if ($statusId != 0) {
+        if ($statusId != 0 && $statusId != -1) {
             $query->where([
                 $this->aliasField('staff_status_id') => $statusId
             ]);
