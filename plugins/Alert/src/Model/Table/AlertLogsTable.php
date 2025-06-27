@@ -159,6 +159,7 @@ class AlertLogsTable extends ControllerActionTable
     {
         $alertFeatures = $this->AlertRules->getFeatureOptions();
         $checksum = $this->generateChecksum($subject, $message);
+        $alertFeatures['Messaging'] = __('Messaging');
 
         if (!array_key_exists($feature, $alertFeatures)) {
             Log::debug("❌ Unknown feature '{$feature}' passed to insertAlertLog.");
