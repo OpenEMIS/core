@@ -375,7 +375,7 @@ class AlertLogsTable extends ControllerActionTable
         ksort($workflowFeatures); // sort alphabetical
 
         $features = array_merge($alertFeatures, $workflowFeatures); // combine the alert and workflow feature
-
+        $alertFeatures['Messaging'] = __('Messaging');
         $featureOptions['AllFeatures'] = __('All Features'); // to show all the records
         foreach ($features as $key => $value) {
             if (array_key_exists($key, $alertFeatures)) {
