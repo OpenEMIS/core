@@ -36,6 +36,7 @@ class AssessmentsTable extends AppTable
     private $i = 1;
 
     private $assessmentPeriodWeights = [];
+    private $academicTerm = 0;
 
     public function initialize(array $config): void
     {
@@ -72,7 +73,6 @@ class AssessmentsTable extends AppTable
         $gradeId = $requestData->education_grade_id ?? null;
         $superAdmin = $requestData->super_admin ?? false;
         $userId = $requestData->user_id ?? null;
-        $academicTerm = $requestData->academic_term ?? null;
 
         $StudentStatuses = $this->StudentStatuses;
         $conditions = [];
@@ -99,6 +99,7 @@ class AssessmentsTable extends AppTable
             ->contain([
                 'InstitutionClasses.Institutions',
                 'AcademicPeriods',
+                'EducationGrades',
                 'Users.BirthplaceAreas',
             ])
             ->innerJoin(['InstitutionClassGrades' => 'institution_class_grades'], [
@@ -124,19 +125,15 @@ class AssessmentsTable extends AppTable
                 'academic_period_name' => 'AcademicPeriods.name',
                 'academic_period_id' => 'AcademicPeriods.id',
                 'nationality_name' => 'Nationalities.name',
-                'user_name' => $query->func()->concat([
-                                'Users.first_name' => 'literal',
-                                ' ',
-                                'Users.middle_name' => 'literal',
-                                ' ',
-                                'Users.third_name' => 'literal',
-                                ' ',
-                                'Users.last_name' => 'literal',
-                            ]),
                 'student_id' => $this->aliasField('student_id'),
                 'education_grade_id' => $this->aliasField('education_grade_id'),
                 'institution_class_id' => 'InstitutionClasses.id',
-
+                'education_grade_name' => 'EducationGrades.name',
+                'student_name' => $query->func()->concat([
+                    'Users.first_name' => 'literal',
+                    " ",
+                    'Users.last_name' => 'literal'
+                ]),
             ])
             ->where($conditions);
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
@@ -147,7 +144,6 @@ class AssessmentsTable extends AppTable
                 return $row;
             });
         });
-
            
     }
 
@@ -163,7 +159,7 @@ class AssessmentsTable extends AppTable
             'key' => 'AcademicPeriods.name',
             'field' => 'academic_period_name',
             'type' => 'integer',
-            'label' => '',
+            'label' =>  __('Academic Period'),
         ];
         $fields[] = [
             'key' => 'Users.openemis_no',
@@ -175,21 +171,21 @@ class AssessmentsTable extends AppTable
             'key' => 'Institutions.code',
             'field' => 'code',
             'type' => 'string',
-            'label' => '',
+            'label' => __('Institutions Code'),
         ];
 
         $fields[] = [
             'key' => 'Institutions.name',
             'field' => 'institution_name',
             'type' => 'string',
-            'label' => '',
+            'label' => __('Institutions Name'),
         ];
 
         $fields[] = [
-            'key' => 'Users.first_name',
-            'field' => 'user_name',
+            'key' => '',
+            'field' => 'student_name',
             'type' => 'string',
-            'label' => '',
+            'label' => __('Student Name'),
         ];
 
         $fields[] = [
@@ -197,6 +193,13 @@ class AssessmentsTable extends AppTable
             'field' => 'class_name',
             'type' => 'string',
             'label' => __('Class'),
+        ];
+
+         $fields[] = [
+            'key' => 'education_grade_name',
+            'field' => 'education_grade_name',
+            'type' => 'string',
+            'label' => __('Education Grade'),
         ];
 
         $fields[] = [
@@ -280,9 +283,10 @@ class AssessmentsTable extends AppTable
                 foreach ($assessmentPeriods as $period) {
                     $subjectId = $subject['subject_id'];
                     $assessmentPeriodId = $period->id;
+                    $academicTerm = $period->academic_term;
                     $resultType = $assessmentGradeTypes[$subjectId][$assessmentPeriodId] ?? 'MARKS';
 
-                    $label = __($subject['education_subject_name']) . ' - ' . $period->name;
+                    $label = __($subject['education_subject_name']) . ' - ' . $period->name . ' - ' . $period->academic_term;
                     if ($resultType == 'MARKS') {
                         $label .= ' (' . $period->weight . ') ';
                     }
@@ -311,7 +315,7 @@ class AssessmentsTable extends AppTable
                 ];
             }
         }
-
+        
         $fields[] = [
             'key' => 'total_mark',
             'field' => 'assessment_item',
@@ -378,9 +382,17 @@ class AssessmentsTable extends AppTable
             if(!isset($student_results[$student_id][$education_subject_id][$assessment_period_id])){
                 $student_results[$student_id][$education_subject_id][$assessment_period_id] = $arresult;
             } else {
-//                Log::debug('arresult');
-//                Log::debug($arresult);
+                //Log::debug('arresult');
+                //Log::debug($arresult);
             }
+        }
+
+        $AssessmentPeriods = TableRegistry::getTableLocator()->get('Assessment.AssessmentPeriods');
+        $getAssessment = $AssessmentPeriods ->find()
+                        ->where([$AssessmentPeriods->aliasField('assessment_id') => $assessmentId, $AssessmentPeriods->aliasField('id') => $assessmentPeriodId])->first();
+      
+        if(!empty($getAssessment)){
+            $this->academicTerm = $getAssessment->academic_term;
         }
         $this->results = $student_results;
         $this->assessmentItemResults = $student_results;
@@ -478,5 +490,6 @@ class AssessmentsTable extends AppTable
             return '';
         }
     }*/
+
 
 }
