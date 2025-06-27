@@ -185,6 +185,7 @@ class ReportCardsTable extends ControllerActionTable
         $this->field('principal_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
         $this->field('homeroom_teacher_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
         $this->field('teacher_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
+        $this->field('overall_result', ['options' => $this->getSelectOptions('general.overallresult')]);
 
     }
 
@@ -276,7 +277,7 @@ class ReportCardsTable extends ControllerActionTable
     {
         $this->setupFields($entity);
         $this->field('education_programme_id', ['type' => 'select']);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date','excluded_security_roles', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date','excluded_security_roles', 'education_programme_id', 'education_grade_id', 'overall_result', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
@@ -300,7 +301,7 @@ class ReportCardsTable extends ControllerActionTable
         $this->fields['code']['type'] = 'readonly';
        // $this->fields['name']['type'] = 'readonly';
         $this->field('education_programme_id', ['entity' => $entity]);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'overall_result', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
     }
 
     public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, ServerRequest $request)
@@ -473,6 +474,12 @@ class ReportCardsTable extends ControllerActionTable
             $attr['options'] = $options;
             $attr['onChangeReload'] = 'changeTeacherCommentsRequired';
         }
+        return $attr;
+    }
+
+    public function onUpdateFieldTotalMark(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        $attr['options'] = $this->getSelectOptions('general.yesno');
         return $attr;
     }
 

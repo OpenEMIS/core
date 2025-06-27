@@ -132,7 +132,8 @@ class SurveysTable extends AppTable
     public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
+            $attr['options'] = ['' => '-- ' . __('Select') . ' --', ] // POCOR-9219
+                + $this->controller->getFeatureOptions($this->getAlias());
             $attr['select'] = false;
             $attr['onChangeReload'] = true;
             $data = $request->getData($this->getAlias());

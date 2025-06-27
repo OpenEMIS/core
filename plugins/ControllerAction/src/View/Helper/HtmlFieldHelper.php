@@ -104,22 +104,25 @@ class HtmlFieldHelper extends Helper
     {
         $html = '';
 
-        if (is_null($this->table)) {
+        if (is_null($this->table) && isset($attr['className'])) { // POCOR-9227
             $this->table = TableRegistry::getTableLocator()->get($attr['className']);
         }
 
         // trigger event for custom field types
         $method = 'onGet' . Inflector::camelize($type) . 'Element';
-        $eventKey = 'ControllerAction.Model.' . $method;
-        $event = $this->dispatchEvent($this->table, $eventKey, $method, ['action' => $action, 'entity' => $data, 'attr' => $attr, 'options' => $options]);
-        //echo "<pre>";print_r($attr);die;
-        if ($event->getResult()) {
-            $html = $event->getResult();
-        } else {
-            if (method_exists($this, $type)) {
-                $html = $this->$type($action, $data, $attr, $options);
+        $html = $this->$type($action, $data, $attr, $options); // POCOR-9227
+        if ($this->table) { // POCOR-9227
+            $eventKey = 'ControllerAction.Model.' . $method;
+            $event = $this->dispatchEvent($this->table, $eventKey, $method, ['action' => $action, 'entity' => $data, 'attr' => $attr, 'options' => $options]);
+            //echo "<pre>";print_r($attr);die;
+            if ($event->getResult()) {
+                $html = $event->getResult();
+            } else {
+                if (method_exists($this, $type)) {
+                    $html = $this->$type($action, $data, $attr, $options);
+                }
             }
-        }
+        } // POCOR-9227
         return $html;
     }
 
@@ -178,8 +181,10 @@ class HtmlFieldHelper extends Helper
                 $fieldName = $attr['fieldName'];
             }
             $options = $this->patchInvalidFields($data, $attr['field'], $options);
-            $value = $this->Form->input($fieldName, $options);
-        }
+            if ($attr['field'] && $options) { // POCOR-9227
+                $value = $this->Form->input($fieldName, $options);
+            }
+        } // POCOR-9227
         return $value;
     }
 
@@ -561,6 +566,7 @@ class HtmlFieldHelper extends Helper
             $defaultImgView = $this->table->getDefaultImgView();
 
             $showRemoveButton = false;
+            $tmp_file_read = null; // POCOR-9227
             // if (isset($data[$attr['field']]['tmp_name'])) {
             //     $tmp_file = ((is_array($data[$attr['field']])) && (file_exists($data[$attr['field']]['tmp_name']))) ? $data[$attr['field']]['tmp_name'] : "";
             //     $tmp_file_read = (!empty($tmp_file)) ? file_get_contents($tmp_file) : "";
