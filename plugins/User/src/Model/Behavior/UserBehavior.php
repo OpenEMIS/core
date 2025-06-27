@@ -15,6 +15,7 @@ use Cake\Http\Session;
 use Cake\Routing\Router;
 use Cake\ORM\Locator\TableLocator;
 use Cake\Chronos\Chronos;
+use Cake\Log\Log;
 
 
 class UserBehavior extends Behavior
@@ -739,8 +740,11 @@ class UserBehavior extends Behavior
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $systemDateFormat = $ConfigItems->value('date_format');
         try {
-            $date = Chronos::createFromFormat($systemDateFormat, $data['date_of_birth']);
-            $data['date_of_birth'] = $date->format('Y-m-d');
+            $dob = $data['date_of_birth'] ?? null;
+            if ($dob) {
+                $date = Chronos::createFromFormat($systemDateFormat, $dob);
+                $data['date_of_birth'] = $date->format('Y-m-d');
+            }
         } catch (\Exception $e) {
             Log::warning("Invalid date: " . $data['date_of_birth'] . ' with format ' . $systemDateFormat);
         }
