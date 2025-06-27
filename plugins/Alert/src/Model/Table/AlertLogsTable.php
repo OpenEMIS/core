@@ -161,7 +161,7 @@ class AlertLogsTable extends ControllerActionTable
         $checksum = $this->generateChecksum($subject, $message);
 
         if (!array_key_exists($feature, $alertFeatures)) {
-            $this->logMsg("❌ Unknown feature '{$feature}' passed to insertAlertLog.");
+            Log::debug("❌ Unknown feature '{$feature}' passed to insertAlertLog.");
             return;
         }
 
