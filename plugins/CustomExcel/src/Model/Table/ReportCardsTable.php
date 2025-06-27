@@ -2991,15 +2991,22 @@ class ReportCardsTable extends AppTable
     //POCOR-9232 starts
     public function onExcelTemplateInitialiseClassAndLevelRanking(Event $event, array $params, ArrayObject $extra)
     {
-        if (empty($params['academic_period_id']) && empty($params['student_id']) && !empty($params['institution_id'])) {
+        
+        if (empty($params['academic_period_id']) && empty($params['report_card_id']) && !empty($params['institution_id'])) {
             return [];
+        }
+        $report_card_id = $params['report_card_id'];
+        $ReportCards = self::getDynamicTableInstance('ReportCard.ReportCards');
+        $reportCard = $ReportCards->find()->where([ 'id' => $report_card_id ])->first();
+         $education_grade_id = 0;
+        if(!empty($reportCard)){
+            $education_grade_id = $reportCard->education_grade_id;
         }
         $studentId = $params['student_id'];
         $academicPeriodId = $params['academic_period_id'];
         $institutionId = $params['institution_id'];
         $connection = ConnectionManager::get('default');
-        $studentsData = $connection->execute("SELECT
-            academic_periods.name AS 'academic_period',
+        $studentsData = $connection->execute("SELECT  academic_periods.name AS 'academic_period',
             institutions.name AS 'institution_name',
             institutions.code AS 'institution_code',
             education_grades.name AS 'education_grade',
@@ -3021,8 +3028,7 @@ class ReportCardsTable extends AppTable
         INNER JOIN institutions ON institutions.id = institution_subject_students.institution_id
         INNER JOIN education_grades ON education_grades.id = institution_subject_students.education_grade_id
         INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id
-        WHERE
-            academic_periods.id = " . $academicPeriodId . " AND institutions.id = " . $institutionId . " AND institution_subject_students.student_id = " . $studentId . "
+        WHERE academic_periods.id = " . $academicPeriodId . " AND institutions.id = " . $institutionId . " AND education_grades.id = " . $education_grade_id . "
         ORDER BY
             institution_subjects.name,
             'level_ranking',
