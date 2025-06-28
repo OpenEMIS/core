@@ -814,19 +814,42 @@ class DashboardController extends AppController
     public static function triggerSystemProcess($systemProcessesTable, $rule, string $processName, int $userId, array $extraOptions = []): void
     {
         $now = FrozenTime::now();
+        $paramsJson = json_encode($extraOptions);
+
+        // Check for an existing process with same model, name, and params
+        $existing = $systemProcessesTable->find()
+            ->where([
+                'model' => $processName,
+                'name' => $rule['feature'],
+                'params' => $paramsJson,
+                'created_user_id' => $userId,
+//                'status IN' => [1, 2, 3] // Start, Running, Finished
+            ])
+            ->first();
+
+        if ($existing) {
+            // 🦕 Skip creating duplicate process
+            Log::debug(__FUNCTION__ . 'Already Present');
+            return;
+        }
 
         $processValues = [
             'name' => $rule['feature'],
             'status' => 1,
             'start_date' => $now,
             'model' => $processName,
-            'created_user_id' => $userId
+            'created_user_id' => $userId,
+            'params' => $paramsJson
         ];
+
         $process = $systemProcessesTable->newEntity($processValues);
         if ($systemProcessesTable->save($process)) {
             self::triggerAlertCommand($processName, $userId, $rule['id'], $process->id, $extraOptions);
+        } else {
+            Log::debug(__FUNCTION__ . 'Could Not Fire');
         }
     }
+
 
     public static function triggerAlertCommand(string $processName, int $userId, int $ruleId, int $processId, array $extraOptions = []): void
     {

@@ -181,6 +181,7 @@ class AlertLogsTable extends ControllerActionTable
             // Only trigger resend if status is still 0 (unsent)
             if ($log->status === 0) {
                 $this->triggerSendingAlertCommand('sending_alert', $feature, $log->id, __FUNCTION__, __LINE__);
+                sleep(10);
             }
         }
 
