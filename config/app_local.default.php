@@ -81,15 +81,38 @@ return [
      *
      * See app.php for more configuration options.
      */
-    'EmailTransport' => [
+//    'EmailTransport' => [
+//        'openemis' => [
+//            'className' => 'Smtp',
+//            // The following keys are used in SMTP transports
+//            'host' => 'smtp.gmail.com',
+//            'port' => 587,
+//            'timeout' => 30,
+//            'username' => 'app@openemis.org',
+//            'password' => '',
+//            'client' => null,
+//            'tls' => true,
+//            'url' => env('EMAIL_TRANSPORT_DEFAULT_URL', null),
+//        ],
+//    ],
+//
+//    'Email' => [
+//        'openemis' => [
+//            'transport' => 'openemis',
+//            'from' => ['app@openemis.org' => 'DoNotReply'],
+//            //'charset' => 'utf-8',
+//            //'headerCharset' => 'utf-8',
+//        ],
+//    ]
+'EmailTransport' => [
         'openemis' => [
             'className' => 'Smtp',
             // The following keys are used in SMTP transports
-            'host' => 'smtp.gmail.com',
+            'host' => 'live.smtp.mailtrap.io',
             'port' => 587,
             'timeout' => 30,
-            'username' => 'app@openemis.org',
-            'password' => '',
+            'username' => 'api',
+            'password' => 'fa5d220b522e2431d32e26bfea976f5b',
             'client' => null,
             'tls' => true,
             'url' => env('EMAIL_TRANSPORT_DEFAULT_URL', null),
