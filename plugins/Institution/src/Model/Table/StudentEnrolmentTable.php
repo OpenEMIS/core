@@ -27,7 +27,7 @@ class StudentEnrolmentTable extends ControllerActionTable
     const TO_DO = 1;
     const IN_PROGRESS = 2;
     const DONE = 3;
-
+    protected $_alreadyHandled = [];
     private $workflowEvents = [
         [
             'value' => 'Workflow.onApprove',
@@ -416,12 +416,11 @@ class StudentEnrolmentTable extends ControllerActionTable
             ])
             ->toArray();
 
-
         foreach ($activeRules as $rule) {
             if(!is_array($rule)){
                 $rule = $rule->toArray();
             }
-            DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['enrolment_id' => $entity->id]);
+            DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['enrolment_id' => (int) $entity->id, 'status_id' => (int) $entity->status_id]);
         }
 
     }
@@ -971,6 +970,10 @@ class StudentEnrolmentTable extends ControllerActionTable
                 }
             }
         }
+        if (!empty($this->_alreadyHandled[$entity->id])) {
+            return;
+        }
+        $this->_alreadyHandled[$entity->id] = true;
         $this->sendStudentEnrolmentAlert($entity);
     }
 

@@ -1467,7 +1467,7 @@ class StudentAdmissionTable extends ControllerActionTable
             if (!is_array($rule)) {
                 $rule = $rule->toArray();
             }
-            DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['admission_id' => $entity->id]);
+            DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['admission_id' => (int) $entity->id, 'status_id' => (int) $entity->status_id]);
         }
     }
 

@@ -170,6 +170,11 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
             'required' => true,
             'short' => 'a'
         ]);
+        $parser->addOption('status_id', [
+            'help' => 'Specify the Status ID for targeted alerts.',
+            'required' => false,
+            'short' => 't'
+        ]);
 
         return $parser;
     }
