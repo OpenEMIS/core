@@ -511,7 +511,7 @@ class AlertRulesTable extends ControllerActionTable
             return $this->assignToGuardianOnly($attr);
         }
 
-        if ($feature === 'StudentEnrollment') {
+        if ($feature === 'StudentEnrolment') {
             return $this->assignToGuardianOnly($attr);
         }
 
