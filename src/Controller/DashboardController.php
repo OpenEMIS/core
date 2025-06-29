@@ -759,7 +759,7 @@ class DashboardController extends AppController
             return false;
         }
 
-        return $currentDate > $nextRunDate;
+        return $currentDate >= $nextRunDate;
     }
 
     private function getLastRunDateForAlert(string $processName)
@@ -802,7 +802,7 @@ class DashboardController extends AppController
             case 'Yearly':
                 return $date->modify('+1 year')->format('Y-m-d');
             case 'Daily':
-                return $date->format('Y-m-d');
+                return $date->modify('+1 day')->format('Y-m-d');
             case 'Once':
                 return null; // never run
             default:

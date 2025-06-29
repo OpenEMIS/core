@@ -65,7 +65,7 @@ class AlertRetirementWarningCommand extends AlertCommandBase
 
         $conditions = [
             'Users.date_of_birth <=' => $targetDate,
-            'Users.date_of_death IS' => null,
+//            'Users.date_of_death IS' => null,
             'StaffStatuses.code' => 'ASSIGNED'
         ];
 
@@ -74,7 +74,7 @@ class AlertRetirementWarningCommand extends AlertCommandBase
             $conditions['Staff.institution_id IN'] = $institutionIds;
         }
 
-        $this->logMsg("Retirement alert WHERE clause: " . print_r($conditions, true));
+//        $this->logMsg("Retirement alert WHERE clause: " . print_r($conditions, true));
 
         return $this->Staff->find()
             ->contain(['Users', 'Institutions', 'StaffStatuses'])

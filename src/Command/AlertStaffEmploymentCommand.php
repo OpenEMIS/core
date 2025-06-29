@@ -4,8 +4,6 @@ namespace App\Command;
 
 use Cake\Console\Arguments;
 use Cake\Console\ConsoleIo;
-use Cake\I18n\FrozenDate;
-use Cake\ORM\TableRegistry;
 
 /**
  * Command to send alerts for staff leave reminders.
@@ -14,6 +12,7 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
 {
     const CONDITION_DAYS_BEFORE = 1;
     const CONDITION_DAYS_AFTER = 2;
+
     /**
      * Log alert (SMS or Email) into alert logs.
      *
@@ -53,12 +52,13 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
      */
     protected function getPendingItems(string $featureKey): array
     {
+
         $this->loadModel('Staff.EmploymentStatuses');
 
         $thresholdArray = json_decode($this->rule['threshold'], true);
         $value = (int)($thresholdArray['value'] ?? 0);
-        $statusTypeId = (int) ($thresholdArray['employment_type'] ?? 0);
-        $condition = (int) ($thresholdArray['condition'] ?? 0);
+        $statusTypeId = (int)($thresholdArray['employment_type'] ?? 0);
+        $condition = (int)($thresholdArray['condition'] ?? 0);
 
         if (!$statusTypeId || !$value || !in_array($condition, [self::CONDITION_DAYS_BEFORE, self::CONDITION_DAYS_AFTER], true)) {
             return [];
@@ -68,12 +68,28 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
 
         $dateCondition = match ($condition) {
             self::CONDITION_DAYS_BEFORE => "DATEDIFF($statusDateField, NOW()) BETWEEN 0 AND $value",
-            self::CONDITION_DAYS_AFTER  => "DATEDIFF(NOW(), $statusDateField) BETWEEN 0 AND $value",
+            self::CONDITION_DAYS_AFTER => "DATEDIFF(NOW(), $statusDateField) BETWEEN 0 AND $value",
             default => null
         };
         if (!$dateCondition) {
             return [];
         }
+
+        $where = [
+            $this->EmploymentStatuses->aliasField('status_type_id') => $statusTypeId,
+            "$statusDateField IS NOT NULL",
+            $dateCondition
+        ];
+
+        $userId = $this->userId;
+        $isSuperAdmin = $this->Users->get($userId)->super_admin;
+
+        if (!$isSuperAdmin) {
+            $institutionIds = $this->SecurityGroupUsers->getInstitutionsByUser($userId);
+            $where['Staff.institution_id IN'] = $institutionIds;
+        }
+        $this->logMsg("Employment alert WHERE clause: " . print_r($where, true));
+
 
         $alertData = $this->EmploymentStatuses->find()
             ->contain(['Users', 'EmploymentStatusTypes'])
@@ -90,20 +106,16 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
                 'institution_website' => 'Institutions.website'
             ])
             ->innerJoin(['InstitutionStaff' => 'institution_staff'],
-            ['InstitutionStaff.staff_id = EmploymentStatuses.staff_id',
+                ['InstitutionStaff.staff_id = EmploymentStatuses.staff_id',
                 ])
             ->innerJoin(['Institutions' => 'institutions'],
-            ['InstitutionStaff.institution_id = Institutions.id',
+                ['InstitutionStaff.institution_id = Institutions.id',
                 ])
             ->innerJoin(['StaffStatuses' => 'staff_statuses'],
                 ['InstitutionStaff.staff_status_id = StaffStatuses.id',
                     'StaffStatuses.code = "ASSIGNED"'
                 ])
-            ->where([
-                $this->EmploymentStatuses->aliasField('status_type_id') => $statusTypeId,
-                "$statusDateField IS NOT NULL",
-                $dateCondition
-            ])
+            ->where($where)
             ->distinct($this->EmploymentStatuses->aliasField('staff_id'))
             ->enableAutoFields()
             ->disableHydration();
