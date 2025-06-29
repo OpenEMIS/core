@@ -11,7 +11,7 @@ use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\Mailer\Email;
 use Cake\Log\Log;
 
-class SendingAlertCommand extends Command
+class SendingAlertCommand extends \Cake\Command\Command
 {
     use LocatorAwareTrait;
 
@@ -150,9 +150,9 @@ class SendingAlertCommand extends Command
             ->disableHydration()
             ->toArray();
 
-        $sid = $attributes['account_sid'] ?? null;
-        $token = $attributes['auth_token'] ?? null;
-        $from = $attributes['twilio_number'] ?? null;
+        $sid = $attributes['sms_account_sid'] ?? null;
+        $token = $attributes['sms_auth_token'] ?? null;
+        $from = $attributes['sms_number'] ?? null;
 
         if (!$sid || !$token || !$from) {
             $io->err("Twilio credentials missing for $to");

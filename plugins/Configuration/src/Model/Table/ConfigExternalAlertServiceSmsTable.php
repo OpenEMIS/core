@@ -144,8 +144,8 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
         );
 
         if ($action == 'view') {
-            if (isset($attributes['sms_account_sid'])) {
-                $attributes['sms_account_sid'] = '*****';
+            if (isset($attributes['sms_auth_token'])) {
+                $attributes['sms_auth_token'] = '*****';
             }
 
             foreach ($attributes as $key => $obj) {
