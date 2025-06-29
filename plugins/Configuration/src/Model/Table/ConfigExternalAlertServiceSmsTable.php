@@ -40,11 +40,12 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
         $alias = $this->getAlias();
         $data = $requestData[$alias];
         $source = $data['label'];
-        if ($source == 'Twillio') {
+        if ($source == 'Twilio') {
             return $validator
                 ->requirePresence('sms_account_sid')
                 ->requirePresence('sms_auth_token')
-                ->requirePresence('sms_number')->notEmptyString('sms_account_sid', __('Please enter the Account SID'))
+                ->requirePresence('sms_number')
+                ->notEmptyString('sms_account_sid', __('Please enter the Account SID'))
                 ->notEmptyString('sms_auth_token', __('Please enter the Auth Token'))
                 ->notEmptyString('sms_number', __('Please enter the SMS Number'));
         }
@@ -115,8 +116,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
     {
         $this->field('value', ['visible' => true]);
 
-
-        $this->field('attributes', ['type' => 'external_alert_service_sms']);
+        $this->field('attributes', ['type' => 'custom_external_source']);
     }
 
     public function onGetCustomExternalSourceElement(Event $event, $action, Entity $entity, $attr, $options = [])
@@ -132,15 +132,20 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
             ->where([
                 $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $entity->name
             ])
-            ->order('attribute_field')
+            ->orderAsc('attribute_field')
             ->toArray();
-        if (isset($attributes['private_key'])) {
-            unset($attributes['private_key']);
-        }
+
+        $visibleAttributes = ['sms_account_sid', 'sms_auth_token', 'sms_number'];
+
+        // Filter attributes using array_intersect_key
+        $attributes = array_intersect_key(
+            $attributes,
+            array_flip($visibleAttributes)
+        );
 
         if ($action == 'view') {
-            if (isset($attributes['password'])) {
-                $attributes['password'] = '*****';
+            if (isset($attributes['sms_account_sid'])) {
+                $attributes['sms_account_sid'] = '*****';
             }
 
             foreach ($attributes as $key => $obj) {
@@ -177,7 +182,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra): void
     {
 
         $alias = $this->getAlias();
@@ -189,56 +194,18 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
             return;
         }
 
-
-        if ($source == 'Custom') {
-            $patchOption['validate'] = 'Custom';
-        }
-
-        if ($source == 'Jordan CSPD') {
-            $patchOption['validate'] = 'JordanCSPD';
-        }
-
-        if ($data['value'] != 'Jordan CSPD') {//POCOR-6930 add if condition
-            if (empty($data['private_key'])) {
-                $newKey = openssl_pkey_new([
-                    "digest_alg" => "sha256",
-                    "private_key_bits" => 1024,
-                    "private_key_type" => OPENSSL_KEYTYPE_RSA
-                ]);
-
-                $res = openssl_pkey_new();
-
-                openssl_pkey_export($res, $privKey);
-
-                $pubKey = openssl_pkey_get_details($res);
-                $pubKey = $pubKey["key"];
-                $protectedKey = Security::hash(microtime(true), 'sha256', true);
-                $privateKey = $this->urlsafeB64Encode(Security::encrypt($privKey, $protectedKey));
-                $status = openssl_public_encrypt($protectedKey, $key, Configure::read('Application.public.key'));
-                $protectedKey = $this->urlsafeB64Encode($key);
-                $requestData[$alias]['private_key'] = $privateKey . '.' . $protectedKey;
-                $requestData[$alias]['public_key'] = $pubKey;
-            } else {
-                $privKey = $data['private_key'];
-                $protectedKey = Security::hash(microtime(true), 'sha256', true);
-                $privateKey = $this->urlsafeB64Encode(Security::encrypt($privKey, $protectedKey));
-                $status = openssl_public_encrypt($protectedKey, $key, Configure::read('Application.public.key'));
-                $protectedKey = $this->urlsafeB64Encode($key);
-                $requestData[$alias]['private_key'] = $privateKey . '.' . $protectedKey;
-            }
-        }
-
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
     {
         $errors = $entity->getErrors();
         $source = $entity->name;
+//        $this->field('sms_account_sid', ['type' => 'string', 'required' => 'required']);
+//        $this->field('sms_auth_token', ['type' => 'password', 'required' => 'required']);
+//        $this->field('sms_number', ['type' => 'string', 'required' => 'required']);
+
         if(empty($entity->password)){
-            $entity->password = $entity->getOriginal('password');
-        }
-        if(empty($entity->api_key)){
-            $entity->api_key = $entity->getOriginal('api_key');
+            $entity->sms_auth_token = $entity->getOriginal('sms_auth_token');
         }
         if (!empty($errors)) {
             $errorMessage = 'Please enter the required details.';
@@ -262,10 +229,13 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
         $this->field('value_selection', ['visible' => false]);
         switch ($source) {
             case 'Twilio':
-                $this->field('api_url', ['type' => 'string', 'required' => 'required']);
-                $this->field('username', ['type' => 'string', 'required' => 'required']);
-                $this->field('password', ['type' => 'password', 'required' => 'required', 'attr' => ['value' => ''], 'autocomplete' => 'off']);
-                $this->field('api_key', ['type' => 'password', 'required' => 'required',  'attr' => ['value' => ''], 'autocomplete' => 'off']);
+                $this->field('sms_account_sid', ['type' => 'string', 'required' => 'required']);
+                $this->field('sms_auth_token', ['type' => 'password', 'required' => 'required']);
+                $this->field('sms_number', ['type' => 'string', 'required' => 'required']);
+                $this->field('api_url', ['type' => 'hidden']);
+                $this->field('username', ['type' => 'hidden']);
+                $this->field('password', ['type' => 'hidden']);
+                $this->field('api_key', ['type' => 'hidden']);
                 $this->field('first_name_mapping', ['type' => 'hidden']);
                 $this->field('middle_name_mapping', ['type' => 'hidden']);
                 $this->field('third_name_mapping', ['type' => 'hidden']);
@@ -282,49 +252,6 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
 
                 break;
 
-            case 'Custom':
-                $this->field('token_uri');
-                $this->field('record_uri');
-                $this->field('client_id');
-                $this->field('user_endpoint_uri');
-                $this->field('scope');
-                $this->field('first_name_mapping');
-                $this->field('middle_name_mapping');
-                $this->field('third_name_mapping');
-                $this->field('last_name_mapping');
-                $this->field('date_of_birth_mapping');
-                $this->field('external_reference_mapping');
-                $this->field('gender_mapping');
-                $this->field('identity_type_mapping');
-                $this->field('identity_number_mapping');
-                $this->field('nationality_mapping');
-                $this->field('address_mapping');
-                $this->field('postal_mapping');
-                $this->field('private_key', ['type' => 'text']);
-                $this->field('public_key', ['type' => 'text']);
-                break;
-            //POCOR-6930 Starts
-            case 'Jordan CSPD':
-                $this->field('url');
-                $this->field('username', ['type' => 'string', 'required' => 'required']);
-                $this->field('password', ['type' => 'string', 'required' => 'required']);
-                $this->field('first_name_mapping');
-                $this->field('middle_name_mapping');
-                $this->field('third_name_mapping');
-                $this->field('last_name_mapping');
-                $this->field('date_of_birth_mapping');
-                $this->field('gender_mapping');
-                $this->field('identity_type_mapping');
-                $this->field('identity_number_mapping');
-                $this->field('nationality_mapping');
-                $this->field('address_mapping');
-                $this->field('postal_mapping');
-                break;
-            case 'UNHCR':
-                $this->field('secret_code');
-                $this->field('url');
-                $this->field('application_id');
-                break;//POCOR-7981 Ends
             default:
                 break;
         }
@@ -380,30 +307,6 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
         return __($entity->label);
     }
 
-    public function openEMISIdentityValidation($attributes)
-    {
-        $attribute = [];
-        $this->openEMISIdentityExternalSource($attribute);
-        foreach ($attribute as $key => $values) {
-            if (!isset($values['required'])) {
-                if (empty($attributes[$key]['value'])) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    public function openEMISIdentityExternalSource(&$attribute)
-    {
-        $attribute['token_uri'] = ['label' => 'Token URI', 'type' => 'text'];
-        $attribute['refresh_token'] = ['label' => 'Refresh Token', 'type' => 'textarea'];
-        $attribute['client_id'] = ['label' => 'Client ID', 'type' => 'text'];
-        $attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
-        // $attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
-        // $attribute['hd'] = ['label' => 'Hosted Domain', 'type' => 'text', 'required' => false];
-        $attribute['record_uri'] = ['label' => 'Record URI', 'type' => 'text'];
-    }
 
     /**
      * @param $entity
@@ -434,26 +337,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
         }
     }
 
-    protected function processAuthentication(&$attribute, $authenticationType)
-    {
-        $ExternalDataSourceAttributesTable = self::getDynamicTableInstance('ExternalDataSourceAttributes'); // POCOR-8849
-        $attributesArray = $ExternalDataSourceAttributesTable->find()->where([$ExternalDataSourceAttributesTable->aliasField('external_data_source_type') => $authenticationType])->toArray();
-        $attributeFieldsArray = $this->_table->array_column($attributesArray, 'attribute_field');
-        foreach ($attribute as $key => $values) {
-            $attributeValue = '';
-            if (array_search($key, $attributeFieldsArray) !== false) {
-                $attributeValue = $attributesArray[array_search($key, $attributeFieldsArray)]['value'];
-            }
-            if (method_exists($this, lcfirst(Inflector::camelize($authenticationType, ' ')) . 'ModifyValue')) {
-                $method = lcfirst(Inflector::camelize($authenticationType, ' ')) . 'ModifyValue';
-                $result = $this->$method($key, $attributeValue);
-                if ($result !== false) {
-                    $attributeValue = $result;
-                }
-            }
-            $attribute[$key]['value'] = $attributeValue;
-        }
-    }
+
     /** // POCOR-8849
      * Get a dynamic table instance with all associations.
      *
@@ -524,12 +408,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
         ])->where(['external_data_source_type' => $source])->toArray();
 
         $fields = [
-            'url', 'token_uri', 'record_uri', 'user_endpoint_uri', 'client_id', 'scope',
-            'username', 'password', 'api_url', 'api_key', 'first_name_mapping', 'middle_name_mapping',
-            'third_name_mapping', 'last_name_mapping', 'date_of_birth_mapping', 'external_reference_mapping',
-            'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping',
-            'address_mapping', 'postal_mapping', 'private_key', 'public_key', 'secret_code', 'application_id',
-            'gender_id_mapping', 'openemis_no_mapping'
+            'sms_account_sid', 'sms_auth_token', 'sms_number'
         ];
 
         foreach ($fields as $field) {
