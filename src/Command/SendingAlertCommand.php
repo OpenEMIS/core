@@ -174,7 +174,16 @@ class SendingAlertCommand extends \Cake\Command\Command
             if ($response->isOk()) {
                 $io->out("SMS sent to: $to");
             } else {
-                $io->err("Failed to send SMS to $to: " . $response->getStringBody());
+                $errorBody = $response->getStringBody();
+                $io->out("Failed to send SMS to $to: $errorBody");
+                $io->err("Failed to send SMS to $to: $errorBody");
+
+                // 🔥 Add logging here
+                Log::error('Twilio send failure', [
+                    'to' => $to,
+                    'response' => $errorBody,
+                    'status' => $response->getStatusCode()
+                ]);
             }
         } catch (\Exception $e) {
             $io->err("Exception sending SMS to $to: " . $e->getMessage());
