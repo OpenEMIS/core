@@ -71,7 +71,7 @@ class StaffSubjectsTable extends AppTable
         if (!empty($academicPeriodId)) {
             $conditions['academic_periods.id'] = $academicPeriodId;
         }
-         //POCOR-9124 end
+        //POCOR-9124 end
 
         // get all institution staff id
         $institutionStaffTbl = $institutionStaff->find()
@@ -92,7 +92,7 @@ class StaffSubjectsTable extends AppTable
                 $institutionStaff->aliasField('staff_status_id') => 1,
                 $staffPositionTitles->aliasField('type') => 1,
             ])
-            ->where($conditions)//POCOR-9124
+            ->where($conditions) //POCOR-9124
             ->group([$institutionStaff->aliasField('staff_id')]);
 
         // get all staff qualifications staff id - staff_qualification_titles
@@ -127,7 +127,7 @@ class StaffSubjectsTable extends AppTable
             ->innerJoin(['identity_types' => $identityTypes->table()], [
                 'identity_types.id = ' . $userIdentities->aliasField('identity_type_id')
             ])
-            ->where(['identity_types.default = 1'])
+            ->where(['identity_types.default' => 1])
             ->group([$userIdentities->aliasField('security_user_id')]);
 
         // get user identities security - other_staff_identities
@@ -139,7 +139,7 @@ class StaffSubjectsTable extends AppTable
             ->innerJoin(['identity_types' => $identityTypes->table()], [
                 'identity_types.id = ' . $userIdentities->aliasField('identity_type_id')
             ])
-            ->where(['identity_types.default != 1'])
+            ->where(['identity_types.default !=' => 1])
             ->group([$userIdentities->aliasField('security_user_id')]);
 
         // get user nationalities security - staff_nationalities
@@ -151,7 +151,7 @@ class StaffSubjectsTable extends AppTable
             ->innerJoin(['nationalities' => $nationalities->table()], [
                 'nationalities.id = ' . $userNationalities->aliasField('nationality_id')
             ])
-            ->where(['user_nationalities.preferred = 1'])
+            ->where(['user_nationalities.preferred' => 1])
             ->group([$userNationalities->aliasField('security_user_id')]);
 
 
@@ -283,9 +283,11 @@ class StaffSubjectsTable extends AppTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
-        $IdentityTypesss = TableRegistry::get('identity_types');
-        $userIdTypes = $IdentityTypesss->find()->all();
-        $defaultIdType = $IdentityTypesss->find()->where(['default' => 1])->first();
+        $IdentityType = TableRegistry::get('identity_types');
+        $userIdTypes = $IdentityType->find()->all();
+        $defaultIdType = $IdentityType->find()
+            ->where([$IdentityType->aliasField('default') => 1])
+            ->first();;
 
 
         $newFields = [];
