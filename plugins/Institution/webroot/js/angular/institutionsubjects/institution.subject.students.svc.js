@@ -106,19 +106,28 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdDataSvc) {
     function getConfigItemValue(code) {
         var success = function(response, deferred) {
             var results = response.data.data;
-
             if (angular.isObject(results) && results.length > 0) {
-                var configItemValue = (results[0].value.length > 0) ? results[0].value : results[0].default_value;
-                deferred.resolve(configItemValue);
+                var value = results[0].value;
+                var defaultValue = results[0].default_value;
+
+                // Use default if value is empty, null, or undefined
+                var configItemValue = (value !== undefined && value !== null && value !== "") ? value : defaultValue;
+
+                // Optionally cast to number
+                deferred.resolve(Number(configItemValue));
             } else {
                 deferred.reject('There is no ' + code + ' configured');
             }
         };
 
         return ConfigItemsTable
-            .where({code: code})
-            .ajax({success: success, defer: true});
-    };
+            .where({ code: code })
+            .ajax({
+                success: success,
+                defer: true
+            });
+    }
+
 
     function saveInstitutionSubject(data) {
         return InstitutionSubjects.edit(data);

@@ -65,6 +65,7 @@ $this->start('panelBody');
         <label><?= __('Teachers') ?></label>
         <select chosen
             multiple="multiple"
+            ng-disabled="InstitutionSubjectStudentsController.disableTeachers"
             data-placeholder="<?=__('Select Teacher') ?>"
             class="chosen-select"
             options="InstitutionSubjectStudentsController.teacherOptions"
