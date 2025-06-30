@@ -72,6 +72,10 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
     Controller.classes = [];
     Controller.toValidateClasses = false;
     Controller.maxStudentsPerSubject = null;
+    Controller.disableTeachers = true;
+    Controller.disableStudents = true;
+    Controller.disableRooms = true;
+    Controller.disableSave = true;
 
     // Function mapping
     Controller.setTop = setTop;
@@ -82,158 +86,244 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
     angular.element(document).ready(function () {
         InstitutionSubjectStudentsSvc.init(angular.baseUrl);
         UtilsSvc.isAppendLoader(true);
-        if (Controller.institutionSubjectId != null) {
-            InstitutionSubjectStudentsSvc.getInstitutionSubjectDetails(Controller.institutionSubjectId)
-            .then(function(response) {
-                Controller.institutionSubjectName = response.name;
-                Controller.academicPeriodId = response.academic_period_id;
-                Controller.institutionId = response.institution_id;
-                Controller.academicPeriodName = response.academic_period.name;
-                Controller.educationSubjectName = response.education_subject.name;
-                Controller.educationSubjectId = response.education_subject_id;
-                Controller.educationGradeId = response.education_grade_id;
 
-                var classIds = [];
-                angular.forEach(response.class_subjects, function(value, key) {
-                    this.push(value.institution_class_id);
-                }, classIds);
-                Controller.institutionClassIds = classIds;
+        if (!Controller.institutionSubjectId) return;
 
-                var teachers = [];
-                angular.forEach(response.subject_staff, function(value, key) {
-                    if (value.end_date == null) {
-                        this.push(value.staff_id);
-                    } else {
-                        Controller.pastTeachers.push({
-                            staff_id: value.staff_id,
-                            institution_subject_id: value.institution_subject_id,
-                            institution_id: value.institution_id,
-                            id: value.id,
-                            name_with_id: value.user.name_with_id,
-                            start_date: value.start_date,
-                            end_date: value.end_date
-                        });
-                    }
-                }, teachers);
-                Controller.teachers = teachers;
-
-                var rooms = [];
-                angular.forEach(response.rooms, function(value, key) {
-                    this.push(value.id);
-                }, rooms);
-                Controller.rooms = rooms;
-
-                var classes = [];
-                angular.forEach(response.class_subjects, function(value, key) {
-                    this.push(value.institution_class_id);
-                }, classes);
-                Controller.classes = classes;
-
-                var assignedStudents = [];
-                angular.forEach(response.subject_students, function(value, key) {
-                    var toPush = {
-                        openemis_no: value ?.user ?.openemis_no, //POCOR-7073
-                        name: value ?.user ?.name, //POCOR-7073
-                        student_status_name: value.student_status.name,
-                        gender_name: value ?.user ?.gender ?.name, //POCOR-7073
-                        student_id: value.student_id,
-                        institution_class: value.institution_class.name,
-                        institution_class_id: value.institution_class_id,
-                        encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify(
-                            {
-                                student_id: value.student_id,
-                                institution_class_id: value.institution_class_id,
-                                institution_subject_id: value.institution_subject_id,
-                                education_grade_id: value.education_grade_id,
-                                education_subject_id: value.education_subject_id,
-                                academic_period_id: value.academic_period_id,
-                                institution_id: value.institution_id,
-                                student_status_id: value.student_status_id,
-                                gender_id: value ?.user ?.gender.id //POCOR-7073
-                            }
-                        ))
-                    };
-                    this.push(toPush);
-                }, assignedStudents);
-                Controller.assignedStudents = assignedStudents;
-                Controller.originalAssignedStudents = assignedStudents.slice();
-
-                var promises = [];
-                promises[0] = InstitutionSubjectStudentsSvc.getUnassignedStudent(response.id, Controller.academicPeriodId, Controller.educationGradeId, Controller.institutionClassIds);
-                promises[1] = InstitutionSubjectStudentsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
-                promises[2] = InstitutionSubjectStudentsSvc.getRoomsOptions(response.academic_period_id, Controller.institutionSubjectId);
-                promises[3] = InstitutionSubjectStudentsSvc.getClassOptions(response.institution_id, response.academic_period_id, Controller.educationGradeId, response.id);
-                promises[4] = InstitutionSubjectStudentsSvc.getConfigItemValue('max_students_per_subject');
-                return $q.all(promises);
-            }, function(error) {
-                console.log(error);
+        getInstitutionSubjectDetails()
+            .then(setBasicData)
+            .then(checkIfHasClasses)
+            .then(getClassOptions)
+            .then(setClassOptions)
+            // .then(getRoomOptions)
+            // .then(setRoomOptions)
+            // .then(getMaxStudentConfig)
+            // .then(setMaxStudentConfig)
+            // .then(getTeacherOptions)
+            // .then(setTeacherOptions)
+            // .then(setTeachers)
+            // .then(setRooms)
+            // .then(setAssignedStudents)
+            // .then(getUnassignedStudents)
+            // .then(setUnassignedStudents)
+            // .then(translateHeaders)
+            // .then(setTranslatedHeaders)
+            .catch(function (error) {
+                console.warn('Load process halted:', error.message || error);
             })
-            .then(function (promises) {
-                var unassignedStudentsArr = [];
-                angular.forEach(promises[0], function(value, key) {
-                    var toPush = {
-                        openemis_no: value.openemis_no,
-                        name: value.name,
-                        student_status_name: value.student_status,
-                        gender_name: value.gender,
-                        student_id: value.student_id,
-                        institution_class: value.institution_class,
-                        institution_class_id: value.institution_class_id,
-                        encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify(
-                            {
-                                student_id: value.student_id,
-                                institution_class_id: value.institution_class_id,
-                                institution_subject_id: Controller.institutionSubjectId,
-                                education_grade_id: value.education_grade_id,
-                                education_subject_id: Controller.educationSubjectId,
-                                academic_period_id: value.academic_period_id,
-                                institution_id: value.institution_id,
-                                student_status_id: value.student_status_id,
-                                gender_id: value.gender_id
-                            }
-                        ))
-                    };
-                    this.push(toPush);
-                }, unassignedStudentsArr);
-                Controller.unassignedStudents = unassignedStudentsArr;
-                Controller.teacherOptions = promises[1];
-                Controller.roomOptions = promises[2];
-                Controller.classOptions = promises[3];
-                Controller.maxStudentsPerSubject = promises[4];
-                var toTranslate = [];
-                angular.forEach(Controller.colDef, function(value, key) {
-                    this.push(value.headerName);
-                }, toTranslate);
-                return InstitutionSubjectStudentsSvc.translate(toTranslate);
-            }, function (error) {
-                console.log(error);
-            })
-            .then(function (translatedText) {
-                angular.forEach(translatedText, function(value, key) {
-                    Controller.colDef[key]['headerName'] = value;
-                });
-                Controller.setTop(Controller.colDef, Controller.unassignedStudents);
-                Controller.setBottom(Controller.colDef, Controller.assignedStudents);
-            }, function (error) {
-                console.log(error);
-            })
-            .finally(function(){
-                Controller.dataReady = true;
-                Controller.toValidateClasses = true;
-                UtilsSvc.isAppendLoader(false);
+            .finally(markControllerReady);
+
+        $scope.$watch('InstitutionSubjectStudentsController.classes', onClassChange);
+    });
+
+    function getInstitutionSubjectDetails() {
+        return InstitutionSubjectStudentsSvc.getInstitutionSubjectDetails(Controller.institutionSubjectId)
+            .catch(console.log);
+    }
+
+    function setBasicData(institutionSubjectDetailsResponce) {
+
+        Controller.institutionSubjectDetails = institutionSubjectDetailsResponce;
+        Controller.institutionSubjectName = institutionSubjectDetailsResponce.name;
+        Controller.academicPeriodId = institutionSubjectDetailsResponce.academic_period_id;
+        Controller.institutionId = institutionSubjectDetailsResponce.institution_id;
+        Controller.academicPeriodName = institutionSubjectDetailsResponce.academic_period.name;
+        Controller.educationSubjectName = institutionSubjectDetailsResponce.education_subject.name;
+        Controller.educationSubjectId = institutionSubjectDetailsResponce.education_subject_id;
+        Controller.educationGradeId = institutionSubjectDetailsResponce.education_grade_id;
+        Controller._institutionSubjectDetails = institutionSubjectDetailsResponce;
+        if (angular.isArray(institutionSubjectDetailsResponce.class_subjects)) {
+            Controller.classes = institutionSubjectDetailsResponce.class_subjects.map(function(cs) {
+                return cs.institution_class_id;
             });
         }
 
-        $scope.$watch('InstitutionSubjectStudentsController.classes', function(_newVal, _oldVal) {
-            if (Controller.toValidateClasses) {
-                UtilsSvc.isAppendLoader(true);
-                validateClassUpdate(_newVal, _oldVal);
-            } else if (Controller.dataReady) {
-                Controller.toValidateClasses = true;
-            }
-        })
+    }
 
-    });
+    function checkIfHasClasses() {
+        if (!Controller.classes.length) {
+            AlertSvc.error(Controller, 'No classes are associated with this subject.');
+            Controller.disableTeachers = true;
+            Controller.disableStudents = true;
+            Controller.disableSave = true;
+            throw new Error('No classes linked to subject');
+        }else{
+            AlertSvc.reset(Controller);
+            Controller.disableTeachers = false;
+            Controller.disableStudents = false;
+        }
+    }
+
+    function setTeachers(response) {
+        const teachers = [], past = [];
+        response.subject_staff.forEach(s => {
+            if (s.end_date === null) {
+                teachers.push(s.staff_id);
+            } else {
+                past.push({
+                    staff_id: s.staff_id,
+                    institution_subject_id: s.institution_subject_id,
+                    institution_id: s.institution_id,
+                    id: s.id,
+                    name_with_id: s.user.name_with_id,
+                    start_date: s.start_date,
+                    end_date: s.end_date
+                });
+            }
+        });
+        Controller.teachers = teachers;
+        Controller.pastTeachers = past;
+        return response;
+    }
+
+    function setRooms(response) {
+        Controller.rooms = response.rooms.map(r => r.id);
+        return response;
+    }
+
+    function setAssignedStudents(response) {
+        const students = response.subject_students.map(mapAssignedStudent);
+        Controller.assignedStudents = students;
+        Controller.originalAssignedStudents = [...students];
+        return response;
+    }
+
+    function getMaxStudentConfig() {
+        return InstitutionSubjectStudentsSvc.getConfigItemValue('max_students_per_subject')
+            .catch(console.log);
+    }
+
+    function setMaxStudentConfig(configVal) {
+        Controller.maxStudentsPerSubject = configVal;
+        return Controller._institutionSubjectDetails;
+    }
+
+    function getClassOptions() {
+        return InstitutionSubjectStudentsSvc.getClassOptions(
+            Controller.institutionId,
+            Controller.academicPeriodId,
+            Controller.educationGradeId,
+            Controller.institutionSubjectId
+        ).catch(console.log);
+    }
+
+    function setClassOptions(classOptionsResponce) {
+        Controller.classOptions = classOptionsResponce;
+    }
+
+    function getTeacherOptions(response) {
+        return InstitutionSubjectStudentsSvc.getTeacherOptions(
+            response.institution_id,
+            response.academic_period_id
+        ).catch(console.log);
+    }
+
+    function setTeacherOptions(teacherOpts) {
+        Controller.teacherOptions = teacherOpts;
+        return Controller._institutionSubjectDetails;
+    }
+
+    function getRoomOptions(response) {
+        return InstitutionSubjectStudentsSvc.getRoomsOptions(
+            response.academic_period_id,
+            Controller.institutionSubjectId
+        ).catch(console.log);
+    }
+
+    function setRoomOptions(roomOpts) {
+        Controller.roomOptions = roomOpts;
+        return Controller._institutionSubjectDetails;
+    }
+
+    function getUnassignedStudents(response) {
+        return InstitutionSubjectStudentsSvc.getUnassignedStudent(
+            response.id,
+            Controller.academicPeriodId,
+            Controller.educationGradeId,
+            Controller.classes
+        ).catch(console.log);
+    }
+
+    function setUnassignedStudents(unassigned) {
+        Controller.unassignedStudents = unassigned.map(mapUnassignedStudent);
+        return;
+    }
+
+    function translateHeaders() {
+        const toTranslate = Controller.colDef.map(col => col.headerName);
+        return InstitutionSubjectStudentsSvc.translate(toTranslate)
+            .catch(console.log);
+    }
+
+    function setTranslatedHeaders(translated) {
+        translated.forEach((val, i) => {
+            Controller.colDef[i].headerName = val;
+        });
+        Controller.setTop(Controller.colDef, Controller.unassignedStudents);
+        Controller.setBottom(Controller.colDef, Controller.assignedStudents);
+    }
+
+    function markControllerReady() {
+        Controller.dataReady = true;
+        Controller.toValidateClasses = true;
+        UtilsSvc.isAppendLoader(false);
+    }
+
+    function onClassChange(newVal, oldVal) {
+        if (Controller.toValidateClasses) {
+            UtilsSvc.isAppendLoader(true);
+            validateClassUpdate(newVal, oldVal);
+            checkIfHasClasses();
+        } else if (Controller.dataReady) {
+            Controller.toValidateClasses = true;
+        }
+    }
+
+    function mapAssignedStudent(value) {
+        return {
+            openemis_no: value?.user?.openemis_no,
+            name: value?.user?.name,
+            student_status_name: value.student_status.name,
+            gender_name: value?.user?.gender?.name,
+            student_id: value.student_id,
+            institution_class: value.institution_class.name,
+            institution_class_id: value.institution_class_id,
+            encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify({
+                student_id: value.student_id,
+                institution_class_id: value.institution_class_id,
+                institution_subject_id: value.institution_subject_id,
+                education_grade_id: value.education_grade_id,
+                education_subject_id: value.education_subject_id,
+                academic_period_id: value.academic_period_id,
+                institution_id: value.institution_id,
+                student_status_id: value.student_status_id,
+                gender_id: value?.user?.gender?.id
+            }))
+        };
+    }
+
+    function mapUnassignedStudent(value) {
+        return {
+            openemis_no: value.openemis_no,
+            name: value.name,
+            student_status_name: value.student_status,
+            gender_name: value.gender,
+            student_id: value.student_id,
+            institution_class: value.institution_class,
+            institution_class_id: value.institution_class_id,
+            encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify({
+                student_id: value.student_id,
+                institution_class_id: value.institution_class_id,
+                institution_subject_id: Controller.institutionSubjectId,
+                education_grade_id: value.education_grade_id,
+                education_subject_id: Controller.educationSubjectId,
+                academic_period_id: value.academic_period_id,
+                institution_id: value.institution_id,
+                student_status_id: value.student_status_id,
+                gender_id: value.gender_id
+            }))
+        };
+    }
+
 
     function setTop(header, content, key = 'name') {
         for(var i = 0; i < header.length; i++) {
