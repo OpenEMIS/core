@@ -15,11 +15,11 @@ use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
 
 /**
- * 
+ *
  * This class is used to generate the Student profile
  * Ticket - POCOR6286
  * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
- * 
+ *
  */
 class StudentProfilesTable extends ControllerActionTable
 {
@@ -33,7 +33,7 @@ class StudentProfilesTable extends ControllerActionTable
     CONST PUBLISHED = 4;
 
     CONST MAX_PROCESSES = 2;
-    
+
     public $fileTypes = [
         'jpeg'  => 'image/jpeg',
         'jpg'   => 'image/jpeg',
@@ -66,13 +66,13 @@ class StudentProfilesTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('NextInstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' =>'next_institution_class_id']);
         $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
-        
+
         $this->addBehavior('User.AdvancedNameSearch');
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
-        
+
         $this->StudentTemplates = TableRegistry::getTableLocator()->get('ProfileTemplate.StudentTemplates');
         $this->InstitutionStudentsProfileTemplates = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsProfileTemplates');
         $this->StudentReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.StudentReportCardProcesses');
@@ -120,7 +120,7 @@ class StudentProfilesTable extends ControllerActionTable
         $reportCardId = $this->request->getQuery('student_profile_template_id');
         $institutionId = $queryString['institution_id'];
         $academicPeriodId = $this->request->getQuery('academic_period_id');
-        
+
         if (!is_null($reportCardId) && $this->StudentTemplates->exists([$this->StudentTemplates->getPrimaryKey() => $reportCardId])) {
 
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
@@ -131,7 +131,7 @@ class StudentProfilesTable extends ControllerActionTable
                 'academic_period_id' => $academicPeriodId,
                 'education_grade_id' => $entity->education_grade_id,
             ];
-            
+
             // Download button, status must be generated or published
             if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
                 //START:POCOR-6667
@@ -191,7 +191,7 @@ class StudentProfilesTable extends ControllerActionTable
                             'url' => 'javascript:void(0)',
                             0 => $encodedQueryString
                             ];
-                } 
+                }
             }
         }
         //POCOR-5191::Start
@@ -207,7 +207,7 @@ class StudentProfilesTable extends ControllerActionTable
             $roles = $student_profile_security_roles_table->find()->where(['student_profile_template_id'=> $this->request->getQuery('student_profile_template_id')])->toArray();
         }
         //print_r($this->request->getQuery('student_profile_template_id'));die;
-        
+
         $curr_u_roles = $securitygroupusersTable->find()->where(['security_group_id'=> $security_group_id, 'security_user_id'=>$user_id])->toArray();
         $rolArr = [];
         $rolArrrr = [];
@@ -221,7 +221,7 @@ class StudentProfilesTable extends ControllerActionTable
         $result = array_intersect($rolArrrr, $rolArr);
         $nResult = reset($result);
         //echo "<pre>";print_r(($rolArr));die;
-        
+
 
         if($this->Session->read('Auth.User.super_admin') != 1){
             if(!empty($nResult)){
@@ -230,7 +230,7 @@ class StudentProfilesTable extends ControllerActionTable
                 }
             }else{
                 unset($buttons);
-            }       
+            }
         }
         //POCOR-5191::End
         return $buttons;
@@ -246,7 +246,7 @@ class StudentProfilesTable extends ControllerActionTable
         $this->field('completed_on');
         $this->field('email_status');
     }
-    
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('report_queue');
@@ -282,8 +282,8 @@ class StudentProfilesTable extends ControllerActionTable
         $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $AcademicPeriod->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;        
-        //End 
+        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        //End
 
         // Report Cards filter
         $reportCardOptions = [];
@@ -292,7 +292,7 @@ class StudentProfilesTable extends ControllerActionTable
                 $this->StudentTemplates->aliasField('academic_period_id') => $selectedAcademicPeriod
             ])
             ->toArray();
-       
+
 
         $reportCardOptions = ['-1' => '-- '.__('Select Profile').' --'] + $reportCardOptions;//POCOR-6655 renamed filter name
         $selectedReportCard = !is_null($this->request->getQuery('student_profile_template_id')) ? $this->request->getQuery('student_profile_template_id') : -1;
@@ -409,9 +409,17 @@ class StudentProfilesTable extends ControllerActionTable
                     'education_grade_id' => $educationGradeId,
                     'student_profile_template_id' => $reportCardId
                 ];
-                
+                // POCOR-9165 start
+                $encodedParams = $this->paramsEncode($params);
+                $downloadAllPdfUrl = $this->url('downloadAllPdf');
+                $downloadAllPdfUrl['1'] = $encodedParams;
+                $downloadAllUrl = $this->url('downloadAll');
+                $downloadAllUrl['1'] = $encodedParams;
+                unset($downloadAllPdfUrl['?']);
+                unset($downloadAllUrl['?']);
+                // POCOR-9165 end
                 if ($generatedCount > 0 || $publishedCount > 0) {
-                    $downloadButtonPdf['url'] = $this->setQueryString($this->url('downloadAllPdf'), $params);
+                    $downloadButtonPdf['url'] = $downloadAllPdfUrl;
                     $downloadButtonPdf['type'] = 'button';
                     $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
                     $downloadButtonPdf['attr'] = $toolbarAttr;
@@ -420,7 +428,7 @@ class StudentProfilesTable extends ControllerActionTable
                 }
 
                 if ($generatedCount > 0 || $publishedCount > 0) {
-                    $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
+                    $downloadButton['url'] = $downloadAllUrl;
                     $downloadButton['type'] = 'button';
                     $downloadButton['label'] = '<i class="fa kd-download"></i>';
                     $downloadButton['attr'] = $toolbarAttr;
@@ -456,10 +464,10 @@ class StudentProfilesTable extends ControllerActionTable
                 $date = FrozenTime::now()->format('Y-m-d');
 
                 if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
-                    
+
                     $extra['toolbarButtons']['generateAll'] = $generateButton;
-                    
-                } else { 
+
+                } else {
                     $generateButton['attr']['data-html'] = true;
                     $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('StaffProfiles.date_closed'));
                     $generateButton['url'] = 'javascript:void(0)';
@@ -645,7 +653,7 @@ class StudentProfilesTable extends ControllerActionTable
 
         return $value;
     }
-    
+
     public function downloadExcel(Event $event, ArrayObject $extra)
     {
         $model = $this->InstitutionStudentsProfileTemplates;
@@ -676,7 +684,7 @@ class StudentProfilesTable extends ControllerActionTable
         }
         exit();
     }
-    
+
     public function downloadPDF(Event $event, ArrayObject $extra)
     {
         $model = $this->InstitutionStudentsProfileTemplates;
@@ -769,7 +777,7 @@ class StudentProfilesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->StudentTemplates->checkIfHasTemplate($params['student_profile_template_id']);
-        
+
         $institutionId = $this->getInstitutionID();
         if ($hasTemplate) {
             $StudentReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.StudentReportCardProcesses');
@@ -780,10 +788,10 @@ class StudentProfilesTable extends ControllerActionTable
                     $StudentReportCardProcesses->aliasField('academic_period_id') => $params['academic_period_id'],
                     $StudentReportCardProcesses->aliasField('institution_id') => $institutionId,
                 ])
-                ->count();      
-                        
+                ->count();
 
-            if (!$inProgress) {                   
+
+            if (!$inProgress) {
                 $this->addReportCardsToProcesses($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
                 $this->GenerateAllStudentReportCards($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
                 $this->Alert->warning('StudentProfiles.generateAll');
@@ -797,11 +805,11 @@ class StudentProfilesTable extends ControllerActionTable
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
-    
+
     public function downloadAllPdf(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-        
+
         $institutionId = $this->getInstitutionID();
         // only download report cards with generated or published status
         $statusArray = [self::GENERATED, self::PUBLISHED];
@@ -817,22 +825,22 @@ class StudentProfilesTable extends ControllerActionTable
                 $this->InstitutionStudentsProfileTemplates->aliasField('file_content IS NOT NULL')
             ])
             ->toArray();
-            
+
         if (!empty($files)) {
             $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
             $zipName = 'StudentReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
             $filepath = $path . $zipName;
-           
+
             $zip = new ZipArchive;
             $zip->open($filepath, ZipArchive::CREATE);
-            
+
             foreach ($files as $file) {
                 $fileName = $file->file_name;
                 $fileNameData = explode(".",$fileName);
                 $fileName = $fileNameData[0].'.pdf';
-                
+
                 $zip->addFromString($fileName,  $this->getFile($file->file_content_pdf));
-             
+
             }
             $zip->close();
 
@@ -847,13 +855,14 @@ class StudentProfilesTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
+            exit(); // POCOR-9165
         } else {
             $event->stopPropagation();
             $this->Alert->warning('StudentProfiles.noFilesToDownload');
             return $this->controller->redirect($this->url('index'));
         }
     }
-    
+
     public function downloadAll(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
@@ -876,7 +885,7 @@ class StudentProfilesTable extends ControllerActionTable
             $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
             $zipName = 'StudentReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
             $filepath = $path . $zipName;
-           
+
             $zip = new ZipArchive;
             $zip->open($filepath, ZipArchive::CREATE);
             foreach ($files as $file) {
@@ -895,6 +904,7 @@ class StudentProfilesTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
+            exit(); // POCOR-9165
         } else {
             $event->stopPropagation();
             $this->Alert->warning('StudentProfiles.noFilesToDownload');
@@ -1094,7 +1104,7 @@ class StudentProfilesTable extends ControllerActionTable
                     'file_content' => NULL,
                     'student_id' => $student->student_id
                 ];
-                
+
                 $newEntity = $this->InstitutionStudentsProfileTemplates->patchEntity($studentsReportCardEntity, $newData);
 
                 if (!$this->InstitutionStudentsProfileTemplates->save($newEntity)) {
@@ -1164,7 +1174,7 @@ class StudentProfilesTable extends ControllerActionTable
     private function addReportCardsToEmailProcesses($institutionId, $educationGradeId, $academicPeriodId, $reportCardId, $studentId = null)
     {
         Log::write('debug', 'Initialize Add All Student Profile Report Cards '.$reportCardId.' for Grade '.$educationGradeId.' to email processes ('.FrozenTime::now().')');
-        
+
         $institutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         $where = [];
         $where[$institutionClassStudents->aliasField('education_grade_id IS')] = $educationGradeId;
@@ -1214,7 +1224,7 @@ class StudentProfilesTable extends ControllerActionTable
                 'academic_period_id' => $academicPeriodId,
                 'created' => date('Y-m-d H:i:s')
             ];
-            
+
             $obj = array_merge($idKeys, $data);
             $newEntity = $this->StudentReportCardEmailProcesses->newEntity($obj);
             $this->StudentReportCardEmailProcesses->save($newEntity);

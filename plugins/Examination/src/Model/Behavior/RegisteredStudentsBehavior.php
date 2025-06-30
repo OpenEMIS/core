@@ -195,9 +195,14 @@ class RegisteredStudentsBehavior extends Behavior {
         $where[$model->aliasField('examination_id')] = $selectedExamination;
         $extra['selectedExamination'] = $selectedExamination;
         // End
+        $alias = $model->getAlias(); 
+        if($alias == 'ExaminationResults') { //POCOR-8390
+            $encodedQueryString = $model->paramsEncode(['institution_id'=>$institutionId]);
+            $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
 
-        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
-
+        } else {
+            $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
+        }
         $sortList = ['Users.openemis_no', 'Users.first_name', 'registration_number'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
@@ -295,20 +300,38 @@ class RegisteredStudentsBehavior extends Behavior {
        }
    //POCOR-7512 start
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-         $subjectTable=TableRegistry::get('Examination.ExaminationStudentSubjects');
-         $subjectData=$subjectTable->find('all')
-                                   ->select([
-                                        'id'=> 'ExaminationSubjects.id',
-                                        'name'=> 'ExaminationSubjects.name',
-                                        'code'=>'ExaminationSubjects.code'
-                                     ])->leftJoin(
-                                            ['ExaminationSubjects' => 'examination_subjects'],
-                                            [
-                                                'ExaminationSubjects.id = '.  $subjectTable->aliasField('examination_subject_id')
-                                            ])
-                                    ->where([$subjectTable->aliasField('student_id')=>$entity->student_id])
-                                    ->toArray();
-         $entity['examination_subjects']=$subjectData;
+        $subjectTable=TableRegistry::get('Examination.ExaminationStudentSubjects');
+        $subjectData = $subjectTable->find()
+            ->select([
+                'id' => 'ExaminationSubjects.id',
+                'name' => 'ExaminationSubjects.name',
+                'code' => 'ExaminationSubjects.code',
+                'weight' => 'ExaminationSubjects.weight',
+                'education_subject_id' => 'ExaminationSubjects.education_subject_id',
+                'education_subject_name' => 'EducationSubjects.name',
+                'grading_type_id' => 'ExaminationSubjects.examination_grading_type_id',
+                'grading_type_name' => 'GradingTypes.name',
+                'examination_date' => 'ExaminationSubjects.examination_date',
+                'start_time' => 'ExaminationSubjects.start_time',
+                'end_time' => 'ExaminationSubjects.end_time'
+            ])
+            ->leftJoin(
+                ['ExaminationSubjects' => 'examination_subjects'],
+                ['ExaminationSubjects.id = ' . $subjectTable->aliasField('examination_subject_id')]
+            )
+            ->leftJoin(
+                ['EducationSubjects' => 'education_subjects'],
+                ['EducationSubjects.id = ExaminationSubjects.education_subject_id']
+            )
+            ->leftJoin( //POCOR-8390
+                ['GradingTypes' => 'examination_grading_types'],
+                ['GradingTypes.id = ExaminationSubjects.examination_grading_type_id']
+            )
+            ->where([
+                $subjectTable->aliasField('student_id') => $entity->student_id
+            ])
+            ->toArray();
+        $entity['examination_subjects'] = $subjectData;
         //POCOR-7512 end
         if ($entity->has('examination')) {
             $registrationStartDate = $entity->examination->registration_start_date;

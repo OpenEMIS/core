@@ -773,6 +773,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
         userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
         userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
         userCtrl.selectedUserData.email = selectedData.email;
+        userCtrl.selectedUserData.mobile_number = selectedData.mobile_number;
         userCtrl.selectedUserData.gender_id = selectedData.gender_id;
         userCtrl.selectedUserData.gender = {name: selectedData.gender};
         userCtrl.selectedUserData.nationality_id = selectedData.nationality_id;
@@ -864,6 +865,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
                 userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
                 userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
                 userCtrl.selectedUserData.email = selectedData.email;
+                userCtrl.selectedUserData.mobile_number = selectedData.mobile_number;
                 userCtrl.selectedUserData.gender_id = selectedData.gender_id;
                 userCtrl.selectedUserData.gender = {name: selectedData.gender};
                 userCtrl.selectedUserData.nationality_id = selectedData.nationality_id;
@@ -922,6 +924,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
             userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
             userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
             userCtrl.selectedUserData.email = selectedData.email;
+            userCtrl.selectedUserData.mobile_number = selectedData.mobile_number;
             userCtrl.selectedUserData.gender_id = selectedData.gender_id;
             userCtrl.selectedUserData.gender = {name: selectedData.gender};
             userCtrl.selectedUserData.nationality_id = selectedData.nationality_id;
@@ -1067,6 +1070,9 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
             address_area_id: DirectoryaddSvc.getAddressAreaId(),
             contact_type: scope.selectedUserData.contact_type_id,
             contact_value: scope.selectedUserData.contact_value,
+            email: scope.selectedUserData.email,
+            mobile_number: scope.selectedUserData.mobile_number,
+
             photo_name: scope.selectedUserData.photo_name,
             photo_content: scope.selectedUserData.photo_base_64,
             custom: [],
@@ -1186,6 +1192,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.error(error);
+            userCtrl.message =  error.data.message || error.statusText || error.toString();
+            userCtrl.messageClass = 'alert-danger';
             UtilsSvc.isAppendLoader(false);
         });
     }
