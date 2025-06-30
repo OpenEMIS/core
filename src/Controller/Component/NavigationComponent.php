@@ -877,6 +877,7 @@ class NavigationComponent extends Component
             'Institutions.ExaminationResults.index' => [
                 'title' => 'Results',
                 'parent' => 'Institutions.Examinations',
+                'selected' => ['Institutions.ExaminationResults'],
             ],
 
             'Institutions.ReportCards' => [
