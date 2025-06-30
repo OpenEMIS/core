@@ -9482,7 +9482,7 @@ class InstitutionsController extends AppController
     public
     function StaffHistories()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.InstitutionStaffAttendanceActivities']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserHistories']);
     }//POCOR -8333 ends
 
     public function History()
