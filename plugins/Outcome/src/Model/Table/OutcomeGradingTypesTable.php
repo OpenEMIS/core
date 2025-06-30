@@ -1,4 +1,5 @@
 <?php
+
 namespace Outcome\Model\Table;
 
 use ArrayObject;
@@ -52,24 +53,24 @@ class OutcomeGradingTypesTable extends ControllerActionTable
         $this->controller->getOutcomeTabs();
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Grading Types','Learning Outcomes');       
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Administration', 'Grading Types', 'Learning Outcomes');
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
@@ -116,7 +117,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
     public function addEditOnAddOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if ($data->offsetExists($this->getAlias())) {
-            if (!array_key_exists('grading_options', $data[$this->alias()])) {
+            if (!array_key_exists('grading_options', $data[$this->getAlias()])) { //POCOR-9154
                 $data[$this->getAlias()]['grading_options'] = [];
             } else {
                 // reindex array keys
@@ -136,6 +137,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
             'GradingOptions' => ['validate' => false]
         ];
     }
+
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
@@ -157,7 +159,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
             $extra['redirect'] = $this->setQueryString($url, $criteriaParams, 'criteriaForm');
         }
     }
-    
+
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         if (!isset($data[$this->getAlias()]['grading_options']) || empty($data[$this->getAlias()]['grading_options'])) {
@@ -182,7 +184,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
         ];
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'academic_period_id') {
             return __('Academic Period');
