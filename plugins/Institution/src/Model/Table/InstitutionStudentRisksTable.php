@@ -217,11 +217,12 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
         $riskId = $params['risk_id'];
         $academicPeriodId = $params['academic_period_id'];
+
         $url = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'InstitutionStudentRisks',
-           // '0' => $encodedQueryString,
+            '0' => $encodedQueryString,
         ];
 
         $risksUrl = $this->setQueryString($url, [
@@ -229,7 +230,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
             'academic_period_id' => $academicPeriodId
         ]);
 
-        $this->Navigation->substituteCrumb('Institution Student Risks', 'Institution Student Risks', $risksUrl);
+        $this->Navigation->substituteCrumb('Institution Student Risks', 'Institution Student Risks', );
 
         // Header
         $studentName = $entity->user->first_name . ' ' . $entity->user->last_name;
@@ -297,6 +298,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
     public function afterSaveOrDelete(Event $mainEvent, Entity $afterSaveOrDeleteEntity)
     {
+
         $role = null;
         $user_id = null;
         $criteriaModel = $afterSaveOrDeleteEntity->getSource();
@@ -338,12 +340,13 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
         if (!empty($institutionId)) {
             $criteriaRecord = $this->Risks->getCriteriaByModel($criteriaModel, $institutionId);
+
             if(!empty($criteriaRecord)){
                 foreach ($criteriaRecord as $criteriaDataKey => $criteriaDataObj) {
                     // to get the risks criteria to get the value on the student_risk_criterias
-                    $risksCriteriaResults = $RiskCriterias->find('ActiveRiskCriteria', ['criteria_key' => $criteriaDataKey, 'institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId]);
+                    $risksCriteriaResults = $RiskCriterias->find('ActiveRiskCriteria', ['criteria_key' => $criteriaDataKey, 'institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId])->all();
 
-                    if (!$risksCriteriaResults->isEmpty()) {
+                    if ($risksCriteriaResults->count() > 0) {
                         foreach ($risksCriteriaResults as $key => $risksCriteriaData) {
                             $riskId = $risksCriteriaData->risk_id;
                             $threshold = $risksCriteriaData->threshold;
@@ -945,4 +948,11 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    /*public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+       $queryString = $this->getQueryString();
+       $academicPeriodId = $queryString['academic_period_id'];
+       $query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
+    }*/
 }
