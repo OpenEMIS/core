@@ -38,6 +38,8 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
                 $validator = $model->getValidator();
                 $validator->add('behaviour_classification_id', 'notBlank', ['rule' => 'notBlank']);
                 $validator->requirePresence('behaviour_classification_id');
+                $model->setValidator('forSave', $validator);
+
             }
         }
     }
