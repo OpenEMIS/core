@@ -158,7 +158,7 @@ class AlertLogsTable extends ControllerActionTable
     public function insertAlertLog(string $method, string $feature, string $recipient, ?string $subject = null, ?string $message = null): void
     {
         $alertFeatures = $this->AlertRules->getFeatureOptions();
-        $checksum = $this->generateChecksum($subject, $message);
+        $checksum = $this->generateChecksum($subject . $recipient . $feature . $method, $message);
         $alertFeatures['Messaging'] = __('Messaging');
 
         if (!array_key_exists($feature, $alertFeatures)) {

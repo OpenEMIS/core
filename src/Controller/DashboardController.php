@@ -748,7 +748,6 @@ class DashboardController extends AppController
             return false;
         }else if (empty($lastRunDate)) {
             Log::debug("[Alert: {$alert['name']}] Not triggered yet");
-
             return true;
         }
         Log::debug("[Alert: {$alert['name']}] $lastRunDate");
