@@ -1,4 +1,49 @@
 <?php if (!empty($academicPeriodOptions) || !empty($systemOptions) || !empty($levelOptions) || !empty($cycleOptions) || !empty($programmeOptions) || !empty($gradeOptions) || !empty($setupOptions)) : ?>
+	
+<?php 
+//POCOR-9225[START]
+$this->Html->css('ControllerAction.../plugins/chosen/css/chosen.min.css', ['block' => true]);
+$this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min.js', ['block' => true]);
+?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    $('.chosenSelect').chosen({
+        width: '100%',
+        allow_single_deselect: true,
+        placeholder_text_single: 'Select an option'
+    });
+});
+</script>
+<style>
+.chosen-container-single .chosen-single {
+    background-color:  #ffffff !important;
+    border: 1px solid #ccc;
+    font-weight: 390;
+    font-size: 12px;
+    padding: 6px 10px !important;
+    border-radius: 4px !important;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+	height: 25px !important
+}
+
+.chosen-container-single .chosen-single div {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.chosen-container {
+    width: 100% !important;
+}
+
+.form-control.chosenSelect {
+    height: auto;
+    font-size: 12px;
+    font-weight: 300;
+}
+/* POCOR-9225[END] */
+</style>
 	<div class="toolbar-responsive panel-toolbar">
 		<div class="toolbar-wrapper">
 			<?php
@@ -59,7 +104,7 @@
 
 				if (!empty($programmeOptions)) {
 					echo $this->Form->input('programmes', array(
-						'class' => 'form-control',
+						'class' => 'form-control chosenSelect', //POCOR-9225
 						'label' => false,
 						'options' => $programmeOptions,
 						'default' => $selectedProgramme,

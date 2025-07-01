@@ -47,7 +47,8 @@ class MessageRecipientsTable extends ControllerActionTable{
         $this->field('openemis_no',['sort'=>true]);
         $this->field('name');
         $this->field('email');
-        
+        $this->field('mobile_number');
+
     }
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
@@ -58,6 +59,7 @@ class MessageRecipientsTable extends ControllerActionTable{
             return $results->map(function ($row) {
                 $row['openemis_no'] = $row->security_user->openemis_no;
                 $row['email'] = $row->security_user->email;
+                $row['mobile_number'] = $row->security_user->mobile_number;
                 $row['name'] = $row->security_user->first_name." ". $row->security_user->last_name;
                 return $row;
             });
