@@ -9,13 +9,13 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
-/* POCOR-7462 for cases alert rule */ 
+/* POCOR-7462 for cases alert rule */
 class AlertRuleSystemUpdatesBehavior extends AlertRuleBehavior
 {
     protected $_defaultConfig = [
         'feature' => 'SystemUpdates',
         'name' => 'System Updates',
-        'method' => 'Email',
+        'method' => ['Email','SMS'], // POCOR-8286
         'threshold' => [
             // 'value' => [
             //     'type' => 'integer',
@@ -75,5 +75,5 @@ class AlertRuleSystemUpdatesBehavior extends AlertRuleBehavior
     }
 
 
-   
+
 }
