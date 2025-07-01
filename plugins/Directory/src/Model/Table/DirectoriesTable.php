@@ -2316,9 +2316,17 @@ public function getIdentityTypeData($value_selection)
                     }
                     if ($item->code == 'directory_date_of_birth') {
                         if ($item->value == 1) {
-                            $this->field('date_of_birth', ['visible' => true, 'before' => 'student_status']);
+                            try{
+                                $this->field('date_of_birth', ['visible' => true, 'before' => 'student_status']);
+                            }catch (\Exception $exception){
+                                $this->field('date_of_birth', ['visible' => true]);
+                            }
                         } else {
-                            $this->field('date_of_birth', ['visible' => false, 'before' => 'student_status']);
+                            try {
+                                $this->field('date_of_birth', ['visible' => false, 'before' => 'student_status']);
+                            } catch (\Exception $exception) {
+                                $this->field('date_of_birth', ['visible' => true]);
+                            }
                         }
                     }
                     if ($item->code == 'directory_identity_number') {
@@ -2552,7 +2560,7 @@ public function getIdentityTypeData($value_selection)
         if (!$entity->isNew()) {
             if (!$entity->is_student) {
                 $dirty = $entity->getDirty();
-                Log::debug(print_r($dirty,true));
+//                Log::debug(print_r($dirty,true));
                 if (in_array('gender_id', $dirty)) {
                     $this->Alert->error(__('Gender is not editable in Directories') , ['type' => 'string', 'reset' => true]);
                     $entity->setErrors(['gender_id', __('Gender is not editable in Directories')]);

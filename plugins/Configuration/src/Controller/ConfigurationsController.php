@@ -32,7 +32,7 @@ class ConfigurationsController extends AppController
     }
 
     public function AutomatedStudentEnrollment() //POCOR-8689
-    { 
+    {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigAutomatedStudentEnrollments']);
     }
 
@@ -179,6 +179,12 @@ class ConfigurationsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalDataSource']);
     }
     // End POCOR-7507
+    // Start POCOR-8286
+    public function ExternalAlertServiceSMS()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalAlertServiceSms']);
+    }
+    // End POCOR-8286
     //POCOR-7531 start
     public function ExternalDataSourceExams()
     {

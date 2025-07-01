@@ -4,6 +4,7 @@ namespace App\Shell;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Console\Shell;
+use Cake\Utility\Hash;
 
 class UpdateAssigneeShell extends Shell
 {

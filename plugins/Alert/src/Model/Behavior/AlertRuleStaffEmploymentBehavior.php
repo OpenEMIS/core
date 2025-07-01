@@ -15,7 +15,7 @@ class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'StaffEmployment',
             'name' => 'Staff Employment',
-            'method' => 'Email',
+            'method' => ['Email','SMS'], // POCOR-8286
             'threshold' => [
                 'value' => [
                     'type' => 'integer',
@@ -47,7 +47,6 @@ class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
                 '${threshold.value}' => 'Threshold value.',
                 '${employment_type.name}' => 'Employment type.',
                 '${employment_date}' => 'Staff employment date.',
-                '${employment_period}' => 'Staff employment period.',
                 '${user.openemis_no}' => 'OpenEMIS ID.',
                 '${user.first_name}' => 'First name.',
                 '${user.middle_name}' => 'Middle name.',
@@ -87,6 +86,8 @@ class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
                         'message' => __('Staff employment must be between 1 to 365')
                     ]
                 ]);
+                $model->setValidator('forSave', $validator); // POCOR-8286
+
             }
         }
     }
