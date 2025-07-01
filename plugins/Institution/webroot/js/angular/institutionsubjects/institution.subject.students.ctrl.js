@@ -70,6 +70,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
     Controller.rooms = [];
     Controller.classOptions = [];
     Controller.classes = [];
+    Controller.subjectStaff = [];
     Controller.toValidateClasses = false;
     Controller.maxStudentsPerSubject = null;
     Controller.disableTeachers = true;
@@ -94,14 +95,14 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
             .then(checkIfHasClasses)
             .then(getClassOptions)
             .then(setClassOptions)
-            // .then(getRoomOptions)
-            // .then(setRoomOptions)
-            // .then(getMaxStudentConfig)
-            // .then(setMaxStudentConfig)
-            // .then(getTeacherOptions)
-            // .then(setTeacherOptions)
-            // .then(setTeachers)
-            // .then(setRooms)
+            .then(getRoomOptions)
+            .then(setRoomOptions)
+            .then(getMaxStudentConfig)
+            .then(setMaxStudentConfig)
+            .then(getTeacherOptions)
+            .then(setTeacherOptions)
+            .then(setTeachers)
+            .then(setRooms)
             // .then(setAssignedStudents)
             // .then(getUnassignedStudents)
             // .then(setUnassignedStudents)
@@ -120,19 +121,21 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
             .catch(console.log);
     }
 
-    function setBasicData(institutionSubjectDetailsResponce) {
+    function setBasicData(institutionSubjectDetailsResponse) {
 
-        Controller.institutionSubjectDetails = institutionSubjectDetailsResponce;
-        Controller.institutionSubjectName = institutionSubjectDetailsResponce.name;
-        Controller.academicPeriodId = institutionSubjectDetailsResponce.academic_period_id;
-        Controller.institutionId = institutionSubjectDetailsResponce.institution_id;
-        Controller.academicPeriodName = institutionSubjectDetailsResponce.academic_period.name;
-        Controller.educationSubjectName = institutionSubjectDetailsResponce.education_subject.name;
-        Controller.educationSubjectId = institutionSubjectDetailsResponce.education_subject_id;
-        Controller.educationGradeId = institutionSubjectDetailsResponce.education_grade_id;
-        Controller._institutionSubjectDetails = institutionSubjectDetailsResponce;
-        if (angular.isArray(institutionSubjectDetailsResponce.class_subjects)) {
-            Controller.classes = institutionSubjectDetailsResponce.class_subjects.map(function(cs) {
+        Controller.institutionSubjectDetails = institutionSubjectDetailsResponse;
+        Controller.institutionSubjectName = institutionSubjectDetailsResponse.name;
+        Controller.academicPeriodId = institutionSubjectDetailsResponse.academic_period_id;
+        Controller.institutionId = institutionSubjectDetailsResponse.institution_id;
+        Controller.academicPeriodName = institutionSubjectDetailsResponse.academic_period.name;
+        Controller.educationSubjectName = institutionSubjectDetailsResponse.education_subject.name;
+        Controller.educationSubjectId = institutionSubjectDetailsResponse.education_subject_id;
+        Controller.educationGradeId = institutionSubjectDetailsResponse.education_grade_id;
+        Controller.subjectStaff = institutionSubjectDetailsResponse.subject_staff;
+        Controller.rooms = institutionSubjectDetailsResponse.rooms.map(r => r.id);
+        Controller._institutionSubjectDetails = institutionSubjectDetailsResponse;
+        if (angular.isArray(institutionSubjectDetailsResponse.class_subjects)) {
+            Controller.classes = institutionSubjectDetailsResponse.class_subjects.map(function(cs) {
                 return cs.institution_class_id;
             });
         }
@@ -144,18 +147,20 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
             AlertSvc.error(Controller, 'No classes are associated with this subject.');
             Controller.disableTeachers = true;
             Controller.disableStudents = true;
+            Controller.disableRooms = true;
             Controller.disableSave = true;
             throw new Error('No classes linked to subject');
         }else{
             AlertSvc.reset(Controller);
             Controller.disableTeachers = false;
             Controller.disableStudents = false;
+            Controller.disableRooms = false;
         }
     }
 
-    function setTeachers(response) {
+    function setTeachers() {
         const teachers = [], past = [];
-        response.subject_staff.forEach(s => {
+        Controller.subjectStaff.forEach(s => {
             if (s.end_date === null) {
                 teachers.push(s.staff_id);
             } else {
@@ -172,10 +177,9 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
         });
         Controller.teachers = teachers;
         Controller.pastTeachers = past;
-        return response;
     }
 
-    function setRooms(response) {
+    function setRooms() {
         Controller.rooms = response.rooms.map(r => r.id);
         return response;
     }
@@ -210,10 +214,10 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
         Controller.classOptions = classOptionsResponce;
     }
 
-    function getTeacherOptions(response) {
+    function getTeacherOptions() {
         return InstitutionSubjectStudentsSvc.getTeacherOptions(
-            response.institution_id,
-            response.academic_period_id
+            Controller.institutionId,
+            Controller.academicPeriodId
         ).catch(console.log);
     }
 
@@ -222,9 +226,8 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
         return Controller._institutionSubjectDetails;
     }
 
-    function getRoomOptions(response) {
+    function getRoomOptions() {
         return InstitutionSubjectStudentsSvc.getRoomsOptions(
-            response.academic_period_id,
             Controller.institutionSubjectId
         ).catch(console.log);
     }
