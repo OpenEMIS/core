@@ -18,7 +18,7 @@ use Cake\Log\Log;
 use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
-use Cake\Collection\CollectionInterface;
+use Cake\Collection\CollectionInterface; // POCOR-9243
 
 class InstitutionSubjectsTable extends ControllerActionTable
 {
@@ -393,7 +393,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function findTranslateItem(Query $query, array $options)
     {
-        return $query
+        return $query // POCOR-9243 start
             ->formatResults(function (CollectionInterface $results) {
                 return $results->map(function ( $row) {
                     if (!empty($row['subject_students']) && is_array($row['subject_students'])) {
@@ -410,7 +410,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         ));
                     }
                     return $row;
-                });
+                }); // POCOR-9243 end
             });
     }
     //6198 starts
