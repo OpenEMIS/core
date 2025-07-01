@@ -402,7 +402,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         foreach ($value['subject_students'] as $student) {
                             //POCOR-6463- in edit page we'll only display those students who are "Enrolled"
                             if ($student->student_status_id != 1) {
-                                unset($arrResults[0]['subject_students'][$i]);
+//                                unset($arrResults[0]['subject_students'][$i]);
                             }
                             $i++;
                         }
