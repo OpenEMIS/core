@@ -118,6 +118,7 @@ $this->start('panelBody');
                 ng-init="InstitutionSubjectStudentsController.rooms = []">
         </select>
     </div>
+    {{"InstitutionSubjectStudentsController.assignedStudents"}}
     <div class="input select">
         <label><?= __('Add Student') ?></label>
         <div class="input-form-wrapper"
