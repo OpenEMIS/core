@@ -6767,7 +6767,15 @@ class InstitutionsController extends AppController
             unset($userData['username'], $userData['password']);
             $entity = $securityUsers->patchEntity($checkStudentExist, $userData);
         } else {
-            $entity = $securityUsers->newEntity($userData);
+            //POCOR-9181[START]
+            try {
+                $entity = $securityUsers->newEntity($userData);
+            } catch (\Exception $e) {
+                Log::debug(__FUNCTION__);
+
+                Log::debug('Error: ' . $e->getMessage());
+            }
+            //POCOR-9181[END]
         }
         //POCOR-8706(attached behaviour to reflect users in moodle created from directory)
         $securityUsers->addBehavior('User.MoodleCreateUser');
