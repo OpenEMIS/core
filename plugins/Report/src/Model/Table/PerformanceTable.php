@@ -50,6 +50,37 @@ class PerformanceTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
+   public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if ($data[$this->getAlias()]['feature'] == 'Report.Assessments') {
+            $options['validate'] = 'assessments';
+        }elseif($data[$this->getAlias()]['feature'] == 'Report.Performance'){
+            $options['validate'] = 'performance';
+        }
+    }
+
+    public function validationAssessments(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('institution_id')
+            ->notEmpty('education_grade_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+       return $validator;
+    }
+    public function validationPerformance(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('institution_id')
+            ->notEmpty('education_grade_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+       return $validator;
+    }
     public function beforeAction(Event $event)
     {
         $this->fields = [];
@@ -311,36 +342,38 @@ class PerformanceTable extends AppTable
      */
     public function onUpdateFieldAssessmentPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $gradeId = $request->getData($this->getAlias())['education_grade_id'];
-        $academicPeriodId = $request->getData($this->getAlias())['academic_period_id'];
-        if ($gradeId > 0) {
-            $condition[$this->Assessments->aliasField('education_grade_id')] = $gradeId;
-        }
-        if (!empty($academicPeriodId)) {
-            $condition[$this->Assessments->aliasField('academic_period_id')] = $academicPeriodId;
-        }
-        $assessmentPeriodList = $this->AssessmentPeriods
-                        ->find('list', [
-                            'keyField' => 'id',
-                            'valueField' => 'code_name'
-                        ])
-                        ->leftJoin([$this->Assessments->getAlias() => $this->Assessments->getTable()], [
-                            $this->Assessments->aliasField('id = ') . $this->AssessmentPeriods->aliasField('assessment_id')
-                        ])
-                        ->where([$condition])
-                        ->toArray();
+        if($this->request->getData()['Performance']['feature'] == 'Report.Performance'){
+            $gradeId = $request->getData($this->getAlias())['education_grade_id'];
+            $academicPeriodId = $request->getData($this->getAlias())['academic_period_id'];
+            if ($gradeId > 0) {
+                $condition[$this->Assessments->aliasField('education_grade_id')] = $gradeId;
+            }
+            if (!empty($academicPeriodId)) {
+                $condition[$this->Assessments->aliasField('academic_period_id')] = $academicPeriodId;
+            }
+            $assessmentPeriodList = $this->AssessmentPeriods
+                            ->find('list', [
+                                'keyField' => 'id',
+                                'valueField' => 'code_name'
+                            ])
+                            ->leftJoin([$this->Assessments->getAlias() => $this->Assessments->getTable()], [
+                                $this->Assessments->aliasField('id = ') . $this->AssessmentPeriods->aliasField('assessment_id')
+                            ])
+                            ->where([$condition])
+                            ->toArray();
 
-        $attr['type'] = 'select';
-        $attr['select'] = false;
-        if (count($assessmentPeriodList) > 1) {
-            $assessmentPeriodOption = ['' => '-- ' . __('Select') . ' --', 0 => __('All Periods')] + $assessmentPeriodList;
-        } else {
-            $assessmentPeriodOption = ['' => '-- ' . __('Select') . ' --'] + $assessmentPeriodList;
-        }
-        $attr['options'] = $assessmentPeriodOption;
-        $attr['onChangeReload'] = true;
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            if (count($assessmentPeriodList) > 1) {
+                $assessmentPeriodOption = ['' => '-- ' . __('Select') . ' --', 0 => __('All Periods')] + $assessmentPeriodList;
+            } else {
+                $assessmentPeriodOption = ['' => '-- ' . __('Select') . ' --'] + $assessmentPeriodList;
+            }
+            $attr['options'] = $assessmentPeriodOption;
+            $attr['onChangeReload'] = true;
 
-        return $attr;
+            return $attr;
+        }
     }
 
     /**
@@ -351,33 +384,35 @@ class PerformanceTable extends AppTable
      */
     public function onUpdateFieldAcademicTerm(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $assessmentPeriodId = $this->request->getData($this->getAlias())['assessment_period_id'];
-        if ($assessmentPeriodId > 0) {
-            $condition[$this->AssessmentPeriods->aliasField('academic_term')] = $assessmentPeriodId;
-        }
-        
-        $academicTermList = $this->AssessmentPeriods
-                        ->find('list', [
-                            'keyField' => 'academic_term',
-                            'valueField' => 'academic_term'
-                        ])
-                        ->where([
-                            $condition, 
-                            $this->AssessmentPeriods->aliasField('academic_term !=') => 'NULL'
-                        ])
-                        ->toArray();
-     
-        $attr['type'] = 'select';
-        $attr['select'] = false;
-        if (count($academicTermList) > 1) {
-            $assessmentTermOption = ['' => '-- ' . __('Select') . ' --', 0 => __('All Terms')] + $academicTermList;
-        } else {
-            $assessmentTermOption = ['' => '-- ' . __('Select') . ' --'] + $academicTermList;
-        }
-        $attr['options'] = $assessmentTermOption;
-        $attr['onChangeReload'] = true;
+        if($this->request->getData()['Performance']['feature'] == 'Report.Performance'){
+            $assessmentPeriodId = $this->request->getData($this->getAlias())['assessment_period_id'];
+            if ($assessmentPeriodId > 0) {
+                $condition[$this->AssessmentPeriods->aliasField('academic_term')] = $assessmentPeriodId;
+            }
+            
+            $academicTermList = $this->AssessmentPeriods
+                            ->find('list', [
+                                'keyField' => 'academic_term',
+                                'valueField' => 'academic_term'
+                            ])
+                            ->where([
+                                $condition, 
+                                $this->AssessmentPeriods->aliasField('academic_term !=') => 'NULL'
+                            ])
+                            ->toArray();
+         
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            if (count($academicTermList) > 1) {
+                $assessmentTermOption = ['' => '-- ' . __('Select') . ' --', 0 => __('All Terms')] + $academicTermList;
+            } else {
+                $assessmentTermOption = ['' => '-- ' . __('Select') . ' --'] + $academicTermList;
+            }
+            $attr['options'] = $assessmentTermOption;
+            $attr['onChangeReload'] = true;
 
-        return $attr;
+            return $attr;
+        }
 
     }
 

@@ -1691,20 +1691,33 @@ class StaffTable extends ControllerActionTable
                 $institutionId = $this->paramsEncode(['id' => $entity->institution->id]);
                 $userId = $entity->_matchingData['Users']->id;
 
+                //POCOR-3128[START]
                 $icon = '<i class="fa fa-history"></i>';
+                // $url = [
+                //     'plugin' => 'Institution',
+                //     'institutionId' => $institutionId,
+                //     'controller' => 'StaffHistories',
+                //     'action' => 'index'
+                // ];
                 $url = [
                     'plugin' => 'Institution',
-                    'institutionId' => $institutionId,
-                    'controller' => 'StaffHistories',
-                    'action' => 'index'
+                    'institution_id' => $institutionId,
+                    //'controller' => 'StudentHistories',
+                    //'action' => 'index',
+                    'controller' => 'Institutions',//POCOR-8333
+                    'action' => 'StaffHistories',//POCOR-8333
+                    '0' => 'index',//POCOR-8333
+                    '1' => $encodedQueryString
                 ];
 
                 $buttons['history'] = $buttons['view'];
                 $buttons['history']['label'] = $icon . __('History');
                 $buttons['history']['url'] = $this->ControllerAction->setQueryString($url, [
                     'security_user_id' => $userId,
-                    'user_type' => 'Staff'
+                    'user_type' => 'Staff',
+                    'institution_id' => $entity->institution->id
                 ]);
+                //POCOR-3128[END]
             }
             // end POCOR-3125 history button permission
         }
@@ -4338,7 +4351,9 @@ class StaffTable extends ControllerActionTable
                 $staffLeaveRecords = [];
 
                 if (!empty($row->_matchingData['Users']->photo_name)) {
-                    $row['photo_content'] = base64_encode(stream_get_contents($row->_matchingData['Users']->photo_content));
+                    if (!empty($row->_matchingData['Users']->photo_content)) {//POCOR-9189 starts
+                        $row['photo_content'] = base64_encode(stream_get_contents($row->_matchingData['Users']->photo_content));
+                    }//POCOR-9189 ends
                 }
 
                 if (array_key_exists($staffId, $attendanceByStaffIdRecords)) {
@@ -4681,7 +4696,9 @@ class StaffTable extends ControllerActionTable
                     $row['user_avatar'] = null;
 
                     if (!empty($row->user->photo_name)) {
-                        $row['user_avatar'] = base64_encode(stream_get_contents($row->user->photo_content));
+                        if (!empty($row->user->photo_content)) {//POCOR-9189 starts
+                            $row['user_avatar'] = base64_encode(stream_get_contents($row->user->photo_content));
+                        }//POCOR-9189 ends
                     }
                     return $row;
                 });

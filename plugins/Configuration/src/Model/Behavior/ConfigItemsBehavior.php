@@ -132,13 +132,13 @@ class ConfigItemsBehavior extends Behavior
             $action = $this->model->action;
         }
 
-        // echo '<pre>';
-        // print_r($url);
-        // print_r($action);
-        // echo '<br/>';
-        // echo $typeValue;
-
-        // die;
+//         echo '<pre>';
+//         print_r($url);
+//         print_r($action);
+//         echo '<br/>';
+//         echo $typeValue;
+//
+//         die;
 
         // Start POCOR-7507
         if($typeValue == 'ExternalDataSource-Identity'){
@@ -150,6 +150,9 @@ class ConfigItemsBehavior extends Behavior
         }
         if($typeValue == 'ExternalDataSource-LMS'){ //POCOR-8386
             $typeValue = 'ExternalDataSourceLMS';
+        }
+        if($typeValue == 'ExternalAlertService-SMS'){ //POCOR-8386
+            $typeValue = 'ExternalAlertServiceSMS';
         }
         //POCOR-7531 start
          // End POCOR-7507
