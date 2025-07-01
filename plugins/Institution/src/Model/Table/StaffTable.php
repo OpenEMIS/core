@@ -4338,7 +4338,9 @@ class StaffTable extends ControllerActionTable
                 $staffLeaveRecords = [];
 
                 if (!empty($row->_matchingData['Users']->photo_name)) {
-                    $row['photo_content'] = base64_encode(stream_get_contents($row->_matchingData['Users']->photo_content));
+                    if (!empty($row->_matchingData['Users']->photo_content)) {//POCOR-9189 starts
+                        $row['photo_content'] = base64_encode(stream_get_contents($row->_matchingData['Users']->photo_content));
+                    }//POCOR-9189 ends
                 }
 
                 if (array_key_exists($staffId, $attendanceByStaffIdRecords)) {
@@ -4681,7 +4683,9 @@ class StaffTable extends ControllerActionTable
                     $row['user_avatar'] = null;
 
                     if (!empty($row->user->photo_name)) {
-                        $row['user_avatar'] = base64_encode(stream_get_contents($row->user->photo_content));
+                        if (!empty($row->user->photo_content)) {//POCOR-9189 starts
+                            $row['user_avatar'] = base64_encode(stream_get_contents($row->user->photo_content));
+                        }//POCOR-9189 ends
                     }
                     return $row;
                 });
