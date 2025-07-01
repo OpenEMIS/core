@@ -9,13 +9,13 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
-/* POCOR-7462 for cases alert rule */ 
+/* POCOR-7462 for cases alert rule */
 class AlertRuleCaseEscalationBehavior extends AlertRuleBehavior
 {
     protected $_defaultConfig = [
         'feature' => 'CaseEscalation',
         'name' => 'Case Escalation',
-        'method' => 'Email',
+        'method' => ['Email','SMS'], // POCOR-8286
         'threshold' => [
             'value' => [
                 'type' => 'integer',
@@ -46,7 +46,7 @@ class AlertRuleCaseEscalationBehavior extends AlertRuleBehavior
             '${assignee.third_name}'=>'Assignee Third Name.',
             '${assignee.last_name}'=>'Assignee Last Name.',
         ]
-       
+
      ];
 
     public function initialize(array $config): void
@@ -60,13 +60,16 @@ class AlertRuleCaseEscalationBehavior extends AlertRuleBehavior
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
 
             if (isset($data['submit']) && $data['submit'] == 'save') {
-                $validator = $model->validator();
+                // POCOR-8286 start
+                $validator = $model->getValidator();
                 $validator->add('value', [
                     'ruleRange' => [
                         'rule' => ['range', 1, 30],
                         'message' => __('Value must be within 1 to 30')
                     ]
                 ]);
+                $model->setValidator('forSave', $validator);
+                // POCOR-8286 end
             }
         }
     }
@@ -83,5 +86,5 @@ class AlertRuleCaseEscalationBehavior extends AlertRuleBehavior
     }
 
 
-   
+
 }

@@ -1273,8 +1273,8 @@ class RecordBehavior extends Behavior
     {
 
         $recordId = $settings['id'];
-        Log::debug(print_r($settings, true));
-        Log::debug(print_r($this->_table->request->getAttribute('params'), true));
+//        Log::debug(print_r($settings, true));
+//        Log::debug(print_r($this->_table->request->getAttribute('params'), true));
         // POCOR-9067 start: problem for class or institution
         if(!isset($recordId)) {
             $checkEncodedClassId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8324

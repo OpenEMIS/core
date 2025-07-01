@@ -7468,7 +7468,7 @@ class InstitutionsController extends AppController
                 $TransfersTbl->aliasField('institution_id'),
                 $TransfersTbl->aliasField('previous_institution_id')
             ])
-            ->leftJoin([$TransfersTbl->alias() => $TransfersTbl->table()],
+            ->leftJoin([$TransfersTbl->getAlias() => $TransfersTbl->getTable()],
                 [
                     $TransfersTbl->aliasField('student_id') . '=' . $student_id,
                     $TransfersTbl->aliasField('institution_id') => $institution_id

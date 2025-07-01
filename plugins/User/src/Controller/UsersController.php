@@ -1045,9 +1045,16 @@ class UsersController extends AppController
             $params = $process['params'];
             $eventName = $process['callable_event'];
             $executedCount = $process['executed_count'];
-            $modelTable = TableRegistry::getTableLocator()->get($model);
-            if (!empty($eventName)) {
-                $event = $modelTable->dispatchEvent('Shell.' . $eventName, [$id, $executedCount, $params]);
+            try {
+                $modelTable = TableRegistry::getTableLocator()->get($model);
+
+                if (!empty($eventName)) {
+                    $event = $modelTable->dispatchEvent('Shell.' . $eventName, [$id, $executedCount, $params]);
+                }
+            } catch (\Cake\Core\Exception\MissingTableClassException $e) {
+                Log::warning("⚠️ Model table '$model' not found: " . $e->getMessage());
+            } catch (\Exception $e) {
+                Log::error("❌ Unexpected error loading model '$model': " . $e->getMessage());
             }
         }
     }
