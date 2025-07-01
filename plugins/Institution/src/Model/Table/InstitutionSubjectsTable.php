@@ -401,9 +401,9 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         $i = 0;
                         foreach ($value['subject_students'] as $student) {
                             //POCOR-6463- in edit page we'll only display those students who are "Enrolled"
-                            if ($student->student_status_id != 1) {
-                                unset($arrResults[0]['subject_students'][$i]);
-                            }
+//                            if ($student->student_status_id != 1) {
+//                                unset($arrResults[0]['subject_students'][$i]);
+//                            }
                             $i++;
                         }
                     }
@@ -2373,16 +2373,16 @@ class InstitutionSubjectsTable extends ControllerActionTable
     }
     /**
      * Attach field names to the provided data entity by fetching associated details.
-     * 
-     * This function queries the database to fetch related data for a given entity ID 
-     * and populates the `fieldNames` array with information like academic period name, 
+     *
+     * This function queries the database to fetch related data for a given entity ID
+     * and populates the `fieldNames` array with information like academic period name,
      * institution code, education grade details, class name, and subject code.
-     * 
+     *
      * @param \Cake\ORM\Entity $data The entity data to which field names will be attached.
      * @return \Cake\ORM\Entity The modified entity with the `fieldNames` attribute populated.
-     * 
+     *
      * @throws \Cake\Datasource\Exception\RecordNotFoundException If no record is found for the given ID.
-     * 
+     *
      * @author [Megha Gupta <barkha@madvit.com>]
      * @since 2024-12-30
      * @task POCOR-8706
@@ -2412,7 +2412,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 'subject_code' => $subjectData->education_subject_code ?? null,
             ];
         }
-        
+
         $data['fieldNames'] = $fieldNames;
         return $data;
     }
