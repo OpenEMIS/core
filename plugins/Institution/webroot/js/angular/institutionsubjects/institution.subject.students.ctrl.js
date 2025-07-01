@@ -132,12 +132,14 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
         Controller.educationSubjectId = institutionSubjectDetailsResponse.education_subject_id;
         Controller.educationGradeId = institutionSubjectDetailsResponse.education_grade_id;
         Controller.subjectStaff = institutionSubjectDetailsResponse.subject_staff;
-        Controller.rooms = institutionSubjectDetailsResponse.rooms.map(r => r.id);
         Controller._institutionSubjectDetails = institutionSubjectDetailsResponse;
         if (angular.isArray(institutionSubjectDetailsResponse.class_subjects)) {
             Controller.classes = institutionSubjectDetailsResponse.class_subjects.map(function(cs) {
                 return cs.institution_class_id;
             });
+        }
+        if (angular.isArray(institutionSubjectDetailsResponse.rooms)) {
+            Controller.rooms = institutionSubjectDetailsResponse.rooms.map(r => r.id);
         }
 
     }
