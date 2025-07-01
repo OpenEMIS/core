@@ -18,6 +18,7 @@ use Cake\Log\Log;
 use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
+use Cake\Collection\CollectionInterface;
 
 class InstitutionSubjectsTable extends ControllerActionTable
 {
@@ -393,24 +394,23 @@ class InstitutionSubjectsTable extends ControllerActionTable
     public function findTranslateItem(Query $query, array $options)
     {
         return $query
-            ->formatResults(function ($results) {
-                $arrResults = $results->toArray();
-
-                foreach ($arrResults as &$value) {
-                    if (isset($value['subject_students']) && is_array($value['subject_students'])) {
-                        $i = 0;
-                        foreach ($value['subject_students'] as $student) {
-                            //POCOR-6463- in edit page we'll only display those students who are "Enrolled"
-
-                            if ($student->student_status_id != 1) {
-                                Log::debug(print_r($student,true));
-//                                unset($arrResults[0]['subject_students'][$i]);
+            ->formatResults(function (CollectionInterface $results) {
+                return $results->map(function (array $row) {
+                    if (!empty($row['subject_students']) && is_array($row['subject_students'])) {
+                        // Keep only "Enrolled" students (status_id == 1)
+                        $row['subject_students'] = array_values(array_filter(
+                            $row['subject_students'],
+                            function ($student) {
+                                if ($student->student_status_id != 1) {
+                                    Log::debug('Skipping student: ' . print_r($student, true));
+                                    return false;
+                                }
+                                return true;
                             }
-                            $i++;
-                        }
+                        ));
                     }
-                }
-                return $arrResults;
+                    return $row;
+                });
             });
     }
     //6198 starts
