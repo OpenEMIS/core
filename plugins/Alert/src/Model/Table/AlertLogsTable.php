@@ -307,8 +307,8 @@ class AlertLogsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('message', ['visible' => false]);
-        $this->field('destination', ['visible' => false]);
-        $this->field('method', ['after' => 'feature', 'sort' => false]);
+        $this->field('method', ['after' => 'feature', 'sort' => true]);
+        $this->field('destination', ['after' => 'method', 'visible' => true]);
 
         // element control
         $featureOptions = $this->getFeatureOptions();
