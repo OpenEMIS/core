@@ -63,16 +63,13 @@ class InstitutionService extends Controller
                 $resp[$k]['shift_type'] = $data['shift_type'];
                 $resp[$k]['classification'] = $data['classification'];
                 $resp[$k]['area_id'] = $data['area_id'];
-                $resp[$k]['area_name'] = $data['area_education']['name'];
-                $resp[$k]['area_code'] = $data['area_education']['code'];
+                //POCOR-9240[START]
+                $resp[$k]['area_name'] = !empty($data['area_education']['name']) ? $data['area_education']['name'] : 'N/A';
+                $resp[$k]['area_code'] = !empty($data['area_education']['code']) ? $data['area_education']['code'] : 'N/A';
                 $resp[$k]['area_administrative_id'] = $data['area_administrative_id'];
-                if($data['area_administrative_id'] != 0 || $data['area_administrative_id'] != null){
-                    $resp[$k]['area_administrative_name'] = $data['area_administratives']['name'];
-                    $resp[$k]['area_administrative_code'] = $data['area_administratives']['code'];
-                }else{
-                  $resp[$k]['area_administrative_name'] = "N/A"; 
-                  $resp[$k]['area_administrative_code'] = "N/A";
-                } //POCOR-8990
+                $resp[$k]['area_administrative_name'] = !empty($data['area_administratives']['name']) ? $data['area_administratives']['name'] : 'N/A';
+                $resp[$k]['area_administrative_code'] = !empty($data['area_administratives']['code']) ? $data['area_administratives']['code'] : 'N/A';
+                //POCOR-9240[END]
                 $resp[$k]['institution_locality_id'] = $data['institution_locality_id'];
                 $resp[$k]['institution_locality_name'] = $data['institution_localities']['name']??"";
                 $resp[$k]['institution_locality_international_code'] = $data['institution_localities']['international_code']??"";
