@@ -37,12 +37,22 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdDataSvc) {
     };
 
     function translate(data) {
-        KdDataSvc.init({translation: 'translate'});
+        KdDataSvc.init({ translation: 'translate' });
+
         var success = function(response, deferred) {
-            var translated = response.data.translated;
-            deferred.resolve(translated);
+            deferred.resolve(response.data.translated);
         };
-        return translation.translate(data, {success:success, defer: true});
+
+        var error = function(response, deferred) {
+            // couldn’t translate, so just return the original payload
+            deferred.resolve(data);
+        };
+
+        return translation.translate(data, {
+            success: success,
+            error:   error,
+            defer:   true
+        });
     }
 
     function getInstitutionSubjectDetails(institutionSubjectId) {
@@ -57,8 +67,6 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdDataSvc) {
 
     function getUnassignedStudent(institutionSubjectId, academicPeriodId, educationGradeId, institutionClassIds) {
         var success = function(response, deferred) {
-            console.log('getUnassignedStudent');
-            console.log(response);
             deferred.resolve(response.data.data);
         };
 
