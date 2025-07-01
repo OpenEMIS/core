@@ -18,12 +18,25 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
     // Variables
     Controller.bodyDir = getComputedStyle(document.body).direction;
     Controller.columnTopData = [
-        { headerName: "", field: "checkbox", checkboxSelection: true, suppressMenu: suppressMenu, suppressSorting: suppressSorting, minWidth: 50, maxWidth: 50, pinned: 'left' }
+        { headerName: "",
+            field: "checkbox",
+            checkboxSelection: true,
+            suppressMenu: suppressMenu,
+            suppressSorting: suppressSorting,
+            minWidth: 50,
+            maxWidth: 50,
+            pinned: 'left' }
     ];
     Controller.rowTopData = [];
     Controller.topKey = 'id';
     Controller.columnBottomData = [
-        { headerName: "", field: "checkbox", checkboxSelection: true, suppressMenu: suppressMenu, suppressSorting: suppressSorting, minWidth: 50, maxWidth: 50, pinned: 'left' }
+        { headerName: "",
+            field: "checkbox",
+            checkboxSelection: true,
+            suppressMenu: suppressMenu,
+            suppressSorting: suppressSorting,
+            minWidth: 50,
+            maxWidth: 50, pinned: 'left' }
     ];
     Controller.rowBottomData = [];
     Controller.bottomKey = 'id';
@@ -67,10 +80,13 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
     Controller.educationGradeId = null;
     Controller.institutionClassIds = [];
     Controller.teachers = [];
+    Controller.originalTeachers = [];
     Controller.rooms = [];
     Controller.classOptions = [];
     Controller.classes = [];
+    Controller.originalClasses = [];
     Controller.subjectStaff = [];
+    Controller.subjectStudents = [];
     Controller.toValidateClasses = false;
     Controller.maxStudentsPerSubject = null;
     Controller.disableTeachers = true;
@@ -102,27 +118,28 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
             .then(getTeacherOptions)
             .then(setTeacherOptions)
             .then(setTeachers)
-            .then(setRooms)
-            // .then(setAssignedStudents)
-            // .then(getUnassignedStudents)
-            // .then(setUnassignedStudents)
-            // .then(translateHeaders)
-            // .then(setTranslatedHeaders)
+            .then(setAssignedStudents)
+            .then(getUnassignedStudents)
+            .then(setUnassignedStudents)
+            .then(translateHeaders)
+            .then(setTranslatedHeaders)
             .catch(function (error) {
                 console.warn('Load process halted:', error.message || error);
             })
             .finally(markControllerReady);
 
-        $scope.$watch('InstitutionSubjectStudentsController.classes', onClassChange);
+        $scope.$watch('InstitutionSubjectStudentsController.classes', onClassesChange);
+        $scope.$watch('InstitutionSubjectStudentsController.teachers', onTeachersChange);
+        $scope.$watch('InstitutionSubjectStudentsController.rooms', onRoomsChange);
+        $scope.$watchCollection('InstitutionSubjectStudentsController.assignedStudents', onStudentsChange);
     });
 
     function getInstitutionSubjectDetails() {
         return InstitutionSubjectStudentsSvc.getInstitutionSubjectDetails(Controller.institutionSubjectId)
-            .catch(console.log);
+            .catch(console.error);
     }
 
     function setBasicData(institutionSubjectDetailsResponse) {
-
         Controller.institutionSubjectDetails = institutionSubjectDetailsResponse;
         Controller.institutionSubjectName = institutionSubjectDetailsResponse.name;
         Controller.academicPeriodId = institutionSubjectDetailsResponse.academic_period_id;
@@ -131,15 +148,24 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
         Controller.educationSubjectName = institutionSubjectDetailsResponse.education_subject.name;
         Controller.educationSubjectId = institutionSubjectDetailsResponse.education_subject_id;
         Controller.educationGradeId = institutionSubjectDetailsResponse.education_grade_id;
-        Controller.subjectStaff = institutionSubjectDetailsResponse.subject_staff;
+        if (angular.isArray(institutionSubjectDetailsResponse.subject_staff)) {
+            Controller.subjectStaff = institutionSubjectDetailsResponse.subject_staff;
+        }
+        if (angular.isArray(institutionSubjectDetailsResponse.subject_students)) {
+            Controller.subjectStudents = institutionSubjectDetailsResponse.subject_students;
+        }
         Controller._institutionSubjectDetails = institutionSubjectDetailsResponse;
         if (angular.isArray(institutionSubjectDetailsResponse.class_subjects)) {
-            Controller.classes = institutionSubjectDetailsResponse.class_subjects.map(function(cs) {
+            const classes = institutionSubjectDetailsResponse.class_subjects.map(function(cs) {
                 return cs.institution_class_id;
             });
+            Controller.classes = classes;
+            Controller.originalClasses = [...classes];
         }
         if (angular.isArray(institutionSubjectDetailsResponse.rooms)) {
-            Controller.rooms = institutionSubjectDetailsResponse.rooms.map(r => r.id);
+            const rooms = institutionSubjectDetailsResponse.rooms.map(r => r.id);
+            Controller.rooms = rooms;
+            Controller.originalRooms = [...rooms];
         }
 
     }
@@ -150,7 +176,6 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
             Controller.disableTeachers = true;
             Controller.disableStudents = true;
             Controller.disableRooms = true;
-            Controller.disableSave = true;
             throw new Error('No classes linked to subject');
         }else{
             AlertSvc.reset(Controller);
@@ -158,6 +183,33 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
             Controller.disableStudents = false;
             Controller.disableRooms = false;
         }
+    }
+
+    function checkIfCanSave() {
+        // List of base property names to compare
+        const props = [
+            'classes',
+            'rooms',
+            'teachers',
+            'assignedStudents'
+        ];
+
+        // Determine if any prop differs from its “original” counterpart
+        const hasChanged = props.some(prop => {
+            // Build the original property name, e.g. "originalClasses"
+            const originalKey = 'original' +
+                prop.charAt(0).toUpperCase() +
+                prop.slice(1);
+            return !angular.equals(
+                Controller[prop],
+                Controller[originalKey]
+            );
+        });
+        // Enable save only if something changed
+        Controller.disableSave = !hasChanged;
+
+        // (Optional) you could return the flag:
+        return hasChanged;
     }
 
     function setTeachers() {
@@ -178,24 +230,19 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
             }
         });
         Controller.teachers = teachers;
+        Controller.originalTeachers = [...teachers];
         Controller.pastTeachers = past;
     }
 
-    function setRooms() {
-        Controller.rooms = response.rooms.map(r => r.id);
-        return response;
-    }
-
-    function setAssignedStudents(response) {
-        const students = response.subject_students.map(mapAssignedStudent);
+    function setAssignedStudents() {
+        const students = Controller.subjectStudents.map(mapAssignedStudent);
         Controller.assignedStudents = students;
         Controller.originalAssignedStudents = [...students];
-        return response;
     }
 
     function getMaxStudentConfig() {
         return InstitutionSubjectStudentsSvc.getConfigItemValue('max_students_per_subject')
-            .catch(console.log);
+            .catch(console.error);
     }
 
     function setMaxStudentConfig(configVal) {
@@ -209,7 +256,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
             Controller.academicPeriodId,
             Controller.educationGradeId,
             Controller.institutionSubjectId
-        ).catch(console.log);
+        ).catch(console.error);
     }
 
     function setClassOptions(classOptionsResponce) {
@@ -220,7 +267,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
         return InstitutionSubjectStudentsSvc.getTeacherOptions(
             Controller.institutionId,
             Controller.academicPeriodId
-        ).catch(console.log);
+        ).catch(console.error);
     }
 
     function setTeacherOptions(teacherOpts) {
@@ -231,7 +278,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
     function getRoomOptions() {
         return InstitutionSubjectStudentsSvc.getRoomsOptions(
             Controller.institutionSubjectId
-        ).catch(console.log);
+        ).catch(console.error);
     }
 
     function setRoomOptions(roomOpts) {
@@ -239,13 +286,13 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
         return Controller._institutionSubjectDetails;
     }
 
-    function getUnassignedStudents(response) {
+    function getUnassignedStudents() {
         return InstitutionSubjectStudentsSvc.getUnassignedStudent(
-            response.id,
+            Controller.institutionSubjectId,
             Controller.academicPeriodId,
             Controller.educationGradeId,
             Controller.classes
-        ).catch(console.log);
+        ).catch(console.error);
     }
 
     function setUnassignedStudents(unassigned) {
@@ -255,14 +302,29 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
 
     function translateHeaders() {
         const toTranslate = Controller.colDef.map(col => col.headerName);
+
         return InstitutionSubjectStudentsSvc.translate(toTranslate)
-            .catch(console.log);
+            .then(translated => {
+                // If we didn’t get an array (null, undefined, anything else), use the original
+                if (!angular.isArray(translated)) {
+                    console.warn('⚠️ translate() returned non-array, falling back');
+                    return toTranslate;
+                }
+                return translated;
+            })
+            .catch(err => {
+                console.error('❌ translate() failed:', err);
+                // On HTTP or service error, also fall back
+                return toTranslate;
+            });
     }
 
     function setTranslatedHeaders(translated) {
-        translated.forEach((val, i) => {
-            Controller.colDef[i].headerName = val;
-        });
+        if (angular.isArray(translated)) {
+            translated.forEach((val, i) => {
+                Controller.colDef[i].headerName = val;
+            });
+        }
         Controller.setTop(Controller.colDef, Controller.unassignedStudents);
         Controller.setBottom(Controller.colDef, Controller.assignedStudents);
     }
@@ -273,14 +335,24 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
         UtilsSvc.isAppendLoader(false);
     }
 
-    function onClassChange(newVal, oldVal) {
+    function onClassesChange(newVal, oldVal) {
         if (Controller.toValidateClasses) {
             UtilsSvc.isAppendLoader(true);
             validateClassUpdate(newVal, oldVal);
             checkIfHasClasses();
+            checkIfCanSave();
         } else if (Controller.dataReady) {
             Controller.toValidateClasses = true;
         }
+    }
+    function onTeachersChange(newVal, oldVal) {
+            checkIfCanSave();
+    }
+    function onRoomsChange(newVal, oldVal) {
+            checkIfCanSave();
+    }
+    function onStudentsChange(newVal, oldVal) {
+            checkIfCanSave();
     }
 
     function mapAssignedStudent(value) {
@@ -375,6 +447,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
         Controller.gridOptionsBottom.columnDefs = Controller.columnBottomData;
         Controller.gridOptionsBottom.rowData = Controller.rowBottomData;
         Controller.gridOptionsBottom.primaryKey = Controller.bottomKey;
+
     }
 
     function postForm() {
@@ -435,7 +508,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                     .then(function(response) {
                         $window.location.href = Controller.redirectUrl;
                     }, function (error) {
-                        console.log(error);
+                        console.error(error);
                     });
                 } else {
                     AlertSvc.error(Controller, 'The record is not updated due to errors encountered.');
@@ -444,7 +517,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                     })
                 }
             }, function(error){
-                console.log(error);
+                console.error(error);
             });
         }
 
