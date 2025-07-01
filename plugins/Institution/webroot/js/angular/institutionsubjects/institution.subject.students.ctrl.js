@@ -367,6 +367,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
             openemis_no: value?.user?.openemis_no,
             name: value?.user?.name,
             student_status_name: value.student_status.name,
+            student_status_id: value.student_status_id,
             gender_name: value?.user?.gender?.name,
             student_id: value.student_id,
             institution_class: value.institution_class.name,
