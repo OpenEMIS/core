@@ -86,7 +86,7 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
 
         if (!$isSuperAdmin) {
             $institutionIds = $this->SecurityGroupUsers->getInstitutionsByUser($userId);
-            $where['InstitutionStaff.institution_id IN'] = $institutionIds;
+            $where['InstitutionStaff.institution_id IN'] = $institutionIds; // POCOR-9213
         }
         $this->logMsg("Employment alert WHERE clause: " . print_r($where, true));
 

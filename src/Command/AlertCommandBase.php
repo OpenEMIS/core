@@ -90,20 +90,15 @@ abstract class AlertCommandBase extends \Cake\Command\Command
                     $institutionId = (int) $item['institution_id'] ?? null;
 
                     if ($institutionId) {
-                        $this->logMsg('searching for institution contacts ' . $institutionId);
-                        $this->logMsg(print_r($item, true));
                         $contacts = $this->getRoleAssociatedContactList($this->rule->security_roles, $institutionId);
-                        $this->logMsg(print_r($contacts, true));
                         $this->contacts = $contacts;
                     } else {
-                        $this->logMsg('searching for non institution contacts ');
                         $contacts = $this->getRoleAssociatedContactList($this->rule->security_roles);
                         $this->contacts = $contacts;
                     }
                 }
-                if (empty($this->contacts['email']) || empty($this->contacts['phone'])) {
-                    $this->logMsg("No contacts found for alert rule ID {$this->rule->id}. Skipping.");
-                    continue;
+                if (empty($this->contacts['email']) && empty($this->contacts['phone'])) {
+                    continue; // POCOR-9213
                 }
                $placeholders = $this->fillPlaceholders($item); // abstract
                $this->processContactList([$this->rule], $placeholders, fn() => $this->contacts);
@@ -136,66 +131,77 @@ abstract class AlertCommandBase extends \Cake\Command\Command
      * @return array<string, string>
      */
     abstract protected function fillPlaceholders($item): array;
-    public function getRoleAssociatedContactList(array $securityRoles, $institutionId = null): array
-    {
-        $contactList = ['email' => [], 'phone' => []];
+
+    // POCOR-9213
+    public function getRoleAssociatedContactList(
+        array $securityRoles,
+        ?int $institutionId = null
+    ): array {
+        $contactList      = ['email' => [], 'phone' => []];
+        $allSecurityUserIds = [];
 
         foreach ($securityRoles as $role) {
-            if (!$institutionId) {
-                $userQuery = $this->SecurityGroupUsers
-                    ->find()
+            if ($institutionId === null) {
+                $query = $this->SecurityGroupUsers->find()
                     ->select(['security_user_id'])
                     ->distinct(['security_user_id'])
                     ->where(['security_role_id' => $role['id']]);
-                $userIds = collection($userQuery->all())->extract('security_user_id')->toList();
-                $securityUserIds = array_unique($userIds);
-
+                $ids = collection($query->all())
+                    ->extract('security_user_id')
+                    ->toList();
             } else {
-                foreach ($securityRoles as $role) {
-                    $directQuery = $this->SecurityGroupUsers->find()
-                        ->select(['security_user_id'])
-                        ->distinct(['security_user_id'])
-                        ->innerJoin(
-                            ['Institutions' => 'institutions'],
-                            [
-                                'Institutions.id' => $institutionId,
-                                'Institutions.security_group_id = ' . $this->SecurityGroupUsers->aliasField('security_group_id')
-                            ]
-                        )
-                        ->where(['security_role_id' => $role['id']]);
+                // direct
+                $direct = $this->SecurityGroupUsers->find()
+                    ->select(['security_user_id'])
+                    ->distinct(['security_user_id'])
+                    ->innerJoin(
+                        ['Institutions' => 'institutions'],
+                        [
+                            'Institutions.id'                => $institutionId,
+                            'Institutions.security_group_id = ' .
+                            $this->SecurityGroupUsers->aliasField('security_group_id'),
+                        ]
+                    )
+                    ->where(['security_role_id' => $role['id']]);
 
-                    $indirectQuery = $this->SecurityGroupUsers->find()
-                        ->select(['security_user_id'])
-                        ->distinct(['security_user_id'])
-                        ->innerJoin(
-                            ['SecurityGroupInstitutions' => 'security_group_institutions'],
-                            [
-                                'SecurityGroupInstitutions.institution_id' => $institutionId,
-                                'SecurityGroupInstitutions.security_group_id = ' . $this->SecurityGroupUsers->aliasField('security_group_id')
-                            ]
-                        )
-                        ->where(['security_role_id' => $role['id']]);
+                // indirect
+                $indirect = $this->SecurityGroupUsers->find()
+                    ->select(['security_user_id'])
+                    ->distinct(['security_user_id'])
+                    ->innerJoin(
+                        ['SecurityGroupInstitutions' => 'security_group_institutions'],
+                        [
+                            'SecurityGroupInstitutions.institution_id'      => $institutionId,
+                            'SecurityGroupInstitutions.security_group_id = ' .
+                            $this->SecurityGroupUsers->aliasField('security_group_id'),
+                        ]
+                    )
+                    ->where(['security_role_id' => $role['id']]);
 
-                    // Merge both sets of IDs
-                    $directIds = collection($directQuery->all())->extract('security_user_id')->toList();
-                    $indirectIds = collection($indirectQuery->all())->extract('security_user_id')->toList();
-
-                    $securityUserIds = array_unique(array_merge($directIds, $indirectIds));
-
-                }
+                $ids = array_merge(
+                    collection($direct->all())->extract('security_user_id')->toList(),
+                    collection($indirect->all())->extract('security_user_id')->toList()
+                );
             }
 
-            if (!empty($securityUserIds)) {
-                $users = $this->Users
-                    ->find('recipientList', ['recipients' => $securityUserIds])
-                    ->toArray();
+            // merge & dedupe as we go
+            $allSecurityUserIds = array_unique(
+                array_merge($allSecurityUserIds, $ids)
+            );
+        }
 
-                $contactList = $this->getContactsFromUsers($users, $contactList);
-            }
+        if (!empty($allSecurityUserIds)) {
+            // use the accumulated list, not just the last $ids
+            $users = $this->Users
+                ->find('recipientList', ['recipients' => $allSecurityUserIds])
+                ->toArray();
+
+            $contactList = $this->getContactsFromUsers($users, $contactList);
         }
 
         return $contactList;
     }
+
 
     public function getStudentAssociatedContactList(array $securityRoles, $studentUserId): array
     {
