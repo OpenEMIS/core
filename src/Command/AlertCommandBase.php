@@ -87,20 +87,23 @@ abstract class AlertCommandBase extends \Cake\Command\Command
                 if (property_exists($this, 'studentId') && $this->studentId) {
                     $this->contacts = $this->getStudentAssociatedContactList($this->rule->security_roles, $this->studentId);
                 } else {
-                    $institutionId = (int)$item['institution_id'] ?? null;
+                    $institutionId = (int) $item['institution_id'] ?? null;
 
                     if ($institutionId) {
+                        $this->logMsg('searching for institution contacts ' . $institutionId);
+                        $this->logMsg(print_r($item, true));
                         $contacts = $this->getRoleAssociatedContactList($this->rule->security_roles, $institutionId);
+                        $this->logMsg(print_r($contacts, true));
                         $this->contacts = $contacts;
                     } else {
+                        $this->logMsg('searching for non institution contacts ');
                         $contacts = $this->getRoleAssociatedContactList($this->rule->security_roles);
-
                         $this->contacts = $contacts;
                     }
                 }
-                if (empty($this->contacts['email']) && empty($this->contacts['phone'])) {
+                if (empty($this->contacts['email']) || empty($this->contacts['phone'])) {
                     $this->logMsg("No contacts found for alert rule ID {$this->rule->id}. Skipping.");
-                    return false;
+                    continue;
                 }
                $placeholders = $this->fillPlaceholders($item); // abstract
                $this->processContactList([$this->rule], $placeholders, fn() => $this->contacts);
