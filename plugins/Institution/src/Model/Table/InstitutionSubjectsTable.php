@@ -395,7 +395,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         return $query
             ->formatResults(function (CollectionInterface $results) {
-                return $results->map(function (array $row) {
+                return $results->map(function ( $row) {
                     if (!empty($row['subject_students']) && is_array($row['subject_students'])) {
                         // Keep only "Enrolled" students (status_id == 1)
                         $row['subject_students'] = array_values(array_filter(
