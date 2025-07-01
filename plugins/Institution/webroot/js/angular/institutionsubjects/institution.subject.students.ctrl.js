@@ -90,6 +90,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
     Controller.toValidateClasses = false;
     Controller.maxStudentsPerSubject = null;
     Controller.disableTeachers = true;
+    Controller.disableClasses = true;
     Controller.disableStudents = true;
     Controller.disableRooms = true;
     Controller.disableSave = true;
@@ -259,8 +260,14 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
         ).catch(console.error);
     }
 
-    function setClassOptions(classOptionsResponce) {
-        Controller.classOptions = classOptionsResponce;
+    function setClassOptions(classOptionsResponse) {
+        // Normalize to an array
+        Controller.classOptions = angular.isArray(classOptionsResponse)
+            ? classOptionsResponse
+            : [];
+
+        // Disable classes UI only if there are no options
+        Controller.disableClasses = Controller.classOptions.length === 0;
     }
 
     function getTeacherOptions() {
