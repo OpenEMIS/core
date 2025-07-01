@@ -56,6 +56,7 @@ $this->start('panelBody');
                 multiple="multiple"
                 data-placeholder="<?= __('Select Classes') ?>"
                 class="chosen-select"
+                ng-disabled="InstitutionSubjectStudentsController.disableClasses"
                 options="InstitutionSubjectStudentsController.classOptions"
                 ng-model="InstitutionSubjectStudentsController.classes"
                 ng-options="item.id as item.name for item in InstitutionSubjectStudentsController.classOptions"
@@ -120,7 +121,7 @@ $this->start('panelBody');
     <div class="input select">
         <label><?= __('Add Student') ?></label>
         <div class="input-form-wrapper"
-             ng-init="InstitutionSubjectStudentsController.institutionSubjectId=<?= $institutionSubjectId ?>;
+             ng-init="InstitutionSubjectStudentsController.institutionSubjectId=<?= $subjectId ?>;
              InstitutionSubjectStudentsController.redirectUrl='<?= $this->Url->build($viewUrl) ?>';
              InstitutionSubjectStudentsController.alertUrl='<?= $this->Url->build($alertUrl) ?>';">
             <kd-multi-select ng-if="InstitutionSubjectStudentsController.dataReady"
