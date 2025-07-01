@@ -21,7 +21,7 @@ class DashboardController extends AppController
 {
     private const SKIPPABLE_ALERTS = [
         'UnmarkedAttendance'];
-    private bool $useCacheInCallAlerts = true;
+    private bool $useCacheInCallAlerts = false;
     public function initialize(): void
     {
         parent::initialize();
