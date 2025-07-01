@@ -2260,7 +2260,9 @@ class InstitutionsController extends AppController
         if ($subaction == 'edit') {
             $session = $this->request->getSession();
             $institutionSubjectId = $this->ControllerAction->paramsDecode($institutionSubjectId);
+          //  echo "<pre>"; print_r($institutionSubjectId); die;
             $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+
             if (!$this->AccessControl->isAdmin() && $institutionId) {
                 $userId = $this->Auth->user('id');
                 $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
@@ -2269,11 +2271,26 @@ class InstitutionsController extends AppController
                 if (!$AccessControl->check(['Institutions', 'AllSubjects', $action], $roles)) {
                     if ($AccessControl->check(['Institutions', 'Subjects', $action], $roles)) {
                         $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
-                        $subjectRecord = $InstitutionSubjects->get($institutionSubjectId, ['contain' => ['Teachers']])->toArray();
-                        if (in_array($userId, array_column($subjectRecord['teachers']), 'id')) {
+                        //$subjectRecord = $InstitutionSubjects->get($institutionSubjectId, ['contain' => ['Teachers']])->toArray();
+                        $subjectRecord = $InstitutionSubjects->get($institutionSubjectId['id'], ['contain' => ['Teachers']])->toArray(); //POCOR-9245
+                        /*if (in_array($userId, array_column($subjectRecord['teachers']), 'id')) {
                             $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
                             return $this->redirect($url);
-                        }
+                        }*/
+                        //POCOR-9245 start
+                        if (in_array($userId, array_column($subjectRecord['teachers'], 'staff_id'))) {
+                            $url = [
+                                'plugin' => $this->getPlugin(),
+                                'controller' => $this->getName(),
+                                'action' => 'Subjects',
+                                'edit',
+                                 $this->ControllerAction->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId]),
+                                
+                            ];
+
+                            return $this->redirect($url);
+                        } //POCOR-9245 end
+
                     } else {
                         $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
                         return $this->redirect($url);
