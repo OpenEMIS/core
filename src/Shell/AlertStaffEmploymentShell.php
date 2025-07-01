@@ -8,6 +8,7 @@ use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 
 use App\Shell\AlertShell;
+use Cake\I18n\FrozenDate;
 
 class AlertStaffEmploymentShell extends AlertShell
 {
@@ -58,7 +59,7 @@ class AlertStaffEmploymentShell extends AlertShell
 
                             // add the employment period to $vars.
                             $employmentDate = $vars['employment_date'];
-                            $diff = date_diff(new Date(), $employmentDate);
+                            $diff = date_diff(new FrozenDate('NOW'), $employmentDate);
                             $diffDays = $diff->days;
 
                             $vars['employment_period'] = $diffDays;
