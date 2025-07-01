@@ -2969,6 +2969,31 @@ class InstitutionsController extends AppController
                     '0' => 'view',
                     '1' => $encodedQueryString]);
         }//POCOR-8333 ends
+        // if ($action == 'StaffHistories') {
+        //     $queryString = $this->getQueryString();
+        //     $staffId = $queryString['security_user_id'] ?? $queryString['student_id'];
+        //     $Students = TableRegistry::getTableLocator()->get('Security.Users');
+        //     $activeStaff = $Students->get($staffId);
+        //     $staffName = $activeStaff->name;
+        //     $queryString = $this->getQueryString();
+        //     $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+        //     $this->Navigation->addCrumb('Students',
+        //         ['plugin' => $this->getPlugin(),
+        //             'controller' => 'Institutions',
+        //             'action' => 'Staff',
+        //             '0' => 'index',
+        //             '1' => $encodedQueryString]);
+
+        //     $queryString['id'] = $staffId;
+        //     $queryString['security_user_id'] = $staffId;
+        //     $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+        //     $this->Navigation->addCrumb($staffName,
+        //         ['plugin' => $this->getPlugin(),
+        //             'controller' => 'Institutions',
+        //             'action' => 'StaffUser',
+        //             '0' => 'view',
+        //             '1' => $encodedQueryString]);
+        // }
         $this->set('contentHeader', $header);
     }
 
@@ -9476,6 +9501,13 @@ class InstitutionsController extends AppController
     //POCOR -8333 starts
     public
     function StudentHistories()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserHistories']);
+    }//POCOR -8333 ends
+
+    //POCOR -8333 starts
+    public
+    function StaffHistories()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserHistories']);
     }//POCOR -8333 ends
