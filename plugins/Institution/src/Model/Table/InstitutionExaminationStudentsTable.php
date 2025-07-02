@@ -15,7 +15,6 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Utility\Security;
 use Cake\Http\ServerRequest;
 use Cake\I18n\Date;
-use Cake\I18n\FrozenTime;
 
 class InstitutionExaminationStudentsTable extends ControllerActionTable
 {
@@ -353,6 +352,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
     {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
