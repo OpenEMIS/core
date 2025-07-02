@@ -257,7 +257,8 @@ class ReportsController extends AppController
         } /*POCOR-6513 starts - added feature's option for Performance report*/
         elseif ($module == 'Performance') {
             $options = [
-                'Report.Performance' => __('Assessment Missing Mark Entry')
+                'Report.Performance' => __('Assessment Missing Mark Entry'),
+                'Report.Assessments' => __('Assessment')
             ];
         }/*POCOR-6513 ends*/
         return $options;
