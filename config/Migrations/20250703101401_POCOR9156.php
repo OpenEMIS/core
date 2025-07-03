@@ -49,7 +49,6 @@ class POCOR9156 extends AbstractMigration
 
     public function down(): void
     {
-        // Step 4: Restore from backup (safe rollback)
         $this->execute('DELETE FROM `import_mapping`');
         $this->execute('INSERT INTO `import_mapping` SELECT * FROM `zz_9156_import_mapping`');
 
