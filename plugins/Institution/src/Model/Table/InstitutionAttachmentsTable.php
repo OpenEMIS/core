@@ -164,9 +164,9 @@ class InstitutionAttachmentsTable extends ControllerActionTable
         $downloadUrl = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
-            'action' => $this->getAlias(),
-            'institutionId' => $this->paramsEncode(['id' => $entity->institution_id]),
+            'action' => $this->request->getParam('action'), //POCOR-5208
             '0' => 'download',
+            $this->paramsEncode(['id' => $entity->id]) //POCOR-5208
         ];
         $buttons['download'] = [
             'label' => '<i class="fa kd-download"></i>'.__('Download'),
