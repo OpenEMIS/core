@@ -58,8 +58,6 @@ class ReportCardsTable extends AppTable
                 'Principal',
                 'DeputyPrincipal',
                 'InstitutionClasses',
-                'InstitutionSubjectStudents',
-                'InstitutionSubjectStudentsWithName',
                 'StudentBehaviours',
                 'InstitutionStudentAbsences',
                 'CompetencyTemplates',
@@ -80,6 +78,8 @@ class ReportCardsTable extends AppTable
                 'OutcomePeriods',
                 'OutcomeSubjects',
                 'StudentOutcomeSubjectComments',
+                'InstitutionSubjectStudentsWithName', // POCOR-9252
+                'InstitutionSubjectStudents', // POCOR-9252
                 'OutcomeCriterias',
                 'StudentOutcomeResults',
                 'GroupAssessmentPeriods',
@@ -131,14 +131,13 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessments'] = 'onExcelTemplateInitialiseAssessments';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentPeriods'] = 'onExcelTemplateInitialiseAssessmentPeriods';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItems'] = 'onExcelTemplateInitialiseAssessmentItems';
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionSubjectStudents'] = 'onExcelTemplateInitialiseInstitutionSubjectStudents'; // POCOR_9252
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionSubjectStudentsWithName'] = 'onExcelTemplateInitialiseInstitutionSubjectStudentsWithName'; // POCOR_9252
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemsStudentSubjects'] = 'onExcelTemplateInitialiseAssessmentItemsStudentSubjects';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemsWithResults'] = 'onExcelTemplateInitialiseAssessmentItemsWithResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemResults'] = 'onExcelTemplateInitialiseAssessmentItemResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentItemResults'] = 'onExcelTemplateInitialiseGroupAssessmentItemResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentPeriods'] = 'onExcelTemplateInitialiseGroupAssessmentPeriods';
-        $events['ExcelTemplates.Model.afterRenderExcelTemplate'] = 'afterRenderExcelTemplate';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionSubjectStudents'] = 'onExcelTemplateInitialiseInstitutionSubjectStudents'; // POCOR_9252
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionSubjectStudentsWithName'] = 'onExcelTemplateInitialiseInstitutionSubjectStudentsWithName'; // POCOR_9252
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomeTemplates'] = 'onExcelTemplateInitialiseOutcomeTemplates';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomePeriods'] = 'onExcelTemplateInitialiseOutcomePeriods';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomeSubjects'] = 'onExcelTemplateInitialiseOutcomeSubjects';
@@ -153,6 +152,7 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCardGpa'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCardGpa'; //POCOR-8222
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentGradeGpa'] = 'onExcelTemplateInitialiseInstitutionStudentGradeGpa'; //POCOR-8222
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseClassAndLevelRanking'] = 'onExcelTemplateInitialiseClassAndLevelRanking';//POCOR-9232
+        $events['ExcelTemplates.Model.afterRenderExcelTemplate'] = 'afterRenderExcelTemplate';
         return $events;
     }
 
@@ -877,10 +877,10 @@ class ReportCardsTable extends AppTable
             && isset($params['institution_id'])
             && isset($params['academic_period_id'])
             && isset($extra['report_card_education_grade_id'])
-            && isset($extra['report_card_education_grade_id'])
+            && isset($extra['total_results'])
         ) {
             $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents'); // POCOR-9162
-            $entity = $SubjectStudents->find()
+            $entities = $SubjectStudents->find()
                 ->where([
                     $SubjectStudents->aliasField('student_id') => $params['student_id'],
                     $SubjectStudents->aliasField('institution_class_id') => $params['institution_class_id'],
@@ -888,9 +888,18 @@ class ReportCardsTable extends AppTable
                     $SubjectStudents->aliasField('academic_period_id') => $params['academic_period_id'],
                     $SubjectStudents->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
                 ])
-                ->enableHydration(false)
+                ->disableHydration()
                 ->toArray();
-            return $entity;
+            $totalResults = $extra['total_results'] ?? [];
+            foreach ($entities as &$entity) {
+                $sid = $entity['student_id'];
+                $sub = $entity['education_subject_id'];
+                $entity['total_mark'] = $totalResults[$sid][$sub] ?? null;
+            }
+            unset($entity); // break the reference
+//            Log::debug(print_r(['$entities' => $entities],true));
+//            Log::debug(print_r(['$totalResults' => $totalResults],true));
+            return $entities;
         }
     }
 
@@ -1724,6 +1733,7 @@ class ReportCardsTable extends AppTable
                 ->order(['start_date'])
                 ->disableHydration(); // POCOR_9252
             $results = $query->toArray();
+            $only_results = $results;
 // grab the last entity // POCOR_9252 start
             $last = end($results);
 
@@ -1738,11 +1748,12 @@ class ReportCardsTable extends AppTable
 // append it
             $results[] = $total;
             if (!empty($results)) {
-                $extra['assessment_period_ids'] = array_column($results, 'weight', 'id');
+                $extra['full_assessment_period_ids'] = array_column($results, 'weight', 'id');
+                $extra['assessment_period_ids'] = array_column($only_results, 'weight', 'id');
             }
             // POCOR_9252 end
 
-            return $results;
+            return $only_results;
         }
     }
 
@@ -2141,9 +2152,11 @@ class ReportCardsTable extends AppTable
             }
         }
         $entityResults = [];
-
+        $totalResults = [];
         foreach ($marksBySubject as $studentId => $subjectData) {
+            $totalResults[$studentId] = [];
             foreach ($subjectData as $subjectId => $periodData) {
+                $totalResults[$studentId][$subjectId] = null;
                 $sumweight = 0.0; // POCOR_9252 start
                 $summark = 0.0;
                 $totalmark = "";
@@ -2168,22 +2181,14 @@ class ReportCardsTable extends AppTable
                     $totalmark = $summark / $sumweight;
                     $totalmark = number_format($totalmark, 2);
                 }
-                $entityResults[] = new Entity([
-                    'student_id' => $studentId,
-                    'education_subject_id' => $subjectId,
-                    'assessment_period_id' => 0,
-                    'marks_formatted' => $totalmark,
-                    'assessment_id' => $extra['assessment_id'],
-                    'academic_period_id' => $params['academic_period_id'],
-                    'education_grade_id' => $extra['report_card_education_grade_id'],
-                    'institution_id' => $params['institution_id'],
-                    'institution_classes_id' => $params['institution_class_id'] ?? null, // in case it's optional
-                ], ['source' => 'Assessment.AssessmentItemResults']);
+                $totalResults[$studentId][$subjectId] = $totalmark;
             }
         }
        // POCOR_9252 end
 
-//        Log::debug(print_r([__FUNCTION__ => $entityResults], true));
+        $extra['total_results'] = $totalResults;
+//        Log::debug(print_r([__FUNCTION__ => $totalResults], true));
+
         return $entityResults;
 
     }
