@@ -881,7 +881,7 @@ class ReportCardsTable extends AppTable
                     $SubjectStudents->aliasField('academic_period_id') => $params['academic_period_id'],
                     $SubjectStudents->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
                 ])
-                ->disableHydration()
+                ->enableHydration(false)
                 ->toArray();
             return $entity;
         }
@@ -2060,7 +2060,7 @@ class ReportCardsTable extends AppTable
                     $exemption = array_shift($exemptions);
 
                     if (!empty($exemption) && isset($exemption['type']) && $exemption['type'] > 0) {
-                        $marksBySubject[$student_id][$subjectId][$periodId] = $exemption['type'] == 1 ? 'Ex' . $exemption['type'] : 'Ex' . $exemption['type'];
+                        $marksBySubject[$student_id][$subjectId][$periodId] = $exemption['type'] == 1 ? 'Exempted' : 'Unassigned';
                     } elseif (!empty($marks)) {
                         $rawMark = round($marks[0]['marks'], 2);
                         $entity = new \Cake\ORM\Entity($marks[0]);
@@ -2357,8 +2357,7 @@ class ReportCardsTable extends AppTable
                 $entity[] = [
                     'education_subject_id' => $key,
                     'academic_term_value' => __('Average'),
-//                    'marks_formatted' => number_format($value['total_marks'] / $value['count'], 2)
-                    'marks_formatted' => number_format($value['total_marks'] / 100, 2)
+                    'marks_formatted' => number_format($value['total_marks'] / $value['count'], 2)
                 ];
             }
 
