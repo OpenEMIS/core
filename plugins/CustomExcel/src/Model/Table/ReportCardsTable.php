@@ -881,7 +881,7 @@ class ReportCardsTable extends AppTable
                     $SubjectStudents->aliasField('academic_period_id') => $params['academic_period_id'],
                     $SubjectStudents->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
                 ])
-                ->enableHydration(false)
+                ->disableHydration()
                 ->toArray();
             return $entity;
         }
@@ -2060,7 +2060,7 @@ class ReportCardsTable extends AppTable
                     $exemption = array_shift($exemptions);
 
                     if (!empty($exemption) && isset($exemption['type']) && $exemption['type'] > 0) {
-                        $marksBySubject[$student_id][$subjectId][$periodId] = $exemption['type'] == 1 ? 'Unassigned' : 'Exempted';
+                        $marksBySubject[$student_id][$subjectId][$periodId] = $exemption['type'] == 1 ? 'Ex' . $exemption['type'] : 'Ex' . $exemption['type'];
                     } elseif (!empty($marks)) {
                         $rawMark = round($marks[0]['marks'], 2);
                         $entity = new \Cake\ORM\Entity($marks[0]);
@@ -2357,7 +2357,8 @@ class ReportCardsTable extends AppTable
                 $entity[] = [
                     'education_subject_id' => $key,
                     'academic_term_value' => __('Average'),
-                    'marks_formatted' => number_format($value['total_marks'] / $value['count'], 2)
+//                    'marks_formatted' => number_format($value['total_marks'] / $value['count'], 2)
+                    'marks_formatted' => number_format($value['total_marks'] / 100, 2)
                 ];
             }
 
@@ -2740,7 +2741,7 @@ class ReportCardsTable extends AppTable
     }
 
     public function onExcelTemplateInitialiseInstitutionStudentsReportCardGpa(Event $event, array $params, ArrayObject $extra)
-    { 
+    {
         $student_id = $params['student_id'];
         $institution_id = $params['institution_id'];
         $education_grade_id = $params['education_grade_id'];
@@ -2991,7 +2992,7 @@ class ReportCardsTable extends AppTable
     //POCOR-9232 starts
     public function onExcelTemplateInitialiseClassAndLevelRanking(Event $event, array $params, ArrayObject $extra)
     {
-        
+
         if (empty($params['academic_period_id']) && empty($params['report_card_id']) && !empty($params['institution_id'])) {
             return [];
         }
@@ -3015,8 +3016,8 @@ class ReportCardsTable extends AppTable
             security_users.first_name AS 'student_first_name',
             security_users.last_name AS 'student_last_name',
             institution_subjects.name AS 'institution_subject',
-            CASE 
-                WHEN institution_subject_students.total_mark IS NOT NULL THEN institution_subject_students.total_mark 
+            CASE
+                WHEN institution_subject_students.total_mark IS NOT NULL THEN institution_subject_students.total_mark
             ELSE ''
                 END AS 'total_mark',
             RANK() OVER( PARTITION BY institution_classes.name, institution_subjects.name ORDER BY institution_subject_students.total_mark DESC ) AS 'class_ranking',
