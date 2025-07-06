@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
+use Cake\ORM\TableRegistry;
 
 class ExaminationsController extends AppController
 {
@@ -128,8 +129,8 @@ class ExaminationsController extends AppController
         ];
 
         // pass query string for selected exam across tabs
-        if (!is_null($this->request->getQuery['examination_id'])) {
-            $examinationId = $this->request->getQuery['examination_id'];
+        if (!is_null($this->request->getQuery('examination_id'))) {
+            $examinationId = $this->request->getQuery('examination_id');
             foreach ($tabElements as $key => $obj) {
                 $tabElements[$key]['url']['examination_id'] = $examinationId;
             }
