@@ -158,7 +158,7 @@ class AlertLogsTable extends ControllerActionTable
     public function insertAlertLog(string $method, string $feature, string $recipient, ?string $subject = null, ?string $message = null): void
     {
         $alertFeatures = $this->AlertRules->getFeatureOptions();
-        $checksum = $this->generateChecksum($subject, $message);
+        $checksum = $this->generateChecksum($subject . $recipient . $feature . $method, $message); // POCOR-9213
         $alertFeatures['Messaging'] = __('Messaging');
 
         if (!array_key_exists($feature, $alertFeatures)) {
@@ -307,8 +307,8 @@ class AlertLogsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('message', ['visible' => false]);
-        $this->field('destination', ['visible' => false]);
-        $this->field('method', ['after' => 'feature', 'sort' => false]);
+        $this->field('method', ['after' => 'feature', 'sort' => true]);
+        $this->field('destination', ['after' => 'method', 'visible' => true]);
 
         // element control
         $featureOptions = $this->getFeatureOptions();

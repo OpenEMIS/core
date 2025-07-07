@@ -21,7 +21,7 @@ class DashboardController extends AppController
 {
     private const SKIPPABLE_ALERTS = [
         'UnmarkedAttendance'];
-    private bool $useCacheInCallAlerts = true;
+    private bool $useCacheInCallAlerts = false;
     public function initialize(): void
     {
         parent::initialize();
@@ -748,7 +748,6 @@ class DashboardController extends AppController
             return false;
         }else if (empty($lastRunDate)) {
             Log::debug("[Alert: {$alert['name']}] Not triggered yet");
-
             return true;
         }
         Log::debug("[Alert: {$alert['name']}] $lastRunDate");
