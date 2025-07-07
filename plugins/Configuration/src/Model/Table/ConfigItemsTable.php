@@ -28,20 +28,23 @@ class ConfigItemsTable extends AppTable
 
     public function initialize(array $config): void
     {
-        $this->languagePath = TMP . 'cache' . DS . 'language_menu';
-        $this->languageFilePath = TMP . 'cache' . DS . 'language_menu' . DS . 'language';
-        parent::initialize($config);
-        $this->addBehavior('Configuration.ConfigItems');
-        $this->belongsTo('ConfigItemOptions', ['className' => 'Configuration.ConfigItemOptions', 'foreignKey' => 'value']);
-        $this->addBehavior('Restful.RestfulAccessControl', [
-            'Students' => ['index'],
-            'Staff' => ['index'],
-            'OpenEMIS_Classroom' => ['index'],
-            'Map' => ['index'],
-            'ClassStudents' => ['index'],
-            'AssociationStudent' => ['index'],
-            'SubjectStudents' => ['index']
-        ]);
+        $connection = $this->getConnection(); //POCOR-9203
+        if ($connection->getDriver()->isConnected()) { //POCOR-9203
+            $this->languagePath = TMP . 'cache' . DS . 'language_menu';
+            $this->languageFilePath = TMP . 'cache' . DS . 'language_menu' . DS . 'language';
+            parent::initialize($config);
+            $this->addBehavior('Configuration.ConfigItems');
+            $this->belongsTo('ConfigItemOptions', ['className' => 'Configuration.ConfigItemOptions', 'foreignKey' => 'value']);
+            $this->addBehavior('Restful.RestfulAccessControl', [
+                'Students' => ['index'],
+                'Staff' => ['index'],
+                'OpenEMIS_Classroom' => ['index'],
+                'Map' => ['index'],
+                'ClassStudents' => ['index'],
+                'AssociationStudent' => ['index'],
+                'SubjectStudents' => ['index']
+            ]);
+        }
     }
 
     public function beforeAction(Event $event)
