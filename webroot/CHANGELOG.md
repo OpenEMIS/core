@@ -1,3 +1,12 @@
+### [4.31.1] - 2025-07-07
+- Bug Fixed: Institutions > Academic > Subjects List page : Clicking edit button will cause a 404 error
+- Bug Fixed: Administration > Communication > Alert Rules: Staff Employment: Email is not being sent
+- Bug Fixed: Institutions>Performance>Report Cards: Total marks are not showing correctly when exempted or unassigned
+- Bug Fixed: Administration > Communication > Alert: Retirement warning is not sent
+- Bug Fixed: Institutions>Performance>Report Cards: Ordering and gpa start and end date is not showing correctly
+- Bug Fixed: Institutions > Performance > Assessments > Exempt/Unassign: Save button doesn't redirect user to exit the edit mode
+- Bug Fixed: Directory > Student > Academic : User is not able to sort in ascending or descending order.
+
 ### [4.31.0] - 2025-07-01
 - Implemented: Develop SMS function
 - Implemented: Develop a standard report with filters for Reports > Performance > Assessments
