@@ -8292,6 +8292,7 @@ class InstitutionsController extends AppController
     /**
      * Change for hiding/showing external search. POCOR-8231
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *     POCOR-9118 refactored for OpenEMIS Core search
      */
     public function checkConfigurationForExternalSearch(): Response
     {
