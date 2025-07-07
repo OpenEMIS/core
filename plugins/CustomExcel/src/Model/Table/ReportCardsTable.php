@@ -58,8 +58,6 @@ class ReportCardsTable extends AppTable
                 'Principal',
                 'DeputyPrincipal',
                 'InstitutionClasses',
-                'InstitutionSubjectStudents',
-                'InstitutionSubjectStudentsWithName',
                 'StudentBehaviours',
                 'InstitutionStudentAbsences',
                 'CompetencyTemplates',
@@ -80,6 +78,8 @@ class ReportCardsTable extends AppTable
                 'OutcomePeriods',
                 'OutcomeSubjects',
                 'StudentOutcomeSubjectComments',
+                'InstitutionSubjectStudentsWithName', // POCOR-9252
+                'InstitutionSubjectStudents', // POCOR-9252
                 'OutcomeCriterias',
                 'StudentOutcomeResults',
                 'GroupAssessmentPeriods',
@@ -114,8 +114,6 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialisePrincipal'] = 'onExcelTemplateInitialisePrincipal';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseDeputyPrincipal'] = 'onExcelTemplateInitialiseDeputyPrincipal';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionClasses'] = 'onExcelTemplateInitialiseInstitutionClasses';
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionSubjectStudents'] = 'onExcelTemplateInitialiseInstitutionSubjectStudents';
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionSubjectStudentsWithName'] = 'onExcelTemplateInitialiseInstitutionSubjectStudentsWithName';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentBehaviours'] = 'onExcelTemplateInitialiseStudentBehaviours';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentAbsences'] = 'onExcelTemplateInitialiseInstitutionStudentAbsences';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyTemplates'] = 'onExcelTemplateInitialiseCompetencyTemplates';
@@ -138,7 +136,8 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemResults'] = 'onExcelTemplateInitialiseAssessmentItemResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentItemResults'] = 'onExcelTemplateInitialiseGroupAssessmentItemResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentPeriods'] = 'onExcelTemplateInitialiseGroupAssessmentPeriods';
-        $events['ExcelTemplates.Model.afterRenderExcelTemplate'] = 'afterRenderExcelTemplate';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionSubjectStudents'] = 'onExcelTemplateInitialiseInstitutionSubjectStudents'; // POCOR_9252
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionSubjectStudentsWithName'] = 'onExcelTemplateInitialiseInstitutionSubjectStudentsWithName'; // POCOR_9252
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomeTemplates'] = 'onExcelTemplateInitialiseOutcomeTemplates';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomePeriods'] = 'onExcelTemplateInitialiseOutcomePeriods';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomeSubjects'] = 'onExcelTemplateInitialiseOutcomeSubjects';
@@ -153,6 +152,7 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCardGpa'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCardGpa'; //POCOR-8222
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentGradeGpa'] = 'onExcelTemplateInitialiseInstitutionStudentGradeGpa'; //POCOR-8222
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseClassAndLevelRanking'] = 'onExcelTemplateInitialiseClassAndLevelRanking';//POCOR-9232
+        $events['ExcelTemplates.Model.afterRenderExcelTemplate'] = 'afterRenderExcelTemplate';
         return $events;
     }
 
@@ -871,9 +871,16 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionSubjectStudents(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['student_id']) && isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
+        // POCOR_9252
+        if (isset($params['student_id'])
+            && isset($params['institution_class_id'])
+            && isset($params['institution_id'])
+            && isset($params['academic_period_id'])
+            && isset($extra['report_card_education_grade_id'])
+            && isset($extra['total_results'])
+        ) {
             $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents'); // POCOR-9162
-            $entity = $SubjectStudents->find()
+            $entities = $SubjectStudents->find()
                 ->where([
                     $SubjectStudents->aliasField('student_id') => $params['student_id'],
                     $SubjectStudents->aliasField('institution_class_id') => $params['institution_class_id'],
@@ -881,9 +888,18 @@ class ReportCardsTable extends AppTable
                     $SubjectStudents->aliasField('academic_period_id') => $params['academic_period_id'],
                     $SubjectStudents->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
                 ])
-                ->enableHydration(false)
+                ->disableHydration()
                 ->toArray();
-            return $entity;
+            $totalResults = $extra['total_results'] ?? [];
+            foreach ($entities as &$entity) {
+                $sid = $entity['student_id'];
+                $sub = $entity['education_subject_id'];
+                $entity['total_mark'] = $totalResults[$sid][$sub] ?? null;
+            }
+            unset($entity); // break the reference
+//            Log::debug(print_r(['$entities' => $entities],true));
+//            Log::debug(print_r(['$totalResults' => $totalResults],true));
+            return $entities;
         }
     }
 
@@ -1715,14 +1731,29 @@ class ReportCardsTable extends AppTable
                     'end_date <=' => $extra['report_card_end_date']
                 ])
                 ->order(['start_date'])
-                ->enableHydration(false); //POCOR-8798
+                ->disableHydration(); // POCOR_9252
             $results = $query->toArray();
+            $only_results = $results;
+// grab the last entity // POCOR_9252 start
+            $last = end($results);
 
+// clone it so you don’t modify the original
+            $total = $last;
+
+// override the bits you want
+            $total['id']   = 0;
+            $total['name'] = __('Total Period Mark');
+            $total['weight'] = 0;
+
+// append it
+            $results[] = $total;
             if (!empty($results)) {
-                $extra['assessment_period_ids'] = array_column($results, 'id');
+                $extra['full_assessment_period_ids'] = array_column($results, 'weight', 'id');
+                $extra['assessment_period_ids'] = array_column($only_results, 'weight', 'id');
             }
+            // POCOR_9252 end
 
-            return $results;
+            return $only_results;
         }
     }
 
@@ -1898,7 +1929,16 @@ class ReportCardsTable extends AppTable
 
             // to only process the query if the class has subjects
             $conditions = [];
+
             if (!empty($subjectList)) {
+                $conditions = [ // POCOR_9252
+                    $AssessmentItemResults->aliasField('institution_id') => $params['institution_id'],
+                    $AssessmentItemResults->aliasField('student_id') => $params['student_id'],
+                    $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
+                    $AssessmentItemResults->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $AssessmentItemResults->aliasField('education_subject_id IN') => $subjectList
+                ];
+
                 //POCOR-8798
                 if ($extra['assessment_id'] === null) {
                     $conditions[$AssessmentItemResults->aliasField('assessment_id IS')] = null;  // Handle null explicitly
@@ -1907,18 +1947,15 @@ class ReportCardsTable extends AppTable
                 }
 
                 if(isset($extra['assessment_period_ids']) && !empty($extra['assessment_period_ids'])) {
-                    $conditions[$AssessmentItemResults->aliasField('assessment_period_id IN')] = $extra['assessment_period_ids'];
+                    $periodIds = [0];
+                    if (!empty($extra['assessment_period_ids'])) {
+                        // extract only the IDs (the keys of the id=>weight array)
+                        $periodIds = array_keys($extra['assessment_period_ids']);
+                    }
+                    $conditions[$AssessmentItemResults->aliasField('assessment_period_id IN')] = $periodIds;
                 }
+                // POCOR_9252 end
 
-                $conditions = [
-                    //$AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
-                    //$AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
-                    $AssessmentItemResults->aliasField('institution_id') => $params['institution_id'],
-                    $AssessmentItemResults->aliasField('student_id') => $params['student_id'],
-                    $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
-                    $AssessmentItemResults->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $AssessmentItemResults->aliasField('education_subject_id IN') => $subjectList
-                ];
             } else {
                 $conditions = ['1 = 0'];
             }
@@ -1963,10 +2000,17 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseAssessmentItemsWithResults(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_class_id']) && isset($extra['assessment_id']) && isset($extra['assessment_period_ids']) && !empty($extra['assessment_period_ids']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_education_grade_id']) && isset($params['academic_period_id'])) {
+        if (isset($params['institution_class_id']) && isset($extra['assessment_id']) &&
+            isset($extra['assessment_period_ids'])
+            && !empty($extra['assessment_period_ids'])
+            && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_education_grade_id']) && isset($params['academic_period_id'])) {
 
             $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems');
-
+            $periodIds = [0]; // POCOR_9252 start
+            if (!empty($extra['assessment_period_ids'])) {
+                // extract only the IDs (the keys of the id=>weight array)
+                $periodIds = array_keys($extra['assessment_period_ids']);
+            } // POCOR_9252 end
             $entity = $AssessmentItems->find()
                 ->find('assessmentItemsInClass', [
                     'assessment_id' => $extra['assessment_id'],
@@ -1984,7 +2028,7 @@ class ReportCardsTable extends AppTable
                     'AssessmentItemResults.student_id = ' . $params['student_id'],
                     'AssessmentItemResults.education_grade_id = ' . $extra['report_card_education_grade_id'],
                     'AssessmentItemResults.academic_period_id = ' . $params['academic_period_id'],
-                    'AssessmentItemResults.assessment_period_id IN ' => $extra['assessment_period_ids'],
+                    'AssessmentItemResults.assessment_period_id IN ' => $periodIds, // POCOR_9252
                     'AssessmentItemResults.institution_id = ' . $params['institution_id']
                 ])
                 ->distinct()
@@ -2027,7 +2071,11 @@ class ReportCardsTable extends AppTable
             $AssessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults');
 
             $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems');
-
+            $periodIds = [0]; // POCOR_9252 start
+            if (!empty($extra['assessment_period_ids'])) {
+                // extract only the IDs (the keys of the id=>weight array)
+                $periodIds = array_keys($extra['assessment_period_ids']);
+            } // POCOR_9252 end
 
             // to only process the query if the class has subjects
 
@@ -2041,10 +2089,16 @@ class ReportCardsTable extends AppTable
                     'class_id' => $params['institution_class_id']
                 ])
                 ->toArray();
-
-            // 🦕 Loop through subjects and collect latest marks
+            // POCOR_9252  start
+            $assessmentPeriods = $extra['assessment_period_ids'];
+//            Log::debug(print_r(['$assessmentPeriods' => $assessmentPeriods],true));
+            // Loop through subjects and collect latest marks
             foreach ($subjectList as $subjectId) {
-                foreach ($extra['assessment_period_ids'] as $periodId) {
+                foreach ($periodIds as $periodId) {
+                    if(!$periodId){
+                        continue;
+                    }
+                    // POCOR_9252 end
                     $options = [
                         'student_id' => $student_id,
                         'institution_id' => $institution_id,
@@ -2060,7 +2114,8 @@ class ReportCardsTable extends AppTable
                     $exemption = array_shift($exemptions);
 
                     if (!empty($exemption) && isset($exemption['type']) && $exemption['type'] > 0) {
-                        $marksBySubject[$student_id][$subjectId][$periodId] = $exemption['type'] == 1 ? 'Unassigned' : 'Exempted';
+                        $marksBySubject[$student_id][$subjectId][$periodId]['mark'] = $exemption['type'] == 1 ? 'Exempted' : 'Unassigned'; // POCOR_9252
+                        $marksBySubject[$student_id][$subjectId][$periodId]['weight'] = -1; // POCOR_9252
                     } elseif (!empty($marks)) {
                         $rawMark = round($marks[0]['marks'], 2);
                         $entity = new \Cake\ORM\Entity($marks[0]);
@@ -2071,6 +2126,8 @@ class ReportCardsTable extends AppTable
 
                         switch ($resultType) {
                             case 'MARKS':
+                                $marksBySubject[$student_id][$subjectId][$periodId]['weight'] = $assessmentPeriods[$periodId]; // POCOR_9252
+                                $marksBySubject[$student_id][$subjectId][$periodId]['weighted_mark'] = $rawMark * floatval($assessmentPeriods[$periodId]); // POCOR_9252
                                 $formatted = number_format($rawMark, 2);
                                 break;
                             case 'GRADES':
@@ -2087,23 +2144,32 @@ class ReportCardsTable extends AppTable
                                 break;
                         }
 
-                        $marksBySubject[$student_id][$subjectId][$periodId] = $formatted;
+                        $marksBySubject[$student_id][$subjectId][$periodId]['mark'] = $formatted; // POCOR_9252
                     } else {
-                        $marksBySubject[$student_id][$subjectId][$periodId] = null;
+                        $marksBySubject[$student_id][$subjectId][$periodId]['mark'] = null; // POCOR_9252
                     }
                 }
             }
         }
         $entityResults = [];
-
+        $totalResults = [];
         foreach ($marksBySubject as $studentId => $subjectData) {
+            $totalResults[$studentId] = [];
             foreach ($subjectData as $subjectId => $periodData) {
-                foreach ($periodData as $periodId => $formattedMark) {
+                $totalResults[$studentId][$subjectId] = null;
+                $sumweight = 0.0; // POCOR_9252 start
+                $summark = 0.0;
+                $totalmark = "";
+                foreach ($periodData as $periodId => $mark) {
+                    if($mark['weight'] > 0){
+                        $sumweight = $sumweight + $mark['weight'];
+                        $summark = $summark + $mark['weighted_mark'];
+                    }
                     $entityResults[] = new Entity([
                         'student_id' => $studentId,
                         'education_subject_id' => $subjectId,
                         'assessment_period_id' => $periodId,
-                        'marks_formatted' => $formattedMark,
+                        'marks_formatted' => $mark['mark'],
                         'assessment_id' => $extra['assessment_id'],
                         'academic_period_id' => $params['academic_period_id'],
                         'education_grade_id' => $extra['report_card_education_grade_id'],
@@ -2111,10 +2177,18 @@ class ReportCardsTable extends AppTable
                         'institution_classes_id' => $params['institution_class_id'] ?? null, // in case it's optional
                     ], ['source' => 'Assessment.AssessmentItemResults']);
                 }
+                if($sumweight > 0){
+                    $totalmark = $summark / $sumweight;
+                    $totalmark = number_format($totalmark, 2);
+                }
+                $totalResults[$studentId][$subjectId] = $totalmark;
             }
         }
+       // POCOR_9252 end
 
-//        Log::debug(print_r([__FUNCTION__ => $entityResults], true));
+        $extra['total_results'] = $totalResults;
+//        Log::debug(print_r([__FUNCTION__ => $totalResults], true));
+
         return $entityResults;
 
     }
@@ -2279,11 +2353,17 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseGroupAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_class_id']) && isset($extra['assessment_id']) && isset($extra['assessment_period_ids']) && !empty($extra['assessment_period_ids']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_education_grade_id']) && isset($params['academic_period_id'])) {
+        if (isset($params['institution_class_id']) && isset($extra['assessment_id'])
+            && isset($extra['assessment_period_ids'])
+            && !empty($extra['assessment_period_ids']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_education_grade_id']) && isset($params['academic_period_id'])) {
             $AssessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults');
             $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems');
             $query = $AssessmentItemResults->find();
-
+            $periodIds = [0]; // POCOR_9252 start
+            if (!empty($extra['assessment_period_ids'])) {
+                // extract only the IDs (the keys of the id=>weight array)
+                $periodIds = array_keys($extra['assessment_period_ids']);
+            } // POCOR_9252 end
             $selectedColumns = [
                 $AssessmentItemResults->aliasField('education_subject_id'),
                 'marks' => $query->newExpr('SUM(AssessmentItemResults.marks * AssessmentPeriods.weight)'),
@@ -2311,7 +2391,7 @@ class ReportCardsTable extends AppTable
             if (!empty($subjectList)) {
                 $conditions = [
                     $AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
-                    $AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
+                    $AssessmentItemResults->aliasField('assessment_period_id IN ') => $periodIds, // POCOR_9252
                     $AssessmentItemResults->aliasField('institution_id') => $params['institution_id'],
                     $AssessmentItemResults->aliasField('student_id') => $params['student_id'],
                     $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
@@ -2398,7 +2478,16 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseAssessmentTermResults(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_class_id']) && isset($extra['assessment_id']) && isset($extra['assessment_period_ids']) && !empty($extra['assessment_period_ids']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_education_grade_id']) && isset($params['academic_period_id'])) {
+        // POCOR_9252 start
+        if (isset($params['institution_class_id']) && isset($extra['assessment_id'])
+            && isset($extra['assessment_period_ids'])
+            && !empty($extra['assessment_period_ids']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_education_grade_id']) && isset($params['academic_period_id'])) {
+            $periodIds = [0];
+            if (!empty($extra['assessment_period_ids'])) {
+                // extract only the IDs (the keys of the id=>weight array)
+                $periodIds = array_keys($extra['assessment_period_ids']);
+            }
+            // POCOR_9252 end
             $AssessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults');
             $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems');
             $query = $AssessmentItemResults->find();
@@ -2436,7 +2525,7 @@ class ReportCardsTable extends AppTable
             if (!empty($subjectList)) {
                 $conditions = [
                     $AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
-                    $AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
+                    $AssessmentItemResults->aliasField('assessment_period_id IN ') => $periodIds, // POCOR_9252
                     $AssessmentItemResults->aliasField('institution_id') => $params['institution_id'],
                     $AssessmentItemResults->aliasField('student_id') => $params['student_id'],
                     $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
@@ -2740,7 +2829,7 @@ class ReportCardsTable extends AppTable
     }
 
     public function onExcelTemplateInitialiseInstitutionStudentsReportCardGpa(Event $event, array $params, ArrayObject $extra)
-    { 
+    {
         $student_id = $params['student_id'];
         $institution_id = $params['institution_id'];
         $education_grade_id = $params['education_grade_id'];
@@ -2991,7 +3080,7 @@ class ReportCardsTable extends AppTable
     //POCOR-9232 starts
     public function onExcelTemplateInitialiseClassAndLevelRanking(Event $event, array $params, ArrayObject $extra)
     {
-        
+
         if (empty($params['academic_period_id']) && empty($params['report_card_id']) && !empty($params['institution_id'])) {
             return [];
         }
@@ -3015,8 +3104,8 @@ class ReportCardsTable extends AppTable
             security_users.first_name AS 'student_first_name',
             security_users.last_name AS 'student_last_name',
             institution_subjects.name AS 'institution_subject',
-            CASE 
-                WHEN institution_subject_students.total_mark IS NOT NULL THEN institution_subject_students.total_mark 
+            CASE
+                WHEN institution_subject_students.total_mark IS NOT NULL THEN institution_subject_students.total_mark
             ELSE ''
                 END AS 'total_mark',
             RANK() OVER( PARTITION BY institution_classes.name, institution_subjects.name ORDER BY institution_subject_students.total_mark DESC ) AS 'class_ranking',
