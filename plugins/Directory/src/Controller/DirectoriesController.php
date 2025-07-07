@@ -2075,10 +2075,10 @@ class DirectoriesController extends AppController
         $response = $http->post($tokenUri, json_encode($tokenRequestBody), ['headers' => $headers]);
 
         $decodedResponse = $response->getJson();
-        Log::debug(print_r(['getOECoreData' => $decodedResponse], true));
+//        Log::debug(print_r(['getOECoreData' => $decodedResponse], true));
         $responseData = json_decode($noData, true);
-        Log::debug(print_r([$response->isOk() => $decodedResponse['data'],
-            $tokenUri => $tokenRequestBody], true));
+//        Log::debug(print_r([$response->isOk() => $decodedResponse['data'],
+//            $tokenUri => $tokenRequestBody], true));
 
         if ($response->isOk() && isset($decodedResponse['data']['token'])) {
             $token = $decodedResponse['data']['token'];
@@ -2086,10 +2086,10 @@ class DirectoriesController extends AppController
                 'authorization' => "Bearer " . $token,
                 'type' => 'application/json'
             ];
-            Log::debug(print_r(['getOECoreHeaders' => $headers], true));
+//            Log::debug(print_r(['getOECoreHeaders' => $headers], true));
             $userDataUri = $userDataEndpoint . $identityNumber;
 //            $userDataUri = $userDataUri . "&_fields=first_name,middle_name,third_name,last_name,identity_number,date_of_birth,gender_id,openemis_no";
-            Log::debug(print_r(['getOECoreUserDataUri' => $userDataUri, 'token' => $token], true));
+//            Log::debug(print_r(['getOECoreUserDataUri' => $userDataUri, 'token' => $token], true));
             $response = $http->get($userDataUri,
                 ['openemis_no' => $identityNumber], [ // POCOR-9071
                 'headers' => $headers
@@ -2101,7 +2101,7 @@ class DirectoriesController extends AppController
                 $decodedData = $decodedResponse['data']['data'];
             }
             if ($response->isOk() && isset($decodedData)) {
-                Log::debug(print_r(['getOECoreDecodedData' => $decodedData], true));
+//                Log::debug(print_r(['getOECoreDecodedData' => $decodedData], true));
                 $responseData = ['data' => [], 'total' => 0];
                 if (!empty($decodedData)) {
                     foreach ($decodedData as &$answer) {
@@ -2115,7 +2115,7 @@ class DirectoriesController extends AppController
                 $responseData = ['data' => [], 'total' => 0];
             }
         }
-        Log::debug(print_r(['responseData' => $responseData], true));
+//        Log::debug(print_r(['responseData' => $responseData], true));
 
         return $responseData;
     }
