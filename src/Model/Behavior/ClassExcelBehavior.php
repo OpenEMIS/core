@@ -836,14 +836,16 @@ class ClassExcelBehavior extends Behavior
             }
         }
 
-        $specialCharacters = ['=', '@'];
-        $firstCharacter = substr($value, 0, 1);
-        if (in_array($firstCharacter, $specialCharacters)) {
-            // append single quote to escape special characters
-            $value = "'" . $value;
+        if (is_string($value)) {
+            $specialCharacters = ['=', '@'];
+            $firstCharacter = substr($value, 0, 1);
+            if (in_array($firstCharacter, $specialCharacters)) {
+                // append single quote to escape special characters
+                $value = "'" . $value;
+            }
+            return ['rowData' => __($value), 'style' => $style];
         }
-
-        return ['rowData' => __($value), 'style' => $style];
+        return ['rowData' => $value, 'style' => $style];
     }
 
     private function isForeignKey($table, $field)
