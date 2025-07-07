@@ -1840,7 +1840,16 @@ class InstitutionsController extends AppController
 
             // View-related settings
             $this->set('ngController', 'AssessmentItemExemptionsCtrl as AssessmentItemExemptionsController');
-            $backUrl = $this->referer();
+            // POCOR-9248 start
+            $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+            $backUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Results',
+                '1' => $encodedQueryString,
+                '?' => ['queryString' => $encodedQueryString]
+            ];
+            // POCOR-9248 end
             $this->set('backUrl', $backUrl);
             $alertUrl = [
                 'plugin' => 'Configuration',
@@ -2260,7 +2269,9 @@ class InstitutionsController extends AppController
         if ($subaction == 'edit') {
             $session = $this->request->getSession();
             $institutionSubjectId = $this->ControllerAction->paramsDecode($institutionSubjectId);
+          //  echo "<pre>"; print_r($institutionSubjectId); die;
             $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+
             if (!$this->AccessControl->isAdmin() && $institutionId) {
                 $userId = $this->Auth->user('id');
                 $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
@@ -2269,11 +2280,26 @@ class InstitutionsController extends AppController
                 if (!$AccessControl->check(['Institutions', 'AllSubjects', $action], $roles)) {
                     if ($AccessControl->check(['Institutions', 'Subjects', $action], $roles)) {
                         $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
-                        $subjectRecord = $InstitutionSubjects->get($institutionSubjectId, ['contain' => ['Teachers']])->toArray();
-                        if (in_array($userId, array_column($subjectRecord['teachers']), 'id')) {
+                        //$subjectRecord = $InstitutionSubjects->get($institutionSubjectId, ['contain' => ['Teachers']])->toArray();
+                        $subjectRecord = $InstitutionSubjects->get($institutionSubjectId['id'], ['contain' => ['Teachers']])->toArray(); //POCOR-9245
+                        /*if (in_array($userId, array_column($subjectRecord['teachers']), 'id')) {
                             $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
                             return $this->redirect($url);
-                        }
+                        }*/
+                        //POCOR-9245 start
+                        if (in_array($userId, array_column($subjectRecord['teachers'], 'staff_id'))) {
+                            $url = [
+                                'plugin' => $this->getPlugin(),
+                                'controller' => $this->getName(),
+                                'action' => 'Subjects',
+                                'edit',
+                                 $this->ControllerAction->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId]),
+                                
+                            ];
+
+                            return $this->redirect($url);
+                        } //POCOR-9245 end
+
                     } else {
                         $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
                         return $this->redirect($url);
@@ -2969,6 +2995,31 @@ class InstitutionsController extends AppController
                     '0' => 'view',
                     '1' => $encodedQueryString]);
         }//POCOR-8333 ends
+        // if ($action == 'StaffHistories') {
+        //     $queryString = $this->getQueryString();
+        //     $staffId = $queryString['security_user_id'] ?? $queryString['student_id'];
+        //     $Students = TableRegistry::getTableLocator()->get('Security.Users');
+        //     $activeStaff = $Students->get($staffId);
+        //     $staffName = $activeStaff->name;
+        //     $queryString = $this->getQueryString();
+        //     $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+        //     $this->Navigation->addCrumb('Students',
+        //         ['plugin' => $this->getPlugin(),
+        //             'controller' => 'Institutions',
+        //             'action' => 'Staff',
+        //             '0' => 'index',
+        //             '1' => $encodedQueryString]);
+
+        //     $queryString['id'] = $staffId;
+        //     $queryString['security_user_id'] = $staffId;
+        //     $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+        //     $this->Navigation->addCrumb($staffName,
+        //         ['plugin' => $this->getPlugin(),
+        //             'controller' => 'Institutions',
+        //             'action' => 'StaffUser',
+        //             '0' => 'view',
+        //             '1' => $encodedQueryString]);
+        // }
         $this->set('contentHeader', $header);
     }
 
@@ -6742,7 +6793,15 @@ class InstitutionsController extends AppController
             unset($userData['username'], $userData['password']);
             $entity = $securityUsers->patchEntity($checkStudentExist, $userData);
         } else {
-            $entity = $securityUsers->newEntity($userData);
+            //POCOR-9181[START]
+            try {
+                $entity = $securityUsers->newEntity($userData);
+            } catch (\Exception $e) {
+                Log::debug(__FUNCTION__);
+
+                Log::debug('Error: ' . $e->getMessage());
+            }
+            //POCOR-9181[END]
         }
         //POCOR-8706(attached behaviour to reflect users in moodle created from directory)
         $securityUsers->addBehavior('User.MoodleCreateUser');
@@ -7468,7 +7527,7 @@ class InstitutionsController extends AppController
                 $TransfersTbl->aliasField('institution_id'),
                 $TransfersTbl->aliasField('previous_institution_id')
             ])
-            ->leftJoin([$TransfersTbl->alias() => $TransfersTbl->table()],
+            ->leftJoin([$TransfersTbl->getAlias() => $TransfersTbl->getTable()],
                 [
                     $TransfersTbl->aliasField('student_id') . '=' . $student_id,
                     $TransfersTbl->aliasField('institution_id') => $institution_id
@@ -9476,6 +9535,13 @@ class InstitutionsController extends AppController
     //POCOR -8333 starts
     public
     function StudentHistories()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserHistories']);
+    }//POCOR -8333 ends
+
+    //POCOR -8333 starts
+    public
+    function StaffHistories()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserHistories']);
     }//POCOR -8333 ends
