@@ -14,7 +14,7 @@ class AlertRuleScholarshipApplicationBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'ScholarshipApplication',
         'name' => 'Scholarship Application',
-        'method' => 'Email',
+        'method' => ['Email','SMS'], // POCOR-8286
         'threshold' => [
             'value' => [
                 'type' => 'integer',
@@ -89,20 +89,23 @@ class AlertRuleScholarshipApplicationBehavior extends AlertRuleBehavior
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
-                $validator = $model->validator();
+                // POCOR-8286 start
+                $validator = $model->getValidator();
                 $validator->add('value', [
                     'ruleRange' => [
                         'rule' => ['range', 1, 120],
                         'message' => __('Value must be within 1 to 120')
                     ]
                 ]);
+                $model->setValidator('forSave', $validator);
+                // POCOR-8286 end
             }
         }
     }
 
     public function onScholarshipApplicationSetupFields(Event $event, Entity $entity)
     {
-        $this->onAlertRuleSetupFields($event, $entity);   
+        $this->onAlertRuleSetupFields($event, $entity);
     }
 
     public function onGetScholarshipApplicationThreshold(Event $event, Entity $entity)

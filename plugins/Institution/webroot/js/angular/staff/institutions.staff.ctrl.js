@@ -713,7 +713,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         } else {
             switch (userCtrl.step) {
                 case 'internal_search': {
-                    userCtrl.selectedUserData.date_of_birth = userSvc.formatDate(userCtrl.selectedUserData.date_of_birth);
+                    userSvc.formatDate(userCtrl.selectedUserData.date_of_birth).then(function (formattedDate) {
+                        userCtrl.selectedUserData.date_of_birth = formattedDate;
+                    });
                     userCtrl.step = 'user_details';
                     if (userCtrl.isSearchResultEmpty) {
                         userCtrl.selectedUserData.openemis_no = "";
@@ -1701,7 +1703,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             staffRecords[key]['institution_name'] = '-';
             staffRecords[key]['academic_period_name'] = '-';
             staffRecords[key]['education_grade_name'] = '-';
-            staffRecords[key]['date_of_birth'] = userSvc.formatDate(staffRecords[key][mapping.date_of_birth_mapping]);
+            userSvc.formatDate(staffRecords[key][mapping.date_of_birth_mapping]).then(function (formattedDate) {
+                staffRecords[key]['date_of_birth'] = formattedDate;
+            });
             staffRecords[key]['gender_name'] = staffRecords[key][mapping.gender_mapping];
             staffRecords[key]['gender'] = {'name': staffRecords[key][mapping.gender_mapping]};
             staffRecords[key]['identity_type_name'] = staffRecords[key][mapping.identity_type_mapping];
@@ -1746,7 +1750,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 staffRecords[key]['identity_type_name'] = staffRecords[key]['main_identity_type']['name'];
             }
 
-            staffRecords[key]['date_of_birth'] = userSvc.formatDate(staffRecords[key]['date_of_birth']);
+            userSvc.formatDate(staffRecords[key]['date_of_birth']).then(function (formattedDate) {
+                staffRecords[key]['date_of_birth'] = formattedDate;
+            });
             staffRecords[key]['gender_name'] = staffRecords[key]['gender']['name'];
             if (staffRecords[key]['is_student'] == 1 && staffRecords[key]['is_staff'] == 1) {
                 staffRecords[key]['account_type'] = 'Student, Staff';
@@ -1968,11 +1974,15 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
 
         var startDatePicker = angular.element(document.getElementById('Staff_start_date'));
-        startDatePicker.datepicker("setStartDate", userSvc.formatDate(userCtrl.academicPeriodOptions.selectedOption.start_date));
-        startDatePicker.datepicker("setEndDate", userSvc.formatDate(userCtrl.academicPeriodOptions.selectedOption.end_date));
-        // startDatePicker.datepicker("setDate", userSvc.formatDate(userCtrl.academicPeriodOptions.selectedOption.start_date));
         var endDatePicker = angular.element(document.getElementById('Staff_end_date'));
-        endDatePicker.datepicker("setStartDate", userSvc.formatDate(userCtrl.academicPeriodOptions.selectedOption.start_date));
+        userSvc.formatDate(userCtrl.academicPeriodOptions.selectedOption.start_date).then(function (formattedDate) {
+            startDatePicker.datepicker("setStartDate", formattedDate);
+            endDatePicker.datepicker("setStartDate", formattedDate);
+        });
+        userSvc.formatDate(userCtrl.academicPeriodOptions.selectedOption.end_date).then(function (formattedDate) {
+            startDatePicker.datepicker("setEndDate", formattedDate);
+        });
+        // startDatePicker.datepicker("setDate", userSvc.formatDate(userCtrl.academicPeriodOptions.selectedOption.start_date));
         userCtrl.onChangeFTE();
     }
 
@@ -2051,7 +2061,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if (userCtrl.externalSearch) {
                 var staffData = userCtrl.selectedUserData;
                 var amendedStaffData = Object.assign({}, staffData);
-                amendedStaffData.date_of_birth = userSvc.formatDate(amendedStaffData.date_of_birth);
+                userSvc.formatDate(amendedStaffData.date_of_birth).then(function (formattedDate) {
+                    amendedStaffData.date_of_birth = formattedDate;
+                });
                 //POCOR-6576 - added shiftId parameter as shiftId) was missing ealier
                 return userCtrl.addStaffUser(amendedStaffData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, shiftId, staffPositionGradeId);//POCOR-5069 add staffPositionGradeId
             } else {

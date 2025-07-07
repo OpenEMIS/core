@@ -1897,7 +1897,7 @@ class StudentReportCardsTable extends AppTable
         INNER JOIN education_grades ON education_grades.id = institution_subject_students.education_grade_id
         INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id
         WHERE academic_periods.id = " . $academicPeriodId . " AND institution_subject_students.student_id = " . $studentId . " AND LENGTH(institution_subject_students.total_mark) > 0
-        ORDER BY institutions.name, education_grades.name, institution_subjects.name, 'Level Ranking', 'Class Ranking';")->fetchAll(\PDO::FETCH_ASSOC);
+        ORDER BY institutions.name, education_grades.name, institution_subjects.name, 'level_ranking', 'class_ranking'")->fetchAll(\PDO::FETCH_ASSOC);
 
         $entity = $result = [];
         if (!empty($studentsData)) {

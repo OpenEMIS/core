@@ -64,13 +64,13 @@ class ValidationBehavior extends Behavior
                 }
 
                 // inserting these rules first
-                $validator->add($column, [
-                    'ruleValidDate' => [
-                        'rule' => ['date', 'ymd'],
-                        'last' => true,
-                        'message' => $this->getMessage('general.invalidDate')
-                    ]
-                ]);
+//                $validator->add($column, [
+//                    'ruleValidDate' => [
+//                        'rule' => ['date', 'ymd'],
+//                        'last' => true,
+//                        'message' => $this->getMessage('general.invalidDate')
+//                    ]
+//                ]);
 
                 // then inserting the rules from behavior's parent back
                 foreach ($rulesStore as $rkey => $rvalue) {

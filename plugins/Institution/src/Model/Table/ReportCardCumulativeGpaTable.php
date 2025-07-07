@@ -1731,6 +1731,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
      * @param int $educationGradeGpaId
      * @return float GPA value (0.00 if no result)
      */
+    //POCOR-9226 -- Removed the institution_id conditions from query for CGPA calculations.
     private static function getCumulativeGpaForStudentGpa(
         int $institutionId,
         int $studentId,
@@ -1886,7 +1887,6 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                         INNER JOIN institution_classes ON institution_classes.id = assessment_item_student_exemptions.institution_class_id
                         WHERE
                             institution_classes.academic_period_id = $academicPeriodId
-                            AND institution_classes.institution_id = $institutionId
                             AND assessment_item_student_exemptions.student_id = $studentId
                         GROUP BY
                             assessment_item_student_exemptions.education_subject_id,
@@ -1898,7 +1898,6 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                         exemption_info.academic_period_id = institution_subject_students.academic_period_id AND exemption_info.institution_id = institution_subject_students.institution_id AND exemption_info.education_grade_id = institution_subject_students.education_grade_id AND exemption_info.student_id = institution_subject_students.student_id AND exemption_info.education_subject_id = institution_subject_students.education_subject_id AND exemption_info.academic_term = term_info.academic_term
                 WHERE institution_subject_students.academic_period_id = $academicPeriodId
                 AND institution_subject_students.student_id = $studentId
-                AND institution_subject_students.institution_id = $institutionId
                 AND exemption_info.academic_period_id IS NULL
                 GROUP BY  institution_subject_students.academic_period_id
                         ,institution_subject_students.education_grade_id
@@ -1926,14 +1925,12 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         LEFT JOIN
         (
             SELECT students_gpa.student_id
-                ,students_gpa.institution_id
                 ,current_academic_period.academic_period_id
                 ,MAX(students_gpa.education_grade_id) education_grade_id
                 ,ROUND(AVG(IFNULL(students_gpa.gpa, 0)), 2) cum_gpa_per_student
             FROM
             (
-                SELECT institution_students_gpa.institution_id
-                    ,institution_students_gpa.academic_period_id
+                SELECT institution_students_gpa.academic_period_id
                     ,institution_students_gpa.education_grade_id
                     ,education_grades.code education_grades_code
                     ,institution_students_gpa.student_id
@@ -1988,12 +1985,10 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             AND last_year_grades.main_education_grade_id = current_academic_period.education_grade_id
             AND last_year_grades.education_grade_code = students_gpa.education_grades_code
             GROUP BY students_gpa.student_id
-                ,students_gpa.institution_id
                 ,current_academic_period.academic_period_id
         ) cum_gpa
         ON cum_gpa.academic_period_id = main_q.academic_period_id
         AND cum_gpa.education_grade_id = main_q.education_grade_id
-        AND cum_gpa.institution_id = main_q.institution_id
         AND cum_gpa.student_id = main_q.student_id
         LEFT JOIN institution_students_gpa
         ON institution_students_gpa.student_id = main_q.student_id
@@ -2007,19 +2002,11 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             ,main_q.education_grade_id
             ,ind_gpa.education_grades_gpa_id;
         ";
-
-
+        
         $result = $connection->execute($sql)->fetch('assoc');
-//        Log::debug('GPA SQL: ' . $sql);
-//        Log::debug('GPA Result: ' . print_r($result,true));
-//        Log::debug('GPA: ' . $result['gpa'] ?? 0.00);
-//        Log::debug('GPA ID: ' . $educationGradeGpaId);
-//        Log::debug('Student ID: ' . $studentId);
-//        Log::debug('Institution ID: ' . $institutionId);
-//        Log::debug('Academic Period ID: ' . $academicPeriodId);
-//        Log::debug('Education Grade ID: ' . $educationGradeId);
         return $result['cum_gpa'] ?? 0.00;
     }
+
     /**
      * @param array $buttons
      * @param $params

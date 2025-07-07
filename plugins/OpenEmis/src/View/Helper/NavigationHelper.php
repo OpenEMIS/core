@@ -210,7 +210,7 @@ class NavigationHelper extends Helper
                 }
                 $aOptions['id'] = implode('-', $id);
                 if(!isset($url['action'])){//POCOR-7485 add for test
-                    Log::debug(print_r($url, true));
+//                    Log::debug(print_r($url, true));
                     $url['action'] = 'index';
                 }
                 //$html .= $this->Html->link($name, $url, $aOptions);

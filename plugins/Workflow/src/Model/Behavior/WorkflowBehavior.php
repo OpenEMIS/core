@@ -954,14 +954,14 @@ class WorkflowBehavior extends Behavior
                             'tableHeaders' => $tableHeaders1
                         ]);
                     }
-                }                 
+                }
                 //POCOR-8434 ends
                 // Reorder fields
                 $fieldOrder = [];
                 $fields = $model->fields;
                 //POCOR-8434 starts
-                $excludeFields = $model->getAlias() == 'StudentAdmission' 
-                                ? ['workflow_status', 'assignee_id', 'shortlist', 'workflow_transitions'] 
+                $excludeFields = $model->getAlias() == 'StudentAdmission'
+                                ? ['workflow_status', 'assignee_id', 'shortlist', 'workflow_transitions']
                                 : ['workflow_status', 'assignee_id', 'workflow_transitions'];
                 foreach ($fields as $fieldKey => $fieldAttr) {
                     if (!in_array($fieldKey, $excludeFields)) {
@@ -978,7 +978,7 @@ class WorkflowBehavior extends Behavior
                     $shortlist = array_splice($fieldOrder, array_search('shortlist', $fieldOrder), 1);
                     // Insert "shortlist" after "institution_id"
                     array_splice($fieldOrder, array_search('institution_id', $fieldOrder) + 1, 0, $shortlist);
-                } //POCOR-8434 ends               
+                } //POCOR-8434 ends
                 $fieldOrder[] = 'workflow_transitions'; // Set workflow_transitions to last
                 $ControllerAction->setFieldOrder($fieldOrder);
                 // End
@@ -1001,8 +1001,8 @@ class WorkflowBehavior extends Behavior
                 'rowClass' => 'section-header',
                 'tableHeaders' => $tableHeaders1
             ]);
-        } 
-         
+        }
+
     }//POCOR-8434 ends
 
     public function addEditBeforeAction(Event $event)
@@ -1215,7 +1215,7 @@ class WorkflowBehavior extends Behavior
                 }
             }else{
                 if ($model->AccessControl->isAdmin()) {
-               
+
 
                     $buttons = $model->onUpdateActionButtons($event, $entity, $buttons);
 
@@ -1227,7 +1227,7 @@ class WorkflowBehavior extends Behavior
                         $isDeletable = $workflowStep->is_removable == 1 ? true : true;
                     }
 
-                    
+
 
                     return $buttons;
                 }
@@ -2299,7 +2299,9 @@ class WorkflowBehavior extends Behavior
 
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $assigneeId = $SecurityGroupUsers->getFirstAssignee($params);
-
+        if (intval($assigneeId) <= 0){
+            $assigneeId = -1;
+        }
         if($entity->assignee_id == -1){ //POCOR-7025
             $entity->assignee_id = -1;
         }else{
