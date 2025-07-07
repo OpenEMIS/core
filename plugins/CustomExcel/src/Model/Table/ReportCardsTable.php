@@ -2989,9 +2989,7 @@ class ReportCardsTable extends AppTable
             )
             ->leftJoin(
                 [$GradesGpa->getAlias() => $GradesGpa->getTable()],
-                [
-                    $GradesGpa->aliasField('education_grade_id') . ' = ' . $StudentsGpa->aliasField('education_grade_id'),
-                ]
+                $GradesGpa->aliasField('id') . ' = ' . $StudentsGpa->aliasField('education_grades_gpa_id')  //POCOR-9159
             )
             ->leftJoin(
                 ['GradesGpaById' => $GradesGpa->getTable()],
@@ -3000,12 +2998,10 @@ class ReportCardsTable extends AppTable
             ->where([
                 $StudentsGpa->aliasField('student_id') => $params['student_id'],
                 $StudentsGpa->aliasField('institution_id') => $params['institution_id'],
-                // Filter to latest GPA per grade using a correlated subquery
-                sprintf(
-                    '(%s) IN (SELECT MAX(start_date) FROM education_grades_gpa WHERE education_grade_id = %s)',
-                    $GradesGpa->aliasField('start_date'),
-                    $StudentsGpa->aliasField('education_grade_id')
-                )
+            ])
+            ->order([
+                $GradesGpa->aliasField('start_date') => 'ASC', //POCOR-9159
+                'GradesGpaById.name' => 'ASC'
             ])
             ->enableAutoFields(false)
             ->toArray();
