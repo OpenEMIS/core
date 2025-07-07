@@ -2,7 +2,7 @@
 $this->Html->css('ControllerAction.../plugins/datepicker/css/bootstrap-datepicker.min', ['block' => true]);
 $this->Html->css('ControllerAction.../plugins/timepicker/css/bootstrap-timepicker.min.css', ['block' => true]);
 $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepicker.min', ['block' => true]);
-$this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepicker.min.js', ['block' => true]);  
+$this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepicker.min.js', ['block' => true]);
 
     $alias = $ControllerAction['table']->getAlias();
     $fieldKey = 'meeting';
@@ -153,7 +153,8 @@ $this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepic
                     </tr>
                     <script>
                         $(function () {
-                            var datepicker<?= $i;?> = $('#<?= $meetingDateId;?>').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true,"defaultDate": new Date()});
+                            var datepicker<?= $i;?> = $('#<?= $meetingDateId;?>')
+                                .datepicker({"format":'<?= $datepickerFormat ?>',"todayBtn":"linked","orientation":"auto","autoclose":true,"defaultDate": new Date()});
                             $(document).on('DOMMouseScroll mousewheel scroll', function() {
                                 window.clearTimeout(t);
                                 t = window.setTimeout(function() {
@@ -179,7 +180,7 @@ $this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepic
         <?php endif ?>
     </table>
 </div>
-<?php 
+<?php
 
 elseif ($ControllerAction['action'] == 'edit') : ?>
  <?php
@@ -278,9 +279,9 @@ elseif ($ControllerAction['action'] == 'edit') : ?>
                             <i class="fa fa-trash"></i>&nbsp;<span>Delete</span>
                         </button>
                         </td>
-                        
+
                     </tr>
-                    
+
                     <?php endforeach ?>
                 </tbody>
             <?php endif ?>
@@ -359,7 +360,8 @@ elseif ($ControllerAction['action'] == 'edit') : ?>
                     </tr>
                     <script>
                         $(function () {
-                            var datepicker<?= $i;?> = $('#<?= $meetingDateEditId;?>').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true,"defaultDate": new Date()});
+                            var datepicker<?= $i;?> = $('#<?= $meetingDateEditId;?>')
+                                .datepicker({"format":'<?= $datepickerFormat ?>',"todayBtn":"linked","orientation":"auto","autoclose":true,"defaultDate": new Date()});
                             $(document).on('DOMMouseScroll mousewheel scroll', function() {
                                 window.clearTimeout(t);
                                 t = window.setTimeout(function() {
@@ -391,7 +393,7 @@ elseif ($ControllerAction['action'] == 'edit') : ?>
         var request = $.ajax({
                 url: targeturl,
                 type: "GET",
-                data: {meetingId : meetingId}, 
+                data: {meetingId : meetingId},
                 cache: false,
                 success: function(data){
                     window.location.reload();
@@ -400,5 +402,5 @@ elseif ($ControllerAction['action'] == 'edit') : ?>
             request.fail(function(jqXHR, textStatus) {
                 alert( "Request failed: " + textStatus );
             });
-    }  
+    }
 </script>

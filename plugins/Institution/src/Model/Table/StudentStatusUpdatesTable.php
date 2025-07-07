@@ -100,7 +100,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $studentWithdrawRecords = [];
         $today = Time::now();
         $today = $today->format('Y-m-d');
-      
+
         if($academicPeriodEndDate >= $today && $academicPeriodEffectiveDate <= $today){
 //             Log::write('debug', 'End date');
 //             Log::write('debug', $academicPeriodEndDate);
@@ -120,10 +120,10 @@ class StudentStatusUpdatesTable extends ControllerActionTable
             } else {
                 $studentWithdrawRecords = $query->toArray();
             }
-           
+
         }
         return $studentWithdrawRecords;
-        
+
     }
 
     public function triggerUpdateStudentStatusShell()
@@ -196,6 +196,44 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         }
     }
 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+
+        $this->addStudentsExtraButtons($extra['toolbarButtons']); // POCOR-9155
+    }
+
+    private function addStudentsExtraButtons($toolbarButtons1): void // POCOR-9155
+    {
+// back button
+        // Generate encoded query string once
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+// Common button attributes
+        $baseBtnAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false,
+        ];
+
+// Add back button
+        $toolbarButtons = $toolbarButtons1->getArrayCopy();
+        $toolbarButtons['back'] = [
+            'type' => 'button',
+            'label' => '<i class="fa kd-back"></i>',
+            'attr' => array_merge($baseBtnAttr, ['title' => __('Back')]),
+            'url' => [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Students',
+                0 => 'index',
+                1 => $encodedQueryString
+            ]
+        ];
+
+        $toolbarButtons1->exchangeArray($toolbarButtons);
+    }
     public function writeLastExecutedDateToFile(Event $event)
     {
         $today = date('Y-m-d');
