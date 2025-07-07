@@ -187,9 +187,10 @@ class SystemGroupsTable extends ControllerActionTable
             'controller' => 'Securities',
             'action' => 'SystemGroupsList',
             'userGroupId' => $entity->id,
-            'index',
-            "?userGroupId=$entity->id"
-        ];
+            '?' => [
+                'userGroupId' => $entity->id
+            ]
+        ]; //POCOR-9242
 
         $listButton['url'] = $listUrl;
         $listButton['type'] = 'button';
