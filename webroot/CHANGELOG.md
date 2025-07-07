@@ -1,3 +1,30 @@
+### [4.31.1] - 2025-07-07
+- Bug Fixed: Institutions > Academic > Subjects List page : Clicking edit button will cause a 404 error
+- Bug Fixed: Administration > Communication > Alert Rules: Staff Employment: Email is not being sent
+- Bug Fixed: Institutions>Performance>Report Cards: Total marks are not showing correctly when exempted or unassigned
+- Bug Fixed: Administration > Communication > Alert: Retirement warning is not sent
+- Bug Fixed: Institutions>Performance>Report Cards: Ordering and gpa start and end date is not showing correctly
+- Bug Fixed: Institutions > Performance > Assessments > Exempt/Unassign: Save button doesn't redirect user to exit the edit mode
+- Bug Fixed: Directory > Student > Academic : User is not able to sort in ascending or descending order.
+
+### [4.31.0] - 2025-07-01
+- Implemented: Develop SMS function
+- Implemented: Develop a standard report with filters for Reports > Performance > Assessments
+- Implemented: Develop addition of the student role in the Student Admission - Alert Rules
+- Implemented: Add history links to the action menu for Institution -> Staff features
+- Implemented: Develop functions to remove academic period from infrastructure
+- Bug Fixed: Report>Survey>Survey Report: User should be able to select other questions likes staff list and student list
+- Bug Fixed: API: Institutions API is not showing only on gy-tvet-trn env
+- Bug Fixed: Institutions > Attendance > Staff : Attendance page doesn't display staff.
+- Bug Fixed: Institutions > Students > Academic > GPA: Cumulative GPA displays incorrect calculations.
+- Bug Fixed: Administrations > System Setup > System Configurations : Themes > Date format is not applied to datepicker fields
+- Bug Fixed: Institutions>Performance>Report Cards: Develop student report cards placeholder for class rank and grade rank
+- Bug Fixed: Directory > Add : User is unable to update username
+- Bug Fixed: Institutions > Profiles > Students > Download PDF: The PDF Form is misaligned.
+- Bug Fixed: Institutions > Staff > Career > Appraisal > Add > Save : Final Score is incorrect
+- Bug Fixed: Administration>System Setup>System Configuration: Adds dropdown search feature
+- Bug Fixed: Institutions > Report Cards > Comments > View: Some tabs are not displaying correctly.
+
 ### [4.30.1] - 2025-06-26
 - Bug Fixed: Institutions>Performance>Assessment>Report: Report is still showing 0,00 even when marks are not entered
 - Bug Fixed: Institutions > Performance > Competencies: User is unable to view the competencies he has permissions to
