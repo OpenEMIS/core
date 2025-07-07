@@ -1840,7 +1840,16 @@ class InstitutionsController extends AppController
 
             // View-related settings
             $this->set('ngController', 'AssessmentItemExemptionsCtrl as AssessmentItemExemptionsController');
-            $backUrl = $this->referer();
+            // POCOR-9248 start
+            $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+            $backUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Results',
+                '1' => $encodedQueryString,
+                '?' => ['queryString' => $encodedQueryString]
+            ];
+            // POCOR-9248 end
             $this->set('backUrl', $backUrl);
             $alertUrl = [
                 'plugin' => 'Configuration',
