@@ -106,6 +106,7 @@ class AlertStaffLeaveCommand extends AlertCommandBase
             '${date_from}' => $item['date_from'] ?? '',
             '${date_to}' => $item['date_to'] ?? '',
             '${day_difference}' => (string)$dayDiff,
+            '${employment_period}' => (string)$dayDiff,
 
             '${user.openemis_no}' => $item['user']['openemis_no'] ?? '',
             '${user.first_name}' => $item['user']['first_name'] ?? '',
