@@ -21,210 +21,17 @@ class AssessmentPeriods extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+
 
      // Override getKeyForSaveQuery to handle composite keys
-/**
- * @OA\PathItem(
- *     path="/api/v5/assessment-periods"
- * )
- */
-public function _swaggerPath() {}
 
-/**
- * @OA\Get(
- *     path="/api/v5/assessment-periods",
- *     summary="Get list of AssessmentPeriods",
- *     tags={"AssessmentPeriods"},
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(
- *                 property="message",
- *                 type="string",
- *                 example="Successful."
- *             ),
- *             @OA\Property(
- *                 property="data",
- *                 type="array",
- *                 @OA\Items(
- *                     type="object",
-                          @OA\Property(property="id", type="integer", example=null),
-                          @OA\Property(property="code", type="string", example=null),
-                          @OA\Property(property="name", type="string", example=null),
-                          @OA\Property(property="start_date", type="string", format="date", example=null),
-                          @OA\Property(property="end_date", type="string", format="date", example=null),
-                          @OA\Property(property="date_enabled", type="string", format="date", example=null),
-                          @OA\Property(property="date_disabled", type="string", format="date", example=null),
-                          @OA\Property(property="weight", type="number", example=null),
-                          @OA\Property(property="academic_term", type="string", example=null),
-                          @OA\Property(property="assessment_id", type="integer", example=null),
-                          @OA\Property(property="editable_student_statuses", type="integer", example=null),
-                          @OA\Property(property="modified_user_id", type="integer", example=null),
-                          @OA\Property(property="modified", type="string", format="date-time", example=null),
-                          @OA\Property(property="created_user_id", type="integer", example=null),
-                          @OA\Property(property="created", type="string", format="date-time", example=null)
- *                 )
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     )
- * )
- */
-public function _swaggerList() {}
 
-/**
- * @OA\Get(
- *     path="/api/v5/assessment-periods/{id}",
- *     summary="Get AssessmentPeriods by ID",
- *     tags={"AssessmentPeriods"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the AssessmentPeriods",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
 
-/**
- * @OA\Post(
- *     path="/api/v5/assessment-periods",
- *     summary="Create a new AssessmentPeriods",
- *     tags={"AssessmentPeriods"},
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             type="object",
-                     @OA\Property(property="id", type="integer", example=null),
-                     @OA\Property(property="code", type="string", example=null),
-                     @OA\Property(property="name", type="string", example=null),
-                     @OA\Property(property="start_date", type="string", format="date", example=null),
-                     @OA\Property(property="end_date", type="string", format="date", example=null),
-                     @OA\Property(property="date_enabled", type="string", format="date", example=null),
-                     @OA\Property(property="date_disabled", type="string", format="date", example=null),
-                     @OA\Property(property="weight", type="number", example=null),
-                     @OA\Property(property="academic_term", type="string", example=null),
-                     @OA\Property(property="assessment_id", type="integer", example=null),
-                     @OA\Property(property="editable_student_statuses", type="integer", example=null),
-                     @OA\Property(property="modified_user_id", type="integer", example=null),
-                     @OA\Property(property="modified", type="string", format="date-time", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
- *     ),
- *     @OA\Response(
- *         response=201,
- *         description="Created successfully"
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     )
- * )
- */
-public function _swaggerCreate() {}
 
-/**
- * @OA\Put(
- *     path="/api/v5/assessment-periods/{id}",
- *     summary="Update AssessmentPeriods",
- *     tags={"AssessmentPeriods"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the AssessmentPeriods",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             type="object",
-                     @OA\Property(property="id", type="integer", example=null),
-                     @OA\Property(property="code", type="string", example=null),
-                     @OA\Property(property="name", type="string", example=null),
-                     @OA\Property(property="start_date", type="string", format="date", example=null),
-                     @OA\Property(property="end_date", type="string", format="date", example=null),
-                     @OA\Property(property="date_enabled", type="string", format="date", example=null),
-                     @OA\Property(property="date_disabled", type="string", format="date", example=null),
-                     @OA\Property(property="weight", type="number", example=null),
-                     @OA\Property(property="academic_term", type="string", example=null),
-                     @OA\Property(property="assessment_id", type="integer", example=null),
-                     @OA\Property(property="editable_student_statuses", type="integer", example=null),
-                     @OA\Property(property="modified_user_id", type="integer", example=null),
-                     @OA\Property(property="modified", type="string", format="date-time", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Updated successfully"
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerUpdate() {}
 
-/**
- * @OA\Delete(
- *     path="/api/v5/assessment-periods/{id}",
- *     summary="Delete AssessmentPeriods",
- *     tags={"AssessmentPeriods"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the AssessmentPeriods",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerDelete() {}
+
+
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -261,9 +68,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }

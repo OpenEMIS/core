@@ -13,7 +13,7 @@ class SummaryInstitutionRoomTypesFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
     'academic_period_id' => $this->faker->numberBetween(1, 1000),

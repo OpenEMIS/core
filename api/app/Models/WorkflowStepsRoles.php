@@ -35,10 +35,17 @@ use UuidId;
         parent::boot();
         self::bootUuidId();
     }
-    
-    
+
 
      // Override getKeyForSaveQuery to handle composite keys
+
+
+
+
+
+
+
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();

@@ -64,7 +64,8 @@ class Kernel extends HttpKernel
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        'auth.jwt'  =>  \Tymon\JWTAuth\Http\Middleware\Authenticate::class,
+//        'auth.jwt'  =>  \Tymon\JWTAuth\Http\Middleware\Authenticate::class,
+        'auth.jwt' => \App\Http\Middleware\AuthenticateJwt::class, // POCOR-9092 login errors
         'authkeyvalidate' => \App\Http\Middleware\ApiKeyValidate::class,
     ];
 }

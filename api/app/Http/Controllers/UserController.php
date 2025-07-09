@@ -1494,7 +1494,7 @@ class UserController extends Controller
 
                 return $this->sendSuccessResponse("User Found", $data);
             } else {
-                return $this->sendErrorResponse("User Not Found");
+                return $this->sendSuccessResponse("User Not Found");
             }
         } catch (\Exception $e) {
             Log::error(

@@ -89,6 +89,7 @@ class StudentsTable extends AppTable
         $this->ControllerAction->field('report_end_date',['type'=>'hidden']);
         $this->ControllerAction->field('start_date',['type'=>'hidden']);
         $this->ControllerAction->field('end_date',['type'=>'hidden']);
+        $this->ControllerAction->field('education_programme_id', ['type' => 'hidden']); //POCOR-8868
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_subject_id', ['type' => 'hidden']);
         $this->ControllerAction->field('risk_id', ['type' => 'hidden']);
@@ -326,7 +327,8 @@ class StudentsTable extends AppTable
                                     'Report.StudentNotAssignedClass',
                                     'Report.SpecialNeeds',
                                     'Report.StudentGuardians','Report.StudentsPhoto','Report.Students',
-                'Report.StudentIdentities','Report.StudentContacts','Report.StudentsEnrollmentSummary'
+                'Report.StudentIdentities','Report.StudentContacts','Report.StudentsEnrollmentSummary',
+                'Report.StudentsGraduationSummary' //POCOR-8868
                   ])) {
 
 
@@ -458,7 +460,8 @@ class StudentsTable extends AppTable
                         'Report.StudentContacts',
                         'Report.StudentsEnrollmentSummary',
                         'Report.StudentIdentities',
-                        'Report.HealthReports'
+                        'Report.HealthReports',
+                        'Report.StudentsGraduationSummary' //POCOR-8868
                     ]) && count($institutionList) > 1) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
@@ -953,8 +956,8 @@ class StudentsTable extends AppTable
                                       'Report.InstitutionStudentsOutOfSchool',
                                         'Report.StudentsPhoto',
                 'Report.Students',
-                'Report.StudentIdentities','Report.StudentContacts'
-
+                'Report.StudentIdentities','Report.StudentContacts',
+                'Report.StudentsGraduationSummary' //POCOR-8868
                                       ])
             )) {
                 $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
@@ -972,6 +975,7 @@ class StudentsTable extends AppTable
                                        'Report.StaffAttendances',
                                        'Report.StudentsEnrollmentSummary',
                                        'Report.SubjectsBookLists',
+                                       'Report.StudentsGraduationSummary', //POCOR-8868
                                       'Report.SpecialNeeds'])
                 ) {
                     $attr['onChangeReload'] = true;
@@ -1001,7 +1005,8 @@ class StudentsTable extends AppTable
                 'Report.SubjectsBookLists',
                 'Report.StudentNotAssignedClass',
                 'Report.StudentsEnrollmentSummary',
-                'Report.SpecialNeeds'
+                'Report.SpecialNeeds',
+                'Report.StudentsGraduationSummary' //POCOR-8868
             ]))) {
                 $Areas = TableRegistry::getTableLocator()->get('Area.AreaLevels');
                 $entity = $attr['entity'];
@@ -1042,6 +1047,7 @@ class StudentsTable extends AppTable
                 'Report.StudentsRiskAssessment',
                 'Report.SubjectsBookLists',
                 'Report.StudentNotAssignedClass',
+                'Report.StudentsGraduationSummary', //POCOR-8868
                 'Report.StudentsEnrollmentSummary','Report.SpecialNeeds'])) {
                     $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                     $entity = $attr['entity'];
@@ -1076,6 +1082,64 @@ class StudentsTable extends AppTable
         return $attr;
     }
 
+    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if (isset($this->request->getData($this->getAlias())['academic_period_id'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
+            $academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
+            $institutionId = $this->request->getData($this->getAlias())['institution_id'];  //POCOR-5740
+            if (in_array($feature,
+                        [
+                            'Report.StudentsGraduationSummary', //POCOR-8868
+                            'Report.StudentsEnrollmentSummary' //POCOR-8867
+                        ])
+                ) {
+
+                //POCOR-6727 starts
+
+                $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+                $conditions = [];
+                if ($institutionId != 0) {
+                    $conditions[$InstitutionGrades->aliasField('institution_id')] = $institutionId;
+                }
+                $gradeOptions = $InstitutionGrades
+                    ->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'name'
+                    ])
+                    ->select([
+                        'id' => 'EducationProgrammes.id',
+                        'name' => 'EducationProgrammes.name',
+                        // 'education_programme_name' => 'EducationProgrammes.name'
+                    ])
+                    //->contain(['EducationProgrammes'])
+                    ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                    ->where([
+                        // $conditions,
+                        'EducationSystems.academic_period_id' => $academicPeriodId,
+                    ])
+                    ->order([
+                        'EducationProgrammes.order' => 'ASC',
+                        'EducationGrades.name' => 'ASC'
+                    ])
+                    ->toArray();
+                //POCOR-6727 End
+                // print_r($gradeOptions);die;
+                //POCOR-5740 starts
+                if (in_array($feature, ['Report.SubjectsBookLists'])) {
+                    $attr['onChangeReload'] = true;
+                } //POCOR-5740 ends
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = ['-1' => __('All Programmes')] + $gradeOptions;
+            } 
+            else {
+                $attr['value'] = self::NO_FILTER;
+            }
+            return $attr;
+        }
+    }
+
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['academic_period_id'])) {
@@ -1085,7 +1149,7 @@ class StudentsTable extends AppTable
             if (in_array($feature,
                         [
                             'Report.ClassAttendanceNotMarkedRecords',
-                            'Report.SubjectsBookLists'
+                            'Report.SubjectsBookLists',
                         ])
                 ) {
 
@@ -1399,6 +1463,8 @@ class StudentsTable extends AppTable
                 return __('Institution Type');
             case 'special_needs_feature':
                 return __('Special Needs Feature');
+            case 'education_programme_id': // POCOR-8868
+                    return __('Education Programme'); //POCOR-8868
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

@@ -44,14 +44,14 @@ class BulkStudentTransferInTable extends ControllerActionTable
                 'WorkflowModels.model' => $this->_modelAlias
             ])
             ->toArray();
-        //remove open status because we are not getting start_date, end_date, institution class  
+        //remove open status because we are not getting start_date, end_date, institution class
         $option = array();
         //POCOR-6362 starts
         foreach ($steplists as $klist => $vlist) {
             if($vlist == 'Pending Approval From Receiving Institution' || $vlist == 'Pending Cancellation'){
                 $option[$klist] = $vlist;
             }
-        }//POCOR-6362 ends 
+        }//POCOR-6362 ends
         $this->_stepsOptions = $option;
     }
 
@@ -89,7 +89,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
         $superAdmin = $session->read('Auth.User.super_admin');
         //$institutionId = $session->read('Institution.Institutions.id');
         $institutionId = $this->getQueryString('institution_id');
-       
+
         if ($request->is(['post', 'put'])) {
             $statusId = $request->getData($this->getAlias())['status'];
         } else {
@@ -169,7 +169,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
                 $attr['options'] = $this->_stepsOptions;
                 $attr['onChangeReload'] = 'changeStatus';
             break;
-            
+
             case 'reconfirm':
                 $selectedStatus = $this->_currentData['status'];
                 $attr['attr']['value'] = $this->_stepsOptions[$selectedStatus];
@@ -238,7 +238,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
             default:
                 break;
         }
-       
+
         return $attr;
     }
 
@@ -290,10 +290,10 @@ class BulkStudentTransferInTable extends ControllerActionTable
                     ->find()
                     ->where([$SecurityUsers->aliasField('id') => $this->_currentData->assignee_id])
                     ->first();
-                $assigneeOptions = 'Auto Assign'; //POCOR-6961 
+                $assigneeOptions = 'Auto Assign'; //POCOR-6961
                 $attr['type'] = 'readonly';
                 $attr['value'] = '-1';
-                $attr['attr']['value'] = $assigneeOptions; //POCOR-6961 
+                $attr['attr']['value'] = $assigneeOptions; //POCOR-6961
                 break;
 
             default:
@@ -375,6 +375,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
         $process = function ($model, $entity) use ($event, $data) {
+            $data = $data->getArrayCopy();
             // Removal of some fields that are not in use in the table validation
             $errors = $entity->getErrors();
             if (empty($errors)) {

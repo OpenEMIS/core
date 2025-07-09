@@ -55,7 +55,7 @@ class SecurityGroupUsersTable extends AppTable {
         ->leftJoin([$SecurityInstitutions->getAlias() => $SecurityInstitutions->getTable()], [
             $SecurityInstitutions->aliasField('security_group_id = ') . $this->aliasField('security_group_id'),
         ])
-        ->where(['security_user_id' => $security_user_id]);
+        ->where(['security_user_id IS' => $security_user_id]);
         return $query;
     }
 
@@ -472,7 +472,8 @@ class SecurityGroupUsersTable extends AppTable {
         return $assigneeId;
     }
 
-    public function findEmailList(Query $query, array $options) {
+    public function findContactList(Query $query, array $options)
+    {
         $conditions = [
             $this->aliasField('security_role_id') => $options['securityRoleId']
         ];
@@ -485,10 +486,15 @@ class SecurityGroupUsersTable extends AppTable {
         }
 
         return $query
-                        ->matching('Users', function ($q) {
-                            return $q->where(['email' . ' IS NOT NULL']);
-                        })
-                        ->where($conditions);
+            ->matching('Users', function ($q) {
+                return $q->where([
+                    'OR' => [
+                        'Users.email IS NOT NULL',
+                        'Users.mobile_number IS NOT NULL'
+                    ]
+                ]);
+            })
+            ->where($conditions);
     }
 
     /*

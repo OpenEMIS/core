@@ -64,13 +64,13 @@ class ValidationBehavior extends Behavior
                 }
 
                 // inserting these rules first
-                $validator->add($column, [
-                    'ruleValidDate' => [
-                        'rule' => ['date', 'ymd'],
-                        'last' => true,
-                        'message' => $this->getMessage('general.invalidDate')
-                    ]
-                ]);
+//                $validator->add($column, [
+//                    'ruleValidDate' => [
+//                        'rule' => ['date', 'ymd'],
+//                        'last' => true,
+//                        'message' => $this->getMessage('general.invalidDate')
+//                    ]
+//                ]);
 
                 // then inserting the rules from behavior's parent back
                 foreach ($rulesStore as $rkey => $rvalue) {
@@ -196,10 +196,10 @@ class ValidationBehavior extends Behavior
             $check = $AreaLevels->get($Areas->get($check)->area_level_id)->level;
             if ($check != $validateAreaLevel) {
                 $configuredAreaLevel = $AreaLevels->find()
-                                        ->where([
-                                            $AreaLevels->aliasField('level') => $validateAreaLevel
-                                        ])
-                                        ->first();
+                    ->where([
+                        $AreaLevels->aliasField('level') => $validateAreaLevel
+                    ])
+                    ->first();
                 $validationErrorMsg = $model->getMessage('Institution.Institutions.area_id.configuredArea', ['sprintf' => [$configuredAreaLevel->name]]);
             }
         } else if ($globalData['field'] == 'area_administrative_id') {
@@ -247,8 +247,8 @@ class ValidationBehavior extends Behavior
             'total_number_of_students' => $query->func()->sum('total_male_students + total_female_students'),
             'id','name', 'total_male_students', 'total_female_students'
         ])
-        ->group('id','name', 'total_male_students', 'total_female_students')
-        ->having(['total_number_of_students >' => $check]);
+            ->group('id','name', 'total_male_students', 'total_female_students')
+            ->having(['total_number_of_students >' => $check]);
 
         $count = $query->count();
 
@@ -597,11 +597,11 @@ class ValidationBehavior extends Behavior
         $contactId = (array_key_exists('id', $globalData['data']))? $globalData['data']['id']: null;
 
         $query = $Contacts
-                ->find()
-                ->matching('ContactTypes', function ($q) use ($contactOption) {
-                    return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
-                })
-                ->where([$Contacts->aliasField('security_user_id') => $userId]);
+            ->find()
+            ->matching('ContactTypes', function ($q) use ($contactOption) {
+                return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
+            })
+            ->where([$Contacts->aliasField('security_user_id') => $userId]);
 
         if (!empty($contactId)) {
             $query->where([$Contacts->aliasField($Contacts->getPrimaryKey()) .'!='. $contactId]);
@@ -645,8 +645,8 @@ class ValidationBehavior extends Behavior
                 $className = $globalData['providers']['custom']->getRegistryAlias();
                 $newEntity = TableRegistry::getTableLocator()->get($className);
                 $recordWithField = $newEntity->find()
-                                            ->select([$fieldName])
-                                            ->where([$fieldName => 1]);
+                    ->select([$fieldName])
+                    ->where([$fieldName => 1]);
 
                 if (!$globalData['newRecord']) { //for edit, need to ensure that there is other record which is set as default, or else this one must be set as default.
                     //$recordWithField ->andWhere([$modelClass->aliasField('id').' IS NOT ' => $globalData['data']['id']]);
@@ -741,9 +741,9 @@ class ValidationBehavior extends Behavior
     {
         $ClassStudents = TableRegistry::getTableLocator()->get("Institution.InstitutionClassStudents");
         $currentNumberOfStudents = $ClassStudents->find()->where([
-                $ClassStudents->aliasField('institution_class_id') => $class_id,
-                $ClassStudents->aliasField('education_grade_id') => $globalData['data']['education_grade_id']
-            ])->count();
+            $ClassStudents->aliasField('institution_class_id') => $class_id,
+            $ClassStudents->aliasField('education_grade_id') => $globalData['data']['education_grade_id']
+        ])->count();
         /**
          * @todo  add this max limit to config
          * This limit value is being used in InstitutionClasses->editAfterAction()
@@ -823,14 +823,14 @@ class ValidationBehavior extends Behavior
             $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 
             $query = $Institutions->find()
-                    ->contain('Genders')
-                    ->where([
-                        $Institutions->aliasField('id') => $institutionId
-                    ])
-                    ->select([
-                        'Genders.code', 'Genders.name'
-                    ])
-                    ->first();
+                ->contain('Genders')
+                ->where([
+                    $Institutions->aliasField('id') => $institutionId
+                ])
+                ->select([
+                    'Genders.code', 'Genders.name'
+                ])
+                ->first();
             $institutionGender = $query->gender->name;//POCOR-8343
             $institutionGenderCode = $query->gender->code;//POCOR-8343
 
@@ -905,7 +905,7 @@ class ValidationBehavior extends Behavior
                 ]
             )
             ->count()
-            ;
+        ;
         return $existingRecords <= 0;
     }
 
@@ -948,7 +948,7 @@ class ValidationBehavior extends Behavior
                     $InstitutionShifts->aliasField('institution_id') => $institutionId
                 ]
             ])
-            ;
+        ;
 
         // to handle edits
         if (!empty($existingId)) {
@@ -1021,7 +1021,7 @@ class ValidationBehavior extends Behavior
                 ->select([$Students->aliasField('date_of_birth')])
                 ->where([$Students->aliasField($Students->getPrimaryKey()) => $data['student_id']])
                 ->first();
-                ;
+            ;
             if ($studentQuery) {
                 $dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
             } else {
@@ -1042,7 +1042,7 @@ class ValidationBehavior extends Behavior
             ->contain('EducationProgrammes.EducationCycles')
             ->where([$EducationGrades->aliasField($EducationGrades->getPrimaryKey()) => $educationGradeId])
             ->first()
-            ;
+        ;
         $admissionAge = $gradeEntity->education_programme->education_cycle->admission_age;
 
         if (isset($data['academic_period_id']) && !empty($data['academic_period_id'])) {
@@ -1068,12 +1068,12 @@ class ValidationBehavior extends Behavior
         $enrolmentMaximumAge = $admissionAge + $ConfigItems->value('admission_age_plus');
 
         // PHPOE-2284 - 'instead of defining admission age at grade level, please make sure the allowed age range changes according to the grade.'
-       // PHPOE-2691 - 'instead of populating the list of grades by education cycle which is its grandparent, populate the list by its parent instead which is education programme.'
+        // PHPOE-2691 - 'instead of populating the list of grades by education cycle which is its grandparent, populate the list by its parent instead which is education programme.'
         $gradeList = $EducationGrades->find('list')
-           ->where([$EducationGrades->aliasField('education_programme_id') => $programmeId])
-           ->find('order')
-           ->toArray()
-           ;
+            ->where([$EducationGrades->aliasField('education_programme_id') => $programmeId])
+            ->find('order')
+            ->toArray()
+        ;
 
         $yearIncrement = 0;
         foreach ($gradeList as $key => $value) {
@@ -1156,14 +1156,14 @@ class ValidationBehavior extends Behavior
 
             //if have record then return false.
             return !($model->find('list')
-                    ->contain([$foreignKeyModel], [
-                        "$foreignKeyModel.id = " . $model->aliasField($foreignKeyField)
-                    ])
-                    ->where([
-                        $model->aliasField('code') => $globalData['data']['code'],
-                        "$foreignKeyModel.$academicFieldName = " . $globalData['data']['academic_period_id']
-                    ])
-                    ->count());
+                ->contain([$foreignKeyModel], [
+                    "$foreignKeyModel.id = " . $model->aliasField($foreignKeyField)
+                ])
+                ->where([
+                    $model->aliasField('code') => $globalData['data']['code'],
+                    "$foreignKeyModel.$academicFieldName = " . $globalData['data']['academic_period_id']
+                ])
+                ->count());
         }
     }
 
@@ -1174,11 +1174,11 @@ class ValidationBehavior extends Behavior
         // pr($data);die;
 
         return !($model->find()
-                    ->where([
-                        $model->aliasField('education_grade_id') => $data['education_grade_id'],
-                        $model->aliasField('academic_period_id') => $data['academic_period_id']
-                    ])
-                    ->count());
+            ->where([
+                $model->aliasField('education_grade_id') => $data['education_grade_id'],
+                $model->aliasField('academic_period_id') => $data['academic_period_id']
+            ])
+            ->count());
     }
 
     public static function compareJoinDate($field, $academicFieldName, $globalData)
@@ -1189,20 +1189,20 @@ class ValidationBehavior extends Behavior
                 if ($academicFieldName == 'staff_id') {
                     $Table = TableRegistry::getTableLocator()->get('Institution.Staff');
                     $periodObj = $Table->find()
-                            ->where([
-                                $Table->aliasField('staff_id') => $globalData['data'][$academicFieldName],
-                                $Table->aliasField('institution_id') => $globalData['data']['institution_id']
-                            ])
-                            ->toArray();
+                        ->where([
+                            $Table->aliasField('staff_id') => $globalData['data'][$academicFieldName],
+                            $Table->aliasField('institution_id') => $globalData['data']['institution_id']
+                        ])
+                        ->toArray();
                 } else if ($academicFieldName == 'student_id') {
                     $Table = TableRegistry::getTableLocator()->get('Institution.Students');
                     $periodObj = $Table->find()
-                            ->where([
-                                $Table->aliasField('student_id') => $globalData['data'][$academicFieldName],
-                                $Table->aliasField('institution_id') => $globalData['data']['institution_id'],
-                                $Table->aliasField('academic_period_id') => $globalData['data']['academic_period_id']
-                            ])
-                            ->toArray();
+                        ->where([
+                            $Table->aliasField('student_id') => $globalData['data'][$academicFieldName],
+                            $Table->aliasField('institution_id') => $globalData['data']['institution_id'],
+                            $Table->aliasField('academic_period_id') => $globalData['data']['academic_period_id']
+                        ])
+                        ->toArray();
                 }
 
                 $startDateObj = new Date($globalData['data']['start_date']);
@@ -1286,9 +1286,9 @@ class ValidationBehavior extends Behavior
             }
 
             $shiftTime = $InstitutionShift
-                    ->find()
-                    ->where($conditions)
-                    ->toArray();
+                ->find()
+                ->where($conditions)
+                ->toArray();
 
             if (!empty($shiftTime)) {
                 $shiftStartTimeArray = [];
@@ -1414,8 +1414,8 @@ class ValidationBehavior extends Behavior
             ->where($overlapDateCondition)
             ->where([$SearchTable->aliasField($userKey) => $userId])
             ->where([$SearchTable->aliasField('institution_id') => $institution_id])
-            ;
-            // ->toArray();
+        ;
+        // ->toArray();
 
         if (!empty($timeConditions)) {
             $found->where($timeConditions);
@@ -1426,8 +1426,8 @@ class ValidationBehavior extends Behavior
         }
 
         $found = $found->count();
-            // ->sql();
-            // return false;
+        // ->sql();
+        // return false;
         // pr($found == 0);
         return ($found == 0);
     }
@@ -1459,36 +1459,36 @@ class ValidationBehavior extends Behavior
                 $count = $InstitutionStaffTable->find()
                     ->where($condition)
                     ->where([
-                            'OR' => [
-                                [$InstitutionStaffTable->aliasField('end_date').' IS NULL'],
-                                [
-                                    $InstitutionStaffTable->aliasField('start_date').' >=' => $newStartDate,
-                                ]
+                        'OR' => [
+                            [$InstitutionStaffTable->aliasField('end_date').' IS NULL'],
+                            [
+                                $InstitutionStaffTable->aliasField('start_date').' >=' => $newStartDate,
                             ]
-                        ]);
+                        ]
+                    ]);
             } else {
                 $count = $InstitutionStaffTable->find()
                     ->where($condition)
                     ->where([
-                            'OR' => [
-                                [
-                                    $InstitutionStaffTable->aliasField('start_date').' <=' => $newEndDate,
-                                    $InstitutionStaffTable->aliasField('end_date').' IS NULL'
-                                ],
-                                [
-                                    $InstitutionStaffTable->aliasField('start_date').' <=' => $newStartDate,
-                                    $InstitutionStaffTable->aliasField('end_date').' IS NULL'
-                                ],
-                                [
-                                    $InstitutionStaffTable->aliasField('start_date').' <=' => $newEndDate,
-                                    $InstitutionStaffTable->aliasField('end_date').' >=' => $newEndDate,
-                                ],
-                                [
-                                    $InstitutionStaffTable->aliasField('start_date').' <=' => $newStartDate,
-                                    $InstitutionStaffTable->aliasField('end_date').' >=' => $newStartDate,
-                                ],
-                            ]
-                        ]);
+                        'OR' => [
+                            [
+                                $InstitutionStaffTable->aliasField('start_date').' <=' => $newEndDate,
+                                $InstitutionStaffTable->aliasField('end_date').' IS NULL'
+                            ],
+                            [
+                                $InstitutionStaffTable->aliasField('start_date').' <=' => $newStartDate,
+                                $InstitutionStaffTable->aliasField('end_date').' IS NULL'
+                            ],
+                            [
+                                $InstitutionStaffTable->aliasField('start_date').' <=' => $newEndDate,
+                                $InstitutionStaffTable->aliasField('end_date').' >=' => $newEndDate,
+                            ],
+                            [
+                                $InstitutionStaffTable->aliasField('start_date').' <=' => $newStartDate,
+                                $InstitutionStaffTable->aliasField('end_date').' >=' => $newStartDate,
+                            ],
+                        ]
+                    ]);
             }
             if ($count->count() > 0) {
                 return false;
@@ -1772,25 +1772,25 @@ class ValidationBehavior extends Behavior
         if (is_null($groupField) || empty($groupField) || !$groupField) {
             if (!$globalData['newRecord']) {
                 $count =  $model->find()
-                            ->where([
-                                $model->aliasField('id') .' != ' => $globalData['data']['id'],
-                                $model->aliasField('code') => $code,
-                            ])
-                            ->count();
+                    ->where([
+                        $model->aliasField('id') .' != ' => $globalData['data']['id'],
+                        $model->aliasField('code') => $code,
+                    ])
+                    ->count();
             } else {
                 $count =  $model->find()
-                            ->where([$model->aliasField('code') => $code])
-                            ->count();
+                    ->where([$model->aliasField('code') => $code])
+                    ->count();
             }
         } else {
             if (!$globalData['newRecord']) {
                 $count =  $model->find()
-                            ->where([
-                                $model->aliasField('id') .' != ' => $globalData['data']['id'],
-                                $model->aliasField('code') => $code,
-                                $model->aliasField($groupField) => $globalData['data'][$groupField],
-                            ])
-                            ->count();
+                    ->where([
+                        $model->aliasField('id') .' != ' => $globalData['data']['id'],
+                        $model->aliasField('code') => $code,
+                        $model->aliasField($groupField) => $globalData['data'][$groupField],
+                    ])
+                    ->count();
             }
         }
         return $count==0;
@@ -1832,9 +1832,9 @@ class ValidationBehavior extends Behavior
                 $academicPeriodEndDate = (!is_null($periodObj['end_date'])) ? $periodObj['end_date']->toUnixString() : null;
 
                 $rangecheck = ($date >= $academicPeriodStartDate) &&
-                (is_null($academicPeriodEndDate) ||
-                    (!is_null($academicPeriodEndDate) && ($date <= $academicPeriodEndDate))
-                )
+                    (is_null($academicPeriodEndDate) ||
+                        (!is_null($academicPeriodEndDate) && ($date <= $academicPeriodEndDate))
+                    )
                 ;
                 return $rangecheck;
             } else {
@@ -2141,7 +2141,7 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
-     //POCOR-8487[END]
+    //POCOR-8487[END]
 
     public static function validateCustomPattern($field, $code, array $globalData)
     {
@@ -2567,13 +2567,13 @@ class ValidationBehavior extends Behavior
                 $UserNationalitiesTable = TableRegistry::getTableLocator()->get('User.UserNationalities');
 
                 $query = $UserNationalitiesTable
-                        ->find()
-                        ->where([
-                            $UserNationalitiesTable->aliasField('security_user_id') => $globalData['data']['security_user_id'],
-                            $UserNationalitiesTable->aliasField('nationality_id <> ') => $globalData['data']['nationality_id'],
-                            $UserNationalitiesTable->aliasField('preferred') => 1
-                        ])
-                        ->count();
+                    ->find()
+                    ->where([
+                        $UserNationalitiesTable->aliasField('security_user_id') => $globalData['data']['security_user_id'],
+                        $UserNationalitiesTable->aliasField('nationality_id <> ') => $globalData['data']['nationality_id'],
+                        $UserNationalitiesTable->aliasField('preferred') => 1
+                    ])
+                    ->count();
                 if ($query > 0) {
                     return true;
                 } else {
@@ -2592,9 +2592,9 @@ class ValidationBehavior extends Behavior
                 $AreaAdministratives = TableRegistry::getTableLocator()->get('Area.AreaAdministratives');
 
                 $query = $AreaAdministratives->find()
-                        ->select([$AreaAdministratives->aliasField('id')])
-                        ->where([$AreaAdministratives->aliasField('parent_id').' IS NULL'])
-                        ->first();
+                    ->select([$AreaAdministratives->aliasField('id')])
+                    ->where([$AreaAdministratives->aliasField('parent_id').' IS NULL'])
+                    ->first();
                 $worldId = $query->id;
 
                 $conditions = [
@@ -2607,9 +2607,9 @@ class ValidationBehavior extends Behavior
                 }
 
                 $query = $AreaAdministratives
-                        ->find()
-                        ->where($conditions)
-                        ->count();
+                    ->find()
+                    ->where($conditions)
+                    ->count();
 
                 if ($query > 0) {
                     return true;
@@ -2635,14 +2635,14 @@ class ValidationBehavior extends Behavior
             $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
 
             $query = $InstitutionStudents
-                    ->find()
-                    ->where([
-                        $InstitutionStudents->aliasField('institution_id') => $globalData['data']['institution_id'],
-                        $InstitutionStudents->aliasField('education_grade_id') => $globalData['data']['education_grade_id'],
-                        $InstitutionStudents->aliasField('student_status_id') => $enrolledStatus,
-                        $InstitutionStudents->aliasField('start_date > ') => $globalData['data']['end_date']
-                    ])
-                    ->count();
+                ->find()
+                ->where([
+                    $InstitutionStudents->aliasField('institution_id') => $globalData['data']['institution_id'],
+                    $InstitutionStudents->aliasField('education_grade_id') => $globalData['data']['education_grade_id'],
+                    $InstitutionStudents->aliasField('student_status_id') => $enrolledStatus,
+                    $InstitutionStudents->aliasField('start_date > ') => $globalData['data']['end_date']
+                ])
+                ->count();
 
             if ($query > 0) {
                 return false;
@@ -2656,12 +2656,12 @@ class ValidationBehavior extends Behavior
         $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         $periodLevel = $AcademicPeriods
-                    ->find()
-                    ->where([
-                        $AcademicPeriods->aliasField('id') => $globalData['data']['academic_period_id']
-                    ])
-                    ->extract('academic_period_level_id')
-                    ->first();
+            ->find()
+            ->where([
+                $AcademicPeriods->aliasField('id') => $globalData['data']['academic_period_id']
+            ])
+            ->extract('academic_period_level_id')
+            ->first();
 
         if($periodLevel != 1) {
             return false;
@@ -2676,14 +2676,14 @@ class ValidationBehavior extends Behavior
         $registryAlias = $model->getRegistryAlias();
 
         $gradesInInstitution = $InstitutionGrades
-                ->find('list', [
-                    'keyField' => 'id',
-                    'valueField' => 'education_grade_id'
-                ])
-                ->where([
-                    $InstitutionGrades->aliasField('institution_id') => $globalData['data']['institution_id']
-                ])
-                ->toArray();
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'education_grade_id'
+            ])
+            ->where([
+                $InstitutionGrades->aliasField('institution_id') => $globalData['data']['institution_id']
+            ])
+            ->toArray();
 
         if (!in_array($globalData['data']['education_grade_id'], $gradesInInstitution)) {
             return $model->getMessage("$registryAlias.education_grade_id.checkProgrammeExist");
@@ -2698,16 +2698,16 @@ class ValidationBehavior extends Behavior
 
         $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $availableClass = $InstitutionClasses
-                ->find()
-                ->innerJoinWith('ClassGrades', function ($q) use ($educationGradeId) {
-                    return $q->where(['ClassGrades.education_grade_id' => $educationGradeId]);
-                })
-                ->where([
-                    $InstitutionClasses->aliasField('id') => $data['institution_class_id'],
-                    $InstitutionClasses->aliasField('institution_id') => $data['institution_id'],
-                    $InstitutionClasses->aliasField('academic_period_id') => $data['academic_period_id'],
-                ])
-                ->count();
+            ->find()
+            ->innerJoinWith('ClassGrades', function ($q) use ($educationGradeId) {
+                return $q->where(['ClassGrades.education_grade_id' => $educationGradeId]);
+            })
+            ->where([
+                $InstitutionClasses->aliasField('id') => $data['institution_class_id'],
+                $InstitutionClasses->aliasField('institution_id') => $data['institution_id'],
+                $InstitutionClasses->aliasField('academic_period_id') => $data['academic_period_id'],
+            ])
+            ->count();
 
         return !($availableClass == 0);
     }
@@ -2961,12 +2961,12 @@ class ValidationBehavior extends Behavior
         $StaffPositionGrades = TableRegistry::getTableLocator()->get('Institution.StaffPositionGrades');
 
         $institutionPositionGrades = $InstitutionPositions->find()
-                            //->distinct('staff_position_grade_id') //POCOR-7839
-                            ->where([
-                                $InstitutionPositions->aliasField('staff_position_title_id') => $globalData['data']['id']
-                            ])
-                            ->extract('staff_position_grade_id')
-                            ->toArray();
+            //->distinct('staff_position_grade_id') //POCOR-7839
+            ->where([
+                $InstitutionPositions->aliasField('staff_position_title_id') => $globalData['data']['id']
+            ])
+            ->extract('staff_position_grade_id')
+            ->toArray();
 
         if(!empty($institutionPositionGrades)) {  // not empty means position title in use & there's associated grade
             $postPositionGrades = $globalData['data']['position_grades']['_ids'];
@@ -3074,22 +3074,22 @@ class ValidationBehavior extends Behavior
         $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
 
         $query = $InstitutionClasses->find()
-                ->matching('Staff.InstitutionStaff.Positions')
-                ->where([
-                    'Positions.id' => $globalData['data']['id']
-                ])
-                ->count();
+            ->matching('Staff.InstitutionStaff.Positions')
+            ->where([
+                'Positions.id' => $globalData['data']['id']
+            ])
+            ->count();
 
         if ($query > 0) {
             return false;
         }
 
         $query = $InstitutionClasses->find()
-                ->matching('ClassesSecondaryStaff.SecondaryStaff.InstitutionStaff.Positions')
-                ->where([
-                    'Positions.id' => $globalData['data']['id']
-                ])
-                ->count();
+            ->matching('ClassesSecondaryStaff.SecondaryStaff.InstitutionStaff.Positions')
+            ->where([
+                'Positions.id' => $globalData['data']['id']
+            ])
+            ->count();
 
         if ($query > 0) {
             return false;
@@ -3186,57 +3186,7 @@ class ValidationBehavior extends Behavior
 
 
 
-    public static function check_validate_number($field, array $globalData)
-    {
-        //$field is for external variable
-        $nationalityTable = TableRegistry::getTableLocator()->get('Nationalities')
-                            ->find()
-                            ->where([
-                                'Nationalities.id' => $globalData['data']['nationality_id']
-                            ])
-                            ->first();
-        if($nationalityTable->external_validation == 1){
-            if($globalData['data']['id'] != '' && $globalData['data']['identity_type_id'] != '' && $globalData['data']['number'] != ''){
-                //edit nationality case
-                $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types');
-                $UserIdentities = TableRegistry::getTableLocator()->get('UserIdentities');
-                $identityTypeData = $UserIdentities
-                                        ->find()
-                                        ->select([
-                                            $UserIdentities->aliasField('id'),
-                                            $UserIdentities->aliasField('identity_type_id'),
-                                            $IdentityTypes->aliasField('name'),
-                                            $UserIdentities->aliasField('number'),
-                                            $UserIdentities->aliasField('nationality_id'),
-                                        ])
-                                        ->leftJoin(
-                                            [$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
-                                                $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
-                                            ]
-                                        )
-                                        ->where([
-                                            'UserIdentities.identity_type_id' => $globalData['data']['identity_type_id'],
-                                            'UserIdentities.nationality_id' => $globalData['data']['nationality_id'],
-                                            'UserIdentities.security_user_id' => $globalData['data']['security_user_id']
-                                        ])
-                                        ->first();
-                if(!empty($identityTypeData)){
-                    if($identityTypeData->number == $globalData['data']['number']){
-                        return true;
-                    }else if($identityTypeData->number != $globalData['data']['number'] && $globalData['data']['validate_number'] == 1){
-                        return true;
-                    }
-                }
-                return false;
-            }else{
-                //add nationality
-                if($globalData['data']['validate_number'] == 0){
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
+    // POCOR-8989 removed
 
 
     public static function check_identity_type_id_validation($field)
@@ -3303,40 +3253,40 @@ class ValidationBehavior extends Behavior
         $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
         $InstitutionStudentAbsences = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsences');
         $studentStatus = $institutionStudents->find()
-                        ->select([$studentStatuses->aliasField('code')])
-                        ->leftJoin([$studentStatuses->getAlias() => $studentStatuses->getTable()], [
-                            $studentStatuses->aliasField('id = ') . $institutionStudents->aliasField('student_status_id')
-                        ])
-                        ->where([
-                            $institutionStudents->aliasField('student_id') => $studentId,
-                            $institutionStudents->aliasField('institution_id') => $institutionId
-                        ])
-                        ->first();
+            ->select([$studentStatuses->aliasField('code')])
+            ->leftJoin([$studentStatuses->getAlias() => $studentStatuses->getTable()], [
+                $studentStatuses->aliasField('id = ') . $institutionStudents->aliasField('student_status_id')
+            ])
+            ->where([
+                $institutionStudents->aliasField('student_id') => $studentId,
+                $institutionStudents->aliasField('institution_id') => $institutionId
+            ])
+            ->first();
         $code = $studentStatus['student_statuses']['code'];
 
         if (!empty($code) && $code != 'CURRENT') {
-           $check = $StudentAttendanceMarkedRecords->find()
-                    ->select([$StudentAttendanceMarkedRecords->aliasField('date')])
-                    ->where([
-                        $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
-                        $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
-                        $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $classId,
-                        $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $gradeId,
-                        $StudentAttendanceMarkedRecords->aliasField('date') => $startDate
-                    ])->first();
+            $check = $StudentAttendanceMarkedRecords->find()
+                ->select([$StudentAttendanceMarkedRecords->aliasField('date')])
+                ->where([
+                    $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
+                    $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
+                    $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $classId,
+                    $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $gradeId,
+                    $StudentAttendanceMarkedRecords->aliasField('date') => $startDate
+                ])->first();
 
             if (!empty($check)) {
                 $markedDate = $check->date->format('Y-m-d');
             }
 
             $checkTwo = $InstitutionStudentAbsences->find()
-                        ->select([$InstitutionStudentAbsences->aliasField('date')])
-                        ->where([
-                            $InstitutionStudentAbsences->aliasField('date') => $startDate,
-                            $InstitutionStudentAbsences->aliasField('institution_id') => $institutionId,
-                            $InstitutionStudentAbsences->aliasField('student_id') => $studentId
-                        ])
-                        ->first();
+                ->select([$InstitutionStudentAbsences->aliasField('date')])
+                ->where([
+                    $InstitutionStudentAbsences->aliasField('date') => $startDate,
+                    $InstitutionStudentAbsences->aliasField('institution_id') => $institutionId,
+                    $InstitutionStudentAbsences->aliasField('student_id') => $studentId
+                ])
+                ->first();
             if (!empty($checkTwo)) {
                 $unmarkedDate = $checkTwo->date->format('Y-m-d');
             }
@@ -3344,8 +3294,8 @@ class ValidationBehavior extends Behavior
             if (!empty($check)) {
                 $query = $institutionStudents->query();
                 if (!empty($startDate)) {
-                   if ($startDate > $markedDate) {
-                       return false;
+                    if ($startDate > $markedDate) {
+                        return false;
                     } else {
                         return true;
                     }
@@ -3355,8 +3305,8 @@ class ValidationBehavior extends Behavior
             if (!empty($checkTwo)) {
                 $query = $institutionStudents->query();
                 if (!empty($startDate)) {
-                   if ($startDate > $unmarkedDate) {
-                       return false;
+                    if ($startDate > $unmarkedDate) {
+                        return false;
                     } else {
                         return true;
                     }
@@ -3364,78 +3314,78 @@ class ValidationBehavior extends Behavior
             }
 
             if (empty($checkTwo) && empty($check)) {
-                 return true;
+                return true;
             }
         } else {
-			return true;
-		}
+            return true;
+        }
     }
 
-	public static function forLatitudeLength($field, array $globalData)
+    public static function forLatitudeLength($field, array $globalData)
     {
-		if(!empty($field)){
-			$ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        if(!empty($field)){
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
-			$latitudeData = $ConfigItems->find()
-				->select([
-					$ConfigItems->aliasField('value'),
-					$ConfigItems->aliasField('default_value'),
-				   ])
-				   ->where([
-						$ConfigItems->aliasField('code') => 'latitude_length',
-					])
-				->first();
+            $latitudeData = $ConfigItems->find()
+                ->select([
+                    $ConfigItems->aliasField('value'),
+                    $ConfigItems->aliasField('default_value'),
+                ])
+                ->where([
+                    $ConfigItems->aliasField('code') => 'latitude_length',
+                ])
+                ->first();
 
-			$default_length = 0;
-			if (!empty($latitudeData->value)) {
-				$default_length = $latitudeData->value;
-			} else {
-				$default_length = $latitudeData->default_value;
-			}
+            $default_length = 0;
+            if (!empty($latitudeData->value)) {
+                $default_length = $latitudeData->value;
+            } else {
+                $default_length = $latitudeData->default_value;
+            }
 
-			$latitude = explode(".",$globalData['data']['latitude']);
-			$latitude_length = strlen($latitude[1]);
+            $latitude = explode(".",$globalData['data']['latitude']);
+            $latitude_length = strlen($latitude[1]);
 
-			if($latitude_length < $default_length) {
-				return false;
-			} else {
-				return true;
-			}
-		}
+            if($latitude_length < $default_length) {
+                return false;
+            } else {
+                return true;
+            }
+        }
 
     }
 
-	public static function forLongitudeLength($field, array $globalData)
+    public static function forLongitudeLength($field, array $globalData)
     {
-		if(!empty($field)){
-			$ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        if(!empty($field)){
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
-			$longitudeData = $ConfigItems->find()
-				->select([
-					$ConfigItems->aliasField('value'),
-					$ConfigItems->aliasField('default_value'),
-				   ])
-				   ->where([
-						$ConfigItems->aliasField('code') => 'longitude_length',
-					])
-				->first();
+            $longitudeData = $ConfigItems->find()
+                ->select([
+                    $ConfigItems->aliasField('value'),
+                    $ConfigItems->aliasField('default_value'),
+                ])
+                ->where([
+                    $ConfigItems->aliasField('code') => 'longitude_length',
+                ])
+                ->first();
 
-			$longitude = explode(".",$globalData['data']['longitude']);
-			$longitude_length = strlen($longitude[1]);
+            $longitude = explode(".",$globalData['data']['longitude']);
+            $longitude_length = strlen($longitude[1]);
 
-			$default_length = 0;
-			if (!empty($longitudeData->value)) {
-				$default_length = $longitudeData->value;
-			} else {
-				$default_length = $longitudeData->default_value;
-			}
+            $default_length = 0;
+            if (!empty($longitudeData->value)) {
+                $default_length = $longitudeData->value;
+            } else {
+                $default_length = $longitudeData->default_value;
+            }
 
-			if($longitude_length < $default_length) {
-				return false;
-			} else {
-				return true;
-			}
-		}
+            if($longitude_length < $default_length) {
+                return false;
+            } else {
+                return true;
+            }
+        }
 
     }
 
@@ -3450,25 +3400,25 @@ class ValidationBehavior extends Behavior
         $EducationLevels = TableRegistry::getTableLocator()->get('Education.EducationLevels');
         $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $checkCode = $EducationCycles
-                                ->find()
-                                ->leftJoin([$EducationLevels->getAlias() => $EducationLevels->getTable()], [
-                                        $EducationLevels->aliasField('id =') . $EducationCycles->aliasField('education_level_id'),
-                                        $EducationLevels->aliasField('visible') => 1
-                                ])
-                                ->leftJoin([$EducationSystems->getAlias() => $EducationSystems->getTable()], [
-                                        $EducationSystems->aliasField('id =') . $EducationLevels->aliasField('education_system_id'),
-                                        $EducationSystems->aliasField('visible') => 1
-                                ])
-                                ->where([
-                                    $EducationCycles->aliasField('id') => $cycleId
-                            ])->first();
+            ->find()
+            ->leftJoin([$EducationLevels->getAlias() => $EducationLevels->getTable()], [
+                $EducationLevels->aliasField('id =') . $EducationCycles->aliasField('education_level_id'),
+                $EducationLevels->aliasField('visible') => 1
+            ])
+            ->leftJoin([$EducationSystems->getAlias() => $EducationSystems->getTable()], [
+                $EducationSystems->aliasField('id =') . $EducationLevels->aliasField('education_system_id'),
+                $EducationSystems->aliasField('visible') => 1
+            ])
+            ->where([
+                $EducationCycles->aliasField('id') => $cycleId
+            ])->first();
         if (!empty($checkCode)) {
             $existProgrammes = $EducationProgrammes->find()
-                            ->where([
-                                $EducationProgrammes->aliasField('code') => $code,
-                                $EducationProgrammes->aliasField('education_cycle_id') => $checkCode->id
-                            ])
-                            ->first();
+                ->where([
+                    $EducationProgrammes->aliasField('code') => $code,
+                    $EducationProgrammes->aliasField('education_cycle_id') => $checkCode->id
+                ])
+                ->first();
         }
         if (!empty($existProgrammes)) {
             return false;
@@ -3489,28 +3439,28 @@ class ValidationBehavior extends Behavior
         $EducationLevels = TableRegistry::getTableLocator()->get('Education.EducationLevels');
         $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $checkCode = $EducationProgrammes->find()
-                        ->leftJoin([$EducationCycles->getAlias() => $EducationCycles->getTable()], [
-                                        $EducationCycles->aliasField('id =') . $EducationProgrammes->aliasField('education_cycle_id'),
-                                        $EducationCycles->aliasField('visible') => 1
-                        ])
-                        ->leftJoin([$EducationLevels->getAlias() => $EducationLevels->getTable()], [
-                                $EducationLevels->aliasField('id =') . $EducationCycles->aliasField('education_level_id'),
-                                $EducationLevels->aliasField('visible') => 1
-                        ])
-                        ->leftJoin([$EducationSystems->getAlias() => $EducationSystems->getTable()], [
-                                $EducationSystems->aliasField('id =') . $EducationLevels->aliasField('education_system_id'),
-                                $EducationSystems->aliasField('visible') => 1
-                        ])
-                        ->where([
-                            $EducationProgrammes->aliasField('id') => $programmeId
-                    ])->first();
+            ->leftJoin([$EducationCycles->getAlias() => $EducationCycles->getTable()], [
+                $EducationCycles->aliasField('id =') . $EducationProgrammes->aliasField('education_cycle_id'),
+                $EducationCycles->aliasField('visible') => 1
+            ])
+            ->leftJoin([$EducationLevels->getAlias() => $EducationLevels->getTable()], [
+                $EducationLevels->aliasField('id =') . $EducationCycles->aliasField('education_level_id'),
+                $EducationLevels->aliasField('visible') => 1
+            ])
+            ->leftJoin([$EducationSystems->getAlias() => $EducationSystems->getTable()], [
+                $EducationSystems->aliasField('id =') . $EducationLevels->aliasField('education_system_id'),
+                $EducationSystems->aliasField('visible') => 1
+            ])
+            ->where([
+                $EducationProgrammes->aliasField('id') => $programmeId
+            ])->first();
         if (!empty($checkCode)) {
             $existGrades = $EducationGrades->find()
-                            ->where([
-                                $EducationGrades->aliasField('code') => $code,
-                                $EducationGrades->aliasField('education_programme_id') => $checkCode->id
-                            ])
-                            ->first();
+                ->where([
+                    $EducationGrades->aliasField('code') => $code,
+                    $EducationGrades->aliasField('education_programme_id') => $checkCode->id
+                ])
+                ->first();
         }
         if (!empty($existGrades)) {
             return false;
@@ -3531,7 +3481,7 @@ class ValidationBehavior extends Behavior
                 $userIdentities->aliasField('identity_type_id') => $data['identity_type_id']
             ])
             ->count()
-            ;
+        ;
         if($IdentitiesEntity > 0){
             $validationErrorMsg = $model->getMessage('Institution.Students.identity_number.ruleCheckUniqueIdentityNumber');
             return $validationErrorMsg;
@@ -3579,10 +3529,10 @@ class ValidationBehavior extends Behavior
         $shift = $data['shift_id'];
         $shiftOptions = TableRegistry::getTableLocator()->get('shift_options');
         $query = $shiftOptions->find()
-                ->where([
-                    'id' => $globalData['data']['id']
-                ])
-                ->count();
+            ->where([
+                'id' => $globalData['data']['id']
+            ])
+            ->count();
 
         if ($query < 0) {
             return false;

@@ -717,8 +717,8 @@ class WorkflowActionsTable extends AppTable
     }
     //POCOR-8434 starts
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-        // POCOR-8128
-        if (!property_exists($this, 'request') || !$this->getRequest()) {
+        // POCOR-8128, POCOR-9047
+        if (!property_exists($this, 'request') || !method_exists($this, 'getRequest') || !$this->getRequest()) {
             return;
         }
         $queryString = $this->getQueryString();

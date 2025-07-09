@@ -484,6 +484,10 @@ trait MessagesTrait
         'Users' => [
             'student_category' => 'Category',
             'status' => 'Status',
+            'openemis_no' => 'Openemis No', // POCOR-9046
+            'name' => 'Name', // POCOR-9046
+            'gender' => 'Gender', // POCOR-9046
+            'gender_id' => 'Gender', // POCOR-9046
             'select_student' => 'Select Student',
             'select_users' => 'Select Users', // POCOR-7362
             'select_student_empty' => 'No Other Student Available',
@@ -780,7 +784,8 @@ trait MessagesTrait
             'noGrades' => 'No Grades',
             'noClassSubjectSelected' => 'Please select Subject and Textbook before adding record',
             'noTextbookStatusCondition' => 'Please define Textbook Status and Condition before proceed',
-            'noTextbookStudent' => 'Please add physical textbook to be added'
+            'noTextbookStudent' => 'Please add physical textbook to be added',
+            'noStudentSelected' => 'Please select student'
         ],
         'InstitutionTextbooks' => [
             'noTextbooks' => 'No Textbooks',

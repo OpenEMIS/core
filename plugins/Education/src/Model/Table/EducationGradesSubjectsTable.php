@@ -235,11 +235,12 @@ class EducationGradesSubjectsTable extends ControllerActionTable
             ->where([$EducationGrades->aliasField('education_programme_id') => $selectedProgramme])
             ->toArray();
         if (!empty($gradeOptions)) {
-            $selectedGrade = !is_null($serverRequest->getAttribute('query')['grade']) ? $serverRequest->getAttribute('query')['grade'] : key($gradeOptions);
+            $selectedGrade = !is_null($serverRequest->getQuery('grade')) ? $serverRequest->getQuery('grade') : key($gradeOptions); //POCOR-9220
         } else {
             $gradeOptions = ['0' => '-- '.__('No Education Grade').' --'] + $gradeOptions;
-            $selectedGrade = !empty($serverRequest->getAttribute('query')['grade']) ? $serverRequest->getAttribute('query')['grade'] : 0;
+            $selectedGrade = !empty($serverRequest->getQuery('grade')) ? $serverRequest->getQuery('grade') : 0; //POCOR-9220
         }
+
 
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $this->controller->set(compact('gradeOptions', 'selectedGrade'));

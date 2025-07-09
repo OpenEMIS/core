@@ -414,6 +414,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
         userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
         userCtrl.selectedUserData.email = selectedData.email;
+        userCtrl.selectedUserData.mobile_number = selectedData.mobile_number;
         userCtrl.selectedUserData.gender_id = selectedData.gender_id;
         userCtrl.selectedUserData.gender = {name: selectedData.gender};
         userCtrl.selectedUserData.nationality_id = selectedData.nationality_id;
@@ -502,6 +503,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
                 userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
                 userCtrl.selectedUserData.email = selectedData.email;
+                userCtrl.selectedUserData.mobile_number = selectedData.mobile_number;
                 userCtrl.selectedUserData.gender_id = selectedData.gender_id;
                 userCtrl.selectedUserData.gender = {name: selectedData.gender};
                 userCtrl.selectedUserData.nationality_id = selectedData.nationality_id;
@@ -549,6 +551,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
             userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
             userCtrl.selectedUserData.email = selectedData.email;
+            userCtrl.selectedUserData.mobile_number = selectedData.mobile_number;
             userCtrl.selectedUserData.gender_id = selectedData.gender_id;
             userCtrl.selectedUserData.gender = {name: selectedData.gender};
             userCtrl.selectedUserData.nationality_id = selectedData.nationality_id;
@@ -609,6 +612,9 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             photo_content: userCtrl.selectedUserData.photo_base_64,
             contact_type: userCtrl.selectedUserData.contact_type_id,
             contact_value: userCtrl.selectedUserData.contact_value,
+            email: userCtrl.selectedUserData.email,
+            mobile_number: userCtrl.selectedUserData.mobile_number,
+
         };
         UtilsSvc.isAppendLoader(true);
         directorySvc.saveGuardianData(params)
@@ -621,6 +627,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 UtilsSvc.isAppendLoader(false);
             }, function (error) {
                 console.error(error);
+                userCtrl.message =  error.data.message || error.statusText || error.toString();
+                userCtrl.messageClass = 'alert-danger';
                 UtilsSvc.isAppendLoader(false);
             });
     }

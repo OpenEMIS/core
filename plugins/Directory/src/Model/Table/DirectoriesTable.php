@@ -224,6 +224,7 @@ class DirectoriesTable extends ControllerActionTable
                 'last_name' => $securityUsers->aliasField('last_name'),
                 'preferred_name' => $securityUsers->aliasField('preferred_name'),
                 'email' => $securityUsers->aliasField('email'),
+                'mobile_number' => $securityUsers->aliasField('mobile_number'), // POCOR-9011
                 'address' => $securityUsers->aliasField('address'),
                 'postal_code' => $securityUsers->aliasField('postal_code'),
                 'date_of_death' => $securityUsers->aliasField('date_of_death'),
@@ -351,6 +352,7 @@ class DirectoriesTable extends ControllerActionTable
                 'last_name' => $securityUsers->aliasField('last_name'),
                 'preferred_name' => $securityUsers->aliasField('preferred_name'),
                 'email' => $securityUsers->aliasField('email'),
+                'mobile_number' => $securityUsers->aliasField('mobile_number'), // POCOR-9011
                 'address' => $securityUsers->aliasField('address'),
                 'postal_code' => $securityUsers->aliasField('postal_code'),
                 'date_of_death' => $securityUsers->aliasField('date_of_death'),
@@ -493,6 +495,8 @@ class DirectoriesTable extends ControllerActionTable
             'postal_code' => $securityUser['postal_code'],
             'photo_name' => $securityUser['photo_name'],
             'photo_content' => $securityUser['photo_content'],
+            'email' => $securityUser['email'], // POCOR-9011
+            'mobile_number' => $securityUser['mobile_number'], // POCOR-9011
             // Add other fields as needed
         ];
 
@@ -1694,7 +1698,9 @@ public function getIdentityTypeData($value_selection)
             $this->field('openemis_no', ['user_type' => $userType]);
             switch ($userType) {
                 case self::STUDENT:
-                    $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
+                    $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities',
+//                        'Contacts'
+                    ]]);
                     $this->addBehavior('CustomField.Record', [
                         'model' => 'Student.Students',
                         'behavior' => 'Student',
@@ -1712,7 +1718,9 @@ public function getIdentityTypeData($value_selection)
                     ]);
                     break;
                 case self::STAFF:
-                    $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
+                    $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' => ['Identities', 'Nationalities',
+//                        'Contacts'
+                    ]]);
                     $this->addBehavior('CustomField.Record', [
                         'model' => 'Staff.Staff',
                         'behavior' => 'Staff',
@@ -1799,7 +1807,11 @@ public function getIdentityTypeData($value_selection)
     {
         switch ($userType) {
             case self::STUDENT:
-                $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
+                $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>
+                    ['Identities',
+                        'Nationalities',
+//                        'Contacts'
+                    ]]);
                 $this->addBehavior('CustomField.Record', [
                     'model' => 'Student.Students',
                     'behavior' => 'Student',
@@ -1817,7 +1829,11 @@ public function getIdentityTypeData($value_selection)
                 ]);
                 break;
             case self::STAFF:
-                $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
+                $this->addBehavior('User.Mandatory', ['userRole' => 'Staff',
+                    'roleFields' => ['Identities',
+                        'Nationalities',
+//                        'Contacts'
+                    ]]);
                 $this->addBehavior('CustomField.Record', [
                     'model' => 'Staff.Staff',
                     'behavior' => 'Staff',
@@ -2300,9 +2316,17 @@ public function getIdentityTypeData($value_selection)
                     }
                     if ($item->code == 'directory_date_of_birth') {
                         if ($item->value == 1) {
-                            $this->field('date_of_birth', ['visible' => true, 'before' => 'student_status']);
+                            try{
+                                $this->field('date_of_birth', ['visible' => true, 'before' => 'student_status']);
+                            }catch (\Exception $exception){
+                                $this->field('date_of_birth', ['visible' => true]);
+                            }
                         } else {
-                            $this->field('date_of_birth', ['visible' => false, 'before' => 'student_status']);
+                            try {
+                                $this->field('date_of_birth', ['visible' => false, 'before' => 'student_status']);
+                            } catch (\Exception $exception) {
+                                $this->field('date_of_birth', ['visible' => true]);
+                            }
                         }
                     }
                     if ($item->code == 'directory_identity_number') {
@@ -2536,7 +2560,7 @@ public function getIdentityTypeData($value_selection)
         if (!$entity->isNew()) {
             if (!$entity->is_student) {
                 $dirty = $entity->getDirty();
-                Log::debug(print_r($dirty,true));
+//                Log::debug(print_r($dirty,true));
                 if (in_array('gender_id', $dirty)) {
                     $this->Alert->error(__('Gender is not editable in Directories') , ['type' => 'string', 'reset' => true]);
                     $entity->setErrors(['gender_id', __('Gender is not editable in Directories')]);
@@ -2861,7 +2885,13 @@ public function getIdentityTypeData($value_selection)
     {
         if(!empty($entity->modified_user_id)) {
             $users = TableRegistry::get('Security.Users');
-            $user = $users->get($entity->modified_user_id);
+            // POCOR-9083 start
+            try {
+                $user = $users->get($entity->modified_user_id);
+            } catch (\Exception $e) {
+                return $entity->modified_user_id; // Handle the absence of the user gracefully
+            }
+            // POCOR-9083 end
             return $user->name;
         }
     }
@@ -2869,8 +2899,16 @@ public function getIdentityTypeData($value_selection)
     public function onGetCreatedUserId(Event $event, Entity $entity)
     {
         $users = TableRegistry::get('Security.Users');
-        $user = $users->get($entity->created_user_id);
-        return $user->name;
+        // POCOR-9083 start
+        if(!empty($entity->created_user_id)) {
+            try {
+                $user = $users->get($entity->created_user_id);
+            } catch (\Exception $e) {
+                return $entity->created_user_id; // Handle the absence of the user gracefully
+            }
+            return $user->name;
+        }
     }
+    // POCOR-9083 end
     //POCOR-8743 End
 }

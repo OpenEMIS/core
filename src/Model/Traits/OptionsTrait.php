@@ -1,15 +1,32 @@
 <?php
 namespace App\Model\Traits;
+use Cake\ORM\TableRegistry;
+use Cake\Collection\Collection;
 
 trait OptionsTrait
 {
     public function getSelectOptions($code)
     {
+        // $WorkFlows = TableRegistry::get("WorkFlow.WorkFlows" );
+        // $WorkFlowData = $WorkFlows->find('all')->where(['code' => "STUDENT-ADMISSION-1001"])->extract('id')->first();
+        // $WorkFlowSteps = TableRegistry::get('WorkFlow.WorkFlowSteps');
+        // $WorkFlowStepData = $WorkFlowSteps->find('all')->where(['workflow_id' => $WorkFlowData])->toArray();
+        // $workflowStepsDataArr = (new Collection($WorkFlowStepData))
+        //                     ->combine('id', 'name')
+        //                     ->toArray();
+
+        // $workflowDataSelected = [];
+        // foreach ($workflowStepsDataArr as $key => $value) {
+        //     if ($value === 'Approved') {
+        //         $workflowDataSelected[$key] =$value;
+        //     }
+        // }
         $options = [
             'general' => [
                 'active' => [1 => __('Active'), 0 => __('Inactive')],
                 'yesno' => [1 => __('Yes'), 0 => __('No')],
                 'enabledisable' => [1 => __('Enabled'), 0 => __('Disabled')],
+                'overallresult' => [1 => __('Academic Period'), 0 => __('Assessment Period')],
             ],
             'Authentication' => [
                 'yesno' => [0 => __('No'), 1 => __('Yes')]
@@ -91,7 +108,7 @@ trait OptionsTrait
             ],
             'Institutions' => [
                 'classifications' => [1 => __('Academic Institution'), 2 => __('Non-Academic Institution')]
-            ],            
+            ],
             'InstitutionInfrastructure' => [
                 'change_types' => [1 => __('Update Details'), 2 => __('End of Usage'), 3 => __('Change in Type')]
             ],
@@ -222,8 +239,31 @@ trait OptionsTrait
                         ]
                     ],
                 //POCOR-7462 end
+
+                //POCOR-8869 start
+                'StudentAdmission' => [
+                    'workflow_steps' => [
+                        80 => __('Open'),
+                        81 => __('Pending Approval'),
+                        82 => __('Approved'),
+                        83 => __('Rejected'),
+                        84 => __('Pending Cancellation'),
+                        85 => __('Cancelled'),
+                    ]
+                ],
+                'StudentEnrolment' => [
+                    'workflow_steps' => [
+                        134 => __('Open'),
+                        135 => __('Pending Approval'),
+                        136 => __('Approved'),
+                        137 => __('Rejected'),
+                        138 => __('Pending Cancellation'),
+                        139 => __('Cancelled'),
+                    ]
+                ],
+                //POCOR-8869 end
             ],
-            
+
         ];
 
         $index = explode('.', $code);

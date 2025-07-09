@@ -988,11 +988,13 @@ class LandsTable extends ControllerActionTable
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->find('visible')
             ->toArray();
-
+        if(!$typeOptions) {
+            $typeOptions = []; // POCOR-9074
+        }
         if ($withAll && count($typeOptions) > 1) {
             $typeOptions = ['-1' => __('All Land Types')] + $typeOptions;
         }
-        $selectedType = $this->queryString('type', $typeOptions);
+        $selectedType = $this->queryString('type', $typeOptions) ?? -1; // POCOR-9074
         $this->advancedSelectOptions($typeOptions, $selectedType);
 
         return compact('typeOptions', 'selectedType');
