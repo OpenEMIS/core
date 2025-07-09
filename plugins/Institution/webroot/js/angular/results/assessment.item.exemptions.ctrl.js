@@ -105,7 +105,7 @@ function AssessmentItemExemptionsController(
     }
 
     function getTeacherOptions() {
-        var promise = InstitutionAssociationsSvc.getTeacherOptions(
+        var promise = InstitutionDepartmentsSvc.getTeacherOptions(
             Controller.institutionId,
             Controller.academicPeriodId
         );

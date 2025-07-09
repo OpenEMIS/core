@@ -1,6 +1,6 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
-<?= $this->Html->script('Institution.angular/institutionassociations/institution.departments.svc', ['block' => true]); ?>
-<?= $this->Html->script('Institution.angular/institutionassociations/institution.departments.ctrl', ['block' => true]); ?>
+<?= $this->Html->script('Institution.angular/institutiondepartments/institution.departments.svc', ['block' => true]); ?>
+<?= $this->Html->script('Institution.angular/institutiondepartments/institution.departments.ctrl', ['block' => true]); ?>
 <?= $this->Html->css('ControllerAction.../plugins/chosen/css/chosen.min', ['block' => true]); ?>
 <?= $this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min', ['block' => true]); ?>
 <?= $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', ['block' => true]); ?>
