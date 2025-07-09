@@ -743,13 +743,15 @@ class AssessmentResultsTable extends AppTable
                 foreach ($assessmentPeriods as $assessment_period_id => $assessment_period) {
                     foreach ($student_ids as $student_id) {
                         if (!isset($sep[$student_id][$education_subject_id][$assessment_period_id])) {
-                            $missingMark = [
-                                'student_id' => $student_id,
-                                'assessment_id' => $assessment_id,
-                                'education_subject_id' => $education_subject_id,
-                                'assessment_period_id' => $assessment_period_id,
-                            ];
-                            $marks_exempts[] = $missingMark;
+                            //POCOR-9239 -- Commenting $missingMark code as it substituted 0 for missing values
+                            // $missingMark = [
+                            //     'student_id' => $student_id,
+                            //     'assessment_id' => $assessment_id,
+                            //     'education_subject_id' => $education_subject_id,
+                            //     'assessment_period_id' => $assessment_period_id,
+                            // ];
+                            // $marks_exempts[] = $missingMark;
+                            continue;
                         }
                     }
                 }
@@ -891,10 +893,18 @@ class AssessmentResultsTable extends AppTable
 
                                 }
                             }else{
-                                $totalMarksPerStudent[$assessmentI]['simple_mark'] = 'EXEMPT';
-                                $totalMarksPerStudent[$assessmentI]['marks'] = 'EXEMPT';
-                                $totalMarksPerStudent[$assessmentI]['academic_term_total_marks'] = 'EXEMPT';
-                                $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = 'EXEMPT';
+                                //POCOR-9042 starts
+                                if($totalMarksPerStudent[$assessmentI]['type'] == 2){
+                                    $totalMarksPerStudent[$assessmentI]['simple_mark'] = 'UNASSIGN';
+                                    $totalMarksPerStudent[$assessmentI]['marks'] = 'UNASSIGN';
+                                    $totalMarksPerStudent[$assessmentI]['academic_term_total_marks'] = 'UNASSIGN';
+                                    $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = 'UNASSIGN';
+                                }else{//POCOR-9042 ends
+                                    $totalMarksPerStudent[$assessmentI]['simple_mark'] = 'EXEMPT';
+                                    $totalMarksPerStudent[$assessmentI]['marks'] = 'EXEMPT';
+                                    $totalMarksPerStudent[$assessmentI]['academic_term_total_marks'] = 'EXEMPT';
+                                    $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = 'EXEMPT';
+                                }                                
                             }
 //                            $totalMarksPerStudent[$assessmentI][$markkey] = $markval;
                             $assessmentI++;

@@ -62,7 +62,7 @@ class AppraisalTypesTable extends ControllerActionTable
         }else if ($field == 'name') {
             return __('Name');
         }else if ($field == 'field_type_id') {
-            return __('Field Typeles');
+            return __('Field Type');//POCOR-8864
         }else if ($field == 'modified_user_id') {
             return __('Modified By');
         }else if ($field == 'modified') {

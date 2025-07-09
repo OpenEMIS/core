@@ -38,8 +38,32 @@ function AssessmentItemExemptionsSvc($http, $q, $filter, KdDataSvc) {
         return translation.translate(data, {success:success, defer: true});
     }
 
-
+    //POCOR-9114 -- code changes for multiple assessment periods -- START
     function getExemptStudents(options) {
+        if (Array.isArray(options.assessment_period_id)) {
+            // Create a custom combined field
+            options.assessment_period_combo = options.assessment_period_id.join('_');
+
+            // Retain only the first value in the original field
+            options.assessment_period_id = options.assessment_period_id[0];
+        }
+
+        var success = function(response, deferred) {
+            // console.log('response', response); //POCOR-9197
+            if (response.data && response.data.data) {
+                deferred.resolve(response.data.data);
+            } else {
+                deferred.resolve([]);
+            }
+        };
+
+        return InstitutionClassStudents
+            .find('exemptStudents', options)
+            .ajax({ success: success, defer: true });
+    }
+    //POCOR-9114 -- code changes for multiple assessment periods -- END
+
+    function getExemptStudentsOld(options) {
         var success = function(response, deferred) {
 
             if (response.data.data) {

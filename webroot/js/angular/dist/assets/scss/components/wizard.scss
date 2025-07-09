@@ -1,0 +1,455 @@
+@charset "UTF-8";
+
+
+
+/* *
+*    Wizard V1.1.0
+*    created by: Grace Pek
+*    created on: 12 Dec 2017
+*    plugins: primeng tooltip
+*     lookout for: css of primeng tooltip that affects positioning (for primeng version 4.3.0)
+**/
+
+.kdx-wizard {
+    .kdx-wizard-steps-container {
+        align-items: center;
+        border-radius: 4px 4px 0 0;
+        overflow-x: hidden;
+        overflow-y: hidden;
+        border: $lightGreyBorder;
+        border-bottom: none;
+        width: 100%;
+
+        .kdx-wizard-inner-wrapper {
+            transition-timing-function: ease-in-out;
+            -webkit-transition-timing-function: ease-in-out;
+            -moz-transition-timing-function: ease-in-out;
+            -o-transition-timing-function: ease-in-out;
+            transition: 0.5s;
+            -webkit-transition: 0.5s;
+            -moz-transition: 0.5s;
+            -o-transition: 0.5s;
+        }
+
+        ul {
+            list-style-type: none;
+            display: flex;
+            margin: $noMargin;
+            padding: $noPadding;
+            height: 100%;
+            width: 100%;
+        }
+        li {
+            list-style-type: none;
+            display: flex;
+            justify-content: center;
+            position: relative;
+            flex: 1 0 230px;
+            background-color: #f9f9f9;
+            margin-bottom: $margin15;
+            border-bottom: $lightGreyBorder;
+
+            @media #{$mobileLandscape} {
+                flex: 1 0 150px;
+            }
+
+            @media #{$mobilePortrait} {
+                flex: 1 0 100px;
+            }
+
+            .kdx-step-progress-and-icon {
+                width: 100%;
+                position: relative;
+                height: 58px;
+
+                &:before {
+                    content: "";
+                    height: 4px;
+                    width: 50%;
+                    position: absolute;
+                    left: 0;
+                    top: 38px;
+                }
+
+                &:after {
+                    content: "";
+                    height: 4px;
+                    width: 50%;
+                    position: absolute;
+                    right: 0;
+                    top: 38px;
+                }
+
+                &.kdx-bar-hide-first {
+                    &:before {
+                        display: none;
+                    }
+                }
+
+                &.kdx-bar-hide-last {
+                    &:after {
+                        display: none;
+                    }
+                }
+            }
+        }
+
+        .kdx-step-container {
+            height: 100%;
+            width: 100%;
+            text-align: center;
+        }
+        .kdx-step-icon {
+            font-size: $textSizeM;
+            width: 40px;
+            border-radius: 50%;
+            height: 40px;
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            position: absolute;
+            top: 18px;
+            z-index: 2;
+            left: calc(50% - 20px);
+        }
+        .kdx-step-text {
+            display: inline-block;
+            margin-top: 4px;
+            margin-bottom: $margin10;
+            position: relative;
+            z-index: 2;
+        }
+        .step-label {
+            font-size: $bodyTextSize;
+            font-weight: bold;
+            max-width: 200px;
+            margin: $noMargin auto;
+
+            @media #{$mobileLandscape} {
+                max-width: 130px;
+            }
+            @media #{$mobilePortrait} {
+                max-width: 80px;
+            }
+        }
+        .step-description {
+            font-size: $textSizeXXS;
+            max-width: 200px;
+
+            @media #{$mobileLandscape} {
+                display: none;
+            }
+        }
+
+        .ellipsis-wizard {
+            @extend .ellipsis;
+        }
+        .kdx-wizard-step-selected {
+
+            .kdx-step-progress-and-icon {
+                &:after {
+                    background-color: $lightGreyColor !important;
+                }
+                .kdx-step-icon {
+                    background-color: #000000 !important;
+                }
+            }
+
+            .step-label {
+                color: #000000 !important;
+            }
+
+            &:before {
+                position: absolute;
+                content: "\f0d7";
+                font: normal normal normal 14px/1 $fontAwesome;
+                font-size: 49px;
+                bottom: -30px;
+                color: $lightGreyColor;
+                left: calc(50% - 14px);
+            }
+
+            &:after {
+                position: absolute;
+                content: "\f0d7";
+                font: normal normal normal 14px/1 $fontAwesome;
+                font-size: 49px;
+                bottom: -28px;
+                color: #F9F9F9;
+                left: calc(50% - 14px);
+            }
+        }
+        .step-enabled {
+            cursor: default;
+
+            .kdx-step-progress-and-icon {
+                &:before,
+                &:after {
+                    background-color: $successColor;
+                }
+                .kdx-step-icon {
+                    background-color: $successColor;
+                    color: $whiteColor;
+                }
+            }
+
+            .step-label {
+                color: $successColor;
+            }
+
+            .step-description {
+                color: #333333;
+            }
+        }
+        .step-disabled {
+            cursor: not-allowed;
+
+            .kdx-step-progress-and-icon {
+                &:before,
+                &:after {
+                    background-color: $lightGreyColor;
+                }
+                .kdx-step-icon {
+                    background-color: $lightGreyColor;
+                    color: #999999;
+                }
+            }
+
+            .step-label {
+                color: #999999;
+            }
+            .step-description {
+                color: #999999;
+            }
+        }
+    }
+
+    .steps-content {
+        border-right: $lightGreyBorder;
+        border-left: $lightGreyBorder;
+        width: 100%;
+        height: 100%;
+        display: inline-block;
+
+        .step-content {
+            width: 100%;
+            padding: $padding10;
+        }
+        .step-pane {
+            font-size: $bodyTextSize;
+        }
+        .step-text-mobile {
+            display: none;
+            padding-top: $padding5;
+            padding-bottom: $padding10;
+            padding-left: $padding10;
+            padding-right: $padding10;
+
+            .step-label-mobile,
+            .step-descripion-mobile {
+                display: none;
+            }
+
+            .step-label-mobile {
+                font-size: $textSizeM;
+                font-weight: bold;
+            }
+            .step-description-mobile {
+                font-size: $bodyTextSize;
+            }
+
+            @media #{$mobileLandscape} {
+                display: block;
+
+                .step-label-mobile,
+                .step-descripion-mobile {
+                    display: block;
+                }
+            }
+        }
+    }
+    .steps-bottom {
+        height: 48px;
+        background-color: #F9F9F9;
+        border: $lightGreyBorder;
+        width: 100%;
+        display: flex;
+        align-items: center;
+
+        .actions-bottom {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            padding-left: $padding10;
+            padding-right: $padding10;
+        }
+        .actions-hide {
+            display: none;
+        }
+        button {
+            position: relative;
+        }
+        .previous-button {
+            padding-left: 22px;
+        }
+        .next-button {
+            padding-right: 22px;
+        }
+        .icon {
+            font-size: $iconSizeS;
+        }
+        .previous-icon {
+            position: absolute;
+            left: 10px;
+        }
+        .next-icon {
+            position: absolute;
+            right: 10px;
+        }
+    }
+    .btn {
+        transition-property: all;
+        transition-duration: 0.8s;
+    }
+}
+
+
+
+
+
+/**
+ * current primeng tooltip version: 4.3.0. appends tooltipStyleClass after position caluculation.
+ * Hence, any css that affects positioning should be placed under class passed in through HTML string (which is appended before position calculation)
+ * instead of .ui-tooltip.classPassedInThroughtooltipStyleClass
+ */
+
+.ui-tooltip.tooltip-wizard {
+    .ui-tooltip-arrow {
+        border-bottom-color: $styleguideBgColor !important;
+    }
+
+    .ui-tooltip-text {
+        background-color: $styleguideBgColor !important;
+        white-space: normal !important;
+        display: inline-block;
+    }
+}
+
+
+
+
+
+/**
+ * class passed in through HTML string via [pTooltip]. 
+ * Do all css that affects position here (eg: padding, font-size).
+ */
+
+.tooltip-wizard-text {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    padding-left: 3px;
+    padding-right: 3px;
+    display: inline-block;
+
+    .tooltip-label {
+        font-size: $textSizeM;
+        line-height: 1.2em;
+        color: white;
+        text-align: left;
+    }
+    .tooltip-description {
+        font-size: $bodyTextSize;
+        margin-top: $margin10;
+        color: white;
+        text-align: left;
+    }
+}
+
+
+.rtl {
+    .kdx-wizard {
+        .kdx-step-progress-and-icon {
+            &.kdx-bar-hide-first {
+                &:before {
+                    display: block !important;
+                }
+                &:after {
+                    display: none !important;
+                }
+            }
+
+            &.kdx-bar-hide-last {
+                &:before {
+                    display: none !important;
+                }
+                &:after {
+                    display: block !important;
+                }
+            }
+        }
+        .kdx-wizard-step-selected {
+            .kdx-step-progress-and-icon {
+                &:before {
+                    background-color: $lightGreyColor !important;
+                }
+                &:after {
+                    background-color: $successColor !important;
+                }
+            }
+        }
+        .step-label {
+            font-size: $textSizeS;
+        }
+        .step-description {
+            font-size: $bodyTextSize;
+        }
+        .kdx-step-icon {
+            font-size: $textSizeS;
+        }
+        .previous-button {
+            padding-left: 16px;
+            padding-right: 22px;
+        }
+        .next-button {
+            padding-right: 16px;
+            padding-left: 22px;
+        }
+        .icon {
+            font-size: $textSizeS;
+        }
+        .previous-icon {
+            position: absolute;
+            right: 10px;
+            left: auto !important;
+            transform: rotate(180deg);
+        }
+        .next-icon {
+            position: absolute;
+            left: 10px;
+            right: auto !important;
+            transform: rotate(180deg);
+        }
+    }
+
+    .tooltip-wizard-text {
+        .tooltip-label {
+            font-size: $textSizeL;
+            text-align: right;
+        }
+        .tooltip-description {
+            font-size: $textSizeS;
+            text-align: right;
+        }
+    }
+}
+
+.mobile {
+    .step-text-mobile {
+        display: block !important;
+
+        .step-label-mobile,
+        .step-descripion-mobile {
+            display: block !important;
+        }
+    }
+}

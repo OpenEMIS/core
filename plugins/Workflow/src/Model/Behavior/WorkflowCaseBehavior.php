@@ -2216,7 +2216,7 @@ class WorkflowCaseBehavior extends Behavior
                                 if (isset($toolbarButtons['edit']) && !$isEditable) {
                                     unset($toolbarButtons['edit']);
                                 }
-                                
+
                                 if (isset($toolbarButtons['remove']) && !$isDeletable) {
                                     unset($toolbarButtons['remove']);
                                 }

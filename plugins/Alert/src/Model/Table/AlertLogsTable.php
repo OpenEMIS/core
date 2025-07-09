@@ -16,6 +16,8 @@ use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\I18n\FrozenTime; // POCOR-8286
+use Cake\I18n\FrozenDate; // POCOR-8286
 
 class AlertLogsTable extends ControllerActionTable
 {
@@ -33,7 +35,7 @@ class AlertLogsTable extends ControllerActionTable
     {
         parent::initialize($config);
         $this->featureGrouping = $this->getSelectOptions($this->aliasField('feature_grouping'));
-
+        $this->AlertRules = TableRegistry::getTableLocator()->get('Alert.AlertRules');
         $this->toggle('add', false);
         $this->toggle('edit', false);
     }
@@ -74,9 +76,10 @@ class AlertLogsTable extends ControllerActionTable
 
         if ($recordEntity->has('assignee_id') && $recordEntity->assignee_id > 0) {
             // to get the comment inputted on the workflow popup
-            $workflowModelId = $WorkflowModels->find()
+            $workflowModelEntity = $WorkflowModels->find()
                 ->where([$WorkflowModels->aliasField('model') => $modelRegistryAlias])
-                ->first()->id;
+                ->first();
+            $workflowModelId = $workflowModelEntity->id ?? null;
 
             $records = $WorkflowTransitions->find()
                 ->where([
@@ -102,132 +105,141 @@ class AlertLogsTable extends ControllerActionTable
             if ($records) {
                 $lastExecutorId = $records->created_user_id;
                 if($lastExecutorId){ //POCOR-7964
-                    $lastExecutorName = $Users->get($lastExecutorId)->name;
+                    $lastExecutorName = $lastExecutorId;
+                    $lastExecutor = $Users->get($lastExecutorId);
+                    if ($lastExecutor) {
+                        $lastExecutorName = $Users->get($lastExecutorId)->name;
+                    }
                 }
 
-                $vars = $query->enableHydration(false)->first();
+                $vars = $query->disableHydration()->first();
                 $vars['feature'] = $feature;
                 $vars['last_executor_id'] = $lastExecutorId;
-                $vars['last_executor_name'] = $lastExecutorName;
+                $vars['last_executor_name'] = $lastExecutorName ?? $lastExecutorId;
                 $vars['workflow_comment'] = $records->comment;
+                $assigneeData = $vars['assignee'];
+                $recipient = null;
 
-                if (!empty($vars['assignee']['email'])) { // if no email will not insert to alertlog.
-                    $assigneeName = $Users->get($vars['assignee']['id'])->name;
-                    $assigneeEmail = $vars['assignee']['email'];
-                    $recipient = $assigneeName . ' <' . $assigneeEmail . '>';
+                if (
+                    is_array($assigneeData ?? null) &&
+                    !empty($assigneeData['id']) &&
+                    is_numeric($assigneeData['id']) &&
+                    !empty($assigneeData['email'])
+                ) {
+                    // Use `find()->first()` to avoid exception if user not found
+                    $user = $Users->find()
+                        ->where(['id' => $assigneeData['id']])
+                        ->first();
 
+                    if ($user) {
+                        $recipient = $this->formatRecipientNameEmail($user);
+                    }
+                }
+
+                if (!empty($recipient)) {
                     $defaultSubject = __('[${feature}] (${status.name}) ${created_user.first_name} ${created_user.last_name}');
                     $subject = $this->replaceMessage($modelAlias, $defaultSubject, $vars, true);
 
-                    $defaultMessage = __('Your action is required for [${feature} Workflow].');
-                    $defaultMessage .= "\n"; // line break
-                    $defaultMessage .= "\n" . __('Status')      . ': ' . "\t \t"    . '${status.name}' ;
-                    $defaultMessage .= "\n"; // POCOR-8198 line break added
-                    $defaultMessage .= "\n" . __('Sent By')     . ': ' . "\t \t"    . '${last_executor_name}' ;
-                    $defaultMessage .= "\n"; // POCOR-8198 line break added
-                    $defaultMessage .= "\n" . __('Comments')    . ': ' . "\t"    . '${workflow_comment}' ;
+                    $defaultMessage = __('Your action is required for [${feature} Workflow].') . "\n";
+                    $defaultMessage .= "\n" . __('Status') . ': ' . "\t\t" . '${status.name}' . "\n";
+                    $defaultMessage .= "\n" . __('Sent By') . ': ' . "\t\t" . '${last_executor_name}' . "\n";
+                    $defaultMessage .= "\n" . __('Comments') . ': ' . "\t" . '${workflow_comment}';
 
-                    $message = $this->getWorkflowEmailMessage($recordEntity);
+                    $customMessage = $this->getWorkflowEmailMessage($recordEntity);
+                    $finalMessage = $this->replaceMessage($modelAlias, $customMessage ?? $defaultMessage, $vars, true);
 
-                    if (is_null($message)) {
-                        $message = $this->replaceMessage($modelAlias, $defaultMessage, $vars, true);
-                    } else {
-                        $message = $this->replaceMessage($modelAlias, $message, $vars, true);
-                    }
-
-                    // insert to the alertLog and send the email
-                    $this->insertAlertLog($method, $modelAlias, $recipient, $subject, $message);
-                }// end no assignee email in the $vars
+                    $this->insertAlertLog($method, $modelAlias, $recipient, $subject, $finalMessage);
+                }
             }
         }// end if have assignee id in the recordEntity
     }
 
-    public function insertAlertLog($method, $feature, $email, $subject = null, $message = null)
+    // POCOR-8286-start
+    public function insertAlertLog(string $method, string $feature, string $recipient, ?string $subject = null, ?string $message = null): void
     {
-        $today = Time::now();
-        $todayDate = Date::now();
+        $alertFeatures = $this->AlertRules->getFeatureOptions();
+        $checksum = $this->generateChecksum($subject . $recipient . $feature . $method, $message); // POCOR-9213
+        $alertFeatures['Messaging'] = __('Messaging');
 
-        // general feature options from alertRules
-        $AlertRules = TableRegistry::get('Alert.AlertRules');
-        $alertFeatures = $AlertRules->getFeatureOptions();
+        if (!array_key_exists($feature, $alertFeatures)) {
+            Log::debug("❌ Unknown feature '{$feature}' passed to insertAlertLog.");
+            return;
+        }
 
-        // checksum hash($subject,$message)
-        $checksum = Security::hash($subject . ',' . $message, 'sha256');
+        // Find any logs (sent, sending, or unsent) with the same checksum
+        $existingLogs = $this->find()
+            ->where([
+                'checksum' => $checksum
+            ])
+            ->all();
 
-        // to update and add new records into the alert_logs
-        if ($this->exists(['checksum' => $checksum]) && array_key_exists($feature, $alertFeatures)) {
-            $record = $this->find()
-                ->where(['checksum' => $checksum])
-                ->first();
+        $alreadyProcessed = [];
 
-            if ($record->status == 0) {
-                $this->save($record);
+        foreach ($existingLogs as $log) {
+            $alreadyProcessed[] = $log->destination;
+
+            // Only trigger resend if status is still 0 (unsent)
+            if ($log->status === 0) {
+                $this->triggerSendingAlertCommand('sending_alert', $feature, $log->id, __FUNCTION__, __LINE__);
+                sleep(10);
             }
-        } else {
+        }
+
+        // If the recipient has not been processed yet (sent/sending/unsent), send it
+        if (!in_array($recipient, $alreadyProcessed, true)) {
+            $this->createAndSendAlertLog($method, $feature, [$recipient], $subject, $message, $checksum);
+        }
+    }
+
+//    public function insertStudentAdmissionAlertLog(string $method, string $feature, string $recipient, ?string $subject = null, ?string $message = null): void
+//    {
+//        $checksum = $this->generateChecksum($subject, $message);
+//        $this->createAndSendAlertLog($method, $feature, [$recipient], $subject, $message, $checksum);
+//    }
+
+    private function generateChecksum(?string $subject, ?string $message): string
+    {
+        return Security::hash("{$subject},{$message}", 'sha256');
+    }
+
+    private function createAndSendAlertLog(
+        string $method,
+        string $feature,
+        array $recipients,
+        ?string $subject,
+        ?string $message,
+        string $checksum
+    ): void {
+        $savedIds = [];
+
+        foreach ($recipients as $recipient) {
             $entity = $this->newEntity([
                 'feature' => $feature,
                 'method' => $method,
-                'destination' => $email,
+                'destination' => $recipient,
                 'status' => 0,
                 'subject' => $subject,
                 'message' => $message,
                 'checksum' => $checksum
             ]);
-            //POCOR-6023 starts
-            $saveData = $this->save($entity);
 
-            if(!empty($saveData)){
-                $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['id' => $saveData->id])->first();
-                $this->triggerSendingAlertShell('SendingAlert', $result->feature, $result->id);
-            }//POCOR-6023 ends
+            $saved = $this->save($entity);
 
-        }
-
-    }
-
-    public function insertSystemUpdateAlertLog($method, $feature, $email, $subject = null, $message = null)
-    {
-        $today = Time::now();
-        $todayDate = Date::now();
-
-        // general feature options from alertRules
-        $AlertRules = TableRegistry::get('Alert.AlertRules');
-        $alertFeatures = $AlertRules->getFeatureOptions();
-
-        // checksum hash($subject,$message)
-        $checksum = Security::hash($subject . ',' . $message, 'sha256');
-        // to update and add new records into the alert_logs
-        $result_checksum = TableRegistry::get('Alert.AlertLogs')->find()->where(['checksum' => $checksum])->first();
-        if(empty($result_checksum)){
-            $emailsArray = explode(", ", $email);
-            foreach($emailsArray AS $emailData){
-                $entity = $this->newEntity([
-                    'feature' => $feature,
-                    'method' => $method,
-                    'destination' => $emailData,
-                    'status' => 0,
-                    'subject' => $subject,
-                    'message' => $message,
-                    'checksum' => $checksum
-                ]);
-                $saveData = $this->save($entity);
+            if ($saved) {
+                $savedIds[] = $saved->id;
             }
         }
 
-        if(!empty($saveData)){
-            // $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['id' => $saveData->id])->first();
-            $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['feature' => $feature])->all();
-            foreach($result AS $resultData){
-                $this->triggerSendingAlertShell('SendingAlert', $feature, $resultData['id']);
-            }
+        foreach ($savedIds as $id) {
+            $this->triggerSendingAlertCommand('sending_alert', $feature, $id, __FUNCTION__, __LINE__);
         }
-
     }
+    // POCOR-8286 end
 
     public function replaceMessage($feature, $message, $vars, $workflow = false)
     {
-        $AlertRules = TableRegistry::get('Alert.AlertRules');
-        $alertFeatures = $AlertRules->getFeatureOptions();
+
+        $alertFeatures =  $this->AlertRules->getFeatureOptions();
 
         $format = '${%s}';
         $strArray = explode('${', $message);
@@ -236,7 +248,7 @@ class AlertLogsTable extends ControllerActionTable
         $availablePlaceholder = [];
         if (array_key_exists($feature, $alertFeatures)) {
             // for feature from alert Rule to get the availablePlaceholder
-            $alertTypeDetails = $AlertRules->getAlertTypeDetailsByFeature($feature);
+            $alertTypeDetails =  $this->AlertRules->getAlertTypeDetailsByFeature($feature);
             $availablePlaceholder = $alertTypeDetails[$feature]['placeholder'];
         }
 
@@ -250,14 +262,14 @@ class AlertLogsTable extends ControllerActionTable
                 if (empty($availablePlaceholder) || $workflow) {
                     // for workflow alert
                     $value = Hash::get($vars, $placeholder);
-                    if ($value instanceof Date || $value instanceof \Cake\I18n\Date) {
+                    if ($value instanceof FrozenDate || $value instanceof \Cake\I18n\Date) {
                         $value = $this->formatDate($value);
                     }
                     $message = str_replace($replace, $value, $message);
                 } else if (array_key_exists('${' . $placeholder . '}', $availablePlaceholder)) {
                     // for attendance alert (alert rules)
                     $value = Hash::get($vars, $placeholder);
-                    if ($value instanceof Date || $value instanceof \Cake\I18n\Date) {
+                    if ($value instanceof FrozenDate || $value instanceof \Cake\I18n\Date) { // POCOR-8286
                         $value = $this->formatDate($value);
                     }
                     $message = str_replace($replace, $value, $message);
@@ -295,8 +307,8 @@ class AlertLogsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('message', ['visible' => false]);
-        $this->field('destination', ['visible' => false]);
-        $this->field('method', ['after' => 'feature', 'sort' => false]);
+        $this->field('method', ['after' => 'feature', 'sort' => true]);
+        $this->field('destination', ['after' => 'method', 'visible' => true]);
 
         // element control
         $featureOptions = $this->getFeatureOptions();
@@ -355,8 +367,8 @@ class AlertLogsTable extends ControllerActionTable
     public function getFeatureOptions()
     {
         // feature from alert to be classified under general
-        $AlertRules = TableRegistry::get('Alert.AlertRules');
-        $alertFeatures = $AlertRules->getFeatureOptions();
+
+        $alertFeatures =  $this->AlertRules->getFeatureOptions();
         ksort($alertFeatures); // sort alphabetical
 
         // feature from workflow to be classified under workflow
@@ -365,7 +377,7 @@ class AlertLogsTable extends ControllerActionTable
         ksort($workflowFeatures); // sort alphabetical
 
         $features = array_merge($alertFeatures, $workflowFeatures); // combine the alert and workflow feature
-
+        $alertFeatures['Messaging'] = __('Messaging');
         $featureOptions['AllFeatures'] = __('All Features'); // to show all the records
         foreach ($features as $key => $value) {
             if (array_key_exists($key, $alertFeatures)) {
@@ -378,7 +390,7 @@ class AlertLogsTable extends ControllerActionTable
         return $featureOptions;
     }
 
-    public function getWorkflowEmailMessage($recordEntity)
+    public function getWorkflowEmailMessage($recordEntity): ?string
     {
         $message = null;
 
@@ -401,6 +413,25 @@ class AlertLogsTable extends ControllerActionTable
         return $message;
     }
 
+    public function triggerSendingAlertCommand(string $commandName, ?string $feature = null, int $alertLogId = 0, $function = '', $line = 0): void
+    {
+        $args = '';
+        if (!is_null($feature)) {
+            $args .= ' ' . escapeshellarg($feature);
+        }
+        if ($alertLogId > 0) {
+            $args .= ' ' . escapeshellarg((string)$alertLogId);
+        }
+
+        $cmdPath = ROOT . DS . 'bin' . DS . 'cake ' . $commandName . $args;
+        $logPath = ROOT . DS . 'logs' . DS . $commandName . '.log';
+        $shellCmd = $cmdPath . ' >> ' . $logPath . ' & echo $!';
+
+        exec($shellCmd);
+        Log::write('debug', "Executing command from $function $line: " . $shellCmd);
+    }
+
+    /** @deprecated Use triggerSendingAlertCommand() instead */
     public function triggerSendingAlertShell($shellName, $feature = null, $alertLogId = 0)
     {
         $args = '';
@@ -438,5 +469,10 @@ class AlertLogsTable extends ControllerActionTable
             default:
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    private function formatRecipientNameEmail($user): string
+    {
+        return $user->name . ' <' . $user->email . '>';
     }
 }

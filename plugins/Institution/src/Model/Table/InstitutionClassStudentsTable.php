@@ -576,8 +576,8 @@ class InstitutionClassStudentsTable extends AppTable
                 switch ($resultType) {
                     case 'MARKS':
                         // Add logic to add weighted mark to subjectWeightedMark
-                        if ($result['mark'] != 'EXEMPT') {
-                            $this->assessmentPeriodWeightedMark += ($result['marks'] * $attr['assessmentPeriodWeight']);
+                        if ($result['mark'] != 'EXEMPT' && $result['mark'] != 'UNASSIGN') {//POCOR-9042 add 'UNASSIGN' condition
+                            $this->assessmentPeriodWeightedMark += ((float)$result['marks'] * (float)$attr['assessmentPeriodWeight']);
                             $this->assessmentPeriodWeights[] = $attr['assessmentPeriodWeight'];
                         }
                         $printedResult = $result['mark'];
@@ -962,48 +962,90 @@ class InstitutionClassStudentsTable extends AppTable
             ->order([
                 $Users->aliasField('first_name'), $Users->aliasField('last_name')
             ]);
+        if (!empty($row['InstitutionStudentsReportCards']['report_card_id'])) {
+            $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
+        }
 
+        // Get the report card start/end date
+        $reportCardEntity = $ReportCards->find()
+            ->select([
+                $ReportCards->aliasField('start_date'),
+                $ReportCards->aliasField('end_date'),
+                $ReportCards->aliasField('overall_result')
+            ])
+            ->where([
+                $ReportCards->aliasField('id') => $reportCardId
+            ])
+            ->all();
+        // POCOR-9233 start
+        $ReportCardSubjects = self::getDynamicTableInstance('ReportCard.ReportCardSubjects');
+        $reportCardSubjectsEntity = $ReportCardSubjects->find()
+            ->select([
+                'education_subject_id'
+            ])
+            ->where([
+                $ReportCardSubjects->aliasField('report_card_id') => $reportCardId
+            ])
+            ->disableHydration()
+            ->all();
+        //POCOR-6501 starts
+        $Assessments = self::getDynamicTableInstance('Assessment.Assessments');
+        $assessmentResults = $Assessments
+            ->find()
+            ->where([
+                $Assessments->aliasField('academic_period_id') => $academicPeriodId,
+                $Assessments->aliasField('education_grade_id') => $educationGradeId
+            ])
+            ->first();
+        $assessment_id = 0;
+        if(!empty($assessmentResults)){
+            $assessment_id = $assessmentResults->id;
+        }//POCOR-6501 ends
         if ($type == 'PRINCIPAL') {
             $query
                 ->select(['comments' => $StudentReportCards->aliasfield('principal_comments')])
-                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId, $educationGradeId, $classId) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data
+                ->formatResults(function (ResultSetInterface $results) use (
+                    $academicPeriodId,
+                    $institutionId,
+                    $SubjectStudents,
+                    $AssessmentItemResults,
+                    $educationSubjectId,
+                    $ReportCards,
+                    $reportCardId,
+                    $educationGradeId,
+                    $classId,
+                    $reportCardEntity,
+                    $reportCardSubjectsEntity,
+                    $assessment_id
+                ) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data
 
-                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId, $educationGradeId, $classId) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data
+                    return $results->map(function ($row) use (
+                        $academicPeriodId,
+                        $institutionId,
+                        $SubjectStudents,
+                        $AssessmentItemResults,
+                        $educationSubjectId,
+                        $ReportCards,
+                        $reportCardId,
+                        $educationGradeId,
+                        $classId,
+                        $reportCardEntity,
+                        $reportCardSubjectsEntity,
+                        $assessment_id
+                    ) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data
 
                         $studentId = $row->student_id;
-                        if (!empty($row['InstitutionStudentsReportCards']['report_card_id'])) {
-                            $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
-                        }
-
-                        // Get the report card start/end date
-                        $reportCardEntity = $ReportCards->find()
-                            ->select([
-                                $ReportCards->aliasField('start_date'),
-                                $ReportCards->aliasField('end_date')
-                            ])
-                            ->where([
-                                $ReportCards->aliasField('id') => $reportCardId
-                            ])
-                            ->all();
-
+// POCOR-9233 end
                         if (!$reportCardEntity->isEmpty()) {
                             $row->reportCardStartDate = NULL;
                             $row->reportCardEndDate = NULL;
+                            $row->overallResult = NULL;
                             $row->reportCardStartDate = $reportCardEntity->first()['start_date'];
                             $row->reportCardEndDate = $reportCardEntity->first()['end_date'];
+                            $row->overallResult = $reportCardEntity->first()['overall_result'];
                         }
-
                         // To get the report card template subjects
-                        $ReportCardSubjects = self::getDynamicTableInstance('ReportCard.ReportCardSubjects');
-                        $reportCardSubjectsEntity = $ReportCardSubjects->find()
-                            ->select([
-                                'education_subject_id'
-                            ])
-                            ->where([
-                                $ReportCardSubjects->aliasField('report_card_id') => $reportCardId
-                            ])
-                            ->enableHydration(false)
-                            ->all();
+// POCOR-9233 moved up
                         // Check if the student belongs to any subject
                         $subjectStudentsEntities = $SubjectStudents->find()
                             ->select([
@@ -1018,21 +1060,9 @@ class InstitutionClassStudentsTable extends AppTable
                             ->group([
                                 'education_subject_id'
                             ])
-                            ->enableHydration(false)
+                            ->disableHydration() // POCOR-9233
                             ->all();
-                        //POCOR-6501 starts
-                        $Assessments = self::getDynamicTableInstance('Assessment.Assessments');
-                        $assessmentResults = $Assessments
-                                            ->find()
-                                            ->where([
-                                                $Assessments->aliasField('academic_period_id') => $academicPeriodId,
-                                                $Assessments->aliasField('education_grade_id') => $educationGradeId
-                                            ])
-                                            ->first();
-                        $assessment_id = 0;
-                        if(!empty($assessmentResults)){
-                            $assessment_id = $assessmentResults->id;
-                        }//POCOR-6501 ends
+// POCOR-9233 moved up
 
                         // If subjectStudentsEntities is not empty mean the student have a subject
                         if (!$subjectStudentsEntities->isEmpty()) {
@@ -1040,6 +1070,33 @@ class InstitutionClassStudentsTable extends AppTable
                             $total_mark = 0;
                             $subjectTaken = 0;
                             foreach($subjectStudentsEntities->toArray() as $studentEntity) {
+                                //POCOR-9201[START]
+                                if ($row->overallResult == 0) {
+                                    $conditions = [
+                                        $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
+                                        $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
+                                        $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
+                                        $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
+                                        /*POCOR-6443 starts - commented code was hiding overall marks*/
+                                        $AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                        $AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
+                                        /*POCOR-6443 ends*/
+                                        $AssessmentItemResults->aliasField('marks IS NOT NULL')
+                                    ];
+                                }else{
+                                    $conditions = [
+                                        $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
+                                        $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
+                                        $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
+                                        $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
+                                        /*POCOR-6443 starts - commented code was hiding overall marks*/
+                                        // $AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                        // $AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
+                                        /*POCOR-6443 ends*/
+                                        $AssessmentItemResults->aliasField('marks IS NOT NULL')
+                                    ];
+                                }
+                                //POCOR-9201[END]
                                 // Getting all the subject marks based on report card start/end date
                                 $AssessmentItemResultsQuery = $AssessmentItemResults->find();
                                 $assessmentItemResultsEntities = $AssessmentItemResultsQuery
@@ -1057,17 +1114,7 @@ class InstitutionClassStudentsTable extends AppTable
                                     ->contain([
                                         'AssessmentPeriods'
                                     ])
-                                    ->where([
-                                        $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
-                                        $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
-                                        $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
-                                        $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
-                                        /*POCOR-6443 starts - commented code was hiding overall marks*/
-                                        //$AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
-                                        //$AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
-                                        /*POCOR-6443 ends*/
-                                        $AssessmentItemResults->aliasField('marks IS NOT NULL')
-                                    ])
+                                    ->where($conditions)
                                     ->all();
                                     $studentSubArray = [];//POCOR-6501
                                     if (!$assessmentItemResultsEntities->isEmpty()) {
@@ -1108,26 +1155,38 @@ class InstitutionClassStudentsTable extends AppTable
         } elseif ($type == 'HOMEROOM_TEACHER') {
             $query
                 ->select(['comments' => $StudentReportCards->aliasfield('homeroom_teacher_comments')])
-                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId, $educationGradeId, $classId) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data
+                ->formatResults(function (ResultSetInterface $results) use ( // POCOR-9233 start
+                    $academicPeriodId,
+                    $institutionId,
+                    $SubjectStudents,
+                    $AssessmentItemResults,
+                    $educationSubjectId,
+                    $ReportCards,
+                    $reportCardId,
+                    $educationGradeId,
+                    $classId,
+                    $reportCardEntity,
+                    $reportCardSubjectsEntity,
+                    $assessment_id
+                ) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data
 
-                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId, $educationGradeId, $classId) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data
+                    return $results->map(function ($row) use (
+                        $academicPeriodId,
+                        $institutionId,
+                        $SubjectStudents,
+                        $AssessmentItemResults,
+                        $educationSubjectId,
+                        $ReportCards,
+                        $reportCardId,
+                        $educationGradeId,
+                        $classId,
+                        $reportCardEntity,
+                        $reportCardSubjectsEntity,
+                        $assessment_id
+                    ) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data // POCOR-9233 end
 
                         $studentId = $row->student_id;
-                        if (!empty($row['InstitutionStudentsReportCards']['report_card_id'])) {
-                            $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
-                        }
-
-                        // Get the report card start/end date
-                        $reportCardEntity = $ReportCards->find()
-                            ->select([
-                                $ReportCards->aliasField('start_date'),
-                                $ReportCards->aliasField('end_date')
-                            ])
-                            ->where([
-                                $ReportCards->aliasField('id') => $reportCardId
-                            ])
-                            ->all();
-
+// POCOR-9233 moved up
                         if (!$reportCardEntity->isEmpty()) {
                             $row->reportCardStartDate = NULL;
                             $row->reportCardEndDate = NULL;
@@ -1135,18 +1194,7 @@ class InstitutionClassStudentsTable extends AppTable
                             $row->reportCardEndDate = $reportCardEntity->first()['end_date'];
                         }
 
-                        // To get the report card template subjects
-                        $ReportCardSubjects = self::getDynamicTableInstance('ReportCard.ReportCardSubjects');
-                        $reportCardSubjectsEntity = $ReportCardSubjects->find()
-                            ->select([
-                                'education_subject_id'
-                            ])
-                            ->where([
-                                $ReportCardSubjects->aliasField('report_card_id') => $reportCardId
-                            ])
-                            ->enableHydration(false)
-                            ->all();
-
+// POCOR-9233 moved up
                         // Check if the student belongs to any subject
                         $subjectStudentsEntities = $SubjectStudents->find()
                             ->select([
@@ -1163,21 +1211,7 @@ class InstitutionClassStudentsTable extends AppTable
                             ])
                             ->enableHydration(false)
                             ->all();
-
-                        //POCOR-6501 starts
-                        $Assessments = self::getDynamicTableInstance('Assessment.Assessments');
-                        $assessmentResults = $Assessments
-                                            ->find()
-                                            ->where([
-                                                $Assessments->aliasField('academic_period_id') => $academicPeriodId,
-                                                $Assessments->aliasField('education_grade_id') => $educationGradeId
-                                            ])
-                                            ->first();
-                        $assessment_id = 0;
-                        if(!empty($assessmentResults)){
-                            $assessment_id = $assessmentResults->id;
-                        }//POCOR-6501 ends
-
+// POCOR-9233 moved up
                         // If subjectStudentsEntities is not empty mean the student have a subject
                         if (!$subjectStudentsEntities->isEmpty()) {
 
@@ -1186,6 +1220,33 @@ class InstitutionClassStudentsTable extends AppTable
 
                             foreach($subjectStudentsEntities->toArray() as $studentEntity) {
                                 // Getting all the subject marks based on report card start/end date
+                                //POCOR-9201[START]
+                                if ($row->overallResult == 0) {
+                                    $conditions = [
+                                        $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
+                                        $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
+                                        $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
+                                        $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
+                                        /*POCOR-6443 starts - commented code was hiding overall marks*/
+                                        $AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                        $AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
+                                        /*POCOR-6443 ends */
+                                        $AssessmentItemResults->aliasField('marks IS NOT NULL')
+                                    ];
+                                }else{
+                                    $conditions = [
+                                        $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
+                                        $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
+                                        $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
+                                        $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
+                                        /*POCOR-6443 starts - commented code was hiding overall marks*/
+                                        //$AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                        //$AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
+                                        /*POCOR-6443 ends */
+                                        $AssessmentItemResults->aliasField('marks IS NOT NULL')
+                                    ];
+                                }
+                                //POCOR-9201[END]
                                 $AssessmentItemResultsQuery = $AssessmentItemResults->find();
                                 $assessmentItemResultsEntities = $AssessmentItemResultsQuery
                                     ->select([
@@ -1201,17 +1262,7 @@ class InstitutionClassStudentsTable extends AppTable
                                     ->contain([
                                         'AssessmentPeriods'
                                     ])
-                                    ->where([
-                                        $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
-                                        $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
-                                        $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
-                                        $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
-                                        /*POCOR-6443 starts - commented code was hiding overall marks*/
-                                        //$AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
-                                        //$AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
-                                        /*POCOR-6443 ends */
-                                        $AssessmentItemResults->aliasField('marks IS NOT NULL')
-                                    ])
+                                    ->where($conditions)
                                     ->all();
                                 $studentSubArray = [];//POCOR-6501
                                 if (!$assessmentItemResultsEntities->isEmpty()) {
@@ -1252,7 +1303,6 @@ class InstitutionClassStudentsTable extends AppTable
         } elseif ($type == 'TEACHER') {
             $ReportCardsComments = self::getDynamicTableInstance('Institution.InstitutionStudentsReportCardsComments');
             $Staff = $ReportCardsComments->Staff;
-
             $query
                 ->select([
                     'comments' => $ReportCardsComments->aliasField('comments'),
@@ -1274,25 +1324,39 @@ class InstitutionClassStudentsTable extends AppTable
                     $Staff->aliasField('id = ') . $ReportCardsComments->aliasField('staff_id')
                 ])
                 ->where([$SubjectStudents->aliasField('institution_subject_id') => $institutionSubjectId])
-                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId,$institutionSubjectId, $educationGradeId, $classId) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data
-                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId,$institutionSubjectId, $educationGradeId, $classId) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data
+                ->formatResults(function (ResultSetInterface $results) use ( // POCOR-9233 start
+                    $academicPeriodId,
+                    $institutionId,
+                    $SubjectStudents,
+                    $AssessmentItemResults,
+                    $educationSubjectId,
+                    $ReportCards,
+                    $reportCardId,
+                    $institutionSubjectId,
+                    $educationGradeId,
+                    $classId,
+                    $reportCardEntity,
+                    $reportCardSubjectsEntity,
+                    $assessment_id
+                ) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data
+                    return $results->map(function ($row) use (
+                        $academicPeriodId,
+                        $institutionId,
+                        $SubjectStudents,
+                        $AssessmentItemResults,
+                        $educationSubjectId,
+                        $ReportCards,
+                        $reportCardId,
+                        $institutionSubjectId,
+                        $educationGradeId,
+                        $classId,
+                        $reportCardEntity,
+                        $reportCardSubjectsEntity,
+                        $assessment_id
+                    ) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data // POCOR-9233 end
 
                         $studentId = $row->student_id;
-                        if (!empty($row['InstitutionStudentsReportCards']['report_card_id'])) {
-                            $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
-                        }
-
-                        // Get the report card start/end date
-                        $reportCardEntity = $ReportCards->find()
-                            ->select([
-                                $ReportCards->aliasField('start_date'),
-                                $ReportCards->aliasField('end_date')
-                            ])
-                            ->where([
-                                $ReportCards->aliasField('id') => $reportCardId
-                            ])
-                            ->all();
-
+// POCOR-9233 moved up
                         if (!$reportCardEntity->isEmpty()) {
                             $row->reportCardStartDate = NULL;
                             $row->reportCardEndDate = NULL;
@@ -1323,21 +1387,37 @@ class InstitutionClassStudentsTable extends AppTable
                         if (!$subjectStudentsEntities->isEmpty()) {
 
                             $studentEntity = $subjectStudentsEntities->first();
-                            //POCOR-6501 starts
-                            $Assessments = self::getDynamicTableInstance('Assessment.Assessments');
-                            $assessmentResults = $Assessments
-                                                ->find()
-                                                ->where([
-                                                    $Assessments->aliasField('academic_period_id') => $academicPeriodId,
-                                                    $Assessments->aliasField('education_grade_id') => $educationGradeId
-                                                ])
-                                                ->first();
-                            $assessment_id = 0;
-                            if(!empty($assessmentResults)){
-                                $assessment_id = $assessmentResults->id;
-                            }//POCOR-6501 ends
-
+// POCOR-9233 moved up
                             // Getting all the subject marks based on report card start/end date
+                            //POCOR-9201[START]
+                            if ($row->overallResult == 0) {
+                                $conditions = [
+                                    $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
+                                    $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
+                                    $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
+                                    $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
+                                    /*POCOR-6443 starts - commented code was hiding overall marks*/
+                                    $AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                    $AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
+                                    /*POCOR-6443 ends*/
+                                    $AssessmentItemResults->aliasField('marks IS NOT NULL'),
+                                    $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id']
+                                ];
+                            }else{
+                                $conditions = [
+                                    $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
+                                    $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
+                                    $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
+                                    $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
+                                    /*POCOR-6443 starts - commented code was hiding overall marks*/
+                                    //$AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                    //$AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
+                                    /*POCOR-6443 ends*/
+                                    $AssessmentItemResults->aliasField('marks IS NOT NULL'),
+                                    $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id']
+                                ];
+                            }
+                            //POCOR-9201[END]
                             $AssessmentItemResultsQuery = $AssessmentItemResults->find();
 
                             $assessmentItemResultsEntities = $AssessmentItemResultsQuery
@@ -1355,19 +1435,7 @@ class InstitutionClassStudentsTable extends AppTable
                                 ->contain([
                                     'AssessmentPeriods'
                                 ])
-                                ->where([
-                                    $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
-                                    $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
-                                    $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
-                                    $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
-                                    /*POCOR-6443 starts - commented code was hiding overall marks*/
-                                    //$AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
-                                    //$AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
-                                    /*POCOR-6443 ends*/
-                                    $AssessmentItemResults->aliasField('marks IS NOT NULL'),
-                                    $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id']
-
-                                ])
+                                ->where($conditions)
                                 ->all();
 
                             $total_mark = 0;
@@ -1398,6 +1466,15 @@ class InstitutionClassStudentsTable extends AppTable
         $assessment_item_id = preg_replace("/[^a-fA-F0-9\-]/", "", $options['assessment_item_id']);  // Still using assessment_item_id for reference
         $assessment_period_id = intval($options['assessment_period_id']);
         $institution_class_id = intval($options['institution_class_id']);
+
+        //POCOR-9114 -- START Check if the assessment_period_ids are multiple
+        if (!empty($options['assessment_period_combo'])) {
+            $assessment_period_ids = array_filter(
+                array_map('intval', explode('_', $options['assessment_period_combo']))
+            );
+        }
+        //POCOR-9114 -- END
+
 //        Log::debug(print_r([$assessment_item_id, $assessment_period_id, $institution_class_id], true));
         $where = [
             'institution_classes.id = ' . $institution_class_id,
@@ -1413,7 +1490,8 @@ class InstitutionClassStudentsTable extends AppTable
                     $this->aliasField('student_id') . ' = assessment_item_student_exemptions.student_id',
                     $this->aliasField('institution_class_id') . ' = assessment_item_student_exemptions.institution_class_id',
                     $this->aliasField('education_grade_id') . ' = assessment_item_student_exemptions.education_grade_id',
-                    'assessment_item_student_exemptions.assessment_period_id = ' . $assessment_period_id
+                    //'assessment_item_student_exemptions.assessment_period_id = ' . $assessment_period_id
+                    'assessment_item_student_exemptions.assessment_period_id IN (' . implode(',', $assessment_period_ids) . ')' //POCOR-9114
                 ]
             )
             ->leftJoin(
@@ -1461,6 +1539,7 @@ class InstitutionClassStudentsTable extends AppTable
                 'assessment_items.assessment_id',
                 'assessment_items.education_subject_id',
                 'assessment_items.classification',
+                'type' => 'assessment_item_student_exemptions.type',//POCOR-9042
             ])
             ->disableHydration();
 //        Log::debug($query->sql());
@@ -1472,7 +1551,9 @@ class InstitutionClassStudentsTable extends AppTable
                 ($row['middle_name']) ? $fullName[] = $row['middle_name'] : '';
                 ($row['third_name']) ? $fullName[] = $row['third_name'] : '';
                 ($row['last_name']) ? $fullName[] = $row['last_name'] : '';
-                $row['is_exempt'] = ($row['assessment_id']) ? true : false;
+                $row['is_exempt'] = ($row['assessment_id'] && $row['type'] == 1) ? true : false;//POCOR-9042
+                $row['is_unassign'] = ($row['assessment_id'] && $row['type'] == 2) ? true : false;//POCOR-9042
+                $row['is_unassign'] = $row['type'];//POCOR-9042
 
                 $name = implode(' ', $fullName);
 
@@ -1488,6 +1569,8 @@ class InstitutionClassStudentsTable extends AppTable
                     'assessment_period_id' => $row['assessment_period_id'],
                     'assessment_item_id' => $row['assessment_id'],  // Use assessment_id now
                     'is_exempt' => $row['is_exempt'],
+                    'is_unassign' => $row['is_unassign'],//POCOR-9042
+                    'type' => $row['type'],//POCOR-9042
                     'student_status_name' => __($row['student_status_name'])
                 ];
             });

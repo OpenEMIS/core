@@ -15,7 +15,7 @@ class AlertRuleRetirementWarningBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'RetirementWarning',
         'name' => 'Retirement Warning',
-        'method' => 'Email',
+        'method' => ['Email','SMS'], // POCOR-8286
         'threshold' => [
             'value' => [
                 'type' => 'integer',
@@ -72,7 +72,7 @@ class AlertRuleRetirementWarningBehavior extends AlertRuleBehavior
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
-                $validator = $model->validator();
+                $validator = $model->getValidator('default');//POCOR-8341
                 $validator->add('value', [
                     'ruleRange' => [
                         'rule' => ['range', 50, 75],

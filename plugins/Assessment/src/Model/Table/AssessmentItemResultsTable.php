@@ -114,6 +114,7 @@ class AssessmentItemResultsTable extends AppTable
                             $assessmentItemResults->aliasField('assessment_period_id') => $entity->assessment_period_id,
                             $assessmentItemResults->aliasField('assessment_id') => $entity->assessment_id,
                             $assessmentItemResults->aliasField('education_subject_id') => $entity->education_subject_id,
+                            $assessmentItemResults->aliasField('institution_classes_id') => $entity->institution_classes_id,//POCOR-9184
                         ])
                         ->order([ //POCOR-7580-KHINDOL
                             $assessmentItemResults->aliasField('created') => 'DESC',
@@ -297,9 +298,9 @@ class AssessmentItemResultsTable extends AppTable
             ])
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
-                $this->aliasField('assessment_id') => $assessmentId,
-                $this->aliasField('education_subject_id') => $subjectId,
-                $this->aliasField('student_id') => $studentId,
+                $this->aliasField('assessment_id IS') => $assessmentId,
+                $this->aliasField('education_subject_id IS') => $subjectId,
+                $this->aliasField('student_id IS') => $studentId,
             ])
             ->group([$this->aliasField('assessment_period_id')])
             ->disableHydration();
@@ -449,6 +450,56 @@ class AssessmentItemResultsTable extends AppTable
                 }
             }
         }
+    }
+
+    /**
+     * Evaluates the grading type and determines the appropriate grading option for a given assessment mark.
+     *
+     * This method checks the grading type (MARKS, GRADES, DURATION) associated with the assessment item
+     * and matches the mark against the defined grading options. It sets the `assessment_grading_option_id`
+     * and attaches the related `assessment_grading_option` and `assessment_grading_type` entities to the provided entity.
+     *
+     * POCOR-9143: Ensures grading logic is applied consistently across all assessments.
+     *
+     * @param \Cake\ORM\Entity $entity Entity containing `marks`, `assessment_id`, `assessment_period_id`, and `education_subject_id`
+     * @return \Cake\ORM\Entity The updated entity with `assessment_grading_option`, `assessment_grading_option_id`, and `assessment_grading_type` set
+     *
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function evaluateGradingForMarks(Entity $entity): Entity
+    {
+        $educationSubjectId = $entity->education_subject_id;
+        $assessmentId = $entity->assessment_id;
+        $assessmentPeriodId = $entity->assessment_period_id;
+
+        $AssessmentItemsGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentItemsGradingTypes');
+        $assessmentItemsGradingTypeEntity = $AssessmentItemsGradingTypes
+            ->find()
+            ->contain('AssessmentGradingTypes.GradingOptions')
+            ->where([
+                $AssessmentItemsGradingTypes->aliasField('education_subject_id') => $educationSubjectId,
+                $AssessmentItemsGradingTypes->aliasField('assessment_id') => $assessmentId,
+                $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $assessmentPeriodId
+            ])
+            ->first();
+
+        if ($assessmentItemsGradingTypeEntity?->assessment_grading_type) {
+            $gradingType = $assessmentItemsGradingTypeEntity->assessment_grading_type;
+            $entity->set('assessment_grading_type', $gradingType);
+
+            if (in_array($gradingType->result_type, ['MARKS', 'DURATION']) &&
+                !empty($gradingType->grading_options)) {
+                foreach ($gradingType->grading_options as $gradingOptionObj) {
+                    if ($entity->marks >= $gradingOptionObj->min && $entity->marks <= $gradingOptionObj->max) {
+                        $entity->set('assessment_grading_option', $gradingOptionObj);
+                        $entity->set('assessment_grading_option_id', $gradingOptionObj->id);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return $entity;
     }
 
     public function getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId, $institutionClassesId, $assessmentPeriodId, $institutionId)
@@ -715,7 +766,13 @@ class AssessmentItemResultsTable extends AppTable
                 $exemptions[$student_id][$education_subject_id] = [];
             }
             if (isset($assessment_period_id)) {
-                $exemptions[$student_id][$education_subject_id][$assessment_period_id] = 'EXEMPT';
+                //POCOR-9042 starts
+                if($exemption['type'] == 1){
+                    $exemptions[$student_id][$education_subject_id][$assessment_period_id] = 'EXEMPT';
+                }else{
+                    $exemptions[$student_id][$education_subject_id][$assessment_period_id] = 'UNASSIGN';
+                }
+                //POCOR-9042 ends
             }
         }
         return $exemptions;
@@ -936,7 +993,8 @@ class AssessmentItemResultsTable extends AppTable
                 'student_id' => $exemptions_table->aliasField('student_id'),
                 'education_subject_id' => 'assessment_items.education_subject_id',
                 'assessment_period_id' => $exemptions_table->aliasField('assessment_period_id'),
-                'assessment_id' => $exemptions_table->aliasField('assessment_id')
+                'assessment_id' => $exemptions_table->aliasField('assessment_id'),
+                'type' => $exemptions_table->aliasField('type')//POCOR-9042
             ])
             ->innerJoin(['assessment_items' => 'assessment_items'],
                 [$exemptions_table->aliasField('assessment_id') . ' = assessment_items.assessment_id AND ' .
@@ -1064,40 +1122,40 @@ class AssessmentItemResultsTable extends AppTable
 
     public static function getLastMarkForInstitutionResults($options)
     {
-//        return $options;
+        //        return $options;
         $academic_period_id = $options['academic_period_id'];
         $education_grade_id = $options['education_grade_id'];
         $education_subject_id = $options['education_subject_id'];
         $student_id = $options['student_id'];
         $sql = "SELECT assessment_item_results.marks
-FROM assessment_item_results
-INNER JOIN
-(
-    SELECT assessment_item_results.student_id
-        ,assessment_item_results.assessment_id
-        ,assessment_item_results.education_subject_id
-        ,assessment_item_results.assessment_period_id
-        ,MAX(assessment_item_results.created) latest_created
-    FROM assessment_item_results
-    WHERE assessment_item_results.academic_period_id = $academic_period_id
-    AND assessment_item_results.education_grade_id = $education_grade_id
-    AND assessment_item_results.education_subject_id = $education_subject_id
-    AND assessment_item_results.student_id = $student_id
-    GROUP BY assessment_item_results.student_id
-        ,assessment_item_results.assessment_id
-        ,assessment_item_results.education_subject_id
-        ,assessment_item_results.assessment_period_id
-) latest_grades
-ON latest_grades.student_id = assessment_item_results.student_id
-AND latest_grades.assessment_id = assessment_item_results.assessment_id
-AND latest_grades.education_subject_id = assessment_item_results.education_subject_id
-AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id
-AND latest_grades.latest_created = assessment_item_results.created
+        FROM assessment_item_results
+        INNER JOIN
+        (
+            SELECT assessment_item_results.student_id
+                ,assessment_item_results.assessment_id
+                ,assessment_item_results.education_subject_id
+                ,assessment_item_results.assessment_period_id
+                ,MAX(assessment_item_results.created) latest_created
+            FROM assessment_item_results
+            WHERE assessment_item_results.academic_period_id = $academic_period_id
+            AND assessment_item_results.education_grade_id = $education_grade_id
+            AND assessment_item_results.education_subject_id = $education_subject_id
+            AND assessment_item_results.student_id = $student_id
+            GROUP BY assessment_item_results.student_id
+                ,assessment_item_results.assessment_id
+                ,assessment_item_results.education_subject_id
+                ,assessment_item_results.assessment_period_id
+        ) latest_grades
+        ON latest_grades.student_id = assessment_item_results.student_id
+        AND latest_grades.assessment_id = assessment_item_results.assessment_id
+        AND latest_grades.education_subject_id = assessment_item_results.education_subject_id
+        AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id
+        AND latest_grades.latest_created = assessment_item_results.created
 
-GROUP BY assessment_item_results.student_id
-    ,assessment_item_results.assessment_id
-    ,assessment_item_results.education_subject_id
-    ,assessment_item_results.assessment_period_id";
+        GROUP BY assessment_item_results.student_id
+            ,assessment_item_results.assessment_id
+            ,assessment_item_results.education_subject_id
+            ,assessment_item_results.assessment_period_id";
         $connection = ConnectionManager::get('default');
         $marks = $connection->execute($sql)->fetch('assoc');
         if (isset($marks['marks'])) {

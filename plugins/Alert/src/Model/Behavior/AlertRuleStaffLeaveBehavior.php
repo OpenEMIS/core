@@ -15,7 +15,7 @@ class AlertRuleStaffLeaveBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'StaffLeave',
             'name' => 'Staff Leave',
-            'method' => 'Email',
+            'method' => ['Email','SMS'], // POCOR-8286
             'threshold' => [
                 'value' => [
                     'type' => 'integer',
@@ -81,13 +81,16 @@ class AlertRuleStaffLeaveBehavior extends AlertRuleBehavior
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
-                $validator = $model->validator();
+                // POCOR-8286 start
+                $validator = $model->getValidator();
                 $validator->add('value', [
                     'ruleRange' => [
                         'rule' => ['range', 1, 30],
                         'message' => __('Value must be within 1 to 30')
                     ]
                 ]);
+                $model->setValidator('forSave', $validator);
+                // POCOR-8286 end
             }
         }
     }

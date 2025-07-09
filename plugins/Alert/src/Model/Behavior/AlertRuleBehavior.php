@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
+use Cake\Log\Log;
 
 class AlertRuleBehavior extends Behavior
 {
@@ -67,10 +68,11 @@ class AlertRuleBehavior extends Behavior
                         $options = [];
                         if (isset($attr['options']) && !empty($attr['options'])) {
                             $options = $model->getSelectOptions($model->getAlias().".".$attr['options']);
-
+//                            Log::debug(print_r([$model->getAlias().".".$attr['options'] => $options], true));
                         } else if (isset($attr['lookupModel']) && !empty($attr['lookupModel'])) {
                             $modelTable = TableRegistry::get($attr['lookupModel']);
                             $options = $modelTable->getList()->toArray();
+//                            Log::debug(print_r(['opt2' => $options], true));
                         }
                         $attr['options'] = $options;
                     }

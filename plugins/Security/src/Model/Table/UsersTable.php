@@ -784,10 +784,38 @@ class UsersTable extends ControllerActionTable
         return $locator->get($tableFullAlias);
     }
 
+    //POCOR-8341[START]
+    public function findEmailList(Query $query, array $options) {
+        $conditions = [
+            $this->aliasField('id') => $options['id']
+        ];
+
+        return $query
+                ->where($conditions);
+    }
+    //POCOR-8341[START]
     public function findSystemUpdateEmailList(Query $query, array $options) {
         $conditions = [
             $this->aliasField('id') => $options['securityRoleId']
         ];
+
+        return $query->where($conditions);
+    }
+
+    public function findRecipientList(Query $query, array $options)
+    {
+        $recipients = $options['recipients'] ?? null;
+
+        if (empty($recipients)) {
+            // No recipients: force to return no result
+            $conditions = [$this->aliasField('id') => -1];
+        } elseif (is_array($recipients)) {
+            // Non-empty array: use IN
+            $conditions = [$this->aliasField('id') . ' IN' => $recipients];
+        } else {
+            // Single numeric ID
+            $conditions = [$this->aliasField('id') => $recipients];
+        }
 
         return $query->where($conditions);
     }

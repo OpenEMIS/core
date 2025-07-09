@@ -146,7 +146,7 @@ class AppraisalBehavior extends Behavior
             ->toArray();
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event,  $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['onChangeReload'] = true;
@@ -269,12 +269,15 @@ class AppraisalBehavior extends Behavior
                     $tabName = Text::slug($section);
                     if (empty($tabElements)) {
                         $selectedAction = $tabName;
-                    } else { //POCOR-8802
-                        if(isset($url['?']) && $url['?'] != $tabName) {
+                    } else { // POCOR-9123
+                        if (isset($url['?']) && $url['?'] != $tabName) {
                             unset($url['?']);
                         }
                     }
+
                     $url['tab_section'] = $tabName;
+                    $url['?']['tab_section'] = $tabName; // POCOR-9123
+
                     $tabElements[$tabName] = [
                         'url' => $url,
                         'text' => $section,
@@ -343,7 +346,7 @@ class AppraisalBehavior extends Behavior
                 $attr['type'] = 'text';
                 $name = $criteria->field_type->name ?? null;
                 $action = $model->action;
-                if($name == 'Note' && $action == 'add') {
+                if($action == "edit" || ($name == 'Note' && $action == 'add')) {
                     $attr['attr']['disabled'] = true;
                 }
                 break;
@@ -394,7 +397,7 @@ class AppraisalBehavior extends Behavior
     }
 
     //POCOR-8627 Start
-    
+
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         // Logic for reorder field in report Start
@@ -550,7 +553,7 @@ class AppraisalBehavior extends Behavior
             ->where([$AppraisalFormsCriterias->aliasField('appraisal_criteria_id') =>  $attr['appraisal_criteria_id']])
             ->order($AppraisalFormsCriterias->aliasField('order'));
             $formsCriterias = $query->toArray();
-            
+
             foreach ($formsCriterias as $key => $formsCriteria) {
                 $fieldTypeCode = $formsCriteria->appraisal_criteria->field_type->code;
                 $fieldTypeCode = $formsCriteria->appraisal_criteria->field_type->code;
