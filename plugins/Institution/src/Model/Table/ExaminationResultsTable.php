@@ -186,7 +186,7 @@ class ExaminationResultsTable extends ControllerActionTable
                 }
 
                 $rowData = [];
-                $rowData[] = $examItemObj->code_name;
+                $rowData[] = $examItemObj->code .'-'.$examItemObj->name;
                 $rowData[] = $subjectObj->code_name;
                 $rowData[] = $itemResult;
                 $rowData[] = $itemWeight;

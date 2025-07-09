@@ -1,4 +1,5 @@
 <?php
+
 namespace Gpa\Controller;
 
 use App\Controller\AppController;
@@ -9,12 +10,13 @@ use Cake\Utility\Inflector;
 
 class GpaController extends AppController
 {
-    
-	public function initialize(): void {
+
+    public function initialize(): void
+    {
         parent::initialize();
     }
-    
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event) 
+
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeFilter($event);
         if ($this->getPlugin() == 'Gpa') {
@@ -24,13 +26,23 @@ class GpaController extends AppController
         $Tabname = $this->request->getParam('action');
         $header = $this->splitOnCapitalLetters($Tabname);
         $action = $this->request->getParam('action');
+        //POCOR-9160 start
+        $header = trim($header);
+        if ($header == "Gpa System") {
+            $header = 'GPA System';
+        }else if ($header == "Cumulative") {
+            $header = 'Cumulative GPA';
+        } else if ($header == "Gpa Grading Type") {
+            $header = 'GPA Grading Types';
+        }
+        //POCOR-9160 end
         //$header .= ' - '.__(Inflector::humanize($action));
-        $this->Navigation->addCrumb($header , ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $action]);
+        $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $action]);
         $this->set('contentHeader', $header);
-        
     }
-    private function splitOnCapitalLetters($string) {
-        
+    private function splitOnCapitalLetters($string)
+    {
+
         $words = preg_split('/(?=[A-Z])/', $string);
 
         return implode(' ', $words);
@@ -55,10 +67,10 @@ class GpaController extends AppController
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
         $action = !is_null($action) ? $action : $this->request->getParam('action');
-        if($action == 'GpaSystem'){
+        if ($action == 'GpaSystem') {
             $action = 'Gpa';
-        }else {
-          $action = $action;  
+        } else {
+            $action = $action;
         }
         $this->set('selectedAction', $action);
     }
@@ -69,14 +81,17 @@ class GpaController extends AppController
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 
-    public function GpaSystem() { 
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Gpa.GpaSystem']); 
+    public function GpaSystem()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Gpa.GpaSystem']);
     }
 
-    public function Cumulative() { 
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Gpa.Cumulative']); 
+    public function Cumulative()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Gpa.Cumulative']);
     }
-    public function GpaGradingType() { 
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Gpa.GpaGradingTypes']); 
+    public function GpaGradingType()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Gpa.GpaGradingTypes']);
     }
 }

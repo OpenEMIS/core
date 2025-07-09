@@ -541,9 +541,14 @@ class InstitutionPositionsTable extends ControllerActionTable
                 ->combine('id', 'name_and_type') // combine() is another collection method
                 ->toArray(); // Also a collections library method
         }
-        $attr['options'] = $titles;
+        //POCOR-9225[START]
+        $attr['type'] = 'chosenSelect';
+        $attr['attr']['multiple'] = false;
+        $attr['select'] = false;
+        $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $titles;
         $attr['onChangeReload'] = true;
         return $attr;
+        //POCOR-9225[END]
     }
 
     /******************************************************************************************************************

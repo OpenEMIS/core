@@ -1691,20 +1691,33 @@ class StaffTable extends ControllerActionTable
                 $institutionId = $this->paramsEncode(['id' => $entity->institution->id]);
                 $userId = $entity->_matchingData['Users']->id;
 
+                //POCOR-3128[START]
                 $icon = '<i class="fa fa-history"></i>';
+                // $url = [
+                //     'plugin' => 'Institution',
+                //     'institutionId' => $institutionId,
+                //     'controller' => 'StaffHistories',
+                //     'action' => 'index'
+                // ];
                 $url = [
                     'plugin' => 'Institution',
-                    'institutionId' => $institutionId,
-                    'controller' => 'StaffHistories',
-                    'action' => 'index'
+                    'institution_id' => $institutionId,
+                    //'controller' => 'StudentHistories',
+                    //'action' => 'index',
+                    'controller' => 'Institutions',//POCOR-8333
+                    'action' => 'StaffHistories',//POCOR-8333
+                    '0' => 'index',//POCOR-8333
+                    '1' => $encodedQueryString
                 ];
 
                 $buttons['history'] = $buttons['view'];
                 $buttons['history']['label'] = $icon . __('History');
                 $buttons['history']['url'] = $this->ControllerAction->setQueryString($url, [
                     'security_user_id' => $userId,
-                    'user_type' => 'Staff'
+                    'user_type' => 'Staff',
+                    'institution_id' => $entity->institution->id
                 ]);
+                //POCOR-3128[END]
             }
             // end POCOR-3125 history button permission
         }
@@ -3469,6 +3482,23 @@ class StaffTable extends ControllerActionTable
             $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
             $SecurityGroupTbl = TableRegistry::get('Security.UserGroups');
             $SecurityGroupUserTbl = TableRegistry::get('Security.SecurityGroupUsers');
+
+             //POCOR-9212[START] // Here is the logic change: instead of checking institution_id from the table SecurityGroupInstitutions 
+             // check for the security_group_id
+             $groupUserRecords = $SecurityGroupUserTbl->find()
+                        ->matching('SecurityGroups')
+                        ->matching('SecurityRoles')
+                        ->where([$SecurityGroupUserTbl->aliasField('security_user_id') => $staffId])
+                        ->group([
+                            $SecurityGroupUserTbl->aliasField('security_group_id'),
+                            $SecurityGroupUserTbl->aliasField('security_role_id')
+                        ])
+                        ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name', 'security_group_id' => $SecurityGroupUserTbl->aliasField('security_group_id')])
+                        ->toArray();
+            $security_group_id = $groupUserRecords[0]['security_group_id'];
+            //POCOR-9212[END]
+
+
             $SecurityGroup = $SecurityGroupTbl->find()
                 ->select([
                     $SecurityGroupUserTbl->aliasField('security_group_id'),
@@ -3478,7 +3508,8 @@ class StaffTable extends ControllerActionTable
                 ->leftJoin(
                     [$SecurityGroupInstitutions->getAlias() => $SecurityGroupInstitutions->getTable()],
                     [
-                        $SecurityGroupInstitutions->aliasField('institution_id = ') . $SecurityGroupTbl->aliasField('id')
+                        // $SecurityGroupInstitutions->aliasField('institution_id = ') . $SecurityGroupTbl->aliasField('id')
+                        $SecurityGroupInstitutions->aliasField('security_group_id = ') . $SecurityGroupTbl->aliasField('id')  //POCOR-9212
                     ]
                 )
                 ->leftJoin(
@@ -3488,7 +3519,8 @@ class StaffTable extends ControllerActionTable
                     ]
                 )
                 ->where([
-                    $SecurityGroupTbl->aliasField('id') => $institutionId,
+                    // $SecurityGroupTbl->aliasField('id') => $institutionId,
+                    $SecurityGroupTbl->aliasField('id') => $security_group_id, //POCOR-9212
                     $SecurityGroupUserTbl->aliasField('security_user_id') => $staffId,
                 ])->enableHydration(false)->toArray();
             $RoleArr = [];
@@ -4319,7 +4351,9 @@ class StaffTable extends ControllerActionTable
                 $staffLeaveRecords = [];
 
                 if (!empty($row->_matchingData['Users']->photo_name)) {
-                    $row['photo_content'] = base64_encode(stream_get_contents($row->_matchingData['Users']->photo_content));
+                    if (!empty($row->_matchingData['Users']->photo_content)) {//POCOR-9189 starts
+                        $row['photo_content'] = base64_encode(stream_get_contents($row->_matchingData['Users']->photo_content));
+                    }//POCOR-9189 ends
                 }
 
                 if (array_key_exists($staffId, $attendanceByStaffIdRecords)) {
@@ -4662,7 +4696,9 @@ class StaffTable extends ControllerActionTable
                     $row['user_avatar'] = null;
 
                     if (!empty($row->user->photo_name)) {
-                        $row['user_avatar'] = base64_encode(stream_get_contents($row->user->photo_content));
+                        if (!empty($row->user->photo_content)) {//POCOR-9189 starts
+                            $row['user_avatar'] = base64_encode(stream_get_contents($row->user->photo_content));
+                        }//POCOR-9189 ends
                     }
                     return $row;
                 });

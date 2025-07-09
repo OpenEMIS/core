@@ -176,7 +176,7 @@ class StudentRisksTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $conditions = [];
-
+        $extra['selectedAcademicPeriodId'] =  !empty($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $conditions[$this->aliasField('academic_period_id')] = $extra['selectedAcademicPeriodId'];
         $user = $this->Auth->user();
 

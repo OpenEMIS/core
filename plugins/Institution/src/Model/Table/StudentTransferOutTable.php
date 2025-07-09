@@ -14,6 +14,7 @@ use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
+use Cake\Controller\Component;
 
 
 class StudentTransferOutTable extends InstitutionStudentTransfersTable
@@ -151,6 +152,76 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         return $entity;
     }
 
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    {
+        // Generate encoded query string once
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+        $studentsUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'Students',
+            0 => 'index',
+            1 => $encodedQueryString
+        ];
+        $previousTitle = Inflector::humanize(Inflector::underscore($this->getAlias()));
+
+        $Navigation->substituteCrumb($previousTitle, 'Students', $studentsUrl);
+        $Navigation->addCrumb($previousTitle);
+
+    }
+    /**
+     * @return bool
+     */
+    private function checkUserAccessForPendingTransferOut()
+    {
+        $check = false;
+        $newQ = clone $this->query();
+        $institutionId = $this->getInstitutionID();
+        $newQ->find('InstitutionStudentTransferOut', ['institution_id' => $institutionId]);
+        $newQ->where(['Statuses.category' => self::IN_PROGRESS]);
+        $one_req = $newQ->find('all')->first();
+        if ($one_req) {
+            $status_id = $one_req->status_id;
+//            $this->log($status_id, 'debug');
+        } else {
+            return false;
+        }
+        $session = $this->Session;
+        $superAdmin = $session->read('Auth.User.super_admin');
+        if ($superAdmin) {
+            return true;
+        }
+        $roleIds = [];
+        $event = $this->dispatchEvent('Workflow.onUpdateRoles', null, $this);
+        if ($event->getResult()) {
+            $roleIds = $event->getResult();
+        } else {
+            $roles = $this->AccessControl->getRolesByUser()->toArray();
+            foreach ($roles as $key => $role) {
+                $roleIds[$role->security_role_id] = $role->security_role_id;
+            }
+        }
+        if (empty($roleIds)) {
+            $roleIds = [0];
+        }
+//        $this->log($roleIds);
+        $all_steps_and_roles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+        $distinct_step = $all_steps_and_roles->find()
+            ->select(['workflow_step_id'])
+            ->where(['workflow_step_id' => $status_id,
+                'security_role_id IN' => $roleIds])
+            ->distinct(['workflow_step_id'])
+            ->first();
+//        $this->log($distinct_step);
+        if ($distinct_step) {
+//            $this->log($distinct_step, 'debug');
+            $check = true;
+        }
+//        $this->log($check, 'debug');
+        return $check;
+    }
     public function onGetAssociatedRecordsElement(Event $event, $action, $entity, $attr, $options = [])
     {
         $fieldKey = 'associated_records';
@@ -240,9 +311,6 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         /*if (isset($extra['toolbarButtons']['add'])) {
             unset($extra['toolbarButtons']['add']);
         }*/
-        $queryString = $this->getQueryString();
-        $queryString['id'] = 94;
-        $encodedQueryString = $this->paramsEncode($queryString);
 
         $this->field('start_date', ['type' => 'hidden']);
         $this->field('end_date', ['type' => 'hidden']);
@@ -256,41 +324,8 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $this->field('institution_id', ['type' => 'integer',
             'sort' => ['field' => 'Institutions.code']]);
         $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'institution_id', 'academic_period_id', 'education_grade_id', 'requested_date']);
+        $this->addStudentsExtraButtons($extra['toolbarButtons']); // POCOR-9155
 
-        // back button
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        $toolbarAttr = [
-            'class' => 'btn btn-xs btn-default',
-            'data-toggle' => 'tooltip',
-            'data-placement' => 'bottom',
-            'escape' => false
-        ];
-        $toolbarButtonsArray['back']['type'] = 'button';
-        $toolbarButtonsArray['back']['label'] = '<i class="fa kd-back"></i>';
-        $toolbarButtonsArray['back']['attr'] = $toolbarAttr;
-        $toolbarButtonsArray['back']['attr']['title'] = __('Back');
-        $toolbarButtonsArray['back']['url']['plugin'] = 'Institution';
-        $toolbarButtonsArray['back']['url']['controller'] = 'Institutions';
-        $toolbarButtonsArray['back']['url']['action'] = 'Students';
-        $toolbarButtonsArray['back']['url'][0] = 'index';
-        $toolbarButtonsArray['back']['url'][1] = $encodedQueryString;
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
-        // End
-
-        // Start bulk Student Transfer Out button POCOR-6028 start
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        $url = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'BulkStudentTransferOut',
-            'edit'
-        ];
-        $toolbarButtonsArray['bulkAdmission'] = $this->getButtonTemplate();
-        $toolbarButtonsArray['bulkAdmission']['label'] = '<i class="fa kd-transfer"></i>';
-        $toolbarButtonsArray['bulkAdmission']['attr']['title'] = __('Bulk Student Transfer Out');
-        $toolbarButtonsArray['bulkAdmission']['url'] = $url;
-        $toolbarButtonsArray['bulkAdmission']['url'][1] = $encodedQueryString;
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // End bulk Student Transfer Out button POCOR-6028 end
     }
 
@@ -1258,5 +1293,118 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         return $recvInstitution;
     }
     //POCOR-8642 -- END
+
+    /**
+     * @param $toolbarButtons1
+     * @return void
+     */
+    private function addStudentsExtraButtons($toolbarButtons1): void // POCOR-9155
+    {
+// back button
+        // Generate encoded query string once
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+// Common button attributes
+        $baseBtnAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false,
+        ];
+
+// Add back button
+        $toolbarButtons = $toolbarButtons1->getArrayCopy();
+        $toolbarButtons['back'] = [
+            'type' => 'button',
+            'label' => '<i class="fa kd-back"></i>',
+            'attr' => array_merge($baseBtnAttr, ['title' => __('Back')]),
+            'url' => [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Students',
+                0 => 'index',
+                1 => $encodedQueryString
+            ]
+        ];
+
+// Define all extra toolbar buttons
+        $extraButtons = [
+            'add' => [
+                'permission' => ['Institutions', 'Students', 'add'],
+                'action' => 'Students',
+                'icon' => '<i class="fa fa-plus"></i>',
+                'title' => __('Add')
+            ],
+            'graduate' => [
+                'permission' => ['Institutions', 'Promotion', 'add'],
+                'action' => 'Promotion',
+                'icon' => '<i class="fa kd-graduate"></i>',
+                'title' => __('Promotion / Repeating / Graduation')
+            ],
+            'transfer' => [
+                'permission' => ['Institutions', 'Transfer', 'add'],
+                'action' => 'Transfer',
+                'icon' => '<i class="fa kd-transfer"></i>',
+                'title' => __('Transfer')
+            ],
+            'undo' => [
+                'permission' => ['Institutions', 'Undo', 'add'],
+                'action' => 'Undo',
+                'icon' => '<i class="fa kd-undo"></i>',
+                'title' => __('Undo')
+            ],
+        ];
+        if($this->checkUserAccessForPendingTransferOut()){
+            $extraButtons['bulkTransferOut'] = [
+                'permission' => ['Institutions', 'Transfer', 'add'],
+                'action' => 'BulkStudentTransferOut',
+                'next_action' => 'edit',
+                'icon' => '<i class="fa kd-transfer"></i>',
+                'title' => __('Bulk Student Transfer Out')
+            ];
+        }
+
+        foreach ($extraButtons as $key => $config) {
+            if (!empty($config['external'])) {
+                $toolbarButtons[$key] = [
+                    'type' => 'link',
+                    'label' => $config['icon'],
+                    'attr' => array_merge($baseBtnAttr, [
+                        'title' => $config['title'],
+                        'target' => '_blank'
+                    ]),
+                    'url' => $config['url']
+                ];
+                continue;
+            }
+
+            if (!empty($config['permission']) &&
+                !$this->AccessControl->check($config['permission'])) {
+                continue;
+            }
+
+            $url = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => $config['action'],
+                0 => $config['next_action'] ?? 'add',
+                1 => $encodedQueryString
+            ];
+
+            if (!empty($config['extraParams'])) {
+                $url = array_merge($url, ['?' => $config['extraParams']]);
+            }
+
+            $toolbarButtons[$key] = [
+                'type' => 'button',
+                'label' => $config['icon'],
+                'attr' => array_merge($baseBtnAttr, ['title' => $config['title']]),
+                'url' => $url
+            ];
+        }
+
+        $toolbarButtons1->exchangeArray($toolbarButtons);
+    }
 
 }
