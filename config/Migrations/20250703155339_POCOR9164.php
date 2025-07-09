@@ -14,8 +14,8 @@ class POCOR9164 extends AbstractMigration
      */
     public function up(): void
     {
-        // $this->execute('CREATE TABLE `zz_9164_config_items` LIKE `config_items`');
-        // $this->execute('INSERT INTO `zz_9164_config_items` SELECT * FROM `config_items`');
+        $this->execute('CREATE TABLE `zz_9164_config_items` LIKE `config_items`');
+        $this->execute('INSERT INTO `zz_9164_config_items` SELECT * FROM `config_items`');
 
 
         $this->execute("
@@ -44,7 +44,7 @@ class POCOR9164 extends AbstractMigration
         ");
 
 
-        // $this->execute("ALTER TABLE institution_student_programmes MODIFY registration_number VARCHAR(200);");
+        $this->execute("ALTER TABLE institution_student_programmes MODIFY registration_number VARCHAR(200);");
     }
 
     public function down(): void
