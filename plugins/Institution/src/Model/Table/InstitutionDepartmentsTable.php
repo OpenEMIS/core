@@ -1,0 +1,269 @@
+<?php
+
+namespace Institution\Model\Table;
+
+use ArrayObject;
+use Cake\ORM\TableRegistry;
+use Cake\ORM\Query;
+use Cake\ORM\Entity;
+use Cake\I18n\Date;
+use Cake\Event\Event;
+use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
+use Cake\Datasource\ResultSetInterface;
+use App\Model\Table\ControllerActionTable;
+use App\Model\Traits\OptionsTrait;
+use Cake\Log\Log;
+use Cake\Utility\Inflector;
+use Cake\ORM\Table;
+use Cake\Collection\Collection;
+
+class InstitutionDepartmentsTable extends ControllerActionTable
+{
+
+    public function initialize(array $config): void
+    {
+        parent::initialize($config);
+        $this->setTable('institution_departments');
+
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('Managers', ['className' => 'User.Users']);
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Departments' => ['id']
+            ]
+        ]);
+    }
+
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+        $validator->add('code', 'ruleUnique', [
+                   'rule' => ['validateUnique', ['scope' => ['institution_id']]],
+                   'provider' => 'table'
+               ]);
+
+        return $validator;
+    }
+
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('institution_id', ['visible' => false]);
+    }
+
+
+
+    /******************************************************************************************************************
+     **
+     ** index action methods
+     **
+     ******************************************************************************************************************/
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
+        $this->controller->set('contentHeader', $header);
+
+
+        $this->fields['institution_id']['visible'] = false; //POCOR-6971
+
+        $this->fields['manager_id']['sort'] = ['field' => 'Managers.first_name'];
+        $this->setFieldOrder([
+            'code',
+            'name',
+            'manager_id'
+        ]);
+
+        if (is_null($this->request->getQuery('sort'))) {
+            //POCOR-8475 starts
+            //$this->request->getQuery['sort'] = 'created';
+            //$this->request->getQuery['direction'] = 'desc';
+            $this->request = $this->request->withQueryParams( array_merge( $this->request->getQueryParams(), ['sort' => 'created'] ));
+            $this->request = $this->request->withQueryParams( array_merge( $this->request->getQueryParams(), ['direction' => 'desc'] ));
+            //POCOR-8475 ends
+        }
+    }
+
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $extra['auto_contain'] = false;
+        $extra['auto_order'] = false;
+        $institutionStaff = self::getDynamicTableInstance('Report.InstitutionStaff');
+        $institutionID = $this->getQueryString('institution_id');
+        if(!$institutionID){
+            $event->stopPropagation();
+//            return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+
+        }
+        $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('name'),
+                $this->aliasField('code'),
+                $this->aliasField('manager_id'),
+                $this->aliasField('created')
+            ])
+            ->contain([
+
+                'Managers' => [
+                    'fields' => [
+                        'Managers.id',
+                        'Managers.first_name',
+                        'Managers.middle_name',
+                        'Managers.third_name',
+                        'Managers.last_name',
+                        'Managers.preferred_name'
+                    ]
+                ]
+
+            ])
+            ->distinct([$this->aliasField('code')])
+            ->where([$this->aliasField('institution_id') => $institutionID])
+            ->order([
+                $this->aliasField($this->request->getQuery('sort'))
+                => $this->request->getQuery('direction')]); //POCOR-8475
+
+        $sortList = ['code', 'name'/*,POCOR-5069 'StaffPositionGrades.order'*/, 'created','Assignees.first_name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
+        $params = $this->request->getQuery();
+        if(empty($params)){
+            $extra['options']['direction'] = 'desc';
+            $extra['options']['limit'] = 10;
+            $extra['options']['sort'] = 'name';
+        }
+//        Log::debug(print_r($params, true));
+    }
+
+    /******************************************************************************************************************
+     **
+     ** addEdit action methods
+     **
+     ******************************************************************************************************************/
+
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($event, $entity);
+    }
+
+    public function setupFields(Event $event, Entity $entity){
+
+        $this->fields['institution_id']['visible'] = false;
+        $this->field('manager_id', ['entity' => $entity]);
+        $this->setFieldOrder([
+            'code',
+            'name',
+            'manager_id',
+        ]);
+    }
+
+    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+
+        if(!isset($entity['institution_id'])){
+            $entity['institution_id'] = $this->getInstitutionID();
+        };
+
+    }
+
+    public function beforeSave($event, Entity $entity, ArrayObject $options)
+    {
+        if (!isset($entity->institution_id)) {
+            $entity->institution_id = $this->getInstitutionID();
+        }
+    }
+
+
+    //POCOR-6925
+    public function onUpdateFieldManagerId(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+            $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
+            $institutionId = $entity->institution_id ?? $this->getInstitutionID();
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+
+            $raw = $InstitutionStaff->find('subjectStaffOptions',
+                ['institution_id' => $institutionId,
+                    'type' => -1])
+                ->toList();
+            $managerOptions = (new Collection($raw))
+                ->combine('id', 'name')
+                ->toArray();
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = false;
+            $attr['options'] = ['' => '-- ' . __('Select Manager') . ' --'] + $managerOptions;
+            $attr['onChangeReload'] = 'changeStatus';
+        }
+        return $attr;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        return match ($field) {
+            'manager_id' => __('Manager'),
+            default => parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize),
+        };
+    }
+
+
+    /**
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName . POCOR-8231
+     * @return \Cake\ORM\Table
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+
+        try {
+            // Try to get the table instance directly
+            return $locator->get($tableName);
+        } catch (\Exception $e) {
+            Log::debug('Error: ' . $e->getMessage());
+        }
+
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
+}

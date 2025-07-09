@@ -3005,11 +3005,12 @@ class StaffTable extends ControllerActionTable
 
     public function findSubjectStaffOptions(Query $query, array $options)
     {
-        $institutionId = $options['institution_id'];
-        $academicPeriodId = $options['academic_period_id'];
+        $institutionId     = $options['institution_id'];
+        $academicPeriodId  = $options['academic_period_id'] ?? null;
+        $type  = $options['type'] ?? 1;
 
-        return $query
-            ->find('all')
+        // Base query
+        $query = $query
             ->select([
                 $this->aliasField('id'),
                 'Users.id',
@@ -3020,30 +3021,49 @@ class StaffTable extends ControllerActionTable
                 'Users.last_name',
                 'Users.preferred_name'
             ])
-            ->find('byInstitution', ['Institutions.id' => $institutionId])
-            ->find('byPositions', ['Institutions.id' => $institutionId, 'type' => 1])
-            ->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+            ->find('byInstitution', [
+                'Institutions.id' => $institutionId
+            ])
             ->contain(['Users'])
             ->where([
                 $this->aliasField('institution_position_id'),
-                'OR' => [ //check teacher end date
-                    [$this->aliasField('end_date') . ' > ' => Time::now()],
+                'OR' => [
+                    [$this->aliasField('end_date') . ' >' => Time::now()],
                     [$this->aliasField('end_date') . ' IS NULL']
                 ]
             ])
-            ->order([
-                $this->Users->aliasField('first_name')
-            ])
+            ->order([$this->Users->aliasField('first_name')]);
+
+        // Only apply the AcademicPeriod finder if we actually have a period ID
+        if ($academicPeriodId !== null) {
+            $query = $query->find('AcademicPeriod', [
+                'academic_period_id' => $academicPeriodId
+            ]);
+        }
+
+        if ($type >= 0) {
+            $query = $query->find('byPositions', [
+                'Institutions.id' => $institutionId,
+                'type'            => $type
+            ]);
+        }
+
+        return $query
+            ->find('all') // you can drop this if your custom finder already starts from 'all'
             ->formatResults(function ($results) {
-                $returnArr = [];
-                foreach ($results as $result) {
-                    if ($result->has('user')) {
-                        $returnArr[] = ['id' => $result->user->id, 'name' => $result->user->name_with_id];
+                $return = [];
+                foreach ($results as $entity) {
+                    if ($entity->has('user')) {
+                        $return[] = [
+                            'id'   => $entity->user->id,
+                            'name' => $entity->user->name_with_id
+                        ];
                     }
                 }
-                return $returnArr;
+                return $return;
             });
     }
+
 
     public function findAllCommentsViewPermissions(Query $query, array $options)
     {
@@ -3483,7 +3503,7 @@ class StaffTable extends ControllerActionTable
             $SecurityGroupTbl = TableRegistry::get('Security.UserGroups');
             $SecurityGroupUserTbl = TableRegistry::get('Security.SecurityGroupUsers');
 
-             //POCOR-9212[START] // Here is the logic change: instead of checking institution_id from the table SecurityGroupInstitutions 
+             //POCOR-9212[START] // Here is the logic change: instead of checking institution_id from the table SecurityGroupInstitutions
              // check for the security_group_id
              $groupUserRecords = $SecurityGroupUserTbl->find()
                         ->matching('SecurityGroups')
