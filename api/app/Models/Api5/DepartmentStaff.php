@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Api5;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\SecurityUsers;
 
 class DepartmentStaff extends Model
 {

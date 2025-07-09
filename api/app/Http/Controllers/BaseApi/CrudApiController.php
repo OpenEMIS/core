@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use App\Services\PermissionService;
 use Illuminate\Support\Carbon;
-use Tymon\JWTAuth\Facades\JWTAuth;
 
 class CrudApiController extends Controller
 {
@@ -18,7 +17,6 @@ class CrudApiController extends Controller
         'staff-leave-entitlements' => \App\Models\Api5\StaffLeaveEntitlements::class,
         'staff-leave-policies' => \App\Models\Api5\StaffLeavePolicies::class,
         'staff-leave-policy-types' => \App\Models\Api5\StaffLeavePolicyTypes::class,
-        'alerts-logs' => \App\Models\Api5\AlertsLogs::class,
         'workflows-filters' => \App\Models\Api5\WorkflowsFilters::class,
         'workflows' => \App\Models\Api5\Workflows::class,
         'workflow-transitions' => \App\Models\Api5\WorkflowTransitions::class,
