@@ -1,10 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Api5;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
+use App\Models\SecurityUsers;
+use App\Models\Institutions;
 
 
 class InstitutionDepartments extends Model
@@ -247,13 +249,13 @@ class InstitutionDepartments extends Model
     {
     }
 
-    // Scope to include manager details
 
     public function scopeForInstitution($query, $institutionId)
     {
         return $query->where('institution_id', $institutionId);
     }
 
+    // Scope to include manager details
     public function scopeWithManager($query)
     {
         return $query->with(['manager' => function ($query) {

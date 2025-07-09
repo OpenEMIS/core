@@ -5,10 +5,9 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use App\Models\DepartmentStaff;
+use App\Models\Api5\DepartmentStaff;
 use App\Models\SecurityUsers as TestSecurityUser;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Carbon\Carbon;
 
 class DepartmentStaffApiTest extends TestCase
 {

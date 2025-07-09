@@ -2,10 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\InstitutionDepartments;
+use App\Models\Api5\InstitutionDepartments;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
 
 class InstitutionDepartmentsFactory extends Factory
 {
