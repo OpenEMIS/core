@@ -66,17 +66,25 @@ function InstitutionDepartmentsController($scope, $q, $window, $http, UtilsSvc, 
             field: 'gender_name'
         },
         {
-            headerName: 'Staff Status',
-            field: 'staff_status_name'
+            headerName: 'Education Grade',
+            field: 'education_grade_name'
+        },
+        {
+            headerName: 'Student Status',
+            field: 'student_status_name'
         }
     ];
     Controller.institutionId = null;
-    Controller.assignedStaff = {};
-    Controller.unassignedStaff = {};
+    Controller.academicPeriodId = null;
+    Controller.assignedStudents = {};
+    Controller.unassignedStudents = {};
+    Controller.mainTeacherOptions = [];
     Controller.teacherOptions = [];
+    Controller.secondaryTeacherOptions = [];
     Controller.alertUrl = '';
     Controller.redirectUrl = '';
     Controller.selectedTeacher = null;
+    Controller.selectedSecondaryTeacher = [];
     Controller.departmentName = '';
     Controller.academicPeriodName = '';
     Controller.postError = [];
@@ -107,7 +115,7 @@ function InstitutionDepartmentsController($scope, $q, $window, $http, UtilsSvc, 
                     Controller.institutionId = response.institution_id;
                     Controller.academicPeriodName = response.academic_period.name;
 
-                    var assignedStaff = [];
+                    var assignedStudents = [];
                     angular.forEach(response.department_student, function(value, key) {
                         var toPush = {
                             openemis_no: value.user.openemis_no,
@@ -127,8 +135,8 @@ function InstitutionDepartmentsController($scope, $q, $window, $http, UtilsSvc, 
                             }))
                         };
                         this.push(toPush);
-                    }, assignedStaff);
-                    Controller.assignedStaff = assignedStaff;
+                    }, assignedStudents);
+                    Controller.assignedStudents = assignedStudents;
 
                     var promises = [];
                     promises[0] = InstitutionDepartmentsSvc.getUnassignedStudent(Controller.classId, response.institution_id, response.academic_period_id);
@@ -139,7 +147,7 @@ function InstitutionDepartmentsController($scope, $q, $window, $http, UtilsSvc, 
                     console.log(error);
                 })
                 .then(function(promises) {
-                    var unassignedStaffArr = [];
+                    var unassignedStudentsArr = [];
                     angular.forEach(promises[0], function(value, key) {
                         var toPush = {
                             openemis_no: value.openemis_no,
@@ -159,8 +167,8 @@ function InstitutionDepartmentsController($scope, $q, $window, $http, UtilsSvc, 
                             }))
                         };
                         this.push(toPush);
-                    }, unassignedStaffArr);
-                    Controller.unassignedStaff = unassignedStaffArr;
+                    }, unassignedStudentsArr);
+                    Controller.unassignedStudents = unassignedStudentsArr;
                     Controller.mainTeacherOptions = promises[2];
                     Controller.maxStudentsPerClass = parseInt(promises[3]);
 
@@ -179,8 +187,8 @@ function InstitutionDepartmentsController($scope, $q, $window, $http, UtilsSvc, 
                     angular.forEach(translatedText, function(value, key) {
                         Controller.colDef[key]['headerName'] = value;
                     });
-                    Controller.setTop(Controller.colDef, Controller.unassignedStaff);
-                    Controller.setBottom(Controller.colDef, Controller.assignedStaff);
+                    Controller.setTop(Controller.colDef, Controller.unassignedStudents);
+                    Controller.setBottom(Controller.colDef, Controller.assignedStudents);
                 }, function(error) {
                     console.log(error);
                 })
