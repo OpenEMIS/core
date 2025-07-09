@@ -100,13 +100,15 @@ class GuardiansController extends AppController
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'dashboard',
-                'institutionId' => $encodedInstitutionId,
+//                'institutionId' => $encodedInstitutionId,
                 $encodedInstitutionId]);
         $this->Navigation->addCrumb('Students',
             ['plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'institutionId' => $encodedInstitutionId,
-                'action' => 'Students']);
+                'action' => 'Students',
+                '0' => 'index',
+                '1' => $encodedInstitutionId]);
         $this->Navigation->addCrumb($name, [
             'plugin' => 'Institution',
             'controller' => 'Institutions',

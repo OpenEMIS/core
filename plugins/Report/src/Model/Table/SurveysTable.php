@@ -821,7 +821,7 @@ public function getChildren($id, $idArray)
                             //POCOR-7022
                         ])->toArray();
                     if (!empty($surveyFormOptions)) {
-                        $attr['options'] = $surveyFormOptions;
+                        $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $surveyFormOptions; //POCOR-9207
                         $attr['onChangeReload'] = true;
                         $attr['type'] = 'select';
                         $attr['select'] = false;
@@ -829,7 +829,7 @@ public function getChildren($id, $idArray)
                     } else {
                         $surveyFormOptions = ['' => $this->getMessage('general.select.noOptions')];
                         $attr['type'] = 'select';
-                        $attr['options'] = $surveyFormOptions;
+                        $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $surveyFormOptions; //POCOR-9207
                         $attr['attr']['required'] = true;
                     }
 
