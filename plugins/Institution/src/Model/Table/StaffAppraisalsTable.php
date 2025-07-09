@@ -296,7 +296,86 @@ class StaffAppraisalsTable extends ControllerActionTable
         return $query;
     }
 
+    /* 
+     * POCOR-9179. calculatin changed
+     * Only include answers in final score if 'params.formula' exists and is valid.
+     * If 'params' is null or does not contain a known formula, the answer is excluded.
+     */
+
     public function onGetFinalScore(Event $event, Entity $entity)
+    {
+        $institutionStaffAppraisalsId = $entity->id;
+
+        $AppraisalFormsCriteriasScores = $this->AppraisalForms->AppraisalFormsCriteriasScores;
+        $AppraisalScoreAnswers = $this->AppraisalScoreAnswers;
+
+        $results = $this->find()
+            ->select([
+                'answer' => $AppraisalScoreAnswers->aliasField('answer'),
+                'params' => $AppraisalFormsCriteriasScores->aliasField('params')
+            ])
+            ->where([
+                $this->aliasField('id') => $institutionStaffAppraisalsId,
+                $AppraisalFormsCriteriasScores->aliasField('final_score IS NOT NULL')
+            ])
+            ->innerJoin(
+                [$AppraisalFormsCriteriasScores->getAlias() => $AppraisalFormsCriteriasScores->getTable()],
+                $AppraisalFormsCriteriasScores->aliasField('appraisal_form_id') . ' = ' . $this->aliasField('appraisal_form_id')
+            )
+            ->innerJoin(
+                [$AppraisalScoreAnswers->getAlias() => $AppraisalScoreAnswers->getTable()],
+                [
+                    $AppraisalScoreAnswers->aliasField('appraisal_form_id') . ' = ' . $AppraisalFormsCriteriasScores->aliasField('appraisal_form_id'),
+                    $AppraisalScoreAnswers->aliasField('appraisal_criteria_id') . ' = ' . $AppraisalFormsCriteriasScores->aliasField('appraisal_criteria_id'),
+                    $AppraisalScoreAnswers->aliasField('institution_staff_appraisal_id') . ' = ' . $institutionStaffAppraisalsId
+                ]
+            )
+            ->enableHydration(false)
+            ->toArray();
+
+        $sumTotal = 0;
+        $avgTotal = 0;
+        $avgCount = 0;
+
+        /*
+         * POCOR-9179
+         * Only include answers in final score if 'params.formula' exists and is valid.
+         * If 'params' is null or does not contain a known formula, the answer is excluded.
+         */
+        foreach ($results as $row) {
+            $answer = isset($row['answer']) ? floatval($row['answer']) : 0;
+
+            // Skip if params is missing or not usable
+            if (empty($row['params'])) {
+                continue;
+            }
+
+            $params = json_decode($row['params'], true);
+            if (!is_array($params) || empty($params['formula'])) {
+                continue;
+            }
+
+            $formula = strtolower($params['formula']);
+
+            if ($formula === 'sum') {
+                $sumTotal += $answer;
+            } elseif (in_array($formula, ['avg', 'average'])) {
+                $avgTotal += $answer;
+                $avgCount++;
+            }
+        }
+
+        $finalScore = $sumTotal;
+
+        if ($avgCount > 0) {
+            $finalScore += $avgTotal / $avgCount;
+        }
+
+        return $finalScore > 0 ? round($finalScore, 2) : "<i class='fa fa-minus'></i>";
+    }
+
+
+    /*public function onGetFinalScore(Event $event, Entity $entity)
     {
         $institutionStaffAppraisalsId = $entity->id;
         $AppraisalFormsCriteriasScores = $this->AppraisalForms->AppraisalFormsCriteriasScores;
@@ -328,7 +407,7 @@ class StaffAppraisalsTable extends ControllerActionTable
             }
         }
         return $answer;
-    }
+    }*/
 
     private function setupTabElements()
     {

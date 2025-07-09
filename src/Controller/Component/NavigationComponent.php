@@ -722,7 +722,7 @@ class NavigationComponent extends Component
                     'Institutions.Staff',
                     'Institutions.StaffTransferIn',
                     'Institutions.StaffTransferOut',
-                    'StaffHistories.index'
+                    'Institutions.StaffHistories.index' // POCOR-3128
                 ]
             ],
 
@@ -877,6 +877,7 @@ class NavigationComponent extends Component
             'Institutions.ExaminationResults.index' => [
                 'title' => 'Results',
                 'parent' => 'Institutions.Examinations',
+                'selected' => ['Institutions.ExaminationResults'],
             ],
 
             'Institutions.ReportCards' => [

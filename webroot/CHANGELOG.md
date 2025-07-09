@@ -1,3 +1,64 @@
+### [4.31.1] - 2025-07-07
+- Bug Fixed: Institutions > Academic > Subjects List page : Clicking edit button will cause a 404 error
+- Bug Fixed: Administration > Communication > Alert Rules: Staff Employment: Email is not being sent
+- Bug Fixed: Institutions>Performance>Report Cards: Total marks are not showing correctly when exempted or unassigned
+- Bug Fixed: Administration > Communication > Alert: Retirement warning is not sent
+- Bug Fixed: Institutions>Performance>Report Cards: Ordering and gpa start and end date is not showing correctly
+- Bug Fixed: Institutions > Performance > Assessments > Exempt/Unassign: Save button doesn't redirect user to exit the edit mode
+- Bug Fixed: Directory > Student > Academic : User is not able to sort in ascending or descending order.
+
+### [4.31.0] - 2025-07-01
+- Implemented: Develop SMS function
+- Implemented: Develop a standard report with filters for Reports > Performance > Assessments
+- Implemented: Develop addition of the student role in the Student Admission - Alert Rules
+- Implemented: Add history links to the action menu for Institution -> Staff features
+- Implemented: Develop functions to remove academic period from infrastructure
+- Bug Fixed: Report>Survey>Survey Report: User should be able to select other questions likes staff list and student list
+- Bug Fixed: API: Institutions API is not showing only on gy-tvet-trn env
+- Bug Fixed: Institutions > Attendance > Staff : Attendance page doesn't display staff.
+- Bug Fixed: Institutions > Students > Academic > GPA: Cumulative GPA displays incorrect calculations.
+- Bug Fixed: Administrations > System Setup > System Configurations : Themes > Date format is not applied to datepicker fields
+- Bug Fixed: Institutions>Performance>Report Cards: Develop student report cards placeholder for class rank and grade rank
+- Bug Fixed: Directory > Add : User is unable to update username
+- Bug Fixed: Institutions > Profiles > Students > Download PDF: The PDF Form is misaligned.
+- Bug Fixed: Institutions > Staff > Career > Appraisal > Add > Save : Final Score is incorrect
+- Bug Fixed: Administration>System Setup>System Configuration: Adds dropdown search feature
+- Bug Fixed: Institutions > Report Cards > Comments > View: Some tabs are not displaying correctly.
+
+### [4.30.1] - 2025-06-26
+- Bug Fixed: Institutions>Performance>Assessment>Report: Report is still showing 0,00 even when marks are not entered
+- Bug Fixed: Institutions > Performance > Competencies: User is unable to view the competencies he has permissions to
+
+### [4.30.0] - 2025-06-25
+- Implemented: Develop a configuration to change the overall mark and total mark in the report card comments feature between academic period and assessment period
+- Implemented: Develop change to Reports > Staff to include the option for all statuses
+- Implemented: Develop change to Reports > Students to include the option for all statuses
+- Bug Fixed: Institutions > Staff > Select > Edit: User receives a 404 error page.
+- Bug Fixed: Institutions > Performance > Assessments > Exempt/Unassign: Save button doesn't redirect user to exit the edit mode
+- Bug Fixed: Reports > Surveys > Add: Mandatory fields are missing only when save is clicked
+- Bug Fixed: Institutions > Institution Statistics > Add: User is not redirected out of edit page once changes have been saved.
+- Bug Fixed: Administration > Meals : Errors in Meals feature
+- Bug Fixed: Reports > Audits : Excel sheet should show all user roles except for super_admin
+- Bug Fixed: Institutions > Students > Academic > Risks: The risk showing under students profile is showing incorrect risk
+- Bug Fixed: Institutions > Examinations > Results: when viewing results in Institutions > Examinations > Results page, the page does not display all information etc weight, education subject
+- Bug Fixed: Administration > Examinations > Results > Import Template: The reference sheet in the import template for Examination Results is empty
+
+### [4.29.1] - 2025-06-23
+- Bug Fixed: Institutions > Performance > Assessment > Report: Certain users are unable to download mark sheet & are being redirected to homepage instead when doing so.
+
+### [4.29.0] - 2025-06-20
+- Implemented: Develop a change to rename registration number to candidate number
+- Bug Fixed: Administration>Profile>Institution: The placeholder populating the attendance data stops at the end of the calendar year
+- Bug Fixed: Institutions>Report Card>Comments: Principal are not able to view Principal tab even though permission is given
+- Bug Fixed: Administration > Appraisals > Add : User receives a 404 error message when adding options for dropdown field type.
+- Bug Fixed: Administration > System Setup > Education Structure > Grade Subjects: Filter glitches out when selecting by grade level.
+- Bug Fixed: Institutions>Performance>Report Cards: Tonga macros are not working
+- Bug Fixed: Institutions > Performance > Assessments : User is unable to enter student's marks.
+- Bug Fixed: Institutions > General > Profiles > Students: User receives a 404 error message when exporting all excel sheets.
+- Bug Fixed: Administration>System Setup>Custom Fields>Institutions: Custom fields in field tab not showing in both Institution>Overview and Classes Page
+- Bug Fixed: Institutions > Academic > Programmes > Delete: User receives a 404 error message.
+- Bug Fixed: Administration>Performance>GPA: It should show GPA system
+
 ### [4.28.2] - 2025-06-18
 - Bug Fixed: Institutions > Performance > Report Cards > Merge and Download: Report Cards are misaligned when using "Merge and Download", but is align when downloaded individually.
 

@@ -56,7 +56,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
 		$this->setFieldOrder(['status_type_id', 'status_date', 'comment', 'file_content']);
 
         $this->setupTabElements();
-        
+
         $session = $this->request->getSession();
         $controllerName = $this->controller->getName();
         if ($controllerName == 'Profiles')
@@ -72,7 +72,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
         $this->controller->set('contentHeader', $header);
         $alias = $this->alias;
         $this->controller->Navigation->substituteCrumb($this->getHeader($alias), __('Statuses'));
-            
+
         // Start POCOR-5188
         if($this->request->getParam('controller') == 'Staff'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Employment Status','Staff - Career');
@@ -137,7 +137,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
         ];
 
         // will do the comparison with threshold when retrieving the absence data
-        $licenseData = $this->find()
+        $alertData = $this->find()
             ->select([
                 'EmploymentStatusTypes.name',
                 'status_date',
@@ -161,7 +161,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
             ])
             ->enableHydration(false);
 
-        return $licenseData->toArray();
+        return $alertData->toArray();
     }
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
