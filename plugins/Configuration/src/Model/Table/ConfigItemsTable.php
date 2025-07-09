@@ -28,8 +28,7 @@ class ConfigItemsTable extends AppTable
 
     public function initialize(array $config): void
     {
-        $connection = $this->getConnection(); //POCOR-9203
-        if ($connection->getDriver()->isConnected()) { //POCOR-9203
+        if (file_exists(CONFIG . 'app_local.php')) {
             $this->languagePath = TMP . 'cache' . DS . 'language_menu';
             $this->languageFilePath = TMP . 'cache' . DS . 'language_menu' . DS . 'language';
             parent::initialize($config);
