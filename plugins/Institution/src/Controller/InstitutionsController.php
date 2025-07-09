@@ -513,10 +513,10 @@ class InstitutionsController extends AppController
     public function Departments($subaction = 'index', $encodedParams = null)
     {
         if ($subaction == 'edit') {
-            $session = $this->request->getSession();
-            $roles = [];
             $params = $this->ControllerAction->paramsDecode($encodedParams);
             $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+            $departmentId = $params['id'];
+
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Departments';
             $viewUrl[0] = 'view';
