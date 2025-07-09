@@ -128,8 +128,9 @@ class InstitutionsController extends AppController
         'InstitutionExaminationsUndoRegistration',
         'InstitutionExaminationStudents',
 
-        // positions
+        // appointments
         'InstitutionPositions',
+        'InstitutionDepartments',
 
         // finance
         'InstitutionBankAccounts',
@@ -507,6 +508,11 @@ class InstitutionsController extends AppController
     public function Positions()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']);
+    }
+
+    public function Departments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionDepartments']);
     }
 
     public function StaffDuties()
@@ -2294,7 +2300,7 @@ class InstitutionsController extends AppController
                                 'action' => 'Subjects',
                                 'edit',
                                  $this->ControllerAction->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId]),
-                                
+
                             ];
 
                             return $this->redirect($url);
