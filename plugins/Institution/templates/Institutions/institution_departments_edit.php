@@ -10,6 +10,7 @@ $this->start('toolbar');
 $paramsQueryStringFirst = $this->request->getAttribute('params')['pass'][1];
 $paramsQueryStringSecond = $this->request->getAttribute('params')['pass'][2];
 $institutionId = $this->ControllerAction->paramsDecode($paramsQueryStringFirst)['institution_id'];
+$departmentId = $this->ControllerAction->paramsDecode($paramsQueryStringFirst)['id'];
 ?>
 <style type='text/css'>
     .ag-grid-duration {
@@ -30,13 +31,13 @@ $institutionId = $this->ControllerAction->paramsDecode($paramsQueryStringFirst)[
 $this->end();
 $this->start('panelBody');
 ?>
-<form accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" ng-controller="InstitutionAssociationsCtrl as InstitutionDepartmentsController">
+<form accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" ng-controller="InstitutionDepartmentsCtrl as InstitutionDepartmentsController">
     <div class="alert {{InstitutionDepartmentsController.class}}" ng-hide="InstitutionDepartmentsController.message == null">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{InstitutionDepartmentsController.message}}
     </div>
     <div class="input string required">
         <label><?= __('Name') ?></label>
-        <input ng-model="InstitutionDepartmentsController.associationName" type="string" ng-init="InstitutionDepartmentsController.associationName='';">
+        <input ng-model="InstitutionDepartmentsController.departmentName" type="string" ng-init="InstitutionDepartmentsController.departmentName='';">
         <div ng-if="InstitutionDepartmentsController.postError.name" class="error-message">
             <p ng-repeat="error in InstitutionDepartmentsController.postError.name">{{ error }}</p>
         </div>
@@ -62,8 +63,11 @@ $this->start('panelBody');
     </div>
 	<div class="input select">
         <label><?= __('Add Student') ?></label>
-        <div class="input-form-wrapper" ng-init="InstitutionDepartmentsController.classId='<?= $classId ?>'; InstitutionDepartmentsController.redirectUrl='<?= $this->Url->build($viewUrl) ?>'; InstitutionDepartmentsController.alertUrl='<?= $this->Url->build($alertUrl) ?>';">
-    		<kd-multi-select ng-if="InstitutionDepartmentsController.dataReady" grid-options-top="InstitutionDepartmentsController.gridOptionsTop" grid-options-bottom="InstitutionDepartmentsController.gridOptionsBottom"></kd-multi-select>
+        <div class="input-form-wrapper" ng-init="InstitutionDepartmentsController.departmentId='<?= $departmentId ?>'; InstitutionDepartmentsController.redirectUrl='<?= $this->Url->build($viewUrl) ?>'; InstitutionDepartmentsController.alertUrl='<?= $this->Url->build($alertUrl) ?>';">
+    		<kd-multi-select ng-if="InstitutionDepartmentsController.dataReady"
+                             config="InstitutionDepartmentsController.textConfig"
+                             grid-options-top="InstitutionDepartmentsController.gridOptionsTop"
+                             grid-options-bottom="InstitutionDepartmentsController.gridOptionsBottom"></kd-multi-select>
     	</div>
 
         <div class="form-buttons">

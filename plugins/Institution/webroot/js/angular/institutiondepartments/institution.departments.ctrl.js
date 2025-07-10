@@ -45,14 +45,16 @@ function InstitutionDepartmentsController($scope, $q, $window, $http, UtilsSvc, 
     Controller.gridOptionsTop = {
         columnDefs: [],
         rowData: [],
-        primaryKey: []
+        primaryKey: [],
+        overlayNoRowsTemplate: '<span class="ag-custom-overlay"><i class="fa fa-info-circle fa-lg margin-right-10"></i>No Staff Record Found</span>',
     };
     Controller.gridOptionsBottom = {
         columnDefs: [],
         rowData: [],
-        primaryKey: []
+        primaryKey: [],
+        overlayNoRowsTemplate: '<span class="ag-custom-overlay"><i class="fa fa-info-circle fa-lg margin-right-10"></i>No Staff Record Found</span>',
     };
-    Controller.classId = null;
+    Controller.departmentId = null;
     Controller.colDef = [{
             headerName: 'OpenEMIS ID',
             field: 'openemis_no'
@@ -66,12 +68,8 @@ function InstitutionDepartmentsController($scope, $q, $window, $http, UtilsSvc, 
             field: 'gender_name'
         },
         {
-            headerName: 'Education Grade',
-            field: 'education_grade_name'
-        },
-        {
-            headerName: 'Student Status',
-            field: 'student_status_name'
+            headerName: 'Staff Status',
+            field: 'staff_status_name'
         }
     ];
     Controller.institutionId = null;
@@ -89,109 +87,126 @@ function InstitutionDepartmentsController($scope, $q, $window, $http, UtilsSvc, 
     Controller.academicPeriodName = '';
     Controller.postError = [];
     Controller.maxStudentsPerClass = null;
-
+    Controller.textConfig = {
+        topCheckboxLabel: "Staff",
+        topSearchPlaceholder: "Search Staff",
+        topToBottomButton: "Assign",
+        bottomToTopButton: "Unassign",
+        bottomCheckboxLabel: "Staff",
+        bottomSearchPlaceholder: "Search Staff"
+    };
+    Controller.textConfig = {
+        topCheckboxLabel: "Staff",
+        topSearchPlaceholder: "Search Staff",
+        topToBottomButton: "Assign",
+        bottomToTopButton: "Unassign",
+        bottomCheckboxLabel: "Staff",
+        bottomSearchPlaceholder: "Search Staff"
+    };
     // Function mapping
-    Controller.setTop = setTop;
-    Controller.setBottom = setBottom;
-    Controller.postForm = postForm;
-    Controller.updateQueryStringParameter = updateQueryStringParameter;
-    Controller.changeStaff = changeStaff;
+    // Controller.setTop = setTop;
+    // Controller.setBottom = setBottom;
+    // Controller.postForm = postForm;
+    // Controller.updateQueryStringParameter = updateQueryStringParameter;
+    // Controller.changeStaff = changeStaff;
 
     angular.element(document).ready(function() {
         InstitutionDepartmentsSvc.init(angular.baseUrl);
+        console.log('a');
+        console.log(Controller);
         UtilsSvc.isAppendLoader(true);
-        //Edit Section
-        if (Controller.classId != null || Controller.classId != undefined || Controller.classId == '') {
-            InstitutionDepartmentsSvc.getDepartmentDetails(Controller.classId)
+        if (Controller.departmentId != null || Controller.departmentId != undefined || Controller.departmentId == '') {
+            InstitutionDepartmentsSvc.getDepartmentDetails(Controller.departmentId)
                 .then(function(response) {
-                    var secondaryTeachers = [];
-                    angular.forEach(response.department_staff, function(value, key) {
-                        this.push(value.security_user_id);
-                    }, secondaryTeachers);
-                    Controller.selectedSecondaryTeacher = secondaryTeachers;
-
-                    Controller.departmentName = response.name;
-                    Controller.academicPeriodId = response.academic_period_id;
-                    Controller.institutionId = response.institution_id;
-                    Controller.academicPeriodName = response.academic_period.name;
-
-                    var assignedStudents = [];
-                    angular.forEach(response.department_student, function(value, key) {
-                        var toPush = {
-                            openemis_no: value.user.openemis_no,
-                            name: value.user.name,
-                            education_grade_name: value.education_grade.name,
-                            student_status_name: value.student_status.name,
-                            gender_name: value.user.gender.name,
-                            security_user_id: value.security_user_id,
-                            encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify({
-                                security_user_id: value.security_user_id,
-                                institution_department_id: value.institution_department_id,
-                                education_grade_id: value.education_grade_id,
-                                academic_period_id: value.academic_period_id,
-                                institution_id: value.institution_id,
-                                student_status_id: value.student_status_id,
-                                gender_id: value.user.gender.id
-                            }))
-                        };
-                        this.push(toPush);
-                    }, assignedStudents);
-                    Controller.assignedStudents = assignedStudents;
-
-                    var promises = [];
-                    promises[0] = InstitutionDepartmentsSvc.getUnassignedStudent(Controller.classId, response.institution_id, response.academic_period_id);
-                    promises[2] = InstitutionDepartmentsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
-                    promises[3] = InstitutionDepartmentsSvc.getConfigItemValue('max_students_per_class');
-                    return $q.all(promises);
-                }, function(error) {
-                    console.log(error);
+                  console.log(response);
                 })
-                .then(function(promises) {
-                    var unassignedStudentsArr = [];
-                    angular.forEach(promises[0], function(value, key) {
-                        var toPush = {
-                            openemis_no: value.openemis_no,
-                            name: value.name,
-                            education_grade_name: value.education_grade_name,
-                            student_status_name: value.student_status_name,
-                            gender_name: value.gender_name,
-                            security_user_id: value.security_user_id,
-                            encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify({
-                                security_user_id: value.security_user_id,
-                                institution_department_id: value.institution_department_id,
-                                education_grade_id: value.education_grade_id,
-                                academic_period_id: value.academic_period_id,
-                                institution_id: value.institution_id,
-                                student_status_id: value.student_status_id,
-                                gender_id: value.gender_id
-                            }))
-                        };
-                        this.push(toPush);
-                    }, unassignedStudentsArr);
-                    Controller.unassignedStudents = unassignedStudentsArr;
-                    Controller.mainTeacherOptions = promises[2];
-                    Controller.maxStudentsPerClass = parseInt(promises[3]);
-
-                    Controller.teacherOptions = Controller.changeStaff(Controller.selectedSecondaryTeacher);
-                    Controller.secondaryTeacherOptions = Controller.changeStaff(Controller.selectedTeacher);
-
-                    var toTranslate = [];
-                    angular.forEach(Controller.colDef, function(value, key) {
-                        this.push(value.headerName);
-                    }, toTranslate);
-                    return InstitutionDepartmentsSvc.translate(toTranslate);
-                }, function(error) {
-                    console.log(error);
-                })
-                .then(function(translatedText) {
-                    angular.forEach(translatedText, function(value, key) {
-                        Controller.colDef[key]['headerName'] = value;
-                    });
-                    Controller.setTop(Controller.colDef, Controller.unassignedStudents);
-                    Controller.setBottom(Controller.colDef, Controller.assignedStudents);
-                }, function(error) {
-                    console.log(error);
-                })
+        //         .then(function(response) {
+        //             var secondaryTeachers = [];
+        //             angular.forEach(response.department_staff, function(value, key) {
+        //                 this.push(value.security_user_id);
+        //             }, secondaryTeachers);
+        //             Controller.selectedSecondaryTeacher = secondaryTeachers;
+        //
+        //             Controller.departmentName = response.name;
+        //             Controller.academicPeriodId = response.academic_period_id;
+        //             Controller.institutionId = response.institution_id;
+        //             Controller.academicPeriodName = response.academic_period.name;
+        //
+        //             var assignedStaff = [];
+        //             angular.forEach(response.department_staff, function(value, key) {
+        //                 var toPush = {
+        //                     openemis_no: value.user.openemis_no,
+        //                     name: value.user.name,
+        //                     staff_status_name: value.student_status.name,
+        //                     gender_name: value.user.gender.name,
+        //                     security_user_id: value.security_user_id,
+        //                     encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify({
+        //                         staff_id: value.staff_id,
+        //                         security_user_id: value.security_user_id,
+        //                         institution_department_id: value.institution_department_id,
+        //                         institution_id: value.institution_id,
+        //                         staff_status_id: value.staff_status_id,
+        //                         gender_id: value.user.gender.id
+        //                     }))
+        //                 };
+        //                 this.push(toPush);
+        //             }, assignedStaff);
+        //             Controller.assignedStaff = assignedStaff;
+        //
+        //             var promises = [];
+        //             promises[0] = InstitutionDepartmentsSvc.getUnassignedStudent(Controller.departmentId, response.institution_id, response.academic_period_id);
+        //             promises[2] = InstitutionDepartmentsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
+        //             promises[3] = InstitutionDepartmentsSvc.getConfigItemValue('max_students_per_class');
+        //             return $q.all(promises);
+        //         }, function(error) {
+        //             console.log(error);
+        //         })
+        //         .then(function(promises) {
+        //             var unassignedStudentsArr = [];
+        //             angular.forEach(promises[0], function(value, key) {
+        //                 var toPush = {
+        //                     openemis_no: value.openemis_no,
+        //                     name: value.name,
+        //                     education_grade_name: value.education_grade_name,
+        //                     student_status_name: value.student_status_name,
+        //                     gender_name: value.gender_name,
+        //                     security_user_id: value.security_user_id,
+        //                     encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify({
+        //                         security_user_id: value.security_user_id,
+        //                         institution_department_id: value.institution_department_id,
+        //                         education_grade_id: value.education_grade_id,
+        //                         academic_period_id: value.academic_period_id,
+        //                         institution_id: value.institution_id,
+        //                         student_status_id: value.student_status_id,
+        //                         gender_id: value.gender_id
+        //                     }))
+        //                 };
+        //                 this.push(toPush);
+        //             }, unassignedStudentsArr);
+        //             Controller.unassignedStudents = unassignedStudentsArr;
+        //             Controller.mainTeacherOptions = promises[2];
+        //             Controller.maxStudentsPerClass = parseInt(promises[3]);
+        //
+        //             Controller.teacherOptions = Controller.changeStaff(Controller.selectedSecondaryTeacher);
+        //             Controller.secondaryTeacherOptions = Controller.changeStaff(Controller.selectedTeacher);
+        //
+        //             var toTranslate = [];
+        //             angular.forEach(Controller.colDef, function(value, key) {
+        //                 this.push(value.headerName);
+        //             }, toTranslate);
+        //             return InstitutionDepartmentsSvc.translate(toTranslate);
+        //         }, function(error) {
+        //             console.log(error);
+        //         })
+        //         .then(function(translatedText) {
+        //             angular.forEach(translatedText, function(value, key) {
+        //                 Controller.colDef[key]['headerName'] = value;
+        //             });
+        //             Controller.setTop(Controller.colDef, Controller.unassignedStudents);
+        //             Controller.setBottom(Controller.colDef, Controller.assignedStudents);
+        //         }, function(error) {
+        //             console.log(error);
+        //         })
                 .finally(function() {
                     Controller.dataReady = true;
                     UtilsSvc.isAppendLoader(false);
@@ -273,7 +288,7 @@ function InstitutionDepartmentsController($scope, $q, $window, $http, UtilsSvc, 
             this.push(value.encodedVar);
         }, departmentStudents);
         var postData = {};
-        postData.id = Controller.classId;
+        postData.id = Controller.departmentId;
         postData.name = Controller.departmentName;
         if(postData.name === ''){ // POCOR-7994
             AlertSvc.error(
@@ -291,7 +306,7 @@ function InstitutionDepartmentsController($scope, $q, $window, $http, UtilsSvc, 
             console.log(value)
             this.push({
                 security_user_id: value,
-                institution_department_id: Controller.classId
+                institution_department_id: Controller.departmentId
             });
         }, postData.department_staff);
 

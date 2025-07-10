@@ -24,7 +24,7 @@ class DepartmentStaffTable extends ControllerActionTable
         $this->setTable('department_staff');
 
         $this->belongsTo('Departments', ['className' => 'Institution.InstitutionDepartments']);
-        $this->belongsTo('Staff', ['className' => 'User.Users']);
+        $this->belongsTo('Staff', ['className' => 'Institution.Staff']);
 
     }
 
