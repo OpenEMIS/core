@@ -3072,49 +3072,51 @@ class StaffTable extends ControllerActionTable
      * @param array $options Must contain:
      *   - 'institution_id' (int): ID of the institution
      *   - 'department_id'  (int): ID of the department to exclude
+     *   - 'target'  (string): unassigned or manager
      * @return \Cake\ORM\Query
      */
-    public function findUnassignedToDepartment(Query $query, array $options)
+ public function findStaffForDepartment(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
         $departmentId  = $options['department_id'];
+        $target        = $options['target'] ?? 'unassigned';
 
-        return $query
-            // Only staff in this institution, still active
+        $query = $query
             ->where([
                 'Staff.institution_id' => $institutionId,
                 'OR' => [
-                    ['Staff.end_date >' => Time::now()],
-                    ['Staff.end_date IS' => null],
+                    ['Staff.end_date >'   => Time::now()],
+                    ['Staff.end_date IS'  => null],
                 ],
             ])
-            // Exclude those matching a DepartmentStaff link to this department
-            ->notMatching('DepartmentStaff', function (Query $q) use ($departmentId) {
-                return $q->where([
-                    'DepartmentStaff.institution_department_id' => $departmentId
-                ]);
-            })
-            // Bring in the minimal associations needed for mapping
             ->contain([
                 'Users.Genders',
                 'StaffStatuses'
-            ])
-            // Finally, reshape the results into a flat array
-            ->formatResults(function (CollectionInterface $results) use ($departmentId) {
-                return $results->map(function ($staff) use ($departmentId) {
-                    return [
-                        'openemis_no'        => $staff->user->openemis_no,
-                        'name'               => $staff->user->name,
-                        'staff_status_name'  => $staff->staff_status->name,
-                        'gender_name'        => $staff->user->gender->name,
-                        'security_user_id'   => $staff->user->id,
-                        'encodedVar'         => base64_encode(json_encode([
-                            'institution_staff_id' => $staff->id,
-                            'institution_department_id' => $departmentId,
-                        ])),
-                    ];
-                })->toList();
+            ]);
+
+        if ($target === 'unassigned') {
+            $query = $query->notMatching('DepartmentStaff', function (Query $q) use ($departmentId) {
+                return $q->where([
+                    'DepartmentStaff.institution_department_id' => $departmentId
+                ]);
             });
+        }
+
+        return $query->formatResults(function (CollectionInterface $results) use ($departmentId) {
+            return $results->map(function ($staff) use ($departmentId) {
+                return [
+                    'openemis_no'        => $staff->user->openemis_no,
+                    'name'               => $staff->user->name,
+                    'staff_status_name'  => $staff->staff_status->name,
+                    'gender_name'        => $staff->user->gender->name,
+                    'security_user_id'   => $staff->user->id,
+                    'encodedVar'         => base64_encode(json_encode([
+                        'institution_staff_id'       => $staff->id,
+                        'institution_department_id'  => $departmentId,
+                    ])),
+                ];
+            })->toList();
+        });
     }
 
 

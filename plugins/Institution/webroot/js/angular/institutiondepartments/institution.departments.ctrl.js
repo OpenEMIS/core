@@ -44,6 +44,7 @@ function InstitutionDepartmentsController(
     Controller.bodyDir       = document.body.style.direction;
     Controller.departmentId  = null;
     Controller.institutionId = null;
+    Controller.managerId = null;
     Controller.departmentName   = '';
     Controller.departmentCode   = '';
 
@@ -85,7 +86,7 @@ function InstitutionDepartmentsController(
 
     // Function mapping
     Controller.postForm = postForm;
-    Controller.changeStaff = changeStaff;
+    Controller.filterStaff = filterStaff;
 
     //─── Initialization ─────────────────────────────────────────────────────────
     angular.element(document).ready(() => {
@@ -102,8 +103,8 @@ function InstitutionDepartmentsController(
             .then(setBasicData)
             .then(getUnassignedStaff)
             .then(setUnassignedStaff)
-            // .then(getManagerOptions)
-            // .then(getManagerOptions)
+            .then(getManagerOptions)
+            .then(setManagerOptions)
             .then(translateHeaders)
             .then(setTranslatedHeaders)
             .catch(err => {
@@ -159,13 +160,14 @@ function InstitutionDepartmentsController(
 
     function getManagerOptions() {
         return InstitutionDepartmentsSvc
-            .getManagerOptions(Controller.institutionId)
+            .getManagerOptions(Controller.departmentId, Controller.institutionId)
             .catch(err => Promise.reject(err));
     }
 
-    function setTeacherOptions(options) {
-        Controller.mainTeacherOptions = options;
-        Controller.secondaryTeacherOptions = changeStaff(Controller.selectedSecondaryTeachers);
+    function setManagerOptions(options) {
+        console.log(options);
+        Controller.managerOptions = options;
+        filterStaff();
     }
 
     //─── Header translation ─────────────────────────────────────────────────────
@@ -223,12 +225,8 @@ function InstitutionDepartmentsController(
 
 
     //─── Utility: filter out already-selected teachers ───────────────────────────
-    function changeStaff(selected) {
-        return Controller.mainTeacherOptions.filter(opt => {
-            return Array.isArray(selected)
-                ? !selected.includes(opt.id)
-                : opt.id !== selected;
-        });
+    function filterStaff() {
+        return;
     }
 
     //─── Save ───────────────────────────────────────────────────────────────────
@@ -253,8 +251,9 @@ function InstitutionDepartmentsController(
         const postData = {
             id:                Controller.departmentId,
             name:              Controller.departmentName,
+            code:              Controller.departmentCode,
             institution_id:    Controller.institutionId,
-            academic_period_id:Controller.academicPeriodId,
+            manager_id:    Controller.managerId,
             assigned_staff:  departmentStaff
         };
 

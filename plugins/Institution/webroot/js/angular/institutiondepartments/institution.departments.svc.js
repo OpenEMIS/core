@@ -11,7 +11,7 @@ function InstitutionDepartmentsSvc($http, $q, $filter, KdDataSvc) {
         getDepartmentDetails: getDepartmentDetails,
         getUnassignedStaff: getUnassignedStaff,
         translate: translate,
-        // getManagerOptions: getTeacherOptions,
+        getManagerOptions: getManagerOptions,
         // saveDepartment: saveDepartment,
         updateDepartment: updateDepartment,
         // getConfigItemValue: getConfigItemValue
@@ -64,27 +64,29 @@ function InstitutionDepartmentsSvc($http, $q, $filter, KdDataSvc) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
-        return InstitutionStaff.find('UnassignedToDepartment', {
+        return InstitutionStaff.find('StaffForDepartment', {
             institution_id: institutionId,
-            department_id: departmentId
+            department_id: departmentId,
+            targer: 'unassigned'
         }).ajax({
             success: success,
             defer: true
         });
     }
-    //
-    // function getTeacherOptions(institutionId, academicPeriodId) {
-    //     var success = function(response, deferred) {
-    //         deferred.resolve(response.data.data);
-    //     };
-    //     return InstitutionStaff.find('classStaffOptions', {
-    //         institution_id: institutionId,
-    //         academic_period_id: academicPeriodId
-    //     }).ajax({
-    //         success: success,
-    //         defer: true
-    //     });
-    // }
+
+    function getManagerOptions(departmentId, institutionId) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+        return InstitutionStaff.find('StaffForDepartment', {
+            institution_id: institutionId,
+            department_id: departmentId,
+            targer: 'manager'
+        }).ajax({
+            success: success,
+            defer: true
+        });
+    }
     //
     // function getConfigItemValue(code) {
     //     var success = function(response, deferred) {
