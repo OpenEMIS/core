@@ -112,6 +112,7 @@ function InstitutionDepartmentsController(
             })
             .finally(() => {
                 Controller.dataReady = true;
+                filterStaff();
                 UtilsSvc.isAppendLoader(false);
             });
 
@@ -133,11 +134,13 @@ function InstitutionDepartmentsController(
         Controller.departmentName    = response.name;
         Controller.departmentCode    = response.code;
         Controller.institutionId     = response.institution_id;
+        Controller.managerId         = response.manager_id;
         // Assigned staff
         if (angular.isArray(response.assigned_staff)) {
             Controller.assignedStaff = response.assigned_staff;
         }
-        console.log(Controller.assignedStaff);
+
+        // console.log(Controller.assignedStaff);
         return;
     }
 
@@ -167,7 +170,7 @@ function InstitutionDepartmentsController(
     function setManagerOptions(options) {
         console.log(options);
         Controller.managerOptions = options;
-        filterStaff();
+
     }
 
     //─── Header translation ─────────────────────────────────────────────────────
@@ -183,9 +186,11 @@ function InstitutionDepartmentsController(
         translated.forEach((text, i) => {
             Controller.colDef[i].headerName = text;
         });
+
         // Build both grids
         setTopGrid(Controller.colDef, Controller.unassignedStaff);
         setBottomGrid(Controller.colDef, Controller.assignedStaff);
+
     }
 
     //─── Grid helpers ───────────────────────────────────────────────────────────
@@ -226,7 +231,30 @@ function InstitutionDepartmentsController(
 
     //─── Utility: filter out already-selected teachers ───────────────────────────
     function filterStaff() {
-        return;
+        const mgrId = Controller.managerId;
+
+        const filteredAssigned   = mgrId
+            ? Controller.assignedStaff.filter(s => s.security_user_id !== mgrId)
+            : Controller.assignedStaff;
+        const filteredUnassigned = mgrId
+            ? Controller.unassignedStaff.filter(s => s.security_user_id !== mgrId)
+            : Controller.unassignedStaff;
+
+        // reset your column arrays
+        // Controller.columnTopData    = [ Controller.columnTopData[0] ];
+        // Controller.columnBottomData = [ Controller.columnBottomData[0] ];
+
+        // rebuild the columns + rowData bindings
+        setTopGrid(Controller.colDef,    filteredUnassigned);
+        setBottomGrid(Controller.colDef, filteredAssigned);
+
+        // now push the new rows into the grids' APIs:
+        if (Controller.gridOptionsTop.api) {
+            Controller.gridOptionsTop.api.setRowData(filteredUnassigned);
+        }
+        if (Controller.gridOptionsBottom.api) {
+            Controller.gridOptionsBottom.api.setRowData(filteredAssigned);
+        }
     }
 
     //─── Save ───────────────────────────────────────────────────────────────────
