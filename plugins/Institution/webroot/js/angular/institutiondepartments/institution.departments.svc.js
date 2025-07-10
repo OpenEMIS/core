@@ -13,7 +13,7 @@ function InstitutionDepartmentsSvc($http, $q, $filter, KdDataSvc) {
         translate: translate,
         // getManagerOptions: getTeacherOptions,
         // saveDepartment: saveDepartment,
-        // updateDepartment: updateDepartment,
+        updateDepartment: updateDepartment,
         // getConfigItemValue: getConfigItemValue
     };
 
@@ -60,13 +60,13 @@ function InstitutionDepartmentsSvc($http, $q, $filter, KdDataSvc) {
             });
     }
 
-    function getUnassignedStaff(institutionDepartmentId, institutionId, academicPeriodId) {
+    function getUnassignedStaff(institutionId, departmentId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
-        return Staff.find('UnassignedToDepartment', {
+        return InstitutionStaff.find('UnassignedToDepartment', {
             institution_id: institutionId,
-            institution_department_id: institutionDepartmentId
+            department_id: departmentId
         }).ajax({
             success: success,
             defer: true
@@ -112,10 +112,10 @@ function InstitutionDepartmentsSvc($http, $q, $filter, KdDataSvc) {
     //     return InstitutionDepartments.save(data);
     // }
     //
-    // function updateDepartment(data) {
-    //     InstitutionDepartments.reset();
-    //     return InstitutionDepartments.edit(data);
-    // }
+    function updateDepartment(data) {
+        InstitutionDepartments.reset();
+        return InstitutionDepartments.edit(data);
+    }
     //
     // // for add page
     // function getAcademicPeriodOptions(institutionId) {

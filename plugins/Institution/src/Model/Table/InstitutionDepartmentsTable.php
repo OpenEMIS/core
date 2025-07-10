@@ -29,7 +29,10 @@ class InstitutionDepartmentsTable extends ControllerActionTable
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Managers', ['className' => 'User.Users']);
-        $this->hasMany('DepartmentStaff', ['className' => 'Institution.DepartmentStaff', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('DepartmentStaff', ['className' => 'Institution.DepartmentStaff',
+            'foreignKey' => 'institution_department_id',
+            'dependent' => true,
+            'cascadeCallbacks' => true]);
 
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['Departments' => ['id']
@@ -45,9 +48,9 @@ class InstitutionDepartmentsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
         $validator->add('code', 'ruleUnique', [
-                   'rule' => ['validateUnique', ['scope' => ['institution_id']]],
-                   'provider' => 'table'
-               ]);
+            'rule' => ['validateUnique', ['scope' => ['institution_id']]],
+            'provider' => 'table'
+        ]);
 
         return $validator;
     }
@@ -57,7 +60,6 @@ class InstitutionDepartmentsTable extends ControllerActionTable
     {
         $this->field('institution_id', ['visible' => false]);
     }
-
 
 
     /******************************************************************************************************************
@@ -84,8 +86,8 @@ class InstitutionDepartmentsTable extends ControllerActionTable
             //POCOR-8475 starts
             //$this->request->getQuery['sort'] = 'created';
             //$this->request->getQuery['direction'] = 'desc';
-            $this->request = $this->request->withQueryParams( array_merge( $this->request->getQueryParams(), ['sort' => 'created'] ));
-            $this->request = $this->request->withQueryParams( array_merge( $this->request->getQueryParams(), ['direction' => 'desc'] ));
+            $this->request = $this->request->withQueryParams(array_merge($this->request->getQueryParams(), ['sort' => 'created']));
+            $this->request = $this->request->withQueryParams(array_merge($this->request->getQueryParams(), ['direction' => 'desc']));
             //POCOR-8475 ends
         }
     }
@@ -97,7 +99,7 @@ class InstitutionDepartmentsTable extends ControllerActionTable
         $extra['auto_order'] = false;
         $institutionStaff = self::getDynamicTableInstance('Report.InstitutionStaff');
         $institutionID = $this->getQueryString('institution_id');
-        if(!$institutionID){
+        if (!$institutionID) {
             $event->stopPropagation();
 //            return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 
@@ -130,92 +132,19 @@ class InstitutionDepartmentsTable extends ControllerActionTable
                 $this->aliasField($this->request->getQuery('sort'))
                 => $this->request->getQuery('direction')]); //POCOR-8475
 
-        $sortList = ['code', 'name'/*,POCOR-5069 'StaffPositionGrades.order'*/, 'created','Assignees.first_name'];
+        $sortList = ['code', 'name'/*,POCOR-5069 'StaffPositionGrades.order'*/, 'created', 'Assignees.first_name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
         $extra['options']['sortWhitelist'] = $sortList;
         $params = $this->request->getQuery();
-        if(empty($params)){
+        if (empty($params)) {
             $extra['options']['direction'] = 'desc';
             $extra['options']['limit'] = 10;
             $extra['options']['sort'] = 'name';
         }
 //        Log::debug(print_r($params, true));
     }
-
-    /******************************************************************************************************************
-     **
-     ** addEdit action methods
-     **
-     ******************************************************************************************************************/
-
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        $this->setupFields($event, $entity);
-    }
-
-    public function setupFields(Event $event, Entity $entity){
-
-        $this->fields['institution_id']['visible'] = false;
-        $this->field('manager_id', ['entity' => $entity]);
-        $this->setFieldOrder([
-            'code',
-            'name',
-            'manager_id',
-        ]);
-    }
-
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-
-        if(!isset($entity['institution_id'])){
-            $entity['institution_id'] = $this->getInstitutionID();
-        };
-
-    }
-
-    public function beforeSave($event, Entity $entity, ArrayObject $options)
-    {
-        if (!isset($entity->institution_id)) {
-            $entity->institution_id = $this->getInstitutionID();
-        }
-    }
-
-
-    //POCOR-6925
-    public function onUpdateFieldManagerId(Event $event, array $attr, $action, ServerRequest $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-            $entity = $attr['entity'];
-            $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
-            $institutionId = $entity->institution_id ?? $this->getInstitutionID();
-            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-
-            $raw = $InstitutionStaff->find('subjectStaffOptions',
-                ['institution_id' => $institutionId,
-                    'type' => -1])
-                ->toList();
-            $managerOptions = (new Collection($raw))
-                ->combine('id', 'name')
-                ->toArray();
-            $attr['type'] = 'chosenSelect';
-            $attr['attr']['multiple'] = false;
-            $attr['select'] = false;
-            $attr['options'] = ['' => '-- ' . __('Select Manager') . ' --'] + $managerOptions;
-            $attr['onChangeReload'] = 'changeStatus';
-        }
-        return $attr;
-    }
-
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
-    {
-        return match ($field) {
-            'manager_id' => __('Manager'),
-            default => parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize),
-        };
-    }
-
 
     /**
      * Get a dynamic table instance with all associations.
@@ -271,6 +200,80 @@ class InstitutionDepartmentsTable extends ControllerActionTable
         return $locator->get($tableFullAlias);
     }
 
+    /******************************************************************************************************************
+     **
+     ** addEdit action methods
+     **
+     ******************************************************************************************************************/
+
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($event, $entity);
+    }
+
+    public function setupFields(Event $event, Entity $entity)
+    {
+
+        $this->fields['institution_id']['visible'] = false;
+        $this->field('manager_id', ['entity' => $entity]);
+        $this->setFieldOrder([
+            'code',
+            'name',
+            'manager_id',
+        ]);
+    }
+
+    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+
+        if (!isset($entity['institution_id'])) {
+            $entity['institution_id'] = $this->getInstitutionID();
+        };
+
+    }
+
+
+    //POCOR-6925
+
+    public function beforeSave($event, Entity $entity, ArrayObject $options)
+    {
+        if (!isset($entity->institution_id)) {
+            $entity->institution_id = $this->getInstitutionID();
+        }
+    }
+
+    public function onUpdateFieldManagerId(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+            $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
+            $institutionId = $entity->institution_id ?? $this->getInstitutionID();
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+
+            $raw = $InstitutionStaff->find('subjectStaffOptions',
+                ['institution_id' => $institutionId,
+                    'type' => -1])
+                ->toList();
+            $managerOptions = (new Collection($raw))
+                ->combine('id', 'name')
+                ->toArray();
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = false;
+            $attr['options'] = ['' => '-- ' . __('Select Manager') . ' --'] + $managerOptions;
+            $attr['onChangeReload'] = 'changeStatus';
+        }
+        return $attr;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        return match ($field) {
+            'manager_id' => __('Manager'),
+            default => parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize),
+        };
+    }
+
     /**
      * Get Associations Details
      */
@@ -289,18 +292,14 @@ class InstitutionDepartmentsTable extends ControllerActionTable
                         ->map(function ($department_staff) {
                             $staff = $department_staff->staff;
                             return [
-                                'openemis_no'        => $staff->user->openemis_no,
-                                'name'               => $staff->user->name,
-                                'staff_status_name'  => $staff->staff_status->name,
-                                'gender_name'        => $staff->user->gender->name,
-                                'security_user_id'   => $staff->security_group_user_id,
-                                'encodedVar'         => base64_encode(json_encode([
-                                    'staff_id'                  => $staff->id,
-                                    'security_user_id'          => $staff->staff_id,
+                                'openemis_no' => $staff->user->openemis_no,
+                                'name' => $staff->user->name,
+                                'staff_status_name' => $staff->staff_status->name,
+                                'gender_name' => $staff->user->gender->name,
+                                'security_user_id' => $staff->user->id,
+                                'encodedVar' => base64_encode(json_encode([
+                                    'institution_staff_id' => $staff->institution_staff_id,
                                     'institution_department_id' => $staff->institution_department_id,
-                                    'institution_id'            => $staff->institution_id,
-                                    'staff_status_id'           => $staff->staff_status_id,
-                                    'gender_id'                 => $staff->user->gender->id,
                                 ])),
                             ];
                         })
@@ -315,4 +314,49 @@ class InstitutionDepartmentsTable extends ControllerActionTable
             });
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+//        POCOR-8391 start
+        if (!$entity->isNew()) {
+            Log::debug(print_r($entity, true));
+            //empty subject student is handled by beforeMarshal
+            //in another case, it will be save manually to avoid unecessary queries during save by association
+            if (isset($entity->assigned_staff)) {
+                $departmentId = $entity->id;
+                // $institutionClassId = 0;
+                $newStaff = [];
+                //decode string sent through form
+                foreach ($entity->assigned_staff as $item) {
+                    $staff = json_decode($this->urlsafeB64Decode($item->encodedVar), true);
+                    $newStaff[$staff['institution_staff_id']] = $staff;
+                }
+                $departmentStaff = TableRegistry::getTableLocator()->get('Institution.DepartmentStaff');
+                $where = [
+                    $departmentStaff->aliasField('institution_department_id') => $departmentId,
+                ];
+                $existingStaff = $departmentStaff
+                    ->find('all')
+                    ->select([
+                        'id', 'institution_staff_id'
+                    ])
+                    ->where($where)
+                    ->toArray();
+                foreach ($existingStaff as $key => $departmentStaffEntity) {
+                    $institution_staff_id = $departmentStaffEntity->institution_staff_id;
+                    if (!isset($newStaff[$institution_staff_id])) { // if current student does not exists in the new list of students
+//                        Log::debug('- ' . strval($student_id));
+                        $this->DepartmentStaff->delete($departmentStaffEntity);
+                    } else { // if student exists, then remove from the array to get the new student records to be added
+//                        Log::debug('+ ' . strval($student_id));
+                        unset($newStaff[$institution_staff_id]);
+                    }
+                }
+                foreach ($newStaff as $key => $staff) {
+//                    Log::debug(print_r($student, true));
+                    $departmentStaffEntity = $this->DepartmentStaff->newEntity($staff);
+                    $this->DepartmentStaff->save($departmentStaffEntity);
+                }
+            }
+        }
+    }
 }
