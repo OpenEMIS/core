@@ -4,7 +4,7 @@ namespace App\Models\Api5;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\SecurityUsers;
+use App\Models\Api5\InstitutionStaff;
 
 class DepartmentStaff extends Model
 {
@@ -13,7 +13,7 @@ class DepartmentStaff extends Model
     protected $table = 'department_staff';
 
     // ✅ Allow mass assignment
-    protected $fillable = ['id', 'department_id', 'staff_id'];
+    protected $fillable = ['id', 'institution_department_id', 'institution_staff_id'];
 
     // ✅ Disable Laravel's default timestamps
     public $timestamps = false;
@@ -54,8 +54,8 @@ public function _swaggerPath() {}
  *                 @OA\Items(
  *                     type="object",
                           @OA\Property(property="id", type="integer", example=null),
-                          @OA\Property(property="department_id", type="integer", example=null),
-                          @OA\Property(property="staff_id", type="integer", example=null)
+                          @OA\Property(property="institution_department_id", type="integer", example=null),
+                          @OA\Property(property="institution_staff_id", type="integer", example=null)
  *                 )
  *             )
  *         )
@@ -102,8 +102,8 @@ public function _swaggerView() {}
  *         @OA\JsonContent(
  *             type="object",
                      @OA\Property(property="id", type="integer", example=null),
-                     @OA\Property(property="department_id", type="integer", example=null),
-                     @OA\Property(property="staff_id", type="integer", example=null)
+                     @OA\Property(property="institution_department_id", type="integer", example=null),
+                     @OA\Property(property="institution_staff_id", type="integer", example=null)
  *         )
  *     ),
  *     @OA\Response(
@@ -139,8 +139,8 @@ public function _swaggerCreate() {}
  *         @OA\JsonContent(
  *             type="object",
                      @OA\Property(property="id", type="integer", example=null),
-                     @OA\Property(property="department_id", type="integer", example=null),
-                     @OA\Property(property="staff_id", type="integer", example=null)
+                     @OA\Property(property="institution_department_id", type="integer", example=null),
+                     @OA\Property(property="institution_staff_id", type="integer", example=null)
  *         )
  *     ),
  *     @OA\Response(
@@ -226,40 +226,26 @@ public function _swaggerDelete() {}
     // Define scopes for common queries
     public function scopeForDepartment($query, $departmentId)
     {
-        return $query->where('department_id', $departmentId);
+        return $query->where('institution_department_id', $departmentId);
     }
 
     public function department()
     {
-        return $this->belongsTo(InstitutionDepartments::class, 'department_id');
+        return $this->belongsTo(InstitutionDepartments::class, 'institution_department_id');
     }
 
     public function staff()
     {
-        return $this->belongsTo(SecurityUsers::class, 'staff_id');
+        return $this->belongsTo(InstitutionStaff::class, 'institution_staff_id');
     }
-
-    public function scopeWithStaff($query)
-        {
-            return $query->with(['staff' => function ($query) {
-                $query->select('security_users.id',
-                    'security_users.first_name',
-                    'security_users.last_name',
-                    'security_users.openemis_no',
-                    'genders.name as gender_name',
-                )
-                    ->join('genders', 'security_users.gender_id', '=', 'genders.id')
-                    ->groupBy('security_users.id');
-            }, 'department']);
-        }
 
 
     // Add validation rules
     public static function getValidationRules(): array
     {
         return [
-            'department_id' => 'required|exists:institution_departments,id',
-            'staff_id' => 'required|exists:security_users,id',
+            'institution_department_id' => 'required|exists:institution_departments,id',
+            'institution_staff_id' => 'required|exists:institution_staff,id',
         ];
     }
 }
