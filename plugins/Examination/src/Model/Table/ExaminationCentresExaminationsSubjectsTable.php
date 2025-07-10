@@ -304,8 +304,6 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
             return __('Contact Person');
         }elseif ($field == 'telephone') {
             return __('Telephone');
-        }elseif ($field == 'fax') {
-            return __('Fax');
         }elseif ($field == 'email') {
             return __('Email');
         }elseif ($field == 'website') {

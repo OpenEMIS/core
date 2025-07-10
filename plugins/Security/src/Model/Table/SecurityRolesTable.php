@@ -53,6 +53,17 @@ class SecurityRolesTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
+        $this->belongsToMany('Notices', [
+            'className' => 'Alert.Notices',
+            'joinTable' => 'notice_roles',
+            'foreignKey' => 'security_role_id',
+            'targetForeignKey' => 'notice_id',
+            'through' => 'Alert.NoticeRoles',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
+
         if ($this->behaviors()->has('Reorder')) {
             $this->behaviors()->get('Reorder')->setConfig([
                 'filter' => 'security_group_id'

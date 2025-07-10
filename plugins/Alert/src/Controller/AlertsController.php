@@ -16,6 +16,7 @@ class AlertsController extends AppController
     public function Alerts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.Alerts']); }
     public function AlertRules() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertRules']); }
     public function Logs() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertLogs']); }
+    public function Notices() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.Notices']); }
 
     public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
         if ($this->getPlugin() == $this->getPlugin()) {
