@@ -240,18 +240,22 @@ function InstitutionDepartmentsController(
             Controller.postError.name = ['Name Is Required'];
             return;
         }
+        if (!Controller.departmentCode.trim()) {
+            AlertSvc.error(Controller, 'Code is required.');
+            Controller.postError.name = ['Code Is Required'];
+            return;
+        }
 
-        // const departmentStaff = Controller.selectedSecondaryTeachers.map(id => ({
-        //     security_user_id:          id,
-        //     institution_department_id: Controller.departmentId
-        // }));
+        const departmentStaff = Controller.assignedStaff.map(item => ({
+            encodedVar:          item.encodedVar,
+        }));
 
         const postData = {
             id:                Controller.departmentId,
             name:              Controller.departmentName,
             institution_id:    Controller.institutionId,
             academic_period_id:Controller.academicPeriodId,
-            assigned_staff:  Controller.assignedStaff
+            assigned_staff:  departmentStaff
         };
 
         InstitutionDepartmentsSvc
