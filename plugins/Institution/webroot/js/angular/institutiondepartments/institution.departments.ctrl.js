@@ -127,10 +127,6 @@ function InstitutionDepartmentsController(
     }
 
     function setBasicData(response) {
-        // console.log(response);
-        // console.log(response.name);
-        // console.log(response.code);
-        // console.log(response.institution_id);
         Controller.departmentName    = response.name;
         Controller.departmentCode    = response.code;
         Controller.institutionId     = response.institution_id;
@@ -144,7 +140,7 @@ function InstitutionDepartmentsController(
         return;
     }
 
-    function getUnassignedStaff(/* response */) {
+    function getUnassignedStaff() {
         return InstitutionDepartmentsSvc
             .getUnassignedStaff(
                 Controller.institutionId,
@@ -154,9 +150,9 @@ function InstitutionDepartmentsController(
     }
 
     function setUnassignedStaff(unassigned) {
-        console.log(unassigned);
+
         Controller.unassignedStaff = unassigned;
-        console.log(Controller.unassignedStaff);
+
 
         return;
     }
@@ -168,7 +164,7 @@ function InstitutionDepartmentsController(
     }
 
     function setManagerOptions(options) {
-        console.log(options);
+
         Controller.managerOptions = options;
 
     }
@@ -241,10 +237,6 @@ function InstitutionDepartmentsController(
             : Controller.unassignedStaff;
 
         // reset your column arrays
-        // Controller.columnTopData    = [ Controller.columnTopData[0] ];
-        // Controller.columnBottomData = [ Controller.columnBottomData[0] ];
-
-        // rebuild the columns + rowData bindings
         setTopGrid(Controller.colDef,    filteredUnassigned);
         setBottomGrid(Controller.colDef, filteredAssigned);
 
