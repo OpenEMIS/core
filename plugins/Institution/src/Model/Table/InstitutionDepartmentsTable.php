@@ -18,6 +18,7 @@ use Cake\Utility\Inflector;
 use Cake\ORM\Table;
 use Cake\Collection\Collection;
 use Cake\Collection\CollectionInterface;
+use Cake\Controller\Component;
 
 class InstitutionDepartmentsTable extends ControllerActionTable
 {
@@ -60,7 +61,20 @@ class InstitutionDepartmentsTable extends ControllerActionTable
     {
         $this->field('institution_id', ['visible' => false]);
     }
+    public function implementedEvents(): array
+    {
+        $events = parent::implementedEvents();
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        return $events;
+    }
 
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona=false)
+    {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Departments', 'index',$encodedQueryString];
+        $Navigation->substituteCrumb('Institution Departments', __('Departments'), $url);
+    }
 
     /******************************************************************************************************************
      **
