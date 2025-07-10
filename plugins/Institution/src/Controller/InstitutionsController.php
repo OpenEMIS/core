@@ -287,6 +287,18 @@ class InstitutionsController extends AppController
                     }
                 }
                 break;
+            case 'Departments':
+                if (isset($this->request->getParam('pass')[0])) {
+                    if ($this->request->getParam('pass')[0] == 'edit') {
+                        $this->Angular->addModules([
+                            'alert.svc',
+                            'kd-angular-multi-select',
+                            'institution.departments.ctrl',
+                            'institution.departments.svc'
+                        ]);
+                    }
+                }
+                break;
             case 'StudentAttendances':
                 $this->Angular->addModules([
                     'institution.student.attendances.ctrl',

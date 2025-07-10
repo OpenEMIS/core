@@ -122,7 +122,7 @@ function InstitutionAssociationsSvc($http, $q, $filter, KdDataSvc) {
         return InstitutionAssociations.edit(data);
     }
 
-    // for add page
+    // for add page 
     function getAcademicPeriodOptions(institutionId) {
         // console.log("Institution ID " + institutionId);
         var success = function(response, deferred) {

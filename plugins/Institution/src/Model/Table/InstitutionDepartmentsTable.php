@@ -17,6 +17,7 @@ use Cake\Log\Log;
 use Cake\Utility\Inflector;
 use Cake\ORM\Table;
 use Cake\Collection\Collection;
+use Cake\Collection\CollectionInterface;
 
 class InstitutionDepartmentsTable extends ControllerActionTable
 {
@@ -28,10 +29,14 @@ class InstitutionDepartmentsTable extends ControllerActionTable
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Managers', ['className' => 'User.Users']);
+        $this->hasMany('DepartmentStaff', ['className' => 'Institution.DepartmentStaff', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['Departments' => ['id']
             ]
+        ]);
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'DepartmentStaff' => ['index'],
         ]);
     }
 
@@ -265,5 +270,67 @@ class InstitutionDepartmentsTable extends ControllerActionTable
         // Return the table instance
         return $locator->get($tableFullAlias);
     }
+
+    /**
+     * Get Associations Details
+     */
+    public function findDepartmentDetails(Query $query, array $options)
+    {
+        return $query
+//            ->find('translateItem')
+            ->contain([
+                'Managers',
+                'DepartmentStaff.Staff.Users.Genders',
+                'DepartmentStaff.Staff.StaffStatuses'
+            ])
+            ->formatResults(function (CollectionInterface $results) {
+                return $results->map(function ($department) {
+                    // Map each staff member to a flat array
+                    $assignedStaff = collection($department->department_staff)
+                        ->map(function ($department_staff) {
+                            $staff = $department_staff->staff;
+                            return [
+                                'openemis_no'        => $staff->user->openemis_no,
+                                'name'               => $staff->user->name,
+                                'staff_status_name'  => $staff->staff_status->name,
+                                'gender_name'        => $staff->user->gender->name,
+                                'security_user_id'   => $staff->security_group_user_id,
+                                'encodedVar'         => base64_encode(json_encode([
+                                    'staff_id'                  => $staff->id,
+                                    'security_user_id'          => $staff->staff_id,
+                                    'institution_department_id' => $staff->institution_department_id,
+                                    'institution_id'            => $staff->institution_id,
+                                    'staff_status_id'           => $staff->staff_status_id,
+                                    'gender_id'                 => $staff->user->gender->id,
+                                ])),
+                            ];
+                        })
+                        ->toList();
+
+                    // Replace the raw department_staff with our flat array
+                    $department->assigned_staff = $assignedStaff;
+                    unset($department->department_staff);
+
+                    return $department;
+                });
+            });
+    }
+
+
+//    public function findTranslateItem(Query $query, array $options)
+//    {
+//        return $query
+//            ->formatResults(function ($results) {
+//                $arrResults = $results->toArray();
+//                foreach ($arrResults as &$value) {
+//                    if (isset($value['department_staff']) && is_array($value['department_staff'])) {
+//                        foreach ($value['department_staff'] as $staff) {
+//                            Log::debug(print_r($staff,true));
+//                        }
+//                    }
+//                }
+//                return $arrResults;
+//            });
+//    }
 
 }
