@@ -60,6 +60,16 @@ class InstitutionDepartmentsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('institution_id', ['visible' => false]);
+        $this->field('staff', [
+            'label' => '',
+            'override' => true,
+            'type' => 'element',
+            'element' => 'Institution.Departments/staff',
+            'data' => [
+                'students' => []
+            ],
+            'visible' => ['view' => true, 'edit' => false, 'index' => false]
+        ]);
     }
     public function implementedEvents(): array
     {
@@ -310,6 +320,7 @@ class InstitutionDepartmentsTable extends ControllerActionTable
                                 'name' => $staff->user->name,
                                 'staff_status_name' => $staff->staff_status->name,
                                 'gender_name' => $staff->user->gender->name,
+                                'staff_id' => $staff->id,
                                 'security_user_id' => $staff->user->id,
                                 'encodedVar' => base64_encode(json_encode([
                                     'institution_staff_id' => $staff->id,
@@ -371,4 +382,49 @@ class InstitutionDepartmentsTable extends ControllerActionTable
             }
         }
     }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+//        dd($entity);
+        $this->fields['staff']['data']['staff'] = $entity->assigned_staff;
+        $this->setFieldOrder([
+            'code', 'name', 'manager_id', 'staff'
+        ]);
+        return $entity;
+
+    }
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query
+            ->contain([
+                'DepartmentStaff.Staff.Users.Genders',
+                'DepartmentStaff.Staff.StaffStatuses'
+            ])
+            ->formatResults(function (CollectionInterface $results) {
+                return $results->map(function ($department) {
+                    // Map each staff member to a flat array
+                    $assignedStaff = collection($department->department_staff)
+                        ->map(function ($department_staff) use ($department) {
+                            $staff = $department_staff->staff;
+                            return [
+                                'openemis_no' => $staff->user->openemis_no,
+                                'name' => $staff->user->name,
+                                'staff_status_name' => $staff->staff_status->name,
+                                'gender_name' => $staff->user->gender->name,
+                                'security_user_id' => $staff->user->id,
+                                'staff_id' => $staff->id,
+                                'institution_id' => $department->institution_id,
+                            ];
+                        })
+                        ->toList();
+
+                    // Replace the raw department_staff with our flat array
+                    $department->assigned_staff = $assignedStaff;
+                    unset($department->department_staff);
+
+                    return $department;
+                });
+            });
+    }
 }
+
