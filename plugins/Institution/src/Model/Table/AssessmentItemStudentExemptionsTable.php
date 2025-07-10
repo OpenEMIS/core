@@ -141,6 +141,81 @@ class AssessmentItemStudentExemptionsTable extends AppTable
             }
         }
         //POCOR-9114 -- START
+        if ($non_exempt_students_base64 && $assessment_item_id && $assessment_period_id && $type) {//POCOR-9042 add type
+            // Decode the base64 string into an array of student IDs
+            $unexempt_students = json_decode(base64_decode($non_exempt_students_base64), true);
+
+
+            // Get the table object
+            $AssessmentItemStudentExemptions = self::getDynamicTableInstance('assessment_item_student_exemptions');
+            $AssessmentItemsTable = self::getDynamicTableInstance('assessment_items');
+
+            // Retrieve assessment_id and education_subject_id from assessment_item_id
+            $assessmentItem = $AssessmentItemsTable->find()
+                ->select(['assessment_id', 'education_subject_id'])
+                ->where(['id' => $assessment_item_id])
+                ->first();
+
+            if (!$assessmentItem) {
+                Log::error('Assessment item not found for ID ' . $assessment_item_id);
+                return;
+            }
+
+            $assessment_id = $assessmentItem->assessment_id;
+            $education_subject_id = $assessmentItem->education_subject_id;
+            
+                foreach ($unexempt_students as $student) {
+                    $student_id = $student['s_id'];
+                    $education_grade_id = $student['eg_id'];  
+                    $assessment_period_id = $student['ap_id'] ?? null; //POCOR-9195
+
+                    if ($assessment_period_id === null) {
+                        Log::warning("Skipping student $student_id: missing assessment_period_id");
+                        continue; // Don't process this record
+                    }
+
+                // Find and delete the exemption for the student
+                $existingExemption = $AssessmentItemStudentExemptions->find()
+                    ->where([
+                        'assessment_id' => $assessment_id,
+                        'education_subject_id' => $education_subject_id,
+                        'student_id' => $student_id,
+                        'assessment_period_id' => $assessment_period_id,
+                        'institution_class_id' => $institution_class_id,
+                        'education_grade_id' => $education_grade_id,
+                        'type' => $type//POCOR-9042
+                    ])
+                    ->first();
+
+                if ($existingExemption) {
+                    // If the exemption exists, delete it
+                    if ($AssessmentItemStudentExemptions->delete($existingExemption)) {
+                        Log::debug('Exemption removed for student ' . $student_id);
+                    }
+                }
+            }
+        }
+    }
+
+
+    public static function removeExemptionsOrg($params): void
+    {
+        $non_exempt_students_base64 = $params['unexempt_students'] ?? null;
+        $assessment_item_id = $params['assessment_item_id'] ?? null;
+        $assessment_period_id = $params['assessment_period_id'] ?? null;
+        $institution_class_id = $params['institution_class_id'] ?? null;
+        $type = $params['type'] ?? null; //POCOR-9042
+
+        //POCOR-9114 -- START -- changed logic for multiple assessment periods
+        $assessment_period_ids = [];
+        if (!empty($params['assessment_period_id'])) {
+            if (is_array($params['assessment_period_id'])) {
+                $assessment_period_ids = $params['assessment_period_id'];
+            } else {
+                $assessment_period_ids = [$params['assessment_period_id']];
+            }
+        }
+        //POCOR-9114 -- START
 
 //        Log::debug([$assessment_item_id, $assessment_period_id, $institution_class_id ]);
         if ($non_exempt_students_base64 && $assessment_item_id && $assessment_period_id && $type) {//POCOR-9042 add type
