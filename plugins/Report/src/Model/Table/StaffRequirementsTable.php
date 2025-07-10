@@ -57,7 +57,6 @@ class StaffRequirementsTable extends AppTable
 		,institutions.postal_code institutions_postal_code
 		,institutions.contact_person institutions_contact_person
 		,institutions.telephone institutions_telephone
-		,institutions.fax institutions_fax
 		,institutions.email institutions_email
 		,institutions.website institutions_website
 		,institutions.date_opened institutions_date_opened
@@ -966,7 +965,6 @@ class StaffRequirementsTable extends AppTable
 
 				'StaffRequirements__contact_person' => 'student_query.institutions_contact_person',
 				'StaffRequirements__telephone' => 'student_query.institutions_telephone',
-				'StaffRequirements__fax' => 'student_query.institutions_fax',
 				'StaffRequirements__email' => 'student_query.institutions_email',
 				'StaffRequirements__website' => 'student_query.institutions_website',
 				'StaffRequirements__date_opened' => 'student_query.institutions_date_opened',

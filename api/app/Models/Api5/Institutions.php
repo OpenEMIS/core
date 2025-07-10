@@ -14,7 +14,7 @@ class Institutions extends Model
     use HasFactory;
 use InstitutionScope;
     // ✅ Allow mass assignment
-    protected $fillable = ['id', 'name', 'alternative_name', 'code', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'date_opened', 'year_opened', 'date_closed', 'year_closed', 'longitude', 'latitude', 'logo_name', 'logo_content', 'shift_type', 'classification', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id', 'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'security_group_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id', 'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'security_group_id', 'modified_user_id', 'created_user_id'];
+    protected $fillable = ['id', 'name', 'alternative_name', 'code', 'address', 'postal_code', 'contact_person', 'telephone', 'email', 'website', 'date_opened', 'year_opened', 'date_closed', 'year_closed', 'longitude', 'latitude', 'logo_name', 'logo_content', 'shift_type', 'classification', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id', 'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'security_group_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id', 'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'security_group_id', 'modified_user_id', 'created_user_id'];
     // ✅ Treat 'modified' and 'created' as timestamps
     protected $dates = ['modified', 'created'];
 
@@ -94,7 +94,6 @@ public function _swaggerPath() {}
                           @OA\Property(property="postal_code", type="string", example=null),
                           @OA\Property(property="contact_person", type="string", example=null),
                           @OA\Property(property="telephone", type="string", example=null),
-                          @OA\Property(property="fax", type="string", example=null),
                           @OA\Property(property="email", type="string", example=null),
                           @OA\Property(property="website", type="string", example=null),
                           @OA\Property(property="date_opened", type="string", format="date", example=null),
@@ -150,7 +149,6 @@ public function _swaggerList() {}
                      @OA\Property(property="postal_code", type="string", example=null),
                      @OA\Property(property="contact_person", type="string", example=null),
                      @OA\Property(property="telephone", type="string", example=null),
-                     @OA\Property(property="fax", type="string", example=null),
                      @OA\Property(property="email", type="string", example=null),
                      @OA\Property(property="website", type="string", example=null),
                      @OA\Property(property="date_opened", type="string", format="date", example=null),
@@ -244,7 +242,6 @@ public function _swaggerView() {}
                      @OA\Property(property="postal_code", type="string", example=null),
                      @OA\Property(property="contact_person", type="string", example=null),
                      @OA\Property(property="telephone", type="string", example=null),
-                     @OA\Property(property="fax", type="string", example=null),
                      @OA\Property(property="email", type="string", example=null),
                      @OA\Property(property="website", type="string", example=null),
                      @OA\Property(property="date_opened", type="string", format="date", example=null),
