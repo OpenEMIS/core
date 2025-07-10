@@ -2839,9 +2839,9 @@ class NavigationComponent extends Component
                         'Configurations.Theme' => [
                             'title' => 'Themes',
                             'parent' => 'Themes',
-                            'selected' => ['Notices.Notices']
+                           // 'selected' => ['Notices.Notices']
                         ]
-                    ]
+                    ],
                 ],
                 // Start POCOR-5188
                 'Manuals.Institutions' => [
@@ -2858,12 +2858,12 @@ class NavigationComponent extends Component
                     ]
                 ],
                 // End POCOR-5188
-
+/*
                 'Notices.index' => [
                     'title' => 'Notices',
                     'parent' => 'SystemSetup',
                     'selected' => ['Notices.Notices']
-                ],
+                ],*/
                 'Risks.Risks' => [
                     'title' => 'Risks',
                     'parent' => 'SystemSetup',
@@ -3718,6 +3718,12 @@ class NavigationComponent extends Component
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.Logs']
                     ],
+                    'Alerts.Notices' => [
+                        'title' => 'Notices',
+                        'parent' => 'Administration.Communications',
+                        'params' => ['plugin' => 'Alert'],
+                        'selected' => ['Alerts.Notices']
+                    ],
                 ];
             }
         } else {
@@ -3747,6 +3753,12 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Alert'],
                     'selected' => ['Alerts.Logs']
                 ],
+                'Alerts.Notices' => [
+                        'title' => 'Notices',
+                        'parent' => 'Administration.Communications',
+                        'params' => ['plugin' => 'Alert'],
+                        'selected' => ['Alerts.Notices']
+                    ],
             ];
         }
         return $navfour;

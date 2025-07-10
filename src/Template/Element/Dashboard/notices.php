@@ -1,3 +1,8 @@
+<!-- AngularJS Core (v1.5.8) -->
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
+ 
+<!-- Angular Sanitize (must match version 1.5.8) -->
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular-sanitize.js"></script>
 <h3><?= __('Notices'); ?></h3>
 <div class="row dashboard-container">
 	<div id="news">
@@ -11,7 +16,8 @@
 					</li>
 					<li class="list-group-item" ng-repeat="notice in DashboardController.notices | orderBy:'order'" ng-cloak>
 						<div class="notice-message">
-							<p>{{notice.message|removeEmded }}</p>
+						<p ng-bind-html="notice.message"></p>
+
                                                         <!-- <p ng-if="notice.message|getUrl">
                                                            <iframe width="200" height="200" src="{{trustedUrl(notice.message|getUrl)}}" frameborder="0" allowfullscreen ></iframe> 
                                                         </p> -->
