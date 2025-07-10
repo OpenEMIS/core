@@ -706,8 +706,6 @@ class MessagingTable extends ControllerActionTable
         $options = $SecurityRoles->find('list', [
             'keyField' => 'id',
             'valueField' => 'name',
-        ])->where([
-            $SecurityRoles->aliasField('name IN') => ['Student', 'Guardian']
         ])->toArray();
         $attr['type'] = 'chosenSelect';
         $attr['attr']['multiple'] = true;

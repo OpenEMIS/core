@@ -188,12 +188,16 @@ function DashboardSvc($q, $filter, KdDataSvc) {
             }
         };
 
-        return NoticesTable
+        /*return NoticesTable
             .order(['-created'])
             .ajax({
                 success: success,
                 defer: true
-            });
+            });*/
+        return NoticesTable  //pocor-7210       
+            .select()
+            .find('Notices')
+            .ajax({success: success, defer: true});
     }
 
     function getNotices() {
@@ -215,12 +219,10 @@ function DashboardSvc($q, $filter, KdDataSvc) {
             }
         };
 
-        return NoticesTable
-            .order(['-created'])
-            .ajax({
-                success: success,
-                defer: true
-            });
+        return NoticesTable //POCOR-7210
+            .select()
+            .find('Notices')
+            .ajax({success: success, defer: true});
     };
 
     function getWorkbenchItems() {

@@ -28,6 +28,17 @@ if ($session->check('System.User.roles')) {
         <a class="btn" href="<?= $this->Url->build($homeUrl) ?>">
             <i class="fa fa-home"></i>
         </a>
+        <!--POCOR-7210  start -->
+        <?php if ($SystemNotices): ?>
+		    <a class="btn" href="<?= $this->Url->build(['plugin' => 'System', 'controller' => 'Systems', 'action' => 'SystemNotices']) ?>">
+		        <i class="fa fa-envelope"></i>
+		    </a>
+		<?php else: ?>
+		    <a class="btn" href="<?= $this->Url->build(['plugin' => 'System', 'controller' => 'Systems', 'action' => 'SystemNotices']) ?>">
+		        <i class="fa fa-envelope fa-lg notification-dot"></i>
+		    </a>
+		<?php endif; ?> <!-- POCOR-7210 end -->
+
     </div>
 	
     <?php
