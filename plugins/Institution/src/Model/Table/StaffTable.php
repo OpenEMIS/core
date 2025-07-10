@@ -3066,16 +3066,16 @@ class StaffTable extends ControllerActionTable
     }
 
     /**
-     * Find all staff in an institution who are NOT assigned to a given department.
+     * Find all staff in an institution who are NOT assigned to a given department or are managers.
      *
      * @param \Cake\ORM\Query $query
      * @param array $options Must contain:
-     *   - 'institution_id' (int): ID of the institution
-     *   - 'department_id'  (int): ID of the department to exclude
-     *   - 'target'  (string): unassigned or manager
+     * - 'institution_id' (int): ID of the institution
+     * - 'department_id'  (int): ID of the department to exclude
+     * - 'target'  (string): 'unassigned' or 'manager' (default 'unassigned')
      * @return \Cake\ORM\Query
      */
- public function findStaffForDepartment(Query $query, array $options)
+    public function findStaffForDepartment(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
         $departmentId  = $options['department_id'];
@@ -3093,15 +3093,71 @@ class StaffTable extends ControllerActionTable
                 'Users.Genders',
                 'StaffStatuses'
             ]);
+        Log::debug($target);
+        switch ($target) {
+            case 'unassigned':
+                $query = $this->_filterUnassignedStaff($query, $departmentId);
+                break;
+            case 'manager':
+                $query = $this->_filterManagerStaff($query, $departmentId); // Assuming you'll implement this
+                break;
+            // Add more cases as needed
+        }
 
-        if ($target === 'unassigned') {
+        return $this->_formatStaffResults($query, $departmentId);
+    }
+
+    /**
+     * Applies filters for unassigned staff based on multiple assignment allowance.
+     *
+     * @param \Cake\ORM\Query $query
+     * @param int $departmentId
+     * @return \Cake\ORM\Query
+     */
+    protected function _filterUnassignedStaff(Query $query, int $departmentId): Query
+    {
+        // load the config once
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $allowMultiple = (bool)$ConfigItems->value('AssigningStafftoMultipleDepartments');
+
+        if ($allowMultiple) {
+            // only filter out those already in *this* department
             $query = $query->notMatching('DepartmentStaff', function (Query $q) use ($departmentId) {
                 return $q->where([
                     'DepartmentStaff.institution_department_id' => $departmentId
                 ]);
             });
+        } else {
+            // filter out anyone in DepartmentStaff *at all*
+            $query = $query->notMatching('DepartmentStaff');
         }
+        return $query;
+    }
 
+    /**
+     * Applies filters for manager staff (placeholder).
+     *
+     * @param \Cake\ORM\Query $query
+     * @param int $departmentId
+     * @return \Cake\ORM\Query
+     */
+    protected function _filterManagerStaff(Query $query, int $departmentId): Query
+    {
+        // Implement manager-specific filtering logic here
+        // For example:
+        // $query->where(['Staff.is_manager' => true]);
+        return $query;
+    }
+
+    /**
+     * Formats the staff query results.
+     *
+     * @param \Cake\ORM\Query $query
+     * @param int $departmentId
+     * @return \Cake\ORM\Query
+     */
+    protected function _formatStaffResults(Query $query, int $departmentId): Query
+    {
         return $query->formatResults(function (CollectionInterface $results) use ($departmentId) {
             return $results->map(function ($staff) use ($departmentId) {
                 return [
