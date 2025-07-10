@@ -158,6 +158,7 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     public function institutionStaff()
     {
         return $this->belongsTo(InstitutionStaff::class, 'id', 'staff_id');
+
     }
 
 

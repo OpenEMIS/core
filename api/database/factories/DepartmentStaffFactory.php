@@ -15,8 +15,8 @@ class DepartmentStaffFactory extends Factory
 
         return [
             'id' => $this->faker->numberBetween(1, 1000),
-            'department_id' => \App\Models\Api5\InstitutionDepartments::inRandomOrder()->value('id') ?? \App\Models\Api5\InstitutionDepartments::factory()->create()->id,
-            'staff_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
+            'institution_department_id' => \App\Models\Api5\InstitutionDepartments::inRandomOrder()->value('id') ?? \App\Models\Api5\InstitutionDepartments::factory()->create()->id,
+            'institution_staff_id' => \App\Models\Api5\InstitutionStaff::inRandomOrder()->value('id') ?? \App\Models\Api5\InstitutionStaff::factory()->create()->id,
         ];
     }
 }

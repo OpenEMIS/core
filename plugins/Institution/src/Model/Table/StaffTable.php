@@ -71,6 +71,7 @@ class StaffTable extends ControllerActionTable
         $this->hasMany('StaffRelease', ['className' => 'Institution.StaffRelease', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         // $this->hasMany('Contacts', ['className' => 'User.Contacts',        'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('SecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'foreignKey' => 'secondary_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('DepartmentStaff', ['className' => 'Institution.DepartmentStaff', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Security.SecurityAccess');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -3061,6 +3062,61 @@ class StaffTable extends ControllerActionTable
                     }
                 }
                 return $return;
+            });
+    }
+
+    /**
+     * Find all staff in an institution who are NOT assigned to a given department.
+     *
+     * @param \Cake\ORM\Query $query
+     * @param array $options Must contain:
+     *   - 'institution_id' (int): ID of the institution
+     *   - 'department_id'  (int): ID of the department to exclude
+     * @return \Cake\ORM\Query
+     */
+    public function findUnassignedToDepartment(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $departmentId  = $options['institution_department_id'];
+
+        return $query
+            // Only staff in this institution, still active
+            ->where([
+                'Staff.institution_id' => $institutionId,
+                'OR' => [
+                    ['Staff.end_date >' => Time::now()],
+                    ['Staff.end_date IS' => null],
+                ],
+            ])
+            // Exclude those matching a DepartmentStaff link to this department
+            ->notMatching('DepartmentStaff', function (Query $q) use ($departmentId) {
+                return $q->where([
+                    'DepartmentStaff.institution_department_id' => $departmentId
+                ]);
+            })
+            // Bring in the minimal associations needed for mapping
+            ->contain([
+                'Users.Genders',
+                'StaffStatuses'
+            ])
+            // Finally, reshape the results into a flat array
+            ->formatResults(function (CollectionInterface $results) {
+                return $results->map(function ($staff) {
+                    return [
+                        'openemis_no'        => $staff->user->openemis_no,
+                        'name'               => $staff->user->name,
+                        'staff_status_name'  => $staff->staff_status->name,
+                        'gender_name'        => $staff->user->gender->name,
+                        'security_user_id'   => $staff->security_group_user_id,
+                        'encodedVar'         => base64_encode(json_encode([
+                            'staff_id'                  => $staff->id,
+                            'security_user_id'          => $staff->security_group_user_id,
+                            'institution_id'            => $staff->institution_id,
+                            'staff_status_id'           => $staff->staff_status_id,
+                            'gender_id'                 => $staff->user->gender->id,
+                        ])),
+                    ];
+                })->toList();
             });
     }
 

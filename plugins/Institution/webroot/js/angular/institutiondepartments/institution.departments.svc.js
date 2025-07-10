@@ -9,7 +9,7 @@ function InstitutionDepartmentsSvc($http, $q, $filter, KdDataSvc) {
     var service = {
         init: init,
         getDepartmentDetails: getDepartmentDetails,
-        // getUnassignedStaff: getUnassignedStaff,
+        getUnassignedStaff: getUnassignedStaff,
         translate: translate,
         // getManagerOptions: getTeacherOptions,
         // saveDepartment: saveDepartment,
@@ -60,19 +60,18 @@ function InstitutionDepartmentsSvc($http, $q, $filter, KdDataSvc) {
             });
     }
 
-    // function getUnassignedStaff(institutionDepartmentId, institutionId, academicPeriodId) {
-    //     var success = function(response, deferred) {
-    //         deferred.resolve(response.data.data);
-    //     };
-    //     return Users.find('InstitutionStudentsNotInDepartment', {
-    //         academic_period_id: academicPeriodId,
-    //         institution_id: institutionId,
-    //         institution_department_id: institutionDepartmentId
-    //     }).ajax({
-    //         success: success,
-    //         defer: true
-    //     });
-    // }
+    function getUnassignedStaff(institutionDepartmentId, institutionId, academicPeriodId) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+        return Staff.find('UnassignedToDepartment', {
+            institution_id: institutionId,
+            institution_department_id: institutionDepartmentId
+        }).ajax({
+            success: success,
+            defer: true
+        });
+    }
     //
     // function getTeacherOptions(institutionId, academicPeriodId) {
     //     var success = function(response, deferred) {
