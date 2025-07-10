@@ -14,6 +14,8 @@ class CrudApiController extends Controller
     protected $allowedResources = [
         'department-staff' => \App\Models\Api5\DepartmentStaff::class, // POCOR_8030
         'institution-departments' => \App\Models\Api5\InstitutionDepartments::class, // POCOR_8030
+        'institution-infrastructure-attachments' => \App\Models\InstitutionInfrastructureAttachments::class,
+        'infrastructure-attachment-types' => \App\Models\InfrastructureAttachmentTypes::class,
         'staff-leave-entitlements' => \App\Models\Api5\StaffLeaveEntitlements::class,
         'staff-leave-policies' => \App\Models\Api5\StaffLeavePolicies::class,
         'staff-leave-policy-types' => \App\Models\Api5\StaffLeavePolicyTypes::class,

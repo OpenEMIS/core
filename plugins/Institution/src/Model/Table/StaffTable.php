@@ -3831,7 +3831,7 @@ class StaffTable extends ControllerActionTable
                 'Institutions.postal_code',
                 'Institutions.contact_person',
                 'Institutions.telephone',
-                'Institutions.fax',
+//                'Institutions.fax',
                 'Institutions.email',
                 'Institutions.website',
                 'Users.id',

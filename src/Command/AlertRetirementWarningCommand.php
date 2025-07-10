@@ -119,7 +119,7 @@ class AlertRetirementWarningCommand extends AlertCommandBase
             '${institution.postal_code}' => $item['institution']['postal_code'] ?? '',
             '${institution.contact_person}' => $item['institution']['contact_person'] ?? '',
             '${institution.telephone}' => $item['institution']['telephone'] ?? '',
-            '${institution.fax}' => $item['institution']['fax'] ?? '',
+//          '${institution.fax}' => $item['institution']['fax'] ?? '',
             '${institution.email}' => $item['institution']['email'] ?? '',
             '${institution.website}' => $item['institution']['website'] ?? ''
         ];

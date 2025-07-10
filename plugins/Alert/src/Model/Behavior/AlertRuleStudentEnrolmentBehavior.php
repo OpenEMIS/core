@@ -45,7 +45,7 @@ class AlertRuleStudentEnrolmentBehavior extends AlertRuleBehavior
             '${institution.postal_code}' => 'Institution Postal Code',
             '${institution.contact_person}' => 'Institution Contact Person',
             '${institution.telephone}' => 'Institution Telephone Number',
-            '${institution.fax}' => 'Institution Fax Number',
+//            '${institution.fax}' => 'Institution Fax Number',
             '${institution.email}' => 'Institution Email',
             '${institution.website}' => 'Institution Website',
 
