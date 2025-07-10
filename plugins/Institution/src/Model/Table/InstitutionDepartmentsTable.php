@@ -298,8 +298,8 @@ class InstitutionDepartmentsTable extends ControllerActionTable
                                 'gender_name' => $staff->user->gender->name,
                                 'security_user_id' => $staff->user->id,
                                 'encodedVar' => base64_encode(json_encode([
-                                    'institution_staff_id' => $staff->institution_staff_id,
-                                    'institution_department_id' => $staff->institution_department_id,
+                                    'institution_staff_id' => $staff->id,
+                                    'institution_department_id' => $department_staff->institution_department_id,
                                 ])),
                             ];
                         })
@@ -318,43 +318,41 @@ class InstitutionDepartmentsTable extends ControllerActionTable
     {
 //        POCOR-8391 start
         if (!$entity->isNew()) {
-            Log::debug(print_r($entity, true));
-            //empty subject student is handled by beforeMarshal
-            //in another case, it will be save manually to avoid unecessary queries during save by association
             if (isset($entity->assigned_staff)) {
                 $departmentId = $entity->id;
-                // $institutionClassId = 0;
                 $newStaff = [];
-                //decode string sent through form
+//                Log::debug(print_r(['$entity->assigned_staff' => $entity->assigned_staff],true));
                 foreach ($entity->assigned_staff as $item) {
-                    $staff = json_decode($this->urlsafeB64Decode($item->encodedVar), true);
+                    $staff = json_decode($this->urlsafeB64Decode($item['encodedVar']), true);
                     $newStaff[$staff['institution_staff_id']] = $staff;
                 }
+//                Log::debug(print_r(['$newStaff' => $newStaff],true));
                 $departmentStaff = TableRegistry::getTableLocator()->get('Institution.DepartmentStaff');
                 $where = [
                     $departmentStaff->aliasField('institution_department_id') => $departmentId,
                 ];
                 $existingStaff = $departmentStaff
                     ->find('all')
-                    ->select([
-                        'id', 'institution_staff_id'
-                    ])
                     ->where($where)
                     ->toArray();
-                foreach ($existingStaff as $key => $departmentStaffEntity) {
+
+                foreach ($existingStaff as $departmentStaffEntity) {
                     $institution_staff_id = $departmentStaffEntity->institution_staff_id;
                     if (!isset($newStaff[$institution_staff_id])) { // if current student does not exists in the new list of students
-//                        Log::debug('- ' . strval($student_id));
-                        $this->DepartmentStaff->delete($departmentStaffEntity);
+                        $deleted = $this->DepartmentStaff->delete($departmentStaffEntity);
+//                        Log::debug(print_r(['$deleted' => $deleted], true));
                     } else { // if student exists, then remove from the array to get the new student records to be added
-//                        Log::debug('+ ' . strval($student_id));
                         unset($newStaff[$institution_staff_id]);
                     }
                 }
-                foreach ($newStaff as $key => $staff) {
-//                    Log::debug(print_r($student, true));
-                    $departmentStaffEntity = $this->DepartmentStaff->newEntity($staff);
-                    $this->DepartmentStaff->save($departmentStaffEntity);
+//                Log::debug(print_r($newStaff, true));
+                foreach ($newStaff as $staff) {
+                    try {
+                        $departmentStaffEntity = $this->DepartmentStaff->newEntity($staff);
+                        $this->DepartmentStaff->save($departmentStaffEntity);
+                    } catch (\Exception $exception) {
+                        Log::debug($exception->getMessage());
+                    }
                 }
             }
         }
