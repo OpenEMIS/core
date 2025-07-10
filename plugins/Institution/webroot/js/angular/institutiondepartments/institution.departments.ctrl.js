@@ -41,7 +41,7 @@ function InstitutionDepartmentsController(
     const suppressSorting = true;
 
     Controller.dataReady     = false;
-    Controller.bodyDir       = document.body.style.direction;
+    Controller.bodyDir = getComputedStyle(document.body).direction;
     Controller.departmentId  = null;
     Controller.institutionId = null;
     Controller.managerId = null;
@@ -59,7 +59,7 @@ function InstitutionDepartmentsController(
         { headerName: 'OpenEMIS ID',    field: 'openemis_no'      },
         { headerName: 'Name',           field: 'name'             },
         { headerName: 'Gender',         field: 'gender_name'      },
-        { headerName: 'Staff Status',   field: 'staff_status_name'}
+        { headerName: 'Staff Status',   field: 'staff_status_name'},
     ];
 
     // Top grid (available staff)
@@ -136,7 +136,6 @@ function InstitutionDepartmentsController(
             Controller.assignedStaff = response.assigned_staff;
         }
 
-        // console.log(Controller.assignedStaff);
         return;
     }
 
@@ -182,7 +181,6 @@ function InstitutionDepartmentsController(
         translated.forEach((text, i) => {
             Controller.colDef[i].headerName = text;
         });
-
         // Build both grids
         setTopGrid(Controller.colDef, Controller.unassignedStaff);
         setBottomGrid(Controller.colDef, Controller.assignedStaff);
@@ -191,6 +189,8 @@ function InstitutionDepartmentsController(
 
     //─── Grid helpers ───────────────────────────────────────────────────────────
     function setTopGrid(columns, rows) {
+        Controller.columnTopData = [ Controller.columnTopData[0] ];
+
         columns.forEach(col => {
             col.suppressMenu = suppressMenu;
             col.filter       = 'text';
@@ -208,6 +208,7 @@ function InstitutionDepartmentsController(
     }
 
     function setBottomGrid(columns, rows) {
+        Controller.columnBottomData = [ Controller.columnBottomData[0] ];
         columns.forEach(col => {
             col.suppressMenu = suppressMenu;
             col.filter       = 'text';
