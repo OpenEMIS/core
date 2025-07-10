@@ -277,7 +277,6 @@ class InstitutionDepartmentsTable extends ControllerActionTable
     public function findDepartmentDetails(Query $query, array $options)
     {
         return $query
-//            ->find('translateItem')
             ->contain([
                 'Managers',
                 'DepartmentStaff.Staff.Users.Genders',
@@ -315,22 +314,5 @@ class InstitutionDepartmentsTable extends ControllerActionTable
                 });
             });
     }
-
-
-//    public function findTranslateItem(Query $query, array $options)
-//    {
-//        return $query
-//            ->formatResults(function ($results) {
-//                $arrResults = $results->toArray();
-//                foreach ($arrResults as &$value) {
-//                    if (isset($value['department_staff']) && is_array($value['department_staff'])) {
-//                        foreach ($value['department_staff'] as $staff) {
-//                            Log::debug(print_r($staff,true));
-//                        }
-//                    }
-//                }
-//                return $arrResults;
-//            });
-//    }
 
 }
