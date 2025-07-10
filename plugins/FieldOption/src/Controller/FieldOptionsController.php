@@ -828,4 +828,10 @@ class FieldOptionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
     }
     //POCOR-8873 end
+
+    //POCOR-5208
+     public function InfrastructureAttachmentTypes()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
+    }
 }
