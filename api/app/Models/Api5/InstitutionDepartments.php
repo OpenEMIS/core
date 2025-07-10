@@ -263,30 +263,6 @@ class InstitutionDepartments extends Model
         }]);
     }
 
-    public function scopeWithStaff($query)
-    {
-        return $query->with(['staff' => function ($query) {
-            $query->select('security_users.id',
-                'security_users.first_name',
-                'security_users.last_name',
-                'security_users.openemis_no',
-                'genders.name as gender_name',
-                'department_staff.department_id as pivot_department_id',
-                'department_staff.staff_id as pivot_staff_id',
-                'institution_departments.id as department_id',
-                'institution_departments.institution_id as department_institution_id',
-                'institution_staff.institution_id as institution_staff_institution_id',
-            )
-                ->join('genders', 'security_users.gender_id', '=', 'genders.id')
-                ->join('institution_departments', 'department_staff.department_id', '=', 'institution_departments.id')
-                ->join('institution_staff', function ($join) {
-                    $join->on('security_users.id', '=', 'institution_staff.staff_id')
-                        ->orderBy('institution_staff.id', 'desc')
-                        ->whereColumn('institution_staff.institution_id', '=', 'institution_departments.institution_id');
-                })->groupBy('security_users.id');
-        }]);
-    }
-
     public function manager()
     {
         return $this->belongsTo(SecurityUsers::class, 'manager_id');
@@ -294,7 +270,7 @@ class InstitutionDepartments extends Model
 
     public function staff()
     {
-        return $this->belongsToMany(SecurityUsers::class, 'department_staff', 'department_id', 'staff_id');
+        return $this->belongsToMany(InstitutionStaff::class, 'department_staff', 'institution_department_id', 'institution_staff_id');
     }
 
     // Add validation rules

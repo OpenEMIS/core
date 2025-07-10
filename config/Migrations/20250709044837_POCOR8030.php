@@ -132,11 +132,11 @@ class POCOR8030 extends AbstractMigration
         if (!$this->hasTable('department_staff')) {
             $this->execute("CREATE TABLE `department_staff` (
                 `id` INT NOT NULL AUTO_INCREMENT,
-                `department_id` INT NOT NULL,
-                `staff_id` INT NOT NULL,
+                `institution_department_id` INT NOT NULL,
+                `institution_staff_id` INT NOT NULL,
                 PRIMARY KEY (`id`),
-                FOREIGN KEY (`department_id`) REFERENCES `institution_departments`(`id`),
-                FOREIGN KEY (`staff_id`) REFERENCES `security_users`(`id`)
+                FOREIGN KEY (`institution_department_id`) REFERENCES `institution_departments`(`id`),
+                FOREIGN KEY (`institution_staff_id`) REFERENCES `institution_staff`(`id`)
             ) ENGINE=InnoDB");
             Log::info('Created table department_staff with foreign keys.');
         }
@@ -187,10 +187,10 @@ class POCOR8030 extends AbstractMigration
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
 
         if ($this->hasTable('department_staff')) {
-            $this->execute(
-                "ALTER TABLE `department_staff` DROP FOREIGN KEY `department_staff_department_id`");
-            $this->execute(
-                "ALTER TABLE `department_staff` DROP FOREIGN KEY `department_staff_staff_id`");
+//            $this->execute(
+//                "ALTER TABLE `department_staff` DROP FOREIGN KEY `department_staff_instution_department_id`");
+//            $this->execute(
+//                "ALTER TABLE `department_staff` DROP FOREIGN KEY `department_staff_staff_id`");
             $this->execute("DROP TABLE IF EXISTS `department_staff`");
             Log::info('Dropped table department_staff and its constraints.');
         }
