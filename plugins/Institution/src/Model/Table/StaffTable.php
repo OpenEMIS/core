@@ -3093,7 +3093,6 @@ class StaffTable extends ControllerActionTable
                 'Users.Genders',
                 'StaffStatuses'
             ]);
-        Log::debug($target);
         switch ($target) {
             case 'unassigned':
                 $query = $this->_filterUnassignedStaff($query, $departmentId);
@@ -3118,18 +3117,17 @@ class StaffTable extends ControllerActionTable
     {
         // load the config once
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $allowMultiple = (bool)$ConfigItems->value('AssigningStafftoMultipleDepartments');
-
-        if ($allowMultiple) {
+        $allowMultiple = $ConfigItems->value('AssigningStafftoMultipleDepartments');
+        if ($allowMultiple == 'Disable') {
+            // filter out anyone in DepartmentStaff *at all*
+            $query = $query->notMatching('DepartmentStaff');
+        } else {
             // only filter out those already in *this* department
             $query = $query->notMatching('DepartmentStaff', function (Query $q) use ($departmentId) {
                 return $q->where([
                     'DepartmentStaff.institution_department_id' => $departmentId
                 ]);
             });
-        } else {
-            // filter out anyone in DepartmentStaff *at all*
-            $query = $query->notMatching('DepartmentStaff');
         }
         return $query;
     }

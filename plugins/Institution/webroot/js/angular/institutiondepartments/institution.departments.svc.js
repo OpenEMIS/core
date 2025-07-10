@@ -65,7 +65,7 @@ function InstitutionDepartmentsSvc($http, $q, $filter, KdDataSvc) {
         return InstitutionStaff.find('StaffForDepartment', {
             institution_id: institutionId,
             department_id: departmentId,
-            targer: 'unassigned'
+            target: 'unassigned'
         }).ajax({
             success: success,
             defer: true
@@ -79,7 +79,7 @@ function InstitutionDepartmentsSvc($http, $q, $filter, KdDataSvc) {
         return InstitutionStaff.find('StaffForDepartment', {
             institution_id: institutionId,
             department_id: departmentId,
-            targer: 'manager'
+            target: 'manager'
         }).ajax({
             success: success,
             defer: true
