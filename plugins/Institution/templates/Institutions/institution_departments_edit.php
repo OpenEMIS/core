@@ -42,27 +42,33 @@ $this->start('panelBody');
             <p ng-repeat="error in InstitutionDepartmentsController.postError.name">{{ error }}</p>
         </div>
     </div>
+    <div class="input string required">
+        <label><?= __('Code') ?></label>
+        <input ng-model="InstitutionDepartmentsController.departmentCode" type="string" ng-init="InstitutionDepartmentsController.departmentCode='';">
+        <div ng-if="InstitutionDepartmentsController.postError.code" class="error-message">
+            <p ng-repeat="error in InstitutionDepartmentsController.postError.code">{{ error }}</p>
+        </div>
+    </div>
     <div class="input select">
-        <label><?= __('Staff') ?></label>
+        <label><?= __('Manager') ?></label>
         <select chosen
             data-placeholder="-- <?=__('Select Staff or Leave Blank') ?> --"
-            name="InstitutionClasses[secondary_staff_id]"
-            id="institutionclasses-secondary-staff-id"
-            multiple="multiple"
+            name="InstitutionDepartments[manager]"
+            id="institution-departments-manager-id"
             class="chosen-select"
-            options="InstitutionDepartmentsController.secondaryTeacherOptions"
-            ng-model="InstitutionDepartmentsController.selectedSecondaryTeacher"
-            ng-options="option.id as option.name for option in InstitutionDepartmentsController.secondaryTeacherOptions"
+            options="InstitutionDepartmentsController.managerOptions"
+            ng-model="InstitutionDepartmentsController.managerId"
+            ng-options="option.id as option.name for option in InstitutionDepartmentsController.managerOptions"
             ng-init="InstitutionDepartmentsController.selectedSecondaryTeacher=[];"
-            ng-change="InstitutionDepartmentsController.teacherOptions = InstitutionDepartmentsController.changeStaff(InstitutionDepartmentsController.selectedSecondaryTeacher);"
+            ng-change="InstitutionDepartmentsController.managerOptions = InstitutionDepartmentsController.changeManager(InstitutionDepartmentsController.managerId);"
 >
         </select>
-        <div ng-if="InstitutionDepartmentsController.postError.staff_id" class="error-message">
-            <p ng-repeat="error in InstitutionDepartmentsController.postError.staff_id">{{ error }}</p>
+        <div ng-if="InstitutionDepartmentsController.postError.manager_id" class="error-message">
+            <p ng-repeat="error in InstitutionDepartmentsController.postError.manager_id">{{ error }}</p>
         </div>
     </div>
 	<div class="input select">
-        <label><?= __('Add Student') ?></label>
+        <label><?= __('Add Staff') ?></label>
         <div class="input-form-wrapper" ng-init="InstitutionDepartmentsController.departmentId='<?= $departmentId ?>'; InstitutionDepartmentsController.redirectUrl='<?= $this->Url->build($viewUrl) ?>'; InstitutionDepartmentsController.alertUrl='<?= $this->Url->build($alertUrl) ?>';">
     		<kd-multi-select ng-if="InstitutionDepartmentsController.dataReady"
                              config="InstitutionDepartmentsController.textConfig"

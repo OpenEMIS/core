@@ -11,8 +11,6 @@ class InstitutionDepartmentsFactory extends Factory
 
     public function definition(): array
     {
-
-
         return [
             'id' => $this->faker->numberBetween(1, 1000),
             'name' => $this->faker->lexify(str_repeat("?", 100)),

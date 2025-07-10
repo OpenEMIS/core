@@ -44,13 +44,10 @@ function InstitutionDepartmentsController(
     Controller.bodyDir       = document.body.style.direction;
     Controller.departmentId  = null;
     Controller.institutionId = null;
-    Controller.academicPeriodId = null;
     Controller.departmentName   = '';
-    Controller.academicPeriodName = '';
+    Controller.departmentCode   = '';
 
-    Controller.selectedSecondaryTeachers = [];
-    Controller.mainTeacherOptions        = [];
-    Controller.secondaryTeacherOptions   = [];
+    Controller.managerOptions = [];
 
     Controller.assignedStaff   = [];
     Controller.unassignedStaff = [];
@@ -105,8 +102,8 @@ function InstitutionDepartmentsController(
             .then(setBasicData)
             .then(getUnassignedStaff)
             .then(setUnassignedStaff)
-            .then(getTeacherOptions)
-            .then(setTeacherOptions)
+            // .then(getManagerOptions)
+            // .then(getManagerOptions)
             .then(translateHeaders)
             .then(setTranslatedHeaders)
             .catch(err => {
@@ -117,13 +114,6 @@ function InstitutionDepartmentsController(
                 UtilsSvc.isAppendLoader(false);
             });
 
-        // Watch for secondary-teacher changes to update available list
-        $scope.$watchCollection(
-            'InstitutionDepartmentsController.selectedSecondaryTeachers',
-            () => {
-                Controller.secondaryTeacherOptions = changeStaff(Controller.selectedSecondaryTeachers);
-            }
-        );
     });
 
     //─── Data loaders & setters ─────────────────────────────────────────────────
@@ -135,38 +125,41 @@ function InstitutionDepartmentsController(
     }
 
     function setBasicData(response) {
-        console.log(response);
+        // console.log(response);
+        // console.log(response.name);
+        // console.log(response.code);
+        // console.log(response.institution_id);
         Controller.departmentName    = response.name;
+        Controller.departmentCode    = response.code;
         Controller.institutionId     = response.institution_id;
-
         // Assigned staff
-        if (angular.isArray(response.department_staff)) {
-            Controller.assignedStaff = response.department_staff.map(mapAssignedStaff);
+        if (angular.isArray(response.assigned_staff)) {
+            Controller.assignedStaff = response.assigned_staff;
         }
-        Controller.mainTeacherOptions = response.staff_options || [];
-        Controller.secondaryTeacherOptions = changeStaff(Controller.selectedSecondaryTeachers);
-
-        return response;
+        console.log(Controller.assignedStaff);
+        return;
     }
 
     function getUnassignedStaff(/* response */) {
         return InstitutionDepartmentsSvc
-            .getUnassignedStudent(
-                Controller.departmentId,
+            .getUnassignedStaff(
                 Controller.institutionId,
-                Controller.academicPeriodId
+                Controller.departmentId
             )
             .catch(err => Promise.reject(err));
     }
 
     function setUnassignedStaff(unassigned) {
-        Controller.unassignedStaff = unassigned.map(mapUnassignedStaff);
+        console.log(unassigned);
+        Controller.unassignedStaff = unassigned;
+        console.log(Controller.unassignedStaff);
+
         return;
     }
 
-    function getTeacherOptions() {
+    function getManagerOptions() {
         return InstitutionDepartmentsSvc
-            .getTeacherOptions(Controller.institutionId, Controller.academicPeriodId)
+            .getManagerOptions(Controller.institutionId)
             .catch(err => Promise.reject(err));
     }
 
@@ -228,42 +221,6 @@ function InstitutionDepartmentsController(
         Controller.gridOptionsBottom.rowData    = Controller.rowBottomData;
     }
 
-    //─── Mappers ────────────────────────────────────────────────────────────────
-    function mapAssignedStaff(item) {
-        return {
-            openemis_no:      item.user.openemis_no,
-            name:             item.user.name,
-            staff_status_name: item.staff_status.name,
-            gender_name:      item.user.gender.name,
-            security_user_id: item.security_group_user_id,
-            encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify({
-                staff_id:                  item.staff_id,
-                security_user_id:          item.security_group_user_id,
-                institution_department_id: item.institution_department_id,
-                institution_id:            item.institution_id,
-                staff_status_id:           item.staff_status_id,
-                gender_id:                 item.user.gender.id
-            }))
-        };
-    }
-
-    function mapUnassignedStaff(item) {
-        return {
-            openemis_no:      item.openemis_no,
-            name:             item.name,
-            staff_status_name: item.staff_status_name,
-            gender_name:      item.gender_name,
-            security_user_id: item.security_user_id,
-            encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify({
-                security_user_id:          item.security_user_id,
-                institution_department_id: item.institution_department_id,
-                academic_period_id:        item.academic_period_id,
-                institution_id:            item.institution_id,
-                staff_status_id:           item.staff_status_id,
-                gender_id:                 item.gender_id
-            }))
-        };
-    }
 
     //─── Utility: filter out already-selected teachers ───────────────────────────
     function changeStaff(selected) {
@@ -284,17 +241,17 @@ function InstitutionDepartmentsController(
             return;
         }
 
-        const departmentStaff = Controller.selectedSecondaryTeachers.map(id => ({
-            security_user_id:          id,
-            institution_department_id: Controller.departmentId
-        }));
+        // const departmentStaff = Controller.selectedSecondaryTeachers.map(id => ({
+        //     security_user_id:          id,
+        //     institution_department_id: Controller.departmentId
+        // }));
 
         const postData = {
             id:                Controller.departmentId,
             name:              Controller.departmentName,
             institution_id:    Controller.institutionId,
             academic_period_id:Controller.academicPeriodId,
-            department_staff:  departmentStaff
+            assigned_staff:  Controller.assignedStaff
         };
 
         InstitutionDepartmentsSvc

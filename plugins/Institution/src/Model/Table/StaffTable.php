@@ -29,7 +29,7 @@ use Cake\Utility\Text;
 use Cake\ORM\Locator\TableLocator;
 use Cake\I18n\FrozenDate;
 use Cake\I18n\FrozenTime;
-
+use Cake\Collection\CollectionInterface;
 
 
 class StaffTable extends ControllerActionTable
@@ -3077,7 +3077,7 @@ class StaffTable extends ControllerActionTable
     public function findUnassignedToDepartment(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
-        $departmentId  = $options['institution_department_id'];
+        $departmentId  = $options['department_id'];
 
         return $query
             // Only staff in this institution, still active
@@ -3100,20 +3100,17 @@ class StaffTable extends ControllerActionTable
                 'StaffStatuses'
             ])
             // Finally, reshape the results into a flat array
-            ->formatResults(function (CollectionInterface $results) {
-                return $results->map(function ($staff) {
+            ->formatResults(function (CollectionInterface $results) use ($departmentId) {
+                return $results->map(function ($staff) use ($departmentId) {
                     return [
                         'openemis_no'        => $staff->user->openemis_no,
                         'name'               => $staff->user->name,
                         'staff_status_name'  => $staff->staff_status->name,
                         'gender_name'        => $staff->user->gender->name,
-                        'security_user_id'   => $staff->security_group_user_id,
+                        'security_user_id'   => $staff->user->id,
                         'encodedVar'         => base64_encode(json_encode([
-                            'staff_id'                  => $staff->id,
-                            'security_user_id'          => $staff->security_group_user_id,
-                            'institution_id'            => $staff->institution_id,
-                            'staff_status_id'           => $staff->staff_status_id,
-                            'gender_id'                 => $staff->user->gender->id,
+                            'institution_staff_id' => $staff->id,
+                            'institution_department_id' => $departmentId,
                         ])),
                     ];
                 })->toList();

@@ -187,10 +187,6 @@ class POCOR8030 extends AbstractMigration
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
 
         if ($this->hasTable('department_staff')) {
-//            $this->execute(
-//                "ALTER TABLE `department_staff` DROP FOREIGN KEY `department_staff_instution_department_id`");
-//            $this->execute(
-//                "ALTER TABLE `department_staff` DROP FOREIGN KEY `department_staff_staff_id`");
             $this->execute("DROP TABLE IF EXISTS `department_staff`");
             Log::info('Dropped table department_staff and its constraints.');
         }

@@ -23,8 +23,13 @@ class DepartmentStaffTable extends ControllerActionTable
         parent::initialize($config);
         $this->setTable('department_staff');
 
-        $this->belongsTo('Departments', ['className' => 'Institution.InstitutionDepartments']);
-        $this->belongsTo('Staff', ['className' => 'Institution.Staff']);
+        $this->belongsTo('Departments', [
+            'className' => 'Institution.InstitutionDepartments',
+            'foreignKey' => 'institution_department_id'
+            ]);
+        $this->belongsTo('Staff', [
+            'className' => 'Institution.Staff',
+            'foreignKey' => 'institution_staff_id']);
 
     }
 
