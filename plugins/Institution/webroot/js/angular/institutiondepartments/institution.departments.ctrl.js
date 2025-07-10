@@ -1,351 +1,316 @@
-//Multi Select v.1.0.0
+// Multi Select v.1.0.0
 agGrid.initialiseAgGridWithAngular1(angular);
 
-angular.module('institution.departments.ctrl', ['agGrid', 'kd-angular-multi-select', 'utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institution.departments.svc', 'angular.chosen'])
+angular
+    .module('institution.departments.ctrl', [
+        'agGrid',
+        'kd-angular-multi-select',
+        'utils.svc',
+        'alert.svc',
+        'aggrid.locale.svc',
+        'institution.departments.svc',
+        'angular.chosen'
+    ])
     .controller('InstitutionDepartmentsCtrl', InstitutionDepartmentsController);
 
-InstitutionDepartmentsController.$inject = ['$scope', '$q', '$window', '$http', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionDepartmentsSvc'];
+InstitutionDepartmentsController.$inject = [
+    '$scope',
+    '$q',
+    '$window',
+    '$http',
+    'UtilsSvc',
+    'AlertSvc',
+    'AggridLocaleSvc',
+    'InstitutionDepartmentsSvc'
+];
 
-function InstitutionDepartmentsController($scope, $q, $window, $http, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionDepartmentsSvc) {
+function InstitutionDepartmentsController(
+    $scope,
+    $q,
+    $window,
+    $http,
+    UtilsSvc,
+    AlertSvc,
+    AggridLocaleSvc,
+    InstitutionDepartmentsSvc
+) {
+    const Controller = this;
 
-    var Controller = this;
+    //─── Constants & initial grid state ─────────────────────────────────────────
+    const suppressMenu    = true;
+    const suppressSorting = true;
 
-    // Constants
-    var suppressMenu = true;
-
-    var suppressSorting = true;
-    Controller.dataReady = false;
-
-    // Variables
-    Controller.bodyDir = getComputedStyle(document.body).direction;
-    Controller.columnTopData = [{
-        headerName: "",
-        field: "checkbox",
-        checkboxSelection: true,
-        suppressMenu: suppressMenu,
-        suppressSorting: suppressSorting,
-        minWidth: 50,
-        maxWidth: 50,
-        pinned: 'left'
-    }];
-    Controller.rowTopData = [];
-    Controller.topKey = 'id';
-    Controller.columnBottomData = [{
-        headerName: "",
-        field: "checkbox",
-        checkboxSelection: true,
-        suppressMenu: suppressMenu,
-        suppressSorting: suppressSorting,
-        minWidth: 50,
-        maxWidth: 50,
-        pinned: 'left'
-    }];
-    Controller.rowBottomData = [];
-    Controller.bottomKey = 'id';
-    Controller.gridOptionsTop = {
-        columnDefs: [],
-        rowData: [],
-        primaryKey: [],
-        overlayNoRowsTemplate: '<span class="ag-custom-overlay"><i class="fa fa-info-circle fa-lg margin-right-10"></i>No Staff Record Found</span>',
-    };
-    Controller.gridOptionsBottom = {
-        columnDefs: [],
-        rowData: [],
-        primaryKey: [],
-        overlayNoRowsTemplate: '<span class="ag-custom-overlay"><i class="fa fa-info-circle fa-lg margin-right-10"></i>No Staff Record Found</span>',
-    };
-    Controller.departmentId = null;
-    Controller.colDef = [{
-            headerName: 'OpenEMIS ID',
-            field: 'openemis_no'
-        },
-        {
-            headerName: 'Name',
-            field: 'name'
-        },
-        {
-            headerName: 'Gender',
-            field: 'gender_name'
-        },
-        {
-            headerName: 'Staff Status',
-            field: 'staff_status_name'
-        }
-    ];
+    Controller.dataReady     = false;
+    Controller.bodyDir       = document.body.style.direction;
+    Controller.departmentId  = null;
     Controller.institutionId = null;
     Controller.academicPeriodId = null;
-    Controller.assignedStudents = {};
-    Controller.unassignedStudents = {};
-    Controller.mainTeacherOptions = [];
-    Controller.teacherOptions = [];
-    Controller.secondaryTeacherOptions = [];
-    Controller.alertUrl = '';
-    Controller.redirectUrl = '';
-    Controller.selectedTeacher = null;
-    Controller.selectedSecondaryTeacher = [];
-    Controller.departmentName = '';
+    Controller.departmentName   = '';
     Controller.academicPeriodName = '';
-    Controller.postError = [];
-    Controller.maxStudentsPerClass = null;
-    Controller.textConfig = {
-        topCheckboxLabel: "Staff",
-        topSearchPlaceholder: "Search Staff",
-        topToBottomButton: "Assign",
-        bottomToTopButton: "Unassign",
-        bottomCheckboxLabel: "Staff",
-        bottomSearchPlaceholder: "Search Staff"
-    };
-    Controller.textConfig = {
-        topCheckboxLabel: "Staff",
-        topSearchPlaceholder: "Search Staff",
-        topToBottomButton: "Assign",
-        bottomToTopButton: "Unassign",
-        bottomCheckboxLabel: "Staff",
-        bottomSearchPlaceholder: "Search Staff"
-    };
-    // Function mapping
-    // Controller.setTop = setTop;
-    // Controller.setBottom = setBottom;
-    // Controller.postForm = postForm;
-    // Controller.updateQueryStringParameter = updateQueryStringParameter;
-    // Controller.changeStaff = changeStaff;
 
-    angular.element(document).ready(function() {
+    Controller.selectedSecondaryTeachers = [];
+    Controller.mainTeacherOptions        = [];
+    Controller.secondaryTeacherOptions   = [];
+
+    Controller.assignedStaff   = [];
+    Controller.unassignedStaff = [];
+
+    Controller.postError = {};
+
+    Controller.colDef = [
+        { headerName: 'OpenEMIS ID',    field: 'openemis_no'      },
+        { headerName: 'Name',           field: 'name'             },
+        { headerName: 'Gender',         field: 'gender_name'      },
+        { headerName: 'Staff Status',   field: 'staff_status_name'}
+    ];
+
+    // Top grid (available staff)
+    Controller.columnTopData = [{
+        headerName: '', field: 'checkbox', checkboxSelection: true,
+        suppressMenu, suppressSorting, minWidth: 50, maxWidth: 50, pinned: 'left'
+    }];
+    Controller.rowTopData = [];
+    Controller.gridOptionsTop = {
+        columnDefs: [], rowData: [], primaryKey: 'id',
+        overlayNoRowsTemplate:
+            '<span class="ag-custom-overlay">' +
+            '<i class="fa fa-info-circle fa-lg margin-right-10"></i>' +
+            'No Staff Record Found</span>'
+    };
+
+    // Bottom grid (assigned staff)
+    Controller.columnBottomData = angular.copy(Controller.columnTopData);
+    Controller.rowBottomData = [];
+    Controller.gridOptionsBottom = {
+        columnDefs: [], rowData: [], primaryKey: 'id',
+        overlayNoRowsTemplate: Controller.gridOptionsTop.overlayNoRowsTemplate
+    };
+
+    // Function mapping
+    Controller.postForm = postForm;
+    Controller.changeStaff = changeStaff;
+
+    //─── Initialization ─────────────────────────────────────────────────────────
+    angular.element(document).ready(() => {
         InstitutionDepartmentsSvc.init(angular.baseUrl);
-        console.log('a');
-        console.log(Controller);
         UtilsSvc.isAppendLoader(true);
-        if (Controller.departmentId != null || Controller.departmentId != undefined || Controller.departmentId == '') {
-            InstitutionDepartmentsSvc.getDepartmentDetails(Controller.departmentId)
-                .then(function(response) {
-                  console.log(response);
-                })
-        //         .then(function(response) {
-        //             var secondaryTeachers = [];
-        //             angular.forEach(response.department_staff, function(value, key) {
-        //                 this.push(value.security_user_id);
-        //             }, secondaryTeachers);
-        //             Controller.selectedSecondaryTeacher = secondaryTeachers;
-        //
-        //             Controller.departmentName = response.name;
-        //             Controller.academicPeriodId = response.academic_period_id;
-        //             Controller.institutionId = response.institution_id;
-        //             Controller.academicPeriodName = response.academic_period.name;
-        //
-        //             var assignedStaff = [];
-        //             angular.forEach(response.department_staff, function(value, key) {
-        //                 var toPush = {
-        //                     openemis_no: value.user.openemis_no,
-        //                     name: value.user.name,
-        //                     staff_status_name: value.student_status.name,
-        //                     gender_name: value.user.gender.name,
-        //                     security_user_id: value.security_user_id,
-        //                     encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify({
-        //                         staff_id: value.staff_id,
-        //                         security_user_id: value.security_user_id,
-        //                         institution_department_id: value.institution_department_id,
-        //                         institution_id: value.institution_id,
-        //                         staff_status_id: value.staff_status_id,
-        //                         gender_id: value.user.gender.id
-        //                     }))
-        //                 };
-        //                 this.push(toPush);
-        //             }, assignedStaff);
-        //             Controller.assignedStaff = assignedStaff;
-        //
-        //             var promises = [];
-        //             promises[0] = InstitutionDepartmentsSvc.getUnassignedStudent(Controller.departmentId, response.institution_id, response.academic_period_id);
-        //             promises[2] = InstitutionDepartmentsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
-        //             promises[3] = InstitutionDepartmentsSvc.getConfigItemValue('max_students_per_class');
-        //             return $q.all(promises);
-        //         }, function(error) {
-        //             console.log(error);
-        //         })
-        //         .then(function(promises) {
-        //             var unassignedStudentsArr = [];
-        //             angular.forEach(promises[0], function(value, key) {
-        //                 var toPush = {
-        //                     openemis_no: value.openemis_no,
-        //                     name: value.name,
-        //                     education_grade_name: value.education_grade_name,
-        //                     student_status_name: value.student_status_name,
-        //                     gender_name: value.gender_name,
-        //                     security_user_id: value.security_user_id,
-        //                     encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify({
-        //                         security_user_id: value.security_user_id,
-        //                         institution_department_id: value.institution_department_id,
-        //                         education_grade_id: value.education_grade_id,
-        //                         academic_period_id: value.academic_period_id,
-        //                         institution_id: value.institution_id,
-        //                         student_status_id: value.student_status_id,
-        //                         gender_id: value.gender_id
-        //                     }))
-        //                 };
-        //                 this.push(toPush);
-        //             }, unassignedStudentsArr);
-        //             Controller.unassignedStudents = unassignedStudentsArr;
-        //             Controller.mainTeacherOptions = promises[2];
-        //             Controller.maxStudentsPerClass = parseInt(promises[3]);
-        //
-        //             Controller.teacherOptions = Controller.changeStaff(Controller.selectedSecondaryTeacher);
-        //             Controller.secondaryTeacherOptions = Controller.changeStaff(Controller.selectedTeacher);
-        //
-        //             var toTranslate = [];
-        //             angular.forEach(Controller.colDef, function(value, key) {
-        //                 this.push(value.headerName);
-        //             }, toTranslate);
-        //             return InstitutionDepartmentsSvc.translate(toTranslate);
-        //         }, function(error) {
-        //             console.log(error);
-        //         })
-        //         .then(function(translatedText) {
-        //             angular.forEach(translatedText, function(value, key) {
-        //                 Controller.colDef[key]['headerName'] = value;
-        //             });
-        //             Controller.setTop(Controller.colDef, Controller.unassignedStudents);
-        //             Controller.setBottom(Controller.colDef, Controller.assignedStudents);
-        //         }, function(error) {
-        //             console.log(error);
-        //         })
-                .finally(function() {
-                    Controller.dataReady = true;
-                    UtilsSvc.isAppendLoader(false);
-                });
+
+        if (!Controller.departmentId) {
+            UtilsSvc.isAppendLoader(false);
+            return;
         }
 
+        // Promise chain to load all data
+        getDepartmentDetails()
+            .then(setBasicData)
+            .then(getUnassignedStaff)
+            .then(setUnassignedStaff)
+            .then(getTeacherOptions)
+            .then(setTeacherOptions)
+            .then(translateHeaders)
+            .then(setTranslatedHeaders)
+            .catch(err => {
+                console.warn('Load halted:', err);
+            })
+            .finally(() => {
+                Controller.dataReady = true;
+                UtilsSvc.isAppendLoader(false);
+            });
 
+        // Watch for secondary-teacher changes to update available list
+        $scope.$watchCollection(
+            'InstitutionDepartmentsController.selectedSecondaryTeachers',
+            () => {
+                Controller.secondaryTeacherOptions = changeStaff(Controller.selectedSecondaryTeachers);
+            }
+        );
     });
 
-    function changeStaff(key) {
-        var newOptions = [];
-        for (var i = 0; i < Controller.mainTeacherOptions.length; i++) {
-            if (key instanceof Array) {
-                if (!key.includes(Controller.mainTeacherOptions[i].id)) {
-                    newOptions.push(Controller.mainTeacherOptions[i]);
-                }
-            } else {
-                if (Controller.mainTeacherOptions[i].id != key) {
-                    newOptions.push(Controller.mainTeacherOptions[i]);
-                }
-            }
+    //─── Data loaders & setters ─────────────────────────────────────────────────
 
-        }
-        return newOptions;
+    function getDepartmentDetails() {
+        return InstitutionDepartmentsSvc
+            .getDepartmentDetails(Controller.departmentId)
+            .catch(err => Promise.reject(err));
     }
 
-    function setTop(header, content, key = 'name') {
-        for (var i = 0; i < header.length; i++) {
-            header[i].suppressMenu = suppressMenu;
-            header[i].filter = 'text';
-            header[i].width = 200;
-            header[i].minWidth = 200;
-            Controller.columnTopData.push(header[i]);
+    function setBasicData(response) {
+        console.log(response);
+        Controller.departmentName    = response.name;
+        Controller.institutionId     = response.institution_id;
+
+        // Assigned staff
+        if (angular.isArray(response.department_staff)) {
+            Controller.assignedStaff = response.department_staff.map(mapAssignedStaff);
         }
-        if (Controller.bodyDir != 'ltr') {
+        Controller.mainTeacherOptions = response.staff_options || [];
+        Controller.secondaryTeacherOptions = changeStaff(Controller.selectedSecondaryTeachers);
+
+        return response;
+    }
+
+    function getUnassignedStaff(/* response */) {
+        return InstitutionDepartmentsSvc
+            .getUnassignedStudent(
+                Controller.departmentId,
+                Controller.institutionId,
+                Controller.academicPeriodId
+            )
+            .catch(err => Promise.reject(err));
+    }
+
+    function setUnassignedStaff(unassigned) {
+        Controller.unassignedStaff = unassigned.map(mapUnassignedStaff);
+        return;
+    }
+
+    function getTeacherOptions() {
+        return InstitutionDepartmentsSvc
+            .getTeacherOptions(Controller.institutionId, Controller.academicPeriodId)
+            .catch(err => Promise.reject(err));
+    }
+
+    function setTeacherOptions(options) {
+        Controller.mainTeacherOptions = options;
+        Controller.secondaryTeacherOptions = changeStaff(Controller.selectedSecondaryTeachers);
+    }
+
+    //─── Header translation ─────────────────────────────────────────────────────
+    function translateHeaders() {
+        const labels = Controller.colDef.map(c => c.headerName);
+        return InstitutionDepartmentsSvc
+            .translate(labels)
+            .then(translated => angular.isArray(translated) ? translated : labels)
+            .catch(() => labels);
+    }
+
+    function setTranslatedHeaders(translated) {
+        translated.forEach((text, i) => {
+            Controller.colDef[i].headerName = text;
+        });
+        // Build both grids
+        setTopGrid(Controller.colDef, Controller.unassignedStaff);
+        setBottomGrid(Controller.colDef, Controller.assignedStaff);
+    }
+
+    //─── Grid helpers ───────────────────────────────────────────────────────────
+    function setTopGrid(columns, rows) {
+        columns.forEach(col => {
+            col.suppressMenu = suppressMenu;
+            col.filter       = 'text';
+            col.width        = 200;
+            col.minWidth     = 200;
+            Controller.columnTopData.push(col);
+        });
+        if (Controller.bodyDir !== 'ltr') {
             Controller.columnTopData.reverse();
         }
-        for (var i = 0; i < content.length; i++) {
-            if (content[i].checkbox == undefined) {
-                content[i].checkbox = '';
-            }
-        }
-        Controller.rowTopData = content;
-        Controller.topKey = key;
+        rows.forEach(r => { r.checkbox = r.checkbox || ''; });
+        Controller.rowTopData = rows;
         Controller.gridOptionsTop.columnDefs = Controller.columnTopData;
-        Controller.gridOptionsTop.rowData = Controller.rowTopData;
-        Controller.gridOptionsTop.primaryKey = Controller.topKey;
+        Controller.gridOptionsTop.rowData    = Controller.rowTopData;
     }
 
-    function setBottom(header, content, key = 'name') {
-        for (var i = 0; i < header.length; i++) {
-            header[i].suppressMenu = suppressMenu;
-            header[i].filter = 'text';
-            header[i].width = 200;
-            header[i].minWidth = 200;
-            Controller.columnBottomData.push(header[i]);
-        }
-        if (Controller.bodyDir != 'ltr') {
+    function setBottomGrid(columns, rows) {
+        columns.forEach(col => {
+            col.suppressMenu = suppressMenu;
+            col.filter       = 'text';
+            col.width        = 200;
+            col.minWidth     = 200;
+            Controller.columnBottomData.push(col);
+        });
+        if (Controller.bodyDir !== 'ltr') {
             Controller.columnBottomData.reverse();
         }
-
-        for (var i = 0; i < content.length; i++) {
-            if (content[i].checkbox == undefined) {
-                content[i].checkbox = '';
-            }
-        }
-        Controller.rowBottomData = content;
-        Controller.bottomKey = key;
+        rows.forEach(r => { r.checkbox = r.checkbox || ''; });
+        Controller.rowBottomData = rows;
         Controller.gridOptionsBottom.columnDefs = Controller.columnBottomData;
-        Controller.gridOptionsBottom.rowData = Controller.rowBottomData;
-        Controller.gridOptionsBottom.primaryKey = Controller.bottomKey;
+        Controller.gridOptionsBottom.rowData    = Controller.rowBottomData;
     }
 
+    //─── Mappers ────────────────────────────────────────────────────────────────
+    function mapAssignedStaff(item) {
+        return {
+            openemis_no:      item.user.openemis_no,
+            name:             item.user.name,
+            staff_status_name: item.staff_status.name,
+            gender_name:      item.user.gender.name,
+            security_user_id: item.security_group_user_id,
+            encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify({
+                staff_id:                  item.staff_id,
+                security_user_id:          item.security_group_user_id,
+                institution_department_id: item.institution_department_id,
+                institution_id:            item.institution_id,
+                staff_status_id:           item.staff_status_id,
+                gender_id:                 item.user.gender.id
+            }))
+        };
+    }
+
+    function mapUnassignedStaff(item) {
+        return {
+            openemis_no:      item.openemis_no,
+            name:             item.name,
+            staff_status_name: item.staff_status_name,
+            gender_name:      item.gender_name,
+            security_user_id: item.security_user_id,
+            encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify({
+                security_user_id:          item.security_user_id,
+                institution_department_id: item.institution_department_id,
+                academic_period_id:        item.academic_period_id,
+                institution_id:            item.institution_id,
+                staff_status_id:           item.staff_status_id,
+                gender_id:                 item.gender_id
+            }))
+        };
+    }
+
+    //─── Utility: filter out already-selected teachers ───────────────────────────
+    function changeStaff(selected) {
+        return Controller.mainTeacherOptions.filter(opt => {
+            return Array.isArray(selected)
+                ? !selected.includes(opt.id)
+                : opt.id !== selected;
+        });
+    }
+
+    //─── Save ───────────────────────────────────────────────────────────────────
     function postForm() {
-        Controller.postError = [];
-        var departmentStudents = [];
-        console.log(Controller.gridOptionsBottom.rowData)
-        angular.forEach(Controller.gridOptionsBottom.rowData, function(value, key) {
-            this.push(value.encodedVar);
-        }, departmentStudents);
-        var postData = {};
-        postData.id = Controller.departmentId;
-        postData.name = Controller.departmentName;
-        if(postData.name === ''){ // POCOR-7994
-            AlertSvc.error(
-                Controller,
-                'The record is not saved due to errors encountered.'
-            );
+        Controller.postError = {};
+
+        if (!Controller.departmentName.trim()) {
+            AlertSvc.error(Controller, 'Name is required.');
             Controller.postError.name = ['Name Is Required'];
             return;
         }
-        postData.departmentStudents = departmentStudents;
-        postData.institution_id = Controller.institutionId;
-        postData.academic_period_id = Controller.academicPeriodId;
-        postData.department_staff = [];
-        angular.forEach(Controller.selectedSecondaryTeacher, function(value, key) {
-            console.log(value)
-            this.push({
-                security_user_id: value,
-                institution_department_id: Controller.departmentId
-            });
-        }, postData.department_staff);
 
-        InstitutionDepartmentsSvc.updateDepartment(postData)
-            .then(function(response) {
-                var error = response.data.error;
-                if (error instanceof Array && error.length == 0) {
-                    Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'alertType', 'success');
-                    Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'message', 'general.edit.success');
-                    var queryString1 = localStorage.getItem('queryString1');
-                    var queryString2 = localStorage.getItem('queryString2');
-                    $http.get(Controller.alertUrl)
-                        .then(function(response) {
-                            //$window.location.href = Controller.redirectUrl;
-                            var successUrl = angular.baseUrl + '/Institution/Institutions/Departments/view/' + queryString1 + '/' + queryString2;
-                            $window.location.href = successUrl;
-                        }, function(error) {
-                            console.log(error);
-                        });
-                } else {
-                    AlertSvc.error(Controller, 'The record is not updated due to errors encountered.');
-                    angular.forEach(error, function(value, key) {
-                        Controller.postError[key] = value;
-                    })
+        const departmentStaff = Controller.selectedSecondaryTeachers.map(id => ({
+            security_user_id:          id,
+            institution_department_id: Controller.departmentId
+        }));
+
+        const postData = {
+            id:                Controller.departmentId,
+            name:              Controller.departmentName,
+            institution_id:    Controller.institutionId,
+            academic_period_id:Controller.academicPeriodId,
+            department_staff:  departmentStaff
+        };
+
+        InstitutionDepartmentsSvc
+            .updateDepartment(postData)
+            .then(resp => {
+                const errors = resp.data.error;
+                if (Array.isArray(errors) && errors.length === 0) {
+                    const successUrl = `${angular.baseUrl}/Institution/Institutions/Departments/view/` +
+                        `${localStorage.getItem('queryString1')}/` +
+                        `${localStorage.getItem('queryString2')}?alertType=success&message=general.edit.success`;
+                    return $http.get(successUrl)
+                        .then(() => $window.location.href = successUrl);
                 }
-            }, function(error) {
-                console.log(error);
-            });
-
+                AlertSvc.error(Controller, 'Update failed.');
+                errors.forEach((e, idx) => Controller.postError[idx] = e);
+            })
+            .catch(err => console.error(err));
     }
-
-    function updateQueryStringParameter(uri, key, value) {
-        var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
-        var separator = uri.indexOf('?') !== -1 ? "&" : "?";
-        if (uri.match(re)) {
-            return uri.replace(re, '$1' + key + "=" + value + '$2');
-        } else {
-            return uri + separator + key + "=" + value;
-        }
-    }
-
 }
