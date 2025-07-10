@@ -31,57 +31,64 @@ $departmentId = $this->ControllerAction->paramsDecode($paramsQueryStringFirst)['
 $this->end();
 $this->start('panelBody');
 ?>
-<form accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" ng-controller="InstitutionDepartmentsCtrl as InstitutionDepartmentsController">
-    <div class="alert {{InstitutionDepartmentsController.class}}" ng-hide="InstitutionDepartmentsController.message == null">
-        <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{InstitutionDepartmentsController.message}}
+<form accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate"
+      ng-controller="InstitutionDepartmentsCtrl as InstitutionDepartmentsController">
+    <div class="alert {{InstitutionDepartmentsController.class}}"
+         ng-hide="InstitutionDepartmentsController.message == null">
+        <a class="close" aria-hidden="true" href="#"
+           data-dismiss="alert">×</a>{{InstitutionDepartmentsController.message}}
     </div>
     <div class="input string required">
         <label><?= __('Name') ?></label>
-        <input ng-model="InstitutionDepartmentsController.departmentName" type="string" ng-init="InstitutionDepartmentsController.departmentName='';">
+        <input ng-model="InstitutionDepartmentsController.departmentName" type="string"
+               ng-init="InstitutionDepartmentsController.departmentName='';">
         <div ng-if="InstitutionDepartmentsController.postError.name" class="error-message">
             <p ng-repeat="error in InstitutionDepartmentsController.postError.name">{{ error }}</p>
         </div>
     </div>
     <div class="input string required">
         <label><?= __('Code') ?></label>
-        <input ng-model="InstitutionDepartmentsController.departmentCode" type="string" ng-init="InstitutionDepartmentsController.departmentCode='';">
+        <input ng-model="InstitutionDepartmentsController.departmentCode" type="string"
+               ng-init="InstitutionDepartmentsController.departmentCode='';">
         <div ng-if="InstitutionDepartmentsController.postError.code" class="error-message">
             <p ng-repeat="error in InstitutionDepartmentsController.postError.code">{{ error }}</p>
         </div>
     </div>
     <div class="input select">
         <label><?= __('Manager') ?></label>
-        <select chosen
-            data-placeholder="-- <?=__('Select Staff or Leave Blank') ?> --"
-            name="InstitutionDepartments[manager]"
-            id="institution-departments-manager-id"
-            class="chosen-select"
-            options="InstitutionDepartmentsController.managerOptions"
-            ng-model="InstitutionDepartmentsController.managerId"
-            ng-options="option.id as option.name for option in InstitutionDepartmentsController.managerOptions"
-            ng-init="InstitutionDepartmentsController.selectedSecondaryTeacher=[];"
-            ng-change="InstitutionDepartmentsController.managerOptions = InstitutionDepartmentsController.changeManager(InstitutionDepartmentsController.managerId);"
->
-        </select>
+        <div class="input-select-wrapper">
+            <select
+                name="InstitutionDepartments[manager]"
+                id="institution-departments-manager-id"
+                ng-model="InstitutionDepartmentsController.managerId"
+                ng-options="option.security_user_id as option.name for option in InstitutionDepartmentsController.managerOptions"
+                ng-init="InstitutionDepartmentsController.managerId=null;"
+                ng-change="InstitutionDepartmentsController.filterStaff();"
+            >
+                <option value="">-- <?= __('Select Manager or Leave Blank') ?> --</option>
+            </select>
+        </div>
         <div ng-if="InstitutionDepartmentsController.postError.manager_id" class="error-message">
             <p ng-repeat="error in InstitutionDepartmentsController.postError.manager_id">{{ error }}</p>
         </div>
     </div>
-	<div class="input select">
+    <div class="input select">
         <label><?= __('Add Staff') ?></label>
-        <div class="input-form-wrapper" ng-init="InstitutionDepartmentsController.departmentId='<?= $departmentId ?>'; InstitutionDepartmentsController.redirectUrl='<?= $this->Url->build($viewUrl) ?>'; InstitutionDepartmentsController.alertUrl='<?= $this->Url->build($alertUrl) ?>';">
-    		<kd-multi-select ng-if="InstitutionDepartmentsController.dataReady"
+        <div class="input-form-wrapper"
+             ng-init="InstitutionDepartmentsController.departmentId='<?= $departmentId ?>'; InstitutionDepartmentsController.redirectUrl='<?= $this->Url->build($viewUrl) ?>'; InstitutionDepartmentsController.alertUrl='<?= $this->Url->build($alertUrl) ?>';">
+            <kd-multi-select ng-if="InstitutionDepartmentsController.dataReady"
                              config="InstitutionDepartmentsController.textConfig"
                              grid-options-top="InstitutionDepartmentsController.gridOptionsTop"
                              grid-options-bottom="InstitutionDepartmentsController.gridOptionsBottom"></kd-multi-select>
-    	</div>
+        </div>
 
         <div class="form-buttons">
             <div class="button-label"></div>
-            <button class="btn btn-default btn-save" type="button" ng-click="InstitutionDepartmentsController.postForm();">
+            <button class="btn btn-default btn-save" type="button"
+                    ng-click="InstitutionDepartmentsController.postForm();">
                 <i class="fa fa-check"></i> <?= __('Save') ?>
             </button>
-            <?= $this->Html->link('<i class="fa fa-close"></i> '.__('Cancel'), $viewUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
+            <?= $this->Html->link('<i class="fa fa-close"></i> ' . __('Cancel'), $viewUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
             <button id="reload" type="submit" name="submit" value="reload" class="hidden">reload</button>
         </div>
     </div>
