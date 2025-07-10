@@ -14,7 +14,7 @@ use InstitutionScope;
     protected $table = 'institution_contact_persons';
 
     // ✅ Allow mass assignment
-    protected $fillable = ['id', 'contact_person', 'designation', 'department', 'telephone', 'mobile_number', 'fax', 'email', 'preferred', 'institution_id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
+    protected $fillable = ['id', 'contact_person', 'designation', 'department', 'telephone', 'mobile_number', 'email', 'preferred', 'institution_id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
 
     // ✅ Disable Laravel's default timestamps
     public $timestamps = false;

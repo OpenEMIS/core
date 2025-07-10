@@ -141,6 +141,9 @@ function AssessmentItemExemptionsController(
             {headerName: 'Name', field: 'name'},
             {headerName: 'Gender', field: 'gender_name'},
             {headerName: 'Student Status', field: 'student_status_name'},
+            {headerName: 'Assessment Period', field: 'assessment_title'},//POCOR-9195
+            {headerName: 'Subject', field: 'education_subject_id_title'},//POCOR-9195
+
         ];
     }
 
@@ -262,16 +265,19 @@ function AssessmentItemExemptionsController(
         ctrl.unassingStudents = [];//POCOR-9042
 
         response.forEach(student => {
-            // console.log(student);
+            //console.log(student);
             const studentData = {
                 openemis_no: student.openemis_no,
                 name: student.name,
                 gender_name: student.gender,
                 student_id: student.student_id,
                 student_status_name: student.student_status_name,
+                assessment_title: student.assessment_period_name, //POCOR-9195
+                education_subject_id_title: student.education_subject_name, //POCOR-9195
                 encodedVar: {
                     s_id: student.student_id,
-                    eg_id: student.education_grade_id
+                    eg_id: student.education_grade_id,
+                    ap_id: student.assessment_period_id //POCOR-9195
                 }
             };
 

@@ -171,6 +171,17 @@ class ImportUsersTable extends AppTable
             return false;
 
         }
+        $extractedPassword = $columns->filter(function ($value) {
+            return strtolower(trim($value)) === 'password';
+        });
+        $passwordColIndex = key($extractedPassword->toArray()) + 1;
+        $password = $sheet->getCellByColumnAndRow($passwordColIndex, $row)->getValue();
+        $password = trim((string)$password);
+
+        if (strlen($password) < 4) {
+            $rowInvalidCodeCols['password'] = 'Invalid password: Must be at least 4 characters';
+            return false;
+        }
         // POCOR-8683 end
         $accountType = $columns->filter(function ($value, $key, $iterator) {
             return $value == 'account_type';
@@ -380,6 +391,7 @@ class ImportUsersTable extends AppTable
      */
     public function onImportModelSpecificValidation(Event $event, $references, $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
+       
         $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
         $isStaff = ($tempRow['account_type'] == self::IS_STAFF);
         $isStudent = ($tempRow['account_type'] == self::IS_STUDENT);

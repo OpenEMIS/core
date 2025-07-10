@@ -68,12 +68,12 @@ class InstitutionContactsTable extends ControllerActionTable {
                 'last' => true
             ])
 
-            ->allowEmpty('fax')
+            /*->allowEmpty('fax')
             ->add('fax', 'ruleCustomFax', [
                     'rule' => ['validateCustomPattern', 'institution_fax'],
                     'provider' => 'table',
                     'last' => true
-                ])
+                ])*/
             ;
         return $validator;
     }
@@ -109,7 +109,7 @@ class InstitutionContactsTable extends ControllerActionTable {
         $this->controller->set('contentHeader', $institutionName. ' - ' .__('Contacts (Institution)'));
 
         $this->setFieldVisible(['view', 'edit'], [
-            'telephone', 'fax', 'email', 'website'
+            'telephone', 'email', 'website'
         ]);
 
         // no index page
@@ -167,8 +167,6 @@ class InstitutionContactsTable extends ControllerActionTable {
         switch ($field) {
             case 'telephone':
                 return __('Telephone');
-            case 'fax':
-                return __('Fax');
             case 'email':
                 return __('Email');
             case 'website':
