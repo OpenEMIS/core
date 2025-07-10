@@ -978,6 +978,19 @@ class NavigationComponent extends Component
                     'Institutions.InstitutionRooms'
                 ]
             ],
+            //POCOR-5208 Start
+             'Institutions.InfrastructureAttachments.index' => [
+                'title' => 'Infrastructure Attachments',
+                'parent' => 'Infrastructures',
+                'selected' => [
+                    'Institutions.InfrastructureAttachments.index',
+                    'Institutions.InfrastructureAttachments.view',
+                    'Institutions.InfrastructureAttachments.add',
+                    'Institutions.InfrastructureAttachments.edit',
+                    'Institutions.InfrastructureAttachments.delete'
+                ]
+            ],
+            //POCOR-5208 End
 
             // POCOR-6150 start
             'Institutions.InfrastructureNeeds.index' => [

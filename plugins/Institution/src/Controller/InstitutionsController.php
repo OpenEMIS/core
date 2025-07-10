@@ -9902,6 +9902,12 @@ class InstitutionsController extends AppController
             $this->render('scanned_data');
     }
 
+    //POCOR-5208
+    public function InfrastructureAttachments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureAttachments']);
+    }
+
 }
 
 
