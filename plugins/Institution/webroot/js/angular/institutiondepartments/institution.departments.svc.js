@@ -1,6 +1,6 @@
 angular
-    .module('institution.associations.svc', ['kd.data.svc'])
-    .service('InstitutionAssociationsSvc', InstitutionDepartmentsSvc);
+    .module('institution.departments.svc', ['kd.data.svc'])
+    .service('InstitutionDepartmentsSvc', InstitutionDepartmentsSvc);
 
 InstitutionDepartmentsSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc'];
 
@@ -8,32 +8,27 @@ function InstitutionDepartmentsSvc($http, $q, $filter, KdDataSvc) {
 
     var service = {
         init: init,
-        getAssociationDetails: getAssociationDetails,
-        getUnassignedStudent: getUnassignedStudent,
+        getDepartmentDetails: getDepartmentDetails,
+        getUnassignedStaff: getUnassignedStaff,
         translate: translate,
-        getTeacherOptions: getTeacherOptions,
-        saveAssociation: saveAssociation,
-        updateAssociation: updateAssociation,
-        getConfigItemValue: getConfigItemValue,
-        getAcademicPeriodOptions: getAcademicPeriodOptions,
+        getManagerOptions: getTeacherOptions,
+        saveDepartment: saveDepartment,
+        updateDepartment: updateDepartment,
+        getConfigItemValue: getConfigItemValue
     };
 
     var models = {
-        AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         InstitutionStaff: 'Institution.Staff',
-        AssociationStudent: 'Student.InstitutionAssociationStudent',
-        InstitutionClasses: 'Institution.InstitutionClasses',
-        InstitutionAssociations: 'Institution.InstitutionAssociations',
-        InstitutionShifts: 'Institution.InstitutionShifts',
+        DepartmentStaff: 'Institution.DepartmentStaff',
+        InstitutionDepartments: 'Institution.InstitutionDepartments',
         Users: 'User.Users',
-        ConfigItemsTable: 'Configuration.ConfigItems'
     };
 
     return service;
 
     function init(baseUrl) {
         KdDataSvc.base(baseUrl);
-        KdDataSvc.controllerAction('AssociationStudent');
+        KdDataSvc.controllerAction('DepartmentStudent');
         KdDataSvc.init(models);
     };
 
@@ -51,27 +46,27 @@ function InstitutionDepartmentsSvc($http, $q, $filter, KdDataSvc) {
         });
     }
 
-    function getAssociationDetails(associationId) {
+    function getDepartmentDetails(departmentId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
-        return InstitutionAssociations
-            .get(associationId)
-            .find('associationDetails')
+        return InstitutionDepartments
+            .get(departmentId)
+            .find('departmentDetails')
             .ajax({
                 success: success,
                 defer: true
             });
     }
 
-    function getUnassignedStudent(institutionAssociationId, institutionId, academicPeriodId) {
+    function getUnassignedStaff(institutionDepartmentId, institutionId, academicPeriodId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
-        return Users.find('InstitutionStudentsNotInAssociation', {
+        return Users.find('InstitutionStudentsNotInDepartment', {
             academic_period_id: academicPeriodId,
             institution_id: institutionId,
-            institution_association_id: institutionAssociationId
+            institution_department_id: institutionDepartmentId
         }).ajax({
             success: success,
             defer: true
@@ -112,14 +107,14 @@ function InstitutionDepartmentsSvc($http, $q, $filter, KdDataSvc) {
             });
     };
 
-    function saveAssociation(data) {
-        InstitutionAssociations.reset();
-        return InstitutionAssociations.save(data);
+    function saveDepartment(data) {
+        InstitutionDepartments.reset();
+        return InstitutionDepartments.save(data);
     }
 
-    function updateAssociation(data) {
-        InstitutionAssociations.reset();
-        return InstitutionAssociations.edit(data);
+    function updateDepartment(data) {
+        InstitutionDepartments.reset();
+        return InstitutionDepartments.edit(data);
     }
 
     // for add page
