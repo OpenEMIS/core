@@ -44,20 +44,33 @@ class InstitutionDepartmentsTable extends ControllerActionTable
         ]);
     }
 
+    public function beforeMarshal(\Cake\Event\EventInterface $event, \ArrayObject $data, \ArrayObject $options)
+    {
+        if (empty($data['institution_id'])) {
+            $data['institution_id'] = $this->getInstitutionID();
+        }
+    }
+
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
-        $validator->add('code', 'ruleUnique', [
-            'rule' => ['validateUnique', ['scope' => ['institution_id']]],
-            'provider' => 'table',
-            'message' => __('This department code is already in use.')
-        ]);
-        $validator->add('name', 'ruleUnique', [
-            'rule' => ['validateUnique', ['scope' => ['institution_id']]],
-            'provider' => 'table',
-            'message' => __('This department name is already in use.')
-        ]);
+        $validator
+            ->requirePresence('code', 'create')
+            ->notEmptyString('code', 'Please enter a code.')
+            ->requirePresence('name', 'create')
+            ->notEmptyString('name', 'Please enter a name.')
+            // then your unique rules...
+            ->add('code', 'unique', [
+                'rule'     => ['validateUnique', ['scope' => ['institution_id']]],
+                'provider' => 'table',
+                'message'  => __('This department code is already in use.')
+            ])
+            ->add('name', 'unique', [
+                'rule'     => ['validateUnique', ['scope' => ['institution_id']]],
+                'provider' => 'table',
+                'message'  => __('This department name is already in use.')
+            ]);
 
         return $validator;
     }
