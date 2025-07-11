@@ -46,7 +46,6 @@ function InstitutionDepartmentsSvc($http, $q, $filter, KdDataSvc) {
 
     function getDepartmentDetails(departmentId) {
         var success = function(response, deferred) {
-            console.log(response);
             deferred.resolve(response.data.data);
         };
         return InstitutionDepartments

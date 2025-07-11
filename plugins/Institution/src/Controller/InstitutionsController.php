@@ -531,7 +531,8 @@ class InstitutionsController extends AppController
 
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Departments';
-            $viewUrl[0] = 'view';
+            $viewUrl['0'] = 'view';
+            $viewUrl['1'] = $encodedParams;
 
             $institutionParamsEncode = $this->ControllerAction->paramsEncode([
                 'id' => $institutionId,

@@ -87,6 +87,7 @@ function InstitutionDepartmentsController(
     // Function mapping
     Controller.postForm = postForm;
     Controller.filterStaff = filterStaff;
+    Controller.updateQueryStringParameter = updateQueryStringParameter;
 
     //─── Initialization ─────────────────────────────────────────────────────────
     angular.element(document).ready(() => {
@@ -240,7 +241,7 @@ function InstitutionDepartmentsController(
         // reset your column arrays
         setTopGrid(Controller.colDef,    filteredUnassigned);
         setBottomGrid(Controller.colDef, filteredAssigned);
-
+        Controller.assignedStaff = filteredAssigned;
         // now push the new rows into the grids' APIs:
         if (Controller.gridOptionsTop.api) {
             Controller.gridOptionsTop.api.setRowData(filteredUnassigned);
@@ -277,7 +278,6 @@ function InstitutionDepartmentsController(
             manager_id:    Controller.managerId,
             assigned_staff:  departmentStaff
         };
-
         InstitutionDepartmentsSvc
             .updateDepartment(postData)
             .then(function(resp) {
@@ -285,16 +285,15 @@ function InstitutionDepartmentsController(
 
                 // 1) empty-array → success
                 if (angular.isArray(errors) && errors.length === 0) {
-                    var successUrl = angular.baseUrl +
-                        '/Institution/Institutions/Departments/view/' +
-                        localStorage.getItem('queryString1') + '/' +
-                        localStorage.getItem('queryString2') +
-                        '?alertType=success&message=general.edit.success';
+                        Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'alertType', 'success');
+                        Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'message', 'general.edit.success');
 
-                    return $http.get(successUrl)
-                        .then(function() {
-                            $window.location.href = successUrl;
-                        });
+                        $http.get(Controller.alertUrl)
+                            .then(function(response) {
+                                $window.location.href = Controller.redirectUrl;
+                            });
+
+
                 }
 
                 // something went wrong—normalize and assign
@@ -305,7 +304,16 @@ function InstitutionDepartmentsController(
                 console.error(err);
             });
     }
-
+    function updateQueryStringParameter(uri, key, value) {
+        var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+        var separator = uri.indexOf('?') !== -1 ? "&" : "?";
+        if (uri.match(re)) {
+            return uri.replace(re, '$1' + key + "=" + value + '$2');
+        }
+        else {
+            return uri + separator + key + "=" + value;
+        }
+    }
     /**
      * Normalize CakePHP validation error payloads:
      *  - Strings → [string]
