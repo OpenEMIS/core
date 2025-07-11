@@ -4640,7 +4640,7 @@ class InstitutionRepository extends Controller
                 $store['postal_code'] = $data['postal_code'];
                 $store['contact_person'] = $data['contact_person'];
                 $store['telephone'] = $data['telephone'];
-                $store['fax'] = $data['fax'];
+               // $store['fax'] = $data['fax'];
                 $store['email'] = $data['email'];
                 $store['website'] = $data['website'];
                 $store['date_opened'] = $data['date_opened'];

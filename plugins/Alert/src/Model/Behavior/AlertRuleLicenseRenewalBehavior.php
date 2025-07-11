@@ -97,7 +97,7 @@ class AlertRuleLicenseRenewalBehavior extends AlertRuleBehavior
             '${institution.postal_code}' => 'Institution postal code.',
             '${institution.contact_person}' => 'Institution contact person.',
             '${institution.telephone}' => 'Institution telephone number.',
-            '${institution.fax}' => 'Institution fax number.',
+//            '${institution.fax}' => 'Institution fax number.',
             '${institution.email}' => 'Institution email.',
             '${institution.website}' => 'Institution website.',
         ]

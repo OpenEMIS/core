@@ -1,3 +1,28 @@
+### [4.32.0] - 2025-07-10
+- Implemented: Develop migration script to add table descriptions 
+- Implemented: Develop a function to send a custom alert when enrolment status changes
+- Implemented: Formatting the notices box text
+- Implemented: Develop changes to the staff qualification report to include gender
+- Implemented: Develop changes to the institutions table to drop the fax column
+- Implemented: Develop changes to the Directory Import Template to include password
+- Implemented: 3.14 Add attachments/photos to the institution infrastructure feature 
+- Bug Fixed: Institutions > Performances > Assessments > Exempt/Unassign: The current behaviour still allows user to unassign and exempt students with marks.
+- Bug Fixed: Institutions > Academic > Subjects > View > Edit:  Changes of un-assigning students were not made when user manually exits the edit page
+- Bug Fixed: Institutions>Attendance>Students: Cannot mark absence or late
+- Bug Fixed: Institutions>Performance>Assessment>Unassign: It is showing multiple students when unassigned to multiple periods
+- Bug Fixed: Administrations > Security > Groups > System Groups > View > List: User receives a 404 error message.
+- Bug Fixed: Reports > Staff > Add > Position Summary Report: Displays an error message in the status column
+- Bug Fixed: Institutions > Statistics > Standard: Document instantly receives "Error" status when generating statistics
+
+### [4.31.1] - 2025-07-07
+- Bug Fixed: Institutions > Academic > Subjects List page : Clicking edit button will cause a 404 error
+- Bug Fixed: Administration > Communication > Alert Rules: Staff Employment: Email is not being sent
+- Bug Fixed: Institutions>Performance>Report Cards: Total marks are not showing correctly when exempted or unassigned
+- Bug Fixed: Administration > Communication > Alert: Retirement warning is not sent
+- Bug Fixed: Institutions>Performance>Report Cards: Ordering and gpa start and end date is not showing correctly
+- Bug Fixed: Institutions > Performance > Assessments > Exempt/Unassign: Save button doesn't redirect user to exit the edit mode
+- Bug Fixed: Directory > Student > Academic : User is not able to sort in ascending or descending order.
+
 ### [4.31.0] - 2025-07-01
 - Implemented: Develop SMS function
 - Implemented: Develop a standard report with filters for Reports > Performance > Assessments

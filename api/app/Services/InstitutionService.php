@@ -45,7 +45,7 @@ class InstitutionService extends Controller
                 $resp[$k]['postal_code'] = $data['postal_code'];
                 $resp[$k]['contact_person'] = $data['contact_person'];
                 $resp[$k]['telephone'] = $data['telephone'];
-                $resp[$k]['fax'] = $data['fax'];
+               // $resp[$k]['fax'] = $data['fax'];
                 $resp[$k]['email'] = $data['email'];
                 $resp[$k]['website'] = $data['website'];
                 $resp[$k]['date_opened'] = $data['date_opened'];
@@ -154,7 +154,7 @@ class InstitutionService extends Controller
                 $resp['postal_code'] = $data['postal_code'];
                 $resp['contact_person'] = $data['contact_person'];
                 $resp['telephone'] = $data['telephone'];
-                $resp['fax'] = $data['fax'];
+             //   $resp['fax'] = $data['fax'];
                 $resp['email'] = $data['email'];
                 $resp['website'] = $data['website'];
                 $resp['date_opened'] = $data['date_opened'];

@@ -220,7 +220,7 @@ class InstitutionStatusTable extends ControllerActionTable
             $this->field('contact_section', ['visible' => false]);
             $this->field('contact_person', ['visible' => false]);
             $this->field('telephone', ['visible' => false]);
-            $this->field('fax', ['visible' => false]);
+          //  $this->field('fax', ['visible' => false]);
             $this->field('email', ['visible' => false]);
             $this->field('website', ['visible' => false]);
         }
@@ -256,7 +256,7 @@ class InstitutionStatusTable extends ControllerActionTable
             $this->field('contact_section', ['visible' => false]);
             $this->field('contact_person', ['visible' => false]);
             $this->field('telephone', ['visible' => false]);
-            $this->field('fax', ['visible' => false]);
+           // $this->field('fax', ['visible' => false]);
             $this->field('email', ['visible' => false]);
             $this->field('website', ['visible' => false]);
             $this->field('longitude', ['visible' => false]);
@@ -391,7 +391,7 @@ class InstitutionStatusTable extends ControllerActionTable
             'area_administrative_id',
 
             'contact_section',
-            'contact_person', 'telephone', 'fax', 'email', 'website',
+            'contact_person', 'telephone', 'email', 'website',
 
             'map_section',
             'map',
@@ -890,8 +890,6 @@ public function onGetFieldLabel(Event $event, $module, $field, $language, $autoH
          return __('Area Administrative');
     }elseif($field == 'institution_locality_id'){
          return __('Institution Locality');
-    }elseif($field == 'fax'){
-         return __('Fax');
     }else {
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }

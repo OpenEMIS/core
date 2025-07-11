@@ -978,6 +978,19 @@ class NavigationComponent extends Component
                     'Institutions.InstitutionRooms'
                 ]
             ],
+            //POCOR-5208 Start
+             'Institutions.InfrastructureAttachments.index' => [
+                'title' => 'Infrastructure Attachments',
+                'parent' => 'Infrastructures',
+                'selected' => [
+                    'Institutions.InfrastructureAttachments.index',
+                    'Institutions.InfrastructureAttachments.view',
+                    'Institutions.InfrastructureAttachments.add',
+                    'Institutions.InfrastructureAttachments.edit',
+                    'Institutions.InfrastructureAttachments.delete'
+                ]
+            ],
+            //POCOR-5208 End
 
             // POCOR-6150 start
             'Institutions.InfrastructureNeeds.index' => [
@@ -2839,9 +2852,9 @@ class NavigationComponent extends Component
                         'Configurations.Theme' => [
                             'title' => 'Themes',
                             'parent' => 'Themes',
-                            'selected' => ['Notices.Notices']
+                           // 'selected' => ['Notices.Notices']
                         ]
-                    ]
+                    ],
                 ],
                 // Start POCOR-5188
                 'Manuals.Institutions' => [
@@ -2858,12 +2871,12 @@ class NavigationComponent extends Component
                     ]
                 ],
                 // End POCOR-5188
-
+/*
                 'Notices.index' => [
                     'title' => 'Notices',
                     'parent' => 'SystemSetup',
                     'selected' => ['Notices.Notices']
-                ],
+                ],*/
                 'Risks.Risks' => [
                     'title' => 'Risks',
                     'parent' => 'SystemSetup',
@@ -3718,6 +3731,12 @@ class NavigationComponent extends Component
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.Logs']
                     ],
+                    'Alerts.Notices' => [
+                        'title' => 'Notices',
+                        'parent' => 'Administration.Communications',
+                        'params' => ['plugin' => 'Alert'],
+                        'selected' => ['Alerts.Notices']
+                    ],
                 ];
             }
         } else {
@@ -3747,6 +3766,12 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Alert'],
                     'selected' => ['Alerts.Logs']
                 ],
+                'Alerts.Notices' => [
+                        'title' => 'Notices',
+                        'parent' => 'Administration.Communications',
+                        'params' => ['plugin' => 'Alert'],
+                        'selected' => ['Alerts.Notices']
+                    ],
             ];
         }
         return $navfour;

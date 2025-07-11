@@ -309,7 +309,7 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('education_level_id', ['type' => 'hidden']);
         $this->ControllerAction->field('position_status', ['type' => 'hidden','value' => 'x']);
         $this->ControllerAction->field('email', ['type' => 'hidden']);
-        $this->ControllerAction->field('fax', ['type' => 'hidden']);
+//        $this->ControllerAction->field('fax', ['type' => 'hidden']);
         $this->ControllerAction->field('contact', ['type' => 'hidden']);
         $this->ControllerAction->field('security_group_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_gender_id', ['type' => 'hidden','value' => 'x']);
