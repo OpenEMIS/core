@@ -233,7 +233,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                 foreach ($attributes as $key => $value) {
                     //POCOR-7531 start
                     if ($key == 'password') {
-                        $value = $this->decrypt($value, Security::getSalt()());
+                        $value = $this->decrypt($value, Security::getSalt());
                     }
                     //POCOR-7531 end
                     if ($key == 'private_key') {
@@ -292,7 +292,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
             $patchOption['validate'] = 'OpenEMISIdentity';
             //POCOR-7531 start
             if (!empty($requestData[$this->getAlias()]['password'])) {
-                $requestData[$this->getAlias()]['password'] = $this->encrypt($requestData[$this->getAlias()]['password'], Security::getSalt()());
+                $requestData[$this->getAlias()]['password'] = $this->encrypt($requestData[$this->getAlias()]['password'], Security::getSalt());
             }
             //POCOR-7531 end
         } elseif ($requestData[$this->getAlias()]['value'] == 'None') {
