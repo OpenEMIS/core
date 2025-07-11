@@ -51,7 +51,9 @@ $this->start('panelBody');
         <input ng-model="InstitutionDepartmentsController.departmentCode" type="string"
                ng-init="InstitutionDepartmentsController.departmentCode='';">
         <div ng-if="InstitutionDepartmentsController.postError.code" class="error-message">
-            <p ng-repeat="error in InstitutionDepartmentsController.postError.code">{{ error }}</p>
+            <p ng-repeat="error in InstitutionDepartmentsController.postError.code">
+                {{ error }}
+            </p>
         </div>
     </div>
     <div class="input select">

@@ -50,7 +50,13 @@ class InstitutionDepartmentsTable extends ControllerActionTable
         $validator->setProvider('custom', $this);
         $validator->add('code', 'ruleUnique', [
             'rule' => ['validateUnique', ['scope' => ['institution_id']]],
-            'provider' => 'table'
+            'provider' => 'table',
+            'message' => __('This department code is already in use.')
+        ]);
+        $validator->add('name', 'ruleUnique', [
+            'rule' => ['validateUnique', ['scope' => ['institution_id']]],
+            'provider' => 'table',
+            'message' => __('This department name is already in use.')
         ]);
 
         return $validator;

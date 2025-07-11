@@ -280,18 +280,60 @@ function InstitutionDepartmentsController(
 
         InstitutionDepartmentsSvc
             .updateDepartment(postData)
-            .then(resp => {
-                const errors = resp.data.error;
-                if (Array.isArray(errors) && errors.length === 0) {
-                    const successUrl = `${angular.baseUrl}/Institution/Institutions/Departments/view/` +
-                        `${localStorage.getItem('queryString1')}/` +
-                        `${localStorage.getItem('queryString2')}?alertType=success&message=general.edit.success`;
+            .then(function(resp) {
+                var errors = resp.data.error;
+
+                // 1) empty-array → success
+                if (angular.isArray(errors) && errors.length === 0) {
+                    var successUrl = angular.baseUrl +
+                        '/Institution/Institutions/Departments/view/' +
+                        localStorage.getItem('queryString1') + '/' +
+                        localStorage.getItem('queryString2') +
+                        '?alertType=success&message=general.edit.success';
+
                     return $http.get(successUrl)
-                        .then(() => $window.location.href = successUrl);
+                        .then(function() {
+                            $window.location.href = successUrl;
+                        });
                 }
+
+                // something went wrong—normalize and assign
+                Controller.postError = normalizeErrors(errors);
                 AlertSvc.error(Controller, 'Update failed.');
-                errors.forEach((e, idx) => Controller.postError[idx] = e);
             })
-            .catch(err => console.error(err));
+            .catch(function(err) {
+                console.error(err);
+            });
+    }
+
+    /**
+     * Normalize CakePHP validation error payloads:
+     *  - Strings → [string]
+     *  - Arrays  → unchanged
+     *  - Objects → collect all nested values into an array
+     */
+    function normalizeErrors(rawErrors) {
+        var out = {};
+        angular.forEach(rawErrors, function(val, field) {
+            if (angular.isString(val)) {
+                out[field] = [ val ];
+            }
+            else if (angular.isArray(val)) {
+                out[field] = val;
+            }
+            else if (angular.isObject(val)) {
+                // e.g. { ruleUnique: "[Message Not Found]" }
+                var msgs = [];
+                angular.forEach(val, function(innerMsg) {
+                    msgs.push(innerMsg);
+                });
+                out[field] = msgs;
+            }
+            else {
+                // unknown shape, stringify
+                out[field] = [ String(val) ];
+            }
+        });
+        return out;
     }
 }
