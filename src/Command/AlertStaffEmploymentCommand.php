@@ -86,7 +86,7 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
 
         if (!$isSuperAdmin) {
             $institutionIds = $this->SecurityGroupUsers->getInstitutionsByUser($userId);
-            $where['Staff.institution_id IN'] = $institutionIds;
+            $where['InstitutionStaff.institution_id IN'] = $institutionIds; // POCOR-9213
         }
         $this->logMsg("Employment alert WHERE clause: " . print_r($where, true));
 
@@ -101,7 +101,7 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
                 'institution_postal_code' => 'Institutions.postal_code',
                 'institution_contact_person' => 'Institutions.contact_person',
                 'institution_telephone' => 'Institutions.telephone',
-                'institution_fax' => 'Institutions.fax',
+             //   'institution_fax' => 'Institutions.fax',
                 'institution_email' => 'Institutions.email',
                 'institution_website' => 'Institutions.website'
             ])
@@ -158,7 +158,7 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
             '${institution.postal_code}' => $item['institution_postal_code'] ?? '',
             '${institution.contact_person}' => $item['institution_contact_person'] ?? '',
             '${institution.telephone}' => $item['institution_telephone'] ?? '',
-            '${institution.fax}' => $item['institution_fax'] ?? '',
+          //  '${institution.fax}' => $item['institution_fax'] ?? '',
             '${institution.email}' => $item['institution_email'] ?? '',
             '${institution.website}' => $item['institution_website'] ?? '',
         ];

@@ -12,6 +12,8 @@ use Illuminate\Support\Carbon;
 class CrudApiController extends Controller
 {
     protected $allowedResources = [
+        'institution-infrastructure-attachments' => \App\Models\InstitutionInfrastructureAttachments::class,
+        'infrastructure-attachment-types' => \App\Models\InfrastructureAttachmentTypes::class,
         'staff-leave-entitlements' => \App\Models\Api5\StaffLeaveEntitlements::class,
         'staff-leave-policies' => \App\Models\Api5\StaffLeavePolicies::class,
         'staff-leave-policy-types' => \App\Models\Api5\StaffLeavePolicyTypes::class,

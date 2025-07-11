@@ -106,6 +106,7 @@ class AlertStaffLeaveCommand extends AlertCommandBase
             '${date_from}' => $item['date_from'] ?? '',
             '${date_to}' => $item['date_to'] ?? '',
             '${day_difference}' => (string)$dayDiff,
+            '${employment_period}' => (string)$dayDiff,
 
             '${user.openemis_no}' => $item['user']['openemis_no'] ?? '',
             '${user.first_name}' => $item['user']['first_name'] ?? '',
@@ -124,7 +125,7 @@ class AlertStaffLeaveCommand extends AlertCommandBase
             '${institution.postal_code}' => $item['institution']['postal_code'] ?? '',
             '${institution.contact_person}' => $item['institution']['contact_person'] ?? '',
             '${institution.telephone}' => $item['institution']['telephone'] ?? '',
-            '${institution.fax}' => $item['institution']['fax'] ?? '',
+           // '${institution.fax}' => $item['institution']['fax'] ?? '',
             '${institution.email}' => $item['institution']['email'] ?? '',
             '${institution.website}' => $item['institution']['website'] ?? '',
         ];

@@ -1840,7 +1840,16 @@ class InstitutionsController extends AppController
 
             // View-related settings
             $this->set('ngController', 'AssessmentItemExemptionsCtrl as AssessmentItemExemptionsController');
-            $backUrl = $this->referer();
+            // POCOR-9248 start
+            $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+            $backUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Results',
+                '1' => $encodedQueryString,
+                '?' => ['queryString' => $encodedQueryString]
+            ];
+            // POCOR-9248 end
             $this->set('backUrl', $backUrl);
             $alertUrl = [
                 'plugin' => 'Configuration',
@@ -2255,60 +2264,115 @@ class InstitutionsController extends AppController
         }
     }
 
-    public function Subjects($subaction = 'index', $institutionSubjectId = null)
+    // POCOR-9243 start
+    public function Subjects($subaction = 'index', $encodedId = null)
     {
-        if ($subaction == 'edit') {
-            $session = $this->request->getSession();
-            $institutionSubjectId = $this->ControllerAction->paramsDecode($institutionSubjectId);
-            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
-            if (!$this->AccessControl->isAdmin() && $institutionId) {
-                $userId = $this->Auth->user('id');
-                $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-                $AccessControl = $this->AccessControl;
-                $action = 'edit';
-                if (!$AccessControl->check(['Institutions', 'AllSubjects', $action], $roles)) {
-                    if ($AccessControl->check(['Institutions', 'Subjects', $action], $roles)) {
-                        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
-                        $subjectRecord = $InstitutionSubjects->get($institutionSubjectId, ['contain' => ['Teachers']])->toArray();
-                        if (in_array($userId, array_column($subjectRecord['teachers']), 'id')) {
-                            $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
-                            return $this->redirect($url);
-                        }
-                    } else {
-                        $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
-                        return $this->redirect($url);
-                    }
-                }
-            }
-            $viewUrl = $this->ControllerAction->url('view');
-            $viewUrl['action'] = 'Subjects';
-            $viewUrl[0] = 'view';
-            //$viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $institutionSubjectId, 'institution_id' => $institutionId]);
-            $viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $institutionSubjectId['institution_subject_id'], 'institution_id' => $institutionId, 'institution_subject_id' => $institutionSubjectId['institution_subject_id']]);//POCOR-8324
-            $indexUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'Subjects',
-                'index',//POCOR-8324
-                //'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
-                $this->ControllerAction->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId])//POCOR-8324
-            ];
-            $alertUrl = [
-                'plugin' => 'Configuration',
-                'controller' => 'Configurations',
-                'action' => 'setAlert',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
-            ];
-            $this->set('alertUrl', $alertUrl);
-            $this->set('viewUrl', $viewUrl);
-            $this->set('indexUrl', $indexUrl);
-            $this->set('institutionSubjectId', $institutionSubjectId['id']);
-            $this->set('institutionId', $institutionId);
-            $this->render('institution_subjects_edit');
-        } else {
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSubjects']);
+        // ─── INDEX CASE ─────────────────────────────────────────────────────────
+        if ($subaction !== 'edit') {
+            $this->ControllerAction->process([
+                'alias'     => __FUNCTION__,
+                'className' => 'Institution.InstitutionSubjects',
+            ]);
+            return;
         }
+
+        // ─── EDIT CASE ──────────────────────────────────────────────────────────
+
+        // 1) Decode the incoming subject ID
+        $decoded = $this->ControllerAction->paramsDecode($encodedId);
+        $subjectId = is_array($decoded) && isset($decoded['id'])
+            ? (int)$decoded['id']
+            : (int)$decoded;
+
+        // 2) Determine current institution
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+// URL for “Back to Subjects” in InstitutionsController
+        $indexUrl = [
+            'plugin'     => 'Institution',
+            'controller' => 'Institutions',
+            'action'     => 'Subjects',
+            0 => 'index',
+            1            => $this->ControllerAction->paramsEncode([
+                'id'             => $institutionId,
+                'institution_id'=> $institutionId,
+            ]),
+        ];
+        // 3) Authorization checks
+        $isAdmin = $this->AccessControl->isAdmin();
+        $userId  = $this->Auth->user('id');
+        $roles   = TableRegistry::getTableLocator()
+            ->get('Institution.Institutions')
+            ->getInstitutionRoles($userId, $institutionId);
+
+        $canEditAll   = $this->AccessControl->check(
+            ['Institutions', 'AllSubjects', 'edit'],
+            $roles
+        );
+        $canEditOwn   = $this->AccessControl->check(
+            ['Institutions', 'Subjects', 'edit'],
+            $roles
+        );
+
+        // If not admin or “edit all,” enforce finer-grained rules
+        if (! $isAdmin && $institutionId && ! $canEditAll) {
+            if ($canEditOwn) {
+                // Teacher can only edit if assigned to this subject
+                $subject = TableRegistry::getTableLocator()
+                    ->get('Institution.InstitutionSubjects')
+                    ->get($subjectId, ['contain' => ['Teachers']]);
+
+                $teacherIds = array_column($subject->teachers, 'id');
+
+                if (!in_array($userId, $teacherIds, true)) {
+                    // redirect back to subject list
+                    return $this->redirect($indexUrl);
+                }
+            } else {
+                // No edit permission at all: go back to institution’s Subjects list
+                return $this->redirect($indexUrl);
+            }
+        }
+
+        // ─── PREPARE VIEW VARIABLES ─────────────────────────────────────────────
+
+        // URL for “View” button
+        $viewUrl = [
+            'plugin'     => 'Institution',
+            'controller' => 'Institutions',
+            'action'     => 'Subjects',
+            0            => 'view',
+            1            => $this->ControllerAction->paramsEncode([
+                'id'                     => $subjectId,
+                'institution_id'         => $institutionId,
+                'institution_subject_id' => $subjectId,
+            ]),
+        ];
+
+        // URL for setting alerts
+        $alertUrl = [
+            'plugin'       => 'Configuration',
+            'controller'   => 'Configurations',
+            'action'       => 'setAlert',
+            0            => $this->ControllerAction->paramsEncode([
+                'id'             => $institutionId,
+                'institution_id'=> $institutionId,
+            ]),
+        ];
+
+        // Pass data to the view
+        $this->set(compact(
+            'viewUrl',
+            'indexUrl',
+            'alertUrl',
+            'subjectId',
+            'institutionId'
+        ));
+
+        // 4) Render the edit template
+        $this->render('institution_subjects_edit');
     }
+    // POCOR-9243 end
+
 
     public function Students($pass = 'index')
     {
@@ -9836,6 +9900,12 @@ class InstitutionsController extends AppController
             $this->set('user', $user);
             $this->set('pass', $pass);
             $this->render('scanned_data');
+    }
+
+    //POCOR-5208
+    public function InfrastructureAttachments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureAttachments']);
     }
 
 }

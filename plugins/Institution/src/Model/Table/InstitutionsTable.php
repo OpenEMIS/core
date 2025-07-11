@@ -367,12 +367,12 @@ class InstitutionsTable extends ControllerActionTable
                 'provider' => 'table',
                 'last' => true
             ])
-            ->allowEmpty('fax')
+            /*->allowEmpty('fax')
             ->add('fax', 'ruleCustomFax', [
                 'rule' => ['validateCustomPattern', 'institution_fax'],
                 'provider' => 'table',
                 'last' => true
-            ])
+            ])*/
             // ->add('area_id', 'ruleAuthorisedArea', [
             //     'rule' => ['checkAuthorisedArea']
             // ])
@@ -562,12 +562,12 @@ class InstitutionsTable extends ControllerActionTable
                         'type' => 'string',
                         'label' => 'Telephone'
                     ];
-                    $newFields[] = [
+                   /* $newFields[] = [
                         'key' => 'Institutions.fax',
                         'field' => 'fax',
                         'type' => 'string',
                         'label' => 'Fax'
-                    ];
+                    ];*/
                     $newFields[] = [
                         'key' => 'Institutions.email',
                         'field' => 'email',
@@ -1039,7 +1039,7 @@ class InstitutionsTable extends ControllerActionTable
             $this->field('contact_section', ['visible' => false]);
             $this->field('contact_person', ['visible' => false]);
             $this->field('telephone', ['visible' => false]);
-            $this->field('fax', ['visible' => false]);
+           // $this->field('fax', ['visible' => false]);
             $this->field('email', ['visible' => false]);
             $this->field('website', ['visible' => false]);
         }
@@ -1289,7 +1289,7 @@ class InstitutionsTable extends ControllerActionTable
                 "institution_area_administrative" => !empty($areaAdministrativeName) ? $areaAdministrativeName : NULL,
                 "institution_contact_person" => $entity->contact_person,
                 "institution_telephone" => $entity->telephone,
-                "institution_mobile" => $entity->fax,
+                //"institution_mobile" => $entity->fax,
                 "institution_email" => $entity->email,
                 "institution_website" => $entity->website,
             ];
@@ -1775,7 +1775,7 @@ class InstitutionsTable extends ControllerActionTable
             'area_administrative_id',
 
             'contact_section',
-            'contact_person', 'telephone', 'fax', 'email', 'website',
+            'contact_person', 'telephone', 'email', 'website',
 
             'map_section',
             'map',
@@ -1892,7 +1892,7 @@ class InstitutionsTable extends ControllerActionTable
             'area_administrative_id',
 
             'contact_section',
-            'contact_person', 'telephone', 'fax', 'email', 'website',
+            'contact_person', 'telephone', 'email', 'website',
         ]);
     }
 
@@ -2663,7 +2663,7 @@ class InstitutionsTable extends ControllerActionTable
                 "institution_area_administrative" => !empty($areaAdministrativeName) ? $areaAdministrativeName : NULL,
                 "institution_contact_person" => $entity->contact_person,
                 "institution_telephone" => $entity->telephone,
-                "institution_mobile" => $entity->fax,
+                //"institution_mobile" => $entity->fax,
                 "institution_email" => $entity->email,
                 "institution_website" => $entity->website,
             ];
