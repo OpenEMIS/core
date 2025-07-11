@@ -177,13 +177,20 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         }
         //POCOR-7509 start
         if ($entity->value == 'OpenEMIS Exams' || $entity->value == 'CXC' || $entity->value == 'PacSIMS') { //POCOR-7533
-            // Decrypting the password attribute using the provided encryption key
-            // $decryptedPassword = Security::decrypt($attributes['password'], $encryptionKey);
-
-            // Masking the decrypted password with asterisks
-            // $newAttributes['password'] = str_repeat('*', strlen($decryptedPassword));
-
+            $newAttributes = [];
+            // $newAttributes['client_id'] = $attributes['client_id'];  //POCOR-7531 
+            $newAttributes['url'] = $attributes['url'];
+            $newAttributes['username'] = $attributes['username']; //POCOR-7531
+            //$newAttributes['password'] = str_repeat('*',strlen($this->decrypt($attributes['password'],Security::salt())));//POCOR-7531
+            // $newAttributes['public_key'] = $attributes['public_key']; //POCOR-7531 
+            $encryptionKey = $attributes['public_key'];
+            //POCOR-7509 start
             if ($attributes['password'] !== null) {
+                // Decrypting the password attribute using the provided encryption key
+                // $decryptedPassword = Security::decrypt($attributes['password'], $encryptionKey);
+
+                // Masking the decrypted password with asterisks
+                // $newAttributes['password'] = str_repeat('*', strlen($decryptedPassword));
                 $newAttributes['password'] = str_repeat('*', strlen($this->decrypt(
                     $attributes['password'],
                     Security::getSalt()
