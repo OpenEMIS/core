@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Api5;
 
 use App\Models\Api5\InstitutionDepartments;
 use Illuminate\Database\Eloquent\Factories\Factory;
