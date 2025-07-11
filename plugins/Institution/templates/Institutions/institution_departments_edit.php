@@ -5,6 +5,7 @@
 <?= $this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min', ['block' => true]); ?>
 <?= $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', ['block' => true]); ?>
 <?php
+
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
 $paramsQueryStringFirst = $this->request->getAttribute('params')['pass'][1];
