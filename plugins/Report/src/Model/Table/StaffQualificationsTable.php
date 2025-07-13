@@ -122,7 +122,8 @@ class StaffQualificationsTable extends AppTable  {
                 'staff_type_name' => 'StaffTypes.name',
                 'qualification_level' => 'QualificationLevels.name',
                 'identity_type_id' => 'Users.identity_type_id',
-                'identity_number' => 'Users.identity_number'
+                'identity_number' => 'Users.identity_number',
+                'gender_name' => 'Genders.name' //POCOR-9244
             ])
             ->contain([
                 'QualificationTitles.QualificationLevels',
@@ -162,7 +163,11 @@ class StaffQualificationsTable extends AppTable  {
                         'last_name',
                         'identity_type_id',
                         'identity_number',
-                        'openemis_no' //POCOR-6078
+                        'openemis_no' ,//POCOR-6078
+                        'gender_id'
+                    ],
+                    'Genders' => [
+                        'fields' => ['id', 'name'] //POCOR-9244
                     ]
                 ]
 
@@ -312,6 +317,13 @@ class StaffQualificationsTable extends AppTable  {
             'field' => 'staff_id',
             'type' => 'integer',
             'label' => ''
+        ];
+        //POCOR-9244 add gender
+        $newFields[] = [ 
+            'key' => '',
+            'field' => 'gender_name',
+            'type' => 'string',
+            'label' => __('Gender Name')
         ];
         //Start:POCOR-6078
         $newFields[] = [

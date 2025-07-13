@@ -188,10 +188,10 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
                 return __('Telephone');
             case 'mobile_number':
                 return __('Mobile Number');
-            case 'fax':
-                return __('Fax');
             case 'email':
                 return __('Email');
+            case 'fax':
+                return __('fax');
             case 'created':
                 return __('Created');
             case 'created_user_id':

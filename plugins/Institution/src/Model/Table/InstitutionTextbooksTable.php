@@ -365,20 +365,16 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
         $process = function ($model, $entity) use ($data, $textbookCode) {
             $newEntities = [];
-
             if (array_key_exists('textbooks_students', $data[$this->getAlias()])) {
-
                 $textbooks = $data[$this->getAlias()]['textbooks_students'];
-
                 if (count($textbooks)) {
-
                     foreach ($textbooks as $key => $textbook) {
-
                         $obj['code'] = $textbook['code'];
                         $obj['comment'] = $textbook['comment'];
                         $obj['textbook_status_id'] = $textbook['textbook_status_id'];
                         $obj['textbook_condition_id'] = $textbook['textbook_condition_id'];
 
+                        // $obj['security_user_id'] = $textbook['security_user_id'];
                         $obj['security_user_id'] = $textbook['security_user_id'];
 
                         $obj['institution_id'] = $entity->institution_id;
@@ -1039,11 +1035,16 @@ class InstitutionTextbooksTable extends ControllerActionTable
     {
         $alias = $this->getAlias();
         $fieldKey = 'textbooks_students';
-
         if ($data['submit'] == 'addTextbooksStudents') { //during the add books, need to ensure that class and subject has value.
-
             if ($data[$alias]['education_subject_id'] && $data[$alias]['textbook_id']) {
-                if ($data[$this->getAlias()]['allocated_to'] == 'all') { //for all student
+                //POCOR-9178[START]
+                if(empty($data[$this->getAlias()]['allocated_to'])){
+                    $entity->getErrors('textbooks_students', __('No student added'));
+                    $this->Alert->error('Textbooks.noStudentSelected', ['reset'=>true]);
+                    return;
+                }
+                //POCOR-9178[END]
+                else if ($data[$this->getAlias()]['allocated_to'] == 'all') { //for all student
                     $studentOptions = explode(',', $data[$alias]['available_student']);
                     foreach ($studentOptions as $key => $value) {
                         $data[$alias][$fieldKey][] = [

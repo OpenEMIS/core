@@ -35,6 +35,7 @@ class StudentGpaTable extends ControllerActionTable
     {
         $this->field('institution_id', ['type' => 'hidden']);
         $this->field('education_grades_gpa_id', ['type' => 'hidden']);
+        $this->field('institution_name'); //POCOR-9226
         $this->field('gpa_name');
         $this->setupTabElements();
     }
@@ -164,22 +165,22 @@ class StudentGpaTable extends ControllerActionTable
 
             // Filtering conditions based on selected options
             if ($selectedAcademicPeriod == -1 || $selectedAcademicPeriod === null) {
-                return $query->where([
+                $query->where([
                     $this->aliasField('student_id') => $userId
                 ]);
             } elseif ($selectedAcademicPeriod != -1 && $selectedGrade == -1) {
-                return $query->where([
+                $query->where([
                     $this->aliasField('student_id') => $userId,
                     $this->aliasField('academic_period_id') => $selectedAcademicPeriod
                 ]);
             } elseif ($selectedAcademicPeriod != -1 && $selectedGrade != -1 && $selectedClass == -1) {
-                return $query->where([
+                $query->where([
                     $this->aliasField('student_id') => $userId,
                     $this->aliasField('academic_period_id') => $selectedAcademicPeriod,
                     $this->aliasField('education_grade_id') => $selectedGrade
                 ]);
             } else {
-                return $query
+                $query
                     ->innerJoin(
                         ['InstitutionClassStudents' => 'institution_class_students'],
                         ['InstitutionClassStudents.student_id = ' . $this->aliasField('student_id')]
@@ -265,16 +266,17 @@ class StudentGpaTable extends ControllerActionTable
 
             $extra['elements']['controls'] = ['name' => 'Profile.Gpa/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
 
+            // echo "<pre>";print_r($query);exit;
             // Check if academic period is unselected or null
             if ($selectedAcademicPeriod == -1 || $selectedAcademicPeriod === null) {
-                return $query->where([
+                $query->where([
                     $this->aliasField('student_id') => $studentId
                 ]);
             }
 
             // Check if only academic period is selected
             elseif ($selectedAcademicPeriod != -1 && $selectedGrade == -1) {
-                return $query->where([
+                $query->where([
                     $this->aliasField('student_id') => $studentId,
                     $this->aliasField('academic_period_id') => $selectedAcademicPeriod
                 ]);
@@ -282,7 +284,7 @@ class StudentGpaTable extends ControllerActionTable
 
             // Check if academic period and education grade are selected, but class is unselected
             elseif ($selectedAcademicPeriod != -1 && $selectedGrade != -1 && $selectedClass == -1) {
-                return $query->where([
+                $query->where([
                     $this->aliasField('student_id') => $studentId,
                     $this->aliasField('academic_period_id') => $selectedAcademicPeriod,
                     $this->aliasField('education_grade_id') => $selectedGrade
@@ -291,7 +293,7 @@ class StudentGpaTable extends ControllerActionTable
 
             // If all filters are selected, including class
             else {
-                return $query
+                $query
                     ->innerJoin(
                         ['InstitutionClassStudents' => 'institution_class_students'],
                         ['InstitutionClassStudents.student_id = ' . $this->aliasField('student_id')]
@@ -306,6 +308,13 @@ class StudentGpaTable extends ControllerActionTable
             }
 
         }
+        //POCOR-9226
+        $query->order([
+        $this->aliasField('academic_period_id') => 'ASC',
+        $this->aliasField('education_grade_id') => 'ASC',
+        ]);
+
+        return $query;
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
@@ -314,6 +323,8 @@ class StudentGpaTable extends ControllerActionTable
             return __('GPA');
         } else if ($field == 'cumulative_gpa') {
             return  __('Cumulative GPA');
+        }else if ($field == 'institution_name') { //POCOR-9226
+            return  __('Institution');
         }else if ($field == 'gpa_name') {
             return  __('GPA Name');
         }else {
@@ -379,6 +390,12 @@ class StudentGpaTable extends ControllerActionTable
             ->first();
 
         return !empty($gpaRecord) ? $gpaRecord->name : '';
+    }
+
+    //POCOR-9226
+    public function onGetInstitutionName(Event $event, Entity $entity)
+    {
+        return $entity->institution->name;
     }
     
 }
