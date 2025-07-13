@@ -343,6 +343,31 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
     {
+        //POCOR-7509 start
+        $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+        $attributes = $ExternalDataSourceAttributes
+            ->find('list', [
+                'keyField' => 'attribute_field',
+                'valueField' => 'value'
+            ])
+            ->where([
+                $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $entity->value
+            ])
+            ->order('attribute_field')
+            ->toArray();
+
+        foreach ($attributes as $key => $value) {
+         
+            if ($key == 'password') {
+                $value = $this->decrypt($value, Security::getSalt());
+            }
+            if ($key) {
+                if (in_array($key, ['url', 'username', 'password'])) {
+                    $entity->{$key} = $value;
+                }
+            }
+        }
+        //POCOR-7509 end
         //POCOR-6930 Starts
         $errors = $entity->getErrors();
         if (!empty($errors)) {
