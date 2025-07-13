@@ -16,6 +16,7 @@ class ExaminationsController extends AppController
             'ImportResults' => ['className' => 'Examination.ImportResults', 'actions' => ['add']],
             'ImportExaminationCentreRooms' => ['className' => 'Examination.ImportExaminationCentreRooms', 'actions' => ['add']],
         ];
+        $this->loadComponent('Examination.SyncExam'); //POCOR-7509
         $this->attachAngularModules();
     }
 
