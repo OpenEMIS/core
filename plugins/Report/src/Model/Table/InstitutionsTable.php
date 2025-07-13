@@ -309,7 +309,7 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('education_level_id', ['type' => 'hidden']);
         $this->ControllerAction->field('position_status', ['type' => 'hidden','value' => 'x']);
         $this->ControllerAction->field('email', ['type' => 'hidden']);
-        $this->ControllerAction->field('fax', ['type' => 'hidden']);
+//        $this->ControllerAction->field('fax', ['type' => 'hidden']);
         $this->ControllerAction->field('contact', ['type' => 'hidden']);
         $this->ControllerAction->field('security_group_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_gender_id', ['type' => 'hidden','value' => 'x']);
@@ -891,6 +891,7 @@ class InstitutionsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['select'] = false;
                 $attr['options'] = $typeOptions;
+                $attr['onChangeReload'] = true;
                 return $attr;
             } else {
                 $attr['value'] = self::NO_FILTER;
@@ -917,6 +918,15 @@ class InstitutionsTable extends AppTable
 
                 switch ($feature) {
                     case 'Report.InstitutionStudents':
+                        //POCOR-8416[START]
+                        $Statuses = self::getDynamicTableInstance('Student.StudentStatuses');
+                        $statusData = $Statuses->find()->select(['id', 'name'])->toArray();
+                        foreach ($statusData as $key => $value) {
+                            $statusOptions[$value->id] = $value->name;
+                        }
+                        $statusOptions = array(-1 => __('All Status')) + $statusOptions;
+                        break;
+                        //POCOR-8416[END]
                     case 'Report.InstitutionStudentEnrollments':
                         $Statuses = self::getDynamicTableInstance('Student.StudentStatuses');
                         $statusData = $Statuses->find()->select(['id', 'name'])->toArray();
@@ -931,6 +941,8 @@ class InstitutionsTable extends AppTable
                         foreach ($statusData as $key => $value) {
                             $statusOptions[$key] = $value;
                         }
+                        $statusOptions = [-1 => 'All Statuses'] + $statusOptions; //POCOR-9041
+
                         break;
 
 
@@ -965,6 +977,7 @@ class InstitutionsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['options'] = $statusOptions;
+                $attr['onChangeReload'] = true;
                 $attr['attr']['required'] = true;
                 return $attr;
             } else {

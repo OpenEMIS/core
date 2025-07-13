@@ -1840,8 +1840,24 @@ class InstitutionsController extends AppController
 
             // View-related settings
             $this->set('ngController', 'AssessmentItemExemptionsCtrl as AssessmentItemExemptionsController');
-            $backUrl = $this->referer();
+            // POCOR-9248 start
+            $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+            $backUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Results',
+                '1' => $encodedQueryString,
+                '?' => ['queryString' => $encodedQueryString]
+            ];
+            // POCOR-9248 end
             $this->set('backUrl', $backUrl);
+            $alertUrl = [
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
+                'action' => 'setAlert',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institution_id])
+            ];
+            $this->set('alertUrl', $alertUrl);
             $this->Navigation->addCrumb(__('Assessments'), ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Assessments', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institution_id])]);
             $this->Navigation->addCrumb(__('Results'), $backUrl);
             $this->render('assessment_item_exemptions_edit');
@@ -2248,60 +2264,115 @@ class InstitutionsController extends AppController
         }
     }
 
-    public function Subjects($subaction = 'index', $institutionSubjectId = null)
+    // POCOR-9243 start
+    public function Subjects($subaction = 'index', $encodedId = null)
     {
-        if ($subaction == 'edit') {
-            $session = $this->request->getSession();
-            $institutionSubjectId = $this->ControllerAction->paramsDecode($institutionSubjectId);
-            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
-            if (!$this->AccessControl->isAdmin() && $institutionId) {
-                $userId = $this->Auth->user('id');
-                $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-                $AccessControl = $this->AccessControl;
-                $action = 'edit';
-                if (!$AccessControl->check(['Institutions', 'AllSubjects', $action], $roles)) {
-                    if ($AccessControl->check(['Institutions', 'Subjects', $action], $roles)) {
-                        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
-                        $subjectRecord = $InstitutionSubjects->get($institutionSubjectId, ['contain' => ['Teachers']])->toArray();
-                        if (in_array($userId, array_column($subjectRecord['teachers']), 'id')) {
-                            $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
-                            return $this->redirect($url);
-                        }
-                    } else {
-                        $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
-                        return $this->redirect($url);
-                    }
-                }
-            }
-            $viewUrl = $this->ControllerAction->url('view');
-            $viewUrl['action'] = 'Subjects';
-            $viewUrl[0] = 'view';
-            //$viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $institutionSubjectId, 'institution_id' => $institutionId]);
-            $viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $institutionSubjectId['institution_subject_id'], 'institution_id' => $institutionId, 'institution_subject_id' => $institutionSubjectId['institution_subject_id']]);//POCOR-8324
-            $indexUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'Subjects',
-                'index',//POCOR-8324
-                //'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
-                $this->ControllerAction->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId])//POCOR-8324
-            ];
-            $alertUrl = [
-                'plugin' => 'Configuration',
-                'controller' => 'Configurations',
-                'action' => 'setAlert',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
-            ];
-            $this->set('alertUrl', $alertUrl);
-            $this->set('viewUrl', $viewUrl);
-            $this->set('indexUrl', $indexUrl);
-            $this->set('institutionSubjectId', $institutionSubjectId['id']);
-            $this->set('institutionId', $institutionId);
-            $this->render('institution_subjects_edit');
-        } else {
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSubjects']);
+        // ─── INDEX CASE ─────────────────────────────────────────────────────────
+        if ($subaction !== 'edit') {
+            $this->ControllerAction->process([
+                'alias'     => __FUNCTION__,
+                'className' => 'Institution.InstitutionSubjects',
+            ]);
+            return;
         }
+
+        // ─── EDIT CASE ──────────────────────────────────────────────────────────
+
+        // 1) Decode the incoming subject ID
+        $decoded = $this->ControllerAction->paramsDecode($encodedId);
+        $subjectId = is_array($decoded) && isset($decoded['id'])
+            ? (int)$decoded['id']
+            : (int)$decoded;
+
+        // 2) Determine current institution
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+// URL for “Back to Subjects” in InstitutionsController
+        $indexUrl = [
+            'plugin'     => 'Institution',
+            'controller' => 'Institutions',
+            'action'     => 'Subjects',
+            0 => 'index',
+            1            => $this->ControllerAction->paramsEncode([
+                'id'             => $institutionId,
+                'institution_id'=> $institutionId,
+            ]),
+        ];
+        // 3) Authorization checks
+        $isAdmin = $this->AccessControl->isAdmin();
+        $userId  = $this->Auth->user('id');
+        $roles   = TableRegistry::getTableLocator()
+            ->get('Institution.Institutions')
+            ->getInstitutionRoles($userId, $institutionId);
+
+        $canEditAll   = $this->AccessControl->check(
+            ['Institutions', 'AllSubjects', 'edit'],
+            $roles
+        );
+        $canEditOwn   = $this->AccessControl->check(
+            ['Institutions', 'Subjects', 'edit'],
+            $roles
+        );
+
+        // If not admin or “edit all,” enforce finer-grained rules
+        if (! $isAdmin && $institutionId && ! $canEditAll) {
+            if ($canEditOwn) {
+                // Teacher can only edit if assigned to this subject
+                $subject = TableRegistry::getTableLocator()
+                    ->get('Institution.InstitutionSubjects')
+                    ->get($subjectId, ['contain' => ['Teachers']]);
+
+                $teacherIds = array_column($subject->teachers, 'id');
+
+                if (!in_array($userId, $teacherIds, true)) {
+                    // redirect back to subject list
+                    return $this->redirect($indexUrl);
+                }
+            } else {
+                // No edit permission at all: go back to institution’s Subjects list
+                return $this->redirect($indexUrl);
+            }
+        }
+
+        // ─── PREPARE VIEW VARIABLES ─────────────────────────────────────────────
+
+        // URL for “View” button
+        $viewUrl = [
+            'plugin'     => 'Institution',
+            'controller' => 'Institutions',
+            'action'     => 'Subjects',
+            0            => 'view',
+            1            => $this->ControllerAction->paramsEncode([
+                'id'                     => $subjectId,
+                'institution_id'         => $institutionId,
+                'institution_subject_id' => $subjectId,
+            ]),
+        ];
+
+        // URL for setting alerts
+        $alertUrl = [
+            'plugin'       => 'Configuration',
+            'controller'   => 'Configurations',
+            'action'       => 'setAlert',
+            0            => $this->ControllerAction->paramsEncode([
+                'id'             => $institutionId,
+                'institution_id'=> $institutionId,
+            ]),
+        ];
+
+        // Pass data to the view
+        $this->set(compact(
+            'viewUrl',
+            'indexUrl',
+            'alertUrl',
+            'subjectId',
+            'institutionId'
+        ));
+
+        // 4) Render the edit template
+        $this->render('institution_subjects_edit');
     }
+    // POCOR-9243 end
+
 
     public function Students($pass = 'index')
     {
@@ -2962,6 +3033,31 @@ class InstitutionsController extends AppController
                     '0' => 'view',
                     '1' => $encodedQueryString]);
         }//POCOR-8333 ends
+        // if ($action == 'StaffHistories') {
+        //     $queryString = $this->getQueryString();
+        //     $staffId = $queryString['security_user_id'] ?? $queryString['student_id'];
+        //     $Students = TableRegistry::getTableLocator()->get('Security.Users');
+        //     $activeStaff = $Students->get($staffId);
+        //     $staffName = $activeStaff->name;
+        //     $queryString = $this->getQueryString();
+        //     $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+        //     $this->Navigation->addCrumb('Students',
+        //         ['plugin' => $this->getPlugin(),
+        //             'controller' => 'Institutions',
+        //             'action' => 'Staff',
+        //             '0' => 'index',
+        //             '1' => $encodedQueryString]);
+
+        //     $queryString['id'] = $staffId;
+        //     $queryString['security_user_id'] = $staffId;
+        //     $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+        //     $this->Navigation->addCrumb($staffName,
+        //         ['plugin' => $this->getPlugin(),
+        //             'controller' => 'Institutions',
+        //             'action' => 'StaffUser',
+        //             '0' => 'view',
+        //             '1' => $encodedQueryString]);
+        // }
         $this->set('contentHeader', $header);
     }
 
@@ -3611,7 +3707,9 @@ class InstitutionsController extends AppController
             $highChartDatas[] = $InstitutionStudents->getHighChart('student_attendance', $params);
 
             $params = [
-                'conditions' => ['institution_id' => $institutionID, 'staff_status_id' => $assignedStatus]
+                'conditions' => [
+                    'institution_id' => $institutionID,
+                    'staff_status_id' => $assignedStatus]
             ];
             $highChartDatas[] = $InstitutionStaff->getHighChart('staff_attendance', $params);
 
@@ -6599,22 +6697,24 @@ class InstitutionsController extends AppController
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
         }
         $securityUserResult = $this->saveSecurityUser($studentData);
-        if ($securityUserResult) {
+        if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
             $this->handleIdentities($requestData, $userRecordId, $userId);
             $this->handleContacts($requestData, $userRecordId, $userId);
             $this->handleCustomFields('student', $requestData, $userRecordId, $userId);
             //if ($requestData['student_admission_status_value'] == 0 || strtolower($requestData['student_admission_status']) == "enrolled") {//POCOR-8434
-                $saved_student = $this->handleStudentInstitutionData($requestData, $userRecordId, $userId) ?? $securityUserResult; // POCOR-8776
+            $saved_student = $this->handleStudentInstitutionData($requestData, $userRecordId, $userId) ?? $securityUserResult; // POCOR-8776
             //}//POCOR-8434
             $this->triggerWebhooks($userRecordId, $requestData);
 //            Log::debug(print_r($studentData,true));
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId, 'saved_student' => $saved_student], 200);
+        } elseif ($securityUserResult instanceof Response) { // POCOR-9011
+            return $securityUserResult;
         } else {
 //            Log::debug(print_r($studentData,true));
-            return $this->sendJsonResponse(['message' => 'Failed to save user Webhooks.'], 500);
-            }
+            return $this->sendJsonResponse(['message' => 'Failed to save user'], 500);
+        }
     }
 
     /**
@@ -6646,7 +6746,7 @@ class InstitutionsController extends AppController
             return $this->sendJsonResponse(['message' => 'success', 'staff' => $result], 200);
         }
         $securityUserResult = $this->saveSecurityUser($staffData);
-        if ($securityUserResult) {
+        if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
             $this->handleIdentities($requestData, $userRecordId, $userId);
@@ -6658,9 +6758,11 @@ class InstitutionsController extends AppController
 //            Log::debug(print_r($staff,true)); // POCOR-8532
 //            Log::debug(print_r($staffData,true)); // POCOR-8532
             return $this->sendJsonResponse(['message' => 'success', 'staff' => $staff->toArray()], 200);
+        } elseif ($securityUserResult instanceof Response) { // POCOR-9011
+            return $securityUserResult;
         } else {
 //            Log::debug(print_r($staffData,true));
-            return $this->sendJsonResponse(['message' => 'Failed to save user Webhooks.'], 500);
+            return $this->sendJsonResponse(['message' => 'Failed to save user.'], 500);
         }
     }
 
@@ -6695,7 +6797,10 @@ class InstitutionsController extends AppController
             'photo_name' => $requestData['photo_name'] ?? null,
             'photo_content' => isset($requestData['photo_base_64']) ? base64_decode($requestData['photo_base_64']) : null,
             'created_user_id' => $userId,
-            'created' => date('Y-m-d H:i:s')
+            'created' => date('Y-m-d H:i:s'), // POCOR-9011
+            'email' => $requestData['email'] ?? null, // POCOR-9011
+            'mobile_number' => $requestData['mobile_number'] ?? null, // POCOR-9011
+
         ];
         if ($is_student) {
             $userData['is_student'] = 1;
@@ -6726,7 +6831,15 @@ class InstitutionsController extends AppController
             unset($userData['username'], $userData['password']);
             $entity = $securityUsers->patchEntity($checkStudentExist, $userData);
         } else {
-            $entity = $securityUsers->newEntity($userData);
+            //POCOR-9181[START]
+            try {
+                $entity = $securityUsers->newEntity($userData);
+            } catch (\Exception $e) {
+                Log::debug(__FUNCTION__);
+
+                Log::debug('Error: ' . $e->getMessage());
+            }
+            //POCOR-9181[END]
         }
         //POCOR-8706(attached behaviour to reflect users in moodle created from directory)
         $securityUsers->addBehavior('User.MoodleCreateUser');
@@ -6738,7 +6851,16 @@ class InstitutionsController extends AppController
 
             Log::debug('Error: ' . $e->getMessage());
 //            Log::debug($entity);
-            return false;
+// POCOR-9011 start
+            if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                if (strpos($e->getMessage(), 'unique_email') !== false) {
+                    return $this->sendJsonResponse(['message' => 'Duplicate email'], 400);
+                } elseif (strpos($e->getMessage(), 'unique_mobile_number') !== false) {
+                    return $this->sendJsonResponse(['message' => 'Duplicate mobile number'], 400);
+                }
+            }
+            return $this->sendJsonResponse(['message' => 'Failed to save user'], 500);
+            // POCOR-9011 end
         }
     }
 
@@ -7443,7 +7565,7 @@ class InstitutionsController extends AppController
                 $TransfersTbl->aliasField('institution_id'),
                 $TransfersTbl->aliasField('previous_institution_id')
             ])
-            ->leftJoin([$TransfersTbl->alias() => $TransfersTbl->table()],
+            ->leftJoin([$TransfersTbl->getAlias() => $TransfersTbl->getTable()],
                 [
                     $TransfersTbl->aliasField('student_id') . '=' . $student_id,
                     $TransfersTbl->aliasField('institution_id') => $institution_id
@@ -7925,7 +8047,7 @@ class InstitutionsController extends AppController
 //        Log::debug(print_r($userData, true));
         $securityUserResult = $this->saveSecurityUser($userData);
 //        Log::debug(print_r($securityUserResult, true));
-        if ($securityUserResult) {
+        if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $r1 = $this->handleNationalities($requestData, $userRecordId, $userId);
             $r2 = $this->handleIdentities($requestData, $userRecordId, $userId);
@@ -7942,9 +8064,11 @@ class InstitutionsController extends AppController
 //            Log::debug('handleGuardians');
 //            Log::debug(print_r($r4, true));
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
+        } elseif ($securityUserResult instanceof Response) { // POCOR-9011
+            return $securityUserResult;
         } else {
 //            Log::debug(print_r($userData,true));
-            return $this->sendJsonResponse(['message' => 'Failed to save user Guardian.'], 500);
+            return $this->sendJsonResponse(['message' => 'Failed to save user.'], 500);
         }
     }
 
@@ -7973,7 +8097,7 @@ class InstitutionsController extends AppController
 //        Log::debug(print_r($userData, true));
         $securityUserResult = $this->saveSecurityUser($userData);
 //        Log::debug(print_r($securityUserResult, true));
-        if ($securityUserResult) {
+        if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $r1 = $this->handleNationalities($requestData, $userRecordId, $userId);
             $r2 = $this->handleIdentities($requestData, $userRecordId, $userId);
@@ -7990,9 +8114,11 @@ class InstitutionsController extends AppController
 //            Log::debug('handleCustomFields');
 //            Log::debug(print_r($r5, true));
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
+        } elseif ($securityUserResult instanceof Response) { // POCOR-9011
+            return $securityUserResult;
         } else {
 //            Log::debug(print_r($userData,true));
-            return $this->sendJsonResponse(['message' => 'Failed to save user Other.'], 500);
+            return $this->sendJsonResponse(['message' => 'Failed to save user.'], 500);
         }
     }
 
@@ -9451,6 +9577,13 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserHistories']);
     }//POCOR -8333 ends
 
+    //POCOR -8333 starts
+    public
+    function StaffHistories()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserHistories']);
+    }//POCOR -8333 ends
+
     public function History()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionHistories']);
@@ -9767,6 +9900,12 @@ class InstitutionsController extends AppController
             $this->set('user', $user);
             $this->set('pass', $pass);
             $this->render('scanned_data');
+    }
+
+    //POCOR-5208
+    public function InfrastructureAttachments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureAttachments']);
     }
 
 }

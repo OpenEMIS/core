@@ -19,6 +19,7 @@ class OpenEmisComponent extends Component
     protected $_defaultConfig = [
         'theme' => 'auto',
         'homeUrl' => ['controller' => '/'],
+        'SystemNotices' =>  ['controller' => '/'],
         'headerMenu' => [
             'About' => [
                 'url' => ['plugin' => false, 'controller' => 'About', 'action' => 'index'],
@@ -63,6 +64,7 @@ class OpenEmisComponent extends Component
 
         $theme = $this->getTheme();
         $controller->set('theme', $theme);
+        $controller->set('SystemNotices', $this->SystemNotices());
         $controller->set('homeUrl', $this->getConfig('homeUrl'));
         $controller->set('headerMenu', $this->getHeaderMenu());
         $controller->set('SystemVersion', $this->getCodeVersion());
@@ -74,7 +76,45 @@ class OpenEmisComponent extends Component
         $controller->set('footerBrand', $brand);
         //$controller->set('dateLanguage', I18n::locale());
         $controller->set('dateLanguage', I18n::getLocale());
- 
+        // POCOR-8563 start
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format');
+
+// Map PHP format (e.g., 'd-m-Y') to Bootstrap Datepicker format (e.g., 'dd-mm-yyyy')
+        $phpToDatepickerFormat = [
+            'd' => 'dd',
+            'j' => 'd',
+            'D' => 'D',        // Mon, Tue (short day)
+            'l' => 'DD',       // Monday, Tuesday (full day)
+            'm' => 'mm',
+            'n' => 'm',
+            'M' => 'M',        // Jan, Feb (short month)
+            'F' => 'MM',       // January, February (full month)
+            'y' => 'yy',       // 2-digit year
+            'Y' => 'yyyy'      // 4-digit year
+        ];
+
+// Convert format safely using regex
+        $datepickerFormat = preg_replace_callback('/[a-zA-Z]/', function ($matches) use ($phpToDatepickerFormat) {
+            return $phpToDatepickerFormat[$matches[0]] ?? $matches[0];
+        }, $systemDateFormat);
+        $controller->set('datepickerFormat', $datepickerFormat);
+        $phpToAngularFormat = [
+            'd' => 'dd',
+            'j' => 'd',
+            'm' => 'MM',
+            'n' => 'M',
+            'M' => 'MMM',   // Jan, Feb
+            'F' => 'MMMM',  // January, February
+            'y' => 'yy',
+            'Y' => 'yyyy',
+        ];
+
+        $angularFormat = preg_replace_callback('/[a-zA-Z]/', function ($matches) use ($phpToAngularFormat) {
+            return $phpToAngularFormat[$matches[0]] ?? $matches[0];
+        }, $systemDateFormat);
+        $controller->set('angularFormat', $angularFormat);
+        // POCOR-8563 end
         //Retriving the panel width size from session
         if ($session->check('System.layout')) {
 
@@ -91,7 +131,7 @@ class OpenEmisComponent extends Component
             $footer = $ConfigItems->value('footer');
             $controller->set('footerText', $footer);
         }
-        
+
     }
 
     private function getTheme()
@@ -141,12 +181,112 @@ class OpenEmisComponent extends Component
         } else if ($session->check('System.version')) {
             $version = $session->read('System.version');
         }
-        
+
         return $version;
 
     }
 
-    
+    public function getLoggedInUserRoles($userId = null)
+    {
+        $roles = [];
+        $usersGroup = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $userRoles = $usersGroup
+                    ->find()
+                    ->where([$usersGroup->aliasField('security_user_id') => $userId ])
+                    ->toArray();
+        if (!empty($userRoles)) {
+            foreach ($userRoles as $role) {
+                $roles[] = $role->security_role_id;
+            }
+        }
+        return (!empty($roles))? $roles: null;
+    }
+
+    //POCOR-7210
+    private function SystemNotices($userId = null)
+    {
+        $userId  = $this->controller->Auth->user('id');
+        $isAdmin = $this->controller->AccessControl->isAdmin();
+
+        if(!$isAdmin && $userId != null){
+            $usersGroup   = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+            $userNotices  = TableRegistry::getTableLocator()->get('Alert.SecurityUserNotices');
+
+            // 1. Get user role IDs
+            $userRoleIdsQuery = $usersGroup->find()
+                ->select(['security_role_id'])
+                ->where(['security_user_id' => $userId])
+                ->enableHydration(false);
+            $userRoleIds = array_column($userRoleIdsQuery->toArray(), 'security_role_id');
+
+            // 2. Check permission to view notices
+            $havePermissionToView = TableRegistry::getTableLocator()
+                ->get('Security.SecurityRoleFunctions')
+                ->find()
+                ->leftJoin(
+                    ['SecurityFunctions' => 'security_functions'],
+                    ['SecurityFunctions.id = SecurityRoleFunctions.security_function_id']
+                )
+                ->where([
+                    'SecurityFunctions.controller' => 'Systems',
+                    'SecurityFunctions.name' => 'Notice Message',
+                    'SecurityRoleFunctions.security_role_id IN' => $userRoleIds,
+                    'SecurityRoleFunctions._view' => 1
+                ])
+                ->toArray();
+
+            if (empty($havePermissionToView)) {
+                // User has no permission to view notices → no red dot
+                return true;
+            }
+
+            // 3. Get notice IDs assigned to user's roles
+            $assignedNoticeIdsQuery = $usersGroup->find()
+                ->select(['notice_id' => 'NoticeRoles.notice_id'])
+                ->innerJoin(
+                    ['NoticeRoles' => 'notice_roles'],
+                    ['SecurityGroupUsers.security_role_id = NoticeRoles.security_role_id']
+                )
+                ->innerJoin(
+                    ['Notices' => 'notices'],
+                    ['Notices.id = NoticeRoles.notice_id']
+                )
+                ->where([
+                    'SecurityGroupUsers.security_user_id IS' => $userId,
+                    'Notices.status' => 1
+                ])
+                ->enableHydration(false);
+
+            $assignedNoticeIds = array_column($assignedNoticeIdsQuery->toArray(), 'notice_id');
+
+            // 4. Admins always return true (no red dot)
+            if ($isAdmin) {
+                return true;
+            }
+
+            // 5. If no assigned notices, return true (no red dot)
+            if (empty($assignedNoticeIds)) {
+                return true;
+            }
+
+            // 6. Get seen notices
+            $seenNoticesQuery = $userNotices->find()
+                ->select(['notice_id'])
+                ->where([
+                    'SecurityUserNotices.security_user_id IS' => $userId,
+                    'SecurityUserNotices.notice_id IN' => $assignedNoticeIds
+                ])
+                ->enableHydration(false);
+
+            $seenNoticeIds = array_column($seenNoticesQuery->toArray(), 'notice_id');
+
+            // 7. Return true if all assigned notices are seen (no red dot), false if any unseen
+            $unseen = array_diff($assignedNoticeIds, $seenNoticeIds);
+            return empty($unseen);
+        }else{
+            return true;
+        }
+    }
 }
 
 ?>

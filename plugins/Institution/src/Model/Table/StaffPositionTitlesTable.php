@@ -508,12 +508,49 @@ class StaffPositionTitlesTable extends ControllerActionTable
      * @author Prajakta K
      * @ticket POCOR-8093
      */
+	// public function getPrincipalRoleId()
+    // {
+    //     $principalData = $this->find()
+    //         ->select([$this->getPrimaryKey()])
+    //         ->where([$this->aliasField('name') => 'Principal'])
+    //         ->first();
+
+    //     return (!empty($principalData))? $principalData->id: null;
+    // }
+
+
+	/**
+     * Get the code of Staff according to Position
+     * @usage  Used to fetch principal and vice principal code
+     * @author Ehteram
+     * @ticket POCOR-9208
+	 * Reason to update this code; Principal may have diffrent name in some ENV 
+     */
 	public function getPrincipalRoleId()
     {
         $principalData = $this->find()
             ->select([$this->getPrimaryKey()])
             ->where([$this->aliasField('name') => 'Principal'])
             ->first();
+		if(empty($principalData)){
+			$principalData = $this->find()
+				->select([$this->getPrimaryKey()])
+				->where([$this->aliasField('name') => 'Deputy Principal - Non-Teaching'])
+				->first();
+		}
+		if(empty($principalData)){
+			$principalData = $this->find()
+            ->select([$this->getPrimaryKey()])
+			->where([$this->aliasField('name') => 'Deputy Principal - Teaching'])
+            ->first();
+		}
+
+		if(empty($principalData)){
+			$principalData = $this->find()
+            ->select([$this->getPrimaryKey()])
+			->where([$this->aliasField('name') => 'Principal - teaching'])
+            ->first();
+		}
 
         return (!empty($principalData))? $principalData->id: null;
     }

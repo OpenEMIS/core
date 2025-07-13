@@ -217,11 +217,12 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
         $riskId = $params['risk_id'];
         $academicPeriodId = $params['academic_period_id'];
+
         $url = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'InstitutionStudentRisks',
-           // '0' => $encodedQueryString,
+            '0' => $encodedQueryString,
         ];
 
         $risksUrl = $this->setQueryString($url, [
@@ -229,7 +230,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
             'academic_period_id' => $academicPeriodId
         ]);
 
-        $this->Navigation->substituteCrumb('Institution Student Risks', 'Institution Student Risks', $risksUrl);
+        $this->Navigation->substituteCrumb('Institution Student Risks', 'Institution Student Risks', );
 
         // Header
         $studentName = $entity->user->first_name . ' ' . $entity->user->last_name;
@@ -297,147 +298,167 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
     public function afterSaveOrDelete(Event $mainEvent, Entity $afterSaveOrDeleteEntity)
     {
-        $role = null;
-        $user_id = null;
-        $criteriaModel = $afterSaveOrDeleteEntity->getSource();
-        // on student admission this will be updated (student gender, guardians, student repeated)
-        $consolidatedModel = ['Institution.StudentUser', 'Student.Guardians', 'Institution.IndividualPromotion'];
+        try { //POCOR-9249 try catch added to avoid 404 error while marking attendance, its fails if risk is not configured in Administration
+            $role = null;
+            $user_id = null;
+            $criteriaModel = $afterSaveOrDeleteEntity->getSource();
+            // on student admission this will be updated (student gender, guardians, student repeated)
+            $consolidatedModel = ['Institution.StudentUser', 'Student.Guardians', 'Institution.IndividualPromotion'];
 
-        if (in_array($criteriaModel, $consolidatedModel)) {
-            $criteriaModel = 'Institution.Students';
-        }
+            if (in_array($criteriaModel, $consolidatedModel)) {
+                $criteriaModel = 'Institution.Students';
+            }
 
-        $RiskCriterias = TableRegistry::get('Risk.RiskCriterias');
-        $criteriaTable = TableRegistry::get($criteriaModel);
+            $RiskCriterias = TableRegistry::get('Risk.RiskCriterias');
+            $criteriaTable = TableRegistry::get($criteriaModel);
 
-        // to get studentId
-        if (isset($afterSaveOrDeleteEntity->student_id)) {
-            $studentId = $afterSaveOrDeleteEntity->student_id;
-        } else {
-            // for gender will be using security_user table the student_id is the ID
-            $studentId = $this->getStudentId($criteriaTable, $afterSaveOrDeleteEntity);
-        }
-        if(!$studentId){
-            return; //No Student Is Updated
-        }
-        // to get the academicPeriodId
-        if (isset($afterSaveOrDeleteEntity->academic_period_id)) {
-            $academicPeriodId = $afterSaveOrDeleteEntity->academic_period_id;
-        } else {
-            // afterDelete $afterSaveOrDeleteEntity doesnt have academicPeriodId, model also have different date
-            $academicPeriodId = $this->getAcademicPeriodId($criteriaTable, $afterSaveOrDeleteEntity);
-        }
+            // to get studentId
+            if (isset($afterSaveOrDeleteEntity->student_id)) {
+                $studentId = $afterSaveOrDeleteEntity->student_id;
+            } else {
+                // for gender will be using security_user table the student_id is the ID
+                $studentId = $this->getStudentId($criteriaTable, $afterSaveOrDeleteEntity);
+            }
+            if(!$studentId){
+                return; //No Student Is Updated
+            }
+            // to get the academicPeriodId
+            if (isset($afterSaveOrDeleteEntity->academic_period_id)) {
+                $academicPeriodId = $afterSaveOrDeleteEntity->academic_period_id;
+            } else {
+                // afterDelete $afterSaveOrDeleteEntity doesnt have academicPeriodId, model also have different date
+                $academicPeriodId = $this->getAcademicPeriodId($criteriaTable, $afterSaveOrDeleteEntity);
+            }
 
-        // to get the institutionId
-        if (isset($afterSaveOrDeleteEntity->institution_id)) {
-            $institutionId = $afterSaveOrDeleteEntity->institution_id;
-        } else {
-            // for gender will be using security_user table, doesnt have any institution
-            $institutionId = $this->getInstitutionId($criteriaTable, $afterSaveOrDeleteEntity, $academicPeriodId);
-        }
+            // to get the institutionId
+            if (isset($afterSaveOrDeleteEntity->institution_id)) {
+                $institutionId = $afterSaveOrDeleteEntity->institution_id;
+            } else {
+                // for gender will be using security_user table, doesnt have any institution
+                $institutionId = $this->getInstitutionId($criteriaTable, $afterSaveOrDeleteEntity, $academicPeriodId);
+            }
 
-        if (!empty($institutionId)) {
-            $criteriaRecord = $this->Risks->getCriteriaByModel($criteriaModel, $institutionId);
-            if(!empty($criteriaRecord)){
-                foreach ($criteriaRecord as $criteriaDataKey => $criteriaDataObj) {
-                    // to get the risks criteria to get the value on the student_risk_criterias
-                    $risksCriteriaResults = $RiskCriterias->find('ActiveRiskCriteria', ['criteria_key' => $criteriaDataKey, 'institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId]);
+            if (!empty($institutionId)) {
+                $criteriaRecord = $this->Risks->getCriteriaByModel($criteriaModel, $institutionId);
 
-                    if (!$risksCriteriaResults->isEmpty()) {
-                        foreach ($risksCriteriaResults as $key => $risksCriteriaData) {
-                            $riskId = $risksCriteriaData->risk_id;
-                            $threshold = $risksCriteriaData->threshold;
-                            $operator = $risksCriteriaData->operator;
-                            $criteria = $risksCriteriaData->criteria;
+                if(!empty($criteriaRecord)){
+                    foreach ($criteriaRecord as $criteriaDataKey => $criteriaDataObj) {
+                        // to get the risks criteria to get the value on the student_risk_criterias
+                        $risksCriteriaResults = $RiskCriterias->find('ActiveRiskCriteria', ['criteria_key' => $criteriaDataKey, 'institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId])->all();
 
-                            $params = new ArrayObject([
-                                'institution_id' => $institutionId,
-                                'student_id' => $studentId,
-                                'academic_period_id' => $academicPeriodId,
-                                'criteria_name' => $criteriaDataKey
-                            ]);
+                        if ($risksCriteriaResults->count() > 0) {
+                            foreach ($risksCriteriaResults as $key => $risksCriteriaData) {
+                                $riskId = $risksCriteriaData->risk_id;
+                                $threshold = $risksCriteriaData->threshold;
+                                $operator = $risksCriteriaData->operator;
+                                $criteria = $risksCriteriaData->criteria;
 
-                            $event = $criteriaTable->dispatchEvent('Model.InstitutionStudentRisks.calculateRiskValue', [$params], $this);
+                                $params = new ArrayObject([
+                                    'institution_id' => $institutionId,
+                                    'student_id' => $studentId,
+                                    'academic_period_id' => $academicPeriodId,
+                                    'criteria_name' => $criteriaDataKey
+                                ]);
 
-                            if ($event->isStopped()) {
-                                $mainEvent->stopPropagation();
-                                return $event->getResult();
-                            }
+                                $event = $criteriaTable->dispatchEvent('Model.InstitutionStudentRisks.calculateRiskValue', [$params], $this);
 
-                            $valueIndexData = $event->getResult();
-                            // if the condition fulfilled then the value will be saved as its value, if not saved as null
-                            switch ($operator) {
-                                case 1: // '<='
-                                    if($valueIndexData <= $threshold){
-                                        $valueIndex = $valueIndexData;
-                                    } else {
-                                        $valueIndex = null;
-                                    }
-                                    break;
-
-                                case 2: // '>='
-                                    if($valueIndexData >= $threshold){
-                                        $valueIndex = $valueIndexData;
-                                    } else {
-                                        $valueIndex = null;
-                                    }
-                                    break;
-
-                                case 3: // '='
-                                case 11: // for status Repeated
-                                    // value risk is an array (valueRisk[threshold] = value)
-                                    if ($threshold = $valueIndexData) {
-                                        $valueIndex = 'True';
-                                    } else {
-                                        $valueIndex = null;
-                                    }
-                                    break;
-                            }
-
-                            // saving association to student_risks_criterias
-                            $criteriaData = [
-                                'value' => $valueIndex,
-                                'risk_criteria_id' => $risksCriteriaData->id
-                            ];
-
-                            $conditions = [
-                                $this->aliasField('academic_period_id') => $academicPeriodId,
-                                $this->aliasField('institution_id') => $institutionId,
-                                $this->aliasField('student_id') => $studentId,
-                                $this->aliasField('risk_id') => $riskId
-                            ];
-
-                            if ($criteria == 'SpecialNeeds') {
-                                if (isset($afterSaveOrDeleteEntity->trigger_from) && $afterSaveOrDeleteEntity->trigger_from == 'shell') {
-                                } else {
-                                    $conditions = [
-                                        $this->aliasField('academic_period_id') => $academicPeriodId,
-                                        $this->aliasField('student_id') => $studentId,
-                                        $this->aliasField('risk_id') => $riskId
-                                    ];
+                                if ($event->isStopped()) {
+                                    $mainEvent->stopPropagation();
+                                    return $event->getResult();
                                 }
-                            }
 
-                            $institutionStudentRisksResults = $this->find()
-                                ->where([$conditions])
-                                ->all();
+                                $valueIndexData = $event->getResult();
+                                // if the condition fulfilled then the value will be saved as its value, if not saved as null
+                                switch ($operator) {
+                                    case 1: // '<='
+                                        if($valueIndexData <= $threshold){
+                                            $valueIndex = $valueIndexData;
+                                        } else {
+                                            $valueIndex = null;
+                                        }
+                                        break;
 
-                            // to update and add new records into the institution_student_risks
-                            if (!$institutionStudentRisksResults->isEmpty()) {
-                                // $entity = $institutionStudentRisksResults->first();
-                                foreach ($institutionStudentRisksResults as $institutionStudentRisksResultsObj) {
-                                    $entity = $institutionStudentRisksResultsObj;
+                                    case 2: // '>='
+                                        if($valueIndexData >= $threshold){
+                                            $valueIndex = $valueIndexData;
+                                        } else {
+                                            $valueIndex = null;
+                                        }
+                                        break;
 
-                                    $studentRisksCriteriaResults = $this->StudentRisksCriterias->find()
-                                        ->where([
-                                            $this->StudentRisksCriterias->aliasField('institution_student_risk_id') => $entity->id,
-                                            $this->StudentRisksCriterias->aliasField('risk_criteria_id') => $risksCriteriaData->id
-                                        ])->all();
-                                    // find id from db
-                                    if (!$studentRisksCriteriaResults->isEmpty()) {
-                                        $criteriaEntity = $studentRisksCriteriaResults->first();
-                                        $criteriaData['id'] = $criteriaEntity->id;
+                                    case 3: // '='
+                                    case 11: // for status Repeated
+                                        // value risk is an array (valueRisk[threshold] = value)
+                                        if ($threshold = $valueIndexData) {
+                                            $valueIndex = 'True';
+                                        } else {
+                                            $valueIndex = null;
+                                        }
+                                        break;
+                                }
+
+                                // saving association to student_risks_criterias
+                                $criteriaData = [
+                                    'value' => $valueIndex,
+                                    'risk_criteria_id' => $risksCriteriaData->id
+                                ];
+
+                                $conditions = [
+                                    $this->aliasField('academic_period_id') => $academicPeriodId,
+                                    $this->aliasField('institution_id') => $institutionId,
+                                    $this->aliasField('student_id') => $studentId,
+                                    $this->aliasField('risk_id') => $riskId
+                                ];
+
+                                if ($criteria == 'SpecialNeeds') {
+                                    if (isset($afterSaveOrDeleteEntity->trigger_from) && $afterSaveOrDeleteEntity->trigger_from == 'shell') {
+                                    } else {
+                                        $conditions = [
+                                            $this->aliasField('academic_period_id') => $academicPeriodId,
+                                            $this->aliasField('student_id') => $studentId,
+                                            $this->aliasField('risk_id') => $riskId
+                                        ];
                                     }
+                                }
+
+                                $institutionStudentRisksResults = $this->find()
+                                    ->where([$conditions])
+                                    ->all();
+
+                                // to update and add new records into the institution_student_risks
+                                if (!$institutionStudentRisksResults->isEmpty()) {
+                                    // $entity = $institutionStudentRisksResults->first();
+                                    foreach ($institutionStudentRisksResults as $institutionStudentRisksResultsObj) {
+                                        $entity = $institutionStudentRisksResultsObj;
+
+                                        $studentRisksCriteriaResults = $this->StudentRisksCriterias->find()
+                                            ->where([
+                                                $this->StudentRisksCriterias->aliasField('institution_student_risk_id') => $entity->id,
+                                                $this->StudentRisksCriterias->aliasField('risk_criteria_id') => $risksCriteriaData->id
+                                            ])->all();
+                                        // find id from db
+                                        if (!$studentRisksCriteriaResults->isEmpty()) {
+                                            $criteriaEntity = $studentRisksCriteriaResults->first();
+                                            $criteriaData['id'] = $criteriaEntity->id;
+                                        }
+
+                                        $data = [];
+                                        $data['student_risks_criterias'][] = $criteriaData;
+
+                                        $patchOptions = ['validate' => false];
+                                        $entity = $this->patchEntity($entity, $data, $patchOptions);
+
+                                        $this->save($entity);
+                                    }
+                                } else {
+                                    $entity = $this->newEntity([
+                                        'average_risk' => 0,
+                                        'total_risk' => 0,
+                                        'academic_period_id' => $academicPeriodId,
+                                        'institution_id' => $institutionId,
+                                        'student_id' => $studentId,
+                                        'risk_id' => $riskId
+                                    ]);
 
                                     $data = [];
                                     $data['student_risks_criterias'][] = $criteriaData;
@@ -447,256 +468,241 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
                                     $this->save($entity);
                                 }
-                            } else {
-                                $entity = $this->newEntity([
-                                    'average_risk' => 0,
-                                    'total_risk' => 0,
-                                    'academic_period_id' => $academicPeriodId,
-                                    'institution_id' => $institutionId,
-                                    'student_id' => $studentId,
-                                    'risk_id' => $riskId
-                                ]);
-
-                                $data = [];
-                                $data['student_risks_criterias'][] = $criteriaData;
-
-                                $patchOptions = ['validate' => false];
-                                $entity = $this->patchEntity($entity, $data, $patchOptions);
-
-                                $this->save($entity);
                             }
                         }
                     }
                 }
             }
-        }
 
-		$InstitutionStudents = TableRegistry::get('Institution.Students');
-		$eventAction = explode('.', $mainEvent->name);
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
+            $eventAction = explode('.', $mainEvent->name);
 
-		if(!empty($eventAction[2]) && ($eventAction[2] == 'afterSave')) {
-			$bodyData = $InstitutionStudents->find('all',
-							[ 'contain' => [
-								'Institutions',
-								'EducationGrades',
-								'AcademicPeriods',
-								'StudentStatuses',
-								'Users',
-								'Users.Genders',
-								'Users.MainNationalities',
-								'Users.Identities.IdentityTypes',
-								'Users.AddressAreas',
-								'Users.BirthplaceAreas',
-								'Users.Contacts.ContactTypes'
-							],
-						])->where([
-							$InstitutionStudents->aliasField('student_id') => $studentId
-						]);
+            if(!empty($eventAction[2]) && ($eventAction[2] == 'afterSave')) {
+                $bodyData = $InstitutionStudents->find('all',
+                                [ 'contain' => [
+                                    'Institutions',
+                                    'EducationGrades',
+                                    'AcademicPeriods',
+                                    'StudentStatuses',
+                                    'Users',
+                                    'Users.Genders',
+                                    'Users.MainNationalities',
+                                    'Users.Identities.IdentityTypes',
+                                    'Users.AddressAreas',
+                                    'Users.BirthplaceAreas',
+                                    'Users.Contacts.ContactTypes'
+                                ],
+                            ])->where([
+                                $InstitutionStudents->aliasField('student_id') => $studentId
+                            ]);
 
-			if (!empty($bodyData)) {
-				foreach ($bodyData as $key => $value) {
-                    $user = $value->user;
-                    $user_id = $user->id;
-					$openemis_no = $user->openemis_no;
-					$first_name = $user->first_name;
-					$middle_name = $user->middle_name;
-					$third_name = $user->third_name;
-					$last_name = $user->last_name;
-					$preferred_name = $user->preferred_name;
-					$gender = $user->gender->name;
-                    try {
-                        $nationality = $user->main_nationality->name;
-                    } catch (\Exception $exception) {
-                        $nationality = null;
-                    }
-                    // POCOR-6283 start
-					$dateOfBirth = $user->date_of_birth;
-                    // commented because date can be converted directly no need to use loop
-					/* if(!empty($value->user->date_of_birth)) {
-						foreach ($value->user->date_of_birth as $key => $date) {
-							$dateOfBirth = $date;
-						}
-					} */
-                    // POCOR-6283 end
-					$address = $user->address;
-					$postalCode = $user->postal_code;
-                    try {
-                        $addressArea = $user->address_area->name;
-                    } catch (\Exception $exception) {
-                        $addressArea = null;
-                    }
-                    try {
-                        $birthplaceArea = $user->birthplace_area->name;
-                    } catch (\Exception $exception) {
-                        $birthplaceArea = null;
-                    }
-                    $role = $user->is_student;
-
-					$contactValue = [];
-					$contactType = [];
-					if(!empty($user['contacts'])) {
-						foreach ($user['contacts'] as $key => $contact) {
-                            try {
-                                $contactValue[] = $contact->value;
-                            } catch (\Exception $exception) {
-
+                if (!empty($bodyData)) {
+                    foreach ($bodyData as $key => $value) {
+                        $user = $value->user;
+                        $user_id = $user->id;
+                        $openemis_no = $user->openemis_no;
+                        $first_name = $user->first_name;
+                        $middle_name = $user->middle_name;
+                        $third_name = $user->third_name;
+                        $last_name = $user->last_name;
+                        $preferred_name = $user->preferred_name;
+                        $gender = $user->gender->name;
+                        try {
+                            $nationality = $user->main_nationality->name;
+                        } catch (\Exception $exception) {
+                            $nationality = null;
+                        }
+                        // POCOR-6283 start
+                        $dateOfBirth = $user->date_of_birth;
+                        // commented because date can be converted directly no need to use loop
+                        /* if(!empty($value->user->date_of_birth)) {
+                            foreach ($value->user->date_of_birth as $key => $date) {
+                                $dateOfBirth = $date;
                             }
-                            try {
-                                $contactType[] = $contact->contact_type->name;
-                            } catch (\Exception $exception) {
+                        } */
+                        // POCOR-6283 end
+                        $address = $user->address;
+                        $postalCode = $user->postal_code;
+                        try {
+                            $addressArea = $user->address_area->name;
+                        } catch (\Exception $exception) {
+                            $addressArea = null;
+                        }
+                        try {
+                            $birthplaceArea = $user->birthplace_area->name;
+                        } catch (\Exception $exception) {
+                            $birthplaceArea = null;
+                        }
+                        $role = $user->is_student;
 
+                        $contactValue = [];
+                        $contactType = [];
+                        if(!empty($user['contacts'])) {
+                            foreach ($user['contacts'] as $key => $contact) {
+                                try {
+                                    $contactValue[] = $contact->value;
+                                } catch (\Exception $exception) {
+
+                                }
+                                try {
+                                    $contactType[] = $contact->contact_type->name;
+                                } catch (\Exception $exception) {
+
+                                }
                             }
-						}
-					}
+                        }
 
-					$identityNumber = [];
-					$identityType = [];
-					if(!empty($user['identities'])) {
-						foreach ($user['identities'] as $key => $identity) {
-                            try {
-                                $identityNumber[] = $identity->number;
-                            } catch (\Exception $exception) {
+                        $identityNumber = [];
+                        $identityType = [];
+                        if(!empty($user['identities'])) {
+                            foreach ($user['identities'] as $key => $identity) {
+                                try {
+                                    $identityNumber[] = $identity->number;
+                                } catch (\Exception $exception) {
 
+                                }
+                                try {
+                                    $identityType[] = $identity->identity_type->name;
+                                } catch (\Exception $exception) {
+
+                                }
                             }
-                            try {
-                                $identityType[] = $identity->identity_type->name;
-                            } catch (\Exception $exception) {
+                        }
 
+                        $username = $user->username;
+                        $institution = $value->institution;
+                        $institution_id = $institution->id;
+                        $institutionName = $institution->name;
+                        $institutionCode = $institution->code;
+                        $educationGrade = $value->education_grade->name;
+                        $academicCode = $value->academic_period->code;
+                        $academicGrade = $value->academic_period->name;
+                        $studentStatus = $value->student_status->name;
+                        $startDate=$value->start_date;
+                        $endDate=$value->end_date;
+                        /*if(!empty($value->start_date)) {
+                            foreach ($value->start_date as $key => $date) {
+                                $startDate = $date;
                             }
-						}
-					}
-
-					$username = $user->username;
-                    $institution = $value->institution;
-                    $institution_id = $institution->id;
-					$institutionName = $institution->name;
-					$institutionCode = $institution->code;
-					$educationGrade = $value->education_grade->name;
-					$academicCode = $value->academic_period->code;
-					$academicGrade = $value->academic_period->name;
-					$studentStatus = $value->student_status->name;
-					$startDate=$value->start_date;
-                    $endDate=$value->end_date;
-					/*if(!empty($value->start_date)) {
-						foreach ($value->start_date as $key => $date) {
-							$startDate = $date;
-						}
-					}
-					if(!empty($value->end_date)) {
-						foreach ($value->end_date as $key => $date) {
-							$endDate = $date;
-						}
-					}*/
-				}
-			}
-			$bodys = array();
-			$bodys = [
-				'security_users_id' => !empty($user_id) ? $user_id : NULL,
-				'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
-				'security_users_first_name' =>	!empty($first_name) ? $first_name : NULL,
-				'security_users_middle_name' => !empty($middle_name) ? $middle_name : NULL,
-				'security_users_third_name' => !empty($third_name) ? $third_name : NULL,
-				'security_users_last_name' => !empty($last_name) ? $last_name : NULL,
-				'security_users_preferred_name' => !empty($preferred_name) ? $preferred_name : NULL,
-				'security_users_gender' => !empty($gender) ? $gender : NULL,
-				'security_users_date_of_birth' => !empty($dateOfBirth) ? date("d-m-Y", strtotime($dateOfBirth)) : NULL,
-				'security_users_address' => !empty($address) ? $address : NULL,
-				'security_users_postal_code' => !empty($postalCode) ? $postalCode : NULL,
-				'area_administrative_name_birthplace' => !empty($addressArea) ? $addressArea : NULL,
-				'area_administrative_name_address' => !empty($birthplaceArea) ? $birthplaceArea : NULL,
-				'contact_type_name' => !empty($contactType) ? $contactType : NULL,
-				'user_contact_type_value' => !empty($contactValue) ? $contactValue : NULL,
-				'nationality_name' => !empty($nationality) ? $nationality : NULL,
-				'identity_type_name' => !empty($identityType) ? $identityType : NULL,
-				'user_identities_number' => !empty($identityNumber) ? $identityNumber : NULL,
-				'security_user_username' => !empty($username) ? $username : NULL,
-				'institutions_id' => !empty($institution_id) ? $institution_id : NULL,
-				'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
-				'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
-				'academic_period_code' => !empty($academicCode) ? $academicCode : NULL,
-				'academic_period_name' => !empty($academicGrade) ? $academicGrade : NULL,
-				'education_grade_name' => !empty($educationGrade) ? $educationGrade : NULL,
-				'student_status_name' => !empty($studentStatus) ? $studentStatus : NULL,
-				'institution_students_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
-				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
-                'role_name' => ($role == 1) ? 'student' : NULL
-			];
-            $custom_field = array();
-			if($user_id){
-            //POCOR-7078 start
-            $studentCustomFieldValues = TableRegistry::get('StudentCustomField.StudentCustomFieldValues');
-            $studentCustomFieldOptions = TableRegistry::get('StudentCustomField.StudentCustomFieldOptions');
-            $studentCustomFields = TableRegistry::get('StudentCustomField.StudentCustomFields');
-            $studentCustomData = $studentCustomFieldValues->find()
-                ->select([
-                        'id'                             => $studentCustomFieldValues->aliasField('id'),
-                        'custom_id'                      => 'studentCustomField.id',
-                        'student_id'                     => $studentCustomFieldValues->aliasField('student_id'),
-                        'student_custom_field_id'        => $studentCustomFieldValues->aliasField('student_custom_field_id'),
-                        'text_value'                     => $studentCustomFieldValues->aliasField('text_value'),
-                        'number_value'                   => $studentCustomFieldValues->aliasField('number_value'),
-                        'decimal_value'                  => $studentCustomFieldValues->aliasField('decimal_value'),
-                        'textarea_value'                 => $studentCustomFieldValues->aliasField('textarea_value'),
-                        'date_value'                     => $studentCustomFieldValues->aliasField('date_value'),
-                        'time_value'                     => $studentCustomFieldValues->aliasField('time_value'),
-                        'option_value_text'              => $studentCustomFieldOptions->aliasField('name'),
-                        'name'                           => 'studentCustomField.name',
-                        'field_type'                     => 'studentCustomField.field_type',
-                    ])->leftJoin(
-                    ['studentCustomField' => 'student_custom_fields'],
-                    [
-                        'studentCustomField.id = '.$studentCustomFieldValues->aliasField('student_custom_field_id')
-                    ])
-                    ->leftJoin(
-                    [$studentCustomFieldOptions->getAlias() => $studentCustomFieldOptions->getTable()],
-                    [
-                        $studentCustomFieldOptions->aliasField('student_custom_field_id = ') . $studentCustomFieldValues->aliasField('student_custom_field_id'),
-                        $studentCustomFieldOptions->aliasField('id = ') . $studentCustomFieldValues->aliasField('number_value')
-                    ])
-                    ->where([
-                    $studentCustomFieldValues->aliasField('student_id') => $user_id,
-                    ])
-                ->disableHydration() // POCOR-8533
-                ->toArray();
-
-            $count = 0;
-            if(!empty($studentCustomData)){
-                foreach ($studentCustomData as $val) {
-                    $custom_field['custom_field'][$count]["id"] = (!empty($val['custom_id']) ? $val['custom_id'] : '');
-                    $custom_field['custom_field'][$count]["name"]= (!empty($val['name']) ? $val['name'] : '');
-                    $fieldTypes[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
-                    $fieldType = $fieldTypes[$count];
-                    if($fieldType == 'TEXT'){
-                        $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
-                    }else if ($fieldType == 'CHECKBOX') {
-                        $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
-                    }else if ($fieldType == 'NUMBER') {
-                        $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
-                    }else if ($fieldType == 'DECIMAL') {
-                        $custom_field['custom_field'][$count]["decimal_value"] = (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
-                    }else if ($fieldType == 'TEXTAREA') {
-                        $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
-                    }else if ($fieldType == 'DROPDOWN') {
-                        $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
-                    }else if ($fieldType == 'DATE') {
-                        $custom_field['custom_field'][$count]["date_value"] = date('Y-m-d', strtotime($val->date_value));
-                    }else if ($fieldType == 'TIME') {
-                        $custom_field['custom_field'][$count]["time_value"] = date('h:i A', strtotime($val->time_value));
-                    }else if ($fieldType == 'COORDINATES') {
-                        $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                        }
+                        if(!empty($value->end_date)) {
+                            foreach ($value->end_date as $key => $date) {
+                                $endDate = $date;
+                            }
+                        }*/
                     }
-                    $count++;
+                }
+                $bodys = array();
+                $bodys = [
+                    'security_users_id' => !empty($user_id) ? $user_id : NULL,
+                    'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
+                    'security_users_first_name' =>	!empty($first_name) ? $first_name : NULL,
+                    'security_users_middle_name' => !empty($middle_name) ? $middle_name : NULL,
+                    'security_users_third_name' => !empty($third_name) ? $third_name : NULL,
+                    'security_users_last_name' => !empty($last_name) ? $last_name : NULL,
+                    'security_users_preferred_name' => !empty($preferred_name) ? $preferred_name : NULL,
+                    'security_users_gender' => !empty($gender) ? $gender : NULL,
+                    'security_users_date_of_birth' => !empty($dateOfBirth) ? date("d-m-Y", strtotime($dateOfBirth)) : NULL,
+                    'security_users_address' => !empty($address) ? $address : NULL,
+                    'security_users_postal_code' => !empty($postalCode) ? $postalCode : NULL,
+                    'area_administrative_name_birthplace' => !empty($addressArea) ? $addressArea : NULL,
+                    'area_administrative_name_address' => !empty($birthplaceArea) ? $birthplaceArea : NULL,
+                    'contact_type_name' => !empty($contactType) ? $contactType : NULL,
+                    'user_contact_type_value' => !empty($contactValue) ? $contactValue : NULL,
+                    'nationality_name' => !empty($nationality) ? $nationality : NULL,
+                    'identity_type_name' => !empty($identityType) ? $identityType : NULL,
+                    'user_identities_number' => !empty($identityNumber) ? $identityNumber : NULL,
+                    'security_user_username' => !empty($username) ? $username : NULL,
+                    'institutions_id' => !empty($institution_id) ? $institution_id : NULL,
+                    'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
+                    'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
+                    'academic_period_code' => !empty($academicCode) ? $academicCode : NULL,
+                    'academic_period_name' => !empty($academicGrade) ? $academicGrade : NULL,
+                    'education_grade_name' => !empty($educationGrade) ? $educationGrade : NULL,
+                    'student_status_name' => !empty($studentStatus) ? $studentStatus : NULL,
+                    'institution_students_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
+                    'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
+                    'role_name' => ($role == 1) ? 'student' : NULL
+                ];
+                $custom_field = array();
+                if($user_id){
+                //POCOR-7078 start
+                $studentCustomFieldValues = TableRegistry::get('StudentCustomField.StudentCustomFieldValues');
+                $studentCustomFieldOptions = TableRegistry::get('StudentCustomField.StudentCustomFieldOptions');
+                $studentCustomFields = TableRegistry::get('StudentCustomField.StudentCustomFields');
+                $studentCustomData = $studentCustomFieldValues->find()
+                    ->select([
+                            'id'                             => $studentCustomFieldValues->aliasField('id'),
+                            'custom_id'                      => 'studentCustomField.id',
+                            'student_id'                     => $studentCustomFieldValues->aliasField('student_id'),
+                            'student_custom_field_id'        => $studentCustomFieldValues->aliasField('student_custom_field_id'),
+                            'text_value'                     => $studentCustomFieldValues->aliasField('text_value'),
+                            'number_value'                   => $studentCustomFieldValues->aliasField('number_value'),
+                            'decimal_value'                  => $studentCustomFieldValues->aliasField('decimal_value'),
+                            'textarea_value'                 => $studentCustomFieldValues->aliasField('textarea_value'),
+                            'date_value'                     => $studentCustomFieldValues->aliasField('date_value'),
+                            'time_value'                     => $studentCustomFieldValues->aliasField('time_value'),
+                            'option_value_text'              => $studentCustomFieldOptions->aliasField('name'),
+                            'name'                           => 'studentCustomField.name',
+                            'field_type'                     => 'studentCustomField.field_type',
+                        ])->leftJoin(
+                        ['studentCustomField' => 'student_custom_fields'],
+                        [
+                            'studentCustomField.id = '.$studentCustomFieldValues->aliasField('student_custom_field_id')
+                        ])
+                        ->leftJoin(
+                        [$studentCustomFieldOptions->getAlias() => $studentCustomFieldOptions->getTable()],
+                        [
+                            $studentCustomFieldOptions->aliasField('student_custom_field_id = ') . $studentCustomFieldValues->aliasField('student_custom_field_id'),
+                            $studentCustomFieldOptions->aliasField('id = ') . $studentCustomFieldValues->aliasField('number_value')
+                        ])
+                        ->where([
+                        $studentCustomFieldValues->aliasField('student_id') => $user_id,
+                        ])
+                    ->disableHydration() // POCOR-8533
+                    ->toArray();
+
+                $count = 0;
+                if(!empty($studentCustomData)){
+                    foreach ($studentCustomData as $val) {
+                        $custom_field['custom_field'][$count]["id"] = (!empty($val['custom_id']) ? $val['custom_id'] : '');
+                        $custom_field['custom_field'][$count]["name"]= (!empty($val['name']) ? $val['name'] : '');
+                        $fieldTypes[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
+                        $fieldType = $fieldTypes[$count];
+                        if($fieldType == 'TEXT'){
+                            $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                        }else if ($fieldType == 'CHECKBOX') {
+                            $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
+                        }else if ($fieldType == 'NUMBER') {
+                            $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
+                        }else if ($fieldType == 'DECIMAL') {
+                            $custom_field['custom_field'][$count]["decimal_value"] = (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
+                        }else if ($fieldType == 'TEXTAREA') {
+                            $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
+                        }else if ($fieldType == 'DROPDOWN') {
+                            $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
+                        }else if ($fieldType == 'DATE') {
+                            $custom_field['custom_field'][$count]["date_value"] = date('Y-m-d', strtotime($val->date_value));
+                        }else if ($fieldType == 'TIME') {
+                            $custom_field['custom_field'][$count]["time_value"] = date('h:i A', strtotime($val->time_value));
+                        }else if ($fieldType == 'COORDINATES') {
+                            $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                        }
+                        $count++;
+                    }
+                }
+                }
+                $body = array_merge($bodys, $custom_field);//POCOR-7078 end
+                if (!$afterSaveOrDeleteEntity->isNew()) {
+                    $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                    if (!empty($afterSaveOrDeleteEntity->modified_user_id)) {
+                        $Webhooks->triggerShell('student_update', ['username' => ''], $body);
+                    }
                 }
             }
-            }
-            $body = array_merge($bodys, $custom_field);//POCOR-7078 end
-			if (!$afterSaveOrDeleteEntity->isNew()) {
-				$Webhooks = TableRegistry::get('Webhook.Webhooks');
-				if (!empty($afterSaveOrDeleteEntity->modified_user_id)) {
-					$Webhooks->triggerShell('student_update', ['username' => ''], $body);
-				}
-			}
-		}
+        } catch (\Throwable $e) {
+
+        }
 	}
 
     // will update the total risk on the institution_student_risks
@@ -945,4 +951,11 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    /*public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+       $queryString = $this->getQueryString();
+       $academicPeriodId = $queryString['academic_period_id'];
+       $query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
+    }*/
 }
