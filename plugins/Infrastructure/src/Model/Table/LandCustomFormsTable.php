@@ -12,16 +12,13 @@ class LandCustomFormsTable extends CustomFormsTable
 {
     public function initialize(array $config): void
     {
-        $this->setTable('infrastructure_custom_forms');
-        parent::initialize($config);
-        // comment cakephp 4 start
-        /*$config['extra'] = [
+        $config['extra'] = [
             'fieldClass' => [
                 'className' => 'Infrastructure.LandCustomFields',
                 'joinTable' => 'infrastructure_custom_forms_fields',
                 'foreignKey' => 'infrastructure_custom_form_id',
                 'targetForeignKey' => 'infrastructure_custom_field_id',
-                'through' => 'Infrastructure.InfrastructureCustomFormsFields',
+                'through' => 'Infrastructure.LandCustomFormsFields',
                 'dependent' => true
             ],
             'filterClass' => [
@@ -32,27 +29,9 @@ class LandCustomFormsTable extends CustomFormsTable
                 'through' => 'Infrastructure.LandCustomFormsFilters',
                 'dependent' => true
             ]
-        ];*/  // comment cakephp 4 end // 
-
-            // InfrastructureCustomFormsFields model
-            $this->belongsToMany('CustomForms', [
-                'className' => 'Infrastructure.LandCustomFields',
-                'joinTable' => 'infrastructure_custom_forms_fields',
-                'foreignKey' => 'infrastructure_custom_form_id',
-                'targetForeignKey' => 'infrastructure_custom_field_id',
-                'through' => 'Infrastructure.InfrastructureCustomFormsFields',
-                'dependent' => true
-            ]);
-
-            // LandCustomForms model
-            $this->belongsToMany('CustomForms', [
-                'className' => 'Infrastructure.LandTypes',
-                'joinTable' => 'infrastructure_custom_forms_filters',
-                'foreignKey' => 'infrastructure_custom_form_id',
-                'targetForeignKey' => 'infrastructure_custom_filter_id',
-                'through' => 'Infrastructure.LandCustomFormsFilters',
-                'dependent' => true
-            ]);
+        ];
+        $this->setTable('infrastructure_custom_forms');
+        parent::initialize($config);
         $this->addBehavior('Infrastructure.Pages', ['module' => 'Land']);
         $this->setDeleteStrategy('restrict');
     }
