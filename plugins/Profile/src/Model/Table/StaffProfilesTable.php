@@ -3,7 +3,6 @@ namespace Profile\Model\Table;
 
 use ArrayObject;
 use ZipArchive;
-
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -11,7 +10,6 @@ use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 use Cake\Log\Log;
-
 use App\Model\Table\ControllerActionTable;
 
 /**
