@@ -64,7 +64,9 @@ class OpenEmisComponent extends Component
 
         $theme = $this->getTheme();
         $controller->set('theme', $theme);
-        $controller->set('SystemNotices', $this->SystemNotices());
+        if (file_exists(CONFIG . 'app_local.php')) { //POCOR-9203
+            $controller->set('SystemNotices', $this->SystemNotices());
+        }
         $controller->set('homeUrl', $this->getConfig('homeUrl'));
         $controller->set('headerMenu', $this->getHeaderMenu());
         $controller->set('SystemVersion', $this->getCodeVersion());

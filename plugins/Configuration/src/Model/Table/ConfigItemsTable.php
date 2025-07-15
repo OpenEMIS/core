@@ -629,18 +629,20 @@ class ConfigItemsTable extends AppTable
 
     public function value($code)
     {
-        $value = '';
-        if (array_key_exists($code, $this->configurations)) {
-            $value = $this->configurations[$code];
-        } else {
-            $entity = $this->findByCode($code)->first();
-            if (empty($entity)) {
-                return false;
+        if (file_exists(CONFIG . 'app_local.php')) { //POCOR-9203
+            $value = '';
+            if (array_key_exists($code, $this->configurations)) {
+                $value = $this->configurations[$code];
+            } else {
+                $entity = $this->findByCode($code)->first();
+                if (empty($entity)) {
+                    return false;
+                }
+                $value = strlen($entity->value) ? $entity->value : $entity->default_value;
+                $this->configurations[$code] = $value;
             }
-            $value = strlen($entity->value) ? $entity->value : $entity->default_value;
-            $this->configurations[$code] = $value;
+            return $value;
         }
-        return $value;
     }
 
     public function defaultValue($code)
