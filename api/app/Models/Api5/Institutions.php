@@ -14,7 +14,7 @@ class Institutions extends Model
     use HasFactory;
 use InstitutionScope;
     // ✅ Allow mass assignment
-    protected $fillable = ['id', 'name', 'alternative_name', 'code', 'address', 'postal_code', 'contact_person', 'telephone', 'email', 'website', 'date_opened', 'year_opened', 'date_closed', 'year_closed', 'longitude', 'latitude', 'logo_name', 'logo_content', 'shift_type', 'classification', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id', 'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'security_group_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id', 'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'security_group_id', 'modified_user_id', 'created_user_id'];
+    protected $fillable = ['id', 'name', 'alternative_name', 'code', 'address', 'postal_code', 'contact_person', 'telephone', 'email', 'website', 'date_opened', 'year_opened', 'date_closed', 'year_closed', 'longitude', 'latitude', 'logo_name', 'logo_content', 'shift_type', 'classification','vision', 'mission', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id', 'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'security_group_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id', 'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'security_group_id','modified_user_id', 'created_user_id'];
     // ✅ Treat 'modified' and 'created' as timestamps
     protected $dates = ['modified', 'created'];
 
@@ -106,6 +106,8 @@ public function _swaggerPath() {}
                           @OA\Property(property="logo_content", type="string", example=null),
                           @OA\Property(property="shift_type", type="integer", example=null),
                           @OA\Property(property="classification", type="integer", example=null),
+                          @OA\Property(property="vision", type="string", example=null),
+                          @OA\Property(property="mission", type="string", example=null),
                           @OA\Property(property="area_id", type="integer", example=null),
                           @OA\Property(property="area_administrative_id", type="integer", example=null),
                           @OA\Property(property="institution_locality_id", type="integer", example=null),
@@ -161,6 +163,8 @@ public function _swaggerList() {}
                      @OA\Property(property="logo_content", type="string", example=null),
                      @OA\Property(property="shift_type", type="integer", example=null),
                      @OA\Property(property="classification", type="integer", example=null),
+                     @OA\Property(property="vision", type="string", example=null),
+                     @OA\Property(property="mission", type="string", example=null),
                      @OA\Property(property="area_id", type="integer", example=null),
                      @OA\Property(property="area_administrative_id", type="integer", example=null),
                      @OA\Property(property="institution_locality_id", type="integer", example=null),
@@ -254,6 +258,8 @@ public function _swaggerView() {}
                      @OA\Property(property="logo_content", type="string", example=null),
                      @OA\Property(property="shift_type", type="integer", example=null),
                      @OA\Property(property="classification", type="integer", example=null),
+                     @OA\Property(property="vision", type="string", example=null),
+                     @OA\Property(property="mission", type="string", example=null),
                      @OA\Property(property="area_id", type="integer", example=null),
                      @OA\Property(property="area_administrative_id", type="integer", example=null),
                      @OA\Property(property="institution_locality_id", type="integer", example=null),
