@@ -4,7 +4,14 @@ namespace CustomExcel\Model\Behavior;
 use Cake\Log\Log;
 use Mpdf\MpdfException; // POCOR-9153
 use DOMDocument; // POCOR-9153
-use DOMXPath; // POCOR-9153
+use DOMXPath;
+use DOMElement;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Exception;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+
+// POCOR-9153
 
 /*
     This trait is for ExcelReportBehavior.php
@@ -78,73 +85,106 @@ trait StudentPdfReportTrait
      * POCOR-9153
      * @throws MpdfException
      */
-    private function savePDF($objSpreadsheet, $filepath, $student_id)
+    private function savePDF($objSpreadsheet, $baseFilePath, $studentId)
     {
-        Log::write('debug', 'ExcelReportBehavior >>> filepath: ' . $filepath);
-        // Convert spreadsheet object into html
+        Log::write('debug', 'ExcelReportBehavior >>> base filepath: ' . $baseFilePath);
+        $sheetCount = $objSpreadsheet->getSheetCount();
+//        $sheetCount = 2;
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
 
-        // This is to store to final processedHtml
-        $processedHtml = '';
-        $filePaths = [];
+
         $tempFiles = [];
-        $basePath = $filepath;
-        for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
+        $pdfPaths = [];
+
+        for ($sheetIndex = 0; $sheetIndex < $sheetCount; $sheetIndex++) {
             $sheet = $objSpreadsheet->getSheet($sheetIndex);
             $orientation = $sheet->getPageSetup()->getOrientation();
 
-            if ($orientation === \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE) {
-                $mpdfOrientation = 'L';
-                $mpdfFormat = 'A4-L'; // landscape
-            } else {
-                $mpdfOrientation = 'P';
-                $mpdfFormat = 'A4'; // portrait
-            }
+            $isLandscape = $orientation === \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE;
+            $mpdfOrientation = $isLandscape ? 'L' : 'P';
+            $mpdfFormat = $isLandscape ? 'A4-L' : 'A4';
 
+            // File naming
+            $sheetBasePath = $baseFilePath . '_sheet' . $sheetIndex;
+            $xlsPath = $sheetBasePath . '.xlsx';
+            $htmlRawPath = $sheetBasePath . '_raw.html';
+            $htmlProcessedPath = $sheetBasePath . '_processed.html';
+            $pdfRawPath = $sheetBasePath . '_raw.pdf';
+            $pdfProcessedPath = $sheetBasePath . '.pdf';
+
+            // Save XLSX
+            $writer->setSheetIndex($sheetIndex);
+            $writer->save($xlsPath);
+            $tempFiles[] = $xlsPath;
+
+            // Load and save raw HTML
+            $rawHtml = file_get_contents($xlsPath, FILE_USE_INCLUDE_PATH);
+            file_put_contents($htmlRawPath, $rawHtml);
+            $tempFiles[] = $htmlRawPath;
+
+            // Save RAW HTML as PDF for comparison
+//            $mpdfRaw = new \Mpdf\Mpdf([
+//                'mode' => 'utf-8',
+//                'format' => $mpdfFormat,
+//                'margin_left' => 0,
+//                'margin_right' => 0,
+//                'margin_top' => 0,
+//                'margin_bottom' => 0,
+//            ]);
+//            $mpdfRaw->autoScriptToLang = true;
+//            $mpdfRaw->autoLangToFont = true;
+//            $mpdfRaw->AddPage($mpdfOrientation);
+//            $mpdfRaw->WriteHTML($rawHtml);
+//            $mpdfRaw->Output($pdfRawPath, 'F');
+
+//            $tempFiles[] = $pdfRawPath;
+
+            // Processed HTML
+            $processedHtml = $this->processHtml($rawHtml);
+
+            file_put_contents($htmlProcessedPath, $processedHtml);
+            $tempFiles[] = $htmlProcessedPath;
+
+            // Render processed HTML to PDF
             $mpdf = new \Mpdf\Mpdf([
                 'mode' => 'utf-8',
                 'format' => $mpdfFormat,
+                'margin_left' => 20,
+                'margin_right' => 20,
+                'margin_top' => 20,
+                'margin_bottom' => 20,
             ]);
-
             $mpdf->autoScriptToLang = true;
             $mpdf->autoLangToFont = true;
 
-            // Sheet index, HTML, and PDF generation follows...
-            $filepath = $basePath . '_' . $sheetIndex;
-            $filepathxl = $filepath . '.xls';
-
-            $writer->setSheetIndex($sheetIndex);
-            $writer->save($filepathxl);
-            $tempFiles[] = $filepathxl;
-            $file = file_get_contents($filepathxl, FILE_USE_INCLUDE_PATH);
-            $processedHtml = $this->processHtml($file, $sheetIndex);
-
             $mpdf->AddPage($mpdfOrientation);
             $mpdf->WriteHTML($processedHtml);
-            $mpdf->Output($filepath . '.pdf', 'F');
+            $mpdf->Output($pdfProcessedPath, 'F');
 
-            $filePaths[] = $filepath . '.pdf';
-            $tempFiles[] = $filepath . '.pdf';
+            $pdfPaths[] = $pdfProcessedPath;
+            $tempFiles[] = $pdfProcessedPath;
+
+            // Log everything
+            Log::write('debug', "Saved XLSX: $xlsPath");
+            Log::write('debug', "Saved RAW HTML: $htmlRawPath");
+            Log::write('debug', "Saved PROCESSED HTML: $htmlProcessedPath");
+            Log::write('debug', "Saved RAW PDF: $pdfRawPath");
+            Log::write('debug', "Saved FINAL PDF: $pdfProcessedPath");
         }
-        // Merge all the pdf that belongs to one report
-        if (!empty($student_id)) {
-            $fileName = $this->getConfig('filename') . '_' . $student_id;
-        } else {
-            $fileName = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His');
-        }
 
-        Log::write('debug', '----------------------fileName---------------------: ');
-        Log::write('debug', $fileName);
+        // Merge PDFs
+        $filename = $this->getConfig('filename') . '_' . (!empty($studentId) ? $studentId : date('Ymd\THis'));
+        Log::write('debug', 'Final merged filename: ' . $filename);
+        $this->mergePDFFiles($pdfPaths, $filename, $filename);
 
-        $this->mergePDFFiles($filePaths, $fileName, $fileName);
-        // // Remove the temp file that is converted from excel object and its successfully converted to pdf
+        // Clean temp files
         if ($this->getConfig('purge')) {
-            foreach ($tempFiles as $tempFile) {
-                // delete excel file after successfully converted to pdf
-                $this->deleteFile($tempFile);
+            foreach ($tempFiles as $file) {
+                $this->deleteFile($file);
             }
         }
     }
+
 
     private function processHtml($htmlFile, $sheetIndex = 0)
     {
