@@ -40,7 +40,6 @@ class ConfigItemsTable extends AppTable
             'Map' => ['index'],
             'ClassStudents' => ['index'],
             'AssociationStudent' => ['index'],
-            'DepartmentStaff' => ['index'],
             'SubjectStudents' => ['index']
         ]);
     }
@@ -288,8 +287,8 @@ class ConfigItemsTable extends AppTable
         ];
         return $this->controller->redirect($action);
     }
-
-    public function viewBeforeAction() {
+    
+    public function viewBeforeAction() {    
         $session = $this->request->getSession();
         if($session->read('successAlert') === 'yes' && empty($session->read('_alert'))){
             $session->delete('successAlert');
@@ -563,7 +562,7 @@ class ConfigItemsTable extends AppTable
                     return __('Disabled');
                 } else {
                     return __('Enabled');
-                }   //POCOR-6248 end
+                }   //POCOR-6248 end            
             } else if ($entity->type == 'Columns for Staff List Page') { //POCOR-6248 start
                 if ($entity->code == 'staff_identity_number') {
                     if ($entity->{$valueField} != 0) {
@@ -574,7 +573,7 @@ class ConfigItemsTable extends AppTable
                     return __('Disabled');
                 } else {
                     return __('Enabled');
-                }   //POCOR-6248 end
+                }   //POCOR-6248 end            
             } else if ($entity->type == 'Columns for Directory List Page') { //POCOR-6248 start
                 if ($entity->code == 'directory_identity_number') {
                     if ($entity->{$valueField} != 0) {
@@ -585,7 +584,7 @@ class ConfigItemsTable extends AppTable
                     return __('Disabled');
                 } else {
                     return __('Enabled');
-                }   //POCOR-6248 end
+                }   //POCOR-6248 end            
             } else if ($entity->type == 'User Data Completeness') {//POCOR-6022
                 if ($entity->{$valueField} == 0) {
                     return __('Disabled');
@@ -1058,14 +1057,14 @@ class ConfigItemsTable extends AppTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
+      
                 if($entity->code=="edition" && $entity->type=="System"){
                     if (isset($buttons['edit'])) {
                         unset($buttons['edit']);
                     }
                 }
-
+               
         return $buttons;
     }
-    //POCOR-8751 end
+    //POCOR-8751 end 
 }
