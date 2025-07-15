@@ -139,3 +139,5 @@ tags-input{width:30%!important;display:inline-block!important;-webkit-border-rad
 .kdx-charts .chart-container{position:relative;top:unset;left:unset;right:unset;bottom:unset}.kdx-charts .chart-container div{height:auto}
 /* KDX-VISUALIZATION v.1.0.0 */
 .kdx-visualization .kdx-visualization-menu-btn.rounded-circle{border-radius:50%!important}
+.notification-dot::after {content: "•";position: absolute;top: 10px;right: 5px;color: red;font-size: 40px;width: 16px;height: 16px;}
+i.fa.fa-envelope.fa-lg.notification-dot {font-size: 14px;}

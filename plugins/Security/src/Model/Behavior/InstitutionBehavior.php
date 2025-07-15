@@ -71,7 +71,7 @@ class InstitutionBehavior extends Behavior
        		else{
        			return $query
 				->select([
-					  'id' => $Institutions->aliasField('id'),$Institutions->aliasField('name'),$Institutions->aliasField('alternative_name'),$Institutions->aliasField('code'),$Institutions->aliasField('postal_code'), $Institutions->aliasField('contact_person'),$Institutions->aliasField('telephone'),$Institutions->aliasField('fax'),$Institutions->aliasField('email'),$Institutions->aliasField('website'),$Institutions->aliasField('date_opened'),$Institutions->aliasField('date_closed'),$Institutions->aliasField('year_closed'),$Institutions->aliasField('longitude'),$Institutions->aliasField('latitude'),
+					  'id' => $Institutions->aliasField('id'),$Institutions->aliasField('name'),$Institutions->aliasField('alternative_name'),$Institutions->aliasField('code'),$Institutions->aliasField('postal_code'), $Institutions->aliasField('contact_person'),$Institutions->aliasField('telephone'),$Institutions->aliasField('email'),$Institutions->aliasField('website'),$Institutions->aliasField('date_opened'),$Institutions->aliasField('date_closed'),$Institutions->aliasField('year_closed'),$Institutions->aliasField('longitude'),$Institutions->aliasField('latitude'),
 						$Institutions->aliasField('logo_name'),$Institutions->aliasField('logo_content'),$Institutions->aliasField('shift_type'),$Institutions->aliasField('classification'),
 						'area_name' => $Areas->aliasField('name'),
 						$Institutions->aliasField('area_id'),$Institutions->aliasField('area_administrative_id'),$Institutions->aliasField('institution_locality_id'),$Institutions->aliasField('institution_type_id'),

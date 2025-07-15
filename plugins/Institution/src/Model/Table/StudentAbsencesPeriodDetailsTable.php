@@ -264,7 +264,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                                         $InsPostalCode = $institutionData->postal_code;
                                         $InsContactPerson = $institutionData->contact_person;
                                         $InsPhone = $institutionData->telephone;
-                                        $InsFax = $institutionData->fax;
+                                      //  $InsFax = $institutionData->fax;
                                         $InsEmail = $institutionData->email;
                                         $InsWebsite = $institutionData->website;
                                         $threshold = $alertRuleData1->threshold;
@@ -445,13 +445,13 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                                             $alertRuleMessage = str_replace($searchKeyPhone, $InsPhone, $alertRuleMessage);
                                         }
 
-                                        $searchFax = "/{$institutionData->fax}/i";  // Corrected syntax
-                                        $searchKeyFax = '${institution.fax}';  // Corrected variable assignment
+                                        /*$searchFax = "/{$institutionData->fax}/i";  // Corrected syntax
+                                        $searchKeyFax = '${institution.fax}'; */ // Corrected variable assignment
 
                                         // Ensure $searchKey3 is a valid regex pattern
-                                        if (!empty($searchFax)) {
+                                        /*if (!empty($searchFax)) {
                                             $alertRuleMessage = str_replace($searchKeyFax, $InsFax, $alertRuleMessage);
-                                        }
+                                        }*/
 
                                         $searchInsEmail = "/{$institutionData->email}/i";  // Corrected syntax
                                         $searchKeyInsEmail = '${institution.email}';  // Corrected variable assignment

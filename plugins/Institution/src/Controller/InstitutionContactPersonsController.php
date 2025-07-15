@@ -70,7 +70,7 @@ class InstitutionContactPersonsController extends PageController
     {
         parent::index();
         $page = $this->Page;
-        $page->exclude(['mobile_number', 'fax', 'email', 'institution_id']);
+        $page->exclude(['mobile_number', 'email', 'institution_id']);
     }
 
       public function add()
