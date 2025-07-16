@@ -209,6 +209,11 @@ class AuditUsersTable extends AppTable
         return $entity->created_user->name;
     }
 
+    public function onExcelGetModifiedOn(Event $event, Entity $entity)
+    {
+        return $entity->modified_on->format('Y-m-d H:i:s');
+    }
+
     public function onExcelGetUserFirstLastName(Event $event, Entity $entity)
     {
         return $entity->user->name;
