@@ -8292,50 +8292,103 @@ class InstitutionsController extends AppController
     /**
      * Change for hiding/showing external search. POCOR-8231
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *     POCOR-9118 refactored for OpenEMIS Core search
      */
-    public function checkConfigurationForExternalSearch()
+    public function checkConfigurationForExternalSearch(): Response
     {
         $this->request->allowMethod(['post']);
+        $data   = $this->request->getData();
+        $params = $data['params'] ?? [];
 
-        $requestData = $this->request->getData();
-        $requestParams = $requestData['params'] ?? [];
+        $identityTypeId = (int)($params['identity_type_id'] ?? 0);
+        $nationalityId  = (int)($params['nationality_id'] ?? 0);
 
-        $identity_type_id = $requestParams['identity_type_id'] ?? 0;
-        $nationality_id = $requestParams['nationality_id'] ?? 0;
-
-        if (!$identity_type_id || !$nationality_id) {
-            return $this->sendJsonResponse([["value" => 'None', "showExternalSearch" => false]]);
+        if (!$identityTypeId || !$nationalityId) {
+            return $this->sendJsonResponse([
+                ['value' => 'None', 'showExternalSearch' => false]
+            ]);
         }
 
-        $configItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $configItemsResultQuery = $configItems
-            ->find('all')
-            ->select(['id' => $configItems->aliasField('id'),
-                'name' => $configItems->aliasField('name')])
-            ->innerJoin(['Nationalities' => 'nationalities'], [
-                'Nationalities.id = ' . $nationality_id,
-                'Nationalities.identity_type_id = ' . $identity_type_id,
-                'Nationalities.external_validation = ' . $configItems->aliasField('id')
+        $configItemsTable = TableRegistry::getTableLocator()
+            ->get('Configuration.ConfigItems');
+
+        // 1) Fetch non–“OpenEMIS Core” data sources
+        $regularQuery = $configItemsTable->find()
+            ->select([
+                'id'   => $configItemsTable->aliasField('id'),
+                'name' => $configItemsTable->aliasField('name'),
             ])
             ->where([
-                $configItems->aliasField('type = "External Data Source - Identity"'),
-                $configItems->aliasField('value = 1')
+                $configItemsTable->aliasField('type')  => 'External Data Source - Identity',
+                $configItemsTable->aliasField('value') => 1,
+                $configItemsTable->aliasField('name !=') => 'OpenEMIS Core',
             ])
+            ->innerJoin(
+                ['Nationalities' => 'nationalities'],
+                [
+                    'Nationalities.id ='            => $nationalityId,
+                    'Nationalities.identity_type_id =' => $identityTypeId,
+                    'Nationalities.external_validation ='
+                    => $configItemsTable->aliasField('id'),
+                ]
+            )
             ->disableHydration();
 
-        $configItemsResult = $configItemsResultQuery->toArray();
+        $regularResults = $regularQuery->toArray();
 
+        // 2) Check for “OpenEMIS Core” match via ExternalDataSourceAttributes
+        $openEmisCoreItem = $configItemsTable->find()
+            ->select(['name'])
+            ->where([
+                'type'  => 'External Data Source - Identity',
+                'value' => 1,
+                'name'  => 'OpenEMIS Core',
+            ])
+            ->first();
 
-        $resultArray = array_map(function ($result) {
-            return ["value" => $result['name'], "showExternalSearch" => true];
-        }, $configItemsResult);
+        $coreResults = [];
+        if ($openEmisCoreItem) {
+            $edaTable = TableRegistry::getTableLocator()
+                ->get('Configuration.ExternalDataSourceAttributes');
 
+            $match = $edaTable->find()
+                ->select(['value'])
+                ->where([
+                    'external_data_source_type' => 'OpenEMIS Core',
+                    'attribute_field'           => 'identity_type_id',
+                    'value'                     => $identityTypeId,
+                ])
+                ->first();
+
+            if ($match) {
+                $coreResults[] = [
+                    'name' => $openEmisCoreItem->name
+                ];
+            }
+        }
+
+        // 3) Map both sets into the unified result format
+        $results = array_merge($regularResults, $coreResults);
+        $resultArray = [];
+
+        foreach ($results as $row) {
+            $resultArray[] = [
+                'value'              => $row['name'],
+                'showExternalSearch' => true
+            ];
+        }
+
+        // 4) Fallback if nothing matched
         if (empty($resultArray)) {
-            $resultArray[] = ["value" => 'None', "showExternalSearch" => false];
+            $resultArray[] = [
+                'value'              => 'None',
+                'showExternalSearch' => false
+            ];
         }
 
         return $this->sendJsonResponse($resultArray);
     }
+
 
     public
     function checkUserAge()
