@@ -906,6 +906,11 @@ class NavigationComponent extends Component
                     'Institutions.ImportInstitutionPositions'
                 ],
             ],
+            'Institutions.Departments.index' => [ //POCOR-8030
+                'title' => 'Departments',
+                'parent' => 'Institutions.Appointment',
+                'selected' => ['Institutions.Departments'],
+            ],
             'Institutions.StaffDuties.index' => [
                 'title' => 'Duties',
                 'parent' => 'Institutions.Appointment',
@@ -1455,7 +1460,7 @@ class NavigationComponent extends Component
                     'Students.SpecialNeedsDiagnostics'
                 ]
             ],
-            
+
             // POCOR-9059[START]
             // 'Student.Students.StudentVisitRequests.index' => [
             //     'title' => 'Visits',
