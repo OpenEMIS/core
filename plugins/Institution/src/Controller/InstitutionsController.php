@@ -128,8 +128,9 @@ class InstitutionsController extends AppController
         'InstitutionExaminationsUndoRegistration',
         'InstitutionExaminationStudents',
 
-        // positions
+        // appointments
         'InstitutionPositions',
+        'InstitutionDepartments',
 
         // finance
         'InstitutionBankAccounts',
@@ -282,6 +283,18 @@ class InstitutionsController extends AppController
                             'kd-angular-multi-select',
                             'institutionadd.associations.ctrl',
                             'institutionadd.associations.svc'
+                        ]);
+                    }
+                }
+                break;
+            case 'Departments':
+                if (isset($this->request->getParam('pass')[0])) {
+                    if ($this->request->getParam('pass')[0] == 'edit') {
+                        $this->Angular->addModules([
+                            'alert.svc',
+                            'kd-angular-multi-select',
+                            'institution.departments.ctrl',
+                            'institution.departments.svc'
                         ]);
                     }
                 }
@@ -507,6 +520,61 @@ class InstitutionsController extends AppController
     public function Positions()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']);
+    }
+
+    public function Departments($subaction = 'index', $encodedParams = null)
+    {
+        if ($subaction == 'edit') {
+            $params = $this->ControllerAction->paramsDecode($encodedParams);
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+            $departmentId = $params['id'];
+
+            $viewUrl = $this->ControllerAction->url('view');
+            $viewUrl['action'] = 'Departments';
+            $viewUrl['0'] = 'view';
+            $viewUrl['1'] = $encodedParams;
+
+            $institutionParamsEncode = $this->ControllerAction->paramsEncode([
+                'id' => $institutionId,
+                'institution_id' => $institutionId,
+            ]);
+            $indexUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Departments',
+                '0' => 'index',
+                '1' => $institutionParamsEncode
+            ];
+
+            $alertUrl = [
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
+                'action' => 'setAlert',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+
+            $this->set('alertUrl', $alertUrl);
+            $this->set('viewUrl', $viewUrl);
+            $this->set('indexUrl', $indexUrl);
+            $this->set('institutionId', $institutionId);
+
+            // Start POCOR-7466
+            $activeInstitution = $this->Institutions->get($institutionId);
+            $institutionName = $activeInstitution->name;
+            $this->Navigation->addCrumb(__('Departments'),
+                ['plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'Departments',
+                    '0' => 'index',
+                    '1' => $institutionParamsEncode]);
+            $header = __($institutionName);
+            $this->set('contentHeader', $header . ' - ' . __('Departments'));
+            // END POCOR-7466
+
+            $this->render('institution_departments_edit');
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionDepartments']);
+        }
     }
 
     public function StaffDuties()
