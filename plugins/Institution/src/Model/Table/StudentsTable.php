@@ -3577,6 +3577,47 @@ class StudentsTable extends ControllerActionTable
         return $query;
     }
 
+    // POCOR-8131 -- START
+    /**
+     * Get custom field options grouped by field ID
+     *
+     * @return array
+     */
+    private static $customFieldOptionsCache = [];
+
+    private static function getCustomFieldOptionsGrouped()
+    {
+        if (!empty(self::$customFieldOptionsCache)) {
+            return self::$customFieldOptionsCache;
+        }
+
+        try {
+            $Table = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldOptions');
+
+            $options = $Table->find()
+                ->select(['id', 'name', 'student_custom_field_id'])
+                ->where(['visible' => 1]) 
+                ->toArray();
+
+            $groupedOptions = [];
+            foreach ($options as $option) {
+                $fieldId = $option->student_custom_field_id;
+                if (!isset($groupedOptions[$fieldId])) {
+                    $groupedOptions[$fieldId] = [];
+                }
+                $groupedOptions[$fieldId][$option->id] = $option->name;
+            }
+
+            self::$customFieldOptionsCache = $groupedOptions;
+
+            return $groupedOptions;
+
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+    // POCOR-8131 -- END
+
     private function addStudentCustomFields(Query $query)
     {
         $institution_students = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
@@ -3593,7 +3634,8 @@ class StudentsTable extends ControllerActionTable
         $custom_field_values = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues');
         $custom_field_options = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldOptions');
         $custom_fields = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFields');
-        $custom_options = self::getRelatedOptions('StudentCustomField.StudentCustomFieldOptions');
+        //$custom_options = self::getRelatedOptions('StudentCustomField.StudentCustomFieldOptions');
+        $custom_options = self::getCustomFieldOptionsGrouped(); //POCOR-8131
         $customFieldData = $this->customFieldData;
         $custom_values = $custom_field_values->find('all')->select([
             'student_id' => $custom_field_values->aliasField('student_id'),
@@ -3627,15 +3669,15 @@ class StudentsTable extends ControllerActionTable
                         if ($fieldType == 'TEXT') {
                             $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_text_value;
                         }
-                        if ($fieldType == 'CHECKBOX') {
-                            $id = $custom_row->custom_number_value;
-                            $custom_option = $custom_options[$id];
-                            if (empty($row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id])) {
-                                $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_option;
-                            } else {
-                                $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] .= ', ' . $custom_option;
-                            }
-                        }
+                        // if ($fieldType == 'CHECKBOX') {
+                        //     $id = $custom_row->custom_number_value;
+                        //     $custom_option = $custom_options[$id];
+                        //     if (empty($row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id])) {
+                        //         $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_option;
+                        //     } else {
+                        //         $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] .= ', ' . $custom_option;
+                        //     }
+                        // }
                         if ($fieldType == 'NUMBER') {
                             $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_number_value;
                         }
@@ -3645,11 +3687,30 @@ class StudentsTable extends ControllerActionTable
                         if ($fieldType == 'TEXTAREA') {
                             $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_textarea_value;
                         }
+                        // if ($fieldType == 'DROPDOWN') {
+                        //     $id = $custom_row->custom_number_value;
+                        //     $custom_option = $custom_options[$id];
+                        //     $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_option;
+                        // }
+
+                        //POCOR-8131 -- END
                         if ($fieldType == 'DROPDOWN') {
                             $id = $custom_row->custom_number_value;
-                            $custom_option = $custom_options[$id];
+                            $custom_option = $custom_options[$custom_row->custom_field_id][$id] ?? null;
                             $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_option;
                         }
+
+                        if ($fieldType == 'CHECKBOX') {
+                            $id = $custom_row->custom_number_value;
+                            $custom_option = $custom_options[$custom_row->custom_field_id][$id] ?? null;
+                            if (empty($row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id])) {
+                                $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_option;
+                            } else {
+                                $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] .= ', ' . $custom_option;
+                            }
+                        }
+                        //POCOR-8131 -- END
+
                         if ($fieldType == 'DATE') {
                             $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = date('Y-m-d', strtotime($custom_row->custom_date_value));
                         }
