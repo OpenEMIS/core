@@ -146,7 +146,7 @@ class MessagingTable extends ControllerActionTable
             // Parse methods
 
             [$role_ids, $recipient_ids] = $this->getRoleRecipientList($entity);
-
+            dd([$role_ids, $recipient_ids]);
             // 1. Handle MessagingSecurityRoles sync
             $this->syncMessagingSecurityRoles($entity->id, $role_ids ?? []);
 
@@ -191,8 +191,10 @@ class MessagingTable extends ControllerActionTable
                     Log::warning("Unknown messaging method: $method");
             }
         }
+        $ids = array_unique($ids);
+        sort($ids);
 
-        return array_unique($ids);
+        return $ids;
     }
 
     private function getEmailRecipientIds(array $recipients, array $roles): array
@@ -319,7 +321,7 @@ class MessagingTable extends ControllerActionTable
             ->disableHydration()
             ->toArray();
         $recipient_ids = array_unique(array_column($recipients, 'recipient_id'));;
-
+        sort($recipient_ids);
         foreach ($methods as $method) {
             switch (strtolower($method)) {
                 case 'email':
@@ -782,10 +784,12 @@ class MessagingTable extends ControllerActionTable
         $distinctResultsValues = array_column($distinctResults, 'security_role_id');
 
         if (sizeof($distinctResultsValues) > 0) {
+            $distinctResultsValues[] =  self::GUARDIAN_ROLE;
             $uniqu_array = array_unique($distinctResultsValues);
         } else {
             $uniqu_array = [0];
         };
+        sort($uniqu_array);
         return $uniqu_array;
     }
 
@@ -1016,6 +1020,7 @@ class MessagingTable extends ControllerActionTable
             } else {
                 // staff
                 $rows = $this->getStaffRecipients($entity, $roleId);
+
             }
             // flatten
             $allRecipients = array_merge($allRecipients, $rows);
@@ -1023,11 +1028,12 @@ class MessagingTable extends ControllerActionTable
 
 
         $student_ids = array_column($allRecipients, 'student_id');
-        $staff_ids = array_column($allRecipients, 'staff_id');
+        $security_user_ids = array_column($allRecipients, 'security_user_id');
         $guardian_ids = array_column($allRecipients, 'guardian_id');
 
-        $recipient_ids = array_unique(array_merge($student_ids, $staff_ids, $guardian_ids));
+        $recipient_ids = array_unique(array_merge($student_ids, $security_user_ids, $guardian_ids));
         // otherwise assume staff
+        sort($recipient_ids);
         return [$role_ids, $recipient_ids];
     }
     /**
@@ -1094,21 +1100,41 @@ class MessagingTable extends ControllerActionTable
 
     protected function getStaffRecipients($entity, $roleId)
     {
-        return [];
-//        switch ((int)$entity->recipient_level_id) {
-//            case self::INSTITUTION:
-//                return $this->recipientsByInstitutionStaff($entity, $roleId);
-//            case self::PROGRAMME:
-//            case self::GRADE:
-//                // aggregate all classes & subjects in that programme/grade
-//                return $this->recipientsByProgrammeOrGradeStaff($entity, $roleId);
-//            case self::GRADE_CLASS:
-//                return $this->recipientsByClassStaff($entity, $roleId);
-//            case self::SUBJECT:
-//                return $this->recipientsBySubjectStaff($entity, $roleId);
-//            default:
-//                return [];
-//        }
+        switch ((int)$entity->recipient_level_id) {
+            case self::INSTITUTION:
+                return $this->recipientsByInstitutionStaff($entity, $roleId);
+            case self::PROGRAMME:
+            case self::GRADE:
+                // aggregate all classes & subjects in that programme/grade
+                return $this->recipientsByProgrammeOrGradeStaff($entity, $roleId);
+            case self::GRADE_CLASS:
+                return $this->recipientsByClassStaff($entity, $roleId);
+            case self::SUBJECT:
+                return $this->recipientsBySubjectStaff($entity, $roleId);
+            default:
+                return [];
+        }
+    }
+
+    protected function recipientsByInstitutionStaff($e, $role_id)
+    {
+        $SGU = self::getDynamicTableInstance('security_group_users');
+        $result = $SGU->find('all')
+            ->select([
+                'security_user_id'    => $SGU->aliasField('security_user_id'),
+            ])
+            // ensure they belong to our institution
+            ->innerJoin(
+                ['SGI'=>'security_group_institutions'],
+                ['SGI.security_group_id = ' . $SGU->aliasField('security_group_id')]
+            )
+            ->where([
+                $SGU->aliasField('security_role_id') => $role_id,
+                'SGI.institution_id' => $e->institution_id,
+                ])
+            ->group([$SGU->aliasField('security_user_id')])
+            ->toArray();
+        return $result;
     }
 
     private function buildStudentGuardianRecipientWhere($entity): array
