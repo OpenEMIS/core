@@ -1,3 +1,11 @@
+### [4.33.0] - 2025-07-17
+- Implemented: Develop changes to the openemis_temps table to rename the table
+- Implemeted: Develop departments feature v5 APIs
+- Bug Fixed: Administration>System Setup > Configurations>External Data Source>OpenEMIS Core: Add a new field
+- Bug Fixed: Institutions > General > Profiles > Students > Download PDF : Report is misaligned when generating in PDF format.
+- Bug Fixed: Administration > System Setup > System Configurations > Authentication: There is an extra drop down feature at the top
+- Bug Fixed: Institutions>Students>Export: Custom field values are not showing for this dropdown
+
 ### [4.32.0] - 2025-07-10
 - Implemented: Develop migration script to add table descriptions 
 - Implemented: Develop a function to send a custom alert when enrolment status changes
