@@ -688,8 +688,28 @@ class CustomFormsTable extends ControllerActionTable
     private function setupFields(Entity $entity)
     {
         $selectedModule = $this->request->getQuery('module');
-        if(empty($selectedModule)){
-            $selectedModule = $this->request->getData()['LandCustomForms']['custom_module_id'];
+        $plugin_name = $this->request->getAttribute('params')['plugin'];
+        if($plugin_name == 'StudentCustomField'){
+            if(empty($selectedModule)){
+                $selectedModule = $this->request->getData()['StudentCustomForms']['custom_module_id'];
+            }
+        }
+        if($plugin_name == 'Infrastructure'){
+            if(empty($selectedModule)){
+                $selectedModule = $this->request->getData()['LandCustomForms']['custom_module_id'];
+            }
+        }
+
+        if($plugin_name == 'StaffCustomField'){
+            if(empty($selectedModule)){
+                $selectedModule = $this->request->getData()['StaffCustomForms']['custom_module_id'];
+            }
+        }
+
+        if($plugin_name == 'InstitutionCustomField'){
+            if(empty($selectedModule)){
+                $selectedModule = $this->request->getData()['InstitutionCustomForms']['custom_module_id'];
+            }
         }
         $customModule = $this->CustomModules->get($selectedModule);
 
