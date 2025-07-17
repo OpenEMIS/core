@@ -21,6 +21,8 @@ use Cake\Core\Configure;
 use Cake\Utility\Security;
 use Cake\Mailer\Email;
 use Cake\Http\Session;
+use Cake\Utility\Inflector;
+
 /**
  * POCOR-7458 (to develop messaging functionality)
  * <author>megha.gupta@mail.valuecoders.com</author>
@@ -43,6 +45,7 @@ class MessagingTable extends ControllerActionTable
     {
         $this->setTable('messaging');
         parent::initialize($config);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->hasMany('MessagingSecurityRoles', ['className' => 'Institution.MessagingSecurityRoles','foreignKey'=>"message_id"]);
         $this->hasMany('MessageRecipients', ['className' => 'Institution.MessageRecipients', 'foreignKey' => "message_id"]);
@@ -137,7 +140,7 @@ class MessagingTable extends ControllerActionTable
             $methods = array_map('trim', explode(',', $entity->method ?? ''));
             $roles = $this->getSecurityRolesFromEntity($entity);
             $recipients = $this->getRecipientList($entity);
-
+            Log::debug(print_r($recipients,true));
             // 1. Handle MessagingSecurityRoles sync
             $this->syncMessagingSecurityRoles($entity->id, $entity->security_role_id['_ids'] ?? []);
 
@@ -574,9 +577,7 @@ class MessagingTable extends ControllerActionTable
     }
     public function onGetRecipientGroupId(Event $event, Entity $entity)
     {
-        $institution_id = $this->getInstitutionID();
-        $academicPeriodId = $entity->academic_period_id;
-        $option=$this->getRecipientGroupOptions($entity->recipient_level_id);
+        $option=$this->getRecipientGroupOptions($entity->recipient_level_id, $entity->institution_id);
         $result= $option[$entity->recipient_group_id];
         return $result;
     }
@@ -681,19 +682,35 @@ class MessagingTable extends ControllerActionTable
         if (
             $action == 'add' || $action == 'edit'
         ) {
-            $recipient_level_id =$request->getData()['Messaging']['recipient_level_id'];
-            if($action == "edit"){
-                if(!empty($request->getAttribute('params')['pass'][1])){
-                    $entity = $this->get($this->paramsDecode($request->getAttribute('params')['pass'][1])['id']);
-                }else{
-                    $entity = $this->get($this->paramsDecode($this->request->getAttribute('params')['?']['queryString'])['id']);
-                }
+
+            $alias = $this->getAlias();
+            $data = $request->getData($alias);
+            $entity = $attr['entity'] ?? [];
+            if(empty($entity)){
+            if (isset($data['recipient_level_id'])) {
+                $recipient_level_id = $data['recipient_level_id'];
+            }
+            if (isset($data['institution_id'])) {
+                $institution_id = $data['institution_id'];
+            }
+            }else{
+                $institution_id = $entity->institution_id;
                 $recipient_level_id = $entity->recipient_level_id;
             }
-            $attr['type'] = 'select';
-            $attr['select'] = true;
-            $data = $this->getRecipientGroupOptions($recipient_level_id);
-            $attr['options']=$data;
+            if(!$institution_id){
+                $institution_id = $this->getInstitutionID();
+            }
+//            if(!empty($recipient_level_id)){
+//                $recipient_level_id = intval($recipient_level_id);
+//            }
+//            dd([$institution_id => $recipient_level_id]);
+
+            if ($recipient_level_id && $institution_id) {
+                $attr['type'] = 'select';
+                $attr['select'] = true;
+                $data = $this->getRecipientGroupOptions($recipient_level_id, $institution_id);
+                $attr['options'] = $data;
+            }
         }
 
         return $attr;
@@ -702,17 +719,108 @@ class MessagingTable extends ControllerActionTable
     {
 
         $entity = $attr['entity'];
+        $institution_id = $this->getInstitutionID();
+        if(empty($institution_id)){
+            return [];
+        }
+        $securityRoleIds = self::getInstitutionSecurityRoleIds($institution_id);
+        if(empty($securityRoleIds)){
+            return [];
+        }
+
         $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
         $options = $SecurityRoles->find('list', [
             'keyField' => 'id',
             'valueField' => 'name',
-        ])->toArray();
+        ])->where([$SecurityRoles->aliasField('id IN') => $securityRoleIds])
+            ->toArray();
         $attr['type'] = 'chosenSelect';
         $attr['attr']['multiple'] = true;
         $attr['options'] = $options;
         $attr['attr']['required'] = true;
         return $attr;
     }
+
+    /**
+     * @param $institution_id
+     * @return array
+     */
+    private static function getInstitutionSecurityRoleIds($institution_id)
+    {
+        $securityGroupInstitutions = self::getDynamicTableInstance('security_group_institutions');
+        $distinctResults = $securityGroupInstitutions
+            ->find('all')
+            ->innerJoin(['SecurityGroupUsers' => 'security_group_users'], [
+                [
+                    'SecurityGroupUsers.security_group_id = ' . $securityGroupInstitutions->aliasField('security_group_id'),
+                ]
+            ])
+            ->select(['security_role_id' => 'SecurityGroupUsers.security_role_id'])
+            ->distinct(['SecurityGroupUsers.security_role_id'])
+            ->where(['institution_id' => $institution_id])
+            ->disableHydration()
+            ->toArray();
+
+        $distinctResultsValues = array_column($distinctResults, 'security_role_id');
+
+        if (sizeof($distinctResultsValues) > 0) {
+            $uniqu_array = array_unique($distinctResultsValues);
+        } else {
+            $uniqu_array = [0];
+        };
+        return $uniqu_array;
+    }
+
+    /**
+     * POCOR-9162 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
+
     public function onUpdateFieldMessage(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['type'] = 'text';
@@ -729,17 +837,24 @@ class MessagingTable extends ControllerActionTable
         }
         return $attr;
     }
-    public function getRecipientGroupOptions($recipient_level_id){
+    public function getRecipientGroupOptions($recipient_level_id, $institution_id){
 
-        $institution_id=$this->getInstitutionID();
         $academicPeriodId =TableRegistry::get('AcademicPeriod.AcademicPeriods')->getCurrent();
-
+        $institutions = $this->Institutions;
+        if ($institution_id) {
+            try {
+                $institution = $institutions->get($institution_id);
+            } catch (\Exception $exception) {
+                Log::debug($exception->getMessage());
+            }
+            $institution_name = $institution->name;
+        }
         $option=[];
         switch ($recipient_level_id) {
             case self::INSTITUTION:
             case "Institution":
-                $option[$institution_id]= $this->Session->read('Institution.Institutions.name');
-                 break;
+                $option[$institution_id] = $institution_name;
+                break;
             case self::PROGRAMME:
             case "Programme":
                 $result= $this->getSelectOptions($institution_id, $academicPeriodId);
