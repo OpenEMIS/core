@@ -12,12 +12,13 @@ use Illuminate\Support\Carbon;
 class CrudApiController extends Controller
 {
     protected $allowedResources = [
+        'department-staff' => \App\Models\Api5\DepartmentStaff::class, // POCOR_8030
+        'institution-departments' => \App\Models\Api5\InstitutionDepartments::class, // POCOR_8030
         'institution-infrastructure-attachments' => \App\Models\InstitutionInfrastructureAttachments::class,
         'infrastructure-attachment-types' => \App\Models\InfrastructureAttachmentTypes::class,
         'staff-leave-entitlements' => \App\Models\Api5\StaffLeaveEntitlements::class,
         'staff-leave-policies' => \App\Models\Api5\StaffLeavePolicies::class,
         'staff-leave-policy-types' => \App\Models\Api5\StaffLeavePolicyTypes::class,
-        'alerts-logs' => \App\Models\Api5\AlertsLogs::class,
         'workflows-filters' => \App\Models\Api5\WorkflowsFilters::class,
         'workflows' => \App\Models\Api5\Workflows::class,
         'workflow-transitions' => \App\Models\Api5\WorkflowTransitions::class,
@@ -728,7 +729,7 @@ class CrudApiController extends Controller
             Log::info("User not authorized for {$model}:{$action}"); // POCOR-9085
             return response()->json(['error' => 'Forbidden'], 403);
         }
-        // POCOR-8966 start
+        // POCOR-8966 end
 
 //        Log::info("User authorized for {$model}:{$action}");
 
