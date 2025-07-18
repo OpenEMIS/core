@@ -146,7 +146,7 @@ class MessagingTable extends ControllerActionTable
             // Parse methods
 
             [$role_ids, $recipient_ids] = $this->getRoleRecipientList($entity);
-            dd([$role_ids, $recipient_ids]);
+
             // 1. Handle MessagingSecurityRoles sync
             $this->syncMessagingSecurityRoles($entity->id, $role_ids ?? []);
 
@@ -300,28 +300,30 @@ class MessagingTable extends ControllerActionTable
 
         $result = $this->save($entity);
 
-        dd($result); // this should update the recipient list as well
+//        dd($result); // this should update the recipient list as well
         $no_result = false;
-
+        if($entity->hasErrors()){
+            $no_result = true;
+        }
         if ($no_result) {
             $errors = $entity->getErrors(); // This includes any validation failures on save
             $this->log('Save failed. Errors: ' . print_r($errors, true), 'error');
-
             $this->Alert->error(__('Failed to send: Validation or Save Error.'), ['type' => 'string', 'reset' => true]);
-
-            return;
+            $event->stopPropagation();
+            return false;
         }
 
         $methods = array_map('trim', explode(',', $entity->method));
         $MessageRecipients = self::getDynamicTableInstance('message_recipients');
         $recipients = $MessageRecipients
             ->find('all')
-            ->where([$MessageRecipients->aliasField('id') => $entity->id])
+            ->where([$MessageRecipients->aliasField('message_id') => $entity->id])
             ->select(['recipient_id' => $MessageRecipients->aliasField('recipient_id')])
             ->disableHydration()
             ->toArray();
         $recipient_ids = array_unique(array_column($recipients, 'recipient_id'));;
         sort($recipient_ids);
+
         foreach ($methods as $method) {
             switch (strtolower($method)) {
                 case 'email':
@@ -433,7 +435,6 @@ class MessagingTable extends ControllerActionTable
     private function logAlerts(string $type, array $recipients, EntityInterface $entity): void
     {
         $logs = self::getDynamicTableInstance('Alert.AlertLogs');
-
         foreach ($recipients as $to) {
             $logs->insertAlertLog(
                 $type,
