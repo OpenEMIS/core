@@ -15,6 +15,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Utility\Security;
 use Cake\Http\ServerRequest;
 use Cake\I18n\Date;
+use Cake\I18n\FrozenTime;
 
 class InstitutionExaminationStudentsTable extends ControllerActionTable
 {
@@ -404,11 +405,81 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             $helpBtn['attr']['title'] = __('Help');
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
-        // End POCOR-5188
+        //POCOR-7509 start
+
+        $syncUserConfigured = TableRegistry::getTableLocator()->get('Configuration.ConfigExternalDataSourceExam')->getOpenemisExamConfiguration();
+
+        if ($syncUserConfigured) {
+            $examinationId = $this->request->getQuery('examination_id');
+            if (($this->AccessControl->check(['Examinations', 'syncStudentsToExam', 'execute']) || $this->AccessControl->isAdmin())
+                && !empty($examinationId) && $examinationId != -1
+            ) {
+
+                $syncParams = [
+                    'examination_id' => $examinationId,
+                    'academic_period_id' => $this->request->getQuery('academic_period_id'),
+                    'institution_id' => $this->getInstitutionID(),
+                    'referrer' => $this->request->getRequestTarget()
+                ];
+                $encodedParams = $this->ControllerAction->paramsEncode($syncParams);
+
+                $syncUrl = [
+                    'plugin' => 'Examination',
+                    'controller' => 'Examinations',
+                    'action' => 'syncStudentsToExam',
+                    '?' => ['queryString' => $encodedParams]
+                ];
+
+                $syncButton =  [
+                    'url' => $syncUrl,
+                    'type' => 'button',
+                    'label' => '<i class="kd-process"></i>',
+                    'attr' => [
+                        'class' => 'btn btn-xs btn-default icon-big',
+                        'data-toggle' => 'tooltip',
+                        'data-placement' => 'bottom',
+                        'escape' => false,
+                        'title' => __('Sync')
+                    ]
+                ];
+
+
+                $extra['toolbarButtons']['sync'] = $syncButton;
+            }
+        }
+        //POCOR-7509 end
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+
+        $query->select([
+            'InstitutionExaminationStudents.id',
+            'InstitutionExaminationStudents.student_id',
+            'InstitutionExaminationStudents.academic_period_id',
+            'InstitutionExaminationStudents.examination_id',
+            'InstitutionExaminationStudents.registration_number',
+            'InstitutionExaminationStudents.examination_centre_id',
+            'InstitutionExaminationStudents.sync_status',
+            'InstitutionExaminationStudents.last_synced',
+
+            'Users.openemis_no',
+            'Users.first_name',
+            'Users.middle_name',
+            'Users.third_name',
+            'Users.last_name',
+            'Users.preferred_name',
+            'Users.date_of_birth',
+            'Users.identity_number',
+
+            'MainIdentityTypes.name',
+            'Genders.name',
+            'MainNationalities.name',
+
+            'Institutions.code',
+            'Institutions.name'
+        ]);
+
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
@@ -924,4 +995,109 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         }
     }
     //POCOR-9169 end
+    //POCOR-7509 start
+    /**
+     * Update action buttons for the entity
+     *
+     * @param \Cake\Event\Event $event The event instance.
+     * @param \Cake\ORM\Entity $entity The entity object.
+     * @param array $buttons The array of existing buttons.
+     * @return array Modified buttons array.
+     */
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $referrerUrl = $this->request->referer();
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+
+        $syncUserConfigured = TableRegistry::getTableLocator()->get('Configuration.ConfigExternalDataSourceExam')->getOpenemisExamConfiguration();
+        if ($this->AccessControl->check(['Examinations', 'syncStudentsToExam', 'execute']) && !empty($syncUserConfigured)) {
+
+
+            $params = [
+                'institution_id' => $entity->institution->id,
+                'academic_period_id' => $entity->academic_period_id,
+                'examination_id' => $entity->examination_id,
+                'examination_centre_id' => $entity->examination_centre_id,
+                'openemis_no' => $entity->openemis_no,
+                'institution_id' => $entity->institution_id,
+                'referrer' => $referrerUrl,
+            ];
+
+
+            $url = [
+                'plugin' => 'Examination',
+                'controller' => 'Examinations',
+                'action' => 'syncStudentsToExam',
+            ];
+
+
+            $buttons['sync'] = [
+                'label' => '<i class="kd-process"></i>' . __('Sync'),
+                'attr' => ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false],
+                'url' => $this->setQueryString($url, $params),
+            ];
+        }
+
+        return $buttons;
+    }
+
+    /**
+     * Get sync status for the entity
+     *
+     * @param \Cake\Event\Event $event The event instance.
+     * @param \Cake\ORM\Entity $entity The entity object.
+     * @return string|null The sync status value.
+     */
+    public function onGetSyncStatus(Event $event, Entity $entity)
+    {
+
+        switch ($entity->sync_status) {
+            case 1:
+                return 'Completed';
+            case -1:
+                return 'Error';
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * Get last synced timestamp formatted
+     *
+     * @param \Cake\Event\Event $event The event instance.
+     * @param \Cake\ORM\Entity $entity The entity object.
+     * @return string|null The formatted last synced date.
+     */
+    public function onGetLastSynced(Event $event, Entity $entity)
+    {
+        if ($entity->last_synced instanceof FrozenTime || $entity->last_synced instanceof \DateTime) {
+            return $entity->last_synced->format('Y-m-d H:i:s');
+        }
+        return null;
+    }
+
+    /**
+     * Modify visible fields after the index action
+     *
+     * @param \Cake\Event\Event $event The event instance.
+     * @param mixed $data The data (not used here).
+     */
+    public function indexAfterAction(Event $event, $data)
+    {
+
+        $this->field('date_of_birth', ['visible' => false]);
+        $this->field('gender_id', ['visible' => false]);
+        $this->field('identity_type', ['visible' => false]);
+        $this->field('nationality', ['visible' => false]);
+        $this->field('identity_number', ['visible' => false]);
+        $this->field('repeated', ['visible' => false]);
+        $this->field('transferred', ['visible' => false]);
+
+
+        $this->field('sync_status', ['visible' => true, 'label' => 'Sync Status']);
+        $this->field('last_synced', ['visible' => true, 'label' => 'Last Synced']);
+    }
+
+    //POCOR-7509 end
 }
