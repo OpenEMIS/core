@@ -308,7 +308,8 @@ return [
             //     exit();
             //   }
             // $query = '';
-            $sqlScript = file(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            // $sqlScript = file(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            $sqlScript = file(ROOT . DS . 'download' . DS .$fileName.'.sql');
             
             
            
@@ -366,6 +367,11 @@ return [
                     // Change the delimiter
                     $delimiter = str_replace('DELIMITER ', '', $trimmedLine);
                     continue; // Skip the DELIMITER line itself
+                }
+
+                // Skip lines that are just the current delimiter
+                if ($trimmedLine === $delimiter) {
+                    continue;
                 }
 
                 // Append the current line to the query
