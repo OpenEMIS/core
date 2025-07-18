@@ -218,6 +218,7 @@ class ReportsController extends AppController
                 'Report.EnrollmentOutliers' => __('Enrollment Outliers'),//POCOR-7211
                 'Report.AgeOutliers' => __('Age Outliers'),//POCOR-7211
                 'Report.ValidationReport' => __('Validation Report'),//POCOR-8144
+                'Report.StaffWithMissingQualificationReport' => __('Staff with Missing Qualification Report'),//POCOR-9262
             ];
         } elseif ($module == 'Audits') {
             $options = [
