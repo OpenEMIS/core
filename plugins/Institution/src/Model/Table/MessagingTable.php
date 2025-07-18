@@ -1116,6 +1116,31 @@ class MessagingTable extends ControllerActionTable
         }
     }
 
+    protected function recipientsBySubjectStaff($e, $role_id)
+    {
+        $Subjects = self::getDynamicTableInstance('Institution.InstitutionSubjects');
+        $parts = explode('-', $e->recipient_group_id);
+        if (count($parts) === 2) {
+            $subject_id = $parts[1];
+        } else {
+            return [];
+        }
+        $SubjectStaff = self::getDynamicTableInstance('Institution.InstitutionSubjectStaff');
+        $staffQuery = $SubjectStaff->find('all')
+            ->select(['security_user_id' => $SubjectStaff->aliasField('staff_id')])
+            ->innerJoin([$Subjects->getAlias() => $Subjects->getTable()],
+                [$SubjectStaff->aliasField('institution_subject_id') . ' = ' . $Subjects->aliasField('id')])
+            ->innerJoin(['SGI' => 'security_group_institutions'],
+                ['SGI.institution_id = ' . $Subjects->aliasField('institution_id')])
+            ->innerJoin(['SGU' => 'security_group_users'],
+                ['SGI.security_group_id = SGU.security_group_id',
+                    'SGU.security_user_id = ' . $SubjectStaff->aliasField('staff_id')])
+            ->where([$SubjectStaff->aliasField('institution_subject_id = ') . $subject_id,
+                'SGU.security_role_id = ' . $role_id]);
+
+        $staff = $staffQuery->toArray();
+        return $staff;
+    }
     protected function recipientsByClassStaff($e, $role_id)
     {
         // primary teacher
@@ -1173,19 +1198,19 @@ class MessagingTable extends ControllerActionTable
         $where = [];
 
         switch ((int) $entity->recipient_level_id) {
-            case 2:
+            case self::PROGRAMME:
                 $where['EducationGrades.education_programme_id'] = $entity->recipient_group_id;
                 break;
 
-            case 3:
+            case self::GRADE:
                 $where['InstitutionStudents.education_grade_id'] = $entity->recipient_group_id;
                 break;
 
-            case 4:
+            case self::GRADE_CLASS:
                 $where['InstitutionSubjectStudents.institution_class_id'] = $entity->recipient_group_id;
                 break;
 
-            case 5:
+            case self::SUBJECT:
                 $parts = explode('-', $entity->recipient_group_id);
                 if (count($parts) === 2) {
                     $where['InstitutionSubjectStudents.institution_class_id'] = $parts[0];
