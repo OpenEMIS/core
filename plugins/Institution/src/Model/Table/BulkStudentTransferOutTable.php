@@ -392,50 +392,55 @@ class BulkStudentTransferOutTable extends ControllerActionTable
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
         $getQueryString = $this->getQueryString(); //POCOR-8624
+
         $process = function ($model, $entity) use ($event, $data) {
-            // Removal of some fields that are not in use in the table validation
             $data = $data->getArrayCopy();
             $errors = $entity->getErrors();
-            if (empty($errors)) {
-                $dataArray = $data->getArrayCopy();
-                if (array_key_exists($this->getAlias(), $dataArray)) {
-                    $selectedStudent = false;
-                    if (array_key_exists('students', $data[$this->getAlias()])) {
-                        foreach ($data[$this->getAlias()]['students'] as $key => $value) {
-                            if ($value['selected'] != 0) {
-                                $selectedStudent = true;
-                                break;
-                            }
-                        }
-                    }
-                    $encodedQueryParams = $this->request->getParam('pass')[1];
-                    if ($selectedStudent) {
-                        // redirects to confirmation page
-                        $url = [
-                            'plugin' => 'Institution',
-                            'controller' => 'Institutions',
-                            'action' => 'BulkStudentTransferOut',
-                                0 => 'reconfirm',
-                                1 => $encodedQueryParams //POCOR-8624
-                        ];
-                        $this->currentEntity = $entity;
-                        $session = $this->Session;
-                        $session->write($this->getRegistryAlias().'.confirm', $entity);
-                        $session->write($this->getRegistryAlias().'.confirmData', $data);
-                        $this->currentEvent = $event;
-                        $event->stopPropagation();
-                        return $this->controller->redirect($url);
-                    } else {
-                        $this->Alert->warning($this->getAlias().'.noStudentSelected', ['reset' => true]);
-                        return false;
+
+            if (!empty($errors)) {
+                return false;
+            }
+            //POCOR-7969  Start
+            $alias = $this->getAlias();
+
+            $selectedStudent = false;
+
+            if (!empty($data[$alias]['students']) && is_array($data[$alias]['students'])) {
+                foreach ($data[$alias]['students'] as $student) {
+                    if (!empty($student['selected'])) {
+                        $selectedStudent = true;
+                        break;
                     }
                 }
+            }
+            //POCOR-7969  END
+            $encodedQueryParams = $this->request->getParam('pass')[1];
+
+            if ($selectedStudent) {
+                $url = [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'BulkStudentTransferOut',
+                    0 => 'reconfirm',
+                    1 => $encodedQueryParams //POCOR-8624
+                ];
+
+                $this->currentEntity = $entity;
+                $session = $this->Session;
+                $session->write($this->getRegistryAlias() . '.confirm', $entity);
+                $session->write($this->getRegistryAlias() . '.confirmData', $data);
+                $this->currentEvent = $event;
+                $event->stopPropagation();
+                return $this->controller->redirect($url);
             } else {
+                $this->Alert->warning($alias . '.noStudentSelected', ['reset' => true]);
                 return false;
             }
         };
+
         return $process;
     }
+
     public function saveBulkStudentTransferOut(Entity $entity, ArrayObject $data)
     {
         $getQueryString = $this->getQueryString(); //POCOR-8624
