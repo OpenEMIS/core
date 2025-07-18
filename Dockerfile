@@ -61,7 +61,7 @@ RUN apt install -y git && composer update && composer dump-autoload
 
 # This clears the config, cache, view, route and generate the jwt and key for application and then caches the config
 RUN cp .env.example .env && \
-    sed -i "s|DB_HOST=.*|DB_HOST=db|g" ./.env &&\
+    sed -i "s|DB_HOST=.*|DB_HOST=openemis-core-database|g" ./.env &&\
     sed -i "s|DB_USERNAME=.*|DB_USERNAME=root|g" ./.env &&\
     sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=root|g" ./.env &&\
     php artisan config:clear && \
