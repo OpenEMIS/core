@@ -1103,10 +1103,10 @@ class MessagingTable extends ControllerActionTable
         switch ((int)$entity->recipient_level_id) {
             case self::INSTITUTION:
                 return $this->recipientsByInstitutionStaff($entity, $roleId);
-            case self::PROGRAMME:
-            case self::GRADE:
-                // aggregate all classes & subjects in that programme/grade
-                return $this->recipientsByProgrammeOrGradeStaff($entity, $roleId);
+//            case self::PROGRAMME: // Only students or guardians
+//            case self::GRADE:
+//                // aggregate all classes & subjects in that programme/grade
+//                return $this->recipientsByProgrammeOrGradeStaff($entity, $roleId);
             case self::GRADE_CLASS:
                 return $this->recipientsByClassStaff($entity, $roleId);
             case self::SUBJECT:
@@ -1114,6 +1114,37 @@ class MessagingTable extends ControllerActionTable
             default:
                 return [];
         }
+    }
+
+    protected function recipientsByClassStaff($e, $role_id)
+    {
+        // primary teacher
+        $Classes = self::getDynamicTableInstance('Institution.InstitutionClasses');
+        $primary = $Classes->find('all')
+            ->select(['security_user_id' => $Classes->aliasField('staff_id')])
+            ->innerJoin(['SGI' => 'security_group_institutions'],
+                ['SGI.institution_id = ' . $Classes->aliasField('institution_id')])
+            ->innerJoin(['SGU' => 'security_group_users'],
+                ['SGI.security_group_id = SGU.security_group_id',
+                    'SGU.security_user_id = ' . $Classes->aliasField('staff_id')])
+            ->where([$Classes->aliasField('id = ') . $e->recipient_group_id,
+                'SGU.security_role_id = ' . $role_id]);
+
+        // secondary teachers
+        $Secondary = self::getDynamicTableInstance('institution_classes_secondary_staff');
+        $secondary = $Secondary->find('all')
+            ->select(['security_user_id' => $Secondary->aliasField('secondary_staff_id')])
+            ->innerJoin([$Classes->getAlias() => $Classes->getTable()],
+                [$Secondary->aliasField('institution_class_id') . ' = ' . $Classes->aliasField('id')])
+            ->innerJoin(['SGI' => 'security_group_institutions'],
+                ['SGI.institution_id = ' . $Classes->aliasField('institution_id')])
+            ->innerJoin(['SGU' => 'security_group_users'],
+                ['SGI.security_group_id = SGU.security_group_id',
+                    'SGU.security_user_id = ' . $Secondary->aliasField('secondary_staff_id')])
+            ->where([$Secondary->aliasField('institution_class_id') => $e->recipient_group_id,
+                'SGU.security_role_id' => $role_id]);
+        return $primary->union($secondary)
+            ->toArray();
     }
 
     protected function recipientsByInstitutionStaff($e, $role_id)
