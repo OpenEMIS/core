@@ -15,14 +15,8 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
 use App\Model\Traits\MessagesTrait;
-use Cake\Core\Exception\Exception;
-use Cake\Auth\DefaultPasswordHasher;
-use Cake\Core\Configure;
-use Cake\Utility\Security;
-use Cake\Mailer\Email;
-use Cake\Http\Session;
-use Cake\Utility\Inflector;
-use Cake\Datasource\EntityInterface;
+use Cake\Utility\Inflector; // POCOR-9274
+use Cake\Datasource\EntityInterface; // POCOR-9274
 
 /**
  * POCOR-7458 (to develop messaging functionality)
@@ -31,17 +25,17 @@ use Cake\Datasource\EntityInterface;
 class MessagingTable extends ControllerActionTable
 {
     use MessagesTrait;
+
     //recipient levels (hard coded)
     const INSTITUTION = 1;
     const PROGRAMME = 2;
-    const GRADE=3;
+    const GRADE = 3;
     const GRADE_CLASS = 4;
+    const SUBJECT = 5;
 
-    const SUBJECT=5;
+    const STUDENT_ROLE = 8; // POCOR-9274
 
-    const STUDENT_ROLE=8;
-
-    const GUARDIAN_ROLE=9;
+    const GUARDIAN_ROLE = 9; // POCOR-9274
 
     //status
     const DRAFT = 0;
@@ -52,7 +46,7 @@ class MessagingTable extends ControllerActionTable
     {
         $this->setTable('messaging');
         parent::initialize($config);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']); // POCOR-9274
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->hasMany('MessagingSecurityRoles', ['className' => 'Institution.MessagingSecurityRoles','foreignKey'=>"message_id"]);
         $this->hasMany('MessageRecipients', ['className' => 'Institution.MessageRecipients', 'foreignKey' => "message_id"]);
@@ -143,7 +137,7 @@ class MessagingTable extends ControllerActionTable
                 $entity->institution_id = $this->getInstitutionID();
             }
 
-            // Parse methods
+            // POCOR-9274 start
 
             [$role_ids, $recipient_ids] = $this->getRoleRecipientList($entity);
 
@@ -152,7 +146,7 @@ class MessagingTable extends ControllerActionTable
 
             // 3. Handle MessageRecipients sync
             $this->syncMessageRecipients($entity->id, $recipient_ids);
-
+            // POCOR-9274 end
             $this->getConnection()->commit();
 
         } catch (\Exception $e) {
@@ -167,10 +161,9 @@ class MessagingTable extends ControllerActionTable
         return TableRegistry::get('Security.SecurityRoles')
             ->find()
             ->where(['id IN' => $entity->security_role_id['_ids'] ?? []])
-            ->extract('id')
+            ->extract('id') // POCOR-9274
             ->toArray();
 
-//        return $lowered;
     }
 
     private function getRecipientIdsByMethod(array $methods, array $roles, array $recipients): array
@@ -191,10 +184,10 @@ class MessagingTable extends ControllerActionTable
                     Log::warning("Unknown messaging method: $method");
             }
         }
-        $ids = array_unique($ids);
-        sort($ids);
+        $ids = array_unique($ids); // POCOR-9274
+        sort($ids); // POCOR-9274
 
-        return $ids;
+        return $ids; // POCOR-9274
     }
 
     private function getEmailRecipientIds(array $recipients, array $roles): array
@@ -300,7 +293,7 @@ class MessagingTable extends ControllerActionTable
 
         $result = $this->save($entity);
 
-//        dd($result); // this should update the recipient list as well
+        // POCOR-9274 start
         $no_result = false;
         if($entity->hasErrors()){
             $no_result = true;
@@ -321,6 +314,13 @@ class MessagingTable extends ControllerActionTable
             ->select(['recipient_id' => $MessageRecipients->aliasField('recipient_id')])
             ->disableHydration()
             ->toArray();
+
+        if(empty($recipients)){
+            $this->Alert->error(__('Failed to send: No Recipients Found.'), ['type' => 'string', 'reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('index'));
+        }
+
         $recipient_ids = array_unique(array_column($recipients, 'recipient_id'));;
         sort($recipient_ids);
 
@@ -343,10 +343,15 @@ class MessagingTable extends ControllerActionTable
             $event->stopPropagation();
             return $this->controller->redirect($this->url('index'));
         }
+        $this->Alert->error(__('Failed to send: No Recipients With Contacts Found.'), ['type' => 'string', 'reset' => true]);
+        $event->stopPropagation();
+        return $this->controller->redirect($this->url('index'));
+        // POCOR-9274 end
     }
     // POCOR-8286 end
 
     /**
+     * POCOR-9274
      * @param EntityInterface $entity
      * @param int[]           $recipientIds
      * @return bool           True if we sent at least one email
@@ -380,6 +385,7 @@ class MessagingTable extends ControllerActionTable
     }
 
     /**
+     * POCOR-9274
      * @param EntityInterface $entity
      * @param int[]           $recipientIds
      * @return bool           True if we sent at least one SMS
@@ -405,6 +411,7 @@ class MessagingTable extends ControllerActionTable
     }
 
     /**
+     * POCOR-9274
      * Load a plain array of user records (disableHydration) filtered to non-null $contactField.
      *
      * @param int[]  $ids
@@ -425,6 +432,7 @@ class MessagingTable extends ControllerActionTable
     }
 
     /**
+     * POCOR-9274
      * Insert one AlertLog per recipient.
      *
      * @param string           $type       'Email' or 'SMS'
@@ -445,6 +453,7 @@ class MessagingTable extends ControllerActionTable
             );
         }
     }
+
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
 
@@ -569,7 +578,7 @@ class MessagingTable extends ControllerActionTable
     }
     public function onGetRecipientGroupId(Event $event, Entity $entity)
     {
-        $option=$this->getRecipientGroupOptions($entity->recipient_level_id, $entity->institution_id);
+        $option=$this->getRecipientGroupOptions($entity->recipient_level_id, $entity->institution_id); // POCOR-9274
         $result= $option[$entity->recipient_group_id];
         return $result;
     }
@@ -674,7 +683,7 @@ class MessagingTable extends ControllerActionTable
         if (
             $action == 'add' || $action == 'edit'
         ) {
-
+            // POCOR-9274 start
             $alias = $this->getAlias();
             $data = $request->getData($alias);
             $entity = $attr['entity'] ?? [];
@@ -692,10 +701,6 @@ class MessagingTable extends ControllerActionTable
             if(!$institution_id){
                 $institution_id = $this->getInstitutionID();
             }
-//            if(!empty($recipient_level_id)){
-//                $recipient_level_id = intval($recipient_level_id);
-//            }
-//            dd([$institution_id => $recipient_level_id]);
 
             if ($recipient_level_id && $institution_id) {
                 $attr['type'] = 'select';
@@ -704,14 +709,14 @@ class MessagingTable extends ControllerActionTable
                 $attr['options'] = $data;
             }
         }
+        // POCOR-9274 end
 
         return $attr;
     }
     public function onUpdateFieldSecurityRoleId(Event $event, array $attr, $action, ServerRequest $request)
     {
 
-        $entity = $attr['entity'];
-
+        // POCOR-9274 start
         $alias = $this->getAlias();
         $data = $request->getData($alias);
         $entity = $attr['entity'] ?? [];
@@ -752,9 +757,11 @@ class MessagingTable extends ControllerActionTable
         $attr['options'] = $options;
         $attr['attr']['required'] = true;
         return $attr;
+        // POCOR-9274 end
     }
 
     /**
+     * POCOR-9274
      * @param $institution_id
      * @return array
      */
@@ -860,6 +867,13 @@ class MessagingTable extends ControllerActionTable
         }
         return $attr;
     }
+
+    /**
+     * POCOR-9274 start
+     * @param $recipient_level_id
+     * @param $institution_id
+     * @return array
+     */
     public function getRecipientGroupOptions($recipient_level_id, $institution_id){
 
         $academicPeriodId =TableRegistry::get('AcademicPeriod.AcademicPeriods')->getCurrent();
@@ -876,7 +890,7 @@ class MessagingTable extends ControllerActionTable
         switch ($recipient_level_id) {
             case self::INSTITUTION:
             case "Institution":
-                $option[$institution_id] = $institution_name;
+                $option[$institution_id] = $institution_name; // POCOR-9274 end
                 break;
             case self::PROGRAMME:
             case "Programme":
@@ -1010,6 +1024,11 @@ class MessagingTable extends ControllerActionTable
         return $attr;
     }
 
+    /**
+     * POCOR-9274
+     * @param $entity
+     * @return array
+     */
     public function getRoleRecipientList($entity)
     {
         $role_ids = $this->getSecurityRolesFromEntity($entity);
@@ -1035,24 +1054,17 @@ class MessagingTable extends ControllerActionTable
         $recipient_ids = array_unique(array_merge($student_ids, $security_user_ids, $guardian_ids));
         // otherwise assume staff
         sort($recipient_ids);
+
         return [$role_ids, $recipient_ids];
     }
-    /**
-     * @param Entity $entity
-     * @param int[]  $securityRoleIds  — one or more security_role_id’s
-     * @return array  — each element is a row with user_id, email, phone, first_name, last_name, etc.
-     */
-    public function getRecipientList($entity, array $securityRoleIds): array
-    {
-        $allRecipients = [];
 
-
-    }
     //POCOR-8016::modify query Start
     // POCOR-8286 start
     public function getStudentGuardianRecipients($entity)
     {
 
+        // POCOR-9274 start
+        // POCOR-9274 start
         $where = $this->buildStudentGuardianRecipientWhere($entity);
 
         $isSubjectLevel = in_array($entity->recipient_level_id, [self::GRADE_CLASS, self::SUBJECT]);
@@ -1060,7 +1072,7 @@ class MessagingTable extends ControllerActionTable
         $tableName = $isSubjectLevel ? 'Institution.InstitutionSubjectStudents'
             : 'Institution.InstitutionStudents';
         $Table = self::getDynamicTableInstance($tableName);
-
+        // POCOR-9274 end
         $aliasPrefix = $isSubjectLevel ? 'InstitutionSubjectStudents' : 'InstitutionStudents';
 
         $query = $Table->find()
@@ -1095,10 +1107,16 @@ class MessagingTable extends ControllerActionTable
             ])
             ->group([$aliasPrefix . '.student_id', 'StudentGuardians.guardian_id'])
             ->toArray();
-
+        // POCOR-9274 end
         return $query;
     }
 
+    /**
+     * // POCOR-9274 start
+     * @param $entity
+     * @param $roleId
+     * @return array
+     */
     protected function getStaffRecipients($entity, $roleId)
     {
         switch ((int)$entity->recipient_level_id) {
@@ -1199,19 +1217,19 @@ class MessagingTable extends ControllerActionTable
         $where = [];
 
         switch ((int) $entity->recipient_level_id) {
-            case self::PROGRAMME:
+            case self::PROGRAMME: // POCOR-9274
                 $where['EducationGrades.education_programme_id'] = $entity->recipient_group_id;
                 break;
 
-            case self::GRADE:
+            case self::GRADE: // POCOR-9274
                 $where['InstitutionStudents.education_grade_id'] = $entity->recipient_group_id;
                 break;
 
-            case self::GRADE_CLASS:
+            case self::GRADE_CLASS: // POCOR-9274
                 $where['InstitutionSubjectStudents.institution_class_id'] = $entity->recipient_group_id;
                 break;
 
-            case self::SUBJECT:
+            case self::SUBJECT: // POCOR-9274
                 $parts = explode('-', $entity->recipient_group_id);
                 if (count($parts) === 2) {
                     $where['InstitutionSubjectStudents.institution_class_id'] = $parts[0];
