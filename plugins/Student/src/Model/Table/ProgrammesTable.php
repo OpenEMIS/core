@@ -446,7 +446,7 @@ class ProgrammesTable extends ControllerActionTable
 			->where(['education_programme_id' => $entity->education_grade->education_programme_id,'student_id' => $entity->student_id,'institution_id'=>$entity->institution_id])
 			->first();
 
-			$this->field('registration_number',['attr' => ['value' => $institutionStudentProgramme->registration_number]]);
+			$this->field('registration_number',['type' => 'readonly', 'attr' => ['value' => $institutionStudentProgramme->registration_number]]); //POCOR-9164
 			//POCOR-8870 end
 
 			$period = $entity->academic_period;
