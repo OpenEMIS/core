@@ -4,7 +4,14 @@ namespace CustomExcel\Model\Behavior;
 use Cake\Log\Log;
 use Mpdf\MpdfException; // POCOR-9153
 use DOMDocument; // POCOR-9153
-use DOMXPath; // POCOR-9153
+use DOMXPath;
+use DOMElement;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Exception;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+
+// POCOR-9153
 
 /*
     This trait is for ExcelReportBehavior.php
@@ -78,73 +85,106 @@ trait StudentPdfReportTrait
      * POCOR-9153
      * @throws MpdfException
      */
-    private function savePDF($objSpreadsheet, $filepath, $student_id)
+    private function savePDF($objSpreadsheet, $baseFilePath, $studentId)
     {
-        Log::write('debug', 'ExcelReportBehavior >>> filepath: ' . $filepath);
-        // Convert spreadsheet object into html
+        Log::write('debug', 'ExcelReportBehavior >>> base filepath: ' . $baseFilePath);
+        $sheetCount = $objSpreadsheet->getSheetCount();
+//        $sheetCount = 2;
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
 
-        // This is to store to final processedHtml
-        $processedHtml = '';
-        $filePaths = [];
+
         $tempFiles = [];
-        $basePath = $filepath;
-        for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
+        $pdfPaths = [];
+
+        for ($sheetIndex = 0; $sheetIndex < $sheetCount; $sheetIndex++) {
             $sheet = $objSpreadsheet->getSheet($sheetIndex);
             $orientation = $sheet->getPageSetup()->getOrientation();
 
-            if ($orientation === \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE) {
-                $mpdfOrientation = 'L';
-                $mpdfFormat = 'A4-L'; // landscape
-            } else {
-                $mpdfOrientation = 'P';
-                $mpdfFormat = 'A4'; // portrait
-            }
+            $isLandscape = $orientation === \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE;
+            $mpdfOrientation = $isLandscape ? 'L' : 'P';
+            $mpdfFormat = $isLandscape ? 'A4-L' : 'A4';
 
+            // File naming
+            $sheetBasePath = $baseFilePath . '_sheet' . $sheetIndex;
+            $xlsPath = $sheetBasePath . '.xlsx';
+            $htmlRawPath = $sheetBasePath . '_raw.html';
+            $htmlProcessedPath = $sheetBasePath . '_processed.html';
+            $pdfRawPath = $sheetBasePath . '_raw.pdf';
+            $pdfProcessedPath = $sheetBasePath . '.pdf';
+
+            // Save XLSX
+            $writer->setSheetIndex($sheetIndex);
+            $writer->save($xlsPath);
+            $tempFiles[] = $xlsPath;
+
+            // Load and save raw HTML
+            $rawHtml = file_get_contents($xlsPath, FILE_USE_INCLUDE_PATH);
+            file_put_contents($htmlRawPath, $rawHtml);
+            $tempFiles[] = $htmlRawPath;
+
+            // Save RAW HTML as PDF for comparison
+//            $mpdfRaw = new \Mpdf\Mpdf([
+//                'mode' => 'utf-8',
+//                'format' => $mpdfFormat,
+//                'margin_left' => 0,
+//                'margin_right' => 0,
+//                'margin_top' => 0,
+//                'margin_bottom' => 0,
+//            ]);
+//            $mpdfRaw->autoScriptToLang = true;
+//            $mpdfRaw->autoLangToFont = true;
+//            $mpdfRaw->AddPage($mpdfOrientation);
+//            $mpdfRaw->WriteHTML($rawHtml);
+//            $mpdfRaw->Output($pdfRawPath, 'F');
+
+//            $tempFiles[] = $pdfRawPath;
+
+            // Processed HTML
+            $processedHtml = $this->processHtml($rawHtml);
+
+            file_put_contents($htmlProcessedPath, $processedHtml);
+            $tempFiles[] = $htmlProcessedPath;
+
+            // Render processed HTML to PDF
             $mpdf = new \Mpdf\Mpdf([
                 'mode' => 'utf-8',
                 'format' => $mpdfFormat,
+                'margin_left' => 20,
+                'margin_right' => 20,
+                'margin_top' => 20,
+                'margin_bottom' => 20,
             ]);
-
             $mpdf->autoScriptToLang = true;
             $mpdf->autoLangToFont = true;
 
-            // Sheet index, HTML, and PDF generation follows...
-            $filepath = $basePath . '_' . $sheetIndex;
-            $filepathxl = $filepath . '.xls';
-
-            $writer->setSheetIndex($sheetIndex);
-            $writer->save($filepathxl);
-            $tempFiles[] = $filepathxl;
-            $file = file_get_contents($filepathxl, FILE_USE_INCLUDE_PATH);
-            $processedHtml = $this->processHtml($file, $sheetIndex);
-
             $mpdf->AddPage($mpdfOrientation);
             $mpdf->WriteHTML($processedHtml);
-            $mpdf->Output($filepath . '.pdf', 'F');
+            $mpdf->Output($pdfProcessedPath, 'F');
 
-            $filePaths[] = $filepath . '.pdf';
-            $tempFiles[] = $filepath . '.pdf';
+            $pdfPaths[] = $pdfProcessedPath;
+            $tempFiles[] = $pdfProcessedPath;
+
+            // Log everything
+            Log::write('debug', "Saved XLSX: $xlsPath");
+            Log::write('debug', "Saved RAW HTML: $htmlRawPath");
+            Log::write('debug', "Saved PROCESSED HTML: $htmlProcessedPath");
+            Log::write('debug', "Saved RAW PDF: $pdfRawPath");
+            Log::write('debug', "Saved FINAL PDF: $pdfProcessedPath");
         }
-        // Merge all the pdf that belongs to one report
-        if (!empty($student_id)) {
-            $fileName = $this->getConfig('filename') . '_' . $student_id;
-        } else {
-            $fileName = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His');
-        }
 
-        Log::write('debug', '----------------------fileName---------------------: ');
-        Log::write('debug', $fileName);
+        // Merge PDFs
+        $filename = $this->getConfig('filename') . '_' . (!empty($studentId) ? $studentId : date('Ymd\THis'));
+        Log::write('debug', 'Final merged filename: ' . $filename);
+        $this->mergePDFFiles($pdfPaths, $filename, $filename);
 
-        $this->mergePDFFiles($filePaths, $fileName, $fileName);
-        // // Remove the temp file that is converted from excel object and its successfully converted to pdf
+        // Clean temp files
         if ($this->getConfig('purge')) {
-            foreach ($tempFiles as $tempFile) {
-                // delete excel file after successfully converted to pdf
-                $this->deleteFile($tempFile);
+            foreach ($tempFiles as $file) {
+                $this->deleteFile($file);
             }
         }
     }
+
 
     private function processHtml($htmlFile, $sheetIndex = 0)
     {
@@ -688,87 +728,98 @@ HTML;
         unset($mpdf);
     }*/
 
-    // POCOR-8298
-    // POCOR-9153
-    private function mergePDFFiles(array $filenames, $outFile, $title = '', $author = '', $subject = '')
+    /**
+     * Merge multiple PDF files into one, preserving page sizes and centering each imported page
+     *
+     * @param  array   $filenames  List of input PDF paths
+     * @param  string  $outFile    Base name for the output PDF (without “.pdf”)
+     * @param  string  $title      (optional) PDF document title
+     * @param  string  $author     (optional) PDF document author
+     * @param  string  $subject    (optional) PDF document subject
+     * @return void   Writes merged PDF to disk and also dumps raw PDF bytes to a .txt file
+     */
+    private function mergePDFFiles(array $filenames, string $outFile, string $title = '', string $author = '', string $subject = ''): void
     {
-        // Create a new Mpdf instance
-        $tmpdf = new \Mpdf\Mpdf(['mode' => 'utf-8']); //POCOR-8961
-        $width = 297;
-        $height = 210;
-        if ($filenames) {
-            if (isset($filenames[0])) {
-                $curFile = $filenames[0];
-                if (file_exists($curFile)) {
-                    $tmpdf->SetSourceFile($curFile);
-                    $tplId = $tmpdf->ImportPage(1);
-                    $wh = $tmpdf->getTemplateSize($tplId);
-                    $orientation = trim($wh['orientation']) ?? 'L';
-                    $width = $wh['width'] ?? 297;
-                    $height = $wh['height'] ?? 210;
-                }
-            }
+        // If no files, nothing to do
+        if (empty($filenames)) {
+            return;
         }
-        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8',
-            'format' => [$width,$height],
-//            'margin_left' => 40,
-//            'margin_right' => 10,
-//            'margin_top' => 30,
-//            'margin_bottom' => 30,
-        ]); //POCOR-8961
+
+        // Step 1: Probe the first file to get default orientation & size
+        $probe = new \Mpdf\Mpdf(['mode' => 'utf-8']);
+        $firstFile = $filenames[0];
+        if (!file_exists($firstFile)) {
+            throw new \RuntimeException("Cannot find PDF to merge: {$firstFile}");
+        }
+        $probe->SetSourceFile($firstFile);
+        $tplId    = $probe->ImportPage(1);
+        $tplSize  = $probe->getTemplateSize($tplId);
+        $defaultOrientation = $tplSize['orientation'] ?? 'P';
+        $defaultWidth       = $tplSize['width']       ?? 210;
+        $defaultHeight      = $tplSize['height']      ?? 297;
+        unset($probe);
+
+        // Step 2: Create main Mpdf with 10-pt margins
+        $mpdf = new \Mpdf\Mpdf([
+            'mode'         => 'utf-8',
+            'format'       => [$defaultWidth, $defaultHeight],
+            'orientation'  => $defaultOrientation,
+            'margin_left'  => 10,
+            'margin_right' => 10,
+            'margin_top'   => 10,
+            'margin_bottom'=> 10,
+        ]);
         $mpdf->SetTitle($title);
         $mpdf->SetAuthor($author);
         $mpdf->SetSubject($subject);
-        $mpdf->autoScriptToLang = true; //POCOR-7264
-        $mpdf->autoLangToFont = true; //POCOR-7264
-        if ($filenames) {
-            $filesTotal = sizeof($filenames);
-            // $mpdf->SetImportUse();
+        $mpdf->autoScriptToLang = true;
+        $mpdf->autoLangToFont   = true;
 
-            for ($i = 0; $i<count($filenames);$i++) {
-                $curFile = $filenames[$i];
-                if (file_exists($curFile)){
-                    $pageCount = $mpdf->SetSourceFile($curFile);
-                    for ($p = 1; $p <= $pageCount; $p++) {
-                        $tplId = $mpdf->ImportPage($p);
-                        $tplSize = $mpdf->getTemplateSize($tplId);
-                        $orientation = $tplSize['orientation'];
-                        $tplWidth = $tplSize['width'];
-                        $tplHeight = $tplSize['height'];
+        // Step 3: Loop through each file & import all pages
+        foreach ($filenames as $filePath) {
+            if (!file_exists($filePath)) {
+                continue;
+            }
 
-                        $pageWidth = $mpdf->w;
-                        $pageHeight= $mpdf->h;
+            // Load and import all pages in this file
+            $pageCount = $mpdf->SetSourceFile($filePath);
+            for ($p = 1; $p <= $pageCount; $p++) {
+                $tplId   = $mpdf->ImportPage($p);
+                $size    = $mpdf->getTemplateSize($tplId);
+                $ori     = $size['orientation'];
+                $tplW    = $size['width'];
+                $tplH    = $size['height'];
 
-// Calculate center offsets
-                        $offsetX = ($pageWidth - $tplWidth) / 2;
-                        $offsetY = ($pageHeight - $tplHeight) / 2;
+                // Add a new page matching the imported page’s size & orientation
+                $mpdf->AddPage(
+                    $ori,
+                    '', '', '', '',   // use default header/footer settings
+                    10, 10, 10, 10,   // left, right, top, bottom margins
+                    0, 0,             // margin_header, margin_footer
+                    [$tplW, $tplH]
+                );
 
-// Add page with exact orientation and size
-                        if (($p == 1)) {
-                            $mpdf->state = 0;
-                        } else {
-                            $mpdf->state = 1;
-                        }
-                        $mpdf->AddPage($orientation, '', '', '', '', '', '', '', '', '', '', [$tplWidth, $tplHeight]);
-                        $mpdf->UseTemplate($tplId);
-                    }
-                }
+                // Compute inner printable area
+                $innerW = $mpdf->w - $mpdf->lMargin - $mpdf->rMargin;
+                $innerH = $mpdf->h - $mpdf->tMargin - $mpdf->bMargin;
+
+                // Center the template within margins
+                $offsetX = $mpdf->lMargin + (($innerW - $tplW) / 2);
+                $offsetY = $mpdf->tMargin + (($innerH - $tplH) / 2);
+
+                // Place the imported page
+                $mpdf->UseTemplate($tplId, $offsetX, $offsetY);
             }
         }
 
-        // Define file paths
-        $file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile . '.pdf';
-        $pdf_file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
+        // Step 4: Write out merged PDF
+        $outputPath    = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile . '.pdf';
+        $rawPdfContent = $mpdf->Output($outputPath, \Mpdf\Output\Destination::STRING_RETURN);
 
-        // Output the merged PDF to the specified file
-        $content = $mpdf->Output($file_path, "S");
+        // Also dump raw PDF bytes to .txt for debugging
+        $txtPath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile . '.txt';
+        file_put_contents($txtPath, $rawPdfContent);
 
-        // Save the PDF content to a text file
-        $fp = fopen($pdf_file_path . $outFile . ".txt", "wb");
-        fwrite($fp, $content);
-        fclose($fp);
-
-        // Clean up
         unset($mpdf);
     }
 
