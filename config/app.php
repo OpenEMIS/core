@@ -169,11 +169,8 @@ return [
      */
     //POCOR-8626 -- Added ignoredDeprecationPaths for deprecation warnings.
     'Error' => [
-        'errorLevel' => E_ALL & ~E_DEPRECATED & ~E_NOTICE & ~E_WARNING & ~E_USER_DEPRECATED,
+        'errorLevel' => E_ALL & ~E_DEPRECATED & ~E_NOTICE & ~E_WARNING,
         'exceptionRenderer' => 'Cake\Error\ExceptionRenderer',
-        'ignoredDeprecationPaths' => [
-            'vendor/cakephp/cakephp/src/Controller/ComponentRegistry.php'
-        ],
         'skipLog' => [],
         'log' => true,
         'trace' => true,
