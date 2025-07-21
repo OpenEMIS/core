@@ -56,6 +56,8 @@ class PerformanceTable extends AppTable
             $options['validate'] = 'assessments';
         }elseif($data[$this->getAlias()]['feature'] == 'Report.Performance'){
             $options['validate'] = 'performance';
+        }elseif($data[$this->getAlias()]['feature'] == 'Report.OutcomesResult'){
+            $options['validate'] = 'OutcomesResult';
         }
     }
 
@@ -79,6 +81,19 @@ class PerformanceTable extends AppTable
             ->notEmpty('education_grade_id')
             ->notEmpty('area_level_id')
             ->notEmpty('area_education_id');
+       return $validator;
+    }
+
+    public function validationOutcomesResult(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('institution_id')
+            ->notEmpty('education_grade_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id')
+            ->notEmpty('outcome_period');
        return $validator;
     }
     public function beforeAction(Event $event)
