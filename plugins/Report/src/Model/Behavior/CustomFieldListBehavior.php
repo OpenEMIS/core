@@ -424,7 +424,7 @@ class CustomFieldListBehavior extends Behavior
                 // POCOR-9265 end
             }
         }
-        return $customFields;
+        return $fields;
     }
 
     // Function to generate the excel content
