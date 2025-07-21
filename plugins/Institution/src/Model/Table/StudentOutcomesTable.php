@@ -227,6 +227,7 @@ class StudentOutcomesTable extends ControllerActionTable
                 if (!array_key_exists($outcomePeriodId, $allOutcomeResults)) {
                     $allOutcomeResults[$studentId][$outcomePeriodId] = [];
                 }
+
                 foreach ($criteriaList as $criteriaEntity) {
                     $criteriaId = $criteriaEntity->id;
                     $criteriaFieldId = $prefix . $criteriaId;
