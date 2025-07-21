@@ -264,7 +264,8 @@ class ReportsController extends AppController
         }/*POCOR-6513 ends*/
         elseif ($module == 'Meals') {//POCOR-9267 Starts
             $options = [
-                'Report.MealSummary' => __('Meals Summary Report')
+                'Report.MealSummary' => __('Meals Summary Report'),
+                'Report.MealDetails' => __('Meals Details Report')//POCOR-9268
             ];
         }//POCOR-9267 Ends
         return $options;
