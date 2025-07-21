@@ -21,11 +21,11 @@ class OutcomesResultTable extends AppTable
         $this->setTable('institution_classes');
         parent::initialize($config);
 
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->hasMany('ClassesSecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'saveStrategy' => 'replace', 'foreignKey' => 'institution_class_id']);
         $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts']);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 
         $this->hasMany('ClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
         $this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents']);
@@ -104,200 +104,6 @@ class OutcomesResultTable extends AppTable
         }
     }
 
-    public function onExcelBeforeQuerybkp(Event $event, ArrayObject $settings, $query)
-    {
-        $requestData = json_decode($settings['process']['params']);
-        $academicPeriodId = $requestData->academic_period_id;
-        $institutionId = $requestData->institution_id;
-        $areaId = $requestData->area_education_id;
-        $educationGradeId = $requestData->education_grade_id;
-        $selectedArea = $requestData->area_education_id;
-        $outcomePeriod = $requestData->outcome_period;
-        $conditions = [];
-        if ($areaId != 1 && $areaId != '') {
-            $areaIds = [];
-            $allgetArea = $this->getChildren($selectedArea, $areaIds);
-            $selectedArea1[]= $selectedArea;
-            if(!empty($allgetArea)){
-                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
-            }else{
-                $allselectedAreas = $selectedArea1;
-            }
-            $conditions['Institutions.area_id IN'] = $allselectedAreas;
-        }
-        if ($institutionId > 0) {
-            $conditions[$this->aliasField('institution_id')] = $institutionId;
-        } else {
-            $conditions = [];
-        }
-
-        
-        $InstitutionClassStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
-        $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
-        $InstitutionOutcomeResultsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionOutcomeResults');
-        $OutcomeCriteriasTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
-        $OutcomeGradingOptionsTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeGradingOptions');
-        $OutcomePeriodsTable = TableRegistry::getTableLocator()->get('Outcome.OutcomePeriods');
-        $outcomeCommentTable = TableRegistry::getTableLocator()->get('Institution.InstitutionOutcomeSubjectComments');
-
-        // Class Student table - get all students in the class for the outcome
-        
-        $studentList = $InstitutionClassStudentsTable
-            ->find()
-            ->select([
-                $InstitutionClassStudentsTable->aliasField('student_id'),
-                $UsersTable->aliasField('first_name'),
-                $UsersTable->aliasField('middle_name'),
-                $UsersTable->aliasField('third_name'),
-                $UsersTable->aliasField('last_name'),
-                $UsersTable->aliasField('preferred_name')
-            ])
-            ->contain($UsersTable->getAlias())
-            ->where([
-                $InstitutionClassStudentsTable->aliasField('institution_id IS') => $institutionId,
-                $InstitutionClassStudentsTable->aliasField('academic_period_id IS') => $academicPeriodId,
-                $InstitutionClassStudentsTable->aliasField('education_grade_id IS') => $educationGradeId,
-            ])
-            ->toArray();
-          //  dd($studentList);
-
-        $studentIdList = Hash::extract($studentList, '{n}.student_id');
-
-        // Get all student outcome results for the students found in above query
-        $studentOutcomeResultList = $InstitutionOutcomeResultsTable
-            ->find()
-            ->select([
-                $InstitutionOutcomeResultsTable->aliasField('student_id'),
-                $OutcomeCriteriasTable->aliasField('id'),
-                $OutcomeGradingOptionsTable->aliasField('name'),
-                $OutcomeGradingOptionsTable->aliasField('code'),
-                $OutcomeCriteriasTable->aliasField('name'),
-                $OutcomePeriodsTable->aliasField('id'),
-                $OutcomePeriodsTable->aliasField('name')
-
-            ])
-            ->contain([
-                $OutcomeCriteriasTable->getAlias(),
-                $OutcomeGradingOptionsTable->getAlias(),
-                $OutcomePeriodsTable->getAlias()
-            ])
-            ->where([
-                $InstitutionOutcomeResultsTable->aliasField('student_id IN') => $studentIdList,
-                $InstitutionOutcomeResultsTable->aliasField('institution_id IS') => $institutionId,
-                $InstitutionOutcomeResultsTable->aliasField('academic_period_id IS') => $academicPeriodId,
-                $InstitutionOutcomeResultsTable->aliasField('outcome_period_id IS') => $outcomePeriod
-            ])
-            ->toArray();
-
-        // Massage data to the required format for formatResults()
-        $outcomeResults = [];
-        $prefix = $settings['criteria_prefix'];
-
-        foreach ($studentOutcomeResultList as $entity) {
-            $studentId = $entity->student_id;
-            if (!array_key_exists($studentId, $outcomeResults)) {
-                $outcomeResults[$studentId] = [];
-            }
-
-            $periodId = $entity->outcome_period->id;
-            if (!array_key_exists($periodId, $outcomeResults[$studentId])) {
-                $outcomeResults[$studentId][$periodId] = [];
-            }
-
-            $criteriaId = $entity->outcome_criteria->id;
-            $criteriaFieldId = $prefix . $criteriaId;
-            $gradingOptions = $entity->outcome_grading_option->name;
-            $outcomeResults[$studentId][$periodId][$criteriaFieldId] = $gradingOptions;
-        }
-
-        $allOutcomeResults = [];
-        $studentEntityList = [];
-
-        foreach ($studentList as $studentEntity) {
-            $studentId = $studentEntity->student_id;
-            $studentEntityList[$studentId] = $studentEntity->user;
-
-            if (!array_key_exists($studentId, $allOutcomeResults)) {
-                $allOutcomeResults[$studentId] = [];
-            }
-
-            foreach ($periodList as $outcomePeriodId) {
-                $outcomePeriodId = $outcomePeriodId;
-                if (!array_key_exists($outcomePeriodId, $allOutcomeResults)) {
-                    $allOutcomeResults[$studentId][$outcomePeriodId] = [];
-                }
-
-                foreach ($criteriaList as $criteriaEntity) {
-                    $criteriaId = $criteriaEntity->id;
-                    $criteriaFieldId = $prefix . $criteriaId;
-                    $extractField = $studentId . '.' . $outcomePeriodId . '.' . $criteriaFieldId;
-                    $result = Hash::get($outcomeResults, $extractField);
-                    if (!is_null($result)) {
-                        $allOutcomeResults[$studentId][$outcomePeriodId][$criteriaFieldId] = $result;
-                    } else {
-                        $allOutcomeResults[$studentId][$outcomePeriodId][$criteriaFieldId] = '';
-                    }
-                }
-            }
-        }
-
-        $query
-            ->select([
-                'class' => $this->aliasField('name'),
-                'student_id' => 'Students.id',
-                'openemis_no' => 'Students.openemis_no',
-                'outcome_period' => 'OutcomePeriods.name',
-                'outcome_period_id' => 'OutcomePeriods.id',
-                'institution_name' => 'Institutions.name',
-                'institution_code' => 'Institutions.code',
-                'education_grade_name' => 'EducationGrades.name'
-            ])
-            ->innerJoin(['InstitutionClassStudents' => 'institution_class_students'], [
-                $this->aliasField('id = ') . 'InstitutionClassStudents.institution_class_id'
-            ])
-            ->innerJoin(['Students' => 'security_users'], [
-                'InstitutionClassStudents.student_id = Students.id'
-            ])
-            ->innerJoin(['OutcomePeriods' => 'outcome_periods'], [
-                'OutcomePeriods.academic_period_id = ' . $academicPeriodId,
-            ])
-            ->innerJoin(['StudentStatuses' => 'student_statuses'],[
-                'InstitutionClassStudents.student_status_id = StudentStatuses.id'
-            ])
-            ->innerJoin(['Institutions' => 'institutions'],[
-                $this->aliasField('institution_id = ') . 'Institutions.id'
-            ])
-            ->innerJoin(['EducationGrades' => 'education_grades'],[
-                'InstitutionClassStudents.education_grade_id = EducationGrades.id'
-            ])
-            ->leftJoin(['EducationGrades' => 'education_grades'],[
-                'InstitutionClassStudents.education_grade_id = EducationGrades.id'
-            ])
-            ->where([
-                'InstitutionClassStudents.education_grade_id' =>$educationGradeId,
-                $this->aliasField('institution_id IS') => $institutionId,
-                $this->aliasField('academic_period_id IS') => $academicPeriodId,
-                'OR' => [['StudentStatuses.code' => 'CURRENT'], ['StudentStatuses.code' => 'PROMOTED'],
-                            ['StudentStatuses.code' => 'TRANSFERRED'],['StudentStatuses.code' => 'GRADUATED']]
-            ])
-            ->formatResults(function(ResultSetInterface $results) use ($allOutcomeResults, $studentEntityList) {
-                return $results->map(function ($row) use ($allOutcomeResults, $studentEntityList) {
-
-                    $studentId = $row->student_id;
-                    $outcomePeriodId = $row->outcome_period_id;
-                    $outcomeResults = $allOutcomeResults[$studentId][$outcomePeriodId];
-                    $studentName = $studentEntityList[$studentId]->name;
-
-                    foreach ($outcomeResults as $field => $value) {
-                        $row->{$field} = $value;
-                    }
-
-                    $row->student = $studentName;
-
-                    return $row;
-                });
-            });
-    }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
@@ -310,7 +116,7 @@ class OutcomesResultTable extends AppTable
         $outcomePeriod = $requestData->outcome_period;
         $criteriaList =  $settings['criteria_list_entities'];
         $conditions = [];
-        if ($areaId != 1 && $areaId != '') {
+       if ($areaId != 1 && $areaId != '') {
             $areaIds = [];
             $allgetArea = $this->getChildren($selectedArea, $areaIds);
             $selectedArea1[]= $selectedArea;
@@ -321,18 +127,16 @@ class OutcomesResultTable extends AppTable
             }
             $conditions['Institutions.area_id IN'] = $allselectedAreas;
         }
-        if ($institutionId > 0) {
+        $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
+        if ($institutionId != 1) {
             $conditions[$this->aliasField('institution_id')] = $institutionId;
-        } else {
-            $conditions = [];
-        }
-        if ($institutionId > 0) {
-            $conditions[$this->aliasField('education_grade_id')] = $educationGradeId;
-        } else {
-            $conditions = [];
         }
 
-        
+        // Only filter by grade if specific one is selected (not "All")
+        if ($educationGradeId != 0) {
+            $conditions['InstitutionClassStudents.education_grade_id'] = $educationGradeId;
+        }
+
         $InstitutionClassStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
         $InstitutionOutcomeResultsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionOutcomeResults');
@@ -341,9 +145,18 @@ class OutcomesResultTable extends AppTable
         $OutcomePeriodsTable = TableRegistry::getTableLocator()->get('Outcome.OutcomePeriods');
         $outcomeCommentTable = TableRegistry::getTableLocator()->get('Institution.InstitutionOutcomeSubjectComments');
         
-
         // Class Student table - get all students in the class for the outcome
-        
+        $where = [];
+        $where[$InstitutionClassStudentsTable->aliasField('academic_period_id')] = $academicPeriodId;
+        if ($institutionId != 1) {
+            $where[$InstitutionClassStudentsTable->aliasField('institution_id')] = $institutionId;
+        }
+
+        // Only filter by grade if specific one is selected (not "All")
+        if ($educationGradeId != 0) {
+            $where[$InstitutionClassStudentsTable->aliasField('education_grade_id')] = $educationGradeId;
+        }
+
         $studentList = $InstitutionClassStudentsTable
             ->find()
             ->select([
@@ -355,31 +168,40 @@ class OutcomesResultTable extends AppTable
                 $UsersTable->aliasField('preferred_name')
             ])
             ->contain($UsersTable->getAlias())
-            ->where([
-                $InstitutionClassStudentsTable->aliasField('institution_id IS') => $institutionId,
-                $InstitutionClassStudentsTable->aliasField('academic_period_id IS') => $academicPeriodId,
-                $InstitutionClassStudentsTable->aliasField('education_grade_id IS') => $educationGradeId,
-            ])
+            ->where($where)
             ->toArray();
-          //  dd($studentList);
 
         $studentIdList = Hash::extract($studentList, '{n}.student_id');
 
         // Get all student outcome results for the students found in above query
             $InstitutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
+        if (empty($studentIdList)) {
+            $studentOutcomeResultList = []; // no results to process
+        }else {
+            $whereClause = []; 
+            $whereClause[$InstitutionOutcomeResultsTable->aliasField('academic_period_id')] = $academicPeriodId;
+        if ($institutionId != 1) {
+            $whereClause[$InstitutionOutcomeResultsTable->aliasField('institution_id')] = $institutionId;
+        }
+
+        // Only filter by grade if specific one is selected (not "All")
+       
+            $whereClause[$InstitutionOutcomeResultsTable->aliasField('outcome_period_id')] = $outcomePeriod;
+            $whereClause[$InstitutionOutcomeResultsTable->aliasField('student_id IN')] = $studentIdList;
+        
             $studentOutcomeResultList = $InstitutionOutcomeResultsTable
                 ->find()
                 ->select([
                     $InstitutionOutcomeResultsTable->aliasField('student_id'),
                     'outcome_criteria_id' => $OutcomeCriteriasTable->aliasField('id'),
-                    'name' => $OutcomeGradingOptionsTable->aliasField('name'),
-                    'code' => $OutcomeGradingOptionsTable->aliasField('code'),
                     'criteria_name' => $OutcomeCriteriasTable->aliasField('name'),
                     'outcome_period_id' => $OutcomePeriodsTable->aliasField('id'),
                     'outcome_period_name' => $OutcomePeriodsTable->aliasField('name'),
                     'final_result' => $InstitutionSubjectStudents->aliasField('outcome_result'),
                     'comments' => $outcomeCommentTable->aliasField('comments'),
-                    'subject_id' => $InstitutionSubjectStudents->aliasField('education_subject_id')
+                    'subject_id' => $InstitutionSubjectStudents->aliasField('education_subject_id'),
+                    'grading_option_name' => $OutcomeGradingOptionsTable->aliasField('name'),
+                    'grading_option_code' => $OutcomeGradingOptionsTable->aliasField('code'),
                 ])
                 ->contain([
                     $OutcomeCriteriasTable->getAlias(),
@@ -407,16 +229,11 @@ class OutcomesResultTable extends AppTable
                         ]
                     ]
                 ])
-                ->where([
-                    $InstitutionOutcomeResultsTable->aliasField('student_id IN') => $studentIdList,
-                    $InstitutionOutcomeResultsTable->aliasField('institution_id') => $institutionId,
-                    $InstitutionOutcomeResultsTable->aliasField('academic_period_id') => $academicPeriodId,
-                    $InstitutionOutcomeResultsTable->aliasField('outcome_period_id') => $outcomePeriod
-                ])
+                ->where($whereClause)
                 ->enableAutoFields(false)
                 ->toArray();
-//echo "<pre>"; print_r($studentOutcomeResultList); 
-        // Massage data to the required format for formatResults()
+        }
+
         $outcomeResults = [];
         $prefix = $settings['criteria_prefix'];
         $finalResults = [];
@@ -439,17 +256,21 @@ class OutcomesResultTable extends AppTable
                 $outcomeResults[$studentId] = [];
             }
 
-            $periodId = $entity->outcome_period->id;
+            $periodId = $entity->outcome_period_id;
             if (!array_key_exists($periodId, $outcomeResults[$studentId])) {
                 $outcomeResults[$studentId][$periodId] = [];
             }
 
-            $criteriaId = $entity->outcome_criteria->id;
+            $criteriaId = $entity->outcome_criteria_id;
+            $criteriaId = $entity->outcome_criteria_id ?? null;
+
+            if (!$criteriaId) {
+                continue; // skip if no valid criteria ID
+            }
             $criteriaFieldId = $prefix . $criteriaId;
-            $gradingOptions = $entity->outcome_grading_option->name ?? '';
+            $gradingOptions = $entity->grading_option_name ?? '';
             $outcomeResults[$studentId][$periodId][$criteriaFieldId] = $gradingOptions;
         }
-
         $allOutcomeResults = [];
         $studentEntityList = [];
 
@@ -460,29 +281,22 @@ class OutcomesResultTable extends AppTable
             if (!array_key_exists($studentId, $allOutcomeResults)) {
                 $allOutcomeResults[$studentId] = [];
             }
+            $outcomePeriodId = $outcomePeriod; 
 
-            foreach ($periodList as $outcomePeriodId) {
-                $outcomePeriodId = $outcomePeriodId;
-                if (!array_key_exists($outcomePeriodId, $allOutcomeResults)) {
-                    $allOutcomeResults[$studentId][$outcomePeriodId] = [];
-                }
+            if (!array_key_exists($studentId, $allOutcomeResults)) {
+                $allOutcomeResults[$studentId] = [];
+            }
 
-                foreach ($criteriaList as $criteriaEntity) {
-                    echo "<pre>"; print_r($criteriaList); echo 'kjpk';
-                    $criteriaId = $criteriaEntity->id;
-                    $criteriaFieldId = $prefix . $criteriaId;
-                    $extractField = $studentId . '.' . $outcomePeriodId . '.' . $criteriaFieldId;
-                    $result = Hash::get($outcomeResults, $extractField);
-                    if (!is_null($result)) {
-                        $allOutcomeResults[$studentId][$outcomePeriodId][$criteriaFieldId] = $result;
-                    } else {
-                        $allOutcomeResults[$studentId][$outcomePeriodId][$criteriaFieldId] = '';
-                    }
+            foreach ($criteriaList as $criteriaEntity) {
+                $criteriaId = $criteriaEntity->id;
+                $criteriaFieldId = $prefix . $criteriaId;
+                $extractField = $studentId . '.' . $outcomePeriodId . '.' . $criteriaFieldId;
+                $result = Hash::get($outcomeResults, $extractField);
+                if (!is_null($result)) {
+                    $allOutcomeResults[$studentId][$outcomePeriodId][$criteriaFieldId] = $result;
                 }
             }
         }
-
-echo "<pre>"; print_r($allOutcomeResults);
         $query
             ->select([
                 'class' => $this->aliasField('name'),
@@ -493,7 +307,10 @@ echo "<pre>"; print_r($allOutcomeResults);
                 'institution_name' => 'Institutions.name',
                 'institution_code' => 'Institutions.code',
                 'education_grade_name' => 'EducationGrades.name'
+                'academic_period_name' => 'AcademicPeriods.name'
             ])
+            ->contain(['Institutions']) 
+            ->contain(['AcademicPeriods']) 
             ->innerJoin(['InstitutionClassStudents' => 'institution_class_students'], [
                 $this->aliasField('id = ') . 'InstitutionClassStudents.institution_class_id'
             ])
@@ -509,35 +326,33 @@ echo "<pre>"; print_r($allOutcomeResults);
             ->innerJoin(['Institutions' => 'institutions'],[
                 $this->aliasField('institution_id = ') . 'Institutions.id'
             ])
-            ->innerJoin(['EducationGrades' => 'education_grades'],[
-                'InstitutionClassStudents.education_grade_id = EducationGrades.id'
-            ])
             ->leftJoin(['EducationGrades' => 'education_grades'],[
                 'InstitutionClassStudents.education_grade_id = EducationGrades.id'
             ])
-            ->where([
-                'InstitutionClassStudents.education_grade_id' =>$educationGradeId,
-                $this->aliasField('institution_id IS') => $institutionId,
-                $this->aliasField('academic_period_id IS') => $academicPeriodId,
-                'OR' => [['StudentStatuses.code' => 'CURRENT'], ['StudentStatuses.code' => 'PROMOTED'],
-                            ['StudentStatuses.code' => 'TRANSFERRED'],['StudentStatuses.code' => 'GRADUATED']]
+            ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'],[
+                'InstitutionClassSubjects.institution_class_id = InstitutionClassStudents.institution_class_id'
             ])
+            ->leftJoin(['InstitutionSubjects' => 'institution_subjects'],[
+                'InstitutionSubjects.id = InstitutionClassSubjects.institution_subject_id '
+            ])
+            ->leftJoin(['EducationSubjects' => 'education_subjects'],[
+                'EducationSubjects.id = InstitutionSubjects.institution_subject_id '
+            ])
+
+           ->where($conditions)
             ->formatResults(function(ResultSetInterface $results) use ($allOutcomeResults, $studentEntityList, $finalResults, $commentResults) {
                 return $results->map(function ($row) use ($allOutcomeResults, $studentEntityList, $finalResults, $commentResults) {
-
                     $studentId = $row->student_id;
                     $outcomePeriodId = $row->outcome_period_id;
-                    $outcomeResults = $allOutcomeResults[$studentId][$outcomePeriodId];
                     $studentName = $studentEntityList[$studentId]->name;
+                    foreach ($allOutcomeResults[$studentId][$outcomePeriodId] ?? [] as $field => $value) {
+                        $row->{$field} = $value;  // e.g., outcome_criteria_134 => 'Excellent'
+                    }
 
-                    /*foreach ($outcomeResults as $field => $value) {
-                        $row->{$field} = $value;
-                    }*/
                     // Add per-criteria outcome results
                      foreach ($outcomeResults[$studentId][$periodId] ?? [] as $field => $value) {
                         $row->{$field} = $value;
                     }
-
                     // Inject final_result per subject
                     foreach ($finalResults[$studentId] ?? [] as $subjectId => $result) {
                         $row->{'final_result' . $subjectId} = $result;
@@ -548,7 +363,6 @@ echo "<pre>"; print_r($allOutcomeResults);
                         $row->{'comment' . $subjectId} = $comment;
                     }
                     $row->student = $studentName;
-                    //echo "<pre>"; print_r($row);
                     return $row;
                 });
             });
@@ -561,6 +375,12 @@ echo "<pre>"; print_r($allOutcomeResults);
 
         $newFields = [];
 
+        $newFields[] = [
+            'key' => 'AcademicPeriods.name',
+            'field' => 'academic_period_name',
+            'type' => 'string',
+            'label' => __('Institution')
+        ];
         $newFields[] = [
             'key' => 'Institutions.name',
             'field' => 'institution_name',
