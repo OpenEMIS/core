@@ -12,9 +12,14 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use PDOException;
 use Cake\Http\ServerRequest;
+use Cake\I18n\FrozenTime;//POCOR-9268
+use Cake\I18n\Time;//POCOR-9268
+use Cake\ORM\Table;//POCOR-9268
 
 class MealsTable extends AppTable
 {
+    const NO_FILTER = 0;//POCOR-9268
+
     public function initialize(array $config): void
     {
         $this->setTable('institution_meal_students');
@@ -48,6 +53,8 @@ class MealsTable extends AppTable
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('report_start_date', ['type' => 'hidden']);//POCOR-9268
+        $this->ControllerAction->field('report_end_date', ['type' => 'hidden']);//POCOR-9268
         $this->ControllerAction->field('format');
     }
 
@@ -55,6 +62,8 @@ class MealsTable extends AppTable
     {
         if ($data[$this->getAlias()]['feature'] == 'Report.MealSummary') {
             $options['validate'] = 'MealSummary';
+        }else if($data[$this->getAlias()]['feature'] == 'Report.MealDetails'){//POCOR-9268
+            $options['validate'] = 'MealDetails';
         }
     }
 
@@ -78,6 +87,53 @@ class MealsTable extends AppTable
             }
         return $attr;
     }
+    //POCOR-9268 Starts
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+        // validation for meals details feature
+        $validator
+            ->add('report_start_date', [
+                'ruleCompareDate' => [
+                    'rule' => ['compareDate', 'report_end_date', true],
+                    'on' => function ($context) {
+                        $feature = $context['data']['feature'];
+                        return in_array($feature, ['Report.MealDetails']);
+                    }
+                ],
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                    'on' => function ($context) {
+                        $feature = $context['data']['feature'];
+                        return in_array($feature, ['Report.MealDetails']);
+                    },
+                    'message' => __('Report Start Date should be later than Academic Period Start Date')
+                ],
+            ]);
+
+        $validator
+            ->add('report_end_date', [
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                    'on' => function ($context) {
+                        $feature = $context['data']['feature'];
+                        return in_array($feature, ['Report.MealDetails']);
+                    },
+                    'message' => __('Report End Date should be earlier than Academic Period End Date')
+                ],
+                'ruleForOneMonthDate' => [
+                    'rule' => ['forOneMonthDate'],
+                    'on' => function ($context) {
+                        $feature = $context['data']['feature'];
+                        return in_array($feature, ['Report.MealDetails']);
+                    },
+                    'message' => __('Date range should be one month only')
+                ]
+            ]);
+
+        return $validator;
+    }//POCOR-9268 Ends
 
     public function validationMealSummary(Validator $validator)
     {
@@ -87,6 +143,15 @@ class MealsTable extends AppTable
             ->notEmpty('area_education_id');
         return $validator;
     }
+    //POCOR-9268 Starts
+    public function validationMealDetails(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('institution_id')
+            ->notEmpty('area_education_id');
+        return $validator;
+    }//POCOR-9268 Ends
 
     function array_flatten($array) {
         if (!is_array($array)) {
@@ -110,7 +175,7 @@ class MealsTable extends AppTable
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
 
-            if (in_array($feature, ['Report.MealSummary'])) {
+            if (in_array($feature, ['Report.MealSummary','Report.MealDetails'])) {
                 $institutionList = [];
                 if (array_key_exists('institution_type_id', (array)$request->getData($this->getAlias())) && !empty($request->getData($this->getAlias())['institution_type_id'])) {
                     $institutionTypeId = $request->getData($this->getAlias())['institution_type_id'];
@@ -248,7 +313,7 @@ class MealsTable extends AppTable
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
 
-            if ((in_array($feature, ['Report.MealSummary'])
+            if ((in_array($feature, ['Report.MealSummary','Report.MealDetails'])
             )) {
                 $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
@@ -258,7 +323,7 @@ class MealsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['select'] = false;
 
-                if (in_array($feature, ['Report.Meals'])
+                if (in_array($feature, ['Report.Meals','Report.MealDetails'])
                 ) {
                     $attr['onChangeReload'] = true;
                 }
@@ -276,7 +341,7 @@ class MealsTable extends AppTable
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
 
-            if ((in_array($feature, ['Report.MealSummary']))) {
+            if ((in_array($feature, ['Report.MealSummary','Report.MealDetails']))) {
                 $Areas = TableRegistry::getTableLocator()->get('Area.AreaLevels');
                 $entity = $attr['entity'];
 
@@ -305,7 +370,7 @@ class MealsTable extends AppTable
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
             $areaLevelId = $this->request->getData($this->getAlias())['area_level_id'];//POCOR-6333
-            if (in_array($feature, ['Report.MealSummary'])) {
+            if (in_array($feature, ['Report.MealSummary','Report.MealDetails'])) {
                     $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                     $entity = $attr['entity'];
 
@@ -374,4 +439,100 @@ class MealsTable extends AppTable
         }
         return $idArray;
     }
+    //POCOR-9268 Starts
+    public function onUpdateFieldReportStartDate(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        $requestData = $this->request->getData($this->getAlias());
+        $feature = isset($requestData['feature']) ? $requestData['feature'] : null;
+        $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : null;
+        if ($feature) {
+            $attr['value'] = self::NO_FILTER;
+            if ($selectedAcademicPeriodId) {
+                $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
+                $selectedPeriod = $AcademicPeriods->get($selectedAcademicPeriodId);
+                if (in_array($feature, [
+                    'Report.MealDetails'
+                ])
+                ) {
+                    $attr['type'] = 'date';
+                    $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
+                    $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
+                    $attr['value'] = $selectedPeriod->start_date;
+                }
+            }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldReportEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        $requestData = $this->request->getData($this->getAlias());
+        $feature = isset($requestData['feature']) ? $requestData['feature'] : null;
+        $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : null;
+        if ($feature) {
+            $attr['value'] = self::NO_FILTER;
+            if ($selectedAcademicPeriodId) {
+                $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
+                $selectedPeriod = $AcademicPeriods->get($selectedAcademicPeriodId);
+                if (in_array($feature, [
+                    'Report.MealDetails'
+                ])
+                ) {
+                    $attr['type'] = 'date';
+                    $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
+                    $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
+                    $attr['value'] = $selectedPeriod->end_date;
+                }
+            }
+            return $attr;
+        }
+    }
+
+    /**
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }//POCOR-9268 Ends
 }
