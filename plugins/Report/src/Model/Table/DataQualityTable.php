@@ -97,7 +97,7 @@ class DataQualityTable extends AppTable {
     {
     	if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
-            if (in_array($feature,['Report.EnrollmentOutliers','Report.AgeOutliers'])){
+            if (in_array($feature,['Report.EnrollmentOutliers','Report.AgeOutliers','Report.StaffWithMissingQualificationReport'])){
             	$AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
                 $currentPeriod = $AcademicPeriodTable->getCurrent();
@@ -118,7 +118,7 @@ class DataQualityTable extends AppTable {
         if (isset($request->getData()[$this->getAlias()]['feature'])) {
             $feature = $this->request->getData()[$this->getAlias()]['feature'];
 
-            if ((in_array($feature, ['Report.ValidationReport',
+            if ((in_array($feature, ['Report.ValidationReport','Report.StaffWithMissingQualificationReport'
 
             ]))) {
                 $Areas = TableRegistry::get('Area.AreaLevels');
@@ -150,7 +150,7 @@ class DataQualityTable extends AppTable {
             $areaLevelId = $this->request->getData()[$this->getAlias()]['area_level_id'];//POCOR-6333
             if ((in_array($feature,
                 [
-                    'Report.ValidationReport',
+                    'Report.ValidationReport', 'Report.StaffWithMissingQualificationReport'
                 ]))) {
                 $Areas = TableRegistry::get('Area.Areas');
                 $entity = $attr['entity'];
@@ -191,7 +191,7 @@ class DataQualityTable extends AppTable {
         if (isset($this->request->getData()[$this->getAlias()]['feature'])) {
             $feature = $this->request->getData()[$this->getAlias()]['feature'];
 
-            if (in_array($feature, ['Report.ValidationReport',
+            if (in_array($feature, ['Report.ValidationReport', 'Report.StaffWithMissingQualificationReport'
                   ])) {
                 $institutionList = [];
                 if (array_key_exists('institution_type_id', $request->getData()[$this->getAlias()]) && !empty($request->getData()[$this->getAlias()]['institution_type_id'])) {
@@ -219,7 +219,7 @@ class DataQualityTable extends AppTable {
                     $institutionList = $institutionQuery->toArray();
                 } elseif (!$institutionTypeId && array_key_exists('area_education_id', $request->getData()[$this->getAlias()]) && !empty($request->getData()[$this->getAlias()]['area_education_id']) && $areaId != -1) {
                     //Start:POCOR-6818 Modified this for POCOR-6859
-                    $AreaT = TableRegistry::get('areas');
+                    $AreaT = TableRegistry::get('Area.Areas'); //POCOR-9262
                     //Level-1
                     $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
                     $childArea =[];

@@ -28,20 +28,22 @@ class ConfigItemsTable extends AppTable
 
     public function initialize(array $config): void
     {
-        $this->languagePath = TMP . 'cache' . DS . 'language_menu';
-        $this->languageFilePath = TMP . 'cache' . DS . 'language_menu' . DS . 'language';
-        parent::initialize($config);
-        $this->addBehavior('Configuration.ConfigItems');
-        $this->belongsTo('ConfigItemOptions', ['className' => 'Configuration.ConfigItemOptions', 'foreignKey' => 'value']);
-        $this->addBehavior('Restful.RestfulAccessControl', [
-            'Students' => ['index'],
-            'Staff' => ['index'],
-            'OpenEMIS_Classroom' => ['index'],
-            'Map' => ['index'],
-            'ClassStudents' => ['index'],
-            'AssociationStudent' => ['index'],
-            'SubjectStudents' => ['index']
-        ]);
+        if (file_exists(CONFIG . 'app_local.php')) {
+            $this->languagePath = TMP . 'cache' . DS . 'language_menu';
+            $this->languageFilePath = TMP . 'cache' . DS . 'language_menu' . DS . 'language';
+            parent::initialize($config);
+            $this->addBehavior('Configuration.ConfigItems');
+            $this->belongsTo('ConfigItemOptions', ['className' => 'Configuration.ConfigItemOptions', 'foreignKey' => 'value']);
+            $this->addBehavior('Restful.RestfulAccessControl', [
+                'Students' => ['index'],
+                'Staff' => ['index'],
+                'OpenEMIS_Classroom' => ['index'],
+                'Map' => ['index'],
+                'ClassStudents' => ['index'],
+                'AssociationStudent' => ['index'],
+                'SubjectStudents' => ['index']
+            ]);
+        }
     }
 
     public function beforeAction(Event $event)
@@ -627,18 +629,20 @@ class ConfigItemsTable extends AppTable
 
     public function value($code)
     {
-        $value = '';
-        if (array_key_exists($code, $this->configurations)) {
-            $value = $this->configurations[$code];
-        } else {
-            $entity = $this->findByCode($code)->first();
-            if (empty($entity)) {
-                return false;
+        if (file_exists(CONFIG . 'app_local.php')) { //POCOR-9203
+            $value = '';
+            if (array_key_exists($code, $this->configurations)) {
+                $value = $this->configurations[$code];
+            } else {
+                $entity = $this->findByCode($code)->first();
+                if (empty($entity)) {
+                    return false;
+                }
+                $value = strlen($entity->value) ? $entity->value : $entity->default_value;
+                $this->configurations[$code] = $value;
             }
-            $value = strlen($entity->value) ? $entity->value : $entity->default_value;
-            $this->configurations[$code] = $value;
+            return $value;
         }
-        return $value;
     }
 
     public function defaultValue($code)

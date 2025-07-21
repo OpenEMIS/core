@@ -128,8 +128,9 @@ class InstitutionsController extends AppController
         'InstitutionExaminationsUndoRegistration',
         'InstitutionExaminationStudents',
 
-        // positions
+        // appointments
         'InstitutionPositions',
+        'InstitutionDepartments',
 
         // finance
         'InstitutionBankAccounts',
@@ -282,6 +283,18 @@ class InstitutionsController extends AppController
                             'kd-angular-multi-select',
                             'institutionadd.associations.ctrl',
                             'institutionadd.associations.svc'
+                        ]);
+                    }
+                }
+                break;
+            case 'Departments':
+                if (isset($this->request->getParam('pass')[0])) {
+                    if ($this->request->getParam('pass')[0] == 'edit') {
+                        $this->Angular->addModules([
+                            'alert.svc',
+                            'kd-angular-multi-select',
+                            'institution.departments.ctrl',
+                            'institution.departments.svc'
                         ]);
                     }
                 }
@@ -507,6 +520,61 @@ class InstitutionsController extends AppController
     public function Positions()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']);
+    }
+
+    public function Departments($subaction = 'index', $encodedParams = null)
+    {
+        if ($subaction == 'edit') {
+            $params = $this->ControllerAction->paramsDecode($encodedParams);
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+            $departmentId = $params['id'];
+
+            $viewUrl = $this->ControllerAction->url('view');
+            $viewUrl['action'] = 'Departments';
+            $viewUrl['0'] = 'view';
+            $viewUrl['1'] = $encodedParams;
+
+            $institutionParamsEncode = $this->ControllerAction->paramsEncode([
+                'id' => $institutionId,
+                'institution_id' => $institutionId,
+            ]);
+            $indexUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Departments',
+                '0' => 'index',
+                '1' => $institutionParamsEncode
+            ];
+
+            $alertUrl = [
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
+                'action' => 'setAlert',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+
+            $this->set('alertUrl', $alertUrl);
+            $this->set('viewUrl', $viewUrl);
+            $this->set('indexUrl', $indexUrl);
+            $this->set('institutionId', $institutionId);
+
+            // Start POCOR-7466
+            $activeInstitution = $this->Institutions->get($institutionId);
+            $institutionName = $activeInstitution->name;
+            $this->Navigation->addCrumb(__('Departments'),
+                ['plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'Departments',
+                    '0' => 'index',
+                    '1' => $institutionParamsEncode]);
+            $header = __($institutionName);
+            $this->set('contentHeader', $header . ' - ' . __('Departments'));
+            // END POCOR-7466
+
+            $this->render('institution_departments_edit');
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionDepartments']);
+        }
     }
 
     public function StaffDuties()
@@ -6675,7 +6743,6 @@ class InstitutionsController extends AppController
      */
     public function saveStudentData()
     {
-
         if($this->savingStudentData > 0) {
             self::debug('>0');
             return;
@@ -6705,6 +6772,7 @@ class InstitutionsController extends AppController
             $this->handleCustomFields('student', $requestData, $userRecordId, $userId);
             //if ($requestData['student_admission_status_value'] == 0 || strtolower($requestData['student_admission_status']) == "enrolled") {//POCOR-8434
             $saved_student = $this->handleStudentInstitutionData($requestData, $userRecordId, $userId) ?? $securityUserResult; // POCOR-8776
+            $handle_candidate_number = $this->handleCandidateNumber($requestData, $userRecordId); // POCOR-9164
             //}//POCOR-8434
             $this->triggerWebhooks($userRecordId, $requestData);
 //            Log::debug(print_r($studentData,true));
@@ -7396,6 +7464,96 @@ class InstitutionsController extends AppController
         }
 
         return $saved_student;
+    }
+
+    /**
+     * POCOR-9164
+     * @author Ehteram Ahmad
+     * Create Registration Number(Candidate Number) on new student enrollment  
+     **/
+
+    private function handleCandidateNumber(array $requestData, $userRecordId)
+    {
+        $institutionId = $requestData['institution_id'] ?? null;
+        $institutionClassId = $requestData['institution_class_id'] ?? null;
+        $educationGradeId = $requestData['education_grade_id'] ?? null;
+        $academicPeriodId = $requestData['academic_period_id'] ?? null;
+
+
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionStudentProgrammes = TableRegistry::get('Student.InstitutionStudentProgrammes');
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+
+        $institutionResult = $Institutions->find()
+                    ->contain('Areas')
+                    ->where([$Institutions->aliasField('id') => $requestData['institution_id']])
+                    ->first();
+
+        $AcademicPeriodsResult = $AcademicPeriods->find()
+                    ->where([$AcademicPeriods->aliasField('id') => $academicPeriodId])
+                    ->first();
+
+        $EducationGradesResult = $EducationGrades->find()
+                    ->where([$EducationGrades->aliasField('id') => $educationGradeId])
+                    ->first();
+
+        $areaCode = $institutionResult->area['code'];
+        $institutionCode = $institutionResult->code;
+        $AcademicPeriodsCode = $AcademicPeriodsResult->code;
+        $EducationProgrammeId = $EducationGradesResult->education_programme_id;
+
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $autoGeneratedCandidateNumber = $ConfigItemTable
+            ->find()
+            ->select([$ConfigItemTable->aliasField('value')])
+            ->where([$ConfigItemTable->aliasField('code') => 'auto_generated_candidate_number'])
+            ->first();
+        
+        $autoGeneratedCandidateNumberValueSelection = $autoGeneratedCandidateNumber['value_selection'];
+        $isEnabled = $autoGeneratedCandidateNumber['value'];
+        if($isEnabled){
+            preg_match_all('/\${([^}]+)}/', $autoGeneratedCandidateNumberValueSelection, $matches);
+
+            $cleanedArray = $matches[1];
+
+            $InstitutionStudentProgrammesData = $InstitutionStudentProgrammes->find()
+                        ->order([$InstitutionStudentProgrammes->aliasField('id') => 'desc']) //POCOR-8074
+                        ->limit(1)
+                        ->first();
+                
+            $registration_number = $InstitutionStudentProgrammesData->registration_number;
+            if(!empty($registration_number)){
+                $registration_number = explode("/", $registration_number);
+                $last_registration_number = end($registration_number);
+                $next_registration_number = (int)$last_registration_number + 1;
+                $nextNumberPadded = str_pad($next_registration_number, strlen($last_registration_number), '0', STR_PAD_LEFT);
+                $formattedNumber = $nextNumberPadded;
+            }else{
+                $digits = 4;
+                $number = 1;
+                $formattedNumber = str_pad($number, $digits, '0', STR_PAD_LEFT);
+            }
+            $rawCandidateNumber = [
+                $areaCode,
+                $institutionCode,
+                $AcademicPeriodsCode,
+                $formattedNumber
+            ];
+            $finalCandidateNumber = implode('/', $rawCandidateNumber);
+
+            $data = $InstitutionStudentProgrammes->newEntity([
+                'institution_id' =>$institutionId,
+                'student_id'=>$userRecordId,
+                'education_programme_id'=>$EducationProgrammeId,
+                'registration_number'=> $finalCandidateNumber,
+                'modified_user_id'=>$this->Auth->user('id'),
+                'modified'=>date('Y-m-d h:i:s'),
+                'created_user_id'=>$this->Auth->user('id'),
+                'created'=> date('Y-m-d h:i:s')
+            ]);
+            $InstitutionStudentProgrammes->save($data);
+        }
     }
 
     /**
@@ -8292,50 +8450,103 @@ class InstitutionsController extends AppController
     /**
      * Change for hiding/showing external search. POCOR-8231
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *     POCOR-9118 refactored for OpenEMIS Core search
      */
-    public function checkConfigurationForExternalSearch()
+    public function checkConfigurationForExternalSearch(): Response
     {
         $this->request->allowMethod(['post']);
+        $data   = $this->request->getData();
+        $params = $data['params'] ?? [];
 
-        $requestData = $this->request->getData();
-        $requestParams = $requestData['params'] ?? [];
+        $identityTypeId = (int)($params['identity_type_id'] ?? 0);
+        $nationalityId  = (int)($params['nationality_id'] ?? 0);
 
-        $identity_type_id = $requestParams['identity_type_id'] ?? 0;
-        $nationality_id = $requestParams['nationality_id'] ?? 0;
-
-        if (!$identity_type_id || !$nationality_id) {
-            return $this->sendJsonResponse([["value" => 'None', "showExternalSearch" => false]]);
+        if (!$identityTypeId || !$nationalityId) {
+            return $this->sendJsonResponse([
+                ['value' => 'None', 'showExternalSearch' => false]
+            ]);
         }
 
-        $configItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $configItemsResultQuery = $configItems
-            ->find('all')
-            ->select(['id' => $configItems->aliasField('id'),
-                'name' => $configItems->aliasField('name')])
-            ->innerJoin(['Nationalities' => 'nationalities'], [
-                'Nationalities.id = ' . $nationality_id,
-                'Nationalities.identity_type_id = ' . $identity_type_id,
-                'Nationalities.external_validation = ' . $configItems->aliasField('id')
+        $configItemsTable = TableRegistry::getTableLocator()
+            ->get('Configuration.ConfigItems');
+
+        // 1) Fetch non–“OpenEMIS Core” data sources
+        $regularQuery = $configItemsTable->find()
+            ->select([
+                'id'   => $configItemsTable->aliasField('id'),
+                'name' => $configItemsTable->aliasField('name'),
             ])
             ->where([
-                $configItems->aliasField('type = "External Data Source - Identity"'),
-                $configItems->aliasField('value = 1')
+                $configItemsTable->aliasField('type')  => 'External Data Source - Identity',
+                $configItemsTable->aliasField('value') => 1,
+                $configItemsTable->aliasField('name !=') => 'OpenEMIS Core',
             ])
+            ->innerJoin(
+                ['Nationalities' => 'nationalities'],
+                [
+                    'Nationalities.id ='            => $nationalityId,
+                    'Nationalities.identity_type_id =' => $identityTypeId,
+                    'Nationalities.external_validation ='
+                    => $configItemsTable->aliasField('id'),
+                ]
+            )
             ->disableHydration();
 
-        $configItemsResult = $configItemsResultQuery->toArray();
+        $regularResults = $regularQuery->toArray();
 
+        // 2) Check for “OpenEMIS Core” match via ExternalDataSourceAttributes
+        $openEmisCoreItem = $configItemsTable->find()
+            ->select(['name'])
+            ->where([
+                'type'  => 'External Data Source - Identity',
+                'value' => 1,
+                'name'  => 'OpenEMIS Core',
+            ])
+            ->first();
 
-        $resultArray = array_map(function ($result) {
-            return ["value" => $result['name'], "showExternalSearch" => true];
-        }, $configItemsResult);
+        $coreResults = [];
+        if ($openEmisCoreItem) {
+            $edaTable = TableRegistry::getTableLocator()
+                ->get('Configuration.ExternalDataSourceAttributes');
 
+            $match = $edaTable->find()
+                ->select(['value'])
+                ->where([
+                    'external_data_source_type' => 'OpenEMIS Core',
+                    'attribute_field'           => 'identity_type_id',
+                    'value'                     => $identityTypeId,
+                ])
+                ->first();
+
+            if ($match) {
+                $coreResults[] = [
+                    'name' => $openEmisCoreItem->name
+                ];
+            }
+        }
+
+        // 3) Map both sets into the unified result format
+        $results = array_merge($regularResults, $coreResults);
+        $resultArray = [];
+
+        foreach ($results as $row) {
+            $resultArray[] = [
+                'value'              => $row['name'],
+                'showExternalSearch' => true
+            ];
+        }
+
+        // 4) Fallback if nothing matched
         if (empty($resultArray)) {
-            $resultArray[] = ["value" => 'None', "showExternalSearch" => false];
+            $resultArray[] = [
+                'value'              => 'None',
+                'showExternalSearch' => false
+            ];
         }
 
         return $this->sendJsonResponse($resultArray);
     }
+
 
     public
     function checkUserAge()
