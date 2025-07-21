@@ -2,25 +2,22 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
-use ZipArchive;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\Utility\Hash;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Log\Log;
 
+//POCOR-9076
 class OutcomesResultTable extends AppTable
 {
     public function initialize(array $config): void
     {
-
         $this->setTable('institution_classes');
         parent::initialize($config);
-
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->hasMany('ClassesSecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'saveStrategy' => 'replace', 'foreignKey' => 'institution_class_id']);
@@ -48,10 +45,7 @@ class OutcomesResultTable extends AppTable
             'through' => 'Institution.InstitutionClassSubjects',
             'foreignKey' => 'institution_class_id',
             'targetForeignKey' => 'institution_subject_id'
-        ]);
-
-
-       
+        ]);       
         $this->addBehavior('Excel', [
             'excludes' => ['is_student', 'photo_name', 'is_staff', 'is_guardian',  'super_admin', 'status'],
             'pages' => false,
@@ -65,16 +59,17 @@ class OutcomesResultTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
-        $institutionId = $requestData->institution_id;
-        $areaId = $requestData->area_education_id;
         $educationGradeId = $requestData->education_grade_id;
-        $selectedArea = $requestData->area_education_id;
-        $outcomePeriod = $requestData->outcome_period;
 
-        if (!is_null($academicPeriodId) && !is_null($institutionId) && !is_null($educationGradeId)) {
+        if (!is_null($academicPeriodId)) {
             $OutcomeCriteriasTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
             $EducationSubjectsTable = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
+            $conditions = [];
+            $conditions['OutcomeCriterias.academic_period_id'] = $academicPeriodId;
+            if ($educationGradeId != 0) {
+                $conditions['OutcomeCriterias.education_grade_id'] = $educationGradeId;
 
+            }
             $criteriaList = $OutcomeCriteriasTable
                 ->find()
                 ->select([
@@ -86,24 +81,18 @@ class OutcomesResultTable extends AppTable
                 ->contain([
                     $EducationSubjectsTable->getAlias()
                 ])
-                ->where([
-                    $OutcomeCriteriasTable->aliasField('academic_period_id') => $academicPeriodId,
-                    $OutcomeCriteriasTable->aliasField('education_grade_id') => $educationGradeId,
-                ])
+                ->where($conditions)
                 ->order($OutcomeCriteriasTable->aliasField('education_subject_id'))
                 ->toArray();
 
             $settings['criteria_list_entities'] = $criteriaList;
             $settings['criteria_prefix'] = 'outcome_criteria_';
-            $settings['institution_id'] = $institutionId;
             $settings['academic_period_id'] = $academicPeriodId;
-            $settings['education_grade_id'] = $educationGradeId;
 
         } else {
             Log::write('error', 'Outcome excel: No outcome template id found.');
         }
     }
-
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
@@ -116,27 +105,22 @@ class OutcomesResultTable extends AppTable
         $outcomePeriod = $requestData->outcome_period;
         $criteriaList =  $settings['criteria_list_entities'];
         $conditions = [];
-       if ($areaId != 1 && $areaId != '') {
+       if (!empty($areaId) && $areaId != 1) {
             $areaIds = [];
             $allgetArea = $this->getChildren($selectedArea, $areaIds);
-            $selectedArea1[]= $selectedArea;
-            if(!empty($allgetArea)){
-                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
-            }else{
-                $allselectedAreas = $selectedArea1;
+            $allselectedAreas = array_merge([$selectedArea], $allgetArea ?? []);
+            $allselectedAreas = array_unique(array_filter($allselectedAreas));
+            if (!empty($allselectedAreas)) {
+                $conditions['Institutions.area_id IN'] = $allselectedAreas;
             }
-            $conditions['Institutions.area_id IN'] = $allselectedAreas;
         }
         $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
-        if ($institutionId != 1) {
+        if (!empty($institutionId) && $institutionId != 1) {
             $conditions[$this->aliasField('institution_id')] = $institutionId;
         }
-
-        // Only filter by grade if specific one is selected (not "All")
-        if ($educationGradeId != 0) {
+        if (!empty($educationGradeId) && $educationGradeId != 0) {
             $conditions['InstitutionClassStudents.education_grade_id'] = $educationGradeId;
         }
-
         $InstitutionClassStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
         $InstitutionOutcomeResultsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionOutcomeResults');
@@ -144,19 +128,14 @@ class OutcomesResultTable extends AppTable
         $OutcomeGradingOptionsTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeGradingOptions');
         $OutcomePeriodsTable = TableRegistry::getTableLocator()->get('Outcome.OutcomePeriods');
         $outcomeCommentTable = TableRegistry::getTableLocator()->get('Institution.InstitutionOutcomeSubjectComments');
-        
-        // Class Student table - get all students in the class for the outcome
         $where = [];
         $where[$InstitutionClassStudentsTable->aliasField('academic_period_id')] = $academicPeriodId;
-        if ($institutionId != 1) {
+        if (!empty($institutionId) && $institutionId != 1) {
             $where[$InstitutionClassStudentsTable->aliasField('institution_id')] = $institutionId;
         }
-
-        // Only filter by grade if specific one is selected (not "All")
-        if ($educationGradeId != 0) {
+        if (!empty($educationGradeId) && $educationGradeId != 0) {
             $where[$InstitutionClassStudentsTable->aliasField('education_grade_id')] = $educationGradeId;
         }
-
         $studentList = $InstitutionClassStudentsTable
             ->find()
             ->select([
@@ -173,22 +152,23 @@ class OutcomesResultTable extends AppTable
 
         $studentIdList = Hash::extract($studentList, '{n}.student_id');
 
-        // Get all student outcome results for the students found in above query
-            $InstitutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
-        if (empty($studentIdList)) {
-            $studentOutcomeResultList = []; // no results to process
-        }else {
-            $whereClause = []; 
-            $whereClause[$InstitutionOutcomeResultsTable->aliasField('academic_period_id')] = $academicPeriodId;
-        if ($institutionId != 1) {
+        $InstitutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
+        $whereClause = [];
+        // Always filter by academic period and outcome period
+        $whereClause[$InstitutionOutcomeResultsTable->aliasField('academic_period_id')] = $academicPeriodId;
+        $whereClause[$InstitutionOutcomeResultsTable->aliasField('outcome_period_id')] = $outcomePeriod;
+        // Filter by institution only if a specific one is selected
+        if (!empty($institutionId) && $institutionId != 1) {
             $whereClause[$InstitutionOutcomeResultsTable->aliasField('institution_id')] = $institutionId;
         }
-
-        // Only filter by grade if specific one is selected (not "All")
-       
-            $whereClause[$InstitutionOutcomeResultsTable->aliasField('outcome_period_id')] = $outcomePeriod;
+        // Filter by grade only if a specific one is selected
+        if (!empty($educationGradeId) && $educationGradeId != 0) {
+            $whereClause[$InstitutionOutcomeResultsTable->aliasField('education_grade_id')] = $educationGradeId;
+        }
+        if (empty($studentIdList)) {
+            $studentOutcomeResultList = [];
+        }else {
             $whereClause[$InstitutionOutcomeResultsTable->aliasField('student_id IN')] = $studentIdList;
-        
             $studentOutcomeResultList = $InstitutionOutcomeResultsTable
                 ->find()
                 ->select([
@@ -233,7 +213,6 @@ class OutcomesResultTable extends AppTable
                 ->enableAutoFields(false)
                 ->toArray();
         }
-
         $outcomeResults = [];
         $prefix = $settings['criteria_prefix'];
         $finalResults = [];
@@ -241,7 +220,6 @@ class OutcomesResultTable extends AppTable
         foreach ($studentOutcomeResultList as $entity) {
             $studentId = $entity->student_id;
             $result = $entity->final_result;
-            $comments = $entity->comments;
             $subjectId = $entity->subject_id;
            if (!empty($entity->final_result)) {
                 $finalResults[$studentId][$subjectId] = $entity->final_result;
@@ -260,8 +238,6 @@ class OutcomesResultTable extends AppTable
             if (!array_key_exists($periodId, $outcomeResults[$studentId])) {
                 $outcomeResults[$studentId][$periodId] = [];
             }
-
-            $criteriaId = $entity->outcome_criteria_id;
             $criteriaId = $entity->outcome_criteria_id ?? null;
 
             if (!$criteriaId) {
@@ -277,16 +253,13 @@ class OutcomesResultTable extends AppTable
         foreach ($studentList as $studentEntity) {
             $studentId = $studentEntity->student_id;
             $studentEntityList[$studentId] = $studentEntity->user;
-
             if (!array_key_exists($studentId, $allOutcomeResults)) {
                 $allOutcomeResults[$studentId] = [];
             }
             $outcomePeriodId = $outcomePeriod; 
-
             if (!array_key_exists($studentId, $allOutcomeResults)) {
                 $allOutcomeResults[$studentId] = [];
             }
-
             foreach ($criteriaList as $criteriaEntity) {
                 $criteriaId = $criteriaEntity->id;
                 $criteriaFieldId = $prefix . $criteriaId;
@@ -306,8 +279,9 @@ class OutcomesResultTable extends AppTable
                 'outcome_period_id' => 'OutcomePeriods.id',
                 'institution_name' => 'Institutions.name',
                 'institution_code' => 'Institutions.code',
-                'education_grade_name' => 'EducationGrades.name'
-                'academic_period_name' => 'AcademicPeriods.name'
+                'education_grade_name' => 'EducationGrades.name',
+                'academic_period_name' => 'AcademicPeriods.name',
+                'education_subject_name' => 'EducationSubjects.name',
             ])
             ->contain(['Institutions']) 
             ->contain(['AcademicPeriods']) 
@@ -329,35 +303,52 @@ class OutcomesResultTable extends AppTable
             ->leftJoin(['EducationGrades' => 'education_grades'],[
                 'InstitutionClassStudents.education_grade_id = EducationGrades.id'
             ])
-            ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'],[
-                'InstitutionClassSubjects.institution_class_id = InstitutionClassStudents.institution_class_id'
+            ->innerJoin(['InstitutionSubjectStudents' => 'institution_subject_students'], [
+                'InstitutionSubjectStudents.student_id = InstitutionClassStudents.student_id',
+                'InstitutionSubjectStudents.institution_id = InstitutionClassStudents.institution_id',
+                'InstitutionSubjectStudents.academic_period_id = InstitutionClassStudents.academic_period_id',
+                'InstitutionSubjectStudents.institution_class_id = InstitutionClassStudents.institution_class_id',
             ])
-            ->leftJoin(['InstitutionSubjects' => 'institution_subjects'],[
-                'InstitutionSubjects.id = InstitutionClassSubjects.institution_subject_id '
+            ->leftJoin(['InstitutionSubjects' => 'institution_subjects'], [
+                'InstitutionSubjects.id = InstitutionSubjectStudents.institution_subject_id'
             ])
-            ->leftJoin(['EducationSubjects' => 'education_subjects'],[
-                'EducationSubjects.id = InstitutionSubjects.institution_subject_id '
+            ->leftJoin(['EducationSubjects' => 'education_subjects'], [
+                'EducationSubjects.id = InstitutionSubjectStudents.education_subject_id'
             ])
+            ->leftJoin(
+                ['InstitutionOutcomeResults' => 'institution_outcome_results'],
+                function ($exp, $q) use ($educationGradeId) {
+                    $on = [
+                        'InstitutionOutcomeResults.student_id = InstitutionSubjectStudents.student_id',
+                        'InstitutionOutcomeResults.education_subject_id = InstitutionSubjectStudents.education_subject_id',
+                        'InstitutionOutcomeResults.institution_id = InstitutionSubjectStudents.institution_id',
+                        'InstitutionOutcomeResults.academic_period_id = InstitutionSubjectStudents.academic_period_id',
+                    ];
 
+                    if ($educationGradeId != 1) {
+                        $on[] = $exp->eq('InstitutionOutcomeResults.education_grade_id', $educationGradeId);
+                    }
+                    return $on;
+                }
+            )
            ->where($conditions)
+           ->group('InstitutionClassStudents.student_id')
             ->formatResults(function(ResultSetInterface $results) use ($allOutcomeResults, $studentEntityList, $finalResults, $commentResults) {
                 return $results->map(function ($row) use ($allOutcomeResults, $studentEntityList, $finalResults, $commentResults) {
                     $studentId = $row->student_id;
                     $outcomePeriodId = $row->outcome_period_id;
                     $studentName = $studentEntityList[$studentId]->name;
                     foreach ($allOutcomeResults[$studentId][$outcomePeriodId] ?? [] as $field => $value) {
-                        $row->{$field} = $value;  // e.g., outcome_criteria_134 => 'Excellent'
+                        $row->{$field} = $value; 
                     }
-
                     // Add per-criteria outcome results
-                     foreach ($outcomeResults[$studentId][$periodId] ?? [] as $field => $value) {
+                    /*foreach ($outcomeResults[$studentId][$periodId] ?? [] as $field => $value) {
                         $row->{$field} = $value;
-                    }
+                    }*/
                     // Inject final_result per subject
                     foreach ($finalResults[$studentId] ?? [] as $subjectId => $result) {
                         $row->{'final_result' . $subjectId} = $result;
                     }
-
                     // Inject comment per subject
                     foreach ($commentResults[$studentId] ?? [] as $subjectId => $comment) {
                         $row->{'comment' . $subjectId} = $comment;
@@ -379,7 +370,7 @@ class OutcomesResultTable extends AppTable
             'key' => 'AcademicPeriods.name',
             'field' => 'academic_period_name',
             'type' => 'string',
-            'label' => __('Institution')
+            'label' => __('Academic Periods')
         ];
         $newFields[] = [
             'key' => 'Institutions.name',
@@ -396,10 +387,17 @@ class OutcomesResultTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'EducationSubjects.name',
+            'key' => 'EducationGrades.name',
             'field' => 'education_grade_name',
             'type' => 'string',
             'label' => __('Grade')
+        ];
+
+        $newFields[] = [
+            'key' => 'EducationSubject.name',
+            'field' => 'education_subject_name',
+            'type' => 'string',
+            'label' => __('Education Subject')
         ];
 
         $newFields[] = [
@@ -455,7 +453,6 @@ class OutcomesResultTable extends AppTable
                     'group' => $subject['name']
                 ];
             }
-
             // Add comment after all criteria for the subject
             $newFields[] = [
                 'key' => $subject['name'] . '_comment',
@@ -464,7 +461,6 @@ class OutcomesResultTable extends AppTable
                 'label' => __('Comment'),
                 'group' => $subject['name']
             ];
-
             // Add final result after comment
             $newFields[] = [
                 'key' => $subject['name'] . '_final_result',
