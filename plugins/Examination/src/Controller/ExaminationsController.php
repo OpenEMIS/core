@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
+use Cake\ORM\TableRegistry;
 
 class ExaminationsController extends AppController
 {
@@ -15,6 +16,7 @@ class ExaminationsController extends AppController
             'ImportResults' => ['className' => 'Examination.ImportResults', 'actions' => ['add']],
             'ImportExaminationCentreRooms' => ['className' => 'Examination.ImportExaminationCentreRooms', 'actions' => ['add']],
         ];
+        $this->loadComponent('Examination.SyncExam'); //POCOR-7509
         $this->attachAngularModules();
     }
 
@@ -128,8 +130,8 @@ class ExaminationsController extends AppController
         ];
 
         // pass query string for selected exam across tabs
-        if (!is_null($this->request->getQuery['examination_id'])) {
-            $examinationId = $this->request->getQuery['examination_id'];
+        if (!is_null($this->request->getQuery('examination_id'))) {
+            $examinationId = $this->request->getQuery('examination_id');
             foreach ($tabElements as $key => $obj) {
                 $tabElements[$key]['url']['examination_id'] = $examinationId;
             }
@@ -180,4 +182,107 @@ class ExaminationsController extends AppController
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
+
+    //POCOR-7509 start
+    /**
+     * Syncs examination results by fetching parameters from the request
+     * and retrieving corresponding data from the database.
+     *
+     * This method calls the 'SyncExam' model's 'getResultFromExam' method
+     * to fetch results based on the specified parameters.
+     *
+     * @return \Cake\Http\Response|null Redirects to the referring URL.
+     */
+    public function syncResultsExam()
+    {
+        error_reporting(0);
+        $this->autoRender = false;
+
+        $params = $this->buildParams([
+            'academic_period_id' => 'AcademicPeriod.AcademicPeriods',
+            'examination_id' => 'Examination.Examinations',
+            'examination_centre_id' => 'Examination.ExaminationCentres',
+        ]);
+        if (!empty($params)) {
+            $this->SyncExam->getResultFromExam($params);
+        }
+
+        return $this->redirect($this->referer());
+    }
+
+    /**
+     * Build parameters by fetching codes from corresponding tables.
+     *
+     * This method retrieves the IDs from the query parameters,
+     * then fetches the corresponding records from the database
+     * to return an array of parameters with their respective codes.
+     *
+     * @param array $mappings Key-value pairs of query parameter names and table aliases.
+     * @return array Parameters with their respective codes.
+     */
+    private function buildParams(array $mappings)
+    {
+        $params = [];
+
+        foreach ($mappings as $queryParam => $tableAlias) {
+            $id = $this->request->getQuery($queryParam);
+            if ($id) {
+                $record = TableRegistry::getTableLocator()->get($tableAlias)->find()->where(['id' => $id])->first();
+                if ($record) {
+                    $params[str_replace('_id', '_code', $queryParam)] = $record->code;
+                }
+            }
+        }
+
+        return $params;
+    }
+
+
+    /**
+     * Syncs students to their respective exams based on a query string.
+     *
+     * This function processes the incoming query string, retrieves the student's data
+     * using the `openemis_no` identifier, and adds the `student_id` to the parameters.
+     * It also handles potential error reporting and ensures the sync operation is 
+     * performed. Currently, the actual sync process is commented out.
+     * 
+     * @return \Cake\Http\Response|null Redirects the user back to the previous page after processing.
+     */
+   public function syncStudentsToExam()
+    {
+        error_reporting(0);
+        $this->autoRender = false;
+        $params = [];
+        $requestQuery = $this->request->getQuery();
+
+        if (isset($requestQuery['queryString'])) {
+
+            $params = $this->ControllerAction->paramsDecode($requestQuery['queryString']);
+            $SecurityUsersTable = $this->getTableLocator()->get('Security.Users');
+            $params = $this->ControllerAction->paramsDecode($requestQuery['queryString']);
+
+            if (!empty($params['openemis_no'])) {
+                $SecurityUsersTable = $this->getTableLocator()->get('Security.Users');
+                $userData = $SecurityUsersTable->find()
+                    ->where(['openemis_no' => $params['openemis_no']])
+                    ->first();
+
+                if ($userData) {
+                    $params['student_id'] = $userData->id;
+                    $this->SyncExam->registerStudentsInExams($params);
+                }
+            } else {
+                $params['student_id'] = -1;
+                $this->SyncExam->registerStudentsInExams($params);
+            }
+        }
+        $referrerUrl = $params['referrer'] ??
+            $requestQuery['referrer'] ??
+            $this->request->getEnv('HTTP_REFERER') ??
+            '/';
+
+        return $this->redirect($referrerUrl);
+    }
+
+    //POCOR-7509 end
 }

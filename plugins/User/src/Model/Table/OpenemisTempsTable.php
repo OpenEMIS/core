@@ -6,14 +6,14 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\UserTrait;
 use Cake\I18n\Time;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\Datasource\ConnectionManager;
 
 class OpenemisTempsTable extends AppTable
@@ -21,7 +21,7 @@ class OpenemisTempsTable extends AppTable
     
     public function initialize(array $config): void
     {
-        $this->setTable('openemis_temps');
+        $this->setTable('security_users_openemis_no');
         parent::initialize($config);     
 
         $this->getDisplayField('openemis_no');

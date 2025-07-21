@@ -1,3 +1,22 @@
+### [4.34.0] - 2025-07-18
+- Implemented: Develop a function to generate a candidate number
+- Implemeted: Develop sync button functions to register students for examinations from OpenEMIS Core to OpenEMIS Exams
+- Implemented: Develop changes to installation wizard to use prd_cor_new database
+- Implemented: Develop a new standard report for staff with missing qualifications
+- Implemented: Develop changes to docker and docker-compose files for OpenEMIS Core
+- Bug Fixed: Administration > System Setup > Custom Field > Infrastructure > Add: The Custom Field dropdown list is not displaying any options, even though custom fields have been configured
+- Bug Fixed: Institutions>Messaging: It only send to students and not other roles
+- Bug Fixed: Reports>Audits>Users: Modified on has no data
+- Bug Fixed: Institutions > Students > Bulk Transfer: There is no selection of start date for the new institution
+
+### [4.33.0] - 2025-07-17
+- Implemented: Develop changes to the openemis_temps table to rename the table
+- Implemeted: Develop departments feature v5 APIs
+- Bug Fixed: Administration>System Setup > Configurations>External Data Source>OpenEMIS Core: Add a new field
+- Bug Fixed: Institutions > General > Profiles > Students > Download PDF : Report is misaligned when generating in PDF format.
+- Bug Fixed: Administration > System Setup > System Configurations > Authentication: There is an extra drop down feature at the top
+- Bug Fixed: Institutions>Students>Export: Custom field values are not showing for this dropdown
+
 ### [4.32.0] - 2025-07-10
 - Implemented: Develop migration script to add table descriptions 
 - Implemented: Develop a function to send a custom alert when enrolment status changes
