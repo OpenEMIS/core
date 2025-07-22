@@ -200,6 +200,11 @@ class MealDetailsTable extends AppTable
                     ['Genders.id = SecurityUsers.gender_id']
                 )
                 ->where($conditions)
+                ->andWhere(function ($exp) use ($year, $month) {
+                    return $exp
+                        ->eq("YEAR(MealDetails.date)", $year)
+                        ->eq("MONTH(MealDetails.date)", $month);
+                })
                 ->group([
                     'AcademicPeriods.name',
                     'Institutions.id',
