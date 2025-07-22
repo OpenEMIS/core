@@ -109,6 +109,24 @@ class StaffEntitlementTable extends ControllerActionTable
             array_column($years, 'year'),
             array_column($years, 'year')
         );
+        $institutionId = $this->getInstitutionID();
+        $staffId       = $this->getStaffID();
+
+// 2. Prepare the base conditions array
+        $instStaffConditions = [];
+
+// Only add the = check if the ID is not null, otherwise check IS NULL
+        if ($institutionId !== null) {
+            $instStaffConditions['InstitutionStaff.institution_id ='] = $institutionId;
+        } else {
+            $instStaffConditions['InstitutionStaff.institution_id IS'] = null;
+        }
+
+        if ($staffId !== null) {
+            $instStaffConditions['InstitutionStaff.staff_id ='] = $staffId;
+        } else {
+            $instStaffConditions['InstitutionStaff.staff_id IS'] = null;
+        }
 
         // Add calculated fields, join related tables, and group the query
         $query
@@ -146,17 +164,15 @@ class StaffEntitlementTable extends ControllerActionTable
                 'InstitutionStaff' => [
                     'table' => 'institution_staff',
                     'type' => 'INNER',
-                    'conditions' => [
-                        'InstitutionStaff.institution_id = ' . $this->getInstitutionID(),
-                        'InstitutionStaff.staff_id = ' .  $this->getStaffID(),
-// POCOR-9287 start
+                    // POCOR-9287 start
+                    'conditions' => $instStaffConditions
 //                        'InstitutionStaff.start_date <= ' . $this->aliasField('date_from'),
 //                        'OR' => [
 //                            'InstitutionStaff.end_date IS NULL',
 //                            'InstitutionStaff.end_date >= ' . $this->aliasField('date_to')
 //                        ]
                         // POCOR-9287 end
-                    ]
+
                 ],
                 // Join InstitutionPositions
                 'InstitutionPositions' => [
