@@ -28,7 +28,7 @@ services:
     environment:
     - DB_HOST=openemis-core-database    # Specifies the DB_Host as DB container
     volumes:
-      - openemis-core-config:/var/www/html/core/config     # Volume mounting for config
+      - ./config:/var/www/html/core/config     # Volume mounting for config
       - ./api/.env:/var/www/html/api/.env
     networks:
       - openemis-network    # Specifies the network
@@ -47,7 +47,7 @@ services:
 volumes:
 # Persistent storage to prevent data loss when container is restarted or removed
   openemis-core-database:
-  openemis-core-config:
+#  openemis-core-config:
 networks:
 # Custom bridge network for inter container communication and this ensures that container can resolve by container name
   openemis-network:
