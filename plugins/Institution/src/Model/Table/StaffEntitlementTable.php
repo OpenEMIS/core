@@ -196,7 +196,14 @@ class StaffEntitlementTable extends ControllerActionTable
                             'StaffPositionTitles.name LIKE ' => '%' . $search . '%']]);
         }
         unset($extra['config']['search']);
+//        dd($query->sql());
         return $query;
+
+    }
+
+    public function onGetDaysTotal(Event $event, Entity $entity)
+    {
+            return $entity->days_total . " ";
 
     }
 
