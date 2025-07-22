@@ -317,18 +317,24 @@ class OutcomesResultTable extends AppTable
             ])
             ->leftJoin(
                 ['InstitutionOutcomeResults' => 'institution_outcome_results'],
-                function ($exp, $q) use ($educationGradeId) {
+                function ($exp, $q) use ($educationGradeId, $institutionId,  $academicPeriodId) {
                     $on = [
-                        'InstitutionOutcomeResults.student_id = InstitutionSubjectStudents.student_id',
-                        'InstitutionOutcomeResults.education_subject_id = InstitutionSubjectStudents.education_subject_id',
-                        'InstitutionOutcomeResults.institution_id = InstitutionSubjectStudents.institution_id',
-                        'InstitutionOutcomeResults.academic_period_id = InstitutionSubjectStudents.academic_period_id',
+                        'InstitutionOutcomeResults.student_id = InstitutionClassStudents.student_id',
+                        
+                        'InstitutionOutcomeResults.institution_id = InstitutionClassStudents.institution_id',
+                        'InstitutionOutcomeResults.academic_period_id = InstitutionClassStudents.academic_period_id',
+                        'InstitutionOutcomeResults.education_grade_id  = InstitutionClassStudents.education_grade_id ',
                     ];
 
-                    if ($educationGradeId != 1) {
-                        $on[] = $exp->eq('InstitutionOutcomeResults.education_grade_id', $educationGradeId);
+                    if (!empty($institutionId) && $institutionId != 1) {
+                    $on[] = $exp->eq('InstitutionOutcomeResults.institution_id', $institutionId);
                     }
+                    if (!empty($educationGradeId) && $educationGradeId != 0) {
+                         $on[] = $exp->eq('InstitutionOutcomeResults.education_grade_id', $educationGradeId);
+                    }
+                    $on[] = $exp->eq('InstitutionOutcomeResults.academic_period_id', $academicPeriodId);
                     return $on;
+                        return $on;
                 }
             )
            ->where($conditions)
@@ -339,7 +345,7 @@ class OutcomesResultTable extends AppTable
                     $outcomePeriodId = $row->outcome_period_id;
                     $studentName = $studentEntityList[$studentId]->name;
                     foreach ($allOutcomeResults[$studentId][$outcomePeriodId] ?? [] as $field => $value) {
-                        $row->{$field} = $value; 
+                        $row->{$field} = $value;  
                     }
                     // Add per-criteria outcome results
                     /*foreach ($outcomeResults[$studentId][$periodId] ?? [] as $field => $value) {
