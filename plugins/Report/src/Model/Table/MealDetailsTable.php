@@ -3,6 +3,9 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
+use DateInterval;
+use DatePeriod;
+use DateTime;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Event\Event;
@@ -15,6 +18,7 @@ use Cake\ORM\TableRegistry;
 class MealDetailsTable extends AppTable
 {
     use OptionsTrait;
+    protected $workingDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
     public function initialize(array $config): void
     {
@@ -55,14 +59,28 @@ class MealDetailsTable extends AppTable
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
+        $requestData = json_decode($settings['process']['params']);
+        $sheetsData = $this->generateSheetsData($requestData);
+        $sheets->exchangeArray($sheetsData);        
+    }
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
+        $sheetData = $settings['sheet']['sheetData'];
         $areaId = $requestData->area_education_id;
         $selectedArea = $requestData->area_education_id;
         $areaLevelId = $requestData->area_level_id;
         $institutionId = $requestData->institution_id;
         $academicPeriodId = $requestData->academic_period_id;
+
+        $year = $sheetData['year'];
+        $month = $sheetData['month'];
+
+        $startDay = $sheetData['startDay'];
+        $endDay = $sheetData['endDay'];
 
         $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
@@ -116,15 +134,21 @@ class MealDetailsTable extends AppTable
            // $conditions[$this->aliasField('Areas.area_level_id')] = $areaLevelId;
         }
 
+        $monthNameExpr = $query->func()->date_format([
+            'MealDetails.date' => 'identifier',
+            "'%Y %M'" => 'literal'
+        ]);
+        
         $query
             ->select([
                 'academic_period'         => 'AcademicPeriods.name',
+                'Institutions.id',
                 'institution_code'        => 'Institutions.code',
                 'institution_name'        => 'Institutions.name',
                 'education_grade'         => 'EducationGrades.name',
                 'class'                   => 'InstitutionClasses.name',
                 'meal_programme'          => 'MealProgrammes.name',
-                'institution_class_id', 
+                'MealDetails.institution_class_id', 
                 'MealDetails.institution_id',
                 'MealDetails.date',
                 'education_grade_id'      => 'InstitutionClassGrades.education_grade_id',     // Optional
@@ -132,64 +156,100 @@ class MealDetailsTable extends AppTable
                 'gender_name'             => 'Genders.name',
                 'student_name' => $query->func()->replace([
                     $query->func()->replace([
-                        $query->func()->concat_ws([' ' => 'literal', 'SecurityUsers.first_name', 'SecurityUsers.middle_name', 'SecurityUsers.third_name', 'SecurityUsers.last_name']),
+                        $query->func()->concat_ws(['literal' => ' ', 'SecurityUsers.first_name', 'SecurityUsers.middle_name', 'SecurityUsers.third_name', 'SecurityUsers.last_name']),
                         '  ',
                         ' '
                     ]),
                     ' ',
                     ' '
-                ])
-                //'meal_programmes_id',
-                //'academic_period_id',
-                // 'male_students' => $query->func()->count('DISTINCT CASE WHEN SecurityUsers.gender_id = 1 THEN SecurityUsers.id END'),
-                // 'female_students' => $query->func()->count('DISTINCT CASE WHEN SecurityUsers.gender_id = 2 THEN SecurityUsers.id END'),
-                // 'total_students' => $query->newExpr(
-                //     'COUNT(DISTINCT CASE WHEN SecurityUsers.gender_id = 1 THEN SecurityUsers.id END) + 
-                //     COUNT(DISTINCT CASE WHEN SecurityUsers.gender_id = 2 THEN SecurityUsers.id END)'
-                // )
-            ])
-            ->contain([
-                'SecurityUsers' => ['fields' => ['id', 'first_name', 'gender_id']],
-                'InstitutionClasses' => ['fields' => ['id', 'name']],
-                'InstitutionClasses.InstitutionClassGrades.EducationGrades' => ['fields' => ['id', 'name']],
-                'Institutions' => ['fields' => ['id', 'code', 'name', 'area_id']],
-                'Institutions.Areas' => ['fields' => ['id', 'area_level_id']],
-            ])
-            ->leftJoinWith('InstitutionClasses.InstitutionClassGrades.EducationGrades') // important for JOIN
-            ->leftJoinWith('Institutions.Areas') // to use Areas in WHERE
-            ->leftJoin(
-                ['AcademicPeriods' => 'academic_periods'],
-                ['AcademicPeriods.id = MealDetails.academic_period_id']
-            )
-            ->leftJoin(
-                ['MealProgrammes' => 'meal_programmes'],
-                ['MealProgrammes.id = MealDetails.meal_programmes_id']
-            )
-            ->InnerJoin(
-                ['Genders' => 'genders'],
-                ['Genders.id = SecurityUsers.gender_id']
-            )
-            ->where($conditions)
-            ->group([
-                'AcademicPeriods.name',
-                'Institutions.id',
-                'EducationGrades.name',
-                'InstitutionClasses.name',
-                'MealProgrammes.name',
-                'SecurityUsers.id',
-                'DATE_FORMAT(institution_meal_students.date, "%Y %M")'
-            ])
-            ->order([
-                'AcademicPeriods.name' => 'ASC',
-                'Institutions.name' => 'ASC',
-                'EducationGrades.name' => 'ASC',
-                'InstitutionClasses.name' => 'ASC',
-                'MealProgrammes.name' => 'ASC',
-                'DATE_FORMAT(institution_meal_students.date, "%Y %M")' => 'ASC'
+                ]),
+                'month' => $monthNameExpr
             ]);
+            
+            // Add day-wise aggregation (Day 1 to Day 31)
+            for ($day = $startDay; $day <= $endDay; $day++) {
+                $caseExpr = $query->newExpr("SUM(CASE WHEN DAY(MealDetails.date) = {$day} THEN 1 ELSE 0 END)");
+                $query->select(["day_{$day}" => $caseExpr]);
+            }
+        
+            $query    
+                ->contain([
+                    'SecurityUsers' => ['fields' => ['id', 'first_name','middle_name','third_name','last_name','openemis_no', 'gender_id']],
+                    'InstitutionClasses' => ['fields' => ['id', 'name']],
+                    'InstitutionClasses.InstitutionClassGrades.EducationGrades' => ['fields' => ['id', 'name']],
+                    'Institutions' => ['fields' => ['id', 'code', 'name', 'area_id']],
+                    'Institutions.Areas' => ['fields' => ['id', 'area_level_id']],
+                ])
+                //->leftJoinWith('SecurityUsers')
+                ->leftJoinWith('InstitutionClasses.InstitutionClassGrades.EducationGrades') // important for JOIN
+                ->leftJoinWith('Institutions.Areas') // to use Areas in WHERE
+                ->leftJoin(
+                    ['AcademicPeriods' => 'academic_periods'],
+                    ['AcademicPeriods.id = MealDetails.academic_period_id']
+                )
+                ->leftJoin(
+                    ['MealProgrammes' => 'meal_programmes'],
+                    ['MealProgrammes.id = MealDetails.meal_programmes_id']
+                )
+                ->leftJoin(
+                    ['SecurityUsers' => 'security_users'],
+                    ['SecurityUsers.id = MealDetails.student_id']
+                )
+                ->InnerJoin(
+                    ['Genders' => 'genders'],
+                    ['Genders.id = SecurityUsers.gender_id']
+                )
+                ->where($conditions)
+                ->group([
+                    'AcademicPeriods.name',
+                    'Institutions.id',
+                    'EducationGrades.name',
+                    'InstitutionClasses.name',
+                    'MealProgrammes.name',
+                    'SecurityUsers.id',
+                    $monthNameExpr
+                ])
+                ->order([
+                    'AcademicPeriods.name' => 'ASC',
+                    'Institutions.name' => 'ASC',
+                    'EducationGrades.name' => 'ASC',
+                    'InstitutionClasses.name' => 'ASC',
+                    'MealProgrammes.name' => 'ASC',
+                    'month' => 'ASC'
+                ]);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    {
+        $sheetData = $settings['sheet']['sheetData'];
+        $newFields = $this->getMealDetailFields($event, $settings, $fields);
+
+        $year = (int)$sheetData['year'];
+        $month = str_pad($sheetData['month'], 2, '0', STR_PAD_LEFT);
+
+        // Get number of days in the month
+        $totalDays = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+
+        for ($day = 1; $day <= $totalDays; ++$day) {
+            $date = new DateTime("$year-$month-$day");
+            $dayText = $date->format('l'); // e.g. Monday, Tuesday
+
+            // Only include if it’s a working day
+            if (in_array($dayText, $this->workingDays)) {
+                $dayColumnFormat = $dayText . ' (' . $this->formatDate($date) . ')';
+                $newFields[] = [
+                    'key'   => 'day_' . $day,
+                    'field' => 'day_' . $day,
+                    'type'  => 'string',
+                    'label' => $dayColumnFormat
+                ];
+            }
+        }
+
+        $fields->exchangeArray($newFields);
+    }
+
+    public function getMealDetailFields(Event $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
 
@@ -236,27 +296,13 @@ class MealDetailsTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'male_students', // needed for Excel behavior
-            'field' => 'male_students',
+            'key' => 'month', 
+            'field' => 'month',
             'type' => 'string',
-            'label' => __('Number of Male Students')
+            'label' => __('Month')
         ];
 
-        $newFields[] = [
-            'key' => 'female_students',
-            'field' => 'female_students',
-            'type' => 'string',
-            'label' => __('Number of Female Students')
-        ];
-
-        $newFields[] = [
-            'key' => 'total_students',
-            'field' => 'total_students',
-            'type' => 'string',
-            'label' => __('Total Number of Students')
-        ];
-
-        $fields->exchangeArray($newFields);
+        return $newFields;
     }
 
     public function getChildren($id, $idArray) {
@@ -271,6 +317,51 @@ class MealDetailsTable extends AppTable
            $idArray = $this->getChildren($value['id'], $idArray);
         }
         return $idArray;
+    }
+
+    private function generateSheetsData($requestData)
+    {
+        $startDate = $requestData->report_start_date;
+        $endDate = $requestData->report_end_date;
+
+        $reportStartDate = new DateTime($startDate);
+        $reportEndDate = new DateTime($endDate);
+
+        $sheetStartDate = (new DateTime($startDate))->modify('first day of this month');
+        $sheetEndDate = (new DateTime($endDate))->modify('first day of next month');
+        $interval = DateInterval::createFromDateString('1 month');
+        $period   = new DatePeriod($sheetStartDate, $interval, $sheetEndDate);
+
+        $sheets = [];
+
+        foreach ($period as $date) {
+            $month = $date->format('n');
+            $year = $date->format('Y');
+            $amountOfDays = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+
+            $reportStartDay = 1;
+            $reportEndDay = $amountOfDays;
+
+            if ($month == $reportStartDate->format('n')) {
+                $reportStartDay = $reportStartDate->format('j');
+            }
+            if ($month == $reportEndDate->format('n')) {
+                $reportEndDay = $reportEndDate->format('j');
+            }
+
+            $sheets[] = [
+                'sheetData' => [
+                    'year' => $year,
+                    'month' => $month,
+                    'startDay' => $reportStartDay,
+                    'endDay' => $reportEndDay
+                ],
+                'name' => $date->format('Y') . ' - ' . $date->format('F'),
+                'table' => $this,
+                'query' => $this->find()
+            ];
+        }
+        return $sheets;
     }
 }
 //POCOR-9268 Ends
