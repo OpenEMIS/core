@@ -35,7 +35,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
 
         $this->setDeleteStrategy('restrict');
     }
-    //POCOR-
+    //POCOR-9293 start
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
@@ -48,7 +48,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
                 'provider' => 'table'
             ]);
     }
-
+    //POCOR-9293 end
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->controller->getOutcomeTabs();
