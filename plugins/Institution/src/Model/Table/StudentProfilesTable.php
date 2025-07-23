@@ -124,6 +124,10 @@ class StudentProfilesTable extends ControllerActionTable
         if (!is_null($reportCardId) && $this->StudentTemplates->exists([$this->StudentTemplates->getPrimaryKey() => $reportCardId])) {
 
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+            $viewAttr = ['role' => 'menuitem', // POCOR-9292 start
+                'tabindex' => '-1',
+                'escape' => false,
+                'target' => '_blank']; // POCOR-9292 end
             $params = [
                 'student_profile_template_id' => $reportCardId,
                 'student_id' => $entity->student_id,
@@ -132,15 +136,17 @@ class StudentProfilesTable extends ControllerActionTable
                 'education_grade_id' => $entity->education_grade_id,
             ];
 
+
             // Download button, status must be generated or published
             if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
                 //START:POCOR-6667
                 $viewPdfUrl = $this->setQueryString($this->url('viewPDF'), $params);
                 $buttons['viewPdf'] = [
                     'label' => '<i class="fa fa-eye"></i>'.__('View PDF'),
-                    'attr' => $indexAttr,
+                    'attr' => $viewAttr, // POCOR-9292
                     'url' => $viewPdfUrl
                 ];
+
                 //END:POCOR-6667
                 $downloadPdfUrl = $this->setQueryString($this->url('downloadPDF'), $params);
                 $buttons['downloadPdf'] = [
@@ -148,12 +154,13 @@ class StudentProfilesTable extends ControllerActionTable
                     'attr' => $indexAttr,
                     'url' => $downloadPdfUrl
                 ];
-                // $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
-                // $buttons['download'] = [
-                //     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
-                //     'attr' => $indexAttr,
-                //     'url' => $downloadUrl
-                // ];
+                // POCOR-9292
+                 $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
+                 $buttons['download'] = [
+                     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
+                     'attr' => $indexAttr,
+                     'url' => $downloadUrl
+                 ];
             }
 
             // Generate button, all statuses
