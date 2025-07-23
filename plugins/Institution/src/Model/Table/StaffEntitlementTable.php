@@ -119,13 +119,13 @@ class StaffEntitlementTable extends ControllerActionTable
         if ($institutionId !== null) {
             $instStaffConditions['InstitutionStaff.institution_id ='] = $institutionId;
         } else {
-            $instStaffConditions['InstitutionStaff.institution_id IS'] = null;
+            $instStaffConditions['InstitutionStaff.institution_id ='] = -1;
         }
 
         if ($staffId !== null) {
             $instStaffConditions['InstitutionStaff.staff_id ='] = $staffId;
         } else {
-            $instStaffConditions['InstitutionStaff.staff_id IS'] = null;
+            $instStaffConditions['InstitutionStaff.staff_id = '] = -1;
         }
 
         // Add calculated fields, join related tables, and group the query
