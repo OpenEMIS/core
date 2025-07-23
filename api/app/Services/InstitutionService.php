@@ -54,6 +54,8 @@ class InstitutionService extends Controller
                 $resp[$k]['year_closed'] = $data['year_closed'];
                 $resp[$k]['longitude'] = $data['longitude'];
                 $resp[$k]['latitude'] = $data['latitude'];
+                $resp[$k]['vision'] = $data['vision'];
+                $resp[$k]['mission'] = $data['mission'];
                 $resp[$k]['logo_name'] = $data['logo_name'];
                 if($data['logo_content']){
                     $resp[$k]['logo_content'] = base64_encode($data['logo_content']);
@@ -163,6 +165,8 @@ class InstitutionService extends Controller
                 $resp['year_closed'] = $data['year_closed'];
                 $resp['longitude'] = $data['longitude'];
                 $resp['latitude'] = $data['latitude'];
+                $resp['vision'] = $data['vision'];
+                $resp['mission'] = $data['mission'];
                 $resp['logo_name'] = $data['logo_name'];
                 if($data['logo_content']){
                     $resp['logo_content'] = base64_encode($data['logo_content']);
