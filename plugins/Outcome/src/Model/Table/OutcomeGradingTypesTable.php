@@ -35,18 +35,19 @@ class OutcomeGradingTypesTable extends ControllerActionTable
 
         $this->setDeleteStrategy('restrict');
     }
-
-    /*public function validationDefault(Validator $validator): Validator
+    //POCOR-
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
             ->requirePresence('grading_options')
-            ->allowEmpty('code')
+            ->requirePresence('code')
+            ->requirePresence('name')
             ->add('code', 'ruleUniqueCode', [
                 'rule' => 'validateUnique',
                 'provider' => 'table'
             ]);
-    }*/
+    }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
