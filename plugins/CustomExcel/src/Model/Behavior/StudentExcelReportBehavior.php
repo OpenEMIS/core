@@ -1464,73 +1464,73 @@ class StudentExcelReportBehavior extends Behavior
     }
 
     private function image($objSpreadsheet, $objWorksheet, $objCell, $attr, ArrayObject $extra)
-{
-    $columnValue = $attr['columnValue'];
-    $rowValue = $attr['rowValue'];
-    $cellCoordinate = $columnValue . $rowValue;
+    {
+        $columnValue = $attr['columnValue'];
+        $rowValue = $attr['rowValue'];
+        $cellCoordinate = $columnValue . $rowValue;
 
-    $attr['imageWidth'] = $attr['imageWidth'] ?? 50;
-    $attr['imageMarginLeft'] = $attr['imageMarginLeft'] ?? 0;
-    $attr['imageMarginTop'] = $attr['imageMarginTop'] ?? 0;
+        $attr['imageWidth'] = $attr['imageWidth'] ?? 50;
+        $attr['imageMarginLeft'] = $attr['imageMarginLeft'] ?? 0;
+        $attr['imageMarginTop'] = $attr['imageMarginTop'] ?? 0;
 
-    $data = Hash::extract($extra['vars'], $attr['displayValue']);
-    $imageContent = current($data);
+        $data = Hash::extract($extra['vars'], $attr['displayValue']);
+        $imageContent = current($data);
 
-    $tempImagePath = '';
-    $mimeType = '';
-    
-    // Handle student photo
-    if ($attr['displayValue'] === 'StudentUsers.photo_content') {
-        $studentId = current(Hash::extract($extra['vars'], 'StudentUsers.id'));
-        if (!empty($imageContent)) {
-            if (!is_resource($imageContent)) {
-                $stream = fopen('php://memory', 'r+');
-                fwrite($stream, $imageContent);
-                rewind($stream);
-                $imageContent = $stream;
+        $tempImagePath = '';
+        $mimeType = '';
+        
+        // Handle student photo
+        if ($attr['displayValue'] === 'StudentUsers.photo_content') {
+            $studentId = current(Hash::extract($extra['vars'], 'StudentUsers.id'));
+            if (!empty($imageContent)) {
+                if (!is_resource($imageContent)) {
+                    $stream = fopen('php://memory', 'r+');
+                    fwrite($stream, $imageContent);
+                    rewind($stream);
+                    $imageContent = $stream;
+                }
+
+                $mimeType = mime_content_type($imageContent);
+                $ext = explode('/', $mimeType)[1];
+                $attr['mime_type'] = $mimeType;
+
+                $tempImagePath = TMP . "temp_student_photo_{$studentId}.{$ext}";
+                file_put_contents($tempImagePath, stream_get_contents($imageContent));
+            } else {
+                // fallback
+                $tempImagePath = ROOT . DS . 'plugins' . DS . 'ReportCard' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.png';
+                $attr['mime_type'] = 'image/png';
             }
-
-            $mimeType = mime_content_type($imageContent);
-            $ext = explode('/', $mimeType)[1];
-            $attr['mime_type'] = $mimeType;
-
-            $tempImagePath = TMP . "temp_student_photo_{$studentId}.{$ext}";
-            file_put_contents($tempImagePath, stream_get_contents($imageContent));
-        } else {
-            // fallback
-            $tempImagePath = ROOT . DS . 'plugins' . DS . 'ReportCard' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.png';
-            $attr['mime_type'] = 'image/png';
         }
-    }
 
-    // Handle institution logo
-    elseif ($attr['displayValue'] === 'Institutions.logo_content') {
-        $institutionId = current(Hash::extract($extra['vars'], 'Institutions.id'));
-        if (!empty($imageContent)) {
-            if (!is_resource($imageContent)) {
-                $stream = fopen('php://memory', 'r+');
-                fwrite($stream, $imageContent);
-                rewind($stream);
-                $imageContent = $stream;
+        // Handle institution logo
+        elseif ($attr['displayValue'] === 'Institutions.logo_content') {
+            $institutionId = current(Hash::extract($extra['vars'], 'Institutions.id'));
+            if (!empty($imageContent)) {
+                if (!is_resource($imageContent)) {
+                    $stream = fopen('php://memory', 'r+');
+                    fwrite($stream, $imageContent);
+                    rewind($stream);
+                    $imageContent = $stream;
+                }
+
+                $mimeType = mime_content_type($imageContent);
+                $ext = explode('/', $mimeType)[1];
+                $attr['mime_type'] = $mimeType;
+
+                $tempImagePath = TMP . "temp_logo_{$institutionId}.{$ext}";
+                file_put_contents($tempImagePath, stream_get_contents($imageContent));
+            } else {
+                $tempImagePath = ROOT . DS . 'plugins' . DS . 'ReportCard' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.png';
+                $attr['mime_type'] = 'image/png';
             }
-
-            $mimeType = mime_content_type($imageContent);
-            $ext = explode('/', $mimeType)[1];
-            $attr['mime_type'] = $mimeType;
-
-            $tempImagePath = TMP . "temp_logo_{$institutionId}.{$ext}";
-            file_put_contents($tempImagePath, stream_get_contents($imageContent));
-        } else {
-            $tempImagePath = ROOT . DS . 'plugins' . DS . 'ReportCard' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.png';
-            $attr['mime_type'] = 'image/png';
         }
+
+        $this->renderImage($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $tempImagePath, $attr);
+
+        // Clear placeholder text
+        $objWorksheet->getCell($cellCoordinate)->setValue('');
     }
-
-    $this->renderImage($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $tempImagePath, $attr);
-
-    // Clear placeholder text
-    $objWorksheet->getCell($cellCoordinate)->setValue('');
-}
 
 
 }
