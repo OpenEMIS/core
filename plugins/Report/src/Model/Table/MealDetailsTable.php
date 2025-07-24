@@ -14,6 +14,7 @@ use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
+use Cake\Database\Expression\ExpressionInterface;
 
 class MealDetailsTable extends AppTable
 {
@@ -138,7 +139,7 @@ class MealDetailsTable extends AppTable
             'MealDetails.date' => 'identifier',
             "'%Y %M'" => 'literal'
         ]);
-        
+        $fullNameExpr = new \Cake\Database\Expression\QueryExpression("TRIM(CONCAT_WS(' ', SecurityUsers.first_name, SecurityUsers.middle_name, SecurityUsers.third_name, SecurityUsers.last_name))");
         $query
             ->select([
                 'academic_period'         => 'AcademicPeriods.name',
@@ -154,15 +155,7 @@ class MealDetailsTable extends AppTable
                 'education_grade_id'      => 'InstitutionClassGrades.education_grade_id',     // Optional
                 'openemis_no'             => 'SecurityUsers.openemis_no',
                 'gender_name'             => 'Genders.name',
-                'student_name' => $query->func()->replace([
-                    $query->func()->replace([
-                        $query->func()->concat_ws(['literal' => ' ', 'SecurityUsers.first_name', 'SecurityUsers.middle_name', 'SecurityUsers.third_name', 'SecurityUsers.last_name']),
-                        '  ',
-                        ' '
-                    ]),
-                    ' ',
-                    ' '
-                ]),
+                'student_name' => $fullNameExpr,
                 'month' => $monthNameExpr
             ]);
             
@@ -298,6 +291,27 @@ class MealDetailsTable extends AppTable
             'field' => 'meal_programme',
             'type' => 'string',
             'label' => __('Meal Programme')
+        ];
+
+        $newFields[] = [
+            'key' => 'openemis_no', 
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => __('Student OpenEMIS No')
+        ];
+
+        $newFields[] = [
+            'key' => 'student_name', 
+            'field' => 'student_name',
+            'type' => 'string',
+            'label' => __('Student Name')
+        ];
+
+        $newFields[] = [
+            'key' => 'gender_name', 
+            'field' => 'gender_name',
+            'type' => 'string',
+            'label' => __('Gender Name')
         ];
 
         $newFields[] = [
