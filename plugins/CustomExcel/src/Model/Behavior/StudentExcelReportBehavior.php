@@ -135,6 +135,11 @@ class StudentExcelReportBehavior extends Behavior
             $this->deleteFile($extra['temp_logo']);
         }
 
+        if ($extra->offsetExists('temp_photo_content')) {
+           
+            $this->deleteFile($extra['temp_photo_content']);
+        }
+
         if ($extra->offsetExists('image_resource')) {
             imagedestroy($extra['image_resource']);
         }
@@ -330,7 +335,7 @@ class StudentExcelReportBehavior extends Behavior
         $objWorksheet->getCell($cellCoordinate)->setValue($cellValue);
     }
 
-    public function renderImage($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $imagePath, $attr, $extra)
+    public function renderImagebkp($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $imagePath, $attr, $extra)
     {
         $imageWidth = $attr['imageWidth'];
         $imageMarginLeft = $attr['imageMarginLeft'];
@@ -451,7 +456,7 @@ class StudentExcelReportBehavior extends Behavior
 
         }
         $variableValues = $variableValues->getArrayCopy();
-        //echo "<pre>"; print_r($variableValues);die;
+       // echo "<pre>"; print_r($variableValues);die;
         return $variableValues;
     }
 
@@ -1341,7 +1346,7 @@ class StudentExcelReportBehavior extends Behavior
         }
     }
 
-    private function image($objSpreadsheet, $objWorksheet, $objCell, $attr, ArrayObject $extra)
+    private function imagebkp($objSpreadsheet, $objWorksheet, $objCell, $attr, ArrayObject $extra)
     {
         $columnValue = $attr['columnValue'];
         $rowValue = $attr['rowValue'];
@@ -1353,8 +1358,41 @@ class StudentExcelReportBehavior extends Behavior
 
         $data = Hash::extract($extra['vars'], $attr['displayValue']);
         $imageContent = current($data);
+        if (!is_resource($imageContent) && !empty($imageContent)) {
+            $stream = fopen('php://memory', 'r+');
+            fwrite($stream, $imageContent);
+            rewind($stream);
+            $imageContent = $stream;
+        }else{
+            $imageContent = current($data);
+        }
         //for staff photo
         if ($attr['displayValue'] == 'StudentUsers.photo_content' ) {
+            if (is_resource($imageContent)) {
+                
+                $studentId = Hash::extract($extra['vars'], 'StudentUsers.id');
+                
+                $studentId = current($studentId);
+
+                $mimeType = mime_content_type($imageContent);
+                $exp = explode('/', $mimeType);
+                $logoExt = end($exp);
+
+                $attr['mime_type'] = $mimeType;
+
+                $tempImagePath = TMP . "temp_student_photo_$studentId.$logoExt";
+                if (!file_exists($tempImagePath)) {
+                    file_put_contents($tempImagePath, stream_get_contents($imageContent));
+                    $extra['temp_photo_content'] = $tempImagePath;
+                }
+            } else {
+
+                $tempImagePath = ROOT . DS . 'plugins' . DS . 'ReportCard' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.png';
+                $attr['mime_type'] = 'image/png';
+            }
+        }
+
+        if ($attr['displayValue'] == 'Institutions.logo_content' ) {
             if (is_resource($imageContent)) {
                 $institutionId = Hash::extract($extra['vars'], 'Institutions.id');
                 $institutionId = current($institutionId);
@@ -1382,4 +1420,117 @@ class StudentExcelReportBehavior extends Behavior
         // set to empty to remove the placeholder
         $objWorksheet->getCell($cellCoordinate)->setValue('');
     }
+
+    public function renderImage($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $imagePath, $attr)
+    {
+        $imageWidth = $attr['imageWidth'];
+        $imageMarginLeft = $attr['imageMarginLeft'];
+        $imageMarginTop = $attr['imageMarginTop'];
+
+        $objDrawing = new MemoryDrawing();
+        $imageResource = null;
+
+        if ($imagePath && file_exists($imagePath)) {
+            switch ($attr['mime_type']) {
+                case 'image/png':
+                    $imageResource = imagecreatefrompng($imagePath);
+                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_PNG);
+                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_PNG);
+                    break;
+                case 'image/jpeg':
+                    $imageResource = imagecreatefromjpeg($imagePath);
+                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_JPEG);
+                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_JPEG);
+                    break;
+                case 'image/gif':
+                    $imageResource = imagecreatefromgif($imagePath);
+                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_GIF);
+                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_GIF);
+                    break;
+            }
+        }
+
+        if ($imageResource) {
+            imageAlphaBlending($imageResource, true);
+            imageSaveAlpha($imageResource, true);
+
+            $objDrawing->setImageResource($imageResource);
+            $objDrawing->setWidth($imageWidth);
+            $objDrawing->setCoordinates($cellCoordinate);
+            $objDrawing->setOffsetX($imageMarginLeft);
+            $objDrawing->setOffsetY($imageMarginTop);
+            $objDrawing->setWorksheet($objSpreadsheet->getActiveSheet());
+        }
+    }
+
+    private function image($objSpreadsheet, $objWorksheet, $objCell, $attr, ArrayObject $extra)
+{
+    $columnValue = $attr['columnValue'];
+    $rowValue = $attr['rowValue'];
+    $cellCoordinate = $columnValue . $rowValue;
+
+    $attr['imageWidth'] = $attr['imageWidth'] ?? 50;
+    $attr['imageMarginLeft'] = $attr['imageMarginLeft'] ?? 0;
+    $attr['imageMarginTop'] = $attr['imageMarginTop'] ?? 0;
+
+    $data = Hash::extract($extra['vars'], $attr['displayValue']);
+    $imageContent = current($data);
+
+    $tempImagePath = '';
+    $mimeType = '';
+    
+    // Handle student photo
+    if ($attr['displayValue'] === 'StudentUsers.photo_content') {
+        $studentId = current(Hash::extract($extra['vars'], 'StudentUsers.id'));
+        if (!empty($imageContent)) {
+            if (!is_resource($imageContent)) {
+                $stream = fopen('php://memory', 'r+');
+                fwrite($stream, $imageContent);
+                rewind($stream);
+                $imageContent = $stream;
+            }
+
+            $mimeType = mime_content_type($imageContent);
+            $ext = explode('/', $mimeType)[1];
+            $attr['mime_type'] = $mimeType;
+
+            $tempImagePath = TMP . "temp_student_photo_{$studentId}.{$ext}";
+            file_put_contents($tempImagePath, stream_get_contents($imageContent));
+        } else {
+            // fallback
+            $tempImagePath = ROOT . DS . 'plugins' . DS . 'ReportCard' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.png';
+            $attr['mime_type'] = 'image/png';
+        }
+    }
+
+    // Handle institution logo
+    elseif ($attr['displayValue'] === 'Institutions.logo_content') {
+        $institutionId = current(Hash::extract($extra['vars'], 'Institutions.id'));
+        if (!empty($imageContent)) {
+            if (!is_resource($imageContent)) {
+                $stream = fopen('php://memory', 'r+');
+                fwrite($stream, $imageContent);
+                rewind($stream);
+                $imageContent = $stream;
+            }
+
+            $mimeType = mime_content_type($imageContent);
+            $ext = explode('/', $mimeType)[1];
+            $attr['mime_type'] = $mimeType;
+
+            $tempImagePath = TMP . "temp_logo_{$institutionId}.{$ext}";
+            file_put_contents($tempImagePath, stream_get_contents($imageContent));
+        } else {
+            $tempImagePath = ROOT . DS . 'plugins' . DS . 'ReportCard' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.png';
+            $attr['mime_type'] = 'image/png';
+        }
+    }
+
+    $this->renderImage($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $tempImagePath, $attr);
+
+    // Clear placeholder text
+    $objWorksheet->getCell($cellCoordinate)->setValue('');
+}
+
+
 }
