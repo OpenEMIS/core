@@ -37,7 +37,7 @@ FROM php:8.3-apache AS backend
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    libicu-dev libzip-dev unzip \
+    libicu-dev libzip-dev unzip git \
     libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev vim \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install intl zip gd pdo pdo_mysql mysqli mbstring xml bcmath
@@ -57,7 +57,7 @@ COPY . .
 
 # Sets the working directory and update the composer dependencies and autoloads the class file
 WORKDIR /var/www/html/core/api
-RUN apt install -y git && composer update && composer dump-autoload
+RUN composer update && composer dump-autoload
 
 # This clears the config, cache, view, route and generate the jwt and key for application and then caches the config
 RUN cp .env.example .env && \
