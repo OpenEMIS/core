@@ -37,7 +37,8 @@ class ReportsController extends AppController
             'Workflows' => ['className' => 'Report.Workflows', 'actions' => ['index', 'add']],
             'UisStatistics' => ['className' => 'Report.UisStatistics', 'actions' => ['index', 'add']],
             'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']],
-            'Performance' => ['className' => 'Report.Performance', 'actions' => ['index', 'add']]
+            'Performance' => ['className' => 'Report.Performance', 'actions' => ['index', 'add']],
+            'Meals' => ['className' => 'Report.Meals', 'actions' => ['index', 'add']]//POCOR-9267 
         ];
         $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
@@ -262,6 +263,12 @@ class ReportsController extends AppController
                 'Report.Assessments' => __('Assessment')
             ];
         }/*POCOR-6513 ends*/
+        elseif ($module == 'Meals') {//POCOR-9267 Starts
+            $options = [
+                'Report.MealSummary' => __('Meals Summary Report'),
+                'Report.MealDetails' => __('Meals Details Report')//POCOR-9268
+            ];
+        }//POCOR-9267 Ends
         return $options;
     }
 
