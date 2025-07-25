@@ -145,11 +145,11 @@ class MealSummaryTable extends AppTable
             ])
             ->leftJoinWith('InstitutionClasses.InstitutionClassGrades.EducationGrades') // important for JOIN
             ->leftJoinWith('Institutions.Areas') // to use Areas in WHERE
-            ->leftJoin(
+            ->INNERJoin(
                 ['AcademicPeriods' => 'academic_periods'],
                 ['AcademicPeriods.id = MealSummary.academic_period_id']
             )
-            ->leftJoin(
+            ->INNERJoin(
                 ['MealProgrammes' => 'meal_programmes'],
                 ['MealProgrammes.id = MealSummary.meal_programmes_id']
             )
