@@ -1,3 +1,7 @@
+### [4.36.0] - 2025-07-25
+- Implemented: Develop a Meals Summary Report
+- Implemented: Develop a Meals Details Report
+
 ### [4.35.0] - 2025-07-23
 - Implemented: 3.05 Add fields for school vision and mission to the institution overview page
 - Bug Fixed: Institutions > Survey > Forms > View > Edit: Mandatory text field becomes blank when clicked "save" button when assignee is not selected.
