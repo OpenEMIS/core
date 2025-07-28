@@ -185,6 +185,12 @@ class ConfigurationsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalAlertServiceSms']);
     }
     // End POCOR-8286
+    // Start POCOR-9303
+    public function ExternalPrintingServicePDF()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalPrintingServicePdf']);
+    }
+    // End POCOR-9303
     //POCOR-7531 start
     public function ExternalDataSourceExams()
     {
