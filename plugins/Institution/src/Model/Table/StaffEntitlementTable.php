@@ -209,13 +209,13 @@ class StaffEntitlementTable extends ControllerActionTable
                 // POCOR-9287 end
             ])
             ->group([
-                'year',
-                'institution_id',
-                'staff_id',
-                'staff_leave_type_id',
-                'position_name',
-                'staff_leave_policy_id',
-                'days_total' // Group by days allocated for consistency
+                'StaffLeaveEntitlements.id',
+                'InstitutionStaff.id',
+//                'staff_id',
+//                'staff_leave_type_id',
+//                'position_name',
+//                'staff_leave_policy_id',
+//                'days_total' // Group by days allocated for consistency
             ]);
 
         $search = $this->getSearchKey();
