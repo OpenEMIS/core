@@ -131,13 +131,15 @@ trait StudentPdfReportTrait
         $sheetPath = $baseFileName . '.xlsx';
         $pdfFile = basename($baseFileName) . '.pdf';
         $pdfUrl = 'http://pdf-printer:5000/check-pdf/' . $pdfFile;
-
+        $authUser = 'user';
+        $authPass = 'password';
         try {
             $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
             $objWriter->save($sheetPath);
 
             $client = new \GuzzleHttp\Client();
             $response = $client->post('http://pdf-printer:5000/queue-job', [
+                'auth' => [$authUser, $authPass],
                 'multipart' => [
                     [
                         'name'     => 'file',
@@ -150,10 +152,11 @@ trait StudentPdfReportTrait
             // Poll until ready
             sleep(2);
             $retries = 15;
-            $retries = 15;
             while ($retries-- > 0) {
                 try {
-                    $res = $client->get($pdfUrl);
+                    $res = $client->get($pdfUrl, [
+                        'auth' => [$authUser, $authPass]
+                    ]);
 
                     if ($res->getStatusCode() === 200) {
                         return $res->getBody()->getContents();
