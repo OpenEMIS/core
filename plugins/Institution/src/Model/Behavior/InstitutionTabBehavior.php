@@ -237,6 +237,11 @@ class InstitutionTabBehavior extends Behavior
 
         $actions = ['view', 'edit'];
 
+        //POCOR-9273
+        if ($this->_table->request->getParam('action') && $this->_table->request->getParam('action') == 'Programmes') {
+            $actions[] = 'remove';
+        }
+
         foreach ($actions as $action) {
             if (isset($buttons[$action])) {
                 $url = $buttons[$action]['url'];

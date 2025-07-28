@@ -4649,6 +4649,8 @@ class InstitutionRepository extends Controller
                 $store['year_closed'] = $data['year_closed'];
                 $store['longitude'] = $data['longitude'];
                 $store['latitude'] = $data['latitude'];
+                $store['vision'] = $data['vision'];
+                $store['mission'] = $data['mission'];
                 
                 // $store['logo_content'] = $data['logo_content']??Null;
                 if(isset($data['logo_content'])){
