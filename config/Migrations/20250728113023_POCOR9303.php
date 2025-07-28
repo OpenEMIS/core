@@ -137,6 +137,9 @@ class POCOR9303 extends AbstractMigration
             ['username', 'User Name', 'user'],
             ['password', 'Password', 'password'],
             ['api_url', 'API URL', 'http://pdf-printer:5000'],
+            ['api_params', 'API Parameters', '{ "TiledWatermark":{"type":"string","value":"draft"},
+            "EncryptFile": {"type": "boolean", "value": "true"},
+            "DocumentOpenPassword": {"type": "string", "value": "secret"}}}'],
         ];
 
         $data = array_map(fn($attr) => $this->generateExternalDataSourceAttribute('PDF Printer', ...$attr), $attributes);
