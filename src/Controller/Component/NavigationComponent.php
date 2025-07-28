@@ -2650,7 +2650,12 @@ class NavigationComponent extends Component
                 'title' => 'Custom',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
-            ]
+            ],//POCOR-9267 Starts
+            'Reports.Meals' => [
+                'title' => 'Meals',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ]//POCOR-9267 Ends
         ];
         return $navigation;
     }
