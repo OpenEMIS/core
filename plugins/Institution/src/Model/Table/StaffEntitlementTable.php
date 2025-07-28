@@ -135,24 +135,33 @@ class StaffEntitlementTable extends ControllerActionTable
                 'staff_id' => $this->aliasField('staff_id'),
                 'staff_leave_type_id' => 'StaffLeaveEntitlements.staff_leave_type_id', // POCOR-9287
                 'year' => $query->func()->year([$this->aliasField('date_from') => 'identifier']), // Extract year from date_from
-                'days_taken' => '(DATEDIFF(' . $this->aliasField('date_to') . ', ' . $this->aliasField('date_from') . ') + 1)', // Days taken including 1 day // POCOR-8975
+                'days_taken' => $query->newExpr()->add([
+                    'SUM(DATEDIFF(' . $this->aliasField('date_to') . ', ' . $this->aliasField('date_from') . ') + 1)'
+                ]),
+
+//                'days_total_adjusted' => $query->newExpr()->add([
+//                    'COALESCE(StaffLeavePolicyTypes.days, 0) + COALESCE(SUM(DISTINCT StaffLeaveEntitlements.adjustment), 0)'
+//                ]),
+
+                'days_balance' => $query->newExpr()->add([
+                    'COALESCE(StaffLeavePolicyTypes.days, 0) + COALESCE(StaffLeaveEntitlements.total_adjustment, 0) - ' .
+                    'SUM(DATEDIFF(' . $this->aliasField('date_to') . ', ' . $this->aliasField('date_from') . ') + 1)'
+                ]),
                 'position_name' => 'StaffPositionTitles.name', // Position name
                 'staff_leave_policy_id' => 'StaffPositionTitles.staff_leave_policy_id', // Leave policy ID
                 'days_total' => $query->func()->coalesce(['StaffLeavePolicyTypes.days' => 'literal', 0]), // Default to 0 if NULL
-                'entitlements_adjustment' => $query->func()->coalesce(['SUM(StaffLeaveEntitlements.adjustment)' => 'literal', 0]), // Leave entitlements adjustment
+                'entitlements_adjustment' => $query->func()->coalesce(['StaffLeaveEntitlements.total_adjustment' => 'literal', 0]),
                 'days_total_adjusted' => $query->newExpr()->add([
-                    'COALESCE(StaffLeavePolicyTypes.days, 0) + COALESCE(SUM(StaffLeaveEntitlements.adjustment), 0)' // POCOR-8975
-                ]), // Adjusted total days
-                'days_balance' => $query->newExpr()->add([
-                    'COALESCE(StaffLeavePolicyTypes.days, 0) + COALESCE(SUM(StaffLeaveEntitlements.adjustment), 0) - (DATEDIFF(' . // POCOR-8975
-                    $this->aliasField('date_to') . ', ' . $this->aliasField('date_from') . ') +1)'
-                ]) // Balance calculation
+                    'COALESCE(StaffLeavePolicyTypes.days, 0) + COALESCE(StaffLeaveEntitlements.total_adjustment, 0)'
+                ]),
             ])
             ->join([
                 // POCOR-9287 start
                 // Join StaffLeaveEntitlements
                 'StaffLeaveEntitlements' => [
-                    'table' => 'staff_leave_entitlements',
+                    'table' => '(SELECT staff_id, staff_leave_type_id,
+                    SUM(adjustment) AS total_adjustment FROM staff_leave_entitlements
+                    GROUP BY staff_id, staff_leave_type_id)',
                     'type' => 'RIGHT',
                     'conditions' => [
                         'StaffLeaveEntitlements.staff_id = ' . $this->aliasField('staff_id'),
@@ -209,12 +218,14 @@ class StaffEntitlementTable extends ControllerActionTable
                 // POCOR-9287 end
             ])
             ->group([
-                'StaffLeaveEntitlements.id',
+                'StaffEntitlement.staff_id',
+                'StaffEntitlement.institution_id',
+                'YEAR(StaffEntitlement.date_from)',
+//                'StaffLeaveEntitlements.staff_leave_type_id',
                 'InstitutionStaff.id',
-//                'staff_id',
-//                'staff_leave_type_id',
-//                'position_name',
-//                'staff_leave_policy_id',
+//                'StaffPositionTitles.staff_leave_policy_id',
+//                'StaffLeavePolicyTypes.days',
+//                'StaffLeaveEntitlements.total_adjustment'
 //                'days_total' // Group by days allocated for consistency
             ]);
 
@@ -227,6 +238,10 @@ class StaffEntitlementTable extends ControllerActionTable
             $query->where(['OR' => ['StaffLeaveTypes.name LIKE ' => '%' . $search . '%',
                 'StaffPositionTitles.name LIKE ' => '%' . $search . '%']]);
         }
+        $institutionId = $this->getInstitutionID();
+        $staffId = $this->getStaffID();
+//        dd([[$selectedYear, $institutionId, $staffId],
+//            $query->sql($query->getValueBinder())]);
         unset($extra['config']['search']);
         return $query;
 
