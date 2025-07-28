@@ -147,13 +147,15 @@ trait StudentPdfReportTrait
             ->where(['external_data_source_type' => 'PDF Printer'])
             ->disableHydration()
             ->toArray();
-
+//        Log::debug(print_r($attributes,true));
         $authUser = $attributes['username'] ?? null;
         $baseUrl = $attributes['api_url'] ?? null;
         $authPass = $attributes['password'] ?? null;
+        $apiParams = $attributes['api_params'] ?? null;
+        $deleteOriginal = $attributes['delete_original'] ?? 1;
         $sheetPath = $baseFileName . '.xlsx';
         $pdfFile = basename($baseFileName) . '.pdf';
-        $pdfUrl = $baseUrl . '/check-pdf/' . $pdfFile;
+        $pdfUrl = $baseUrl . '/check-pdf/' . $pdfFile. '?delete=true';
 //        $authUser = 'user';
 //        $authPass = 'password';
         try {
@@ -161,15 +163,30 @@ trait StudentPdfReportTrait
             $objWriter->save($sheetPath);
 
             $client = new \GuzzleHttp\Client();
+            $multipart = [
+                [
+                    'name' => 'file',
+                    'contents' => fopen($sheetPath, 'r'),
+                    'filename' => basename($sheetPath)
+                ],
+            ];
+            if($apiParams){
+                $apiParams = json_encode(json_decode($apiParams, true)); // ensures valid JSON string
+                $multipart[] = [
+                    'name'     => 'lo_options',
+                    'contents' => $apiParams
+                ];
+            }
+            if ($deleteOriginal) {
+                $multipart[] = [
+                    'name'     => 'delete_original',
+                    'contents' => '1'
+                ];
+            }
+//            Log::debug(print_r($multipart,true));
             $response = $client->post($baseUrl . '/queue-job', [
                 'auth' => [$authUser, $authPass],
-                'multipart' => [
-                    [
-                        'name'     => 'file',
-                        'contents' => fopen($sheetPath, 'r'),
-                        'filename' => basename($sheetPath)
-                    ]
-                ]
+                'multipart' => $multipart
             ]);
 
             // Poll until ready
@@ -182,7 +199,8 @@ trait StudentPdfReportTrait
                     ]);
 
                     if ($res->getStatusCode() === 200) {
-                        return $res->getBody()->getContents();
+                        $finalPdf = $res->getBody()->getContents();
+                        return $finalPdf;
                     }
                 } catch (\GuzzleHttp\Exception\ClientException $e) {
                     // Probably 404 — PDF not ready yet

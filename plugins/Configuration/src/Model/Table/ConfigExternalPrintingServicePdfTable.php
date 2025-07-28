@@ -133,7 +133,7 @@ class ConfigExternalPrintingServicePdfTable extends ControllerActionTable
             ->orderAsc('attribute_field')
             ->toArray();
 
-        $visibleAttributes = ['username', 'password', 'api_url'];
+        $visibleAttributes = ['username', 'password', 'api_url', 'api_params'];
 
         // Filter attributes using array_intersect_key
         $attributes = array_intersect_key(
@@ -230,6 +230,7 @@ class ConfigExternalPrintingServicePdfTable extends ControllerActionTable
                 $this->field('username', ['type' => 'string', 'required' => 'required']);
                 $this->field('password', ['type' => 'password', 'required' => 'required']);
                 $this->field('api_url', ['type' => 'string', 'required' => 'required']);
+                $this->field('api_params', ['type' => 'string']);
                 $this->field('api_key', ['type' => 'hidden']);
                 $this->field('first_name_mapping', ['type' => 'hidden']);
                 $this->field('middle_name_mapping', ['type' => 'hidden']);
@@ -403,7 +404,7 @@ class ConfigExternalPrintingServicePdfTable extends ControllerActionTable
         ])->where(['external_data_source_type' => $source])->toArray();
 
         $fields = [
-            'username', 'password', 'api_url'
+            'username', 'password', 'api_url', 'api_params'
         ];
 
         foreach ($fields as $field) {
