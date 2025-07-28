@@ -16,6 +16,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Exception;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use Cake\ORM\TableRegistry;
 
 // POCOR-9153
 
@@ -97,7 +98,13 @@ trait StudentPdfReportTrait
     {
         Log::write('debug', 'ExcelReportBehavior >>> base filepath: ' . $baseFilePath);
 //        $mode = strtolower($this->getConfig('printPdf') ?? 'mpdf');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $enabled = $ConfigItems->value('external_printing_service_pdf_printer');
         $mode = 'api';
+        if ($enabled != '1') {
+            $mode = 'mpdf';
+        }
+
 
         if ($mode === 'api') {
             $pdfContent = $this->printPdfViaApi($objSpreadsheet, $baseFilePath . '_sheet' . $studentId);
@@ -127,18 +134,34 @@ trait StudentPdfReportTrait
     private function printPdfViaApi(Spreadsheet $objSpreadsheet, string $baseFileName): ?string
     {
         Log::write('debug', 'ExcelReportBehavior >>> base filepath: ' . $baseFileName);
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $enabled = $ConfigItems->value('external_printing_service_pdf_printer');
 
+        if ($enabled != '1') {
+            return null;
+        }
+
+        $attributes = TableRegistry::getTableLocator()
+            ->get('Configuration.ExternalDataSourceAttributes')
+            ->find('list', ['keyField' => 'attribute_field', 'valueField' => 'value'])
+            ->where(['external_data_source_type' => 'PDF Printer'])
+            ->disableHydration()
+            ->toArray();
+
+        $authUser = $attributes['username'] ?? null;
+        $baseUrl = $attributes['api_url'] ?? null;
+        $authPass = $attributes['password'] ?? null;
         $sheetPath = $baseFileName . '.xlsx';
         $pdfFile = basename($baseFileName) . '.pdf';
-        $pdfUrl = 'http://pdf-printer:5000/check-pdf/' . $pdfFile;
-        $authUser = 'user';
-        $authPass = 'password';
+        $pdfUrl = $baseUrl . '/check-pdf/' . $pdfFile;
+//        $authUser = 'user';
+//        $authPass = 'password';
         try {
             $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
             $objWriter->save($sheetPath);
 
             $client = new \GuzzleHttp\Client();
-            $response = $client->post('http://pdf-printer:5000/queue-job', [
+            $response = $client->post($baseUrl . '/queue-job', [
                 'auth' => [$authUser, $authPass],
                 'multipart' => [
                     [
