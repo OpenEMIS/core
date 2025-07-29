@@ -137,12 +137,12 @@ function AssessmentItemExemptionsController(
 
     function getColumnDefinitions() {
         return [
+            {headerName: 'Assessment Period', field: 'assessment_title'},//POCOR-9195
             {headerName: 'OpenEMIS ID', field: 'openemis_no'},
             {headerName: 'Name', field: 'name'},
             {headerName: 'Gender', field: 'gender_name'},
             {headerName: 'Student Status', field: 'student_status_name'},
-            {headerName: 'Assessment Period', field: 'assessment_title'},//POCOR-9195
-            {headerName: 'Subject', field: 'education_subject_id_title'},//POCOR-9195
+            // {headerName: 'Subject', field: 'education_subject_id_title'},//POCOR-9195
 
         ];
     }
@@ -265,7 +265,7 @@ function AssessmentItemExemptionsController(
         ctrl.unassingStudents = [];//POCOR-9042
 
         response.forEach(student => {
-            //console.log(student);
+            // console.log(student);
             const studentData = {
                 openemis_no: student.openemis_no,
                 name: student.name,
