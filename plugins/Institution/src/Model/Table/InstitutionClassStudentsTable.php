@@ -1459,6 +1459,7 @@ class InstitutionClassStudentsTable extends AppTable
     }
 
     //POCOR-9195 -- Updated function to include logic to display only selected subjects and students with no marks
+    // POCOR-9289 stashed
     public function findExemptStudentsNoMarks(Query $query, array $options): Query
     {
 
@@ -1605,8 +1606,9 @@ class InstitutionClassStudentsTable extends AppTable
             ->disableHydration();
 //        Log::debug($query->sql());
         // Format the results
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) // POCOR-9289
+        use ($selectedSubject, $assessment_period_names_string) { // POCOR-9289
+            return $results->map(function ($row) use ($selectedSubject, $assessment_period_names_string) { // POCOR-9289
                 $fullName = [];
                 ($row['first_name']) ? $fullName[] = $row['first_name'] : '';
                 ($row['middle_name']) ? $fullName[] = $row['middle_name'] : '';
