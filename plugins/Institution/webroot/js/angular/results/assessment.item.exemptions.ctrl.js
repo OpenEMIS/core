@@ -235,7 +235,7 @@ function AssessmentItemExemptionsController(
         if (Array.isArray(options.assessment_item_id) && options.assessment_item_ids.length === 0) {
             options.assessment_item_id = null;
         }
-        console.log(options);
+        // console.log(options);
         if (options.excempttype_id && options.assessment_period_id && options.assessment_item_id) {
             ctrl.dataReady = false;
 
@@ -304,7 +304,7 @@ function AssessmentItemExemptionsController(
         ctrl.unassingStudents = [];//POCOR-9042
 
         studentList.forEach(student => {
-            console.log(student);
+            // console.log(student);
             const studentData = {
                 openemis_no: student.openemis_no,
                 name: student.name,
@@ -346,6 +346,8 @@ function AssessmentItemExemptionsController(
     }
 
     ctrl.setTop = function (header, content, key = 'name') {
+        ctrl.columnTopData = createColumnData();
+
         for (var i = 0; i < header.length; i++) {
             header[i].suppressMenu = SUPPRESS_MENU;
             header[i].filter = 'text';
@@ -371,6 +373,8 @@ function AssessmentItemExemptionsController(
     };
 
     ctrl.setBottom = function (header, content, key = 'name') {
+        ctrl.columnBottomData = createColumnData();
+
         for (var i = 0; i < header.length; i++) {
             header[i].suppressMenu = SUPPRESS_MENU;
             header[i].filter = 'text';
@@ -392,7 +396,7 @@ function AssessmentItemExemptionsController(
         ctrl.gridOptionsBottom.columnDefs = ctrl.columnBottomData;
         ctrl.gridOptionsBottom.rowData = ctrl.rowBottomData;
         ctrl.gridOptionsBottom.primaryKey = ctrl.bottomKey;
-        // console.log(ctrl.gridOptionsBottom);
+
 
     };
 
@@ -417,6 +421,7 @@ function AssessmentItemExemptionsController(
         gridOptions.rowData = content;
         gridOptions.primaryKey = key;
         gridOptions.rowData;
+        console.log('aaa');
     }
 
     ctrl.postForm = function () {
