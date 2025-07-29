@@ -202,11 +202,12 @@ class AssessmentItemStudentExemptionsTable extends AppTable
             $education_subject_id = $assessmentItem->education_subject_id;
 
                 foreach ($unexempt_students as $student) {
+                    Log::debug(print_r($unexempt_students,true));
                     $student_id = $student['s_id'];
                     $education_grade_id = $student['eg_id'];
                     $assessment_period_id = $student['ap_id'] ?? null; //POCOR-9195
 
-                    if ($assessment_period_id === null) {
+                    if ($assessment_period_id == null) {
                         Log::warning("Skipping student $student_id: missing assessment_period_id");
                         continue; // Don't process this record
                     }

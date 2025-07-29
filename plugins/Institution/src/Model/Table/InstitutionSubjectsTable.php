@@ -402,7 +402,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                             $row['subject_students'],
                             function ($student) {
                                 if ($student->student_status_id != 1) {
-                                    Log::debug('Skipping student: ' . print_r($student, true));
+//                                    Log::debug('Skipping student: ' . print_r($student, true));
                                     return false;
                                 }
                                 return true;
