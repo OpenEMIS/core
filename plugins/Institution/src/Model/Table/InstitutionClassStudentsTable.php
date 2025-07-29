@@ -1743,10 +1743,12 @@ class InstitutionClassStudentsTable extends AppTable
                 [$this->aliasField('student_status_id') . ' = student_statuses.id']
             )
             ->where($where)
-            ->andWhere(function ($exp, $q) use ($selectedSubjectId) {
+            ->andWhere(function ($exp, $q) use ($selectedSubjectId, $assessment_period_ids) {
                 return $exp->or_([
+                    'assessment_item_student_exemptions.education_subject_id = ""',
                     'assessment_item_student_exemptions.education_subject_id IS NULL',
-                    'assessment_item_student_exemptions.education_subject_id = ' . $selectedSubjectId,
+                    ['assessment_item_student_exemptions.education_subject_id = ' . $selectedSubjectId,
+                        'assessment_item_student_exemptions.assessment_period_id IN (' . implode(',', $assessment_period_ids) . ')' ]
                 ]);
             })
         ;
@@ -1791,7 +1793,7 @@ class InstitutionClassStudentsTable extends AppTable
                 ($row['last_name']) ? $fullName[] = $row['last_name'] : '';
                 $row['is_exempt'] = ($row['assessment_id'] && $row['type'] == 1) ? true : false;//POCOR-9042
                 $row['is_unassign'] = ($row['assessment_id'] && $row['type'] == 2) ? true : false;//POCOR-9042
-                $row['is_unassign'] = $row['type'];//POCOR-9042
+
 
                 $name = implode(' ', $fullName);
 
