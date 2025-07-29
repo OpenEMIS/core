@@ -152,7 +152,6 @@ class AssessmentItemStudentExemptionsTable extends AppTable
                 'education_grade_id' => $record->education_grade_id,
                 'academic_period_id' => $record->academic_period_id,
                 'assessment_period_id' => $record->assessment_period_id,
-//                'institution_id' => $record->institution_id,
                 'institution_classes_id' => $record->institution_classes_id,
             ]);
         }

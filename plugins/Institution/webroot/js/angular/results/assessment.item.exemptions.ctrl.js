@@ -155,7 +155,7 @@ function AssessmentItemExemptionsController(
             ctrl.assessment_item_id &&
             ctrl.assessment_period_id) {
 
-            // loadClassDetails();//POCOR-9042
+            loadClassDetails();//POCOR-9042
             // console.log('init');
         }
         UtilsSvc.isAppendLoader(false);
@@ -168,7 +168,7 @@ function AssessmentItemExemptionsController(
             ctrl.assessment_item_id &&
             ctrl.assessment_period_id) {
             ctrl.actionEnabled = true; //POCOR-9197
-            // loadClassDetails();//POCOR-9042
+            loadClassDetails();//POCOR-9042
             // console.log(ctrl);
         } else {
             ctrl.actionEnabled = false;
