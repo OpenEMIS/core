@@ -95,7 +95,10 @@ $this->start('panelBody');
             <select name="assessment_item_id" id="assessment-item-id"
                     ng-options="option.id as option.name for option in $ctrl.assessment_items"
                     ng-model="$ctrl.assessment_item_id"
-                    ng-change="$ctrl.onSubjectChange();$ctrl.checkAndLoadStudents();"
+                    ng-change="
+                    $ctrl.onSubjectChange();
+                    $ctrl.checkAndLoadStudents();
+                    "
             >
                 <option value=""><?= __('-- Select --') ?></option>
             </select>
