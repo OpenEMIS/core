@@ -49,7 +49,7 @@ function AssessmentItemExemptionsSvc($http, $q, $filter, KdDataSvc) {
         }
 
         var success = function(response, deferred) {
-            console.log('response', response); //POCOR-9197
+            // console.log('response', response); //POCOR-9197
             if (response.data && response.data.data) {
                 deferred.resolve(response.data.data);
             } else {
