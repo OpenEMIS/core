@@ -1745,8 +1745,8 @@ class InstitutionClassStudentsTable extends AppTable
             ->where($where)
             ->andWhere(function ($exp, $q) use ($selectedSubjectId) {
                 return $exp->or_([
-                    'assessment_item_student_exemptions.education_subject_id IS' => null,
-                    'assessment_item_student_exemptions.education_subject_id' => '',
+                    'assessment_item_student_exemptions.education_subject_id IS NULL',
+                    'assessment_item_student_exemptions.education_subject_id = ' . $selectedSubjectId,
                 ]);
             })
         ;
