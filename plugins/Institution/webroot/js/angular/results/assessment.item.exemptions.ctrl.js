@@ -137,12 +137,12 @@ function AssessmentItemExemptionsController(
 
     function getColumnDefinitions() {
         return [
-            {headerName: 'Assessment Period', field: 'assessment_title'},//POCOR-9195
+            {headerName: 'Assessment Period', field: 'assessment_title'},//POCOR-9289 moved forward to be clear)
             {headerName: 'OpenEMIS ID', field: 'openemis_no'},
             {headerName: 'Name', field: 'name'},
             {headerName: 'Gender', field: 'gender_name'},
             {headerName: 'Student Status', field: 'student_status_name'},
-            // {headerName: 'Subject', field: 'education_subject_id_title'},//POCOR-9195
+            // {headerName: 'Subject', field: 'education_subject_id_title'},//POCOR-9289 removed
 
         ];
     }
@@ -155,7 +155,7 @@ function AssessmentItemExemptionsController(
             ctrl.assessment_item_id &&
             ctrl.assessment_period_id) {
 
-            loadClassDetails();//POCOR-9042
+            loadClassDetails();//POCOR-9289
             // console.log('init');
         }
         UtilsSvc.isAppendLoader(false);
@@ -168,7 +168,7 @@ function AssessmentItemExemptionsController(
             ctrl.assessment_item_id &&
             ctrl.assessment_period_id) {
             ctrl.actionEnabled = true; //POCOR-9197
-            loadClassDetails();//POCOR-9042
+            loadClassDetails();////POCOR-9289
             // console.log(ctrl);
         } else {
             ctrl.actionEnabled = false;
@@ -211,19 +211,19 @@ function AssessmentItemExemptionsController(
         if (!Array.isArray(ctrl.assessment_period_id)) {
             ctrl.assessment_period_id = [ctrl.assessment_period_id];  // POCOR-9114 Convert to array if it's a single value
         }
-        if (Array.isArray(ctrl.assessment_period_id) && ctrl.assessment_period_id.length === 0) {
+        if (Array.isArray(ctrl.assessment_period_id) && ctrl.assessment_period_id.length === 0) { //POCOR-9289 start
             ctrl.assessment_period_id = null;  // POCOR-9114 Convert to array if it's a single value
         }
         if (undefined === typeof ctrl.assessment_period_id) {
             ctrl.assessment_period_id = null;  // POCOR-9114 Convert to array if it's a single value
-        }
+        } //POCOR-9289 end
         const options = {
             institution_class_id: ctrl.institution_class_id,
             assessment_item_ids: ctrl.assessment_item_ids,
             assessment_item_id: ctrl.assessment_item_id,
             assessment_period_id: ctrl.assessment_period_id,
-            classification: ctrl.classification,
-            excempttype_id: ctrl.excempttype_id
+            classification: ctrl.classification, //POCOR-9289
+            excempttype_id: ctrl.excempttype_id //POCOR-9289
         }
         // console.log(options);
         //     .then(loadAdditionalClassData)
@@ -232,16 +232,15 @@ function AssessmentItemExemptionsController(
             options.assessment_item_id = options.assessment_item_ids[0];
             delete options.assessment_item_ids;
         }
-        if (Array.isArray(options.assessment_item_id) && options.assessment_item_ids.length === 0) {
+        if (Array.isArray(options.assessment_item_id) && options.assessment_item_ids.length === 0) { // POCOR-9289 start
             options.assessment_item_id = null;
         }
         // console.log(options);
-        if (options.excempttype_id && options.assessment_period_id && options.assessment_item_id) {
+        if (options.excempttype_id && options.assessment_period_id && options.assessment_item_id) { // POCOR-9289 end
             ctrl.dataReady = false;
-
             AssessmentItemExemptionsSvc.getExemptStudents(options)
                 .then(setClassDetails)
-                .then(translateColumnHeaders)
+            // .then(translateColumnHeaders)
                 .then(() => {
                     // translatedText.forEach((text, index) => {
                     //     ctrl.colDef[index].headerName = text;
@@ -263,7 +262,9 @@ function AssessmentItemExemptionsController(
                     ctrl.dataReady = true;
                     UtilsSvc.isAppendLoader(false);
                 });
-        } else {
+        } else {     //POCOR-9289 start
+                ctrl.dataReady = false;
+                UtilsSvc.isAppendLoader(true);
                 setClassDetails([])
                 translateColumnHeaders()
                 .then(() => {
@@ -289,8 +290,8 @@ function AssessmentItemExemptionsController(
                 });
         }
     }
-
-    //POCOR-9042 starts
+    //POCOR-9289 end
+    // POCOR-9042 starts
     ctrl.checkAndLoadStudents = function () {
         if (ctrl.isAllSelected()) {
             ctrl.onSubjectChange(); // or a more specific `loadStudents()` function
@@ -298,7 +299,6 @@ function AssessmentItemExemptionsController(
     };//POCOR-9042 ends
 
     function setClassDetails(studentList) {
-
         ctrl.exemptStudents = [];
         ctrl.unexemptStudents = [];
         ctrl.unassingStudents = [];//POCOR-9042
@@ -346,7 +346,7 @@ function AssessmentItemExemptionsController(
     }
 
     ctrl.setTop = function (header, content, key = 'name') {
-        ctrl.columnTopData = createColumnData();
+        ctrl.columnTopData = createColumnData(); // POCOR-9289
 
         for (var i = 0; i < header.length; i++) {
             header[i].suppressMenu = SUPPRESS_MENU;
@@ -373,7 +373,7 @@ function AssessmentItemExemptionsController(
     };
 
     ctrl.setBottom = function (header, content, key = 'name') {
-        ctrl.columnBottomData = createColumnData();
+        ctrl.columnBottomData = createColumnData(); // POCOR-9289
 
         for (var i = 0; i < header.length; i++) {
             header[i].suppressMenu = SUPPRESS_MENU;
@@ -421,7 +421,6 @@ function AssessmentItemExemptionsController(
         gridOptions.rowData = content;
         gridOptions.primaryKey = key;
         gridOptions.rowData;
-        console.log('aaa');
     }
 
     ctrl.postForm = function () {
