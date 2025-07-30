@@ -135,7 +135,7 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
 
     public function onGetCustomExternalSourceElement(Event $event, $action, Entity $entity, $attr, $options = [])
     {
-        dd($entity->name);
+
         $printer = $entity->value;
         if($printer == self::PRINTER_MPDF){
             return null;
