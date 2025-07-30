@@ -287,7 +287,7 @@ trait StudentPdfReportTrait
             Log::debug("Running LibreOffice command: $loCmd");
 
             exec($loCmd, $output, $returnCode);
-            Log::debug("LibreOffice output: " . implode("\n", $output));
+//            Log::debug("LibreOffice output: " . implode("\n", $output));
             if ($returnCode !== 0 || !file_exists($pdfExpectedPath)) {
                 throw new \Exception("LibreOffice conversion failed with exit code $returnCode");
             }
@@ -300,12 +300,12 @@ trait StudentPdfReportTrait
         } finally {
             // 3. Cleanup
             if (file_exists($xlsxPath)) {
-//                @unlink($xlsxPath);
+                @unlink($xlsxPath);
                 Log::debug("Deleted XLSX: $xlsxPath");
             }
 
             if (file_exists($pdfExpectedPath)) {
-//                @unlink($pdfExpectedPath);
+                @unlink($pdfExpectedPath);
                 Log::debug("Deleted PDF: $pdfExpectedPath");
             }
         }
