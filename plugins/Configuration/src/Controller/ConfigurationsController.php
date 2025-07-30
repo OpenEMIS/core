@@ -186,7 +186,7 @@ class ConfigurationsController extends AppController
     }
     // End POCOR-8286
     // Start POCOR-9303
-    public function PrintingServicePDF()
+    public function PDFService()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigPrintingServicePdf']);
     }

@@ -100,9 +100,9 @@ trait StudentPdfReportTrait
     private function savePDF($objSpreadsheet, $baseFilePath, $studentId)
     {
         Log::write('debug', 'ExcelReportBehavior >>> base filepath: ' . $baseFilePath);
-//        $mode = strtolower($this->getConfig('printPdf') ?? 'mpdf');
+
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $printer = $ConfigItems->value('printing_service_pdf_printer');
+        $printer = $ConfigItems->value('pdf_service');
         switch ($printer) {
             case self::PRINTER_MPDF:
                 $pdfContent = $this->printPdfViaMpdf($objSpreadsheet, $baseFilePath, $studentId);
@@ -138,7 +138,7 @@ trait StudentPdfReportTrait
     {
         Log::write('debug', 'ExcelReportBehavior >>> base filepath: ' . $baseFileName);
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $printer = $ConfigItems->value('printing_service_pdf_printer');
+        $printer = $ConfigItems->value('pdf_service');
 
         if ($printer != self::PRINTER_EXTERNAL) {
             return null;
@@ -147,7 +147,7 @@ trait StudentPdfReportTrait
         $attributes = TableRegistry::getTableLocator()
             ->get('Configuration.ExternalDataSourceAttributes')
             ->find('list', ['keyField' => 'attribute_field', 'valueField' => 'value'])
-            ->where(['external_data_source_type' => 'PDF Printer'])
+            ->where(['external_data_source_type' => 'PDF Service'])
             ->disableHydration()
             ->toArray();
 //        Log::debug(print_r($attributes,true));
@@ -250,7 +250,7 @@ trait StudentPdfReportTrait
             $attributes = TableRegistry::getTableLocator()
                 ->get('Configuration.ExternalDataSourceAttributes')
                 ->find('list', ['keyField' => 'attribute_field', 'valueField' => 'value'])
-                ->where(['external_data_source_type' => 'PDF Printer'])
+                ->where(['external_data_source_type' => 'PDF Service'])
                 ->disableHydration()
                 ->toArray();
             $apiParams = $attributes['api_params'] ?? null;
