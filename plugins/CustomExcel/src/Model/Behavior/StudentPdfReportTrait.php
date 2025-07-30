@@ -239,14 +239,13 @@ trait StudentPdfReportTrait
 
         $tempDir = TMP; // or "/tmp"
         $baseFileName = basename($baseFileName, '.xlsx'); // safe name, no path
-        putenv("HOME=$tempDir"); // Ensures LibreOffice has a writable HOME directory
-        Log::debug($tempDir);
+//        putenv("HOME=$tempDir"); // Ensures LibreOffice has a writable HOME directory
+//        Log::debug($tempDir);
         try {
             // 1. Save XLSX
             $xlsxPath = $tempDir . $baseFileName . '.xlsx';
             $pdfExpectedPath = $tempDir . $baseFileName . '.pdf';
-            Log::debug($xlsxPath);
-            Log::debug($pdfExpectedPath);
+
             $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
             $objWriter->save($xlsxPath);
 
@@ -258,21 +257,30 @@ trait StudentPdfReportTrait
                 ->toArray();
             $apiParams = $attributes['api_params'] ?? null;
             $convert_pdf = "pdf";
-            if($apiParams) {
-//                Log::debug(print_r($apiParams, true));
-                $apiParams = json_encode(json_decode($apiParams, true)); // ensures valid JSON string
-//                Log::debug(print_r($apiParams, true));
+            $javaAvailable = false;
+            exec("java -XshowSettings:properties -version 2>&1", $javaOutput, $javaCode);
+
+            foreach ($javaOutput as $line) {
+                if (stripos($line, 'java.runtime.name') !== false || stripos($line, 'Java(TM)') !== false) {
+                    $javaAvailable = true;
+                    break;
+                }
+            }
+
+            if ($javaAvailable && $apiParams) {
+                // Ensure proper JSON
+                $apiParams = json_encode(json_decode($apiParams, true));
+
                 if ($apiParams) {
-//                    $escapedParams = addcslashes($apiParams, '"');
-                    $escapedParams = $apiParams;
-                    $convert_pdf = 'pdf:calc_pdf_Export:' . $escapedParams;
+                    $convert_pdf = 'pdf:calc_pdf_Export:' . $apiParams;
                 }
             }
             // 2. Prepare command to run LibreOffice in headless mode
+            $escapeTempDir = escapeshellarg($tempDir);
             $escapedSheet = escapeshellarg($xlsxPath);
             $escapedOutputDir = escapeshellarg($tempDir);
 
-            $loCmd = "libreoffice --headless --convert-to $convert_pdf --outdir $escapedOutputDir $escapedSheet";
+            $loCmd = "HOME=$escapeTempDir libreoffice --headless --convert-to $convert_pdf --outdir $escapedOutputDir $escapedSheet";
 
             // You may parse and apply $apiParams if needed
             // For example, if you want watermark, you may use unoconv with a custom template
