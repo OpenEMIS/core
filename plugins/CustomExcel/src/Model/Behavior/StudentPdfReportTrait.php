@@ -240,12 +240,13 @@ trait StudentPdfReportTrait
         $tempDir = TMP; // or "/tmp"
         $baseFileName = basename($baseFileName, '.xlsx'); // safe name, no path
         putenv("HOME=$tempDir"); // Ensures LibreOffice has a writable HOME directory
-
+        Log::debug($tempDir);
         try {
             // 1. Save XLSX
             $xlsxPath = $tempDir . $baseFileName . '.xlsx';
             $pdfExpectedPath = $tempDir . $baseFileName . '.pdf';
-
+            Log::debug($xlsxPath);
+            Log::debug($pdfExpectedPath);
             $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
             $objWriter->save($xlsxPath);
 
@@ -262,13 +263,15 @@ trait StudentPdfReportTrait
                 $apiParams = json_encode(json_decode($apiParams, true)); // ensures valid JSON string
 //                Log::debug(print_r($apiParams, true));
                 if ($apiParams) {
-                    $escapedParams = addcslashes($apiParams, '"');
+//                    $escapedParams = addcslashes($apiParams, '"');
+                    $escapedParams = $apiParams;
                     $convert_pdf = 'pdf:calc_pdf_Export:' . $escapedParams;
                 }
             }
             // 2. Prepare command to run LibreOffice in headless mode
             $escapedSheet = escapeshellarg($xlsxPath);
             $escapedOutputDir = escapeshellarg($tempDir);
+
             $loCmd = "libreoffice --headless --convert-to $convert_pdf --outdir $escapedOutputDir $escapedSheet";
 
             // You may parse and apply $apiParams if needed
