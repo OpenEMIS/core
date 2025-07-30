@@ -256,9 +256,9 @@ trait StudentPdfReportTrait
             $apiParams = $attributes['api_params'] ?? null;
             $convert_pdf = "pdf";
             if($apiParams) {
-                Log::debug(print_r($apiParams, true));
+//                Log::debug(print_r($apiParams, true));
                 $apiParams = json_encode(json_decode($apiParams, true)); // ensures valid JSON string
-                Log::debug(print_r($apiParams, true));
+//                Log::debug(print_r($apiParams, true));
                 $escapedParams = addcslashes($apiParams, '"');
                 $convert_pdf = 'pdf:calc_pdf_Export:'. $escapedParams;
             }
