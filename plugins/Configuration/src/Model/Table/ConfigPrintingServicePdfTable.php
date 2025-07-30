@@ -93,7 +93,7 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
             $this->field('value_selection', ['visible' => false]);
 
             $this->field('type', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
-            $this->field('label', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
+            $this->field('label', ['visible' => ['view' => false, 'edit' => false], 'type' => 'readonly']);
 
             if ($this->action == 'view') {
                 $extra['elements']['controls'] = $this->buildSystemConfigFilters();
@@ -135,6 +135,7 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
 
     public function onGetCustomExternalSourceElement(Event $event, $action, Entity $entity, $attr, $options = [])
     {
+        dd($entity->name);
         $printer = $entity->value;
         if($printer == self::PRINTER_MPDF){
             return null;
@@ -207,7 +208,7 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
         $data = $requestData[$alias];
         $source = $entity['name'];
 
-        if ($source == 'PDF Printer') {
+        if ($source == 'PDF Service') {
             $patchOption['validate'] = true;
             return;
         }
@@ -312,7 +313,7 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
                     $this->aliasField('label'),
                     $this->aliasField('value')]
             )->where([
-                $this->aliasField('type') => 'Printing Service - PDF'
+                $this->aliasField('type') => 'PDF Service'
             ]);
     }
 

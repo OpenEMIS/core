@@ -7,7 +7,7 @@ use Cake\Utility\Text;
 
 class POCOR9303 extends AbstractMigration
 {
-    private const CONFIG_TYPE = 'Printing Service - PDF';
+    private const CONFIG_TYPE = 'PDF Service';
     private const OPTION_TYPE = 'pdf_printer_type';
 
     public function up(): void
@@ -92,10 +92,10 @@ class POCOR9303 extends AbstractMigration
     {
         $items = [
             [
-                'name' => 'PDF Printer',
-                'code' => 'printing_service_pdf_printer',
+                'name' => 'PDF Service',
+                'code' => 'pdf_service',
                 'type' => self::CONFIG_TYPE,
-                'label' => 'PDF Printer',
+                'label' => 'PDF Service',
                 'visible' => 1,
                 'editable' => 1,
                 'value' => '1',
@@ -198,7 +198,7 @@ class POCOR9303 extends AbstractMigration
             "DocumentOpenPassword": {"type": "string", "value": "secret"}}'],
         ];
 
-        $data = array_map(fn($attr) => $this->generateExternalDataSourceAttribute('PDF Printer', ...$attr), $attributes);
+        $data = array_map(fn($attr) => $this->generateExternalDataSourceAttribute('PDF Service', ...$attr), $attributes);
 
         $table->insert($data)->save();
     }
