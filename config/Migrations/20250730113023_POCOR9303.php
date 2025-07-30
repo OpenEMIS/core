@@ -7,12 +7,14 @@ use Cake\Utility\Text;
 
 class POCOR9303 extends AbstractMigration
 {
-    private const CONFIG_TYPE = 'External Printing Service - PDF';
+    private const CONFIG_TYPE = 'Printing Service - PDF';
+    private const OPTION_TYPE = 'pdf_printer_type';
 
     public function up(): void
     {
 //        return;
         $this->backupTables();
+        $this->insertConfigItemOptions();
         $this->insertConfigItems();
         $this->insertNewExternalDataSourceAttributes();
     }
@@ -20,6 +22,7 @@ class POCOR9303 extends AbstractMigration
     private function backupTables(): void
     {
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+        $this->backupTable('config_item_options', 'z_9303_config_item_options');
         $this->backupTable('config_items', 'z_9303_config_items');
         $this->backupTable('external_data_source_attributes', 'z_9303_external_data_source_attributes');
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
@@ -95,8 +98,11 @@ class POCOR9303 extends AbstractMigration
                 'label' => 'PDF Printer',
                 'visible' => 1,
                 'editable' => 1,
+                'value' => 1,
+                'default_value' => 1,
+                'value_selection' => '1',
                 'field_type' => 'Dropdown',
-                'option_type' => 'online_services',
+                'option_type' => self::OPTION_TYPE,
             ],
         ];
 
@@ -119,10 +125,59 @@ class POCOR9303 extends AbstractMigration
                  `option_type`, `created_user_id`, `created`)
                 VALUES
                 ('{$item['name']}', '{$item['code']}', '" . self::CONFIG_TYPE . "',
-                 '{$item['label']}', '0', '0', '0', {$item['editable']},
+                 '{$item['label']}', '{$item['value']}', '{$item['value_selection']}', '{$item['default_value']}', {$item['editable']},
                  {$item['visible']}, $fieldType, $optionType, 1, CURRENT_TIMESTAMP)
             ");
                 Log::info("Inserted config item: {$item['name']}");
+            }
+        }
+    }private function insertConfigItemOptions(): void
+    {
+        //        $this->execute("INSERT INTO `config_item_options` (`option_type`, `option`, `value`, `order`, `visible`) values('meal_type','Received','Received','1','1')");
+        //        $this->execute("INSERT INTO `config_item_options` (`option_type`, `option`, `value`, `order`, `visible`) values('meal_type','Not Received','Not Received','2','1')");
+        //        $this->execute("INSERT INTO `config_item_options` (`option_type`, `option`, `value`, `order`, `visible`) values('meal_type','None','None','3','1')");
+        $item_options = [
+            [
+                'option_type' => self::OPTION_TYPE,
+                'option' => 'MPDF Printer',
+                'value' => 1,
+                'visible' => 1,
+                'order' => 1,
+            ],
+            [
+                'option_type' => self::OPTION_TYPE,
+                'option' => 'LibreOffice Printer',
+                'value' => 2,
+                'visible' => 1,
+                'order' => 2,
+            ],
+            [
+                'option_type' => self::OPTION_TYPE,
+                'option' => 'External PDF Printer',
+                'value' => 3,
+                'visible' => 1,
+                'order' => 3,
+            ],
+        ];
+
+        foreach ($item_options as $item_option) {
+            $existing = $this->fetchRow("
+            SELECT id FROM `config_item_options`
+            WHERE `option_type` = '{$item_option['option_type']}'
+              AND `option` = '{$item_option['option']}'
+        ");
+
+            if (empty($existing)) {
+
+                $this->execute("
+                INSERT INTO `config_item_options`
+                (`option_type`, `option`, `value`, `visible`, `order`)
+                VALUES
+                ('{$item_option['option_type']}', '{$item_option['option']}',
+                 {$item_option['value']},
+                 '{$item_option['visible']}', {$item_option['order']})
+            ");
+                Log::info("Inserted config item option: {$item_option['name']}");
             }
         }
     }
@@ -170,6 +225,7 @@ class POCOR9303 extends AbstractMigration
     private function restoreTables(): void
     {
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+        $this->restoreTable('config_item_options', 'z_9303_config_item_options');
         $this->restoreTable('config_items', 'z_9303_config_items');
         $this->restoreTable('external_data_source_attributes', 'z_9303_external_data_source_attributes');
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');

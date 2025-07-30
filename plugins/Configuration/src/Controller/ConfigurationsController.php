@@ -186,9 +186,9 @@ class ConfigurationsController extends AppController
     }
     // End POCOR-8286
     // Start POCOR-9303
-    public function ExternalPrintingServicePDF()
+    public function PrintingServicePDF()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalPrintingServicePdf']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigPrintingServicePdf']);
     }
     // End POCOR-9303
     //POCOR-7531 start

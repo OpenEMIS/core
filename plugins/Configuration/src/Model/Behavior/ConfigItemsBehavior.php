@@ -151,8 +151,8 @@ class ConfigItemsBehavior extends Behavior
         if($typeValue == 'ExternalAlertService-SMS'){ //POCOR-8386
             $typeValue = 'ExternalAlertServiceSMS';
         }
-        if($typeValue == 'ExternalPrintingService-PDF'){ //POCOR-9303
-            $typeValue = 'ExternalPrintingServicePDF';
+        if($typeValue == 'PrintingService-PDF'){ //POCOR-9303
+            $typeValue = 'PrintingServicePDF';
         }
         //POCOR-7531 start
          // End POCOR-7507
