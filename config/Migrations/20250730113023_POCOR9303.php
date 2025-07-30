@@ -98,8 +98,8 @@ class POCOR9303 extends AbstractMigration
                 'label' => 'PDF Printer',
                 'visible' => 1,
                 'editable' => 1,
-                'value' => 1,
-                'default_value' => 1,
+                'value' => '1',
+                'default_value' => '1',
                 'value_selection' => '1',
                 'field_type' => 'Dropdown',
                 'option_type' => self::OPTION_TYPE,
@@ -125,7 +125,8 @@ class POCOR9303 extends AbstractMigration
                  `option_type`, `created_user_id`, `created`)
                 VALUES
                 ('{$item['name']}', '{$item['code']}', '" . self::CONFIG_TYPE . "',
-                 '{$item['label']}', '{$item['value']}', '{$item['value_selection']}', '{$item['default_value']}', {$item['editable']},
+                 '{$item['label']}', '{$item['value']}', '{$item['value_selection']}',
+                 '{$item['default_value']}', {$item['editable']},
                  {$item['visible']}, $fieldType, $optionType, 1, CURRENT_TIMESTAMP)
             ");
                 Log::info("Inserted config item: {$item['name']}");
@@ -194,7 +195,7 @@ class POCOR9303 extends AbstractMigration
             ['api_url', 'API URL', 'http://pdf-printer:5000'],
             ['api_params', 'API Parameters', '{ "TiledWatermark":{"type":"string","value":"draft"},
             "EncryptFile": {"type": "boolean", "value": "true"},
-            "DocumentOpenPassword": {"type": "string", "value": "secret"}}}'],
+            "DocumentOpenPassword": {"type": "string", "value": "secret"}}'],
         ];
 
         $data = array_map(fn($attr) => $this->generateExternalDataSourceAttribute('PDF Printer', ...$attr), $attributes);
