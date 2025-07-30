@@ -27,6 +27,9 @@ use Cake\ORM\TableRegistry;
 
 trait StudentPdfReportTrait
 {
+    const PRINTER_MPDF = 1;
+    const PRINTER_LIBREOFFICE = 2;
+    const PRINTER_EXTERNAL = 3;
     private $currentWorksheet = null;
     private $currentWorksheetIndex = 0;
 
@@ -99,17 +102,17 @@ trait StudentPdfReportTrait
         Log::write('debug', 'ExcelReportBehavior >>> base filepath: ' . $baseFilePath);
 //        $mode = strtolower($this->getConfig('printPdf') ?? 'mpdf');
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $enabled = $ConfigItems->value('external_printing_service_pdf_printer');
-        $mode = 'api';
-        if ($enabled != '1') {
-            $mode = 'mpdf';
-        }
-
-
-        if ($mode === 'api') {
-            $pdfContent = $this->printPdfViaApi($objSpreadsheet, $baseFilePath . '_sheet' . $studentId);
-        } else {
-            $pdfContent = $this->printPdfViaMpdf($objSpreadsheet, $baseFilePath, $studentId);
+        $printer = $ConfigItems->value('printing_service_pdf_printer');
+        switch ($printer) {
+            case self::PRINTER_MPDF:
+                $pdfContent = $this->printPdfViaMpdf($objSpreadsheet, $baseFilePath, $studentId);
+                break;
+            case self::PRINTER_LIBREOFFICE:
+                $pdfContent = $this->printPdfViaLibreOffice($objSpreadsheet, $baseFilePath, $studentId);
+                break;
+            case self::PRINTER_EXTERNAL:
+                $pdfContent = $this->printPdfViaApi($objSpreadsheet, $baseFilePath . '_sheet' . $studentId);
+                break;
         }
 
         if (!empty($pdfContent)) {
@@ -135,9 +138,9 @@ trait StudentPdfReportTrait
     {
         Log::write('debug', 'ExcelReportBehavior >>> base filepath: ' . $baseFileName);
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $enabled = $ConfigItems->value('external_printing_service_pdf_printer');
+        $printer = $ConfigItems->value('printing_service_pdf_printer');
 
-        if ($enabled != '1') {
+        if ($printer != self::PRINTER_EXTERNAL) {
             return null;
         }
 
@@ -222,6 +225,73 @@ trait StudentPdfReportTrait
             if (file_exists($sheetPath)) {
                 @unlink($sheetPath);
                 Log::write('debug', "Deleted temp XLSX file: $sheetPath");
+            }
+        }
+
+        return null;
+    }
+
+    // POCOR-9303
+    private function printPdfViaLibreOffice(Spreadsheet $objSpreadsheet, string $baseFileName, ?string $studentId = null): ?string
+    {
+
+        $tempDir = TMP; // or "/tmp"
+        $baseFileName = basename($baseFileName, '.xlsx'); // safe name, no path
+        putenv("HOME=$tempDir"); // Ensures LibreOffice has a writable HOME directory
+
+        try {
+            // 1. Save XLSX
+            $xlsxPath = $tempDir . $baseFileName . '.xlsx';
+            $pdfExpectedPath = $tempDir . $baseFileName . '.pdf';
+
+            $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+            $objWriter->save($xlsxPath);
+
+            $attributes = TableRegistry::getTableLocator()
+                ->get('Configuration.ExternalDataSourceAttributes')
+                ->find('list', ['keyField' => 'attribute_field', 'valueField' => 'value'])
+                ->where(['external_data_source_type' => 'PDF Printer'])
+                ->disableHydration()
+                ->toArray();
+            $apiParams = $attributes['api_params'] ?? null;
+            $convert_pdf = "pdf";
+            if($apiParams) {
+                Log::debug(print_r($apiParams, true));
+                $apiParams = json_encode(json_decode($apiParams, true)); // ensures valid JSON string
+                Log::debug(print_r($apiParams, true));
+                $escapedParams = addcslashes($apiParams, '"');
+                $convert_pdf = 'pdf:calc_pdf_Export:'. $escapedParams;
+            }
+            // 2. Prepare command to run LibreOffice in headless mode
+            $escapedSheet = escapeshellarg($xlsxPath);
+            $escapedOutputDir = escapeshellarg($tempDir);
+            $loCmd = "libreoffice --headless --convert-to $convert_pdf --outdir $escapedOutputDir $escapedSheet";
+
+            // You may parse and apply $apiParams if needed
+            // For example, if you want watermark, you may use unoconv with a custom template
+            Log::debug("Running LibreOffice command: $loCmd");
+
+            exec($loCmd, $output, $returnCode);
+            Log::debug("LibreOffice output: " . implode("\n", $output));
+            if ($returnCode !== 0 || !file_exists($pdfExpectedPath)) {
+                throw new \Exception("LibreOffice conversion failed with exit code $returnCode");
+            }
+
+            return file_get_contents($pdfExpectedPath);
+
+        } catch (\Exception $e) {
+            Log::error("LibreOffice PDF conversion error: " . $e->getMessage());
+            return null;
+        } finally {
+            // 3. Cleanup
+            if (file_exists($xlsxPath)) {
+                @unlink($xlsxPath);
+                Log::debug("Deleted XLSX: $xlsxPath");
+            }
+
+            if (file_exists($pdfExpectedPath)) {
+                @unlink($pdfExpectedPath);
+                Log::debug("Deleted PDF: $pdfExpectedPath");
             }
         }
 
