@@ -175,10 +175,12 @@ trait StudentPdfReportTrait
             ];
             if($apiParams){
                 $apiParams = json_encode(json_decode($apiParams, true)); // ensures valid JSON string
-                $multipart[] = [
-                    'name'     => 'lo_options',
-                    'contents' => $apiParams
-                ];
+                if ($apiParams) {
+                    $multipart[] = [
+                        'name' => 'lo_options',
+                        'contents' => $apiParams
+                    ];
+                }
             }
             if ($deleteOriginal) {
                 $multipart[] = [
@@ -259,8 +261,10 @@ trait StudentPdfReportTrait
 //                Log::debug(print_r($apiParams, true));
                 $apiParams = json_encode(json_decode($apiParams, true)); // ensures valid JSON string
 //                Log::debug(print_r($apiParams, true));
-                $escapedParams = addcslashes($apiParams, '"');
-                $convert_pdf = 'pdf:calc_pdf_Export:'. $escapedParams;
+                if ($apiParams) {
+                    $escapedParams = addcslashes($apiParams, '"');
+                    $convert_pdf = 'pdf:calc_pdf_Export:' . $escapedParams;
+                }
             }
             // 2. Prepare command to run LibreOffice in headless mode
             $escapedSheet = escapeshellarg($xlsxPath);
