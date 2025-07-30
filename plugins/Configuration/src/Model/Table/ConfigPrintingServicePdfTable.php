@@ -16,17 +16,26 @@ use Cake\Log\Log;
 
 // POCOR-8286
 
-class ConfigExternalPrintingServicePdfTable extends ControllerActionTable
+class ConfigPrintingServicePdfTable extends ControllerActionTable
 {
     public $id;
     public $authenticationType;
-
+    private $options = [];
+    CONST EXTERNAL_PDF_PRINTER = 3;
     public function initialize(array $config): void
     {
         $this->setTable('config_items');
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
         $this->toggle('remove', false);
+        $optionTable = self::getDynamicTableInstance('Configuration.ConfigItemOptions');
+
+        $this->options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
+            ->where([
+                'ConfigItemOptions.option_type' => 'pdf_printer_type',
+                'ConfigItemOptions.visible' => 1
+            ])
+            ->toArray();
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -37,8 +46,8 @@ class ConfigExternalPrintingServicePdfTable extends ControllerActionTable
         $requestData = $this->request->getData();
         $alias = $this->getAlias();
         $data = $requestData[$alias];
-        $source = $data['label'];
-        if ($source == 'Twilio') {
+        $source = $data['value'];
+        if ($source == self::EXTERNAL_PDF_PRINTER) {
             return $validator
                 ->requirePresence('username')
                 ->requirePresence('password')
@@ -112,13 +121,18 @@ class ConfigExternalPrintingServicePdfTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('value', ['visible' => true]);
-
-        $this->field('attributes', ['type' => 'custom_external_source']);
+        $this->field('value_name', ['visible' => true]);
+        $this->field('value', ['visible' => false]);
+        if ($entity->value == self::EXTERNAL_PDF_PRINTER) {
+            $this->field('attributes', ['type' => 'custom_external_source']);
+        }
     }
 
     public function onGetCustomExternalSourceElement(Event $event, $action, Entity $entity, $attr, $options = [])
     {
+        if($entity->value != self::EXTERNAL_PDF_PRINTER){
+            return null;
+        }
         $tableHeaders = [__('Attribute Name'), __('Value')];
         $tableCells = [];
         $ExternalDataSourceAttributes = self::getDynamicTableInstance('Configuration.ExternalDataSourceAttributes');
@@ -156,21 +170,15 @@ class ConfigExternalPrintingServicePdfTable extends ControllerActionTable
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->getSubject()->renderElement('Configuration.external_alert_service_sms', ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Configuration.printing_service_pdf', ['attr' => $attr]);
 
     }
 
     public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
     {
 
-        if (in_array($action, ['edit'])) {
-            $optionTable = self::getDynamicTableInstance('Configuration.ConfigItemOptions');
-            $options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
-                ->where([
-                    'ConfigItemOptions.option_type' => 'completeness',
-                    'ConfigItemOptions.visible' => 1
-                ])
-                ->toArray();
+        if (in_array($action, ['edit', 'add'])) {
+            $options = $this->options;
             $attr['options'] = $options;
             $attr['onChangeReload'] = true;
             $this->setExternalAttributes($attr['entity']);
@@ -222,11 +230,11 @@ class ConfigExternalPrintingServicePdfTable extends ControllerActionTable
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
 
-        $source = $entity->name;
+        $source = $entity->value;
         $this->field('value', ['visible' => true, 'entity' => $entity]);
         $this->field('value_selection', ['visible' => false]);
         switch ($source) {
-            case 'PDF Printer':
+            case self::EXTERNAL_PDF_PRINTER:
                 $this->field('username', ['type' => 'string', 'required' => 'required']);
                 $this->field('password', ['type' => 'password', 'required' => 'required']);
                 $this->field('api_url', ['type' => 'string', 'required' => 'required']);
@@ -269,26 +277,18 @@ class ConfigExternalPrintingServicePdfTable extends ControllerActionTable
                     $this->aliasField('label'),
                     $this->aliasField('value')]
             )->where([
-                $this->aliasField('type') => 'External Printing Service - PDF'
+                $this->aliasField('type') => 'Printing Service - PDF'
             ]);
     }
 
-    public function onGetValue(Event $event, Entity $entity)
+    public function onGetValueName(Event $event, Entity $entity)
     {
-        $valueField = 'value';
-//        return 'Disabled';
-        if ($entity->{$valueField} == 0) {
-            $value = __('Disabled');
-        } else {
-            $value = __('Enabled');
-        }
-
-        return $value;
+            return $this->options[$entity->value];
     }
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        if ($field == 'value') {
-            return __('Status');
+        if ($field == 'value_name') {
+            return __('Printer');
         } elseif ($field == 'label') {
             return __('Source');
         } else {
