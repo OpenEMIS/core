@@ -13,6 +13,7 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\ORM\Table;
 use Cake\Log\Log;
+use function Symfony\Component\String\b;
 
 // POCOR-8286
 
@@ -21,7 +22,9 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
     public $id;
     public $authenticationType;
     private $options = [];
-    CONST EXTERNAL_PDF_PRINTER = 3;
+    CONST PRINTER_MPDF = 1;
+    CONST PRINTER_LIBREOFFICE = 2;
+    CONST PRINTER_EXTERNAL = 3;
     public function initialize(array $config): void
     {
         $this->setTable('config_items');
@@ -47,7 +50,7 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
         $alias = $this->getAlias();
         $data = $requestData[$alias];
         $source = $data['value'];
-        if ($source == self::EXTERNAL_PDF_PRINTER) {
+        if ($source == self::PRINTER_EXTERNAL) {
             return $validator
                 ->requirePresence('username')
                 ->requirePresence('password')
@@ -123,14 +126,18 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
     {
         $this->field('value_name', ['visible' => true]);
         $this->field('value', ['visible' => false]);
-        if ($entity->value == self::EXTERNAL_PDF_PRINTER) {
+        if ($entity->value == self::PRINTER_EXTERNAL) {
+            $this->field('attributes', ['type' => 'custom_external_source']);
+        }
+        if ($entity->value == self::PRINTER_LIBREOFFICE) {
             $this->field('attributes', ['type' => 'custom_external_source']);
         }
     }
 
     public function onGetCustomExternalSourceElement(Event $event, $action, Entity $entity, $attr, $options = [])
     {
-        if($entity->value != self::EXTERNAL_PDF_PRINTER){
+        $printer = $entity->value;
+        if($printer == self::PRINTER_MPDF){
             return null;
         }
         $tableHeaders = [__('Attribute Name'), __('Value')];
@@ -146,8 +153,14 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
             ])
             ->orderAsc('attribute_field')
             ->toArray();
-
-        $visibleAttributes = ['username', 'password', 'api_url', 'api_params'];
+        switch ($printer) {
+            case self::PRINTER_LIBREOFFICE:
+                $visibleAttributes = ['api_params'];
+                break;
+            case self::PRINTER_EXTERNAL:
+                $visibleAttributes = ['username', 'password', 'api_url', 'api_params'];
+                break;
+        }
 
         // Filter attributes using array_intersect_key
         $attributes = array_intersect_key(
@@ -234,7 +247,27 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
         $this->field('value', ['visible' => true, 'entity' => $entity]);
         $this->field('value_selection', ['visible' => false]);
         switch ($source) {
-            case self::EXTERNAL_PDF_PRINTER:
+            case self::PRINTER_LIBREOFFICE:
+                $this->field('username', ['type' => 'hidden']);
+                $this->field('password', ['type' => 'hidden']);
+                $this->field('api_url', ['type' => 'hidden']);
+                $this->field('api_params', ['type' => 'string']);
+                $this->field('api_key', ['type' => 'hidden']);
+                $this->field('first_name_mapping', ['type' => 'hidden']);
+                $this->field('middle_name_mapping', ['type' => 'hidden']);
+                $this->field('third_name_mapping', ['type' => 'hidden']);
+                $this->field('last_name_mapping', ['type' => 'hidden']);
+                $this->field('date_of_birth_mapping', ['type' => 'hidden']);
+                $this->field('external_reference_mapping', ['type' => 'hidden']);
+                $this->field('gender_mapping', ['type' => 'hidden']);
+                $this->field('identity_type_mapping', ['type' => 'hidden']);
+                $this->field('identity_number_mapping', ['type' => 'hidden']);
+                $this->field('nationality_mapping', ['type' => 'hidden']);
+                $this->field('address_mapping', ['type' => 'hidden']);
+                $this->field('postal_mapping', ['type' => 'hidden']);
+                $this->field('user_endpoint_uri', ['type' => 'hidden']);
+                break;
+            case self::PRINTER_EXTERNAL:
                 $this->field('username', ['type' => 'string', 'required' => 'required']);
                 $this->field('password', ['type' => 'password', 'required' => 'required']);
                 $this->field('api_url', ['type' => 'string', 'required' => 'required']);

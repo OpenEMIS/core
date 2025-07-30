@@ -93,7 +93,7 @@ class POCOR9303 extends AbstractMigration
         $items = [
             [
                 'name' => 'PDF Printer',
-                'code' => 'external_printing_service_pdf_printer',
+                'code' => 'printing_service_pdf_printer',
                 'type' => self::CONFIG_TYPE,
                 'label' => 'PDF Printer',
                 'visible' => 1,
