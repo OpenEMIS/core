@@ -99,7 +99,6 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
                 $extra['elements']['controls'] = $this->buildSystemConfigFilters();
                 $this->checkController();
             }
-//            dd($this->getFields());
         }
 
         $is_manual_exist = $this->getManualUrl('Administration', 'External Alert Service - SMS', 'System Configurations');
@@ -300,6 +299,9 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
         if (isset($extra['toolbarButtons']['add'])) {
             unset($extra['toolbarButtons']['add']);
         }
+                $this->field('value_name', ['visible' => true]);
+        $this->field('value', ['visible' => false]);
+
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
