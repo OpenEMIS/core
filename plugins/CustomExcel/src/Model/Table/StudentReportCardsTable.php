@@ -258,7 +258,10 @@ class StudentReportCardsTable extends AppTable
             //POCOR-7316 start
             $result = [];
             $result = [
+                'id' => $entity->id,
                 'name' => $entity->name,
+                'code' => $entity->code,
+                'logo_content' => $entity->logo_content,
                 'address' => $entity->address,
                 'contact' => $entity->telephone,
                 'area' => $entity['area_administrative']->name,
@@ -386,6 +389,7 @@ class StudentReportCardsTable extends AppTable
             }
             $result = [];
             $result = [
+                'id' => $entity->id ,
                 'name' => $entity->first_name . ' ' . $entity->last_name,
                 'first_name' => $entity->first_name, //POCOR_7316
                 'last_name' => $entity->last_name, //POCOR_7316
