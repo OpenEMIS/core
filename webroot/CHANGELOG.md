@@ -1,3 +1,8 @@
+### [4.37.1] - 2025-08-01
+Bug Fixed: Institutions > Performances > Assessments > Unassign/Exempt page : Retrieve all students regardless if the marks are entered
+Bug Fixed: Administration>Profiles>Students: Left border is not showing
+Bug Fixed: Institutions>Staff>Career>Leave: Entitlements for staff are not showing
+
 ### [4.37.0] - 2025-07-29
 - Implemented: Develop institution logo placeholder in the student profile feature
 - Implemented: Develop a standard report with filters for Reports > Performance > Outcomes
