@@ -764,7 +764,9 @@ class StudentProfilesTable extends ControllerActionTable
 
     public function generateAll(Event $event, ArrayObject $extra)
     {
+
         $params = $this->getQueryString();
+        Log::debug(print_r($params,true));
         $hasTemplate = $this->StudentTemplates->checkIfHasTemplate($params['student_profile_template_id']);
         $userObj = $this->Auth->user();
         $studentId = $userObj['id'];
