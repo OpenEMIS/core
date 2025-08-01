@@ -144,6 +144,13 @@ class DirectoriesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']);
     }
 
+    // POCOR-9287 start
+    public function StaffEntitlement()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffEntitlement']);
+    }
+    // POCOR-9287 end
+
     public function StaffQualifications()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']);
