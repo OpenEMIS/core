@@ -239,6 +239,7 @@ trait StudentPdfReportTrait
 
     private function removeColumnAndRow($processingString, $sheetIndex)
     {
+
         $processedHtmlRows = [];
         $targetRowValue = $this->excelLastRowValueArr[$sheetIndex + 1];
 
@@ -273,8 +274,8 @@ trait StudentPdfReportTrait
             $searchFormat = '/(<img src="data:image\/).*(;base64)/';
             $replacement = '<img src="data:image/jpg;base64';
             $processedHtmlRow = preg_replace($searchFormat, $replacement, $targetRow);
-
-            $processedHtmlColumn = preg_replace($regexString, "", $processedHtmlRow);
+            $processedHtmlColumn = $processedHtmlRow;
+//            $processedHtmlColumn = preg_replace($regexString, "", $processedHtmlRow); // POCOR-9296
 
             // Clear up all the empty blank lines using regular expression
             $processedHtmlRows[] = preg_replace('/^\h*\v+/m', "", $processedHtmlColumn);
