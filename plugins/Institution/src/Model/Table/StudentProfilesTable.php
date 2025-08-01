@@ -771,6 +771,7 @@ class StudentProfilesTable extends ControllerActionTable
     public function generate(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
+//        dd($params);
         $hasTemplate = $this->StudentTemplates->checkIfHasTemplate($params['student_profile_template_id']);
         $institutionId = $this->getInstitutionID();
         if ($hasTemplate) {
@@ -788,8 +789,10 @@ class StudentProfilesTable extends ControllerActionTable
 
     public function generateAll(Event $event, ArrayObject $extra)
     {
+
         $params = $this->getQueryString();
         $hasTemplate = $this->StudentTemplates->checkIfHasTemplate($params['student_profile_template_id']);
+//        dd($params);
 
         $institutionId = $this->getInstitutionID();
         if ($hasTemplate) {
