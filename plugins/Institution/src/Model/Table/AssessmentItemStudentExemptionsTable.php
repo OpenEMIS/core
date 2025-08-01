@@ -111,6 +111,7 @@ class AssessmentItemStudentExemptionsTable extends AppTable
                         ]);
 
                         if ($AssessmentItemStudentExemptions->save($newExemption)) {
+                            self::deleteAssessmentItemResult($newExemption); // POCOR-9289
     //                        Log::debug('Exemption added for student ' . $student_id);
                         }
                     }
@@ -119,6 +120,42 @@ class AssessmentItemStudentExemptionsTable extends AppTable
         }
     }
 
+
+    // POCOR-9289
+    public static function deleteAssessmentItemResult($newExemption)
+    {
+        $AssessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults');
+
+        $deleteAssessmentItemResults = $AssessmentItemResults->find()
+            ->where([
+                $AssessmentItemResults->aliasField('student_id') => $newExemption->student_id,
+                $AssessmentItemResults->aliasField('assessment_id') => $newExemption->assessment_id,
+                $AssessmentItemResults->aliasField('education_subject_id') => $newExemption->education_subject_id,
+                $AssessmentItemResults->aliasField('education_grade_id') => $newExemption->education_grade_id,
+                $AssessmentItemResults->aliasField('assessment_period_id') => $newExemption->assessment_period_id,
+            ])
+            ->enableAutoFields()
+            ->all();
+
+        foreach ($deleteAssessmentItemResults as $record) {
+            // Manually trigger trackDelete before raw SQL
+            $behavior = $AssessmentItemResults->behaviors()->get('TrackDelete');
+            $event = new Event('Model.beforeDelete', $AssessmentItemResults, ['entity' => $record]);
+            $behavior->beforeDelete($event, $record);
+
+            // Raw SQL delete
+            $connection = $AssessmentItemResults->getConnection();
+            $connection->delete('assessment_item_results', [
+                'student_id' => $record->student_id,
+                'assessment_id' => $record->assessment_id,
+                'education_subject_id' => $record->education_subject_id,
+                'education_grade_id' => $record->education_grade_id,
+                'academic_period_id' => $record->academic_period_id,
+                'assessment_period_id' => $record->assessment_period_id,
+                'institution_classes_id' => $record->institution_classes_id,
+            ]);
+        }
+    }
 
     /**
      * @throws \Exception
@@ -163,14 +200,14 @@ class AssessmentItemStudentExemptionsTable extends AppTable
 
             $assessment_id = $assessmentItem->assessment_id;
             $education_subject_id = $assessmentItem->education_subject_id;
-            
+
                 foreach ($unexempt_students as $student) {
                     $student_id = $student['s_id'];
-                    $education_grade_id = $student['eg_id'];  
+                    $education_grade_id = $student['eg_id'];
                     $assessment_period_id = $student['ap_id'] ?? null; //POCOR-9195
 
-                    if ($assessment_period_id === null) {
-                        Log::warning("Skipping student $student_id: missing assessment_period_id");
+                    if ($assessment_period_id == null) {
+//                        Log::warning("Skipping student $student_id: missing assessment_period_id");
                         continue; // Don't process this record
                     }
 

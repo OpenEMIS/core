@@ -69,7 +69,7 @@ class ConfigItemsBehavior extends Behavior
         if(empty($typeValue)){
            $typeValue = $this->model->request->getQueryParams()['type'];
         }
-        
+
         //POCOR-8951 start
         if($typeValue == 'Themes'){
             $productThemes = $ConfigItem
@@ -151,6 +151,10 @@ class ConfigItemsBehavior extends Behavior
         if($typeValue == 'ExternalAlertService-SMS'){ //POCOR-8386
             $typeValue = 'ExternalAlertServiceSMS';
         }
+
+//        if($typeValue == 'PDFService'){ //POCOR-9303
+//            $typeValue = 'PrintingServicePDF';
+//        }
         //POCOR-7531 start
          // End POCOR-7507
 
