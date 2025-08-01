@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 'type' => 'select',
                 'options' => $productThemes,
                 'default' => $selectedProduct ?? 'openemis_core',
+                'url' => $baseUrl,
                 'empty' => 'Select Product',
                 'data-named-key' => 'online_service',
                 'data-named-group' => 'type',
