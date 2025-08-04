@@ -111,10 +111,10 @@ class MoodleCreateUser extends MoodleFunction
         // Assuming $this->openemis_no is the value for core_user_id
         $coreUserId = $this->openemis_no;
 
-        // Check if the core_user_id exists in the security_users table
-        if (!$SecurityUsers->exists(['id' => $coreUserId])) {
-            // Handle the case where the core_user_id does not exist
-            Log::write('debug', "The core_user_id $coreUserId does not exist in the security_users table.");
+        // Check if the openemis_no exists in the security_users table
+        if (!$SecurityUsers->exists(['openemis_no' => $coreUserId])) {
+            // Handle the case where the openemis_no does not exist
+            Log::write('debug', "The openemis_no $coreUserId does not exist in the security_users table.");
             return false;
         }
 
