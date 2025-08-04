@@ -36,7 +36,7 @@ class MoodleApi
     const FUNCTION_PARAM = "wsfunction";
     const JSON_MODE_PARAM = "moodlewsrestformat=json";
     const TEACHER_ROLE_ID = 3;
-    const STUDENT_ROLE_ID = 3;
+    const STUDENT_ROLE_ID = 5;
 
     public function __construct()
     {
@@ -457,11 +457,10 @@ class MoodleApi
         if (empty($studentList)) {
             return;
         }
-
         $Users = TableRegistry::get('Security.Users');
 
-        foreach ($studentList as $student) {
-            $userEntity = $Users->find()->where(['id' => $student->student_id])->first();
+        foreach ($studentList as $student) {     
+            $userEntity = $Users->find()->where(['id' => $student['student_id']])->first();
             if (!$userEntity) {
                 continue;
             }
@@ -476,8 +475,7 @@ class MoodleApi
             $existingStudent = $moodleUserListResponse->getJson();
             if (empty($existingStudent['users'][0]['id'])) {
                 continue;
-            }
-
+            }        
             $studentId = $existingStudent['users'][0]['id'];
             $roleId = self::STUDENT_ROLE_ID;
             $this->createCourseUser($studentId, $roleId, $courseId);
