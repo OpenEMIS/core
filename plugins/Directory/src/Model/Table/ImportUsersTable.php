@@ -1368,8 +1368,11 @@ class ImportUsersTable extends AppTable
         // $periodStartDate = DateTime::createFromFormat('d/m/Y', $periodStartDay, $dateTimeZone);
 
         $periodEndDay = $period->end_date->format('d/m/Y');
-        $timeZone = $this->getTimeZone();
-        $dateTimeZone = new \DateTimeZone($timeZone);
+        try { // POCOR-9313 start
+            $dateTimeZone = new \DateTimeZone($this->getTimeZone());
+        } catch (\Exception $e) {
+            $dateTimeZone = new \DateTimeZone('GMT');
+        } // POCOR-9313 end
         $periodEndDate = DateTime::createFromFormat('d/m/Y', $periodEndDay, $dateTimeZone);
 
         $tempRow['end_date'] = $periodEndDate;
