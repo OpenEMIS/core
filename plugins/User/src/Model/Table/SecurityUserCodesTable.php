@@ -14,3 +14,4 @@ class SecurityUserCodesTable extends AppTable
         parent::initialize($config);
     }
 }
+ 
