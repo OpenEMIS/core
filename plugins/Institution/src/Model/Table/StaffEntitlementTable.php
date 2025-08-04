@@ -19,6 +19,7 @@ use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 use Cake\Utility\Inflector;
+use Cake\Datasource\Exception\RecordNotFoundException; // POCOR-9287
 
 class StaffEntitlementTable extends ControllerActionTable
 {
@@ -54,7 +55,8 @@ class StaffEntitlementTable extends ControllerActionTable
     {
 
         $this->field('year', ['visible' => true]);
-        $this->field('staff_leave_type_id', ['sort' => true]);
+        $this->field('staff_leave_type'); // POCOR-9287
+        $this->field('staff_leave_type_id', ['visible' => false]); // POCOR-9287
         $this->field('position_name', ['visible' => true]);
         $this->field('days_total', ['visible' => true]);
         $this->field('days_total_adjusted', ['visible' => true]);
@@ -107,41 +109,79 @@ class StaffEntitlementTable extends ControllerActionTable
             array_column($years, 'year'),
             array_column($years, 'year')
         );
+        $institutionId = $this->getInstitutionID();
+        $staffId       = $this->getStaffID();
+
+// 2. Prepare the base conditions array
+        $instStaffConditions = [];
+
+// Only add the = check if the ID is not null, otherwise check IS NULL
+        if ($institutionId !== null) {
+            $instStaffConditions['InstitutionStaff.institution_id ='] = $institutionId;
+        } else {
+            $instStaffConditions['InstitutionStaff.institution_id ='] = -1;
+        }
+
+        if ($staffId !== null) {
+            $instStaffConditions['InstitutionStaff.staff_id ='] = $staffId;
+        } else {
+            $instStaffConditions['InstitutionStaff.staff_id = '] = -1;
+        }
 
         // Add calculated fields, join related tables, and group the query
         $query
             ->select([
                 'institution_id' => $this->aliasField('institution_id'),
                 'staff_id' => $this->aliasField('staff_id'),
-                'staff_leave_type_id' => $this->aliasField('staff_leave_type_id'),
+                'staff_leave_type_id' => 'StaffLeaveEntitlements.staff_leave_type_id', // POCOR-9287
                 'year' => $query->func()->year([$this->aliasField('date_from') => 'identifier']), // Extract year from date_from
-                'days_taken' => '(DATEDIFF(' . $this->aliasField('date_to') . ', ' . $this->aliasField('date_from') . ') + 1)', // Days taken including 1 day // POCOR-8975
+                'days_taken' => $query->newExpr()->add([
+                    'SUM(DATEDIFF(' . $this->aliasField('date_to') . ', ' . $this->aliasField('date_from') . ') + 1)'
+                ]),
+
+//                'days_total_adjusted' => $query->newExpr()->add([
+//                    'COALESCE(StaffLeavePolicyTypes.days, 0) + COALESCE(SUM(DISTINCT StaffLeaveEntitlements.adjustment), 0)'
+//                ]),
+
+                'days_balance' => $query->newExpr()->add([
+                    'COALESCE(StaffLeavePolicyTypes.days, 0) + COALESCE(StaffLeaveEntitlements.total_adjustment, 0) - ' .
+                    'SUM(DATEDIFF(' . $this->aliasField('date_to') . ', ' . $this->aliasField('date_from') . ') + 1)'
+                ]),
                 'position_name' => 'StaffPositionTitles.name', // Position name
                 'staff_leave_policy_id' => 'StaffPositionTitles.staff_leave_policy_id', // Leave policy ID
                 'days_total' => $query->func()->coalesce(['StaffLeavePolicyTypes.days' => 'literal', 0]), // Default to 0 if NULL
-                'entitlements_adjustment' => $query->func()->coalesce(['SUM(StaffLeaveEntitlements.adjustment)' => 'literal', 0]), // Leave entitlements adjustment
+                'entitlements_adjustment' => $query->func()->coalesce(['StaffLeaveEntitlements.total_adjustment' => 'literal', 0]),
                 'days_total_adjusted' => $query->newExpr()->add([
-                    'COALESCE(StaffLeavePolicyTypes.days, 0) + COALESCE(SUM(StaffLeaveEntitlements.adjustment), 0)' // POCOR-8975
-                ]), // Adjusted total days
-                'days_balance' => $query->newExpr()->add([
-                    'COALESCE(StaffLeavePolicyTypes.days, 0) + COALESCE(SUM(StaffLeaveEntitlements.adjustment), 0) - (DATEDIFF(' . // POCOR-8975
-                    $this->aliasField('date_to') . ', ' . $this->aliasField('date_from') . ') +1)'
-                ]) // Balance calculation
+                    'COALESCE(StaffLeavePolicyTypes.days, 0) + COALESCE(StaffLeaveEntitlements.total_adjustment, 0)'
+                ]),
             ])
             ->join([
+                // POCOR-9287 start
+                // Join StaffLeaveEntitlements
+                'StaffLeaveEntitlements' => [
+                    'table' => '(SELECT staff_id, staff_leave_type_id,
+                    SUM(adjustment) AS total_adjustment FROM staff_leave_entitlements
+                    GROUP BY staff_id, staff_leave_type_id)',
+                    'type' => 'RIGHT',
+                    'conditions' => [
+                        'StaffLeaveEntitlements.staff_id = ' . $this->aliasField('staff_id'),
+                        'StaffLeaveEntitlements.staff_leave_type_id = ' . $this->aliasField('staff_leave_type_id')
+                    ]
+                ],
+                // POCOR-9287 end
                 // Join InstitutionStaff
                 'InstitutionStaff' => [
                     'table' => 'institution_staff',
                     'type' => 'INNER',
-                    'conditions' => [
-                        'InstitutionStaff.institution_id = ' . $this->aliasField('institution_id'),
-                        'InstitutionStaff.staff_id = ' . $this->aliasField('staff_id'),
-                        'InstitutionStaff.start_date <= ' . $this->aliasField('date_from'),
-                        'OR' => [
-                            'InstitutionStaff.end_date IS NULL',
-                            'InstitutionStaff.end_date >= ' . $this->aliasField('date_to')
-                        ]
-                    ]
+                    // POCOR-9287 start
+                    'conditions' => $instStaffConditions
+//                        'InstitutionStaff.start_date <= ' . $this->aliasField('date_from'),
+//                        'OR' => [
+//                            'InstitutionStaff.end_date IS NULL',
+//                            'InstitutionStaff.end_date >= ' . $this->aliasField('date_to')
+//                        ]
+                        // POCOR-9287 end
+
                 ],
                 // Join InstitutionPositions
                 'InstitutionPositions' => [
@@ -165,41 +205,100 @@ class StaffEntitlementTable extends ControllerActionTable
                     'type' => 'LEFT', // Change to LEFT JOIN to handle missing records gracefully
                     'conditions' => [
                         'StaffLeavePolicyTypes.staff_leave_policy_id = StaffPositionTitles.staff_leave_policy_id',
-                        'StaffLeavePolicyTypes.staff_leave_type_id = ' . $this->aliasField('staff_leave_type_id')
+                        'StaffLeavePolicyTypes.staff_leave_type_id = StaffLeaveEntitlements.staff_leave_type_id' // POCOR-9287 start
                     ]
                 ],
-                // Join StaffLeaveEntitlements
-                'StaffLeaveEntitlements' => [
-                    'table' => 'staff_leave_entitlements',
-                    'type' => 'LEFT',
+                'StaffLeaveTypes' => [
+                    'table' => 'staff_leave_types',
+                    'type' => 'LEFT', // Change to LEFT JOIN to handle missing records gracefully
                     'conditions' => [
-                        'StaffLeaveEntitlements.staff_id = ' . $this->aliasField('staff_id'),
-                        'StaffLeaveEntitlements.staff_leave_type_id = ' . $this->aliasField('staff_leave_type_id')
+                        'StaffLeavePolicyTypes.staff_leave_type_id = StaffLeaveTypes.id'
                     ]
-                ]
+                ],
+                // POCOR-9287 end
             ])
             ->group([
-                'year',
-                'institution_id',
-                'staff_id',
-                'staff_leave_type_id',
-                'position_name',
-                'staff_leave_policy_id',
-                'days_total' // Group by days allocated for consistency
+                'StaffEntitlement.staff_id',
+                'StaffEntitlement.institution_id',
+                'YEAR(StaffEntitlement.date_from)',
+//                'StaffLeaveEntitlements.staff_leave_type_id',
+                'InstitutionStaff.id',
+//                'StaffPositionTitles.staff_leave_policy_id',
+//                'StaffLeavePolicyTypes.days',
+//                'StaffLeaveEntitlements.total_adjustment'
+//                'days_total' // Group by days allocated for consistency
             ]);
 
         $search = $this->getSearchKey();
 
+
+        $query->where(['StaffLeaveEntitlements.staff_id' => $this->getStaffID()], [],true); // POCOR-9287 start
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
             $query->where(['OR' => ['StaffLeaveTypes.name LIKE ' => '%' . $search . '%',
-                            'StaffPositionTitles.name LIKE ' => '%' . $search . '%']]);
+                'StaffPositionTitles.name LIKE ' => '%' . $search . '%']]);
         }
+        $institutionId = $this->getInstitutionID();
+        $staffId = $this->getStaffID();
+//        dd([[$selectedYear, $institutionId, $staffId],
+//            $query->sql($query->getValueBinder())]);
         unset($extra['config']['search']);
         return $query;
 
     }
 
+    // POCOR-9287 start
+    public function onGetDaysTotal(Event $event, Entity $entity)
+    {
+            return $entity->days_total . " ";
+
+    }
+    public function onGetYear(Event $event, Entity $entity)
+    {
+
+        return $entity->year ?? __('Not Specified');
+
+    }
+    public function onGetDaysTaken(Event $event, Entity $entity)
+    {
+
+        return $entity->days_taken ?? __('Not Specified');
+
+    }
+    public function onGetDaysBalance(Event $event, Entity $entity)
+    {
+
+        return $entity->days_balance ?? __('Not Specified');
+
+    }
+    public function onGetStaffLeaveType(Event $event, Entity $entity)
+    {
+        return $this->getRelatedName('Staff.StaffLeaveTypes', $entity->staff_leave_type_id);
+
+    }
+
+    /**
+     * common proc to show related field in the index table
+     * @param $tableName
+     * @param $relatedField
+     * @return string
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function getRelatedName($tableName, $relatedField)
+    {
+        if (!$relatedField) {
+            return "a";
+        }
+        $Table = self::getDynamicTableInstance($tableName);
+        try {
+            $related = $Table->get($relatedField);
+            $name = strval($related->name);
+            return $name;
+        } catch (RecordNotFoundException $e) {
+            return $relatedField;
+        }
+    }
+    // POCOR-9287 end
 
     private function setupTabElements()
     {

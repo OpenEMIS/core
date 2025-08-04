@@ -1,6 +1,37 @@
+### [4.37.1] - 2025-08-01
+Bug Fixed: Institutions > Performances > Assessments > Unassign/Exempt page : Retrieve all students regardless if the marks are entered
+Bug Fixed: Administration>Profiles>Students: Left border is not showing
+Bug Fixed: Institutions>Staff>Career>Leave: Entitlements for staff are not showing
+
+### [4.37.0] - 2025-07-29
+- Implemented: Develop institution logo placeholder in the student profile feature
+- Implemented: Develop a standard report with filters for Reports > Performance > Outcomes
+- Bug Fixed: Institutions > Students > Import: Unable to upload a user.
+- Bug Fixed: Administration>Profiles>Students: Transcript is showing blank
+- Bug Fixed: Institutions>Performance>GPA: Missing GROUP BY condition in one of the subqueries, which caused the calculated GPA to be 0.00
+- Bug Fixed: Institutions>Staff>Finance>Bank Account/Salaries: Getting 404 error when adding
+- Bug Fixed: Administration > Performance > Outcomes: Name and code are not mandatory fields.
+- Bug Fixed: Administration>System Configuration>Themes: Themes for OpenEMIS registration are not showing
+- Bug Fixed: Reports > Performance > Add: Report is stuck in progress.
+
+### [4.36.0] - 2025-07-25
+- Implemented: Develop a Meals Summary Report
+- Implemented: Develop a Meals Details Report
+
+### [4.35.0] - 2025-07-23
+- Implemented: 3.05 Add fields for school vision and mission to the institution overview page
+- Bug Fixed: Institutions > Survey > Forms > View > Edit: Mandatory text field becomes blank when clicked "save" button when assignee is not selected.
+- Bug Fixed: Reports > Surveys > Add > Download: Blank space is displayed instead of "0" in excel report when generating
+- Bug Fixed: Institutions > Academic > Programmes > Delete: User gets redirected to another grade when deleting grade 9
+- Bug Fixed: Institutions > General > Profiles > Students : Issues with Profiles feature
+- Bug Fixed: Institutions>Students: There is no all status filter
+- Bug Fixed: Report>Survey>Institutions: Survey questions are not in order
+- Bug Fixed: Forgot Password > Reset Password: User receives 404 error
+- Bug Fixed: Institutions > Survey > Forms > Edit > Save: After clicking save, user is not redirected back to the view page.
+
 ### [4.34.0] - 2025-07-18
 - Implemented: Develop a function to generate a candidate number
-- Implemeted: Develop sync button functions to register students for examinations from OpenEMIS Core to OpenEMIS Exams
+- Implemented: Develop sync button functions to register students for examinations from OpenEMIS Core to OpenEMIS Exams
 - Implemented: Develop changes to installation wizard to use prd_cor_new database
 - Implemented: Develop a new standard report for staff with missing qualifications
 - Implemented: Develop changes to docker and docker-compose files for OpenEMIS Core
@@ -329,7 +360,7 @@
 - Big Fixed: Directory > Staff/Students/Guardian/Others: Adding new user
 
 ### [4.16.1] - 2025-03-17
-- Bug Fixes: Administration > Performance > Report Cards: When selecting the generate start and generate end dates to, the system adds one extra day to the selected dates
+- Bug Fixed: Administration > Performance > Report Cards: When selecting the generate start and generate end dates to, the system adds one extra day to the selected dates
 - Bug Fixed: Institutions>Report Card>Comments: Revert angular 11 changes
 
 ### [4.16.0] - 2025-03-17

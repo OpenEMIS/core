@@ -56,6 +56,8 @@ class PerformanceTable extends AppTable
             $options['validate'] = 'assessments';
         }elseif($data[$this->getAlias()]['feature'] == 'Report.Performance'){
             $options['validate'] = 'performance';
+        }elseif($data[$this->getAlias()]['feature'] == 'Report.OutcomesResult'){
+            $options['validate'] = 'OutcomesResult';
         }
     }
 
@@ -81,6 +83,19 @@ class PerformanceTable extends AppTable
             ->notEmpty('area_education_id');
        return $validator;
     }
+
+    public function validationOutcomesResult(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('institution_id')
+            ->notEmpty('education_grade_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id')
+            ->notEmpty('outcome_period');
+       return $validator;
+    }
     public function beforeAction(Event $event)
     {
         $this->fields = [];
@@ -92,6 +107,7 @@ class PerformanceTable extends AppTable
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('assessment_period_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('academic_term', ['type' => 'hidden', 'attr' => ['required' => true]]);
+        $this->ControllerAction->field('outcome_period', ['type' => 'hidden', 'attr' => ['required' => true]]);
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
@@ -614,4 +630,47 @@ class PerformanceTable extends AppTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    public function onUpdateFieldOutcomePeriod(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        $requestData = $request->getData();
+
+        if (
+            isset($requestData['Performance']['feature']) &&
+            $requestData['Performance']['feature'] === 'Report.OutcomesResult'
+        ) {
+            $data = $requestData[$this->getAlias()] ?? [];
+            $academicPeriodId = $data['academic_period_id'] ?? null;
+
+            if (!$academicPeriodId) {
+                return $attr; // No period selected, return default attr
+            }
+
+            $outcomePeriodsTable = TableRegistry::getTableLocator()->get('Outcome.OutcomePeriods');
+
+            $outcomePeriodList = $outcomePeriodsTable
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'name'
+                ])
+                ->where([
+                    $outcomePeriodsTable->aliasField('academic_period_id') => $academicPeriodId
+                ])
+                ->toArray();
+
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+
+            if (count($outcomePeriodList) > 1) {
+                $attr['options'] = ['' => '-- ' . __('Select') . ' --', 0 => __('All Periods')] + $outcomePeriodList;
+            } else {
+                $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $outcomePeriodList;
+            }
+
+            $attr['onChangeReload'] = true;
+        }
+
+        return $attr;
+    }
+
 }

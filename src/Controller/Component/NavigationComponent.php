@@ -1990,6 +1990,7 @@ class NavigationComponent extends Component
                     'Directories.StaffClasses',
                     'Directories.StaffSubjects',
                     'Directories.StaffLeave',
+                    'Directories.StaffEntitlement', // POCOR-9287
                     'Directories.ArchivedStaffLeave',
                     'Directories.HistoricalStaffLeave',
                     'Directories.StaffAttendances',
@@ -2649,7 +2650,12 @@ class NavigationComponent extends Component
                 'title' => 'Custom',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
-            ]
+            ],//POCOR-9267 Starts
+            'Reports.Meals' => [
+                'title' => 'Meals',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ]//POCOR-9267 Ends
         ];
         return $navigation;
     }
@@ -5138,6 +5144,7 @@ class NavigationComponent extends Component
             'StaffClasses',
             'StaffSubjects',
             'StaffLeave',
+            'StaffEntitlement', // POCOR-9287
             'StaffAttendances',
             'StaffBehaviours',
             'StaffAppraisals',
