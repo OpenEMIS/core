@@ -129,10 +129,12 @@ class MoodleCreateUser extends MoodleFunction
             Log::write('debug', "No user found with openemis_no $openemis_no in the security_users table.");
             return false;
         }
+        
+        $coreUserId = $coreUser->id;
         $instance = $MoodleApiCreatedUsers->newEntity([
             'moodle_user_id' => $moodleId,
             'moodle_username' => $moodleUsername,
-            'core_user_id' => $coreUser->id
+            'core_user_id' => $coreUserId
         ]);
 
 
