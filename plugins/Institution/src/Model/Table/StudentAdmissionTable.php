@@ -499,10 +499,13 @@ class StudentAdmissionTable extends ControllerActionTable
         $newEntity = $Students->newEntity($incomingStudent);
         try{
             $Students->save($newEntity);
-            return $newEntity;
         } catch (\Exception $exception) {
             Log::debug($exception->getMessage());
+        }
+        if(!$newEntity->hasErrors()){
             return $newEntity;
+        }else{
+            return null;
         }
     }
 
