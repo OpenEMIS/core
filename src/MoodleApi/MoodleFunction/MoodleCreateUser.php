@@ -121,15 +121,18 @@ class MoodleCreateUser extends MoodleFunction
             return false;
         }
 
-        $coreUserId = $SecurityUsers->find()
-            ->select(['id'])
+        $coreUser = $SecurityUsers->find()
             ->where(['openemis_no' => $openemis_no])
             ->first();
 
+        if (!$coreUser) {
+            Log::write('debug', "No user found with openemis_no $openemis_no in the security_users table.");
+            return false;
+        }
         $instance = $MoodleApiCreatedUsers->newEntity([
             'moodle_user_id' => $moodleId,
             'moodle_username' => $moodleUsername,
-            'core_user_id' => $coreUserId
+            'core_user_id' => $coreUser->id
         ]);
 
 
