@@ -168,7 +168,10 @@ class MoodleApi
                 if (!empty($data['subject_staff']) && $existingCourseId) {
                     $this->saveStaffToMoodleCourse($data['subject_staff'], $existingCourseId);
                 }
-                if(!empty($data['subject_students']) && $existingCourseId){
+                if(!empty($data['subjectStudent']) && $existingCourseId){
+                    $data['subject_students'] = array_map(function ($encoded) {
+                        return json_decode(base64_decode($encoded), true);
+                    }, $data['subjectStudent']);
                     $this->saveStudentToMoodleCourse($data['subject_students'], $existingCourseId);
                 }
                 Log::info('Moodle course creation successful.', [
