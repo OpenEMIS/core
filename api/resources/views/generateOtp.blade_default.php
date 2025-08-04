@@ -1,4 +1,4 @@
-<p>Dear {{$first_name}},</p>
+<p>Dear {{$email}},</p>
 <br>
 <p>One-time Password (OTP) is {{$otp}}. This OTP expires in 1 hour.</p>
 <br>
