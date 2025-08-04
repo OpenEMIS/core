@@ -1365,6 +1365,7 @@ class StudentAdmissionTable extends ControllerActionTable
         return $data;
     }
 
+    // POCOR-9313 start: made a little safer
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
         if (!$entity->isNew()) {
@@ -1441,6 +1442,7 @@ class StudentAdmissionTable extends ControllerActionTable
             Log::error('Auto-approval failed: ' . $e->getMessage());
         }
     }
+    // POCOR-9313 end
 
 
     private function sendStudentAdmissionAlert($entity)
