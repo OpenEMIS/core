@@ -391,7 +391,7 @@ class ImportUsersTable extends AppTable
      */
     public function onImportModelSpecificValidation(Event $event, $references, $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-       
+
         $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
         $isStaff = ($tempRow['account_type'] == self::IS_STAFF);
         $isStudent = ($tempRow['account_type'] == self::IS_STUDENT);
@@ -1378,8 +1378,11 @@ class ImportUsersTable extends AppTable
 
     private function parseDate($date, string $format): ?DateTime
     {
-        $dateTimeZone = new \DateTimeZone($this->getTimeZone());
-
+        try { // POCOR-9313 start
+            $dateTimeZone = new \DateTimeZone($this->getTimeZone());
+        } catch (\Exception $e) {
+            $dateTimeZone = new \DateTimeZone('GMT');
+        } // POCOR-9313 end
         // If the input is already a DateTime object, return it
         if ($date instanceof \DateTime) {
             return $date;
