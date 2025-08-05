@@ -222,7 +222,7 @@ class SalariesTable extends ControllerActionTable
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        if (array_key_exists($this->getAlias(), $data)) {
+        if (array_key_exists($this->getAlias(), (array) $data)) { //POCOR-9300[START] added array in second param
             if (!array_key_exists('salary_additions', $data[$this->getAlias()])) {
                 $data[$this->getAlias()]['salary_additions'] = [];
             }

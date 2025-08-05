@@ -422,8 +422,11 @@ class StudentProfilesTable extends ControllerActionTable
                 $downloadAllPdfUrl['1'] = $encodedParams;
                 $downloadAllUrl = $this->url('downloadAll');
                 $downloadAllUrl['1'] = $encodedParams;
+                $generateAllUrl = $this->url('generateAll'); // POCOR-9296
+                $generateAllUrl['1'] = $encodedParams; // POCOR-9296
                 unset($downloadAllPdfUrl['?']);
                 unset($downloadAllUrl['?']);
+                unset($generateAllUrl['?']); // POCOR-9296
                 // POCOR-9165 end
                 if ($generatedCount > 0 || $publishedCount > 0) {
                     $downloadButtonPdf['url'] = $downloadAllPdfUrl;
@@ -444,7 +447,7 @@ class StudentProfilesTable extends ControllerActionTable
                 }
 
                 // Generate all button
-                $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
+                $generateButton['url'] = $generateAllUrl; // POCOR-9296
                 $generateButton['type'] = 'button';
                 $generateButton['label'] = '<i class="fa fa-refresh"></i>';
                 $generateButton['attr'] = $toolbarAttr;
@@ -768,10 +771,14 @@ class StudentProfilesTable extends ControllerActionTable
     public function generate(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
+//        dd($params);
         $hasTemplate = $this->StudentTemplates->checkIfHasTemplate($params['student_profile_template_id']);
         $institutionId = $this->getInstitutionID();
         if ($hasTemplate) {
-            $this->addReportCardsToProcesses($institutionId, $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
+            $this->addReportCardsToProcesses($params['institution_id'], // POCOR-9296
+                $params['academic_period_id'],
+                $params['student_profile_template_id'],
+                $params['student_id']);
             $this->GenerateAllStudentReportCards($institutionId, $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
             $this->Alert->warning('StudentProfiles.generate');
         }
@@ -782,8 +789,10 @@ class StudentProfilesTable extends ControllerActionTable
 
     public function generateAll(Event $event, ArrayObject $extra)
     {
+
         $params = $this->getQueryString();
         $hasTemplate = $this->StudentTemplates->checkIfHasTemplate($params['student_profile_template_id']);
+//        dd($params);
 
         $institutionId = $this->getInstitutionID();
         if ($hasTemplate) {
@@ -799,7 +808,10 @@ class StudentProfilesTable extends ControllerActionTable
 
 
             if (!$inProgress) {
-                $this->addReportCardsToProcesses($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
+                $this->addReportCardsToProcesses($params['institution_id'], // POCOR-9296
+                    $params['academic_period_id'],
+                    $params['student_profile_template_id'],
+                    $params['student_id']);
                 $this->GenerateAllStudentReportCards($params['institution_id'], $params['education_grade_id'], $params['academic_period_id'], $params['student_profile_template_id'], $params['student_id']);
                 $this->Alert->warning('StudentProfiles.generateAll');
             } else {
@@ -1030,14 +1042,13 @@ class StudentProfilesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    private function addReportCardsToProcesses($institutionId, $educationGradeId, $academicPeriodId, $reportCardId, $studentId = null)
+    private function addReportCardsToProcesses($institutionId, $academicPeriodId, $reportCardId, $studentId = null) // POCOR-9296
     {
-        Log::write('debug', 'Initialize Add All Student Profile Report Cards '.$reportCardId.' for Grade '.$educationGradeId.' to processes ('.FrozenTime::now().')');
+        Log::write('debug', 'Initialize Add All Student Profile Report Cards '.$reportCardId . ' to processes ('.FrozenTime::now().')');
 
         $StudentReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.StudentReportCardProcesses');
         $institutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         $where = [];
-        $where[$this->aliasField('education_grade_id IS')] = $educationGradeId;
         $where[$this->aliasField('academic_period_id')] = $academicPeriodId;
         $where[$this->aliasField('institution_id')] = $institutionId;
         if (!is_null($studentId)) {
