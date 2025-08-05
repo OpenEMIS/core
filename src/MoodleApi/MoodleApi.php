@@ -394,7 +394,7 @@ class MoodleApi
         }
 
         if (!empty($unenrolments)) {
-            $this->post('core_enrol_unenrol_users', ['unenrolments' => $unenrolments]);
+            $this->post('enrol_manual_unenrol_users', ['unenrolments' => $unenrolments]);
             Log::info('Unenrolled existing staff from Moodle course.', ['unenrolled' => $unenrolments]);
         }
 
@@ -515,7 +515,7 @@ class MoodleApi
 
 
         if (!empty($unenrolments)) {
-            $this->post('core_enrol_unenrol_users', ['unenrolments' => $unenrolments]);
+            $this->post('enrol_manual_unenrol_users', ['unenrolments' => $unenrolments]);
             Log::info('Unenrolled existing students from Moodle course.', ['unenrolled' => $unenrolments]);
         }
 
