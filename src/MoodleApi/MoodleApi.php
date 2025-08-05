@@ -364,13 +364,45 @@ class MoodleApi
      * 
      * @return void
      */
+    
     public function saveStaffToMoodleCourse(array $staffList, int $courseId): void
     {
-        if (empty($staffList)) {
+        $Users = TableRegistry::get('Security.Users');
+
+        $moodleEnrolledUsersResponse = $this->get('core_enrol_get_enrolled_users', ['courseid' => $courseId]);
+
+        if (!$moodleEnrolledUsersResponse || !$moodleEnrolledUsersResponse->isOk()) {
+            Log::warning('Failed to fetch currently enrolled users from Moodle.', ['courseId' => $courseId]);
             return;
         }
 
-        $Users = TableRegistry::get('Security.Users');
+        $moodleEnrolledUsers = $moodleEnrolledUsersResponse->getJson();
+        $unenrolments = [];
+
+
+        foreach ($moodleEnrolledUsers as $enrolledUser) {
+            foreach ($enrolledUser['roles'] as $role) {
+                if ($role['roleid'] == self::TEACHER_ROLE_ID) {
+                    $unenrolments[] = [
+                        'userid' => $enrolledUser['id'],
+                        'courseid' => $courseId,
+                        'roleid' => self::TEACHER_ROLE_ID,
+                    ];
+                    break;
+                }
+            }
+        }
+
+        if (!empty($unenrolments)) {
+            $this->post('core_enrol_unenrol_users', ['unenrolments' => $unenrolments]);
+            Log::info('Unenrolled existing staff from Moodle course.', ['unenrolled' => $unenrolments]);
+        }
+
+        if (empty($staffList)) {
+            Log::info('Staff list is empty. No new staff assigned.', ['courseId' => $courseId]);
+            return;
+        }
+
 
         foreach ($staffList as $staff) {
             $userEntity = $Users->find()->where(['id' => $staff->staff_id])->first();
@@ -391,10 +423,10 @@ class MoodleApi
             }
 
             $staffId = $existingStaff['users'][0]['id'];
-            $roleId = self::TEACHER_ROLE_ID;
-            $this->createCourseUser($staffId, $roleId, $courseId);
+            $this->createCourseUser($staffId, self::TEACHER_ROLE_ID, $courseId);
         }
     }
+
 
     /**
      * Assigns a user to a Moodle course with a specific role.
@@ -452,14 +484,48 @@ class MoodleApi
      * 
      * @return void
      */
+
     public function saveStudentToMoodleCourse(array $studentList, int $courseId): void
     {
-        if (empty($studentList)) {
-            return;
-        }
         $Users = TableRegistry::get('Security.Users');
 
-        foreach ($studentList as $student) {     
+        $moodleEnrolledUsersResponse = $this->get('core_enrol_get_enrolled_users', ['courseid' => $courseId]);
+
+        if (!$moodleEnrolledUsersResponse || !$moodleEnrolledUsersResponse->isOk()) {
+            Log::warning('Failed to fetch currently enrolled users from Moodle.', ['courseId' => $courseId]);
+            return;
+        }
+
+        $moodleEnrolledUsers = $moodleEnrolledUsersResponse->getJson();
+        $unenrolments = [];
+
+        
+        foreach ($moodleEnrolledUsers as $enrolledUser) {
+            foreach ($enrolledUser['roles'] as $role) {
+                if ($role['roleid'] == self::STUDENT_ROLE_ID) {
+                    $unenrolments[] = [
+                        'userid' => $enrolledUser['id'],
+                        'courseid' => $courseId,
+                        'roleid' => self::STUDENT_ROLE_ID,
+                    ];
+                    break;
+                }
+            }
+        }
+
+
+        if (!empty($unenrolments)) {
+            $this->post('core_enrol_unenrol_users', ['unenrolments' => $unenrolments]);
+            Log::info('Unenrolled existing students from Moodle course.', ['unenrolled' => $unenrolments]);
+        }
+
+
+        if (empty($studentList)) {
+            Log::info('Student list is empty. No new enrolments added.', ['courseId' => $courseId]);
+            return;
+        }
+
+        foreach ($studentList as $student) {
             $userEntity = $Users->find()->where(['id' => $student['student_id']])->first();
             if (!$userEntity) {
                 continue;
@@ -475,10 +541,11 @@ class MoodleApi
             $existingStudent = $moodleUserListResponse->getJson();
             if (empty($existingStudent['users'][0]['id'])) {
                 continue;
-            }        
+            }
+
             $studentId = $existingStudent['users'][0]['id'];
-            $roleId = self::STUDENT_ROLE_ID;
-            $this->createCourseUser($studentId, $roleId, $courseId);
+            $this->createCourseUser($studentId, self::STUDENT_ROLE_ID, $courseId);
         }
     }
+
 }
