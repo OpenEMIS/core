@@ -1,3 +1,23 @@
+### [4.37.1] - 2025-08-01
+Bug Fixed: Institutions > Performances > Assessments > Unassign/Exempt page : Retrieve all students regardless if the marks are entered
+Bug Fixed: Administration>Profiles>Students: Left border is not showing
+Bug Fixed: Institutions>Staff>Career>Leave: Entitlements for staff are not showing
+
+### [4.37.0] - 2025-07-29
+- Implemented: Develop institution logo placeholder in the student profile feature
+- Implemented: Develop a standard report with filters for Reports > Performance > Outcomes
+- Bug Fixed: Institutions > Students > Import: Unable to upload a user.
+- Bug Fixed: Administration>Profiles>Students: Transcript is showing blank
+- Bug Fixed: Institutions>Performance>GPA: Missing GROUP BY condition in one of the subqueries, which caused the calculated GPA to be 0.00
+- Bug Fixed: Institutions>Staff>Finance>Bank Account/Salaries: Getting 404 error when adding
+- Bug Fixed: Administration > Performance > Outcomes: Name and code are not mandatory fields.
+- Bug Fixed: Administration>System Configuration>Themes: Themes for OpenEMIS registration are not showing
+- Bug Fixed: Reports > Performance > Add: Report is stuck in progress.
+
+### [4.36.0] - 2025-07-25
+- Implemented: Develop a Meals Summary Report
+- Implemented: Develop a Meals Details Report
+
 ### [4.35.0] - 2025-07-23
 - Implemented: 3.05 Add fields for school vision and mission to the institution overview page
 - Bug Fixed: Institutions > Survey > Forms > View > Edit: Mandatory text field becomes blank when clicked "save" button when assignee is not selected.
@@ -340,7 +360,7 @@
 - Big Fixed: Directory > Staff/Students/Guardian/Others: Adding new user
 
 ### [4.16.1] - 2025-03-17
-- Bug Fixes: Administration > Performance > Report Cards: When selecting the generate start and generate end dates to, the system adds one extra day to the selected dates
+- Bug Fixed: Administration > Performance > Report Cards: When selecting the generate start and generate end dates to, the system adds one extra day to the selected dates
 - Bug Fixed: Institutions>Report Card>Comments: Revert angular 11 changes
 
 ### [4.16.0] - 2025-03-17

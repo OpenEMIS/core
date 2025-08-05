@@ -1214,4 +1214,100 @@ class AssessmentItemResultsTable extends AppTable
         return $locator->get($tableFullAlias, $options);
     }
 
+   public function getAssessmentItemResultsReport($academicPeriodId, $assessmentIds = null, $subjectIds = null, $studentIds = null, $classIds = null): array
+    {
+        $SubjectStudents = self::getDynamicTableInstance('institution_subject_students');
+        $ClassStudents = self::getDynamicTableInstance('institution_class_students');
+
+        // Step 1: Fetch raw results with class_id
+        $query = $this->find('all')
+            ->select([
+                'grade_name' => 'AssessmentGradingOptions.name',
+                'grade_code' => 'AssessmentGradingOptions.code',
+                $this->aliasField('student_id'),
+                $this->aliasField('assessment_period_id'),
+                $this->aliasField('academic_period_id'),
+                $this->aliasField('education_subject_id'),
+                $this->aliasField('education_grade_id'),
+                $this->aliasField('assessment_id'),
+                'institution_class_id' => $ClassStudents->aliasField('institution_class_id')
+            ])
+            ->contain(['AssessmentGradingOptions'])
+            ->innerJoin([$SubjectStudents->getAlias() => $SubjectStudents->getTable()], [
+                $SubjectStudents->aliasField('student_id') . ' = ' . $this->aliasField('student_id'),
+                $SubjectStudents->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id'),
+                $SubjectStudents->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id'),
+                $SubjectStudents->aliasField('education_grade_id') . ' = ' . $this->aliasField('education_grade_id'),
+                $SubjectStudents->aliasField('education_subject_id') . ' = ' . $this->aliasField('education_subject_id')
+            ])
+            ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->getTable()], [
+                $ClassStudents->aliasField('student_id') . ' = ' . $this->aliasField('student_id'),
+                $ClassStudents->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id') // ✅ Ensures same period
+            ])
+            ->where([
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ])
+            ->disableHydration();
+
+        if (!empty($assessmentIds)) {
+            $query->where([$this->aliasField('assessment_id') . ' IN' => $assessmentIds]);
+        }
+
+        if (!empty($subjectIds)) {
+            $query->where([$this->aliasField('education_subject_id') . ' IN' => $subjectIds]);
+        }
+
+        if (!empty($studentIds)) {
+            $query->where([$this->aliasField('student_id') . ' IN' => $studentIds]);
+        }
+
+        $results = $query->toArray(); // ✅ Now we fetch results
+
+        // Step 2: Preload marks per class
+        $marksPerClass = [];
+
+        foreach ($classIds as $classId) {
+            $marks = self::getMarksForClass([
+                "academic_period_id" => $academicPeriodId,
+                "class_id" => $classId
+            ]);
+            if (!is_array($marks)) {
+                $marks = [];
+            }
+
+            $marksWithSimpleMarks = self::getMarksWithSimpleMarks($marks);
+            $marksPerStudent = self::getMarksPerStudentPerSubjectArray($marksWithSimpleMarks);
+            $marksPerClass[$classId] = $marksPerStudent;
+        }
+
+        // Step 3: Process result rows
+        $returnArray = [];
+
+        foreach ($results as $result) {
+            $studentId = $result['student_id'];
+            $subjectId = $result['education_subject_id'];
+            $assessmentPeriodId = $result['assessment_period_id'];
+            $classId = $result['institution_class_id'];
+
+            if (empty($classId)) {
+                continue; // Skip if classId is not present
+            }
+
+            $marks = $marksPerClass[$classId][$studentId][$subjectId][$assessmentPeriodId] ?? [];
+
+            $totalMarks = array_sum(array_column($marks, 'simple_mark'));
+            $result['marks'] = round($totalMarks, 2);
+
+            $returnArray[$studentId][$subjectId][$assessmentPeriodId] = [
+                'marks' => $result['marks'],
+                'grade_name' => $result['grade_name'],
+                'grade_code' => $result['grade_code'],
+                'assessments' => $marks // ✅ Include assessments here
+            ];
+        }
+
+
+        return $returnArray;
+    }
+
 }
