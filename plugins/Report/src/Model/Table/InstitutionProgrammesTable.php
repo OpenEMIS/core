@@ -121,13 +121,11 @@ class InstitutionProgrammesTable extends AppTable  {
 			if (isset($field['field']) && $field['field'] === 'academic_period_id') {
 				unset($newFields[$index]);
 			}
-		}
-		foreach ($newFields as &$field) {
 			if (isset($field['field']) && $field['field'] === 'start_date') {
-				$field['type'] = 'string';
+				unset($newFields[$index]);
 			}
 			if (isset($field['field']) && $field['field'] === 'end_date') {
-				$field['type'] = 'string';
+				unset($newFields[$index]);
 			}
 		}
 		//POCOR-9301[END]
