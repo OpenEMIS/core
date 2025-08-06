@@ -165,14 +165,9 @@ class MoodleApi
                 $this->_apiLog(MoodleCreateCourse::getFunctionParam(), $moodleData, $response, __METHOD__, $data);
             }
             if ($response->isOk()) {
-                if (!empty($data['subject_staff']) && $existingCourseId) {
-                    $this->saveStaffToMoodleCourse($data['subject_staff'], $existingCourseId);
-                }
-                if(!empty($data['subjectStudent']) && $existingCourseId){
-                    $data['subject_students'] = array_map(function ($encoded) {
-                        return json_decode(base64_decode($encoded), true);
-                    }, $data['subjectStudent']);
-                    $this->saveStudentToMoodleCourse($data['subject_students'], $existingCourseId);
+                if ($existingCourseId) {
+                    $this->saveStaffToMoodleCourse($data['subject_staff'] ?? [], $existingCourseId);
+                    $this->saveStudentToMoodleCourse($data['subjectStudent'] ?? [], $existingCourseId);
                 }
                 Log::info('Moodle course creation successful.', [
                     'response' => $response->getJson()
@@ -364,8 +359,8 @@ class MoodleApi
      * 
      * @return void
      */
-    
-    public function saveStaffToMoodleCourse(array $staffList, int $courseId): void
+
+    public function saveStaffToMoodleCourse(array $staffList=[], int $courseId): void
     {
         $Users = TableRegistry::get('Security.Users');
 
@@ -394,7 +389,7 @@ class MoodleApi
         }
 
         if (!empty($unenrolments)) {
-            $this->post('enrol_manual_unenrol_users', ['unenrolments' => $unenrolments]);
+            $this->post('enrol_manual_unenrol_users', ['enrolments' => $unenrolments]);
             Log::info('Unenrolled existing staff from Moodle course.', ['unenrolled' => $unenrolments]);
         }
 
@@ -485,7 +480,7 @@ class MoodleApi
      * @return void
      */
 
-    public function saveStudentToMoodleCourse(array $studentList, int $courseId): void
+    public function saveStudentToMoodleCourse(array $studentList=[], int $courseId): void
     {
         $Users = TableRegistry::get('Security.Users');
 
@@ -499,7 +494,7 @@ class MoodleApi
         $moodleEnrolledUsers = $moodleEnrolledUsersResponse->getJson();
         $unenrolments = [];
 
-        
+
         foreach ($moodleEnrolledUsers as $enrolledUser) {
             foreach ($enrolledUser['roles'] as $role) {
                 if ($role['roleid'] == self::STUDENT_ROLE_ID) {
@@ -515,7 +510,7 @@ class MoodleApi
 
 
         if (!empty($unenrolments)) {
-            $this->post('enrol_manual_unenrol_users', ['unenrolments' => $unenrolments]);
+            $this->post('enrol_manual_unenrol_users', ['enrolments' => $unenrolments]);
             Log::info('Unenrolled existing students from Moodle course.', ['unenrolled' => $unenrolments]);
         }
 
@@ -524,6 +519,10 @@ class MoodleApi
             Log::info('Student list is empty. No new enrolments added.', ['courseId' => $courseId]);
             return;
         }
+
+        $studentList = array_map(function ($encoded) {
+            return json_decode(base64_decode($encoded), true);
+        }, $studentList);
 
         foreach ($studentList as $student) {
             $userEntity = $Users->find()->where(['id' => $student['student_id']])->first();
@@ -547,5 +546,4 @@ class MoodleApi
             $this->createCourseUser($studentId, self::STUDENT_ROLE_ID, $courseId);
         }
     }
-
 }
