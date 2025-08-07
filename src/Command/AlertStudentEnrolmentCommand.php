@@ -71,7 +71,7 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
             'Institutions',
             'EducationGrades'])
             ->where($where)
-            ->group($this->StudentEnrolment->aliasField('student_id'))
+//            ->group($this->StudentEnrolment->aliasField('student_id'))
         ;
         $query = $this->addStudentGuardianFields($query);
 
