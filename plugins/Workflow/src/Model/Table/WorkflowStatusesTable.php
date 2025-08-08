@@ -97,14 +97,14 @@ class WorkflowStatusesTable extends AppTable {
 						->matching('Workflows')
 						->select([
 							'name' => $this->WorkflowSteps->aliasField('name'),
-							'group' => 'Workflows.name'
+							'group_name' => 'Workflows.name'
 						])
 						->where([$this->WorkflowSteps->aliasField('id').' IN ' => array_keys($workflowSteps)])
 						->toArray();
 					foreach ($workflowStepOptions as $step) {
 						$rowData = [];
 						$rowData[] = $step['name'];
-						$rowData[] = $step['group'];
+						$rowData[] = $step['group_name'];
 						$tableCells[] = $rowData;
 					}
 				}

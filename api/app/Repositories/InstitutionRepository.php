@@ -95,6 +95,7 @@ use Institution\Model\Entity\Institution;
 use Institution\Model\Entity\InstitutionClass;
 use Institution\Model\Entity\InstitutionSubject;
 use Session;
+use App\Models\StudentMealMarkedRecords;
 
 
 class InstitutionRepository extends Controller
@@ -4518,7 +4519,7 @@ class InstitutionRepository extends Controller
         }
     }
 
-    public function addInstitutionStudentMealBenefits($request)
+    public function addInstitutionStudentMealBenefitsbkp($request)
     {
         DB::beginTransaction();
         try {
@@ -4554,6 +4555,16 @@ class InstitutionRepository extends Controller
                 $insert = InstitutionMealStudents::insert($store);
             }
 
+            $checkRecord = StudentMealMarkedRecords::where('date', $store['date'])->first();
+            if(empty($checkRecord)){
+                $store['academic_period_id'] = $data['academic_period_id'];
+                $store['meal_programmes_id'] = $data['meal_programmes_id'];
+                $store['institution_id'] = $data['institution_id']??Null;
+                $store['institution_class_id'] = $data['institution_class_id'];
+                $store['date'] = $data['date'];
+                $store['meal_benefit_id'] = $data['meal_benefit_id'];
+                $insert = StudentMealMarkedRecords::insert($store);
+            }
             DB::commit();
             return 1;
             
@@ -4566,6 +4577,78 @@ class InstitutionRepository extends Controller
             return $this->sendErrorResponse('Meal Benefit is not created/updated successfully.');
         }
     }
+
+    public function addInstitutionStudentMealBenefits($request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+            $userId = JWTAuth::user()->id;
+            $currentDateTime = now()->toDateTimeString();
+
+            // Common meal marked record data
+            $mealMarkedRecordData = [
+                'academic_period_id'   => $data['academic_period_id'],
+                'meal_programmes_id'   => $data['meal_programmes_id'],
+                'institution_id'       => $data['institution_id'] ?? null,
+                'institution_class_id' => $data['institution_class_id'],
+                'date'                 => $data['date'],
+                'meal_benefit_id'      => $data['meal_benefit_id']
+            ];
+
+            if (!empty($data['id'])) {
+                // Update case
+                $check = InstitutionMealStudents::find($data['id']);
+                if (!$check) {
+                    DB::rollBack();
+                    return 2;
+                }
+
+                $data['modified_user_id'] = $userId;
+                $data['modified'] = $currentDateTime;
+                unset($data['id']);
+
+                InstitutionMealStudents::where('id', $check->id)->update($data);
+
+            } else {
+                // Create case
+                $store = [
+                    'student_id'           => $data['student_id'],
+                    'academic_period_id'   => $data['academic_period_id'],
+                    'institution_class_id' => $data['institution_class_id'],
+                    'institution_id'       => $data['institution_id'],
+                    'meal_programmes_id'   => $data['meal_programmes_id'],
+                    'date'                 => $data['date'],
+                    'meal_benefit_id'      => $data['meal_benefit_id'],
+                    'meal_received_id'     => $data['meal_received_id'],
+                    'paid'                 => $data['paid'] ?? null,
+                    'comment'              => $data['comment'] ?? null,
+                    'created_user_id'      => $userId,
+                    'created'              => $currentDateTime
+                ];
+
+                InstitutionMealStudents::create($store);
+            }
+
+            // Check & insert into StudentMealMarkedRecords
+            $checkRecord = StudentMealMarkedRecords::where('date', $data['date'])->first();
+            if (!$checkRecord) {
+                StudentMealMarkedRecords::create($mealMarkedRecordData);
+            }
+
+            DB::commit();
+            return 1;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error(
+                'Meal Benefit is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Meal Benefit is not created/updated successfully.');
+        }
+    }
+
 
     public function addInstitutionMealDistributions($request)
     {
