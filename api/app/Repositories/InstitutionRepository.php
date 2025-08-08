@@ -4519,25 +4519,33 @@ class InstitutionRepository extends Controller
         }
     }
 
-    public function addInstitutionStudentMealBenefitsbkp($request)
+    public function addInstitutionStudentMealBenefits($request)
     {
         DB::beginTransaction();
         try {
             $data = $request->all();
-            //dd($data);
+            
 
-            if(isset($data['id']) && $data['id'] != ""){
-                $check = InstitutionMealStudents::where('id', $data['id'])->first();
-                if(!$check){
+            if(isset($data['institution_meal_student_id']) && $data['institution_meal_student_id'] != ""){
+                $check = InstitutionMealStudents::where('id', $data['institution_meal_student_id'])->first();
+              
+               /* if(!$check){
                     return 2;
-                }
+                }*/
 
-                $id = $data['id'];
-                unset($data['id']);
+               // $id = $data['id'];
+                $id = $check['id'];
+                //unset($data['id']);
+               
+                $data['meal_benefit_id'] = $data['meal_benefit_id'];
+                $data['meal_received_id'] = $data['meal_received_id'];
                 $data['modified_user_id'] = JWTAuth::user()->id;
                 $data['modified'] = Carbon::now()->toDateTimeString();
+                unset($data['institution_meal_student_id']);
+                //dd($data);
                 $update = InstitutionMealStudents::where('id', $id)->update($data);
             } else {
+              
                 $store['student_id'] = $data['student_id'];
                 $store['academic_period_id'] = $data['academic_period_id'];
                 $store['institution_class_id'] = $data['institution_class_id'];
@@ -4555,37 +4563,6 @@ class InstitutionRepository extends Controller
                 $insert = InstitutionMealStudents::insert($store);
             }
 
-            $checkRecord = StudentMealMarkedRecords::where('date', $store['date'])->first();
-            if(empty($checkRecord)){
-                $store['academic_period_id'] = $data['academic_period_id'];
-                $store['meal_programmes_id'] = $data['meal_programmes_id'];
-                $store['institution_id'] = $data['institution_id']??Null;
-                $store['institution_class_id'] = $data['institution_class_id'];
-                $store['date'] = $data['date'];
-                $store['meal_benefit_id'] = $data['meal_benefit_id'];
-                $insert = StudentMealMarkedRecords::insert($store);
-            }
-            DB::commit();
-            return 1;
-            
-        } catch (\Exception $e) {
-            DB::rollback();
-            Log::error(
-                'Meal Benefit is not created/updated successfully.',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-            return $this->sendErrorResponse('Meal Benefit is not created/updated successfully.');
-        }
-    }
-
-    public function addInstitutionStudentMealBenefits($request)
-    {
-        DB::beginTransaction();
-        try {
-            $data = $request->all();
-            $userId = JWTAuth::user()->id;
-            $currentDateTime = now()->toDateTimeString();
-
             // Common meal marked record data
             $mealMarkedRecordData = [
                 'academic_period_id'   => $data['academic_period_id'],
@@ -4595,6 +4572,39 @@ class InstitutionRepository extends Controller
                 'date'                 => $data['date'],
                 'meal_benefit_id'      => $data['meal_benefit_id']
             ];
+            //POCOR-9299 start
+            $exists = StudentMealMarkedRecords::where([
+                'institution_id'       => $mealMarkedRecordData['institution_id'],
+                'academic_period_id'   => $mealMarkedRecordData['academic_period_id'],
+                'institution_class_id' => $mealMarkedRecordData['institution_class_id'],
+                'meal_programmes_id'   => $mealMarkedRecordData['meal_programmes_id'],
+                'date'                 => $mealMarkedRecordData['date'],
+            ])->exists();
+
+            if (!$exists) {
+                StudentMealMarkedRecords::create($mealMarkedRecordData);
+            } //POCOR-9299 end
+            DB::commit();
+            return 1;
+            
+        } catch (\Exception $e) {
+            echo $e;
+            DB::rollback();
+            Log::error(
+                'Meal Benefit is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Meal Benefit is not created/updated successfully.');
+        }
+    }
+
+    public function addInstitutionStudentMealBenefitsno($request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+            $userId = JWTAuth::user()->id;
+            $currentDateTime = now()->toDateTimeString();
 
             if (!empty($data['id'])) {
                 // Update case
@@ -4629,12 +4639,27 @@ class InstitutionRepository extends Controller
 
                 InstitutionMealStudents::create($store);
             }
+            // Common meal marked record data
+            $mealMarkedRecordData = [
+                'academic_period_id'   => $data['academic_period_id'],
+                'meal_programmes_id'   => $data['meal_programmes_id'],
+                'institution_id'       => $data['institution_id'] ?? null,
+                'institution_class_id' => $data['institution_class_id'],
+                'date'                 => $data['date'],
+                'meal_benefit_id'      => $data['meal_benefit_id']
+            ];
 
-            // Check & insert into StudentMealMarkedRecords
-            $checkRecord = StudentMealMarkedRecords::where('date', $data['date'])->first();
-            if (!$checkRecord) {
-                StudentMealMarkedRecords::create($mealMarkedRecordData);
-            }
+            $exists = StudentMealMarkedRecords::where([
+            'institution_id'       => $mealMarkedRecordData['institution_id'],
+            'academic_period_id'   => $mealMarkedRecordData['academic_period_id'],
+            'institution_class_id' => $mealMarkedRecordData['institution_class_id'],
+            'meal_programmes_id'   => $mealMarkedRecordData['meal_programmes_id'],
+            'date'                 => $mealMarkedRecordData['date'],
+        ])->exists();
+
+        if (!$exists) {
+            StudentMealMarkedRecords::create($mealMarkedRecordData);
+        }
 
             DB::commit();
             return 1;
