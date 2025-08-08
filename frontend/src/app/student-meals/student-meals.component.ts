@@ -439,20 +439,22 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
   }
 
   callPostMealAPI(data: any) {
-
+    console.log(data,"data");
+    
     let obj = {
       "institution_id": data?.institution_id,
       "institution_class_id": data?.institution_class_id,
       "academic_period_id": data?.academic_period_id,
       "date": this.academic_period_day,
       "student_id": data?.student_id,
-      "meal_programmes_id": data?.meal_program_id,
+      "meal_programmes_id": this.selected_meal_program,
       "meal_received_id": data?.meal_received_id,
-      "meal_benefit_id": data?.meal_benefit_id
+      "meal_benefit_id": data?.meal_benefit_id,
+      "institution_meal_student_id": data?.institution_meal_student_id
     }
     this.Rest.postWithToken('institutions/students/meal-benefits', obj).subscribe({
       next: (response: any) => {
-        console.log(response, "response");
+        // console.log(response, "response");
 
       },
       error: (error: any) => {
@@ -518,7 +520,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
         var decodedPassword = atob(password);
         // decodedPassword = decodedPassword.replace(/^"(.*)"$/, '$1');
         decodedPassword = decodedPassword.replace(/[\[\]"]/g, '');
-        console.log(decodedPassword,"decodedPassword");
+        // console.log(decodedPassword,"decodedPassword");
         if (userName && decodedPassword) {
           this.loginApi(userName, decodedPassword);
         } else {
@@ -536,7 +538,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
   setTheme() {
     this.Rest.getWithToken('themes').subscribe({
       next: (response: any) => {
-        console.log(response?.data[3].default_value, "response");
+        // console.log(response?.data[3].default_value, "response");
         let selectedThemeData = '';
         if (response?.data[3].value) {
           selectedThemeData = response?.data[3].value;
@@ -791,7 +793,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
           if (response?.data?.data.length > 0) {
             response?.data?.data.forEach((element: any) => {
               let obj = {
-                key: element?.id,
+                key: element?.meal_programme_id,
                 value: element?.name
               }
               this.academic_meal.push(obj);
@@ -828,10 +830,10 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
 
     //This is static link
     // institutions/${this.institution_id}/meal-students?academic_period_id=33&day_id=2024-01-30&institution_class_id=591&meal_program_id=3
-    console.log(this.academic_Period, "academic_Period");
-    console.log(this.academic_period_day, "this.academic_period_day");
-    console.log(this.selected_academic_class, "this.selected_academic_class");
-    console.log(this.selected_meal_program, "selected_meal_program");
+    // console.log(this.academic_Period, "academic_Period");
+    // console.log(this.academic_period_day, "this.academic_period_day");
+    // console.log(this.selected_academic_class, "this.selected_academic_class");
+    // console.log(this.selected_meal_program, "selected_meal_program");
 
     if (this.academic_Period && this.academic_period_day && this.selected_academic_class && this.selected_meal_program) {
       this.Rest.getWithToken(`institutions/${this.institution_id}/meal-students?academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&institution_class_id=${this.selected_academic_class}&meal_program_id=${this.selected_meal_program}`).subscribe({
@@ -852,7 +854,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
 
             let importUrl = response?.data?.url?.import;
             this.mealImportUrl = importUrl.replace("cake_session_id", this.mealImportUrl);
-            console.log(this.mealImportUrl, "this.mealImportUrl 11");
+            // console.log(this.mealImportUrl, "this.mealImportUrl 11");
             let exportUrl = response?.data?.url?.export;
             this.mealExportUrl = exportUrl.replace("cake_session_id", this.mealImportUrl);
 
@@ -894,7 +896,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
               }
             }
 
-            console.log(this.mealImportUrl, "result", this.mealExportUrl);
+            // console.log(this.mealImportUrl, "result", this.mealExportUrl);
           } else {
             this._row = [];
             this.displayLoading = false;
