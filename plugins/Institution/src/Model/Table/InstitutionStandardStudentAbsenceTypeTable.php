@@ -197,51 +197,54 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
                             $studentAbsenceReason = TableRegistry::get('Institution.StudentAbsenceReasons');        
                             $customFieldData = $studentAbsenceReason->find()
                                 ->select([
-                                    'reason_id' => 'student_absence_reasons.id',
-                                    'custom_field' => 'student_absence_reasons.name',
+                                    'reason_id' => $studentAbsenceReason->aliasField('id'),
+                                    'custom_field' => $studentAbsenceReason->aliasField('name'),
                                 ])
                                 ->toArray();
-                                $val->reason_id = '';
-                                $val->reason = '';
-                            foreach($customFieldData as $val) 
-                            {
-                                $custom_field_id = $val->reason_id;
-                                $custom_field = $val->custom_field;
-                                $where[$this->aliasField('student_absence_reason_id')] = $custom_field_id;
-                                $absenceType = $this->find()
-                                ->select([
-                                    'reason' => "COUNT(".$this->aliasField('student_absence_reason_id').")",
-                                    'reason_id' => $this->aliasField('student_absence_reason_id'),
-                                    'absence_type' => "COUNT(".$this->aliasField('absence_type_id').")",
-                                ])
-                                ->contain([
-                                 'AcademicPeriods' => [
-                                        'fields' => ['AcademicPeriods.id']
-                                    ],
-                                    'Institutions' => [
-                                        'fields' => ['Institutions.id']
-                                    ],
-                                    'InstitutionClasses' => [
-                                        'fields' => ['InstitutionClasses.id']
-                                    ],
-                                    'EducationGrades' => [
-                                        'fields' => ['EducationGrades.id']
-                                    ],
-                                ])
-                                ->leftJoin([$studentAbsenceReasonData->getAlias() => $studentAbsenceReasonData->getTable()],
-                                        [$studentAbsenceReasonData->aliasField('id = ') . $this->aliasField('student_absence_reason_id')])
-                                ->Where($where)
-                                ->group([$this->aliasField('student_id'),'Institutions.id','EducationGrades.id','InstitutionClasses.id','AcademicPeriods.id'])
-                                ->toArray();
-                                if(!empty($absenceType)){
-                                    foreach($absenceType as $val) {
-                                        if($val->reason_id!=null){
-                                            $row[$val->reason_id] = $val->reason;  
+                            //POCOR-9310[START]
+                                // $val->reason_id = '';
+                                // $val->reason = '';
+                            foreach ($customFieldData as $customVal) {
+                                    $custom_field_id = $customVal->reason_id;
+                                    $custom_field = $customVal->custom_field;
+                                    $where[$this->aliasField('student_absence_reason_id')] = $custom_field_id;
+
+                                    $absenceType = $this->find()
+                                        ->select([
+                                            'reason' => "COUNT(".$this->aliasField('student_absence_reason_id').")",
+                                            'reason_id' => $this->aliasField('student_absence_reason_id'),
+                                            'absence_type' => "COUNT(".$this->aliasField('absence_type_id').")",
+                                        ])
+                                        ->contain([
+                                            'AcademicPeriods' => ['fields' => ['AcademicPeriods.id']],
+                                            'Institutions' => ['fields' => ['Institutions.id']],
+                                            'InstitutionClasses' => ['fields' => ['InstitutionClasses.id']],
+                                            'EducationGrades' => ['fields' => ['EducationGrades.id']],
+                                        ])
+                                        ->leftJoin(
+                                            [$studentAbsenceReasonData->getAlias() => $studentAbsenceReasonData->getTable()],
+                                            [$studentAbsenceReasonData->aliasField('id = ') . $this->aliasField('student_absence_reason_id')]
+                                        )
+                                        ->where($where)
+                                        ->group([
+                                            $this->aliasField('student_id'),
+                                            'Institutions.id',
+                                            'EducationGrades.id',
+                                            'InstitutionClasses.id',
+                                            'AcademicPeriods.id'
+                                        ])
+                                        ->enableHydration(false)
+                                        ->toArray();
+
+                                    if (!empty($absenceType)) {
+                                        foreach ($absenceType as $absenceVal) {
+                                            if (!empty($absenceVal['reason_id'])) {
+                                                $row[(string)$absenceVal['reason_id']] = $absenceVal['reason'];
+                                            }
                                         }
-                                        
                                     }
                                 }
-                            }
+                                //POCOR-9310[END]
                                 
                         } 
                     }  
