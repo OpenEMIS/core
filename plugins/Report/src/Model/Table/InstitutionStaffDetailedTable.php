@@ -413,7 +413,7 @@ class InstitutionStaffDetailedTable extends AppTable
         $newFields[] = [
             'key' => 'position_date',
             'field' => 'position_date',
-            'type' => 'strung',
+            'type' => 'date',
             'label' => __('Start Date')
         ];
         $InfrastructureCustomFields = TableRegistry::get('StaffCustomField.StaffCustomFields');

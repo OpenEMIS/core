@@ -233,7 +233,7 @@ class BodyMassStatusReportsTable extends AppTable
          $extraFields[] = [
             'key' => 'BodyMassStatusReports.date',
             'field' => 'date',
-            'type' => 'string',
+            'type' => 'date',
             'label' => __('Date')
         ];
         

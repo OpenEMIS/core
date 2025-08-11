@@ -109,6 +109,7 @@ class InstitutionProgrammesTable extends AppTable
 					'label' => __('Area Administrative')
 				];
 			}
+			 //POCOR-9302 start
 			if ($value['field'] == 'start_date') {
 				$newFields[$key] = [
 					'key' => 'InstitutionProgrammes.start_date',
@@ -126,10 +127,12 @@ class InstitutionProgrammesTable extends AppTable
 					'label' => __('End Date')
 				];
 			}
+
+			//POCOR-9302 end
 		}
 		$fields->exchangeArray($newFields);
 	}
-
+    //POCOR-9302 start
 	public function onExcelGetStartDate(Event $event, Entity $entity)
 	{
 		return $this->formatDate($entity->start_date);
@@ -141,6 +144,7 @@ class InstitutionProgrammesTable extends AppTable
 			return $this->formatDate($entity->end_date);
 		}
 	}
+	 //POCOR-9302 end
 
 	public function onExcelGetInstitutionId(Event $event, Entity $entity)
 	{

@@ -101,7 +101,7 @@ class IncomeTable extends AppTable  {
         $newFields[] = [
             'key' => 'InstitutionIncomes.date',
             'field' => 'date',
-            'type' => 'string',
+            'type' => 'date',
             'label' => __('Date')
         ];
         

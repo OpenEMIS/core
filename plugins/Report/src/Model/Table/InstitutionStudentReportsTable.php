@@ -336,14 +336,14 @@ class InstitutionStudentReportsTable extends AppTable
         $extraField[] = [
             'key' => 'Students.date_of_birth',
             'field' => 'date_of_birth',
-            'type' => 'string',
+            'type' => 'date',
             'label' => 'Date Of Birth',
         ];
 
         $extraField[] = [
             'key' => 'Students.date_of_death',
             'field' => 'date_of_death',
-            'type' => 'string',
+            'type' => 'date',
             'label' => 'Date Of Death',
         ];
 
