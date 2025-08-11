@@ -28,7 +28,6 @@ use Cake\Auth\DefaultPasswordHasher;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Cake\I18n\Time;
 use Cake\Datasource\ConnectionManager;
-use Cake\ORM\TableRegistry;
 use Cake\I18n\FrozenTime;
 //POCOR-5672
 
@@ -7482,14 +7481,10 @@ class InstitutionsController extends AppController
         return $saved_student;
     }
 
-    /**
-     * POCOR-9164
-     * @author Ehteram Ahmad
-     * Create Registration Number(Candidate Number) on new student enrollment
-     **/
-
     private function handleCandidateNumber(array $requestData): void
     {
+        Log::debug(print_r([__LINE__, __METHOD__, 'start'], true));
+
         $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
         $Institutions = TableRegistry::get('Institution.Institutions');
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -7501,8 +7496,10 @@ class InstitutionsController extends AppController
         $educationGradeId  = (int)($requestData['education_grade_id'] ?? 0);
         $academicPeriodId  = (int)($requestData['academic_period_id'] ?? 0);
         $userRecordId  = (int)($requestData['user_record_id'] ?? 0);
+        Log::debug(print_r([__LINE__, 'inputs', compact('institutionId','educationGradeId','academicPeriodId', 'userRecordId')], true));
 
         if (!$institutionId || !$educationGradeId || !$academicPeriodId) {
+            Log::debug(print_r([__LINE__, 'bail:not_enough_info'], true));
             return; // not enough info to generate
         }
 
@@ -7511,14 +7508,20 @@ class InstitutionsController extends AppController
             ->contain(['Areas'])
             ->where([$Institutions->aliasField('id') => $institutionId])
             ->first();
+        Log::debug(print_r([__LINE__, 'institution_found' => (bool)$institution], true));
+
         $period = $AcademicPeriods->find()
             ->where([$AcademicPeriods->aliasField('id') => $academicPeriodId])
             ->first();
+        Log::debug(print_r([__LINE__, 'period_found' => (bool)$period], true));
+
         $grade = $EducationGrades->find()
             ->where([$EducationGrades->aliasField('id') => $educationGradeId])
             ->first();
+        Log::debug(print_r([__LINE__, 'grade_found' => (bool)$grade], true));
 
         if (empty($institution) || empty($period) || empty($grade)) {
+            Log::debug(print_r([__LINE__, 'bail:missing_context'], true));
             return;
         }
 
@@ -7527,7 +7530,10 @@ class InstitutionsController extends AppController
         $academicPeriodCode  = $period->code ?? '';
         $educationProgrammeId= (int)($grade->education_programme_id ?? 0);
 
+        Log::debug(print_r([__LINE__, 'context_vals', compact('areaCode','institutionCode','academicPeriodCode','educationProgrammeId')], true));
+
         if ($areaCode === '' || $institutionCode === '' || $academicPeriodCode === '' || !$educationProgrammeId) {
+            Log::debug(print_r([__LINE__, 'bail:missing_required_values'], true));
             return;
         }
 
@@ -7539,16 +7545,16 @@ class InstitutionsController extends AppController
 
         $isEnabled = $config ? (bool)$config->value : false;
         $template  = $config ? (string)$config->value_selection : '';
+        Log::debug(print_r([__LINE__, 'config', 'enabled' => $isEnabled, 'template' => $template], true));
 
         // Decide path: New (template) or Fallback (default)
         $useTemplate = $isEnabled && trim($template) !== '';
+        Log::debug(print_r([__LINE__, 'path' => $useTemplate ? 'template' : 'fallback'], true));
 
         if ($useTemplate) {
             // ==============================
             // === NEW: TEMPLATE-DRIVEN  ===
             // ==============================
-
-            // Token map from screenshot: ${area_code}, ${institution_code}, ${academic_period_code}, ${N}
             $tokenMap = [
                 'area_code'            => $areaCode,
                 'institution_code'     => $institutionCode,
@@ -7560,17 +7566,20 @@ class InstitutionsController extends AppController
             if (preg_match('/\${\s*(\d+)\s*}/', $template, $m)) {
                 $seqWidth = max(1, (int)$m[1]);
             }
+            Log::debug(print_r([__LINE__, 'seqWidth' => $seqWidth], true));
 
             // Replace named tokens first
             $prefix = $template;
             foreach ($tokenMap as $k => $v) {
                 $prefix = preg_replace('/\${\s*' . preg_quote($k, '/') . '\s*}/', $v, $prefix);
             }
+            Log::debug(print_r([__LINE__, 'prefix_after_named_tokens' => $prefix], true));
 
             // Replace the first numeric token with %SEQ%
             $prefix = preg_replace('/\${\s*\d+\s*}/', '%SEQ%', $prefix, 1);
             // Remove any extra numeric tokens cleanly
             $prefix = preg_replace('/\${\s*\d+\s*}/', '', $prefix);
+            Log::debug(print_r([__LINE__, 'prefix_after_numeric_token' => $prefix], true));
 
             // If no %SEQ% present, append it
             if (strpos($prefix, '%SEQ%') === false) {
@@ -7584,8 +7593,11 @@ class InstitutionsController extends AppController
             $prefix = preg_replace('#/{2,}#', '/', $prefix);
             $prefix = rtrim($prefix, '/');
 
+            Log::debug(print_r([__LINE__, 'prefix_final' => $prefix], true));
+
             // Find last sequence for this prefix and increment
             $likePrefix = str_replace(['%', '_'], ['\%', '\_'], str_replace('%SEQ%', '', $prefix)) . '%';
+            Log::debug(print_r([__LINE__, 'likePrefix' => $likePrefix], true));
 
             $conn = ConnectionManager::get('default');
             $nextNumberPadded = $conn->transactional(function () use ($InstitutionStudentProgrammes, $likePrefix, $seqWidth) {
@@ -7595,6 +7607,8 @@ class InstitutionsController extends AppController
                     ->order([$InstitutionStudentProgrammes->aliasField('id') => 'DESC'])
                     ->first();
 
+                Log::debug(print_r([__LINE__, 'txn:last_found' => (bool)$last, 'last_reg' => $last->registration_number ?? null, 'last_id' => $last->id ?? null], true));
+
                 $next = 1;
                 if ($last && !empty($last->registration_number)) {
                     $parts = explode('/', $last->registration_number);
@@ -7603,13 +7617,19 @@ class InstitutionsController extends AppController
                         $next = (int)$lastSeg + 1;
                     }
                 }
-                return str_pad((string)$next, $seqWidth, '0', STR_PAD_LEFT);
+
+                $padded = str_pad((string)$next, $seqWidth, '0', STR_PAD_LEFT);
+                Log::debug(print_r([__LINE__, 'txn:next' => $next, 'txn:padded' => $padded], true));
+                return $padded;
             });
 
+            Log::debug(print_r([__LINE__, 'nextNumberPadded' => $nextNumberPadded], true));
+
             $finalCandidateNumber = str_replace('%SEQ%', $nextNumberPadded, $prefix);
+            Log::debug(print_r([__LINE__, 'finalCandidateNumber' => $finalCandidateNumber], true));
 
             // Save
-            $entity = $InstitutionStudentProgrammes->newEntity([
+            $data = [
                 'institution_id'         => $institutionId,
                 'student_id'             => $userRecordId,
                 'education_programme_id' => $educationProgrammeId,
@@ -7618,26 +7638,35 @@ class InstitutionsController extends AppController
                 'modified_user_id'       => $this->Auth->user('id'),
                 'created'                => FrozenTime::now(),
                 'modified'               => FrozenTime::now(),
-            ]);
-            $InstitutionStudentProgrammes->saveOrFail($entity);
+            ];
+            Log::debug(print_r([__LINE__, 'save(template):data' => $data], true));
+
+            try {
+                $entity = $InstitutionStudentProgrammes->newEntity($data);
+                $InstitutionStudentProgrammes->saveOrFail($entity);
+                Log::debug(print_r([__LINE__, 'save(template):ok', 'new_id' => $entity->id ?? null], true));
+            } catch (\Throwable $e) {
+                Log::error(print_r([__LINE__, 'save(template):error', 'msg' => $e->getMessage()], true));
+                throw $e;
+            }
+            Log::debug(print_r([__LINE__, 'end(template)'], true));
             return;
         }
 
         // ==================================
         // === FALLBACK (default) version ===
         // ==================================
-        // Uses global last registration_number (any prefix), increments last segment,
-        // defaults to 4 digits, and builds: area/institution/period/NNNN
+        Log::debug(print_r([__LINE__, 'fallback:start'], true));
 
-        // Find the last programme globally (POCOR-8074 behavior)
         $lastProgramme = $InstitutionStudentProgrammes->find()
             ->order([$InstitutionStudentProgrammes->aliasField('id') => 'DESC'])
             ->limit(1)
             ->first();
+        Log::debug(print_r([__LINE__, 'fallback:last_found' => (bool)$lastProgramme, 'last_reg' => $lastProgramme->registration_number ?? null, 'last_id' => $lastProgramme->id ?? null], true));
 
         if (empty($lastProgramme)) {
-            // Nothing to base on; start from 0001 with 4 digits
             $formattedNumber = str_pad('1', 4, '0', STR_PAD_LEFT);
+            Log::debug(print_r([__LINE__, 'fallback:seed' => $formattedNumber], true));
         } else {
             $registrationNumber = $lastProgramme->registration_number;
             if (!empty($registrationNumber)) {
@@ -7646,13 +7675,14 @@ class InstitutionsController extends AppController
                 if (ctype_digit($lastSegment)) {
                     $next = (int)$lastSegment + 1;
                     $formattedNumber = str_pad((string)$next, strlen($lastSegment), '0', STR_PAD_LEFT);
+                    Log::debug(print_r([__LINE__, 'fallback:next' => $next, 'fallback:formatted' => $formattedNumber], true));
                 } else {
-                    // If last segment isn’t numeric, reset to 0001 (4 digits)
                     $formattedNumber = str_pad('1', 4, '0', STR_PAD_LEFT);
+                    Log::debug(print_r([__LINE__, 'fallback:non_numeric_last_segment_reset' => $formattedNumber], true));
                 }
             } else {
-                // Last record had no reg no; reset to 0001 (4 digits)
                 $formattedNumber = str_pad('1', 4, '0', STR_PAD_LEFT);
+                Log::debug(print_r([__LINE__, 'fallback:empty_last_reset' => $formattedNumber], true));
             }
         }
 
@@ -7662,8 +7692,9 @@ class InstitutionsController extends AppController
             $academicPeriodCode,
             $formattedNumber,
         ]);
+        Log::debug(print_r([__LINE__, 'fallback:finalCandidateNumber' => $finalCandidateNumber], true));
 
-        $fallbackEntity = $InstitutionStudentProgrammes->newEntity([
+        $data = [
             'institution_id'         => $institutionId,
             'student_id'             => $userRecordId,
             'education_programme_id' => $educationProgrammeId,
@@ -7672,9 +7703,21 @@ class InstitutionsController extends AppController
             'modified_user_id'       => $this->Auth->user('id'),
             'created'                => FrozenTime::now(),
             'modified'               => FrozenTime::now(),
-        ]);
-        $InstitutionStudentProgrammes->saveOrFail($fallbackEntity);
+        ];
+        Log::debug(print_r([__LINE__, 'save(fallback):data' => $data], true));
+
+        try {
+            $fallbackEntity = $InstitutionStudentProgrammes->newEntity($data);
+            $InstitutionStudentProgrammes->saveOrFail($fallbackEntity);
+            Log::debug(print_r([__LINE__, 'save(fallback):ok', 'new_id' => $fallbackEntity->id ?? null], true));
+        } catch (\Throwable $e) {
+            Log::error(print_r([__LINE__, 'save(fallback):error', 'msg' => $e->getMessage()], true));
+            throw $e;
+        }
+
+        Log::debug(print_r([__LINE__, __METHOD__, 'end(fallback)'], true));
     }
+
 
 
     /**
