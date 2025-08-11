@@ -195,7 +195,7 @@ class DirectoryTable extends AppTable
         $extraFields[] = [
             'key' => 'Directory.date_of_birth',
             'field' => 'date_of_birth',
-            'type' => 'date',
+            'type' => 'string',
             'label' => __('DOB')
         ];
 

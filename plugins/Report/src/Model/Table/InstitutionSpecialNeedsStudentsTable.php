@@ -314,7 +314,7 @@ class InstitutionSpecialNeedsStudentsTable extends AppTable  {
         $newFields[] = [
             'key' => 'Users.date_of_birth',
             'field' => 'date_of_birth',
-            'type' => 'date',
+            'type' => 'string',
             'label' => ''
         ];
 
@@ -349,14 +349,14 @@ class InstitutionSpecialNeedsStudentsTable extends AppTable  {
         $newFields[] = [
             'key' => 'InstitutionSpecialNeedsStudents.start_date',
             'field' => 'start_date',
-            'type' => 'date',
+            'type' => 'string',
             'label' => __('Start Date')
         ];
 
         $newFields[] = [
             'key' => 'InstitutionSpecialNeedsStudents.end_date',
             'field' => 'end_date',
-            'type' => 'date',
+            'type' => 'string',
             'label' => __('End Date')
         ];
 
