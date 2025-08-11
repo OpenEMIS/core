@@ -336,7 +336,7 @@ class InstitutionStudentReportsTable extends AppTable
         $extraField[] = [
             'key' => 'Students.date_of_birth',
             'field' => 'date_of_birth',
-            'type' => 'date',
+            'type' => 'string',
             'label' => 'Date Of Birth',
         ];
 
