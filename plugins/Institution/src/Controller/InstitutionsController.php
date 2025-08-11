@@ -7507,6 +7507,19 @@ class InstitutionsController extends AppController
 //        Log::debug(print_r([__LINE__, __METHOD__, 'start'], true));
 
         $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+// Read config
+        $config = $ConfigItemTable->find()
+            ->select(['value', 'value_selection'])
+            ->where([$ConfigItemTable->aliasField('code') => 'auto_generated_candidate_number'])
+            ->first();
+
+        $isEnabled = $config ? (bool)$config->value : false;
+        $template  = $config ? (string)$config->value_selection : '';
+        if (!$isEnabled) {
+            Log::debug(print_r([__LINE__, 'bail:not_enabled'], true));
+            return; // not enabled
+        }
+
         $Institutions = TableRegistry::get('Institution.Institutions');
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $InstitutionStudentProgrammes = TableRegistry::get('Student.InstitutionStudentProgrammes');
@@ -7558,18 +7571,10 @@ class InstitutionsController extends AppController
             return;
         }
 
-        // Read config
-        $config = $ConfigItemTable->find()
-            ->select(['value', 'value_selection'])
-            ->where([$ConfigItemTable->aliasField('code') => 'auto_generated_candidate_number'])
-            ->first();
-
-        $isEnabled = $config ? (bool)$config->value : false;
-        $template  = $config ? (string)$config->value_selection : '';
-//        Log::debug(print_r([__LINE__, 'config', 'enabled' => $isEnabled, 'template' => $template], true));
+        //        Log::debug(print_r([__LINE__, 'config', 'enabled' => $isEnabled, 'template' => $template], true));
 
         // Decide path: New (template) or Fallback (default)
-        $useTemplate = $isEnabled && trim($template) !== '';
+        $useTemplate = trim($template) !== '';
 //        Log::debug(print_r([__LINE__, 'path' => $useTemplate ? 'template' : 'fallback'], true));
 
         if ($useTemplate) {
@@ -7600,7 +7605,7 @@ class InstitutionsController extends AppController
             $prefix = preg_replace('/\${\s*\d+\s*}/', '%SEQ%', $prefix, 1);
             // Remove any extra numeric tokens cleanly
             $prefix = preg_replace('/\${\s*\d+\s*}/', '', $prefix);
-            Log::debug(print_r([__LINE__, 'prefix_after_numeric_token' => $prefix], true));
+//            Log::debug(print_r([__LINE__, 'prefix_after_numeric_token' => $prefix], true));
 
             // If no %SEQ% present, append it
             if (strpos($prefix, '%SEQ%') === false) {
@@ -7683,7 +7688,7 @@ class InstitutionsController extends AppController
             ->order([$InstitutionStudentProgrammes->aliasField('id') => 'DESC'])
             ->limit(1)
             ->first();
-        Log::debug(print_r([__LINE__, 'fallback:last_found' => (bool)$lastProgramme, 'last_reg' => $lastProgramme->registration_number ?? null, 'last_id' => $lastProgramme->id ?? null], true));
+//        Log::debug(print_r([__LINE__, 'fallback:last_found' => (bool)$lastProgramme, 'last_reg' => $lastProgramme->registration_number ?? null, 'last_id' => $lastProgramme->id ?? null], true));
 
         if (empty($lastProgramme)) {
             $formattedNumber = str_pad('1', 4, '0', STR_PAD_LEFT);
@@ -7725,7 +7730,7 @@ class InstitutionsController extends AppController
             'created'                => FrozenTime::now(),
             'modified'               => FrozenTime::now(),
         ];
-        Log::debug(print_r([__LINE__, 'save(fallback):data' => $data], true));
+//        Log::debug(print_r([__LINE__, 'save(fallback):data' => $data], true));
 
         try {
             $fallbackEntity = $InstitutionStudentProgrammes->newEntity($data);
