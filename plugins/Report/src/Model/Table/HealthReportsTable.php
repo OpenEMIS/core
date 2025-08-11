@@ -750,7 +750,7 @@ class HealthReportsTable extends AppTable
         $this->extra_fields['date_of_birth'] = [
             'key' => '',
             'field' => 'date_of_birth',
-            'type' => 'string',
+            'type' => 'date',
             'label' => __('Date Of Birth')
         ];
         $this->extra_fields['student_address'] = [

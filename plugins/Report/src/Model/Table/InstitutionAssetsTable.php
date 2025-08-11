@@ -165,7 +165,7 @@ class InstitutionAssetsTable extends AppTable
         $newFields[] = [
             'key' => '',
             'field' => 'stocktake_date',
-            'type' => 'string',
+            'type' => 'date',
             'label' => __('Stocktake Date')
         ];
 

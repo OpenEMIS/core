@@ -694,7 +694,7 @@ class InstitutionsTable extends AppTable
                     'label' => __('Area Administrative Code')
                 ];
             }
-
+            //POCOR-9302 start
             if ($value['field'] == 'date_opened') {
                 $newFields[$key] = [
                     'key' => 'Institutions.date_opened',
@@ -703,7 +703,7 @@ class InstitutionsTable extends AppTable
                     'label' => __('Date Opened')
                 ];
             }
-
+            //POCOR-9302 end
             if ($value['field'] == 'date_closed') {
                 $newFields[$key] = [
                     'key' => 'Institutions.date_closed',
@@ -746,17 +746,17 @@ class InstitutionsTable extends AppTable
             return '';
         }
     }
-
+    //POCOR-9302 start
     public function onExcelGetDateOpened(Event $event, Entity $entity)
     {
         return isset($entity->date_opened) ? $entity->date_opened->format('Y-m-d') : '';
     }
-
+    
     public function onExcelGetDateClosed(Event $event, Entity $entity)
     {
         return isset($entity->date_closed) ? $entity->date_closed->format('Y-m-d') : '';
     }
-
+    //POCOR-9302 endp
     public function onExcelGetClassification(Event $event, Entity $entity)
     {
         return __($this->classificationOptions[$entity->classification]);
