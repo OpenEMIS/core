@@ -36,10 +36,6 @@ class RenderNumberBehavior extends RenderBehavior {
                 $options['value'] = $savedValue;
             }
 
-            // ---- read params (min/max or range.lower/upper)
-            $min = null;
-            $max = null;
-
             $params = [];
             if (!empty($attr['customField']->params)) {
                 $decoded = json_decode($attr['customField']->params, true);
@@ -47,38 +43,19 @@ class RenderNumberBehavior extends RenderBehavior {
                     $params = $decoded;
                 }
             }
+            $min = $this->getMinFromParams($params);
+            $max = $this->getMaxFromParams($params);
+            $step = $this->getStepFromParams($params);
 
-            // direct min/max
-            if (isset($params['min_value']) && is_numeric($params['min_value'])) {
-                $min = +$params['min_value'];
-            }
-            if (isset($params['max_value']) && is_numeric($params['max_value'])) {
-                $max = +$params['max_value'];
-            }
-
-            // range overrides (if present)
-            if (isset($params['range']) && is_array($params['range'])) {
-                if (isset($params['range']['lower']) && is_numeric($params['range']['lower'])) {
-                    $min = +$params['range']['lower'];
-                }
-                if (isset($params['range']['upper']) && is_numeric($params['range']['upper'])) {
-                    $max = +$params['range']['upper'];
-                }
-            }
-
-            // sanity: ensure min <= max if both exist
+// sanity: ensure min <= max if both exist
             if ($min !== null && $max !== null && $min > $max) {
-                // swap to avoid invalid HTML attributes
                 [$min, $max] = [$max, $min];
             }
 
             if ($min !== null) $options['min'] = (string)$min;
             if ($max !== null) $options['max'] = (string)$max;
+            if ($step !== null) $options['step'] = (string)$step;
 
-            // (optional) respect a step param if you ever add it, e.g. {"step":"0.5"}
-            if (isset($params['step']) && is_numeric($params['step'])) {
-                $options['step'] = (string)+$params['step'];
-            }
             // POCOR-9332 end
             $value .= $form->input($fieldPrefix . ".number_value", $options);
             $value .= $form->hidden($fieldPrefix . "." . $attr['attr']['fieldKey'], ['value' => $fieldId]);
