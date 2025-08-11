@@ -497,8 +497,16 @@ class StudentAdmissionTable extends ControllerActionTable
             $incomingStudent['class'] = $entity->institution_class_id;
         }
         $newEntity = $Students->newEntity($incomingStudent);
+        try{
         $Students->save($newEntity);
+        } catch (\Exception $exception) {
+            Log::debug($exception->getMessage());
+        }
+        if(!$newEntity->hasErrors()){
         return $newEntity;
+        }else{
+            return null;
+        }
     }
 
     //POCOR-8434 Ends
