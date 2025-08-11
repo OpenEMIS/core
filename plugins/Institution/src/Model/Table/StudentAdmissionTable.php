@@ -1128,6 +1128,11 @@ class StudentAdmissionTable extends ControllerActionTable
         $this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
         $this->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
         $this->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
+        $this->field('registration_number', [
+            'type'     => 'readonly',
+            'label'    => __('Candidate Number'),
+            'visible'  => ['view' => true, 'edit' => true, 'add' => false],
+        ]);
         $this->field('institution_class_id', ['entity' => $entity]);
         $this->field('start_date', ['entity' => $entity]);
         $this->field('end_date', ['entity' => $entity]);
@@ -1140,8 +1145,22 @@ class StudentAdmissionTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+
         $this->field('openemis_no');//POCOR-7738
-        $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'start_date', 'end_date', 'comment']);
+        $this->field('registration_number', [
+            'type'     => 'readonly',
+            'label'    => __('Candidate Number'),
+            'visible'  => ['view' => true, 'edit' => true, 'add' => false],
+        ]);
+        $this->setFieldOrder(['status_id',
+            'assignee_id',
+            'student_id',
+            'academic_period_id',
+            'education_grade_id',
+            'institution_class_id',
+            'start_date',
+            'end_date',
+            'comment']);
     }
 
     public function onGetStudentId(Event $event, Entity $entity)
@@ -1176,6 +1195,34 @@ class StudentAdmissionTable extends ControllerActionTable
         return $event->getSubject()->HtmlField->link($value, $url);
     }
 
+    public function onGetRegistrationNumber(Event $event, Entity $entity)
+    {
+        // Fallback: lazy lookup (in case contain didn't run for some reason)
+        $InstitutionStudentProgrammes = TableRegistry::get('Student.InstitutionStudentProgrammes');
+
+        // Scope: same student + institution (+ programme if available in the entity)
+        $conditions = [
+            'student_id'     => $entity->student_id,
+            'institution_id' => $entity->institution_id ?? null,
+        ];
+
+        // If education programme id is reachable via grade, use it to be precise
+        $educationProgrammeId = null;
+        if ($entity->has('education_grade') && $entity->education_grade->education_programme_id ?? null) {
+            $educationProgrammeId = (int)$entity->education_grade->education_programme_id;
+        }
+        if ($educationProgrammeId) {
+            $conditions['education_programme_id'] = $educationProgrammeId;
+        }
+
+        $row = $InstitutionStudentProgrammes->find()
+            ->select(['registration_number', 'id'])
+            ->where($conditions)
+            ->orderDesc('id')
+            ->first();
+
+        return $row->registration_number ?? '';
+    }
 
     //POCOR-6925
 
