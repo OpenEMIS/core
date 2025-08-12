@@ -7701,7 +7701,7 @@ class InstitutionsController extends AppController
                 if (ctype_digit($lastSegment)) {
                     $next = (int)$lastSegment + 1;
                     $formattedNumber = str_pad((string)$next, strlen($lastSegment), '0', STR_PAD_LEFT);
-                    Log::debug(print_r([__LINE__, 'fallback:next' => $next, 'fallback:formatted' => $formattedNumber], true));
+//                    Log::debug(print_r([__LINE__, 'fallback:next' => $next, 'fallback:formatted' => $formattedNumber], true));
                 } else {
                     $formattedNumber = str_pad('1', 4, '0', STR_PAD_LEFT);
                     Log::debug(print_r([__LINE__, 'fallback:non_numeric_last_segment_reset' => $formattedNumber], true));
@@ -7718,7 +7718,7 @@ class InstitutionsController extends AppController
             $academicPeriodCode,
             $formattedNumber,
         ]);
-        Log::debug(print_r([__LINE__, 'fallback:finalCandidateNumber' => $finalCandidateNumber], true));
+//        Log::debug(print_r([__LINE__, 'fallback:finalCandidateNumber' => $finalCandidateNumber], true));
 
         $data = [
             'institution_id'         => $institutionId,
