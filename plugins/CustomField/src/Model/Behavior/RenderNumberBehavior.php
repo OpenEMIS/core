@@ -11,45 +11,62 @@ class RenderNumberBehavior extends RenderBehavior {
         parent::initialize($config);
     }
 
-    public function onGetCustomNumberElement(Event $event, $action, $entity, $attr, $options=[]) {
+    public function onGetCustomNumberElement(Event $event, $action, $entity, $attr, $options = [])
+    {
         $value = '';
 
         // for edit
         $fieldId = $attr['customField']->id;
-        $fieldValues = $attr['customFieldValues'];
-        $savedId = null;
-        $savedValue = null;
-        if (!empty($fieldValues) && array_key_exists($fieldId, $fieldValues)) {
-            if (isset($fieldValues[$fieldId]['id'])) {
-                $savedId = $fieldValues[$fieldId]['id'];
-            }
-            if (isset($fieldValues[$fieldId]['number_value'])) {
-                $savedValue = $fieldValues[$fieldId]['number_value'];
-            }
-        }
-        // End
+        // POCOR-9332 start
+        $fieldValues = $attr['customFieldValues'] ?? [];
+        $savedId = $fieldValues[$fieldId]['id'] ?? null;
+        $savedValue = $fieldValues[$fieldId]['number_value'] ?? null;
 
-        if ($action == 'view') {
-            if (!is_null($savedValue)) {
+        if ($action === 'view') {
+            if ($savedValue !== null) {
                 $value = $savedValue;
             }
-        } else if ($action == 'edit') {
+        } elseif ($action == 'edit') {
             $form = $event->getSubject()->Form;
             $unlockFields = [];
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
             $options['type'] = 'number';
-            if (!is_null($savedValue)) {
+            if ($savedValue !== null) {
                 $options['value'] = $savedValue;
             }
-            $value .= $form->input($fieldPrefix.".number_value", $options);
-            $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
-            $unlockFields[] = $fieldPrefix.".number_value";
-            $unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
-            if (!is_null($savedId)) {
-                $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
-                $unlockFields[] = $fieldPrefix.".id";
+
+            $params = [];
+            if (!empty($attr['customField']->params)) {
+                $decoded = json_decode($attr['customField']->params, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $params = $decoded;
+                }
             }
+            $min = $this->getMinFromParams($params);
+            $max = $this->getMaxFromParams($params);
+            $step = $this->getStepFromParams($params);
+
+// sanity: ensure min <= max if both exist
+            if ($min !== null && $max !== null && $min > $max) {
+                [$min, $max] = [$max, $min];
+            }
+
+            if ($min !== null) $options['min'] = (string)$min;
+            if ($max !== null) $options['max'] = (string)$max;
+            if ($step !== null) $options['step'] = (string)$step;
+
+            // POCOR-9332 end
+            $value .= $form->input($fieldPrefix . ".number_value", $options);
+            $value .= $form->hidden($fieldPrefix . "." . $attr['attr']['fieldKey'], ['value' => $fieldId]);
+            $unlockFields[] = $fieldPrefix . ".number_value";
+            $unlockFields[] = $fieldPrefix . "." . $attr['attr']['fieldKey'];
+
+            if ($savedId !== null) {
+                $value .= $form->hidden($fieldPrefix . ".id", ['value' => $savedId]);
+                $unlockFields[] = $fieldPrefix . ".id";
+            }
+
             $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
