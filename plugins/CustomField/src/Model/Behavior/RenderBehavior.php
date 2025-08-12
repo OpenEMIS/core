@@ -150,4 +150,42 @@ class RenderBehavior extends Behavior {
 
         return null;
     }
+
+    // POCOR-9332 start
+    protected function getMinFromParams(array $params = [])
+    {
+        $min = null;
+
+        // direct min_value
+        if (isset($params['min_value']) && is_numeric($params['min_value'])) {
+            $min = +$params['min_value'];
+        }
+
+        // range.lower overrides
+        if (isset($params['range']) && is_array($params['range']) &&
+            isset($params['range']['lower']) && is_numeric($params['range']['lower'])) {
+            $min = +$params['range']['lower'];
+        }
+
+        return $min;
+    }
+
+    protected function getMaxFromParams(array $params = [])
+    {
+        $max = null;
+
+        // direct max_value
+        if (isset($params['max_value']) && is_numeric($params['max_value'])) {
+            $max = +$params['max_value'];
+        }
+
+        // range.upper overrides
+        if (isset($params['range']) && is_array($params['range']) &&
+            isset($params['range']['upper']) && is_numeric($params['range']['upper'])) {
+            $max = +$params['range']['upper'];
+        }
+
+        return $max;
+    }
+    // POCOR-9332 end
 }

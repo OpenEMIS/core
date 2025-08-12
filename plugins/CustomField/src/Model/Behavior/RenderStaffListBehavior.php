@@ -215,7 +215,23 @@ class RenderStaffListBehavior extends RenderBehavior
 
                                         $cellOptions['type'] = 'number';
                                         $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
+                                        // POCOR-9332 start
+                                        if ($question->has('custom_field') && $question->custom_field->has('params')) {
+                                            $params = json_decode($question->custom_field->params, true);
+                                            $min = $this->getMinFromParams($params);
+                                            $max = $this->getMaxFromParams($params);
+                                            $step = $this->getStepFromParams($params);
 
+// sanity: ensure min <= max if both exist
+                                            if ($min !== null && $max !== null && $min > $max) {
+                                                [$min, $max] = [$max, $min];
+                                            }
+
+                                            if ($min !== null) $cellOptions['min'] = (string)$min;
+                                            if ($max !== null) $cellOptions['max'] = (string)$max;
+                                            if ($step !== null) $cellOptions['step'] = (string)$step;
+                                        }
+                                        // POCOR-9332 end
                                         $cellValue = !is_null($answerValue) ? $answerValue : '';
                                         break;
                                     case 'DECIMAL':

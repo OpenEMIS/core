@@ -12,13 +12,13 @@ class SecurityUserCodes extends Model
     protected $table = 'security_user_codes';
 
     // ✅ Allow mass assignment
-    protected $fillable = ['id', 'security_user_id', 'verification_otp', 'created'];
+    protected $fillable = ['id', 'email','verification_otp', 'created', 'status', 'expires_at'];
 
     // ✅ Disable Laravel's default timestamps
     public $timestamps = false;
 
     // ✅ Treat 'modified' and 'created' as timestamps
-    protected $dates = ['modified', 'created'];
+    protected $dates = ['created', 'expires_at'];
 
     // ✅ Define the primary key
 
@@ -89,7 +89,6 @@ public function _swaggerPath() {}
  *                 @OA\Items(
  *                     type="object",
                           @OA\Property(property="id", type="integer", example=null),
-                          @OA\Property(property="security_user_id", type="integer", example=null),
                           @OA\Property(property="verification_otp", type="string", example=null),
                           @OA\Property(property="created", type="string", format="date-time", example=null)
  *                 )
@@ -114,7 +113,6 @@ public function _swaggerList() {}
  *         @OA\JsonContent(
  *             type="object",
                      @OA\Property(property="id", type="integer", example=null),
-                     @OA\Property(property="security_user_id", type="integer", example=null),
                      @OA\Property(property="verification_otp", type="string", example=null),
                      @OA\Property(property="created", type="string", format="date-time", example=null)
  *         )
@@ -177,7 +175,6 @@ public function _swaggerView() {}
  *         @OA\JsonContent(
  *             type="object",
                      @OA\Property(property="id", type="integer", example=null),
-                     @OA\Property(property="security_user_id", type="integer", example=null),
                      @OA\Property(property="verification_otp", type="string", example=null),
                      @OA\Property(property="created", type="string", format="date-time", example=null)
  *         )
