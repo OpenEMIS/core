@@ -1,4 +1,5 @@
 <?php
+
 namespace User\Model\Behavior;
 
 use ArrayObject;
@@ -14,10 +15,7 @@ use Cake\ORM\TableRegistry;
 class MoodleCreateUserBehavior extends Behavior
 {
 
-    public function initialize(array $config): void
-    {
-
-    }
+    public function initialize(array $config): void {}
 
     // change in POCOR-8381
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
@@ -29,10 +27,9 @@ class MoodleCreateUserBehavior extends Behavior
         } elseif ($entity instanceof \Institution\Model\Entity\Staff) {
             $entity = $this->convertStaffToUser($entity);
         } elseif ($entity instanceof \Institution\Model\Entity\InstitutionSubject) { // POCOR-8706 | for saving moodle subjects
-            $response = $this->addMoodleSubject($entity); 
+            $response = $this->addMoodleSubject($entity);
             return;
-        }      
-        elseif (!$entity instanceof \User\Model\Entity\User) {
+        } elseif (!$entity instanceof \User\Model\Entity\User) {
             return;
         }
 
@@ -42,10 +39,9 @@ class MoodleCreateUserBehavior extends Behavior
                 try { // POCOR-8532
                     $response = $moodleApi->createUser($entity);
                 } catch (\Exception $exception) {
-
                 }
                 if (!$response || !$response->getStatusCode() != 200) {  // Use getStatusCode() instead of accessing $code directly
-//                    throw new Exception("Network Error"); // POCOR-8532
+                    //                    throw new Exception("Network Error"); // POCOR-8532
                     Log::debug('Network Error in Moodle'); // POCOR-8532
                 }
             }
@@ -83,24 +79,23 @@ class MoodleCreateUserBehavior extends Behavior
 
     private function addMoodleSubject($entity)
     {
-         $response = null;
-         try {
- 
-             $subjectsTable = TableRegistry::get('Institution.InstitutionSubjects');
-             $entity = $subjectsTable->attachFieldNames($entity);
- 
-             $moodleApi = new MoodleApi();
-             $response = $moodleApi->createCourse($entity);
- 
-             if (!$response || $response->getStatusCode() !== 200) {
-                 Log::debug('Network Error in Moodle');
-             }
-         } catch (\Exception $exception) {
-             Log::error('Error adding Moodle subject: ' . $exception->getMessage(), [
-                 'exception' => $exception,
-             ]);
-         }
-         return $response;
+        $response = null;
+        try {
+
+            $subjectsTable = TableRegistry::get('Institution.InstitutionSubjects');
+            $entity = $subjectsTable->attachFieldNames($entity);
+
+            $moodleApi = new MoodleApi();
+            $response = $moodleApi->createCourse($entity);
+
+            if (!$response || $response->getStatusCode() !== 200) {
+                Log::debug('Network Error in Moodle');
+            }
+        } catch (\Exception $exception) {
+            Log::error('Error adding Moodle subject: ' . $exception->getMessage(), [
+                'exception' => $exception,
+            ]);
+        }
+        return $response;
     }
- 
 }

@@ -1,3 +1,16 @@
+### [4.38.0] - 2025-08-12
+- Implemented: Develop changes to the url variable names in the .env file
+- Implemented: Institutions > Academics > Subjects : Changes in Subject should be reflected in Moodle Courses
+- Implemented: Develop changes to the .htaccess file to allow read access to log files
+- Bug Fixed: Directory > Import: User receives a 404 error.
+- Bug Fixed: Institutions>Survey>Forms: Remove up and down arrows which allow user to enter negative values
+- Bug Fixed: Reports > Data Quality > Add > Staff with Missing Qualification Report: Institution option field does not have the option to generate the report for all schools.
+- Bug Fixed: Report>Institutions > Students: Report is stuck in progress
+- Bug Fixed: Reports > Institutions > Add: Some columns have no data
+- Bug Fixed: API : new record should not be created when accessing otp-generate endpoint
+- Bug Fixed: Administrations > Security > Permissions > API tab : API Access for Staff Entitlement permission are not available
+- Bug Fixed: Develop changes to rename infrastructure attachments to attachments
+
 ### [4.37.1] - 2025-08-01
 Bug Fixed: Institutions > Performances > Assessments > Unassign/Exempt page : Retrieve all students regardless if the marks are entered
 Bug Fixed: Administration>Profiles>Students: Left border is not showing
