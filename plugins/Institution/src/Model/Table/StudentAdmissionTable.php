@@ -1131,7 +1131,9 @@ class StudentAdmissionTable extends ControllerActionTable
         $this->field('registration_number', [  // POCOR-9323
             'type'     => 'readonly',
             'label'    => __('Candidate Number'),
-            'attr'  => ['entity' => $entity]
+            'attr'  => ['entity' => $entity],
+            'entity'  => $entity,
+
         ]);
         $this->field('institution_class_id', ['entity' => $entity]);
         $this->field('start_date', ['entity' => $entity]);
@@ -1152,8 +1154,9 @@ class StudentAdmissionTable extends ControllerActionTable
         $this->field('registration_number', [
             'type'     => 'readonly',
             'label'    => __('Candidate Number'),
-            'visible'  => ['view' => true, 'edit' => true, 'add' => false,
-                'entity' => $entity],
+            'visible'  => ['view' => true, 'edit' => true, 'add' => false],
+            'entity' => $entity,
+            'attr' => ['entity' => $entity]
         ]);
         $this->setFieldOrder(['status_id',
             'assignee_id',
@@ -1236,7 +1239,6 @@ class StudentAdmissionTable extends ControllerActionTable
     public function onUpdateFieldRegistrationNumber(Event $event, array $attr, $action, $request)
     {
         // Fallback: lazy lookup (in case contain didn't run for some reason)
-        $attr['value'] = 'bbbbb';
 
 //        return $attr;
         $entity = $attr['attr']['entity'];
