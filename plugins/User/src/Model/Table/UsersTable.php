@@ -723,6 +723,12 @@ class UsersTable extends AppTable
                 }
                 return true;
             })
+            ->allowEmpty('password', function ($context) {  //POCOR-9322
+                if ($context['data']['record_source'] == 'import_user') {
+                    return true;
+                }
+                return false;
+            })
             ->add('account_type', 'custom', [
                 'rule' => function ($value, $context) {
 
