@@ -12,13 +12,13 @@ class SecurityUserCodes extends Model
     protected $table = 'security_user_codes';
 
     // ✅ Allow mass assignment
-    protected $fillable = ['id', 'security_user_id', 'verification_otp', 'created'];
+    protected $fillable = ['id', 'email','verification_otp', 'created', 'status', 'expires_at'];
 
     // ✅ Disable Laravel's default timestamps
     public $timestamps = false;
 
-    // ✅ Treat 'modified' and 'created' as timestamps
-    protected $dates = ['modified', 'created'];
+    // ✅ Treat 'expires_at' and 'created' as timestamps
+    protected $dates = ['expires_at', 'created'];
 
     // ✅ Define the primary key
 
