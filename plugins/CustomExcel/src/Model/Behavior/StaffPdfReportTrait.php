@@ -343,10 +343,10 @@ trait StaffPdfReportTrait
         }
 
         if (!empty($pdfContent)) {
-            $filename = $this->getConfig('filename') . '_' . (!empty($studentId) ? $studentId : date('Ymd\THis')) . '.txt';
+            $filename = $this->getConfig('filename') . '_' . (!empty($staff_id) ? $staff_id : date('Ymd\THis')) . '.txt';
             $outputPath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $filename;
             file_put_contents($outputPath, $pdfContent);
-            Log::write('debug', "Saved PDF  to: $outputPath");
+            Log::write('debug', "Saved PDF to: $outputPath");
         } else {
             Log::error("PDF content  is empty");
         }
