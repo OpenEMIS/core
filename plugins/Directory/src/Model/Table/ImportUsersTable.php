@@ -128,49 +128,29 @@ class ImportUsersTable extends AppTable
         return $events;
     }
 
+    /**
+     * POCOR-9322
+     * password validation remove
+     * */
     public function onImportCheckUnique(Event $event,
-                                        $sheet,
-                                        $row,
-                                        $columns,
-                                        $tempRow,
-                                        $importedUniqueCodes,
-                                        $rowInvalidCodeCols) //POCOR-8082
+                                    $sheet,
+                                    $row,
+                                    $columns,
+                                    $tempRow,
+                                    $importedUniqueCodes,
+                                    $rowInvalidCodeCols) //POCOR-8082
     {
-
         $tempRow['columns'] = $columns; // POCOR-8683 start
         $columns = new Collection($columns);
-        // POCOR-8835 start
-//        $user = false;
-//        $extractedOpenemisNo = $columns->filter(function ($value, $key, $iterator) {
-//            return $value == 'openemis_no';
-//        });
-//
-//        $openemisNoIndex = key($extractedOpenemisNo->toArray()) + 1;
-//        $openemisNo = $sheet->getCellByColumnAndRow($openemisNoIndex, $row)->getValue();
-//
-//
-//        $user = null;
-//        if ($openemisNo) {
-//            $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
-//        }
+
+        // Extract username
         $extractedUsername = $columns->filter(function ($value, $key, $iterator) {
             return $value == 'username';
         });
-
         $usernameNoIndex = key($extractedUsername->toArray()) + 1;
         $username = $sheet->getCellByColumnAndRow($usernameNoIndex, $row)->getValue();
 
-//        dd($username);
-        // POCOR-8683 start
-        Log::debug(strval($username));
-        if ($username) {
-            $userCount = $this->Users->find()->where(['username' => $username])->count();
-        }
-        if($userCount > 0){
-            $rowInvalidCodeCols['username'] = 'This username is already in use';
-            return false;
-
-        }
+        // Extract password
         $extractedPassword = $columns->filter(function ($value) {
             return strtolower(trim($value)) === 'password';
         });
@@ -178,99 +158,73 @@ class ImportUsersTable extends AppTable
         $password = $sheet->getCellByColumnAndRow($passwordColIndex, $row)->getValue();
         $password = trim((string)$password);
 
-        if (strlen($password) < 4) {
-            $rowInvalidCodeCols['password'] = 'Invalid password: Must be at least 4 characters';
-            return false;
+        // POCOR-8683 start
+        Log::debug(strval($username));
+
+        // Only validate username & password if not both empty
+        if (!empty($username)) {
+            if (!empty($username)) {
+                $userCount = $this->Users->find()->where(['username' => $username])->count();
+                if ($userCount > 0) {
+                    $rowInvalidCodeCols['username'] = 'This username is already in use';
+                    return false;
+                }
+            }
+        }
+        if (!empty($password)) {
+
+            if (!empty($password) && strlen($password) < 4) {
+                $rowInvalidCodeCols['password'] = 'Invalid password: Must be at least 4 characters';
+                return false;
+            }
         }
         // POCOR-8683 end
+
         $accountType = $columns->filter(function ($value, $key, $iterator) {
             return $value == 'account_type';
         });
         $accountTypeIndex = key($accountType->toArray()) + 1;
         $accountType = $sheet->getCellByColumnAndRow($accountTypeIndex, $row)->getValue();
         $accountTypeId = $this->getAccountTypeId($accountType);
-// POCOR-8835 start
-//        if (!$user) {
-//            if ($openemisNo) {
-//                $rowInvalidCodeCols['openemis_no'] = __('No Such User 1');
-//                return false;
-//            }
-        // POCOR-8835 end
-            try{
-                // POCOR-8683 start
-                // POCOR-8835 start
-                $newOpenemisNo = "";
-                // POCOR-8835 start
-//                if(strlen($openemisNo) > 1){
-//                    $username = Text::slug($openemisNo);
-//                }
-//                if(strlen($username) < 6){
-                // POCOR-8835 end
-                $newOpenemisNo = $newOpenemisNo . $this->getNewOpenEmisNo();
-                    $tempRow['openemis_no'] = $newOpenemisNo;
-//                } // POCOR-8835
-                $tempRow['username'] = $username ?? $newOpenemisNo;
-                if (isset($tempRow['username']) && preg_match('/^\w+$/', $tempRow['username'])) {
-                    $validUserName = true;
-                } else {
-                    $validUserName = false;
-                }
-                if (!$validUserName) {
-                    $rowInvalidCodeCols['username'] = 'The Username has invalid characters';
-                    return false;
-                }
-                // POCOR-8683 end
-            } catch (\Exception $exception) {
-                $rowInvalidCodeCols['username'] = 'New User Creation Error: ' . __($exception->getMessage());
+
+        try {
+            $newOpenemisNo = "";
+            $newOpenemisNo .= $this->getNewOpenEmisNo();
+            $tempRow['openemis_no'] = $newOpenemisNo;
+            $tempRow['username'] = $username ?? $newOpenemisNo;
+
+            if (isset($tempRow['username']) && preg_match('/^\w+$/', $tempRow['username'])) {
+                $validUserName = true;
+            } else {
+                $validUserName = false;
+            }
+
+            if (!$validUserName && !empty($username)) {
+                $rowInvalidCodeCols['username'] = 'The Username has invalid characters';
                 return false;
             }
-        // POCOR-8835 end
-        // POCOR-8835 start
-//        } else {
-//            $tempRow['entity'] = $user;
-//            // POCOR-8683 start
-//            $tempRow['security_user_id'] = $user->id;
-////            Log::debug('$accountTypeId' . strval($accountTypeId));
-//
-//            if($accountTypeId == "" || !$accountTypeId){
-//                $tempRow['account_type'] = self::IS_STUDENT;
-//                $accountTypeId = self::IS_STUDENT;
-//            }
-//            $defaults = [
-//                'username' => $user->username,
-//                'first_name' => $user->first_name,
-//                'last_name' => $user->last_name,
-//                'gender_id' => $user->gender_id,
-//                'date_of_birth' => $user->date_of_birth
-//            ];
-//            foreach ($defaults as $key => $value) {
-//                self::setIfEmpty($tempRow, $key, $value);
-//            }
-//        }
-        // POCOR-8835 end
+
+        } catch (\Exception $exception) {
+            $rowInvalidCodeCols['username'] = 'New User Creation Error: ' . __($exception->getMessage());
+            return false;
+        }
+
         $tempRow['account_type'] = $accountTypeId;
 
         if (empty($tempRow['account_type'])) {
             $tempRow['duplicates'] = __('Account type cannot be empty');
             $rowInvalidCodeCols['account_type'] = $tempRow['duplicates'];
             return false;
-            // POCOR-8683 end
         }
 
         if (!empty($tempRow['account_type'])) {
             // setting is_student = 1, or is_staff = 1, or is_guardian = 1
             $tempRow[$tempRow['account_type']] = 1;
         }
-        // POCOR-8835 start
-//        if (in_array($openemisNo, $importedUniqueCodes->getArrayCopy())) {
-//            $rowInvalidCodeCols['openemis_no'] = __('This OpenEMIS No is Already Present');//$this->getExcelLabel('Import', 'duplicate_unique_key');
-//            $tempRow['duplicates'] = $rowInvalidCodeCols['openemis_no'] ;
-//            return false;
-//        }
-        // POCOR-8835 end
-
     }
 
+
+    
     public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity)
     {
         $importedUniqueCodes[] = $entity->openemis_no;
@@ -1884,4 +1838,148 @@ class ImportUsersTable extends AppTable
         }
         return $have_error;
     }
+
+    public function onImportCheckUniqueBKP(Event $event,
+                                        $sheet,
+                                        $row,
+                                        $columns,
+                                        $tempRow,
+                                        $importedUniqueCodes,
+                                        $rowInvalidCodeCols) //POCOR-8082
+    {
+
+        $tempRow['columns'] = $columns; // POCOR-8683 start
+        $columns = new Collection($columns);
+        // POCOR-8835 start
+//        $user = false;
+//        $extractedOpenemisNo = $columns->filter(function ($value, $key, $iterator) {
+//            return $value == 'openemis_no';
+//        });
+//
+//        $openemisNoIndex = key($extractedOpenemisNo->toArray()) + 1;
+//        $openemisNo = $sheet->getCellByColumnAndRow($openemisNoIndex, $row)->getValue();
+//
+//
+//        $user = null;
+//        if ($openemisNo) {
+//            $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
+//        }
+        $extractedUsername = $columns->filter(function ($value, $key, $iterator) {
+            return $value == 'username';
+        });
+
+        $usernameNoIndex = key($extractedUsername->toArray()) + 1;
+        $username = $sheet->getCellByColumnAndRow($usernameNoIndex, $row)->getValue();
+
+//        dd($username);
+        // POCOR-8683 start
+        Log::debug(strval($username));
+        if ($username) {
+            $userCount = $this->Users->find()->where(['username' => $username])->count();
+        }
+        if($userCount > 0){
+            $rowInvalidCodeCols['username'] = 'This username is already in use';
+            return false;
+
+        }
+        $extractedPassword = $columns->filter(function ($value) {
+            return strtolower(trim($value)) === 'password';
+        });
+        $passwordColIndex = key($extractedPassword->toArray()) + 1;
+        $password = $sheet->getCellByColumnAndRow($passwordColIndex, $row)->getValue();
+        $password = trim((string)$password);
+
+        if (strlen($password) < 4) {
+            $rowInvalidCodeCols['password'] = 'Invalid password: Must be at least 4 characters';
+            return false;
+        }
+        // POCOR-8683 end
+        $accountType = $columns->filter(function ($value, $key, $iterator) {
+            return $value == 'account_type';
+        });
+        $accountTypeIndex = key($accountType->toArray()) + 1;
+        $accountType = $sheet->getCellByColumnAndRow($accountTypeIndex, $row)->getValue();
+        $accountTypeId = $this->getAccountTypeId($accountType);
+// POCOR-8835 start
+//        if (!$user) {
+//            if ($openemisNo) {
+//                $rowInvalidCodeCols['openemis_no'] = __('No Such User 1');
+//                return false;
+//            }
+        // POCOR-8835 end
+            try{
+                // POCOR-8683 start
+                // POCOR-8835 start
+                $newOpenemisNo = "";
+                // POCOR-8835 start
+//                if(strlen($openemisNo) > 1){
+//                    $username = Text::slug($openemisNo);
+//                }
+//                if(strlen($username) < 6){
+                // POCOR-8835 end
+                $newOpenemisNo = $newOpenemisNo . $this->getNewOpenEmisNo();
+                    $tempRow['openemis_no'] = $newOpenemisNo;
+//                } // POCOR-8835
+                $tempRow['username'] = $username ?? $newOpenemisNo;
+                if (isset($tempRow['username']) && preg_match('/^\w+$/', $tempRow['username'])) {
+                    $validUserName = true;
+                } else {
+                    $validUserName = false;
+                }
+                if (!$validUserName) {
+                    $rowInvalidCodeCols['username'] = 'The Username has invalid characters';
+                    return false;
+                }
+                // POCOR-8683 end
+            } catch (\Exception $exception) {
+                $rowInvalidCodeCols['username'] = 'New User Creation Error: ' . __($exception->getMessage());
+                return false;
+            }
+        // POCOR-8835 end
+        // POCOR-8835 start
+//        } else {
+//            $tempRow['entity'] = $user;
+//            // POCOR-8683 start
+//            $tempRow['security_user_id'] = $user->id;
+////            Log::debug('$accountTypeId' . strval($accountTypeId));
+//
+//            if($accountTypeId == "" || !$accountTypeId){
+//                $tempRow['account_type'] = self::IS_STUDENT;
+//                $accountTypeId = self::IS_STUDENT;
+//            }
+//            $defaults = [
+//                'username' => $user->username,
+//                'first_name' => $user->first_name,
+//                'last_name' => $user->last_name,
+//                'gender_id' => $user->gender_id,
+//                'date_of_birth' => $user->date_of_birth
+//            ];
+//            foreach ($defaults as $key => $value) {
+//                self::setIfEmpty($tempRow, $key, $value);
+//            }
+//        }
+        // POCOR-8835 end
+        $tempRow['account_type'] = $accountTypeId;
+
+        if (empty($tempRow['account_type'])) {
+            $tempRow['duplicates'] = __('Account type cannot be empty');
+            $rowInvalidCodeCols['account_type'] = $tempRow['duplicates'];
+            return false;
+            // POCOR-8683 end
+        }
+
+        if (!empty($tempRow['account_type'])) {
+            // setting is_student = 1, or is_staff = 1, or is_guardian = 1
+            $tempRow[$tempRow['account_type']] = 1;
+        }
+        // POCOR-8835 start
+//        if (in_array($openemisNo, $importedUniqueCodes->getArrayCopy())) {
+//            $rowInvalidCodeCols['openemis_no'] = __('This OpenEMIS No is Already Present');//$this->getExcelLabel('Import', 'duplicate_unique_key');
+//            $tempRow['duplicates'] = $rowInvalidCodeCols['openemis_no'] ;
+//            return false;
+//        }
+        // POCOR-8835 end
+
+    }
+
 }
