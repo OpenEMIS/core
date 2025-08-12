@@ -498,8 +498,16 @@ class StudentAdmissionTable extends ControllerActionTable
             $incomingStudent['class'] = $entity->institution_class_id;
         }
         $newEntity = $Students->newEntity($incomingStudent);
-        $Students->save($newEntity);
-        return $newEntity;
+        try{
+            $Students->save($newEntity);
+        } catch (\Exception $exception) {
+            Log::debug($exception->getMessage());
+        }
+        if(!$newEntity->hasErrors()){
+            return $newEntity;
+        }else{
+            return null;
+        }
     }
 
     //POCOR-8434 Ends
@@ -1452,80 +1460,85 @@ class StudentAdmissionTable extends ControllerActionTable
         return $data;
     }
 
+    // POCOR-9313 start: made a little safer
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
-        if ($entity->isNew()) {
-            if ($entity->has('action_type') && $entity->action_type == 'imported') { // Import logic
+        if (!$entity->isNew()) {
+            return; // Only handle new entities
+        }
+
+        if ($entity->has('action_type')) {
+            if ($entity->action_type === 'imported') {
                 $WorkflowActions = TableRegistry::get('Workflow.WorkflowActions');
                 $triggeringStep = $WorkflowActions->getEventTriggeringStep('Institution.StudentAdmission', 'Workflow.onApprove');
 
                 if (!empty($triggeringStep) && $entity->status_id == $triggeringStep) {
-                    if ($this->save($entity)) {
-                        $this->addInstitutionStudent($entity);
-                    }
+                    $this->addInstitutionStudent($entity);
                 }
-            } else if ($entity->has('action_type') && $entity->action_type == 'default') { // AngularJs logic
-                // auto approve admission and add student into the institution
-                $superAdmin = Hash::get($_SESSION['Auth'], 'User.super_admin');
-                $executePermission = isset($_SESSION['Permissions']) && Hash::check($_SESSION['Permissions'], 'Institutions.StudentAdmission.execute');
 
-                // creator must be admin or have 'Student Admission -> Execute' permission
-                if ($superAdmin || $executePermission) {
-                    $workflowEntity = $this->getWorkflow($this->getRegistryAlias());
-
-                    // get the first step in 'APPROVED' workflow statuses
-                    $WorkflowModelsTable = self::getDynamicTableInstance('Workflow.WorkflowModels');
-                    $statuses = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentAdmission', 'APPROVED');
-                    ksort($statuses);
-                    $approvedStatusId = key($statuses);
-                    $approvedStatusEntity = $this->Statuses->get($approvedStatusId);
-
-                    if (!empty($approvedStatusEntity)) {
-                        $prevStepEntity = $this->Statuses->get($entity->status_id);
-
-                        // update status_id and assignee_id of admission record
-                        $entity->status_id = $approvedStatusEntity->id;
-                        $saved = false;
-                        try {
-                            $this->autoAssignAssignee($entity);
-                            $this->save($entity);
-                            $saved = true;
-                        } catch (\Exception $exception) {
-                            try {
-                                $this->save($entity);
-                                $saved = true;
-                            } catch (\Exception $exception) {
-                                $entity->assignee_id = $entity->created_user_id;
-                                $this->save($entity);
-                                $saved = true;
-                            }
-                        }
-                        if ($saved) {
-                            // add workflow transition
-                            $transition = [
-                                'comment' => __('On Auto Approve Student Admission'),
-                                'prev_workflow_step_name' => $prevStepEntity->name,
-                                'workflow_step_name' => $approvedStatusEntity->name,
-                                'workflow_action_name' => 'Administration - Approve Record',
-                                'workflow_model_id' => $workflowEntity->workflow_model_id,
-                                'model_reference' => $entity->id,
-                                'created_user_id' => 1,
-                                'created' => new FrozenTime('NOW')
-                            ];
-
-                            $WorkflowTransitions = self::getDynamicTableInstance('Workflow.WorkflowTransitions');
-                            $transitionEntity = $WorkflowTransitions->newEntity($transition);
-                            $WorkflowTransitions->save($transitionEntity);
-
-                        }
-                    }
-                }
+            } elseif ($entity->action_type === 'default') {
+                // Defer re-save logic to post-processing service if possible
+                $this->processAutoApproval($entity);
             }
         }
-        $this->handleCandidateNumber($entity);
+
+        // These are read-only safe and fine to run here
         $this->sendStudentAdmissionAlert($entity);
         $this->ensureInstitutionStudentExists($entity);
     }
+    protected function processAutoApproval(Entity $entity): void
+    {
+        $superAdmin = Hash::get($_SESSION['Auth'], 'User.super_admin');
+        $executePermission = isset($_SESSION['Permissions']) && Hash::check($_SESSION['Permissions'], 'Institutions.StudentAdmission.execute');
+
+        if (!($superAdmin || $executePermission)) {
+            return;
+        }
+
+        $workflowEntity = $this->getWorkflow($this->getRegistryAlias());
+        $WorkflowModelsTable = self::getDynamicTableInstance('Workflow.WorkflowModels');
+        $statuses = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentAdmission', 'APPROVED');
+        ksort($statuses);
+        $approvedStatusId = key($statuses);
+        $approvedStatusEntity = $this->Statuses->get($approvedStatusId);
+
+        if (empty($approvedStatusEntity)) {
+            return;
+        }
+
+        $prevStepEntity = $this->Statuses->get($entity->status_id);
+
+        // Important: Clone the entity or create a new one if you need to resave
+        $updateFields = [
+            'status_id' => $approvedStatusEntity->id,
+            'assignee_id' => $entity->assignee_id ?: $entity->created_user_id,
+        ];
+
+        $patchEntity = $this->patchEntity($entity, $updateFields);
+
+        try {
+            $this->saveOrFail($patchEntity);
+
+            $transition = [
+                'comment' => __('On Auto Approve Student Admission'),
+                'prev_workflow_step_name' => $prevStepEntity->name,
+                'workflow_step_name' => $approvedStatusEntity->name,
+                'workflow_action_name' => 'Administration - Approve Record',
+                'workflow_model_id' => $workflowEntity->workflow_model_id,
+                'model_reference' => $entity->id,
+                'created_user_id' => 1,
+                'created' => new FrozenTime('NOW')
+            ];
+
+            $WorkflowTransitions = self::getDynamicTableInstance('Workflow.WorkflowTransitions');
+            $transitionEntity = $WorkflowTransitions->newEntity($transition);
+            $WorkflowTransitions->save($transitionEntity);
+        } catch (\Exception $e) {
+            Log::error('Auto-approval failed: ' . $e->getMessage());
+        }
+    }
+    // POCOR-9313 end
+
 
     private function sendStudentAdmissionAlert($entity)
     {
