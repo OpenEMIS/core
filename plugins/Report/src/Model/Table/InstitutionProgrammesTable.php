@@ -8,6 +8,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\I18n\FrozenTime;
 
 class InstitutionProgrammesTable extends AppTable  {
 	use OptionsTrait;
@@ -68,6 +69,15 @@ class InstitutionProgrammesTable extends AppTable  {
 				];
 			$newFields[] = $value;
 			if ($value['field'] == 'institution_id') {
+
+				//POCOR-9301[START]
+				$newFields[] = [
+					'key' => 'Institutions.code',
+					'field' => 'institutionCode',
+					'type' => 'string',
+					'label' => __('Institution Code')
+				];
+				//POCOR-9301[END]
 				
 				$newFields[] = [
 					'key' => 'AcademicPeriods.name',
@@ -105,11 +115,27 @@ class InstitutionProgrammesTable extends AppTable  {
 				];
 			}
 		}
+		
+		//POCOR-9301[START]
+		foreach ($newFields as $index => $field) {
+			if (isset($field['field']) && $field['field'] === 'academic_period_id') {
+				unset($newFields[$index]);
+			}
+			if (isset($field['field']) && $field['field'] === 'start_date') {
+				unset($newFields[$index]);
+			}
+			if (isset($field['field']) && $field['field'] === 'end_date') {
+				unset($newFields[$index]);
+			}
+		}
+		//POCOR-9301[END]
 		$fields->exchangeArray($newFields);
 	}
 
 	public function onExcelGetStartDate(Event $event, Entity $entity) {
-		return $this->formatDate($entity->start_date);
+		if (!empty($entity->start_date)) {
+			return $this->formatDate($entity->start_date);
+		}
 	}
 
 	public function onExcelGetEndDate(Event $event, Entity $entity) {
@@ -118,7 +144,15 @@ class InstitutionProgrammesTable extends AppTable  {
 		}
 	}
 
-	public function onExcelGetInstitutionId(Event $event, Entity $entity) {
-		return $entity->institution->code_name;
-	}
+	//POCOR-9301[START]
+	public function onExcelGetInstitutionCode(Event $event, Entity $entity)
+    {
+        return $entity->institution->code;
+    }
+
+	// public function onExcelGetInstitutionId(Event $event, Entity $entity) {
+	// 	return $entity->institution->code_name;
+	// }
+	
+	//POCOR-9301[END]
 }

@@ -183,12 +183,42 @@ class RegistrationRepository extends Controller
     }
 
 
+    /**
+     * If the email ID is not registered, 
+     * Redirect the user to the registration screen after successfully verifying the OTP."
+     */ 
 
     public function generateOtp($request)
     {
-        DB::beginTransaction();
         try {
+            //POCOR-9306 start
+            $request->validate(['email' => 'required|email']);
             $email = $request['email'];
+
+            $otpUnique = $this->getUniqueOtp();
+            $encodedOtp = $otpUnique['encodedOtp'];
+            $otp = $otpUnique['otp'];
+            $expiresAt = Carbon::now()->addHour();
+            // Check if user exists
+            $user = SecurityUsers::where('email', $email)->first();
+            $userId = $user?->id;
+            // Insert OTP record
+            DB::table('security_user_codes')->insert([
+                'email' => $email,
+                'verification_otp' => $encodedOtp,
+                'status' => 0,
+                'expires_at' => $expiresAt,
+                'created' => Carbon::now(),
+                'security_user_id' => $userId, 
+            ]);
+            // Send OTP email
+            Mail::send('generateOtp', ['email' => $email, 'otp' => $otp], function ($message) use ($email) {
+                $message->to($email, 'OpenEMIS User')
+                    ->subject(config('constants.emailConfig.generateOtpEmail.subject'));
+            });
+            return 1;  //POCOR-9306 end 
+            // verify user,  using new mail id. save in to db
+            /*$email = $request['email'];
             $blankLastName = 0;
 
             $securityUser = SecurityUsers::where('email', $email)->first();
@@ -236,20 +266,18 @@ class RegistrationRepository extends Controller
                     ->subject(config('constants.emailConfig.generateOtpEmail.subject'));
             });
             DB::commit();
-            return 1;
+            return 1;*/ // User register is email id new end
             
         } catch (\Exception $e) {
-            DB::rollback();
+            echo $e;
+            //DB::rollback();
             Log::error(
                 'Failed to sent otp on email.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Failed to sent otp on email.');
         }
     }
-
-
     public function getUniqueOtp()
     {
         try {
@@ -264,6 +292,7 @@ class RegistrationRepository extends Controller
                 return $array;
             }
         } catch (\Exception $e) {
+            echo $e;
             Log::error(
                 'Failed to generate otp.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -272,47 +301,53 @@ class RegistrationRepository extends Controller
             return $this->sendErrorResponse('Failed to generate otp.');
         }
     }
-
-
-
     public function verifyOtp($request)
     {
         try {
-            $params = $request->all();
-            
-            $otp = $params['otp'];
+            //POCOR-9306 start chagene logic
+            $request->validate([
+                'otp' => 'required',
+                'email' => 'required|email',
+            ]);
+
+            $email = $request->email;
+            $otp = $request->otp;
             $encodedOtp = base64_encode($otp);
 
-            $checkOtp = SecurityUserCode::select('security_user_codes.security_user_id','security_user_codes.verification_otp', 'security_user_codes.created')
-                ->join('security_users', 'security_users.id', '=', 'security_user_codes.security_user_id')
+            // Fetch OTP record
+            $otpRecord = DB::table('security_user_codes')
+                ->where('email', $email)
                 ->where('verification_otp', $encodedOtp)
-                ->where('security_users.email', $params['email'])
                 ->first();
 
-            
-            if($checkOtp){
-                $currentTime = date('Y-m-d h:i:s');
-                $otpExpTime = date('Y-m-d h:i:s', strtotime($checkOtp->created.'+1 hour'));
-
-                if($currentTime > $otpExpTime){
-                    return 0;
-                }
-                return 1;
-            } else {
-                return 2;
+            if (!$otpRecord) {
+                return 2; // Invalid OTP or email
             }
-            
+            // Check if OTP expired
+            if (Carbon::now()->gt(Carbon::parse($otpRecord->expires_at))) {
+                return 0; // OTP expired
+            }
+
+            // Check if already used
+            if ($otpRecord->status == 1) {
+                return 3; // OTP already used / verified
+            }
+            // Mark OTP as used
+            DB::table('security_user_codes')
+                ->where('id', $otpRecord->id)
+                ->update(['status' => 1]);
+            return 1; // OTP verified successfully
+            //POCOR-9306 end
+
         } catch (\Exception $e) {
-            Log::error(
+            echo  $e;
+             Log::error(
                 'Failed to verify otp.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Failed to verify otp.');
         }
     }
-
-
     public function autocompleteOpenemisNo($params, $id)
     {
         try {
