@@ -24,7 +24,9 @@ WORKDIR /app
 COPY ./frontend/ ./
 
 # Replace the baseUrl
-RUN sed -i "s|baseUrl:.*|baseUrl: 'http://localhost:80/core/api/v4'|" ./src/environments/environment.ts
+RUN sed -i "s|baseUrl:.*|apiV4BaseUrl: 'http://localhost:80/core/api/v4'|" ./src/environments/environment.ts
+RUN sed -i "s|baseUrl:.*|apiV5BaseUrl: 'http://localhost:80/core/api/v5'|" ./src/environments/environment.ts
+
 # Install Dependencies
 RUN npm install && \
     npm install -g @angular/cli@11.2.19
