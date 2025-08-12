@@ -2,6 +2,7 @@
 namespace CustomExcel\Model\Behavior;
 
 use Cake\Log\Log;
+use Cake\ORM\TableRegistry;
 
 /*
     This trait is for ExcelReportBehavior.php
@@ -323,52 +324,31 @@ trait InstitutionPdfReportTrait
         // Convert spreadsheet object into html
         // POCOR-8073 Temporarily set the error reporting level to include only errors
         error_reporting(E_ERROR);
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
-
-        // This is to store to final processedHtml
-        $processedHtml = '';
-        $filePaths = [];
-        $basePath = $filepath;
-        for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
-            $mpdf = new \Mpdf\Mpdf();
-            $filepath = $basePath.'_'.$sheetIndex;
-            $writer->setSheetIndex($sheetIndex);
-            $writer->save($filepath);
-
-            // Read the html file and convert them into a variable
-            $file = file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
-
-            // Remove all the redundant rows and columns
-            $processedHtml = $this->processHtml($file, $sheetIndex);
-
-            // Save the processed html into a temp pdf
-            $mpdf->AddPage('L');
-
-            $mpdf->WriteHTML($processedHtml);
-            $filepath = $filepath.'.pdf';
-
-            $mpdf->Output($filepath,'F');
-            $filePaths[] = $filepath;
-            unset($mdpf);
+        Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
+        // Convert spreadsheet object into pdf
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $printer = $ConfigItems->value('pdf_service');
+        switch ($printer) {
+            case self::PRINTER_MPDF:
+                $pdfContent = $this->printPdfViaMpdf($objSpreadsheet, $filepath, $staff_id);
+                break;
+            case self::PRINTER_LIBREOFFICE:
+                $pdfContent = $this->printPdfViaLibreOffice($objSpreadsheet, $filepath, $staff_id);
+                break;
+            case self::PRINTER_EXTERNAL:
+                $pdfContent = $this->printPdfViaApi($objSpreadsheet, $filepath . '_sheet' . $staff_id);
+                break;
         }
-        // Merge all the pdf that belongs to one report
-		if(!empty($institution_id)) {
-			$fileName = $this->getConfig('filename') . '_' . $institution_id;
-		} else {
-			$fileName = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His');
-		}
-       
-        Log::write('debug', '----------------------fileName---------------------: ');
-        Log::write('debug', $fileName);
 
-        $this->mergePDFFiles($filePaths, $fileName, $fileName);
-        // // Remove the temp file that is converted from excel object and its successfully converted to pdf
-        if ($this->getConfig('purge')) {
-            foreach ($filePaths as $filepath) {
-                // delete excel file after successfully converted to pdf
-                $this->deleteFile($filepath);
-            }
+        if (!empty($pdfContent)) {
+            $filename = $this->getConfig('filename') . '_' . (!empty($staff_id) ? $staff_id : date('Ymd\THis')) . '.txt';
+            $outputPath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $filename;
+            file_put_contents($outputPath, $pdfContent);
+            Log::write('debug', "Saved PDF to: $outputPath");
+        } else {
+            Log::error("PDF content  is empty");
         }
+        $this->PrintFileViaMpdf($objSpreadsheet, $filepath, $mdpf, $institution_id);
     }
 
     private function mergePDFFiles(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
@@ -405,7 +385,7 @@ trait InstitutionPdfReportTrait
                 }
             }
         }
-		
+
         $file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile.'.pdf';
         $pdf_file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
         $content = $mpdf->Output($file_path, "S");
@@ -413,6 +393,64 @@ trait InstitutionPdfReportTrait
 		fwrite($fp,$content);
 		fclose($fp);
         unset($mpdf);
+    }
+
+    /**
+     * @param $objSpreadsheet
+     * @param $filepath
+     * @param $mdpf
+     * @param $institution_id
+     * @return void
+     * @throws \Mpdf\MpdfException
+     */
+    private function PrintFileViaMpdf($objSpreadsheet, $filepath, $mdpf, $institution_id): void
+    {
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
+
+        // This is to store to final processedHtml
+        $processedHtml = '';
+        $filePaths = [];
+        $basePath = $filepath;
+        for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
+            $mpdf = new \Mpdf\Mpdf();
+            $filepath = $basePath . '_' . $sheetIndex;
+            $writer->setSheetIndex($sheetIndex);
+            $writer->save($filepath);
+
+            // Read the html file and convert them into a variable
+            $file = file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
+
+            // Remove all the redundant rows and columns
+            $processedHtml = $this->processHtml($file, $sheetIndex);
+
+            // Save the processed html into a temp pdf
+            $mpdf->AddPage('L');
+
+            $mpdf->WriteHTML($processedHtml);
+            $filepath = $filepath . '.pdf';
+
+            $mpdf->Output($filepath, 'F');
+            $filePaths[] = $filepath;
+            unset($mdpf);
+        }
+        // Merge all the pdf that belongs to one report
+        if (!empty($institution_id)) {
+            $fileName = $this->getConfig('filename') . '_' . $institution_id;
+        } else {
+            $fileName = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His');
+        }
+
+        Log::write('debug', '----------------------fileName---------------------: ');
+        Log::write('debug', $fileName);
+
+        $this->mergePDFFiles($filePaths, $fileName, $fileName);
+        // // Remove the temp file that is converted from excel object and its successfully converted to pdf
+        if ($this->getConfig('purge')) {
+            foreach ($filePaths as $filepath) {
+                // delete excel file after successfully converted to pdf
+                $this->deleteFile($filepath);
+            }
+        }
     }
 
 }
