@@ -43,6 +43,13 @@ class InfrastructureAttachmentsTable extends ControllerActionTable
         ]);
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $modelAlias = 'InfrastructureAttachments';
+        $userType = '';
+        $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('description', ['visible' => false]);
@@ -192,7 +199,6 @@ class InfrastructureAttachmentsTable extends ControllerActionTable
         $fileContent = 'file_content';
         $uploadedFile = $sentData[$fileContent];
         $fileName = 'file_name';
-    
         if ($uploadedFile instanceof UploadedFile) {
             //$content = (string)$uploadedFile->getStream();
             if ($error === UPLOAD_ERR_OK) {
