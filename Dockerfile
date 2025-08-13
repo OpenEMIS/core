@@ -24,12 +24,16 @@ WORKDIR /app
 COPY ./frontend/ ./
 
 # Replace the baseUrl
-RUN sed -i "s|baseUrl:.*|baseUrl: 'http://localhost:80/core/api/v4'|" ./src/environments/environment.ts
-# RUN sed
+RUN sed -i "s|baseUrl:.*|apiV4BaseUrl: 'http://localhost:80/core/api/v4'|" ./src/environments/environment.ts
+RUN sed -i "s|baseUrl:.*|apiV5BaseUrl: 'http://localhost:80/core/api/v5'|" ./src/environments/environment.ts
+RUN sed -i "s|baseUrl:.*|apiV4BaseUrl: 'http://localhost:80/core/api/v4'|" ./src/environments/environment.prod.ts
+RUN sed -i "s|baseUrl:.*|apiV5BaseUrl: 'http://localhost:80/core/api/v5'|" ./src/environments/environment.prod.ts
+
 # Install Dependencies
 RUN npm install && \
     npm install -g @angular/cli@11.2.19
-# Build the Frontend Angular Application
+
+    # Build the Frontend Angular Application
 RUN ng build --base-href /core/ --output-path=./dist
 
 # === Second Stage: PHP Backed + Apache Stage ===
@@ -59,19 +63,6 @@ COPY . .
 # Sets the working directory and update the composer dependencies and autoloads the class file
 WORKDIR /var/www/html/core/api
 RUN composer update && composer dump-autoload
-
-# This clears the config, cache, view, route and generate the jwt and key for application and then caches the config
-# RUN cp .env.example .env && \
-#     sed -i "s|DB_HOST=.*|DB_HOST=openemis-core-database|g" ./.env &&\
-#     sed -i "s|DB_USERNAME=.*|DB_USERNAME=root|g" ./.env &&\
-#     sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=root|g" ./.env &&\
-#     php artisan config:clear && \
-#     php artisan cache:clear && \
-#     php artisan view:clear && \
-#     php artisan route:clear && \
-#     php artisan key:generate && \
-#     php artisan jwt:secret && \
-#     php artisan config:cache
 
 # Sets the Working Direcory
 WORKDIR /var/www/html/core

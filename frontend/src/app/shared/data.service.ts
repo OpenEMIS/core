@@ -16,7 +16,7 @@ import urls from "./config.urls";
 export class DataService {
  
   // base Url to hold url for api call set in enviroment.ts file
-  baseUrl = environment.baseUrl;
+  apiV4BaseUrl = environment.apiV4BaseUrl;
   loginPayload = {
     // username:environment.user_name,
     // password:environment.password,
@@ -144,21 +144,21 @@ export class DataService {
 
   login() {
     return this.httpClient
-      .post(`${this.baseUrl}/${urls.login}`, this.loginPayload, this.setHeader())
+      .post(`${this.apiV4BaseUrl}/${urls.login}`, this.loginPayload, this.setHeader())
       .pipe(catchError(this.handleError));
   }
 
   generateOtp(payload){
     return this.httpClient
     .post(
-      `${this.baseUrl}/${urls.otpGenerate}`, payload, this.setHeader())
+      `${this.apiV4BaseUrl}/${urls.otpGenerate}`, payload, this.setHeader())
       .pipe(catchError(this.handleError));
   }
 
   verifyOtp(payload){
     return this.httpClient
     .post(
-      `${this.baseUrl}/${urls.verifyOtp}`,payload,this.setHeader()
+      `${this.apiV4BaseUrl}/${urls.verifyOtp}`,payload,this.setHeader()
     )
     .pipe(catchError(this.handleError));
   }
@@ -166,35 +166,35 @@ export class DataService {
   getAcademicPeriod(){
     return this.httpClient
     .get(
-      `${this.baseUrl}/${urls.academicPeriods}/${urls.list}`, this.setHeader())
+      `${this.apiV4BaseUrl}/${urls.academicPeriods}/${urls.list}`, this.setHeader())
       .pipe(catchError(this.handleError)); 
   }
 
   getEducationGrade(academic_period_id){
     return this.httpClient
     .get(
-      `${this.baseUrl}/${urls.educationGrades}/${urls.list}?academic_period_id=${academic_period_id}`, this.setHeader())
+      `${this.apiV4BaseUrl}/${urls.educationGrades}/${urls.list}?academic_period_id=${academic_period_id}`, this.setHeader())
       .pipe(catchError(this.handleError)); 
   }
 
   getNationality(){
     return this.httpClient
     .get(
-      `${this.baseUrl}/${urls.nationalities}/${urls.list}`, this.setHeader())
+      `${this.apiV4BaseUrl}/${urls.nationalities}/${urls.list}`, this.setHeader())
       .pipe(catchError(this.handleError));
   }
 
   // getInstitutionList(){
   //   return this.httpClient
   //   .get(
-  //     `${this.baseUrl}/${urls.institution}/${urls.list}`, this.setHeader())
+  //     `${this.apiV4BaseUrl}/${urls.institution}/${urls.list}`, this.setHeader())
   //     .pipe(catchError(this.handleError));
   // }
 
   searchOpenEmisID(id){
     return this.httpClient
     .get(
-      `${this.baseUrl}/${urls.users}/${urls.openEmisId}/${id}`, this.setHeader())
+      `${this.apiV4BaseUrl}/${urls.users}/${urls.openEmisId}/${id}`, this.setHeader())
       .pipe(catchError(this.handleError))
   }
 
@@ -203,7 +203,7 @@ export class DataService {
   searchIdentityNumber(idenType, identityNumber){
     return this.httpClient
     .get(
-      `${this.baseUrl}/${urls.users}/${urls.identityTypes}/${idenType}/${identityNumber}`,this.setHeader()
+      `${this.apiV4BaseUrl}/${urls.users}/${urls.identityTypes}/${idenType}/${identityNumber}`,this.setHeader()
     )
     .pipe(catchError(this.handleError))
   }
@@ -212,45 +212,45 @@ export class DataService {
   getOpenEmisCandidateDetail(data){
     return this.httpClient
     .get(
-      `${this.baseUrl}/${urls.users}/${data}`,this.setHeader()
+      `${this.apiV4BaseUrl}/${urls.users}/${data}`,this.setHeader()
     )
     .pipe(catchError(this.handleError));
   }
 
   getAdministrativeArea(){
     return this.httpClient
-    .get(`${this.baseUrl}/${urls.institution}/${urls.area}/${urls.list}`,this.setHeader())
+    .get(`${this.apiV4BaseUrl}/${urls.institution}/${urls.area}/${urls.list}`,this.setHeader())
     .pipe(catchError(this.handleError));
   }
 
     getAddressArea(){
         return this.httpClient
-        .get(`${this.baseUrl}/area-administrative/display-address-area-level`, this.setHeader())
+        .get(`${this.apiV4BaseUrl}/area-administrative/display-address-area-level`, this.setHeader())
         .pipe(catchError(this.handleError));
       }
      
       getBirthPlace(){
         return this.httpClient
-        .get(`${this.baseUrl}/area-administrative/display-birthplace-area-level`, this.setHeader())
+        .get(`${this.apiV4BaseUrl}/area-administrative/display-birthplace-area-level`, this.setHeader())
         .pipe(catchError(this.handleError));
       }
 
 
   registerStudent(institution_id,payload){
     return this.httpClient
-    .post(`${this.baseUrl}/${urls.institution}/${institution_id}/${urls.studentAdmission}`, payload,this.setHeader())
+    .post(`${this.apiV4BaseUrl}/${urls.institution}/${institution_id}/${urls.studentAdmission}`, payload,this.setHeader())
     .pipe(catchError(this.handleError));
   }
 
   getCustomField(){
     return this.httpClient
-    .get(`${this.baseUrl}/${urls.studentCustomFields}`,this.setHeader())
+    .get(`${this.apiV4BaseUrl}/${urls.studentCustomFields}`,this.setHeader())
     .pipe(catchError(this.handleError));
   }
 
   getIdentityType(){
     return this.httpClient
-    .get(`${this.baseUrl}/${urls.identityTypes}/${urls.list}`, this.setHeader())
+    .get(`${this.apiV4BaseUrl}/${urls.identityTypes}/${urls.list}`, this.setHeader())
     .pipe(catchError(this.handleError));
   }
 
@@ -276,7 +276,7 @@ export class DataService {
   getInstitution(id:any){
     return this.httpClient
     .get(
-      `${this.baseUrl}/${urls.institution}/grades/${id}/list`, this.setHeader())
+      `${this.apiV4BaseUrl}/${urls.institution}/grades/${id}/list`, this.setHeader())
       .pipe(catchError(this.handleError)); 
   }
 
@@ -300,7 +300,7 @@ export class DataService {
 
    // add api data 
    public pluginsAdd(payload){
-    let pluginsUrl = `${this.baseUrl}/plugins`
+    let pluginsUrl = `${this.apiV4BaseUrl}/plugins`
     return this.httpClient.post<any>(pluginsUrl, payload).pipe(catchError(this.handleError))
   }
   

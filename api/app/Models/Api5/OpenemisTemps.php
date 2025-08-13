@@ -9,7 +9,7 @@ class OpenemisTemps extends Model
 {
     use HasFactory;
 
-    protected $table = 'openemis_temps';
+    protected $table = 'security_users_openemis_no';
 
     // ✅ Allow mass assignment
     protected $fillable = ['id', 'openemis_no', 'ip_address', 'created'];
