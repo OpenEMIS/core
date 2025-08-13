@@ -373,7 +373,7 @@ class ClassProfilesTable extends AppTable
      */
     public function onExcelTemplateInitialiseInfrastructureRoomCustomFields(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
             $InstitutionRooms = TableRegistry::get('institution_rooms');
             $RoomTypes = TableRegistry::get('room_types');
             $RoomCustomFieldValues = TableRegistry::get('room_custom_field_values');
