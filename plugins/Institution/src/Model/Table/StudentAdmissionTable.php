@@ -540,10 +540,10 @@ class StudentAdmissionTable extends ControllerActionTable
         // add student into institution_students_enrolment
         $entity = $this->get($id);
         $this->triggerPendingEnrolmentForStudent($entity);
-        $this->handleCandidateNumber($entity);
+
     }
 
-    public function triggerPendingEnrolmentForStudent(Entity $entity)
+    public function triggerPendingEnrolmentForStudent($entity)
     {
         $WorkflowsTbl = self::getDynamicTableInstance('Workflow.Workflows');
         $WorkflowStepsTbl = self::getDynamicTableInstance('Workflow.WorkflowSteps');
@@ -580,7 +580,9 @@ class StudentAdmissionTable extends ControllerActionTable
         }
 
         $newEntity = $StudentEnrolments->newEntity($enrolmentArr);
-        $StudentEnrolments->save($newEntity);
+        if ($StudentEnrolments->save($entity)) {
+            $this->handleCandidateNumber($entity);
+        }
     }
 
     public function studentsAfterSave(Event $event, $student)
@@ -1466,7 +1468,7 @@ class StudentAdmissionTable extends ControllerActionTable
     {
         if ($entity->isNew() || $entity->isDirty('status_id')) {
             $this->sendStudentAdmissionAlert($entity);
-            $this->handleCandidateNumber($entity);
+
         }
         if (!$entity->isNew()) {
             return; // Only handle new entities
@@ -1807,6 +1809,11 @@ class StudentAdmissionTable extends ControllerActionTable
 //        if (!in_array($entity->status_id, array_keys($statuses))) {
 //            return;
 //        }
+        if (property_exists($entity, 'modified_user_id') && $entity->modified_user_id) {
+            $userId = $entity->modified_user_id;
+        } else {
+            $userId = $entity->created_user_id;
+        }
         $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
 // Read config
         $config = $ConfigItemTable->find()
@@ -1962,8 +1969,8 @@ class StudentAdmissionTable extends ControllerActionTable
                 'student_id'             => $userRecordId,
                 'education_programme_id' => $educationProgrammeId,
                 'registration_number'    => $finalCandidateNumber,
-                'created_user_id'        => $this->Auth->user('id'),
-                'modified_user_id'       => $this->Auth->user('id'),
+                'created_user_id'        => $userId,
+                'modified_user_id'       => $userId,
                 'created'                => FrozenTime::now(),
                 'modified'               => FrozenTime::now(),
             ];
@@ -2027,8 +2034,8 @@ class StudentAdmissionTable extends ControllerActionTable
             'student_id'             => $userRecordId,
             'education_programme_id' => $educationProgrammeId,
             'registration_number'    => $finalCandidateNumber,
-            'created_user_id'        => $this->Auth->user('id'),
-            'modified_user_id'       => $this->Auth->user('id'),
+            'created_user_id'        => $userId,
+            'modified_user_id'       => $userId,
             'created'                => FrozenTime::now(),
             'modified'               => FrozenTime::now(),
         ];
