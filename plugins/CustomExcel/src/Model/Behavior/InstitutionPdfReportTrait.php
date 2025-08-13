@@ -2,7 +2,11 @@
 namespace CustomExcel\Model\Behavior;
 
 use Cake\Log\Log;
-use Cake\ORM\TableRegistry;
+use Cake\ORM\TableRegistry; // POCOR-9336
+use PhpOffice\PhpSpreadsheet\Spreadsheet; // POCOR-9336
+use PhpOffice\PhpSpreadsheet\Writer\Exception; // POCOR-9336
+use PhpOffice\PhpSpreadsheet\IOFactory; // POCOR-9336
+
 
 /*
     This trait is for ExcelReportBehavior.php
@@ -10,6 +14,10 @@ use Cake\ORM\TableRegistry;
 */
 trait InstitutionPdfReportTrait
 {
+    const PRINTER_MPDF = 1;
+    const PRINTER_LIBREOFFICE = 2;
+    const PRINTER_EXTERNAL = 3;
+
     private $currentWorksheet = null;
     private $currentWorksheetIndex = 0;
 
@@ -322,33 +330,29 @@ trait InstitutionPdfReportTrait
     {
         Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
         // Convert spreadsheet object into html
-        // POCOR-8073 Temporarily set the error reporting level to include only errors
-        error_reporting(E_ERROR);
-        Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
-        // Convert spreadsheet object into pdf
+// POCOR-9336: start . Convert spreadsheet object into pdf
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $printer = $ConfigItems->value('pdf_service');
         switch ($printer) {
             case self::PRINTER_MPDF:
-                $pdfContent = $this->printPdfViaMpdf($objSpreadsheet, $filepath, $staff_id);
+                $pdfContent = $this->printPdfViaMpdf($objSpreadsheet, $filepath, $institution_id);
                 break;
             case self::PRINTER_LIBREOFFICE:
-                $pdfContent = $this->printPdfViaLibreOffice($objSpreadsheet, $filepath, $staff_id);
+                $pdfContent = $this->printPdfViaLibreOffice($objSpreadsheet, $filepath, $institution_id);
                 break;
             case self::PRINTER_EXTERNAL:
-                $pdfContent = $this->printPdfViaApi($objSpreadsheet, $filepath . '_sheet' . $staff_id);
+                $pdfContent = $this->printPdfViaApi($objSpreadsheet, $filepath . '_sheet' . $institution_id);
                 break;
         }
 
         if (!empty($pdfContent)) {
-            $filename = $this->getConfig('filename') . '_' . (!empty($staff_id) ? $staff_id : date('Ymd\THis')) . '.txt';
+            $filename = $this->getConfig('filename') . '_' . (!empty($institution_id) ? $institution_id : date('Ymd\THis')) . '.txt';
             $outputPath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $filename;
             file_put_contents($outputPath, $pdfContent);
             Log::write('debug', "Saved PDF to: $outputPath");
         } else {
             Log::error("PDF content  is empty");
         }
-        $this->PrintFileViaMpdf($objSpreadsheet, $filepath, $mdpf, $institution_id);
     }
 
     private function mergePDFFiles(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
@@ -387,23 +391,18 @@ trait InstitutionPdfReportTrait
         }
 
         $file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile.'.pdf';
-        $pdf_file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
-        $content = $mpdf->Output($file_path, "S");
-		$fp = fopen($pdf_file_path . $outFile . ".txt","wb");
-		fwrite($fp,$content);
-		fclose($fp);
+        $content = $mpdf->Output($file_path, \Mpdf\Output\Destination::STRING_RETURN);
         unset($mpdf);
+        return $content;
     }
 
     /**
      * @param $objSpreadsheet
      * @param $filepath
-     * @param $mdpf
      * @param $institution_id
-     * @return void
      * @throws \Mpdf\MpdfException
      */
-    private function PrintFileViaMpdf($objSpreadsheet, $filepath, $mdpf, $institution_id): void
+    private function printPdfViaMpdf($objSpreadsheet, $filepath, $institution_id)
     {
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
 
@@ -443,7 +442,7 @@ trait InstitutionPdfReportTrait
         Log::write('debug', '----------------------fileName---------------------: ');
         Log::write('debug', $fileName);
 
-        $this->mergePDFFiles($filePaths, $fileName, $fileName);
+        $finalPDF = $this->mergePDFFiles($filePaths, $fileName, $fileName);
         // // Remove the temp file that is converted from excel object and its successfully converted to pdf
         if ($this->getConfig('purge')) {
             foreach ($filePaths as $filepath) {
@@ -451,6 +450,7 @@ trait InstitutionPdfReportTrait
                 $this->deleteFile($filepath);
             }
         }
+        return $finalPDF;
     }
 
 }
