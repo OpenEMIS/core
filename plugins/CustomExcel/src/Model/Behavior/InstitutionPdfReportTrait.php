@@ -14,9 +14,9 @@ use PhpOffice\PhpSpreadsheet\IOFactory; // POCOR-9336
 */
 trait InstitutionPdfReportTrait
 {
-    const PRINTER_MPDF = 1;
-    const PRINTER_LIBREOFFICE = 2;
-    const PRINTER_EXTERNAL = 3;
+    const PRINTER_MPDF = 1; // POCOR-9336
+    const PRINTER_LIBREOFFICE = 2;// POCOR-9336
+    const PRINTER_EXTERNAL = 3; // POCOR-9336
 
     private $currentWorksheet = null;
     private $currentWorksheetIndex = 0;
@@ -403,7 +403,7 @@ trait InstitutionPdfReportTrait
      * @throws \Mpdf\MpdfException
      */
     private function printPdfViaMpdf($objSpreadsheet, $filepath, $institution_id)
-    {
+    { // POCOR-9336 end
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
 
         // This is to store to final processedHtml

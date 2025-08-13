@@ -266,9 +266,16 @@ class ReportCardStatusesTable extends ControllerActionTable
             ])
             ->first();
         $timeZone = $ConfigItem->zonevalue;
+        // POCOR-9336 start
         if (empty($timeZone)) {
             $this->Alert->warning('ReportCardStatuses.timezone');
+            $timeZone = 'GMT';
         }
+        try {
+            $dateTimeZone = new \DateTimeZone($timeZone);
+        } catch (\Exception $e) {
+            $timeZone = 'GMT';
+        } // POCOR-9336 start
         //POCOR-7581 end
         date_default_timezone_set($timeZone);//POCOR-7067 Ends
         //Start:POCOR-6785 need to convert this custom query to cake query
@@ -285,6 +292,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             $now = new DateTime();
             $currentDateTime = $now->format('Y-m-d H:i:s');
             $c_timestap = strtotime($currentDateTime);
+
             $modifiedDate = $entity->modified->timezone($timeZone)->format('Y-m-d H:i:s');
             //POCOR-6841 starts
             if ($entity->status == 2) {
@@ -1229,6 +1237,11 @@ class ReportCardStatusesTable extends ControllerActionTable
             ])
             ->first();
         $timZone = $ConfigItem->zonevalue;
+        try { // POCOR-9336 start
+            $dateTimeZone = new \DateTimeZone($timZone);
+        } catch (\Exception $e) {
+            $timZone = 'GMT';
+        } // POCOR-9336 end
         $value = '';
         if ($timZone) {//POCOR-7581
             if ($entity->has('report_card_started_on')) {

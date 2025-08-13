@@ -427,6 +427,7 @@ class ExcelReportBehavior extends Behavior
 
         if ($format == 'pdf') {
             $this->savePDFAssessment($objSpreadsheet, $filepath, $student_id,$paramVal);
+            return; // POCOR-9336
         } else {
             // pdf
             if(!empty($student_id)) {
@@ -1063,7 +1064,7 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    public function tableData($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): Table
+    public function tableData($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra) // POCOR-9336
     {
         $rowValue = $attr['rowValue'];
         $columnIndex = $attr['columnIndex'];
@@ -1123,6 +1124,7 @@ class ExcelReportBehavior extends Behavior
             $cellCoordinate = $columnValue.$rowValue;
             $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
         }
+
     }
 
     private function match($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)

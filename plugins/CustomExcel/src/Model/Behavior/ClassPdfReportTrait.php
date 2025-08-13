@@ -2,10 +2,10 @@
 namespace CustomExcel\Model\Behavior;
 
 use Cake\Log\Log;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Spreadsheet; // POCOR-9336 start
 use PhpOffice\PhpSpreadsheet\Writer\Exception;
 use Cake\ORM\TableRegistry;
-use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\IOFactory; // POCOR-9336 end
 
 /**
  * This trait is for ExcelReportBehavior.php
@@ -15,9 +15,9 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
  */
 trait ClassPdfReportTrait
 {
-    const PRINTER_MPDF = 1;
+    const PRINTER_MPDF = 1; // POCOR-9336 start
     const PRINTER_LIBREOFFICE = 2;
-    const PRINTER_EXTERNAL = 3;
+    const PRINTER_EXTERNAL = 3; // POCOR-9336 end
     private $currentWorksheet = null;
     private $currentWorksheetIndex = 0;
 
@@ -327,6 +327,7 @@ trait ClassPdfReportTrait
     private function savePDF($objSpreadsheet, $filepath, $institution_id)
     {
         Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
+        // POCOR-9336 start
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $printer = $ConfigItems->value('pdf_service');
         switch ($printer) {
@@ -401,7 +402,7 @@ trait ClassPdfReportTrait
      * @throws \Mpdf\MpdfException
      */
     private function printPdfViaMpdf($objSpreadsheet, $filepath, $institution_id)
-    {
+    { // POCOR-9336 end
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
 
         // This is to store to final processedHtml
@@ -440,7 +441,7 @@ trait ClassPdfReportTrait
         Log::write('debug', '----------------------fileName---------------------: ');
         Log::write('debug', $fileName);
 
-        $finalResult = $this->mergePDFFiles($filePaths, $fileName, $fileName);
+        $finalResult = $this->mergePDFFiles($filePaths, $fileName, $fileName); // POCOR-9336 start
         // // Remove the temp file that is converted from excel object and its successfully converted to pdf
         if ($this->getConfig('purge')) {
             foreach ($filePaths as $filepath) {
@@ -636,6 +637,7 @@ trait ClassPdfReportTrait
         }
 
         return null;
+        // POCOR-9336 end
     }
 }
 ?>
