@@ -501,7 +501,7 @@ class StudentAdmissionTable extends ControllerActionTable
         try{
             $Students->save($newEntity);
         } catch (\Exception $exception) {
-            Log::debug($exception->getMessage());
+            Log::error($exception->getMessage());
         }
         if(!$newEntity->hasErrors()){
             return $newEntity;
@@ -540,6 +540,7 @@ class StudentAdmissionTable extends ControllerActionTable
         // add student into institution_students_enrolment
         $entity = $this->get($id);
         $this->triggerPendingEnrolmentForStudent($entity);
+        $this->handleCandidateNumber($entity);
     }
 
     public function triggerPendingEnrolmentForStudent(Entity $entity)
@@ -1463,6 +1464,10 @@ class StudentAdmissionTable extends ControllerActionTable
     // POCOR-9313 start: made a little safer
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
+        if ($entity->isNew() || $entity->isDirty('status_id')) {
+            $this->sendStudentAdmissionAlert($entity);
+            $this->handleCandidateNumber($entity);
+        }
         if (!$entity->isNew()) {
             return; // Only handle new entities
         }
@@ -1483,9 +1488,9 @@ class StudentAdmissionTable extends ControllerActionTable
         }
 
         // These are read-only safe and fine to run here
-        $this->sendStudentAdmissionAlert($entity);
         $this->ensureInstitutionStudentExists($entity);
     }
+
     protected function processAutoApproval(Entity $entity): void
     {
         $superAdmin = Hash::get($_SESSION['Auth'], 'User.super_admin');
@@ -1559,7 +1564,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 $alertsTable->aliasField('frequency') => 'Once'])
             ->first();
         if (!$alert) {
-            Log::debug('No Alerts for AlertStudentAdmission');
+            Log::error('No Alerts for AlertStudentAdmission');
             return;
         }
         if (!is_array($alert)) {
@@ -1794,15 +1799,14 @@ class StudentAdmissionTable extends ControllerActionTable
         return $caseResults->toArray();
     }
 
-    private function handleCandidateNumber(array $entity): void
+    private function handleCandidateNumber($entity): void
     {
-//        Log::debug(print_r([__LINE__, __METHOD__, 'start'], true));
-        $WorkflowActions = TableRegistry::get('Workflow.WorkflowActions');
-        $triggeringStep = $WorkflowActions->getEventTriggeringStep('Institution.StudentAdmission', 'Workflow.onApprove');
-
-        if (empty($triggeringStep) || $entity->status_id != $triggeringStep) {
-            return;
-        }
+//        $statuses = self::getDynamicTableInstance('Workflow.WorkflowModels')
+//            ->getWorkflowStatusSteps('Institution.StudentAdmission', 'APPROVED');
+//
+//        if (!in_array($entity->status_id, array_keys($statuses))) {
+//            return;
+//        }
         $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
 // Read config
         $config = $ConfigItemTable->find()
@@ -1813,7 +1817,7 @@ class StudentAdmissionTable extends ControllerActionTable
         $isEnabled = $config ? (bool)$config->value : false;
         $template  = $config ? (string)$config->value_selection : '';
         if (!$isEnabled) {
-            Log::debug(print_r([__LINE__, 'bail:not_enabled'], true));
+            Log::error(print_r([__LINE__, 'bail:not_enabled'], true));
             return; // not enabled
         }
 
@@ -1826,14 +1830,12 @@ class StudentAdmissionTable extends ControllerActionTable
         $institutionId     = (int)($entity->institution_id ?? 0);
         $educationGradeId  = (int)($entity->education_grade_id ?? 0);
         $academicPeriodId  = (int)($entity->academic_period_id ?? 0);
-        if (property_exists($entity, 'modified_user_id') && $entity->modified_user_id) {
-            $userRecordId = $entity->modified_user_id;
-        } else {
-            $userRecordId = $entity->created_user_id;
-        }//        Log::debug(print_r([__LINE__, 'inputs', compact('institutionId','educationGradeId','academicPeriodId', 'userRecordId')], true));
+        $userRecordId  = (int)($entity->student_id ?? 0);
+
+        //        Log::debug(print_r([__LINE__, 'inputs', compact('institutionId','educationGradeId','academicPeriodId', 'userRecordId')], true));
 
         if (!$institutionId || !$educationGradeId || !$academicPeriodId) {
-            Log::debug(print_r([__LINE__, 'bail:not_enough_info'], true));
+            Log::error(print_r([__LINE__, 'bail:not_enough_info'], true));
             return; // not enough info to generate
         }
 
@@ -1855,7 +1857,7 @@ class StudentAdmissionTable extends ControllerActionTable
 //        Log::debug(print_r([__LINE__, 'grade_found' => (bool)$grade], true));
 
         if (empty($institution) || empty($period) || empty($grade)) {
-            Log::debug(print_r([__LINE__, 'bail:missing_context'], true));
+            Log::error(print_r([__LINE__, 'bail:missing_context'], true));
             return;
         }
 
@@ -1867,7 +1869,7 @@ class StudentAdmissionTable extends ControllerActionTable
 //        Log::debug(print_r([__LINE__, 'context_vals', compact('areaCode','institutionCode','academicPeriodCode','educationProgrammeId')], true));
 
         if ($areaCode === '' || $institutionCode === '' || $academicPeriodCode === '' || !$educationProgrammeId) {
-            Log::debug(print_r([__LINE__, 'bail:missing_required_values'], true));
+            Log::error(print_r([__LINE__, 'bail:missing_required_values'], true));
             return;
         }
 
@@ -1945,7 +1947,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 }
 
                 $padded = str_pad((string)$next, $seqWidth, '0', STR_PAD_LEFT);
-                Log::debug(print_r([__LINE__, 'txn:next' => $next, 'txn:padded' => $padded], true));
+//                Log::debug(print_r([__LINE__, 'txn:next' => $next, 'txn:padded' => $padded], true));
                 return $padded;
             });
 
@@ -1982,7 +1984,7 @@ class StudentAdmissionTable extends ControllerActionTable
         // ==================================
         // === FALLBACK (default) version ===
         // ==================================
-        Log::debug(print_r([__LINE__, 'fallback:start'], true));
+//        Log::debug(print_r([__LINE__, 'fallback:start'], true));
 
         $lastProgramme = $InstitutionStudentProgrammes->find()
             ->order([$InstitutionStudentProgrammes->aliasField('id') => 'DESC'])
@@ -1992,7 +1994,7 @@ class StudentAdmissionTable extends ControllerActionTable
 
         if (empty($lastProgramme)) {
             $formattedNumber = str_pad('1', 4, '0', STR_PAD_LEFT);
-            Log::debug(print_r([__LINE__, 'fallback:seed' => $formattedNumber], true));
+//            Log::debug(print_r([__LINE__, 'fallback:seed' => $formattedNumber], true));
         } else {
             $registrationNumber = $lastProgramme->registration_number;
             if (!empty($registrationNumber)) {
@@ -2004,11 +2006,11 @@ class StudentAdmissionTable extends ControllerActionTable
 //                    Log::debug(print_r([__LINE__, 'fallback:next' => $next, 'fallback:formatted' => $formattedNumber], true));
                 } else {
                     $formattedNumber = str_pad('1', 4, '0', STR_PAD_LEFT);
-                    Log::debug(print_r([__LINE__, 'fallback:non_numeric_last_segment_reset' => $formattedNumber], true));
+//                    Log::debug(print_r([__LINE__, 'fallback:non_numeric_last_segment_reset' => $formattedNumber], true));
                 }
             } else {
                 $formattedNumber = str_pad('1', 4, '0', STR_PAD_LEFT);
-                Log::debug(print_r([__LINE__, 'fallback:empty_last_reset' => $formattedNumber], true));
+//                Log::debug(print_r([__LINE__, 'fallback:empty_last_reset' => $formattedNumber], true));
             }
         }
 
@@ -2035,7 +2037,7 @@ class StudentAdmissionTable extends ControllerActionTable
         try {
             $fallbackEntity = $InstitutionStudentProgrammes->newEntity($data);
             $InstitutionStudentProgrammes->saveOrFail($fallbackEntity);
-            Log::debug(print_r([__LINE__, 'save(fallback):ok', 'new_id' => $fallbackEntity->id ?? null], true));
+//            Log::debug(print_r([__LINE__, 'save(fallback):ok', 'new_id' => $fallbackEntity->id ?? null], true));
         } catch (\Throwable $e) {
             Log::error(print_r([__LINE__, 'save(fallback):error', 'msg' => $e->getMessage()], true));
             throw $e;
