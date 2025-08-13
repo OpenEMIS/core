@@ -985,7 +985,7 @@ class NavigationComponent extends Component
             ],
             //POCOR-5208 Start
              'Institutions.InfrastructureAttachments.index' => [
-                'title' => 'Infrastructure Attachments',
+                'title' => 'Attachments',
                 'parent' => 'Infrastructures',
                 'selected' => [
                     'Institutions.InfrastructureAttachments.index',

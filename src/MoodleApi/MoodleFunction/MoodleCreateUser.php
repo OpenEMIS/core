@@ -1,4 +1,5 @@
 <?php
+
 /**
  * MoodleCreateUser - Handles any moodle's core_user_create_users logic
  * To be used with MoodleApiComponent
@@ -10,45 +11,48 @@
  * @author    Ervin Kwan <ekwan@kordit.com>
  * @copyright 2018 KORDIT PTE LTD
  */
+
 namespace App\MoodleApi\MoodleFunction;
+
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 
 class MoodleCreateUser extends MoodleFunction
 {
     protected static $functionParam = "core_user_create_users";
+    protected static $listFunctionParam = "core_user_get_users";
 
     protected static $allowedParams  //POCOR-8706
-        = [
-            "username",
-            "password",
-            "createpassword",
-            "firstname",
-            "lastname",
-            "email",
-            "auth",
-            "idnumber",
-            "lang",
-            "calendartype",
-            "theme",
-            "timezone",
-            "mailformat",
-            "description",
-            "city",
-            "country",
-            "firstnamephonetic",
-            "lastnamephonetic",
-            "middlename",
-            "alternatename"
-        ];
+    = [
+        "username",
+        "password",
+        "createpassword",
+        "firstname",
+        "lastname",
+        "email",
+        "auth",
+        "idnumber",
+        "lang",
+        "calendartype",
+        "theme",
+        "timezone",
+        "mailformat",
+        "description",
+        "city",
+        "country",
+        "firstnamephonetic",
+        "lastnamephonetic",
+        "middlename",
+        "alternatename"
+    ];
 
     protected static $mandatoryParams //POCOR-8706
-        = [
-            "username",
-            "firstname",
-            "lastname",
-            "email"
-        ];
+    = [
+        "username",
+        "firstname",
+        "lastname",
+        "email"
+    ];
 
     private $openemis_no;
 
@@ -80,7 +84,7 @@ class MoodleCreateUser extends MoodleFunction
 
         $users = array();
         $users["username"] = $entity->username;
-        $users["password"]= $this->generatePassword();
+        $users["password"] = $this->generatePassword();
         $users["firstname"] = $entity->first_name;
         $users["lastname"] = $entity->last_name;
         //TOOD - Hardcode for now first
@@ -108,20 +112,31 @@ class MoodleCreateUser extends MoodleFunction
         $SecurityUsers = TableRegistry::get("Security.Users");
 
         // Assuming $this->openemis_no is the value for core_user_id
-        $coreUserId = $this->openemis_no;
+        $openemis_no = $this->openemis_no;
 
-        // Check if the core_user_id exists in the security_users table
-        if (!$SecurityUsers->exists(['id' => $coreUserId])) {
-            // Handle the case where the core_user_id does not exist
-            Log::write('debug', "The core_user_id $coreUserId does not exist in the security_users table.");
+        // Check if the openemis_no exists in the security_users table
+        if (!$SecurityUsers->exists(['openemis_no' => $openemis_no])) {
+            // Handle the case where the openemis_no does not exist
+            Log::write('debug', "The openemis_no $openemis_no does not exist in the security_users table.");
             return false;
         }
 
+        $coreUser = $SecurityUsers->find()
+            ->where(['openemis_no' => $openemis_no])
+            ->first();
+
+        if (!$coreUser) {
+            Log::write('debug', "No user found with openemis_no $openemis_no in the security_users table.");
+            return false;
+        }
+        
+        $coreUserId = $coreUser->id;
         $instance = $MoodleApiCreatedUsers->newEntity([
             'moodle_user_id' => $moodleId,
             'moodle_username' => $moodleUsername,
             'core_user_id' => $coreUserId
         ]);
+
 
         if ($MoodleApiCreatedUsers->save($instance)) {
             Log::write('debug', "Successfully linked Moodle user $moodleUsername with OpenEmis user ID $coreUserId.");
@@ -132,4 +147,8 @@ class MoodleCreateUser extends MoodleFunction
         }
     }
 
+    public static function getListFunctionParam()
+    {
+        return self::$listFunctionParam;
+    }
 }

@@ -157,7 +157,6 @@ class RegistrationService extends Controller
     {
         try {
             $data = $this->registrationRepository->verifyOtp($request);
-            
             return $data;
             
         } catch (\Exception $e) {
@@ -169,7 +168,6 @@ class RegistrationService extends Controller
             return $this->sendErrorResponse('Failed to verify otp.');
         }
     }
-
 
     public function autocompleteOpenemisNo($params, $id)
     {
