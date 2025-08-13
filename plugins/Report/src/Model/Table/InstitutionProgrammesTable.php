@@ -9,6 +9,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\I18n\FrozenTime;
 
 class InstitutionProgrammesTable extends AppTable
 {
@@ -74,6 +75,15 @@ class InstitutionProgrammesTable extends AppTable
 			$newFields[] = $value;
 			if ($value['field'] == 'institution_id') {
 
+				//POCOR-9301[START]
+				$newFields[] = [
+					'key' => 'Institutions.code',
+					'field' => 'institutionCode',
+					'type' => 'string',
+					'label' => __('Institution Code')
+				];
+				//POCOR-9301[END]
+				
 				$newFields[] = [
 					'key' => 'AcademicPeriods.name',
 					'field' => 'academic_period',
@@ -108,34 +118,50 @@ class InstitutionProgrammesTable extends AppTable
 					'type' => 'string',
 					'label' => __('Area Administrative')
 				];
-			}
-			 //POCOR-9302 start
-			if ($value['field'] == 'start_date') {
-				$newFields[$key] = [
-					'key' => 'InstitutionProgrammes.start_date',
-					'field' => 'start_date',
-					'type' => 'string',
-					'label' => __('Start Date')
-				];
-			}
 
-			if ($value['field'] == 'end_date') {
-				$newFields[$key] = [
-					'key' => 'InstitutionProgrammes.end_closed',
-					'field' => 'end_date',
-					'type' => 'string',
-					'label' => __('End Date')
-				];
-			}
+				//POCOR-9302 start
+				if ($value['field'] == 'start_date') {
+					$newFields[$key] = [
+						'key' => 'InstitutionProgrammes.start_date',
+						'field' => 'start_date',
+						'type' => 'string',
+						'label' => __('Start Date')
+					];
+				}
 
-			//POCOR-9302 end
+				if ($value['field'] == 'end_date') {
+					$newFields[$key] = [
+						'key' => 'InstitutionProgrammes.end_closed',
+						'field' => 'end_date',
+						'type' => 'string',
+						'label' => __('End Date')
+					];
+				}
+
+				//POCOR-9302 end
+			}
 		}
+		
+		//POCOR-9301[START]
+		foreach ($newFields as $index => $field) {
+			if (isset($field['field']) && $field['field'] === 'academic_period_id') {
+				unset($newFields[$index]);
+			}
+			if (isset($field['field']) && $field['field'] === 'start_date') {
+				unset($newFields[$index]);
+			}
+			if (isset($field['field']) && $field['field'] === 'end_date') {
+				unset($newFields[$index]);
+			}
+		}
+		//POCOR-9301[END]
 		$fields->exchangeArray($newFields);
 	}
-    //POCOR-9302 start
-	public function onExcelGetStartDate(Event $event, Entity $entity)
-	{
-		return $this->formatDate($entity->start_date);
+
+	public function onExcelGetStartDate(Event $event, Entity $entity) {
+		if (!empty($entity->start_date)) {
+			return $this->formatDate($entity->start_date);
+		}
 	}
 
 	public function onExcelGetEndDate(Event $event, Entity $entity)
@@ -146,8 +172,15 @@ class InstitutionProgrammesTable extends AppTable
 	}
 	 //POCOR-9302 end
 
-	public function onExcelGetInstitutionId(Event $event, Entity $entity)
-	{
-		return $entity->institution->code_name;
-	}
+	//POCOR-9301[START]
+	public function onExcelGetInstitutionCode(Event $event, Entity $entity)
+    {
+        return $entity->institution->code;
+    }
+
+	// public function onExcelGetInstitutionId(Event $event, Entity $entity) {
+	// 	return $entity->institution->code_name;
+	// }
+	
+	//POCOR-9301[END]
 }
