@@ -2,10 +2,10 @@
 namespace CustomExcel\Model\Behavior;
 
 use Cake\Log\Log;
-use Cake\ORM\TableRegistry;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Exception;
-use PhpOffice\PhpSpreadsheet\IOFactory;
+use Cake\ORM\TableRegistry; // POCOR-9336
+use PhpOffice\PhpSpreadsheet\Spreadsheet; // POCOR-9336
+use PhpOffice\PhpSpreadsheet\Writer\Exception; // POCOR-9336
+use PhpOffice\PhpSpreadsheet\IOFactory; // POCOR-9336
 
 /*
     This trait is for ExcelReportBehavior.php
@@ -327,7 +327,7 @@ trait StaffPdfReportTrait
     private function savePDF($objSpreadsheet, $filepath, $staff_id)
     {
         Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
-        // Convert spreadsheet object into pdf
+        // POCOR-9336: start . Convert spreadsheet object into pdf
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $printer = $ConfigItems->value('pdf_service');
         switch ($printer) {
