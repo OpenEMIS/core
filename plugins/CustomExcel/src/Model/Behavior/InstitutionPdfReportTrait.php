@@ -453,5 +453,192 @@ trait InstitutionPdfReportTrait
         return $finalPDF;
     }
 
+    /**
+     * Sends an XLSX spreadsheet to the PDF printer API and returns the resulting PDF content.
+     *
+     * @param Spreadsheet $objSpreadsheet
+     * @param string $baseFileName Base path without extension
+     * @return string|null PDF binary content or null on failure
+     * @throws GuzzleException
+     * @throws Exception
+     */
+    private function printPdfViaApi(Spreadsheet $objSpreadsheet, string $baseFileName): ?string
+    {
+        Log::write('debug', 'ExcelReportBehavior >>> base filepath: ' . $baseFileName);
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $printer = $ConfigItems->value('pdf_service');
+
+        if ($printer != self::PRINTER_EXTERNAL) {
+            return null;
+        }
+
+        $attributes = TableRegistry::getTableLocator()
+            ->get('Configuration.ExternalDataSourceAttributes')
+            ->find('list', ['keyField' => 'attribute_field', 'valueField' => 'value'])
+            ->where(['external_data_source_type' => 'PDF Service'])
+            ->disableHydration()
+            ->toArray();
+//        Log::debug(print_r($attributes,true));
+        $authUser = $attributes['username'] ?? null;
+        $baseUrl = $attributes['api_url'] ?? null;
+        $authPass = $attributes['password'] ?? null;
+        $apiParams = $attributes['api_params'] ?? null;
+        $deleteOriginal = $attributes['delete_original'] ?? 1;
+        $sheetPath = $baseFileName . '.xlsx';
+        $pdfFile = basename($baseFileName) . '.pdf';
+        $pdfUrl = $baseUrl . '/check-pdf/' . $pdfFile. '?delete=true';
+//        $authUser = 'user';
+//        $authPass = 'password';
+        try {
+            $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+            $objWriter->save($sheetPath);
+
+            $client = new \GuzzleHttp\Client();
+            $multipart = [
+                [
+                    'name' => 'file',
+                    'contents' => fopen($sheetPath, 'r'),
+                    'filename' => basename($sheetPath)
+                ],
+            ];
+            if($apiParams){
+                $apiParams = json_encode(json_decode($apiParams, true)); // ensures valid JSON string
+                if ($apiParams) {
+                    $multipart[] = [
+                        'name' => 'lo_options',
+                        'contents' => $apiParams
+                    ];
+                }
+            }
+            if ($deleteOriginal) {
+                $multipart[] = [
+                    'name'     => 'delete_original',
+                    'contents' => '1'
+                ];
+            }
+//            Log::debug(print_r($multipart,true));
+            $response = $client->post($baseUrl . '/queue-job', [
+                'auth' => [$authUser, $authPass],
+                'multipart' => $multipart
+            ]);
+
+            // Poll until ready
+            sleep(2);
+            $retries = 15;
+            while ($retries-- > 0) {
+                try {
+                    $res = $client->get($pdfUrl, [
+                        'auth' => [$authUser, $authPass]
+                    ]);
+
+                    if ($res->getStatusCode() === 200) {
+                        $finalPdf = $res->getBody()->getContents();
+                        return $finalPdf;
+                    }
+                } catch (\GuzzleHttp\Exception\ClientException $e) {
+                    // Probably 404 — PDF not ready yet
+                    Log::debug("PDF not ready yet: " . $e->getResponse()->getStatusCode());
+                } catch (\Exception $e) {
+                    Log::error("Unexpected error while polling PDF: " . $e->getMessage());
+                    break;
+                }
+
+                sleep(2);
+            }
+
+            throw new \Exception("PDF not ready after timeout.");
+        } catch (\Exception $e) {
+            Log::error("PDF conversion API error: " . $e->getMessage());
+
+        } finally {
+            // Cleanup
+            if (file_exists($sheetPath)) {
+                @unlink($sheetPath);
+                Log::write('debug', "Deleted temp XLSX file: $sheetPath");
+            }
+        }
+
+        return null;
+    }
+
+    // POCOR-9303
+    private function printPdfViaLibreOffice(Spreadsheet $objSpreadsheet, string $baseFileName, ?string $studentId = null): ?string
+    {
+
+        $tempDir = TMP; // or "/tmp"
+        $baseFileName = basename($baseFileName, '.xlsx'); // safe name, no path
+//        putenv("HOME=$tempDir"); // Ensures LibreOffice has a writable HOME directory
+//        Log::debug($tempDir);
+        try {
+            // 1. Save XLSX
+            $xlsxPath = $tempDir . $baseFileName . '.xlsx';
+            $pdfExpectedPath = $tempDir . $baseFileName . '.pdf';
+
+            $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+            $objWriter->save($xlsxPath);
+
+            $attributes = TableRegistry::getTableLocator()
+                ->get('Configuration.ExternalDataSourceAttributes')
+                ->find('list', ['keyField' => 'attribute_field', 'valueField' => 'value'])
+                ->where(['external_data_source_type' => 'PDF Service'])
+                ->disableHydration()
+                ->toArray();
+            $apiParams = $attributes['api_params'] ?? null;
+            $convert_pdf = "pdf";
+            $javaAvailable = false;
+            exec("java -XshowSettings:properties -version 2>&1", $javaOutput, $javaCode);
+
+            foreach ($javaOutput as $line) {
+                if (stripos($line, 'java.runtime.name') !== false || stripos($line, 'Java(TM)') !== false) {
+                    $javaAvailable = true;
+                    break;
+                }
+            }
+
+            if ($javaAvailable && $apiParams) {
+                // Ensure proper JSON
+                $apiParams = json_encode(json_decode($apiParams, true));
+
+                if ($apiParams) {
+                    $convert_pdf = 'pdf:calc_pdf_Export:' . $apiParams;
+                }
+            }
+            // 2. Prepare command to run LibreOffice in headless mode
+            $escapeTempDir = escapeshellarg($tempDir);
+            $escapedSheet = escapeshellarg($xlsxPath);
+            $escapedOutputDir = escapeshellarg($tempDir);
+
+            $loCmd = "HOME=$escapeTempDir libreoffice --headless --convert-to $convert_pdf --outdir $escapedOutputDir $escapedSheet";
+
+            // You may parse and apply $apiParams if needed
+            // For example, if you want watermark, you may use unoconv with a custom template
+            Log::debug("Running LibreOffice command: $loCmd");
+
+            exec($loCmd, $output, $returnCode);
+//            Log::debug("LibreOffice output: " . implode("\n", $output));
+            if ($returnCode !== 0 || !file_exists($pdfExpectedPath)) {
+                throw new \Exception("LibreOffice conversion failed with exit code $returnCode");
+            }
+
+            return file_get_contents($pdfExpectedPath);
+
+        } catch (\Exception $e) {
+            Log::error("LibreOffice PDF conversion error: " . $e->getMessage());
+            return null;
+        } finally {
+            // 3. Cleanup
+            if (file_exists($xlsxPath)) {
+                @unlink($xlsxPath);
+                Log::debug("Deleted XLSX: $xlsxPath");
+            }
+
+            if (file_exists($pdfExpectedPath)) {
+                @unlink($pdfExpectedPath);
+                Log::debug("Deleted PDF: $pdfExpectedPath");
+            }
+        }
+
+        return null;
+    }
 }
 ?>
