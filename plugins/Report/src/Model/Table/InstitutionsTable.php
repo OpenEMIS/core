@@ -2613,6 +2613,9 @@ class InstitutionsTable extends AppTable
         } catch (\Exception $exception) {
 
         }
+        if($tableName == 'Institution.InstitutionStatuses'){
+            $tableName = 'Institution.Statuses';
+        }
         $parts = explode('.', $tableName);
         $plugin = count($parts) > 1 ? $parts[0] : null;
         $table = count($parts) > 1 ? $parts[1] : $parts[0];
