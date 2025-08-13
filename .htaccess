@@ -1,6 +1,8 @@
 <IfModule mod_rewrite.c>
-	#RewriteBase /core/
+    #RewriteBase /core/
     RewriteEngine on
+    RewriteCond %{REQUEST_URI} ^/(.*)/logs(/|$)
+    RewriteRule ^ - [L]
     RewriteRule    ^$    webroot/    [L]
     RewriteRule    (.*) webroot/$1    [L]
 
