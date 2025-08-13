@@ -442,7 +442,7 @@ trait InstitutionPdfReportTrait
         Log::write('debug', '----------------------fileName---------------------: ');
         Log::write('debug', $fileName);
 
-        $finalPDF = $this->mergePDFFiles($filePaths, $fileName, $fileName);
+        $finalPDF = $this->mergePDFFiles($filePaths, $fileName, $fileName); // POCOR-9336
         // // Remove the temp file that is converted from excel object and its successfully converted to pdf
         if ($this->getConfig('purge')) {
             foreach ($filePaths as $filepath) {
@@ -450,7 +450,7 @@ trait InstitutionPdfReportTrait
                 $this->deleteFile($filepath);
             }
         }
-        return $finalPDF;
+        return $finalPDF; // POCOR-9336 start
     }
 
     /**
@@ -640,5 +640,6 @@ trait InstitutionPdfReportTrait
 
         return null;
     }
+    // POCOR-9336 end
 }
 ?>

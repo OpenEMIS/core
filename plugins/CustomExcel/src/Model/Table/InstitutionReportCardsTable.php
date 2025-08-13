@@ -388,7 +388,7 @@ class InstitutionReportCardsTable extends AppTable
     //POCOR-6328 starts
     public function onExcelTemplateInitialiseInfrastructureLandAccessibile(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
             $InstitutionLands = TableRegistry::get('Institution.InstitutionLands');
             $entity = $InstitutionLands
                 ->find()
@@ -403,7 +403,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInfrastructureBuildingsAccessibile(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
             $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
             $entity = $InstitutionBuildings
                 ->find()
@@ -418,7 +418,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInfrastructureFloorsAccessibile(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id'])) {
+        if (isset($params['institution_id'])) { // POCOR-9336
             $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
             $entity = $InstitutionFloors
                 ->find()
@@ -433,7 +433,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInfrastructureRoomsAccessibile(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
             $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
             $entity = $InstitutionRooms
                 ->find()
@@ -448,7 +448,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInfrastructureLandNotAccessibile(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
             $InstitutionLands = TableRegistry::get('Institution.InstitutionLands');
             $entity = $InstitutionLands
                 ->find()
@@ -466,7 +466,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInfrastructureBuildingsNotAccessibile(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
             $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
             $entity = $InstitutionBuildings
                 ->find()
@@ -484,7 +484,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInfrastructureFloorsNotAccessibile(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
             $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
             $entity = $InstitutionFloors
                 ->find()
@@ -502,7 +502,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInfrastructureRoomsNotAccessibile(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
             $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
             $entity = $InstitutionRooms
                 ->find()
@@ -557,7 +557,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionLands(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
             //POCOR-7411 Starts
             $connection = ConnectionManager::get('default');
             $entity = $connection->execute("SELECT SUM(subq.area_size) area_size
@@ -1146,7 +1146,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseRoomTypes(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
             $connection = ConnectionManager::get('default');
             $RoomTypesData = $connection->execute("SELECT room_area.room_type_name, room_area.room_count
                                 FROM institution_shifts
@@ -1821,7 +1821,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseRoomTypeCount(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
             $RoomTypes = TableRegistry::get('room_types');
             $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
 
@@ -1918,7 +1918,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionClassRooms(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
             $connection = ConnectionManager::get('default');//POCOR-7642 starts
             $RoomTypesData = $connection->execute("SELECT MAX(subq.nb_classrooms) nb_classrooms
                                                     FROM
@@ -3424,7 +3424,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionRoomTypes(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
             $RoomTypes = TableRegistry::get('room_types');
             $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
 
@@ -3454,7 +3454,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionRoomTypesCount(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
             // POCOR-8073 Unify all
 
             $institution_id = $params['institution_id'];
@@ -3536,7 +3536,7 @@ class InstitutionReportCardsTable extends AppTable
         }
     }
 
-    public function getRoomCountByArea($room_type_id, $institutionIds = [])
+    public function getRoomCountByArea($room_type_id, $institutionIds = []) // POCOR-9336
     {
         $institutionRooms = TableRegistry::get('institution_rooms');
         $roomTypes = TableRegistry::get('room_types');
@@ -3993,7 +3993,7 @@ class InstitutionReportCardsTable extends AppTable
      */
     public function onExcelTemplateInitialiseInfrastructureRoomCustomFields(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
             $InstitutionRooms = TableRegistry::get('institution_rooms');
             $RoomTypes = TableRegistry::get('room_types');
             $RoomCustomFieldValues = TableRegistry::get('room_custom_field_values');
@@ -4348,7 +4348,7 @@ class InstitutionReportCardsTable extends AppTable
      */
     public function onExcelTemplateInitialiseInstitutionRooms(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id'])) {
+        if (isset($params['institution_id'])) { // POCOR-9336
             $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
             $entity = [
                 [
@@ -4372,7 +4372,7 @@ class InstitutionReportCardsTable extends AppTable
      */
     public function onExcelTemplateInitialiseInstitutionRoomsArea(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
 // POCOR-8073 Unify all
             $institution_id = $params['institution_id'];
             $insArr = $this->getDistrictInstitutionArray($institution_id);
@@ -4454,7 +4454,7 @@ class InstitutionReportCardsTable extends AppTable
      * @ticket POCOR-6691
      * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
      */
-    public function getRoomCountByAreaCol($institutionIds = [])
+    public function getRoomCountByAreaCol($institutionIds = []) // POCOR-9336
     {
         $institutionRooms = TableRegistry::get('institution_rooms');
         $institutionRoomsAreaData = $institutionRooms->find()
@@ -4758,7 +4758,7 @@ class InstitutionReportCardsTable extends AppTable
     //POCOR-7421 Starts
     public function onExcelTemplateInitialiseInfrastructureLandCustomFields(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
             $connection = ConnectionManager::get('default');
             $InfrastructureLandCustomFieldsData = $connection->execute("SELECT MAX(land_info.institution_land_code) institution_land_code, MAX(land_info.institution_land_name) institution_land_name, MAX(land_info.land_area) land_area, MAX(land_info.land_type_name) land_type_name, MAX(land_info.infrastructure_custom_field_name) infrastructure_custom_field_name, MAX(land_info.custom_field_values) custom_field_values
                     FROM institution_shifts
@@ -4811,7 +4811,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionClassroomArea(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
             $connection = ConnectionManager::get('default');
             $entity = $connection->execute("SELECT SUM(subq.area_size) area_size
                         FROM

@@ -6,8 +6,7 @@ use Cake\ORM\TableRegistry;
 use DOMDocument;//POCOR-8529
 use DOMElement; //POCOR-9052
 use DOMXPath;//POCOR-8529
-use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Spreadsheet; // POCOR-9336 start
 use PhpOffice\PhpSpreadsheet\Writer\Exception;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Mpdf\MpdfException;
@@ -22,7 +21,7 @@ trait PdfReportTrait
 
     const PRINTER_MPDF = 1;
     const PRINTER_LIBREOFFICE = 2;
-    const PRINTER_EXTERNAL = 3;
+    const PRINTER_EXTERNAL = 3; // POCOR-9336 end
     private $currentWorksheet = null;
     private $currentWorksheetIndex = 0;
 
@@ -650,7 +649,7 @@ trait PdfReportTrait
     {
         Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
         // Convert spreadsheet object into html
-        //POCOR-6916 start
+        // POCOR-9336 start
         $reportCard = TableRegistry::get('ReportCard.ReportCards');
         $configVal = $reportCard->find()->select(['pdf_no' => $reportCard->aliasField('pdf_page_number')])->where([$reportCard->aliasField('id') => $report_card_id])->first();
         if (!empty($configVal)) { //POCOR-7096
@@ -689,6 +688,7 @@ trait PdfReportTrait
             Log::error("PDF content  is empty");
         }
 
+
     }
 
     /**
@@ -725,6 +725,7 @@ trait PdfReportTrait
         } else {
             Log::error("PDF content  is empty");
         }
+        // POCOR-9336 end
     }
 
     private function mergePDFFilesAssessment(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
@@ -769,9 +770,9 @@ trait PdfReportTrait
         }
 
         $file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile . '.pdf';
-        $content = $mpdf->Output($file_path, \Mpdf\Output\Destination::STRING_RETURN);
+        $content = $mpdf->Output($file_path, \Mpdf\Output\Destination::STRING_RETURN); // POCOR-9336 end
         unset($mpdf);
-        return $content;
+        return $content; // POCOR-9336 end
     }
 
     private function mergePDFFiles(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
@@ -850,9 +851,9 @@ trait PdfReportTrait
         }
 
         $file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile.'.pdf';
-        $content = $mpdf->Output($file_path, \Mpdf\Output\Destination::STRING_RETURN);
-        return $content;
+        $content = $mpdf->Output($file_path, \Mpdf\Output\Destination::STRING_RETURN); // POCOR-9336 end
         unset($mpdf);
+        return $content; // POCOR-9336 end
     }
     //POCOR-8529 start(to remove hidden columns from pdf)
     function extractHiddenClasses($html) {
@@ -943,6 +944,7 @@ trait PdfReportTrait
     }
     // POCOR-8529  end
 
+    // POCOR-9336 start
     /**
      * @param $objSpreadsheet
      * @param $filepath

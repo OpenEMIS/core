@@ -13,9 +13,9 @@ use PhpOffice\PhpSpreadsheet\IOFactory; // POCOR-9336
 */
 trait StaffPdfReportTrait
 {
-    const PRINTER_MPDF = 1;
+    const PRINTER_MPDF = 1; // POCOR-9336 start
     const PRINTER_LIBREOFFICE = 2;
-    const PRINTER_EXTERNAL = 3;
+    const PRINTER_EXTERNAL = 3; // POCOR-9336 end
     private $currentWorksheet = null;
     private $currentWorksheetIndex = 0;
 
@@ -401,7 +401,7 @@ trait StaffPdfReportTrait
      * @throws \Mpdf\MpdfException
      */
     private function printPdfViaMpdf($objSpreadsheet, $filepath,  $staff_id)
-    {
+    { // POCOR-9336 end
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
 
         // This is to store to final processedHtml
@@ -440,7 +440,7 @@ trait StaffPdfReportTrait
         Log::write('debug', '----------------------fileName---------------------: ');
         Log::write('debug', $fileName);
 
-        $mergedPdf = $this->mergePDFFiles($filePaths, $fileName, $fileName);
+        $mergedPdf = $this->mergePDFFiles($filePaths, $fileName, $fileName); // POCOR-9336 start
         // // Remove the temp file that is converted from excel object and its successfully converted to pdf
         if ($this->getConfig('purge')) {
             foreach ($filePaths as $filepath) {
@@ -448,7 +448,7 @@ trait StaffPdfReportTrait
                 $this->deleteFile($filepath);
             }
         }
-        return $mergedPdf;
+        return $mergedPdf; // POCOR-9336 start
     }
 
     /**
@@ -559,7 +559,7 @@ trait StaffPdfReportTrait
         return null;
     }
 
-    // POCOR-9303
+    // // POCOR-9336 start
     private function printPdfViaLibreOffice(Spreadsheet $objSpreadsheet, string $baseFileName, ?string $studentId = null): ?string
     {
 
@@ -638,6 +638,7 @@ trait StaffPdfReportTrait
 
         return null;
     }
+    // POCOR-9336 end
 
 }
 ?>
