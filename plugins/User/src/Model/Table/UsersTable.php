@@ -528,11 +528,11 @@ class UsersTable extends AppTable
             ->order([$this->aliasField('first_name') => $options['direction']]);
 
         // return $query
-        // 		->order([$this->aliasField('first_name') => $options['direction'],
-        // 				$this->aliasField('middle_name') => $options['direction'],
-        // 				$this->aliasField('third_name') => $options['direction'],
-        // 				$this->aliasField('last_name') => $options['direction']
-        // 			]);
+        //      ->order([$this->aliasField('first_name') => $options['direction'],
+        //              $this->aliasField('middle_name') => $options['direction'],
+        //              $this->aliasField('third_name') => $options['direction'],
+        //              $this->aliasField('last_name') => $options['direction']
+        //          ]);
     }
 
     public function findWithDefaultIdentityType(Query $query, array $options)
@@ -722,6 +722,12 @@ class UsersTable extends AppTable
                     return false;
                 }
                 return true;
+            })
+            ->allowEmpty('password', function ($context) {  //POCOR-9322
+                if ($context['data']['record_source'] == 'import_user') {
+                    return true;
+                }
+                return false;
             })
             ->add('account_type', 'custom', [
                 'rule' => function ($value, $context) {
