@@ -23,7 +23,7 @@ use Cake\I18n\FrozenTime;
 use App\Controller\DashboardController;
 use Cake\I18n\FrozenDate;
 use Cake\ORM\Table;
-use Cake\Datasource\ConnectionManager;
+use Cake\Datasource\ConnectionManager; // POCOR-9323
 
 // POCOR-8286 start
 
@@ -501,7 +501,7 @@ class StudentAdmissionTable extends ControllerActionTable
         try{
             $Students->save($newEntity);
         } catch (\Exception $exception) {
-            Log::error($exception->getMessage());
+            Log::error($exception->getMessage()); // POCOR-9323
         }
         if(!$newEntity->hasErrors()){
             return $newEntity;
@@ -543,7 +543,7 @@ class StudentAdmissionTable extends ControllerActionTable
 
     }
 
-    public function triggerPendingEnrolmentForStudent($entity)
+    public function triggerPendingEnrolmentForStudent($entity) // POCOR-9323
     {
         $WorkflowsTbl = self::getDynamicTableInstance('Workflow.Workflows');
         $WorkflowStepsTbl = self::getDynamicTableInstance('Workflow.WorkflowSteps');
@@ -580,7 +580,7 @@ class StudentAdmissionTable extends ControllerActionTable
         }
 
         $newEntity = $StudentEnrolments->newEntity($enrolmentArr);
-        if ($StudentEnrolments->save($entity)) {
+        if ($StudentEnrolments->save($entity)) { // POCOR-9323
             $this->handleCandidateNumber($entity);
         }
     }
@@ -1466,9 +1466,8 @@ class StudentAdmissionTable extends ControllerActionTable
     // POCOR-9313 start: made a little safer
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
-        if ($entity->isNew() || $entity->isDirty('status_id')) {
+        if ($entity->isNew() || $entity->isDirty('status_id')) { // POCOR-9323
             $this->sendStudentAdmissionAlert($entity);
-
         }
         if (!$entity->isNew()) {
             return; // Only handle new entities
@@ -1566,7 +1565,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 $alertsTable->aliasField('frequency') => 'Once'])
             ->first();
         if (!$alert) {
-            Log::error('No Alerts for AlertStudentAdmission');
+            Log::error('No Alerts for AlertStudentAdmission'); // POCOR-9323
             return;
         }
         if (!is_array($alert)) {
@@ -1801,14 +1800,9 @@ class StudentAdmissionTable extends ControllerActionTable
         return $caseResults->toArray();
     }
 
+    // POCOR-9323
     private function handleCandidateNumber($entity): void
     {
-//        $statuses = self::getDynamicTableInstance('Workflow.WorkflowModels')
-//            ->getWorkflowStatusSteps('Institution.StudentAdmission', 'APPROVED');
-//
-//        if (!in_array($entity->status_id, array_keys($statuses))) {
-//            return;
-//        }
         if (property_exists($entity, 'modified_user_id') && $entity->modified_user_id) {
             $userId = $entity->modified_user_id;
         } else {
