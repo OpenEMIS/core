@@ -95,10 +95,14 @@ export class ApiService {
       .pipe(catchError(this.handleError));
   }
 
-  getWithToken(url: any) {
+  getWithToken(url: any, v5?: boolean) {
+    let baseUrl = environment.apiV4BaseUrl;
+    if(v5 && !baseUrl.includes('/v5/')){
+      baseUrl = baseUrl.replace('/v4/', '/v5/');
+    }
     let token = localStorage.getItem("loginToken");
     const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
-    return this.http.get(`${environment.apiV4BaseUrl}${url}`, {
+    return this.http.get(`${baseUrl}${url}`, {
       headers: headers
     }).pipe(catchError(this.handleError));
   }
