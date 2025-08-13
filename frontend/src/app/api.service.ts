@@ -46,7 +46,7 @@ export class ApiService {
       "username": "admin",
       "api_key": "apikeytest"
     }
-    return this.http.post(`${environment.baseUrl}login`, obj).pipe(catchError(this.handleError))
+    return this.http.post(`${environment.apiV4BaseUrl}login`, obj).pipe(catchError(this.handleError))
   }
 
   setSession(){
@@ -66,19 +66,19 @@ export class ApiService {
       "username": userName,
       "api_key": "apikeytest"
     }
-    return this.http.post(`${environment.baseUrl}login`, obj).pipe(catchError(this.handleError))
+    return this.http.post(`${environment.apiV4BaseUrl}login`, obj).pipe(catchError(this.handleError))
   }
 
   postWithToken(url: any, data: any) {
     let token = localStorage.getItem("loginToken");
     const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
-    return this.http.post(`${environment.baseUrl}${url}`, data, {
+    return this.http.post(`${environment.apiV4BaseUrl}${url}`, data, {
       headers: headers
     }).pipe(catchError(this.handleError));
   }
 
   putWithToken(url: any, data: any, v5?: boolean) {
-    let baseUrl = environment.baseUrl;
+    let baseUrl = environment.apiV4BaseUrl;
     if(v5 && !baseUrl.includes('/v5/')){
       baseUrl = baseUrl.replace('/v4/', '/v5/');
     }
@@ -98,7 +98,7 @@ export class ApiService {
   getWithToken(url: any) {
     let token = localStorage.getItem("loginToken");
     const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
-    return this.http.get(`${environment.baseUrl}${url}`, {
+    return this.http.get(`${environment.apiV4BaseUrl}${url}`, {
       headers: headers
     }).pipe(catchError(this.handleError));
   }
@@ -106,7 +106,7 @@ export class ApiService {
   deleteWithToken(url: any) {
     let token = localStorage.getItem("loginToken");
     const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
-    return this.http.delete(`${environment.baseUrl}${url}`, {
+    return this.http.delete(`${environment.apiV4BaseUrl}${url}`, {
       headers: headers
     }).pipe(catchError(this.handleError));
   }
@@ -115,7 +115,7 @@ export class ApiService {
     let token = localStorage.getItem("loginToken");
     const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
     return this.http
-      .get(`${environment.baseUrl}${url}`, {
+      .get(`${environment.apiV4BaseUrl}${url}`, {
         headers: headers
       })
       .pipe(catchError(this.handleError));
@@ -125,7 +125,7 @@ export class ApiService {
     let token = localStorage.getItem("loginToken");
     const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
     return this.http
-      .get(`${environment.baseUrl}${url}`, {
+      .get(`${environment.apiV4BaseUrl}${url}`, {
         headers: headers,
         responseType: 'blob'
       })
@@ -135,7 +135,7 @@ export class ApiService {
   postImportTemplete(url: any, data: any) {
     let token = localStorage.getItem("loginToken");
     const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
-    return this.http.post(`${environment.baseUrl}${url}`, data, {
+    return this.http.post(`${environment.apiV4BaseUrl}${url}`, data, {
       headers: headers
     }).pipe(catchError(this.handleError));
   }
@@ -143,7 +143,7 @@ export class ApiService {
   get(url: any, token: any) {
     const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
     return this.http
-      .get(`${environment.baseUrl}${url} `, {
+      .get(`${environment.apiV4BaseUrl}${url} `, {
         headers: headers
       })
       .pipe(catchError(this.handleError));
