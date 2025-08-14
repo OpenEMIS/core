@@ -1368,10 +1368,9 @@ class StudentAdmissionTable extends ControllerActionTable
     // POCOR-9313 start: made a little safer
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
-        // These are read-only safe and fine to run here
-        $this->ensureInstitutionStudentExists($entity); // POCOR-9320
-        $this->sendStudentAdmissionAlert($entity); // POCOR-9320
-
+        if ($entity->isNew() || $entity->isDirty('status_id')) { // POCOR-9323
+            $this->sendStudentAdmissionAlert($entity);
+        }
         if (!$entity->isNew()) {
             return; // Only handle new entities
         }
@@ -1391,6 +1390,8 @@ class StudentAdmissionTable extends ControllerActionTable
             }
         }
 
+        // These are read-only safe and fine to run here
+        $this->ensureInstitutionStudentExists($entity);
     }
     protected function processAutoApproval(Entity $entity): void
     {
