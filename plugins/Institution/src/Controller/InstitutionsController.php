@@ -6944,7 +6944,7 @@ class InstitutionsController extends AppController
         }
 
         try {
-            $saved = $securityUsers->save($entity);
+            $saved = $securityUsers->save($entity, ['atomic' => false]);
 
             if ($saved === false) {
                 // buildRules or persistence failed without throwing
