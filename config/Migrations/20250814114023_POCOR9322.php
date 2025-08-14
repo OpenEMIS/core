@@ -15,7 +15,7 @@ class POCOR9322 extends AbstractMigration
         $this->execute("
             UPDATE `import_mapping`
             SET description = CONCAT(IFNULL(description, column_name), '*'),
-                is_optional = 1
+                is_optional = 0
             WHERE LOWER(column_name) IN ('username', 'password')
               AND LOWER(model) = 'user.users'
         ");
