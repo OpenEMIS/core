@@ -69,6 +69,11 @@ class InstitutionClassesTable extends ControllerActionTable
             'foreignKey' => 'institution_class_id',
             'targetForeignKey' => 'institution_subject_id'
         ]);
+        //POCOR-9267 Starts
+        $this->hasMany('InstitutionClassGrades', [
+            'className' => 'Institution.InstitutionClassGrades',
+            'foreignKey' => 'institution_class_id',
+        ]);//POCOR-9267 Ends
 
         /**
          * Shortcuts

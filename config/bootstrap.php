@@ -227,3 +227,15 @@ TypeFactory::map('time', StringType::class);
 //Inflector::rules('plural', ['/^(inflect)or$/i' => '\1ables']);
 //Inflector::rules('irregular', ['red' => 'redlings']);
 //Inflector::rules('uninflected', ['dontinflectme']);
+
+//POCOR-9269 start
+$projectRoot = dirname(__DIR__);
+$logPath = $projectRoot . DIRECTORY_SEPARATOR . 'logs';
+
+if (!file_exists($logPath)) {
+    mkdir($logPath, 0777, true);
+}
+
+if (!is_writable($logPath)) {
+    chmod($logPath, 0777);
+} //POCOR-9269 end
