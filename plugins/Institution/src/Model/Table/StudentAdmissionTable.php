@@ -563,7 +563,7 @@ class StudentAdmissionTable extends ControllerActionTable
             'end_date' => $entity->end_date,
             'student_id' => $entity->student_id,
             'status_id' => $WorkflowsRes->id,
-            'assignee_id' => $this->Auth->user('id'),
+            'assignee_id' => $entity->assignee_id,//POCOR-9277
             'institution_id' => $entity->institution_id,
             'academic_period_id' => $entity->academic_period_id,
             'education_grade_id' => $entity->education_grade_id,
