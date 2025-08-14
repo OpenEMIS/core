@@ -6911,6 +6911,8 @@ class InstitutionsController extends AppController
             } catch (\Exception $e) {
                 Log::debug(__FUNCTION__);
                 Log::debug('Error: ' . $e->getMessage());
+                return $this->sendJsonResponse(['message' => 'Failed to create user ' . $e->getMessage()], 500);
+
             }
             //POCOR-9181[END]
         }
