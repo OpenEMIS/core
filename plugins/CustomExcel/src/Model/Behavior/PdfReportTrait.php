@@ -10,6 +10,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet; // POCOR-9336 start
 use PhpOffice\PhpSpreadsheet\Writer\Exception;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Mpdf\MpdfException;
+use PhpOffice\PhpSpreadsheet\Style\Style;
 
 // POCOR-9171
 /*
@@ -1213,21 +1214,72 @@ trait PdfReportTrait
             $xlsxPath = $tempDir . $baseFileName . '.xlsx';
             $pdfExpectedPath = $tempDir . $baseFileName . '.pdf';
 
-            if ($sheetCount !== null && $sheetCount < $objSpreadsheet->getSheetCount()) {
-                $limitedSpreadsheet = new Spreadsheet();
-                for ($i = 0; $i < $sheetCount; $i++) {
-                    $cloned = clone $objSpreadsheet->getSheet($i);
-                    if ($i === 0) {
-                        // Replace default first sheet
-                        $limitedSpreadsheet->removeSheetByIndex(0);
+            $ss = $objSpreadsheet;
+
+            if ($sheetCount !== null) {
+                $total = $objSpreadsheet->getSheetCount();
+
+                // If $sheetCount <= 0, keep at least one sheet
+                $take = max(1, min($sheetCount, $total));
+
+                if ($take < $total) {
+                    $limited = new Spreadsheet();
+
+                    // Optional: copy document properties (nice-to-have)
+                    $limited->getProperties()
+                        ->setCreator($objSpreadsheet->getProperties()->getCreator())
+                        ->setLastModifiedBy($objSpreadsheet->getProperties()->getLastModifiedBy())
+                        ->setTitle($objSpreadsheet->getProperties()->getTitle())
+                        ->setSubject($objSpreadsheet->getProperties()->getSubject())
+                        ->setDescription($objSpreadsheet->getProperties()->getDescription())
+                        ->setKeywords($objSpreadsheet->getProperties()->getKeywords())
+                        ->setCategory($objSpreadsheet->getProperties()->getCategory());
+
+                    // Remove the default empty first sheet before adding externals
+                    $limited->removeSheetByIndex(0);
+
+                    // Import first N sheets with style/index remapping
+                    for ($i = 0; $i < $take; $i++) {
+                        $sheet = $objSpreadsheet->getSheet($i);
+                        $limited->addExternalSheet($sheet);
                     }
-                    $limitedSpreadsheet->addSheet($cloned);
+
+                    // Make sure the first sheet exists and is active
+                    $limited->setActiveSheetIndex(0);
+
+                    $ss = $limited;
                 }
-                $objWriter = IOFactory::createWriter($limitedSpreadsheet, 'Xlsx');
-            } else {
-                $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
             }
-            $objWriter->save($xlsxPath);
+
+            /* --- Style normalization on the final workbook ($ss) --- */
+
+// Ensure at least one default cell style exists
+            if (count($ss->getCellXfCollection()) === 0) {
+                $ss->addCellXf(new Style());
+            }
+
+// Force any null xfIndex to the default (0)
+            foreach ($ss->getWorksheetIterator() as $sheet) {
+                // getCellCollection() may be lazy; iterating coordinates is fine
+                $cells = $sheet->getCellCollection();
+                foreach ($cells as $coord => $cell) {
+                    if ($cell->getXfIndex() === null) {
+                        $cell->setXfIndex(0);
+                    }
+                }
+            }
+
+// Reconcile internal indices
+            $ss->garbageCollect();
+
+// Write XLSX
+            $writer = IOFactory::createWriter($ss, 'Xlsx');
+// $writer->setPreCalculateFormulas(false); // enable if formula calc causes issues
+            $writer->save($xlsxPath);
+
+// (Optional) free memory if you’re going to build a PDF next
+            $ss->disconnectWorksheets();
+            unset($ss);
 
             $attributes = TableRegistry::getTableLocator()
                 ->get('Configuration.ExternalDataSourceAttributes')
