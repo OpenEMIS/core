@@ -156,7 +156,7 @@ class ImportStudentAdmissionTable extends AppTable
             $this->gradesInInstitution = [];
         }
         //POCOR-8343 Start
-        
+
         if(empty($this->institutionId) && $this->request->getParam('pass')[0] != 'downloadFailed' && $this->request->getParam('pass')[0] != 'downloadPassed' && isset($this->request->getParam('pass')[1])) {
             $queryString = $this->paramsDecode($this->request->getParam('pass')[1]);
             $this->institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : $this->institutionId ;
@@ -565,8 +565,11 @@ class ImportStudentAdmissionTable extends AppTable
         }
         $tempRow['student_name'] = $tempRow['student_id'];
 
-        $timeZone = $this->getTimeZone();
-        $dateTimeZone = new \DateTimeZone($timeZone);
+        try { // POCOR-9313 start
+            $dateTimeZone = new \DateTimeZone($this->getTimeZone());
+        } catch (\Exception $e) {
+            $dateTimeZone = new \DateTimeZone('GMT');
+        } // POCOR-9313 end
         $start_date = $this->checkStartDate($tempRow, $rowInvalidCodeCols, $dateTimeZone);
         if (!$start_date) {
             return false;

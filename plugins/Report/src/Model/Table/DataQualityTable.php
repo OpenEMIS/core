@@ -300,16 +300,14 @@ class DataQualityTable extends AppTable {
 
                    $institutionList = $institutionQuery->toArray();
                 }
-
                 if (empty($institutionList)) {
                     $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
                     $attr['type'] = 'select';
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 } else {
-
                     if (in_array($feature, [
-                        'Report.ValidationReport'
+                        'Report.ValidationReport', 'Report.StaffWithMissingQualificationReport' // POCOR-9312 Added Report.StaffWithMissingQualificationReport
                     ]) && count($institutionList) > 1) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Institutions')] + $institutionList;
                     } else {

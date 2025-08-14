@@ -518,13 +518,18 @@ class ExcelBehavior extends Behavior
                 } else {
                     $event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr]);
                 }
-                if ($event->getResult()) {
-                    $returnedResult = $event->getResult();
-                    if (is_array($returnedResult)) {
-                        $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
-                        $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
-                    } else {
-                        $value = $returnedResult;
+                // Check $event is a valid object with the method getResult //POCOR-9272
+                if ($event && method_exists($event, 'getResult')) {
+                    $result = $event->getResult();
+                    // Explicitly check for null to allow 0 //POCOR-9272
+                    if ($result !== null) { 
+                        $returnedResult = $event->getResult();
+                        if (is_array($returnedResult)) {
+                            $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
+                            $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
+                        } else {
+                            $value = $returnedResult;
+                        }
                     }
                 }
             } else {

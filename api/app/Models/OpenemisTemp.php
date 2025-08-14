@@ -10,5 +10,5 @@ class OpenemisTemp extends Model
     use HasFactory;
 
     public $timestamps = false;
-    protected $table = "openemis_temps";
+    protected $table = "security_users_openemis_no";
 }

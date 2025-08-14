@@ -465,7 +465,7 @@ class StudentSubjectsTable extends ControllerActionTable
             $this->updateAll(['outcome_result' => $options['outcome_result']], ['id' => $StudentSubjectData->id]);
         }
 
-        return $query->find('all')->where(['id' => $StudentSubjectData->id]);
+        return $query->find('all')->where(['id IS' => $StudentSubjectData->id]);
     }
     //POCOR-8435 end
 }
