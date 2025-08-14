@@ -6787,7 +6787,7 @@ class InstitutionsController extends AppController
             return $securityUserResult;
         } else {
 //            Log::debug(print_r($studentData,true));
-            return $this->sendJsonResponse(['message' => 'Failed to save user'], 500);
+            return $this->sendJsonResponse(['message' => 'Failed to save user ' . json_encode(print_r($securityUserResult,true)) ], 500);
         }
     }
 
