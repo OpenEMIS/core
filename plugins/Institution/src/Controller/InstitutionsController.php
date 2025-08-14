@@ -29,6 +29,8 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use Cake\I18n\Time;
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\FrozenTime;
+use Cake\Datasource\EntityInterface;
+
 //POCOR-5672
 
 //POCOR-5672
@@ -6771,8 +6773,8 @@ class InstitutionsController extends AppController
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
         }
         $securityUserResult = $this->saveSecurityUser($studentData);
-        Log::debug(print_r($securityUserResult, true));
-        if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
+//        Log::debug(print_r($securityUserResult, true));
+        if ($securityUserResult instanceof \Cake\ORM\Entity || $securityUserResult instanceof EntityInterface) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
             $this->handleIdentities($requestData, $userRecordId, $userId);
@@ -6901,7 +6903,7 @@ class InstitutionsController extends AppController
      *
      * @return \Cake\Datasource\EntityInterface|\Cake\Http\Response
      */
-    private function saveSecurityUser(array $userData): EntityInterface|Response
+    private function saveSecurityUser(array $userData): \Cake\Datasource\EntityInterface|Response
     {
         $securityUsers = self::getDynamicTableInstance('User.Users'); // POCOR-8706
 
