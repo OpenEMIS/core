@@ -388,12 +388,13 @@ class InstitutionReportCardsTable extends AppTable
     //POCOR-6328 starts
     public function onExcelTemplateInitialiseInfrastructureLandAccessibile(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $InstitutionLands = TableRegistry::get('Institution.InstitutionLands');
             $entity = $InstitutionLands
                 ->find()
                 ->where([
                     $InstitutionLands->aliasField('institution_id') => $params['institution_id'],
+                    $InstitutionLands->aliasField('academic_period_id') => $params['academic_period_id'],
                     $InstitutionLands->aliasField('accessibility') => 1
                 ])
                 ->count();
@@ -403,12 +404,13 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInfrastructureBuildingsAccessibile(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
             $entity = $InstitutionBuildings
                 ->find()
                 ->where([
                     $InstitutionBuildings->aliasField('institution_id') => $params['institution_id'],
+                    $InstitutionBuildings->aliasField('academic_period_id') => $params['academic_period_id'],
                     $InstitutionBuildings->aliasField('accessibility') => 1
                 ])
                 ->count();
@@ -418,12 +420,13 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInfrastructureFloorsAccessibile(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id'])) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
             $entity = $InstitutionFloors
                 ->find()
                 ->where([
                     $InstitutionFloors->aliasField('institution_id') => $params['institution_id'],
+                    $InstitutionFloors->aliasField('academic_period_id') => $params['academic_period_id'],
                     $InstitutionFloors->aliasField('accessibility') => 1
                 ])
                 ->count();
@@ -433,12 +436,13 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInfrastructureRoomsAccessibile(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
             $entity = $InstitutionRooms
                 ->find()
                 ->where([
                     $InstitutionRooms->aliasField('institution_id') => $params['institution_id'],
+                    $InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id'],
                     $InstitutionRooms->aliasField('accessibility') => 1
                 ])
                 ->count();
@@ -448,12 +452,13 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInfrastructureLandNotAccessibile(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $InstitutionLands = TableRegistry::get('Institution.InstitutionLands');
             $entity = $InstitutionLands
                 ->find()
                 ->where([
                     $InstitutionLands->aliasField('institution_id') => $params['institution_id'],
+                    $InstitutionLands->aliasField('academic_period_id') => $params['academic_period_id'],
                     $InstitutionLands->aliasField('accessibility') => 0
                 ])
                 ->count();
@@ -466,12 +471,13 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInfrastructureBuildingsNotAccessibile(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
             $entity = $InstitutionBuildings
                 ->find()
                 ->where([
                     $InstitutionBuildings->aliasField('institution_id') => $params['institution_id'],
+                    $InstitutionBuildings->aliasField('academic_period_id') => $params['academic_period_id'],
                     $InstitutionBuildings->aliasField('accessibility') => 0
                 ])
                 ->count();
@@ -484,12 +490,13 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInfrastructureFloorsNotAccessibile(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
             $entity = $InstitutionFloors
                 ->find()
                 ->where([
                     $InstitutionFloors->aliasField('institution_id') => $params['institution_id'],
+                    $InstitutionFloors->aliasField('academic_period_id') => $params['academic_period_id'],
                     $InstitutionFloors->aliasField('accessibility') => 0
                 ])
                 ->count();
@@ -502,12 +509,13 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInfrastructureRoomsNotAccessibile(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
             $entity = $InstitutionRooms
                 ->find()
                 ->where([
                     $InstitutionRooms->aliasField('institution_id') => $params['institution_id'],
+                    $InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id'],
                     $InstitutionRooms->aliasField('accessibility') => 0
                 ])
                 ->count();
@@ -557,7 +565,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionLands(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             //POCOR-7411 Starts
             $connection = ConnectionManager::get('default');
             $entity = $connection->execute("SELECT SUM(subq.area_size) area_size
@@ -568,7 +576,7 @@ class InstitutionReportCardsTable extends AppTable
                                                 (
                                                     SELECT institution_lands.institution_id, SUM(institution_lands.area) area_size
                                                     FROM institution_lands
-                                                    WHERE institution_lands.land_status_id = 1
+                                                    WHERE institution_lands.academic_period_id = " . $params['academic_period_id'] . " AND institution_lands.land_status_id = 1
                                                     GROUP BY institution_lands.institution_id
                                                 ) land_area
                                                 ON land_area.institution_id = institution_shifts.institution_id
@@ -1146,18 +1154,17 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseRoomTypes(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $connection = ConnectionManager::get('default');
             $RoomTypesData = $connection->execute("SELECT room_area.room_type_name, room_area.room_count
                                 FROM institution_shifts
                                 LEFT JOIN
                                 (
-                                    SELECT institution_rooms.room_type_id, institution_rooms.institution_id,
-                                           room_types.name room_type_name, COUNT(DISTINCT(institution_rooms.id)) room_count
+                                    SELECT institution_rooms.room_type_id, institution_rooms.institution_id, room_types.name room_type_name, COUNT(DISTINCT(institution_rooms.id)) room_count
                                     FROM institution_rooms
                                     INNER JOIN room_types
                                     ON room_types.id = institution_rooms.room_type_id
-                                    WHERE institution_rooms.room_status_id = 1
+                                    WHERE institution_rooms.academic_period_id = " . $params['academic_period_id'] . " AND institution_rooms.room_status_id = 1
                                     GROUP BY institution_rooms.institution_id, institution_rooms.room_type_id
                                 ) room_area
                                 ON room_area.institution_id = institution_shifts.institution_id
@@ -1821,7 +1828,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseRoomTypeCount(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $RoomTypes = TableRegistry::get('room_types');
             $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
 
@@ -1837,6 +1844,7 @@ class InstitutionReportCardsTable extends AppTable
                     ])
                     ->where([$InstitutionRooms->aliasField('room_type_id') => $value->id])
                     ->where([$InstitutionRooms->aliasField('institution_id') => $params['institution_id']])
+                    ->where([$InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id']])
                     ->enableHydration(false)
                     ->toArray();
 
@@ -1918,7 +1926,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionClassRooms(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $connection = ConnectionManager::get('default');//POCOR-7642 starts
             $RoomTypesData = $connection->execute("SELECT MAX(subq.nb_classrooms) nb_classrooms
                                                     FROM
@@ -1931,7 +1939,8 @@ class InstitutionReportCardsTable extends AppTable
                                                             FROM institution_rooms
                                                             INNER JOIN room_types
                                                             ON room_types.id = institution_rooms.room_type_id
-                                                            WHERE institution_rooms.room_status_id = 1
+                                                            WHERE institution_rooms.academic_period_id = " . $params['academic_period_id'] . "
+                                                            AND institution_rooms.room_status_id = 1
                                                             AND room_types.classification = 1
                                                             GROUP BY institution_rooms.institution_id
                                                         ) land_area
@@ -2711,7 +2720,7 @@ class InstitutionReportCardsTable extends AppTable
                                             'area_parent_id' => $areasTbl->aliasField('parent_id')
                                         ])
                                         ->where([$areasTbl->aliasField('parent_id IN') => $reg])
-                                        ->toArray();
+                                        ->toArray(); 
                                     }
                                     if (!empty($areas4)) {
                                         foreach ($areas4 as $ar4) {
@@ -3424,7 +3433,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionRoomTypes(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $RoomTypes = TableRegistry::get('room_types');
             $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
 
@@ -3454,9 +3463,9 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionRoomTypesCount(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             // POCOR-8073 Unify all
-
+            $academic_period_id = $params['academic_period_id'];
             $institution_id = $params['institution_id'];
 
             $insArr = $this->getDistrictInstitutionArray($institution_id);
@@ -3498,19 +3507,20 @@ class InstitutionReportCardsTable extends AppTable
                     } else {
 
                         if ($insKey == 0) {
-                            $area_level_1 = $this->getRoomCountByArea($edu_val['id'], $insVal);
+                            $area_level_1 = $this->getRoomCountByArea($academic_period_id
+                                , $edu_val['id'], $insVal);
                         } else if ($insKey == 1) {
-                            $area_level_2 = $this->getRoomCountByArea($edu_val['id'], $insVal);
+                            $area_level_2 = $this->getRoomCountByArea($academic_period_id, $edu_val['id'], $insVal);
                         } else if ($insKey == 2) {
-                            $area_level_3 = $this->getRoomCountByArea($edu_val['id'], $insVal);
+                            $area_level_3 = $this->getRoomCountByArea($academic_period_id, $edu_val['id'], $insVal);
                         } else if ($insKey == 3) {
-                            $area_level_4 = $this->getRoomCountByArea($edu_val['id'], $insVal);
+                            $area_level_4 = $this->getRoomCountByArea($academic_period_id, $edu_val['id'], $insVal);
                         } else if ($insKey == 4) {
-                            $area_level_5 = $this->getRoomCountByArea($edu_val['id'], $insVal);
+                            $area_level_5 = $this->getRoomCountByArea($academic_period_id, $edu_val['id'], $insVal);
                         } else if ($insKey == 5) {
-                            $area_level_6 = $this->getRoomCountByArea($edu_val['id'], $insVal);
+                            $area_level_6 = $this->getRoomCountByArea($academic_period_id, $edu_val['id'], $insVal);
                         } else {
-                            $area_level_7 = $this->getRoomCountByArea($edu_val['id'], $insVal);
+                            $area_level_7 = $this->getRoomCountByArea($academic_period_id, $edu_val['id'], $insVal);
                         }
                     }
                 }
@@ -3536,7 +3546,7 @@ class InstitutionReportCardsTable extends AppTable
         }
     }
 
-    public function getRoomCountByArea($room_type_id, $institutionIds = []) // POCOR-9336
+    public function getRoomCountByArea($academic_period, $room_type_id, $institutionIds = [])
     {
         $institutionRooms = TableRegistry::get('institution_rooms');
         $roomTypes = TableRegistry::get('room_types');
@@ -3545,6 +3555,7 @@ class InstitutionReportCardsTable extends AppTable
                 'count_room_type' => $institutionRooms->aliasField('id')
             ])
             ->where([
+                $institutionRooms->aliasField('academic_period_id') => $academic_period,
                 $institutionRooms->aliasField('institution_id IN') => $institutionIds,
                 $institutionRooms->aliasField('room_status_id') => 1,
                 $institutionRooms->aliasField('room_type_id') => $room_type_id,
@@ -3993,7 +4004,7 @@ class InstitutionReportCardsTable extends AppTable
      */
     public function onExcelTemplateInitialiseInfrastructureRoomCustomFields(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $InstitutionRooms = TableRegistry::get('institution_rooms');
             $RoomTypes = TableRegistry::get('room_types');
             $RoomCustomFieldValues = TableRegistry::get('room_custom_field_values');
@@ -4010,6 +4021,7 @@ class InstitutionReportCardsTable extends AppTable
                     $InstitutionRooms->aliasField('room_type_id') . '= ' . $RoomTypes->aliasField('id')
                 ])
                 ->where([$InstitutionRooms->aliasField('institution_id') => $params['institution_id']])
+                ->where([$InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id']])
                 ->enableHydration(false)
                 ->toArray();
 
@@ -4348,7 +4360,7 @@ class InstitutionReportCardsTable extends AppTable
      */
     public function onExcelTemplateInitialiseInstitutionRooms(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id'])) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
             $entity = [
                 [
@@ -4372,8 +4384,9 @@ class InstitutionReportCardsTable extends AppTable
      */
     public function onExcelTemplateInitialiseInstitutionRoomsArea(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
 // POCOR-8073 Unify all
+            $academic_period_id = $params['academic_period_id'];
             $institution_id = $params['institution_id'];
             $insArr = $this->getDistrictInstitutionArray($institution_id);
 
@@ -4410,19 +4423,19 @@ class InstitutionReportCardsTable extends AppTable
                         }
                     } else {
                         if ($insKey == 0) {
-                            $area_level_1 = $this->getRoomCountByAreaCol( $insVal);
+                            $area_level_1 = $this->getRoomCountByAreaCol($academic_period_id, $insVal);
                         } else if ($insKey == 1) {
-                            $area_level_2 = $this->getRoomCountByAreaCol( $insVal);
+                            $area_level_2 = $this->getRoomCountByAreaCol($academic_period_id, $insVal);
                         } else if ($insKey == 2) {
-                            $area_level_3 = $this->getRoomCountByAreaCol( $insVal);
+                            $area_level_3 = $this->getRoomCountByAreaCol($academic_period_id, $insVal);
                         } else if ($insKey == 3) {
-                            $area_level_4 = $this->getRoomCountByAreaCol( $insVal);
+                            $area_level_4 = $this->getRoomCountByAreaCol($academic_period_id, $insVal);
                         } else if ($insKey == 4) {
-                            $area_level_5 = $this->getRoomCountByAreaCol( $insVal);
+                            $area_level_5 = $this->getRoomCountByAreaCol($academic_period_id, $insVal);
                         } else if ($insKey == 5) {
-                            $area_level_6 = $this->getRoomCountByAreaCol( $insVal);
+                            $area_level_6 = $this->getRoomCountByAreaCol($academic_period_id, $insVal);
                         } else {
-                            $area_level_7 = $this->getRoomCountByAreaCol( $insVal);
+                            $area_level_7 = $this->getRoomCountByAreaCol($academic_period_id, $insVal);
                         }
                     }
                 }
@@ -4454,12 +4467,13 @@ class InstitutionReportCardsTable extends AppTable
      * @ticket POCOR-6691
      * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
      */
-    public function getRoomCountByAreaCol($institutionIds = []) // POCOR-9336
+    public function getRoomCountByAreaCol($academic_period, $institutionIds = [])
     {
         $institutionRooms = TableRegistry::get('institution_rooms');
         $institutionRoomsAreaData = $institutionRooms->find()
             ->select(['room_area' => $this->find()->func()->sum($institutionRooms->aliasField('area'))])
             ->where([
+                $institutionRooms->aliasField('academic_period_id') => $academic_period,
                 $institutionRooms->aliasField('institution_id IN') => $institutionIds,
             ])
             ->first();
@@ -4758,7 +4772,7 @@ class InstitutionReportCardsTable extends AppTable
     //POCOR-7421 Starts
     public function onExcelTemplateInitialiseInfrastructureLandCustomFields(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $connection = ConnectionManager::get('default');
             $InfrastructureLandCustomFieldsData = $connection->execute("SELECT MAX(land_info.institution_land_code) institution_land_code, MAX(land_info.institution_land_name) institution_land_name, MAX(land_info.land_area) land_area, MAX(land_info.land_type_name) land_type_name, MAX(land_info.infrastructure_custom_field_name) infrastructure_custom_field_name, MAX(land_info.custom_field_values) custom_field_values
                     FROM institution_shifts
@@ -4784,7 +4798,7 @@ class InstitutionReportCardsTable extends AppTable
                             ON institution_lands.id = land_custom_field_values.institution_land_id
                         INNER JOIN land_types
                             ON land_types.id = institution_lands.land_type_id
-                        WHERE institution_lands.land_status_id = 1
+                        WHERE institution_lands.academic_period_id = " . $params['academic_period_id'] . " AND institution_lands.land_status_id = 1
                         GROUP BY  land_custom_field_values.infrastructure_custom_field_id, land_custom_field_values.institution_land_id
                     ) land_info
                     ON land_info.institution_id = institution_shifts.institution_id
@@ -4811,7 +4825,7 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionClassroomArea(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) ) { // POCOR-9336
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $connection = ConnectionManager::get('default');
             $entity = $connection->execute("SELECT SUM(subq.area_size) area_size
                         FROM
@@ -4824,11 +4838,11 @@ class InstitutionReportCardsTable extends AppTable
                                 FROM institution_rooms
                                 INNER JOIN room_types
                                     ON room_types.id = institution_rooms.room_type_id
-                                WHERE institution_rooms.room_status_id = 1 AND room_types.classification = 1
+                                WHERE institution_rooms.academic_period_id = " . $params['academic_period_id'] . " AND institution_rooms.room_status_id = 1 AND room_types.classification = 1
                                 GROUP BY institution_rooms.institution_id
                             ) land_area
                                 ON land_area.institution_id = institution_shifts.institution_id
-                            WHERE institution_shifts.location_institution_id = " . $params['institution_id'] . "
+                            WHERE institution_shifts.academic_period_id = " . $params['academic_period_id'] . " AND institution_shifts.location_institution_id = " . $params['institution_id'] . "
                             GROUP BY institution_shifts.institution_id, institution_shifts.location_institution_id
                         ) subq")->fetch('assoc');
             if (!empty($entity)) {
@@ -6309,7 +6323,7 @@ class InstitutionReportCardsTable extends AppTable
                             'name' => $Grade['name'].' '.$gender['name']
                         ];
                     }
-
+                    
                 }
             }
             return $entity;
@@ -6329,16 +6343,16 @@ class InstitutionReportCardsTable extends AppTable
                             ->select(['start_date', 'start_year','end_date'])
                             ->where(['id' => $params['academic_period_id']])
                             ->first();
-
+            
             $entity = [];
             if(!empty($periodObj)){
                 $year = $periodObj->start_year;
-                $start = $periodObj->start_date instanceof \Cake\I18n\FrozenDate
-                        ? $periodObj->start_date
+                $start = $periodObj->start_date instanceof \Cake\I18n\FrozenDate 
+                        ? $periodObj->start_date 
                         : FrozenDate::create($year, 1, 1);
 
-                $end = $periodObj->end_date instanceof \Cake\I18n\FrozenDate
-                    ? $periodObj->end_date
+                $end = $periodObj->end_date instanceof \Cake\I18n\FrozenDate 
+                    ? $periodObj->end_date 
                     : FrozenDate::create($year, 12, 31);
 
                 $dateRange = [];
@@ -6441,7 +6455,7 @@ class InstitutionReportCardsTable extends AppTable
 
         $entity = [];
         $connection = ConnectionManager::get('default');
-
+        
         foreach ($gradesData as $grade) {
             foreach ($gendersData as $gender) {
                 $studentDetails = $this->fetchStudentAttendanceDetails($connection, $academicPeriodId, $institutionId, $grade['EducationGrades']['id'], $gender['id'], $date);
@@ -6490,7 +6504,7 @@ class InstitutionReportCardsTable extends AppTable
                             ON institution_subjects.id = student_attendance_marked_records.subject_id
                             LEFT JOIN education_subjects
                             ON education_subjects.id = institution_subjects.education_subject_id
-                            WHERE student_attendance_marked_records.no_scheduled_class = 0
+                            WHERE student_attendance_marked_records.no_scheduled_class = 0 
                             AND student_attendance_marked_records.academic_period_id = ".$academicPeriodId."
                             AND student_attendance_marked_records.institution_id = ".$institutionId."
                             AND student_attendance_marked_records.education_grade_id = ".$gradeId."
@@ -6532,7 +6546,7 @@ class InstitutionReportCardsTable extends AppTable
                             ,attend_info.institution_class_id
                             ,attend_info.absence_date
                             ,COUNT(DISTINCT(attend_info.student_id)) absent_count
-                        FROM
+                        FROM 
                         (
                             SELECT institution_student_absence_details.academic_period_id
                                 ,institution_student_absence_details.institution_id
@@ -6542,11 +6556,11 @@ class InstitutionReportCardsTable extends AppTable
                                 ,institution_student_absence_details.date absence_date
                                 ,institution_student_absence_details.subject_id
                                 ,subject_counter.subjects_taken
-                                ,attendance_type.value
+                                ,attendance_type.value 
                             FROM institution_student_absence_details
                             INNER JOIN security_users
                             ON security_users.id = institution_student_absence_details.student_id
-                            LEFT JOIN
+                            LEFT JOIN 
                             (
                                 SELECT institution_subject_students.academic_period_id
                                     ,institution_subject_students.institution_id
@@ -6593,12 +6607,12 @@ class InstitutionReportCardsTable extends AppTable
                                 ,institution_student_absence_details.institution_class_id
                                 ,institution_student_absence_details.student_id
                                 ,institution_student_absence_details.date
-                            HAVING
-                                CASE
-                                    WHEN attendance_type.value = 1
-                                    THEN COUNT(*) >= 1
-                                    ELSE
-                                        CASE WHEN institution_student_absence_details.subject_id = 0
+                            HAVING 
+                                CASE 
+                                    WHEN attendance_type.value = 1 
+                                    THEN COUNT(*) >= 1 
+                                    ELSE 
+                                        CASE WHEN institution_student_absence_details.subject_id = 0 
                                         THEN COUNT(*) >= 2
                                         ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0)
                                         END
@@ -6610,11 +6624,11 @@ class InstitutionReportCardsTable extends AppTable
                             ,attend_info.institution_class_id
                             ,attend_info.absence_date
                     ) marked_absence
-                    ON marked_absence.institution_id = marked_attendance.institution_id
-                    AND marked_absence.academic_period_id = marked_attendance.academic_period_id
-                    AND marked_absence.institution_class_id = marked_attendance.institution_class_id
-                    AND marked_absence.education_grade_id = marked_attendance.education_grade_id
-                    AND marked_absence.absence_date = marked_attendance.date
+                    ON marked_absence.institution_id = marked_attendance.institution_id 
+                    AND marked_absence.academic_period_id = marked_attendance.academic_period_id 
+                    AND marked_absence.institution_class_id = marked_attendance.institution_class_id 
+                    AND marked_absence.education_grade_id = marked_attendance.education_grade_id 
+                    AND marked_absence.absence_date = marked_attendance.date 
                     GROUP BY marked_attendance.academic_period_id
                         ,marked_attendance.institution_id
                         ,marked_attendance.education_grade_id
