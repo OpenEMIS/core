@@ -6910,7 +6910,6 @@ class InstitutionsController extends AppController
                 $entity = $securityUsers->newEntity($userData);
             } catch (\Exception $e) {
                 Log::debug(__FUNCTION__);
-
                 Log::debug('Error: ' . $e->getMessage());
             }
             //POCOR-9181[END]
@@ -6933,7 +6932,7 @@ class InstitutionsController extends AppController
                     return $this->sendJsonResponse(['message' => 'Duplicate mobile number'], 400);
                 }
             }
-            return $this->sendJsonResponse(['message' => 'Failed to save user'], 500);
+            return $this->sendJsonResponse(['message' => 'Failed to save moodle user ' . $e->getMessage()], 500);
             // POCOR-9011 end
         }
     }
