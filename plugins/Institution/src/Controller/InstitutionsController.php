@@ -6895,51 +6895,87 @@ class InstitutionsController extends AppController
      * @param array $userData
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private function saveSecurityUser($userData): false|\Cake\Datasource\EntityInterface|Response
+    /**
+     * Save or update a Security User by openemis_no.
+     * Returns the saved Entity on success, or a JSON Response on failure.
+     *
+     * @return \Cake\Datasource\EntityInterface|\Cake\Http\Response
+     */
+    private function saveSecurityUser(array $userData): EntityInterface|Response
     {
-        $securityUsers = self::getDynamicTableInstance('User.Users');//POCOR-8706
-        $checkStudentExist = $securityUsers->find()->where(['openemis_no' => $userData['openemis_no']])->first();
-//        self::debug($userData);
-        if ($checkStudentExist) {
-            $userData['id'] = $checkStudentExist->id;
+        $securityUsers = self::getDynamicTableInstance('User.Users'); // POCOR-8706
+
+        // Find existing by openemis_no
+        $existing = $securityUsers->find()
+            ->where(['openemis_no' => $userData['openemis_no'] ?? null])
+            ->first();
+
+        if ($existing) {
+            // Prevent accidental username/password overwrite during update
+            $userData['id'] = $existing->id;
             unset($userData['username'], $userData['password']);
-            $entity = $securityUsers->patchEntity($checkStudentExist, $userData);
+            $entity = $securityUsers->patchEntity($existing, $userData);
         } else {
-            //POCOR-9181[START]
+            // POCOR-9181 [START]
             try {
                 $entity = $securityUsers->newEntity($userData);
-            } catch (\Exception $e) {
-                Log::debug(__FUNCTION__);
-                Log::debug('Error: ' . $e->getMessage());
-                return $this->sendJsonResponse(['message' => 'Failed to create user ' . $e->getMessage()], 500);
+            } catch (\Throwable $e) {
+                Log::error(__FUNCTION__ . ': newEntity failed: ' . $e->getMessage());
+                return $this->sendJsonResponse(
+                    ['message' => 'Failed to create user', 'detail' => $e->getMessage()],
+                    500
+                );
             }
-            //POCOR-9181[END]
+            // POCOR-9181 [END]
         }
-        //POCOR-8706(attached behaviour to reflect users in moodle created from directory)
-        $securityUsers->addBehavior('User.MoodleCreateUser');
+
+        // Validation errors from patch/new stage
+        if ($entity->hasErrors()) {
+            return $this->sendJsonResponse(
+                ['message' => 'Validation failed', 'errors' => $entity->getErrors()],
+                422
+            );
+        }
+
+        // Attach behavior once (avoid duplicate add on multiple calls)
+        $behaviors = $securityUsers->behaviors();
+        if (!$behaviors->has('MoodleCreateUser')) {
+            $securityUsers->addBehavior('User.MoodleCreateUser');
+        }
 
         try {
-            if($entity){
             $saved = $securityUsers->save($entity);
-                return $saved;
-            }else{
-                return $this->sendJsonResponse(['message' => 'No Entity'], 400);
-            }
-        } catch (\Exception $e) {
-            Log::debug(__FUNCTION__);
 
-            Log::debug('Error: ' . $e->getMessage());
-//            Log::debug($entity);
-// POCOR-9011 start
-            if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
-                if (strpos($e->getMessage(), 'unique_email') !== false) {
+            if ($saved === false) {
+                // buildRules or persistence failed without throwing
+                return $this->sendJsonResponse(
+                    ['message' => 'Failed to save user', 'errors' => $entity->getErrors()],
+                    400
+                );
+            }
+
+            // Success: return the persisted entity (same instance, PK set/updated)
+            return $saved;
+
+        } catch (\Throwable $e) {
+            Log::error(__FUNCTION__ . ': save failed: ' . $e->getMessage());
+
+            $msg = $e->getMessage();
+            // POCOR-9011 start — keep your duplicate parsing
+            if (str_contains($msg, 'Duplicate entry')) {
+                if (str_contains($msg, 'unique_email')) {
                     return $this->sendJsonResponse(['message' => 'Duplicate email'], 400);
-                } elseif (strpos($e->getMessage(), 'unique_mobile_number') !== false) {
+                }
+                if (str_contains($msg, 'unique_mobile_number')) {
                     return $this->sendJsonResponse(['message' => 'Duplicate mobile number'], 400);
                 }
             }
-            return $this->sendJsonResponse(['message' => 'Failed to save moodle user ' . $e->getMessage()], 500);
             // POCOR-9011 end
+
+            return $this->sendJsonResponse(
+                ['message' => 'Failed to save moodle user', 'detail' => $msg],
+                500
+            );
         }
     }
 
