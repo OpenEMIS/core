@@ -1421,6 +1421,12 @@ class InstitutionsController extends AppController
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Needs'));
                 $this->set('contentHeader', $header);
+            }  else if ($this->request->getParam('action') == 'InfrastructureAttachments') {
+                //$institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Attachments');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
+                $this->Navigation->addCrumb(__('Attachments'));
+                $this->set('contentHeader', $header);
             }
 
             // POCOR-6150 end
