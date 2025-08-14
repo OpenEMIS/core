@@ -6892,10 +6892,9 @@ class InstitutionsController extends AppController
      * Saves a security user. POCOR-8231
      *
      * @param array $userData
-     * @return \Cake\Datasource\EntityInterface|false
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private function saveSecurityUser($userData)
+    private function saveSecurityUser($userData): false|\Cake\Datasource\EntityInterface|Response
     {
         $securityUsers = self::getDynamicTableInstance('User.Users');//POCOR-8706
         $checkStudentExist = $securityUsers->find()->where(['openemis_no' => $userData['openemis_no']])->first();
@@ -6912,7 +6911,6 @@ class InstitutionsController extends AppController
                 Log::debug(__FUNCTION__);
                 Log::debug('Error: ' . $e->getMessage());
                 return $this->sendJsonResponse(['message' => 'Failed to create user ' . $e->getMessage()], 500);
-
             }
             //POCOR-9181[END]
         }
@@ -6920,7 +6918,12 @@ class InstitutionsController extends AppController
         $securityUsers->addBehavior('User.MoodleCreateUser');
 
         try {
-            return $securityUsers->save($entity);
+            if($entity){
+            $saved = $securityUsers->save($entity);
+                return $saved;
+            }else{
+                return $this->sendJsonResponse(['message' => 'No Entity'], 400);
+            }
         } catch (\Exception $e) {
             Log::debug(__FUNCTION__);
 
