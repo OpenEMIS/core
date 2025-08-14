@@ -77,10 +77,9 @@ const COLUMN_MEAL_BENEFIT: any = {
             if (params.data.hasOwnProperty('meal_benefit_name')) {
                 let studentMealTypeId = (params.data.meal_received_id == null) ? null : params.data.meal_received_id;
                 let mealTypeObj = mealTypes.find(obj => obj.id == studentMealTypeId);
-
                 if (mode == 'view') {
                     if (studentMealTypeId == 1) {
-                        if (params.data.meal_benefit_name == null) {
+                        if (params.data.meal_benefit_id) {
                             let idName = params.context.mealBenefitTypeOptions.findIndex((data: any) => {
                                 if (params?.data?.meal_benefit_id) {
                                     if (data.id == params.data.meal_benefit_id) {
@@ -91,9 +90,7 @@ const COLUMN_MEAL_BENEFIT: any = {
                                 }
                             })
                             return `<span>${params.context.mealBenefitTypeOptions[idName].name}</span>`
-                        } else {
-                            return params.data.meal_benefit_name;
-                        }
+                        } 
                     } else
                         if (studentMealTypeId == 2 || studentMealTypeId == 3 || studentMealTypeId == null) {
                             return '<i style="color: #999999;" class="fa fa-minus"></i>';
