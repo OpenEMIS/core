@@ -45,7 +45,8 @@ class InstitutionFloorsTable extends ControllerActionTable
 
         // POCOR-8037 removed academic period code
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
-        /*$this->addBehavior('CustomField.Record', [
+        // POCOR-9344 restored
+        $this->addBehavior('CustomField.Record', [
             'fieldKey' => 'infrastructure_custom_field_id',
             'tableColumnKey' => null,
             'tableRowKey' => null,
@@ -57,7 +58,7 @@ class InstitutionFloorsTable extends ControllerActionTable
             'recordKey' => 'institution_floor_id',
             'fieldValueClass' => ['className' => 'Infrastructure.FloorCustomFieldValues', 'foreignKey' => 'institution_floor_id', 'dependent' => true],
             'tableCellClass' => null
-        ]);*/
+        ]);
         $this->addBehavior('Institution.InfrastructureShift');
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
