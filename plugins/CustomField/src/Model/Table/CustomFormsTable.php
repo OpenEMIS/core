@@ -182,6 +182,7 @@ class CustomFormsTable extends ControllerActionTable
     {
         $CustomFormsFields = TableRegistry::get($this->extra['fieldClass']['through']);
         $CustomFields = TableRegistry::get($this->extra['fieldClass']['className']);
+        dd($this->extra['fieldClass']['through']);
         $formKey = $this->extra['fieldClass']['foreignKey'];
         $fieldKey = $this->extra['fieldClass']['targetForeignKey'];
         // POCOR-8542 Start
