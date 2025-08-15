@@ -603,6 +603,13 @@ class StudentsTable extends AppTable
                     'AreaAdministratives.id = Institution.area_administrative_id'
                 ]
             ],
+            'InstitutionStudentProgrammes' => [ //POCOR-9328
+                'type' => 'left',
+                'table' => 'institution_student_programmes', 
+                'conditions' => [
+                    'InstitutionStudentProgrammes.student_id = '.$this->aliasField('id')
+                ],
+            ],
         ]);
         $query->select([
             'student_id' => 'Students.id',
@@ -634,7 +641,8 @@ class StudentsTable extends AppTable
             'institution_localities' => 'Localities.name',
             'area_administratives'=> 'AreaAdministratives.name',
             'area_education'=> 'Areas.name',
-            'external_reference' => 'Students.external_reference'
+            'external_reference' => 'Students.external_reference',
+            'registration_number' => 'InstitutionStudentProgrammes.registration_number', //POCOR-9328
         ])
         ->contain(['Genders', 'AddressAreas', 'BirthplaceAreas', 'MainNationalities', 'MainIdentityTypes'])
         ->where([$this->aliasField('is_student') => 1,$conditions])
@@ -915,6 +923,13 @@ class StudentsTable extends AppTable
             'field' => 'preferred_language',
             'type' => 'string',
             'label' => 'Preferred Language',
+        ];
+
+         $extraField[] = [
+            'key' => 'InstitutionStudentProgrammes.registration_number', //POCOR-9328
+            'field' => 'registration_number',
+            'type' => 'string',
+            'label' => 'Registration Number',
         ];
         $InfrastructureCustomFields = TableRegistry::getTableLocator()->get('student_custom_fields');
         $customFieldData = $InfrastructureCustomFields->find()->select([
