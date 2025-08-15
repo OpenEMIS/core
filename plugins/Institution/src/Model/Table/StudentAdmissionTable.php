@@ -23,6 +23,7 @@ use Cake\I18n\FrozenTime;
 use App\Controller\DashboardController;
 use Cake\I18n\FrozenDate;
 use Cake\ORM\Table;
+use Cake\Datasource\ConnectionManager; // POCOR-9323
 
 // POCOR-8286 start
 
@@ -500,7 +501,7 @@ class StudentAdmissionTable extends ControllerActionTable
         try{
             $Students->save($newEntity);
         } catch (\Exception $exception) {
-            Log::debug($exception->getMessage());
+            Log::error($exception->getMessage()); // POCOR-9323
         }
         if(!$newEntity->hasErrors()){
             return $newEntity;
@@ -539,9 +540,10 @@ class StudentAdmissionTable extends ControllerActionTable
         // add student into institution_students_enrolment
         $entity = $this->get($id);
         $this->triggerPendingEnrolmentForStudent($entity);
+
     }
 
-    public function triggerPendingEnrolmentForStudent(Entity $entity)
+    public function triggerPendingEnrolmentForStudent($entity) // POCOR-9323
     {
         $WorkflowsTbl = self::getDynamicTableInstance('Workflow.Workflows');
         $WorkflowStepsTbl = self::getDynamicTableInstance('Workflow.WorkflowSteps');
@@ -578,7 +580,9 @@ class StudentAdmissionTable extends ControllerActionTable
         }
 
         $newEntity = $StudentEnrolments->newEntity($enrolmentArr);
-        $StudentEnrolments->save($newEntity);
+        if ($StudentEnrolments->save($entity)) { // POCOR-9323
+            $this->handleCandidateNumber($entity);
+        }
     }
 
     public function studentsAfterSave(Event $event, $student)
@@ -1136,6 +1140,13 @@ class StudentAdmissionTable extends ControllerActionTable
         $this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
         $this->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
         $this->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
+        $this->field('registration_number', [  // POCOR-9323
+            'type'     => 'readonly',
+            'label'    => __('Candidate Number'),
+            'attr'  => ['entity' => $entity],
+            'entity'  => $entity,
+
+        ]);
         $this->field('institution_class_id', ['entity' => $entity]);
         $this->field('start_date', ['entity' => $entity]);
         $this->field('end_date', ['entity' => $entity]);
@@ -1148,11 +1159,32 @@ class StudentAdmissionTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('openemis_no');//POCOR-7738
-        $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'start_date', 'end_date', 'comment']);
-    }
 
-    public function onGetStudentId(Event $event, Entity $entity)
+        $this->field('openemis_no');//POCOR-7738
+        $this->field('student_name'); // POCOR-9323: start
+        $this->field('student_id', ['type' => 'hidden']);//POCOR-7738
+        $this->field('registration_number', [
+            'type'     => 'readonly',
+            'label'    => __('Candidate Number'),
+            'visible'  => ['view' => true, 'edit' => true, 'add' => false],
+            'entity' => $entity,
+            'attr' => ['entity' => $entity]
+        ]);
+        $this->setFieldOrder(['status_id',
+            'assignee_id',
+            'student_name',
+//            'student_id',
+            'academic_period_id',
+            'education_grade_id',
+            'institution_class_id',
+            'start_date',
+            'end_date',
+            'comment']);
+    }
+    // POCOR-9323: end
+
+    // POCOR-9323: start
+    public function onGetStudentName(Event $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('user')) {
@@ -1184,6 +1216,72 @@ class StudentAdmissionTable extends ControllerActionTable
         return $event->getSubject()->HtmlField->link($value, $url);
     }
 
+    // POCOR-9323: start
+    public function onGetRegistrationNumber(Event $event, Entity $entity)
+    {
+        // Fallback: lazy lookup (in case contain didn't run for some reason)
+
+        $InstitutionStudentProgrammes = TableRegistry::get('Student.InstitutionStudentProgrammes');
+
+
+        // Scope: same student + institution (+ programme if available in the entity)
+        $conditions = [
+            'student_id'     => $entity->student_id,
+            'institution_id' => $entity->institution_id ?? null,
+        ];
+
+        // If education programme id is reachable via grade, use it to be precise
+        $educationProgrammeId = null;
+        if ($entity->has('education_grade') && $entity->education_grade->education_programme_id ?? null) {
+            $educationProgrammeId = (int)$entity->education_grade->education_programme_id;
+        }
+        if ($educationProgrammeId) {
+            $conditions['education_programme_id'] = $educationProgrammeId;
+        }
+//        dd($conditions);
+        $row = $InstitutionStudentProgrammes->find()
+            ->select(['registration_number', 'id'])
+            ->where($conditions)
+            ->orderDesc('id')
+            ->first();
+
+        return $row->registration_number ?? '';
+    }
+
+    public function onUpdateFieldRegistrationNumber(Event $event, array $attr, $action, $request)
+    {
+        // Fallback: lazy lookup (in case contain didn't run for some reason)
+
+//        return $attr;
+        $entity = $attr['attr']['entity'];
+
+        $InstitutionStudentProgrammes = TableRegistry::get('Student.InstitutionStudentProgrammes');
+
+
+        // Scope: same student + institution (+ programme if available in the entity)
+        $conditions = [
+            'student_id'     => $entity->student_id,
+            'institution_id' => $entity->institution_id ?? null,
+        ];
+
+        // If education programme id is reachable via grade, use it to be precise
+        $educationProgrammeId = null;
+        if ($entity->has('education_grade') && $entity->education_grade->education_programme_id ?? null) {
+            $educationProgrammeId = (int)$entity->education_grade->education_programme_id;
+        }
+        if ($educationProgrammeId) {
+            $conditions['education_programme_id'] = $educationProgrammeId;
+        }
+//        dd($conditions);
+        $row = $InstitutionStudentProgrammes->find()
+            ->select(['registration_number', 'id'])
+            ->where($conditions)
+            ->orderDesc('id')
+            ->first();
+        $attr['attr']['value'] = $row->registration_number ?? '';
+       return $attr;
+    }
+    // POCOR-9323: end
 
     //POCOR-6925
 
@@ -1368,6 +1466,9 @@ class StudentAdmissionTable extends ControllerActionTable
     // POCOR-9313 start: made a little safer
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
+        if ($entity->isNew() || $entity->isDirty('status_id')) { // POCOR-9323
+            $this->sendStudentAdmissionAlert($entity);
+        }
         if (!$entity->isNew()) {
             return; // Only handle new entities
         }
@@ -1388,9 +1489,9 @@ class StudentAdmissionTable extends ControllerActionTable
         }
 
         // These are read-only safe and fine to run here
-        $this->sendStudentAdmissionAlert($entity);
         $this->ensureInstitutionStudentExists($entity);
     }
+
     protected function processAutoApproval(Entity $entity): void
     {
         $superAdmin = Hash::get($_SESSION['Auth'], 'User.super_admin');
@@ -1464,7 +1565,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 $alertsTable->aliasField('frequency') => 'Once'])
             ->first();
         if (!$alert) {
-            Log::debug('No Alerts for AlertStudentAdmission');
+            Log::error('No Alerts for AlertStudentAdmission'); // POCOR-9323
             return;
         }
         if (!is_array($alert)) {
@@ -1699,4 +1800,250 @@ class StudentAdmissionTable extends ControllerActionTable
         return $caseResults->toArray();
     }
 
+    // POCOR-9323
+    private function handleCandidateNumber($entity): void
+    {
+        if (property_exists($entity, 'modified_user_id') && $entity->modified_user_id) {
+            $userId = $entity->modified_user_id;
+        } else {
+            $userId = $entity->created_user_id;
+        }
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+// Read config
+        $config = $ConfigItemTable->find()
+            ->select(['value', 'value_selection'])
+            ->where([$ConfigItemTable->aliasField('code') => 'auto_generated_candidate_number'])
+            ->first();
+
+        $isEnabled = $config ? (bool)$config->value : false;
+        $template  = $config ? (string)$config->value_selection : '';
+        if (!$isEnabled) {
+            Log::error(print_r([__LINE__, 'bail:not_enabled'], true));
+            return; // not enabled
+        }
+
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionStudentProgrammes = TableRegistry::get('Student.InstitutionStudentProgrammes');
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+
+        // Inputs
+        $institutionId     = (int)($entity->institution_id ?? 0);
+        $educationGradeId  = (int)($entity->education_grade_id ?? 0);
+        $academicPeriodId  = (int)($entity->academic_period_id ?? 0);
+        $userRecordId  = (int)($entity->student_id ?? 0);
+
+        //        Log::debug(print_r([__LINE__, 'inputs', compact('institutionId','educationGradeId','academicPeriodId', 'userRecordId')], true));
+
+        if (!$institutionId || !$educationGradeId || !$academicPeriodId) {
+            Log::error(print_r([__LINE__, 'bail:not_enough_info'], true));
+            return; // not enough info to generate
+        }
+
+        // Fetch core context
+        $institution = $Institutions->find()
+            ->contain(['Areas'])
+            ->where([$Institutions->aliasField('id') => $institutionId])
+            ->first();
+//        Log::debug(print_r([__LINE__, 'institution_found' => (bool)$institution], true));
+
+        $period = $AcademicPeriods->find()
+            ->where([$AcademicPeriods->aliasField('id') => $academicPeriodId])
+            ->first();
+//        Log::debug(print_r([__LINE__, 'period_found' => (bool)$period], true));
+
+        $grade = $EducationGrades->find()
+            ->where([$EducationGrades->aliasField('id') => $educationGradeId])
+            ->first();
+//        Log::debug(print_r([__LINE__, 'grade_found' => (bool)$grade], true));
+
+        if (empty($institution) || empty($period) || empty($grade)) {
+            Log::error(print_r([__LINE__, 'bail:missing_context'], true));
+            return;
+        }
+
+        $areaCode            = $institution->area->code ?? '';
+        $institutionCode     = $institution->code ?? '';
+        $academicPeriodCode  = $period->code ?? '';
+        $educationProgrammeId= (int)($grade->education_programme_id ?? 0);
+
+//        Log::debug(print_r([__LINE__, 'context_vals', compact('areaCode','institutionCode','academicPeriodCode','educationProgrammeId')], true));
+
+        if ($areaCode === '' || $institutionCode === '' || $academicPeriodCode === '' || !$educationProgrammeId) {
+            Log::error(print_r([__LINE__, 'bail:missing_required_values'], true));
+            return;
+        }
+
+        //        Log::debug(print_r([__LINE__, 'config', 'enabled' => $isEnabled, 'template' => $template], true));
+
+        // Decide path: New (template) or Fallback (default)
+        $useTemplate = trim($template) !== '';
+//        Log::debug(print_r([__LINE__, 'path' => $useTemplate ? 'template' : 'fallback'], true));
+
+        if ($useTemplate) {
+            // ==============================
+            // === NEW: TEMPLATE-DRIVEN  ===
+            // ==============================
+            $tokenMap = [
+                'area_code'            => $areaCode,
+                'institution_code'     => $institutionCode,
+                'academic_period_code' => $academicPeriodCode,
+            ];
+
+            // Extract width from first numeric token ${N}; default 4
+            $seqWidth = 4;
+            if (preg_match('/\${\s*(\d+)\s*}/', $template, $m)) {
+                $seqWidth = max(1, (int)$m[1]);
+            }
+//            Log::debug(print_r([__LINE__, 'seqWidth' => $seqWidth], true));
+
+            // Replace named tokens first
+            $prefix = $template;
+            foreach ($tokenMap as $k => $v) {
+                $prefix = preg_replace('/\${\s*' . preg_quote($k, '/') . '\s*}/', $v, $prefix);
+            }
+//            Log::debug(print_r([__LINE__, 'prefix_after_named_tokens' => $prefix], true));
+
+            // Replace the first numeric token with %SEQ%
+            $prefix = preg_replace('/\${\s*\d+\s*}/', '%SEQ%', $prefix, 1);
+            // Remove any extra numeric tokens cleanly
+            $prefix = preg_replace('/\${\s*\d+\s*}/', '', $prefix);
+//            Log::debug(print_r([__LINE__, 'prefix_after_numeric_token' => $prefix], true));
+
+            // If no %SEQ% present, append it
+            if (strpos($prefix, '%SEQ%') === false) {
+                $prefix = rtrim($prefix, '/') . '/%SEQ%';
+            }
+
+            // Remove any unknown ${...} tokens to avoid persisting raw placeholders
+            $prefix = preg_replace('/\${\s*[^}]+\s*}/', '', $prefix);
+
+            // Clean double slashes and trailing slash
+            $prefix = preg_replace('#/{2,}#', '/', $prefix);
+            $prefix = rtrim($prefix, '/');
+
+//            Log::debug(print_r([__LINE__, 'prefix_final' => $prefix], true));
+
+            // Find last sequence for this prefix and increment
+            $likePrefix = str_replace(['%', '_'], ['\%', '\_'], str_replace('%SEQ%', '', $prefix)) . '%';
+//            Log::debug(print_r([__LINE__, 'likePrefix' => $likePrefix], true));
+
+            $conn = ConnectionManager::get('default');
+            $nextNumberPadded = $conn->transactional(function () use ($InstitutionStudentProgrammes, $likePrefix, $seqWidth) {
+                $last = $InstitutionStudentProgrammes->find()
+                    ->select(['registration_number', 'id'])
+                    ->where([$InstitutionStudentProgrammes->aliasField('registration_number') . ' LIKE' => $likePrefix])
+                    ->order([$InstitutionStudentProgrammes->aliasField('id') => 'DESC'])
+                    ->first();
+
+//                Log::debug(print_r([__LINE__, 'txn:last_found' => (bool)$last, 'last_reg' => $last->registration_number ?? null, 'last_id' => $last->id ?? null], true));
+
+                $next = 1;
+                if ($last && !empty($last->registration_number)) {
+                    $parts = explode('/', $last->registration_number);
+                    $lastSeg = end($parts);
+                    if (ctype_digit($lastSeg)) {
+                        $next = (int)$lastSeg + 1;
+                    }
+                }
+
+                $padded = str_pad((string)$next, $seqWidth, '0', STR_PAD_LEFT);
+//                Log::debug(print_r([__LINE__, 'txn:next' => $next, 'txn:padded' => $padded], true));
+                return $padded;
+            });
+
+//            Log::debug(print_r([__LINE__, 'nextNumberPadded' => $nextNumberPadded], true));
+
+            $finalCandidateNumber = str_replace('%SEQ%', $nextNumberPadded, $prefix);
+//            Log::debug(print_r([__LINE__, 'finalCandidateNumber' => $finalCandidateNumber], true));
+
+            // Save
+            $data = [
+                'institution_id'         => $institutionId,
+                'student_id'             => $userRecordId,
+                'education_programme_id' => $educationProgrammeId,
+                'registration_number'    => $finalCandidateNumber,
+                'created_user_id'        => $userId,
+                'modified_user_id'       => $userId,
+                'created'                => FrozenTime::now(),
+                'modified'               => FrozenTime::now(),
+            ];
+//            Log::debug(print_r([__LINE__, 'save(template):data' => $data], true));
+
+            try {
+                $entity = $InstitutionStudentProgrammes->newEntity($data);
+                $InstitutionStudentProgrammes->saveOrFail($entity);
+//                Log::debug(print_r([__LINE__, 'save(template):ok', 'new_id' => $entity->id ?? null], true));
+            } catch (\Throwable $e) {
+                Log::error(print_r([__LINE__, 'save(template):error', 'msg' => $e->getMessage()], true));
+                throw $e;
+            }
+//            Log::debug(print_r([__LINE__, 'end(template)'], true));
+            return;
+        }
+
+        // ==================================
+        // === FALLBACK (default) version ===
+        // ==================================
+//        Log::debug(print_r([__LINE__, 'fallback:start'], true));
+
+        $lastProgramme = $InstitutionStudentProgrammes->find()
+            ->order([$InstitutionStudentProgrammes->aliasField('id') => 'DESC'])
+            ->limit(1)
+            ->first();
+//        Log::debug(print_r([__LINE__, 'fallback:last_found' => (bool)$lastProgramme, 'last_reg' => $lastProgramme->registration_number ?? null, 'last_id' => $lastProgramme->id ?? null], true));
+
+        if (empty($lastProgramme)) {
+            $formattedNumber = str_pad('1', 4, '0', STR_PAD_LEFT);
+//            Log::debug(print_r([__LINE__, 'fallback:seed' => $formattedNumber], true));
+        } else {
+            $registrationNumber = $lastProgramme->registration_number;
+            if (!empty($registrationNumber)) {
+                $segments = explode('/', $registrationNumber);
+                $lastSegment = end($segments);
+                if (ctype_digit($lastSegment)) {
+                    $next = (int)$lastSegment + 1;
+                    $formattedNumber = str_pad((string)$next, strlen($lastSegment), '0', STR_PAD_LEFT);
+//                    Log::debug(print_r([__LINE__, 'fallback:next' => $next, 'fallback:formatted' => $formattedNumber], true));
+                } else {
+                    $formattedNumber = str_pad('1', 4, '0', STR_PAD_LEFT);
+//                    Log::debug(print_r([__LINE__, 'fallback:non_numeric_last_segment_reset' => $formattedNumber], true));
+                }
+            } else {
+                $formattedNumber = str_pad('1', 4, '0', STR_PAD_LEFT);
+//                Log::debug(print_r([__LINE__, 'fallback:empty_last_reset' => $formattedNumber], true));
+            }
+        }
+
+        $finalCandidateNumber = implode('/', [
+            $areaCode,
+            $institutionCode,
+            $academicPeriodCode,
+            $formattedNumber,
+        ]);
+//        Log::debug(print_r([__LINE__, 'fallback:finalCandidateNumber' => $finalCandidateNumber], true));
+
+        $data = [
+            'institution_id'         => $institutionId,
+            'student_id'             => $userRecordId,
+            'education_programme_id' => $educationProgrammeId,
+            'registration_number'    => $finalCandidateNumber,
+            'created_user_id'        => $userId,
+            'modified_user_id'       => $userId,
+            'created'                => FrozenTime::now(),
+            'modified'               => FrozenTime::now(),
+        ];
+//        Log::debug(print_r([__LINE__, 'save(fallback):data' => $data], true));
+
+        try {
+            $fallbackEntity = $InstitutionStudentProgrammes->newEntity($data);
+            $InstitutionStudentProgrammes->saveOrFail($fallbackEntity);
+//            Log::debug(print_r([__LINE__, 'save(fallback):ok', 'new_id' => $fallbackEntity->id ?? null], true));
+        } catch (\Throwable $e) {
+            Log::error(print_r([__LINE__, 'save(fallback):error', 'msg' => $e->getMessage()], true));
+            throw $e;
+        }
+
+//        Log::debug(print_r([__LINE__, __METHOD__, 'end(fallback)'], true));
+    }
 }
