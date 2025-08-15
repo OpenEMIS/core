@@ -182,35 +182,34 @@ class CustomFormsTable extends ControllerActionTable
     {
         $CustomFormsFields = TableRegistry::get($this->extra['fieldClass']['through']);
         $CustomFields = TableRegistry::get($this->extra['fieldClass']['className']);
-        dd($this->extra['fieldClass']['through']);
         $formKey = $this->extra['fieldClass']['foreignKey'];
         $fieldKey = $this->extra['fieldClass']['targetForeignKey'];
         // POCOR-8542 Start
         $selectFields = [
-            'name'       => $CustomFields->aliasField('name'),
+            'name' => $CustomFields->aliasField('name'),
             'field_type' => $CustomFields->aliasField('field_type'),
-            $fieldKey    => $CustomFormsFields->aliasField($fieldKey),
-            $formKey     => $CustomFormsFields->aliasField($formKey),
-            'id'         => $CustomFormsFields->aliasField('id'),
+            $fieldKey => $CustomFormsFields->aliasField($fieldKey),
+            $formKey => $CustomFormsFields->aliasField($formKey),
+            'id' => $CustomFormsFields->aliasField('id')
         ];
-
-// Add section only if it exists on the table
-        if ($CustomFormsFields->hasField('section')) { // or: $CustomFormsFields->getSchema()->hasColumn('section')
-            $selectFields['section'] = $CustomFormsFields->aliasField('section');
+        try{
+            $selectFields['section'] = $CustomFormsFields->aliasField('section'); //comment cakephp4 not found column // Again change for this POCOR-8419
+        }catch (\Exception $exception){
+            Log::debug('No Custom Field Section');
         }
-
         return $CustomFormsFields
-            ->find()
+            ->find('all')
             ->select($selectFields)
             ->innerJoin(
                 [$CustomFields->getAlias() => $CustomFields->getTable()],
-                [$CustomFields->aliasField('id = ') . $CustomFormsFields->aliasField($fieldKey)]
+                [
+                    $CustomFields->aliasField('id = ') . $CustomFormsFields->aliasField($fieldKey),
+                ]
             )
             ->order([$CustomFormsFields->aliasField('order')])
             ->where([$CustomFormsFields->aliasField($formKey) => $formId])
-            ->enableAutoFields(false) // avoid pulling everything; set true if you *do* want all CFFields columns
+            ->enableAutoFields()
             ->toArray();
-
     }
 
     public function onGetCustomOrderFieldElement(Event $event, $action, $entity, $attr, $options = [])

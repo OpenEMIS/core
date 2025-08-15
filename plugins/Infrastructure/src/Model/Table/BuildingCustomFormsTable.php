@@ -11,13 +11,14 @@ class BuildingCustomFormsTable extends CustomFormsTable
     public function initialize(array $config): void
     {
         // comment cakephp4 POCOR-7485
-        /*$config['extra'] = [
+        // POCOR-9344 restored
+        $config['extra'] = [
             'fieldClass' => [
                 'className' => 'Infrastructure.BuildingCustomFields',
                 'joinTable' => 'infrastructure_custom_forms_fields',
                 'foreignKey' => 'infrastructure_custom_form_id',
                 'targetForeignKey' => 'infrastructure_custom_field_id',
-                'through' => 'Infrastructure.InfrastructureCustomFormsFields',
+                'through' => 'Infrastructure.BuildingCustomFormsFields',
                 'dependent' => true
             ],
             'filterClass' => [
@@ -28,7 +29,7 @@ class BuildingCustomFormsTable extends CustomFormsTable
                 'through' => 'Infrastructure.BuildingCustomFormsFilters',
                 'dependent' => true
             ]
-        ];*/
+        ];
 
         // InfrastructureCustomFormsFields model
         $this->belongsToMany('InfrastructureCustomFields', [
