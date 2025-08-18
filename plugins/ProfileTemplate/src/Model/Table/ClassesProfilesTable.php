@@ -749,9 +749,16 @@ class ClassesProfilesTable extends ControllerActionTable
     {
 		$model = $this->ClassProfiles;
         $ids = $this->getQueryString();
-        unset($ids['area_id']);
-        if ($model->exists($ids)) {
-            $data = $model->get($ids);
+        $clean = array_filter(
+            $ids,
+            fn($v) => !is_null($v)
+        );
+
+        if ($model->exists($clean)) {
+            $data = $model->find()
+                ->where($clean)
+                ->first();   // similar to get(), returns first entity or null
+            if(!empty($data)){
             $fileName = $data->file_name;
             $fileNameData = explode(".",$fileName);
 
@@ -772,6 +779,7 @@ class ClassesProfilesTable extends ControllerActionTable
             header('Content-Disposition: inline; filename="' . $filename . '"');
 
             echo $file;
+            }
         }
         exit();
     }
