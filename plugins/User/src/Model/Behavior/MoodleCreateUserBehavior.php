@@ -11,6 +11,7 @@ use Cake\Event\Event;
 use App\MoodleApi\MoodleApi;
 use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
+use Cake\Routing\Router; //POCOR-9277
 
 class MoodleCreateUserBehavior extends Behavior
 {
@@ -21,6 +22,25 @@ class MoodleCreateUserBehavior extends Behavior
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $isNew = $entity->isNew();
+        //POCOR-9277 -- Start
+        $model = $this->_table;       
+        // Get the current request
+        $request = Router::getRequest();
+
+        if ($request) {
+            $params = $request->getAttribute('params'); // all route params
+            $pass = $params['pass'] ?? [];
+
+            if (
+                ($params['action'] ?? null) === 'BulkStudentEnrolment' &&
+                ($params['controller'] ?? null) === 'Institutions' &&
+                ($params['plugin'] ?? null) === 'Institution' &&
+                isset($pass[0]) && $pass[0] === 'reconfirm'
+            ) {
+                return;
+            }
+        }
+        //POCOR-9277 -- End
 
         if ($entity instanceof \Institution\Model\Entity\Student) {
             $entity = $this->convertStudentToUser($entity);
