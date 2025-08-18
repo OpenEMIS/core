@@ -579,9 +579,9 @@ class StudentAdmissionTable extends ControllerActionTable
             $enrolmentArr['institution_class_id'] = 'NULL';
         }
 
-        $newEntity = $StudentEnrolments->newEntity($enrolmentArr);
-        if ($StudentEnrolments->save($newEntity)) { // POCOR-9323
-            $this->handleCandidateNumber($newEntity);
+        $newEnrolmentEntity = $StudentEnrolments->newEntity($enrolmentArr);
+        if ($StudentEnrolments->save($newEnrolmentEntity)) { // POCOR-9323
+            $this->handleCandidateNumber($newEnrolmentEntity);
         }
     }
 
