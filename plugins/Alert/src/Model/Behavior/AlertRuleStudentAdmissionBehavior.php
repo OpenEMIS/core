@@ -55,7 +55,10 @@ class AlertRuleStudentAdmissionBehavior extends AlertRuleBehavior
 //            '${school_name}' => 'School Name.',
 //            '${student_name}' => 'Student Name.', //POCOR-9103
 //            '${academic_year}' => 'Academic Year.',
-//            '${grade_name}' => 'Grade Level/Program Name.',
+            '${grade.name}' => 'Education Grade Name.',
+            '${guardian.name}' => 'Guardian Name.',
+            '${guardian.relation}' => 'Guardian Relation.',
+            '${guardian.contact}' => 'Guardian Contact.',
             // '${assignee.middle_name}'=>'Assignee Middle Name.',
             // '${assignee.third_name}'=>'Assignee Third Name.',
             // '${assignee.last_name}'=>'Assignee Last Name.',
