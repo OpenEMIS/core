@@ -431,7 +431,7 @@ class InstitutionStandardsTable extends AppTable
 
         if ($sheet_tab_name == 'Student') {
             $selectable['gender'] = 'Genders.name';
-            $selectable['birth_certificate'] = 'Identities.number';
+            $selectable['birth_certificate'] = $this->aliasField('identity_number'); //'Identities.number'; //POCOR-9310
             $selectable['date_of_birth'] = $this->aliasField('date_of_birth');
             $selectable['nationality_name'] = 'MainNationalities.name';
             if ($birth_certificate_code_id) {
@@ -649,7 +649,7 @@ class InstitutionStandardsTable extends AppTable
         $extraField[] = [
             'key'   => '',
             'field' => 'absence_date',
-            'type'  => 'date',
+            'type'  => 'string',
             'label' => __('Date'),
         ];
         $extraField[] = [
@@ -761,7 +761,7 @@ class InstitutionStandardsTable extends AppTable
         $extraField[] = [
             'key'   => 'InstitutionStandards.date_of_birth',
             'field' => 'date_of_birth',
-            'type'  => 'date',
+            'type'  => 'string',
             'label' => __('Date Of Birth'),
         ];
         $extraField[] = [
@@ -809,13 +809,13 @@ class InstitutionStandardsTable extends AppTable
         $extraField[] = [
             'key'   => 'InstitutionStudent.start_date',
             'field' => 'student_start_date',
-            'type'  => 'date',
+            'type'  => 'string',
             'label' => __('Start Date'),
         ];
         $extraField[] = [
             'key'   => 'InstitutionStudent.end_date',
             'field' => 'student_end_date',
-            'type'  => 'date',
+            'type'  => 'string',
             'label' => __('End Date'),
         ];
 
@@ -846,6 +846,7 @@ class InstitutionStandardsTable extends AppTable
         return $extraField;
     }
 
+    //POCOR-9310[START] here only date field type change from date to string 
     private function getAcademicTabFields($extraField)
     {
         $extraField[] = [
@@ -887,13 +888,13 @@ class InstitutionStandardsTable extends AppTable
         $extraField[] = [
             'key'   => 'InstitutionStudent.start_date',
             'field' => 'student_start_date',
-            'type'  => 'date',
+            'type'  => 'string',
             'label' => __('Start Date'),
         ];
         $extraField[] = [
             'key'   => 'InstitutionStudent.end_date',
             'field' => 'student_end_date',
-            'type'  => 'date',
+            'type'  => 'string',
             'label' => __('End Date'),
         ];
         $extraField[] = [
