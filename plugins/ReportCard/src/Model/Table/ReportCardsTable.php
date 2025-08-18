@@ -174,16 +174,21 @@ class ReportCardsTable extends ControllerActionTable
         $EducationGradeOptions = [];
         $educationGradeList = [];
         $EducationGradeOptions = $EducationGrades
-                                ->find('list')
-                                ->select([
-                                    'education_grade_id' => $EducationGrades->aliasField('id'),
-                                    'education_grade' => $EducationGrades->aliasField('name')])
-                                ->InnerJoin([$InstitutionGrades->getAlias() => $InstitutionGrades->getTable()], [
-                                   $EducationGrades->aliasField('id = ') . $InstitutionGrades->aliasField('education_grade_id')
-                                ])
-                                ->where([$InstitutionGrades->aliasField('academic_period_id') => $selectedAcademicPeriod])
-                                ->enableHydration(false)
-                                ->toArray();
+                            ->find('list')
+                            ->select([
+                                'education_grade_id' => $EducationGrades->aliasField('id'),
+                                'education_grade' => $EducationGrades->aliasField('name')
+                            ])
+                            ->InnerJoin([$InstitutionGrades->getAlias() => $InstitutionGrades->getTable()], [
+                                $EducationGrades->aliasField('id') . ' = ' . $InstitutionGrades->aliasField('education_grade_id')
+                            ])
+                            ->where([
+                                $InstitutionGrades->aliasField('academic_period_id') => $selectedAcademicPeriod
+                            ])
+                            ->enableHydration(false)
+                            ->order([$EducationGrades->aliasField('id') => 'DESC'])
+                            ->toArray();
+
         $EducationGradeOptionsKey = [];
         $EducationGradeOptionsList=$EducationGradeOptions;
         $list=[];
@@ -196,7 +201,7 @@ class ReportCardsTable extends ControllerActionTable
 
         $EducationGradeOptions = ['-1' => __('All Education Grades')] + $EducationGradeOptions;
         $selectedEducationGrade = !is_null($this->request->getQuery('education_grade_id')) ? $this->request->getQuery('education_grade_id') : -1;
-        $EducationGradeOptions = array_unique($EducationGradeOptions);
+      //  $EducationGradeOptions = array_unique($EducationGradeOptions);
         $this->controller->set(compact('EducationGradeOptions', 'selectedEducationGrade'));
         $extra['elements']['controls'] = ['name' => 'ReportCard.controls', 'data' => [], 'options' => [], 'order' => 1];
         if(!empty($selectedEducationGrade) && $selectedEducationGrade != -1){
@@ -407,7 +412,7 @@ class ReportCardsTable extends ControllerActionTable
         if ($action == 'add') {
 
             $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
+            $academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
 
             $programmeOptions = $EducationProgrammes
                 ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
