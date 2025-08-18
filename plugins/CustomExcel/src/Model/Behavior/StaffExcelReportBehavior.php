@@ -443,6 +443,7 @@ class StaffExcelReportBehavior extends Behavior
 
         if ($format == 'pdf') {
             $this->savePDF($objSpreadsheet, $filepath, $staff_id);
+            return;
         } else {
 			// pdf
 			if(!empty($staff_id)) {
