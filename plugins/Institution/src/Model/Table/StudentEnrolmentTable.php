@@ -913,6 +913,7 @@ class StudentEnrolmentTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        $this->sendStudentEnrolmentAlert($entity); // POCOR-9320
         if ($entity->isNew()) {
             if ($entity->has('action_type') && $entity->action_type == 'imported') { // Import logic
                 $WorkflowActions = self::getDynamicTableInstance('Workflow.WorkflowActions');
@@ -974,7 +975,6 @@ class StudentEnrolmentTable extends ControllerActionTable
             return;
         }
         $this->_alreadyHandled[$entity->id] = true;
-        $this->sendStudentEnrolmentAlert($entity);
     }
 
     public function findWorkbench(Query $query, array $options)
