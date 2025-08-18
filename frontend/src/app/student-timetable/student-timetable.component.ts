@@ -257,7 +257,12 @@ export class StudentTimetableComponent implements OnInit {
                 });
             },
             error: (error: any) => {
-
+                if (error) {
+                    if (error.error == "Token Expired") {
+                        localStorage.removeItem("loginToken");
+                        this.loginData();
+                    }
+                }
             }
         })
     }
@@ -274,7 +279,7 @@ export class StudentTimetableComponent implements OnInit {
             },
             error: (error: any) => {
                 if (error) {
-                    if (error.message == "Token has expired") {
+                    if (error.message == "Token Expired") {
                         localStorage.removeItem("loginToken");
                         this.loginData();
                     }
@@ -300,7 +305,7 @@ export class StudentTimetableComponent implements OnInit {
             },
             error: (error: any) => {
                 if (error) {
-                    if (error.message == "Token has expired") {
+                    if (error.message == "Token Expired") {
                         localStorage.removeItem("loginToken");
                         this.loginData();
                     }
@@ -326,7 +331,7 @@ export class StudentTimetableComponent implements OnInit {
             },
             error: (error: any) => {
                 if (error) {
-                    if (error.message == "Token has expired") {
+                    if (error.message == "Token Expired") {
                         localStorage.removeItem("loginToken");
                     }
                 }
@@ -350,7 +355,7 @@ export class StudentTimetableComponent implements OnInit {
             },
             error: (error: any) => {
                 if (error) {
-                    if (error.message == "Token has expired") {
+                    if (error.message == "Token Expired") {
                         localStorage.removeItem("loginToken");
                         this.loginData();
                     }
@@ -416,7 +421,7 @@ export class StudentTimetableComponent implements OnInit {
                     },
                     error: (error: any) => {
                         if (error) {
-                            if (error.message == "Token has expired") {
+                            if (error.message == "Token Expired") {
                                 localStorage.removeItem("loginToken");
                                 this.loginData();
                             }
@@ -426,7 +431,7 @@ export class StudentTimetableComponent implements OnInit {
             },
             error: (err:any)=>{
                 if (err) {
-                    if (err.message == "Token has expired") {
+                    if (err.message == "Token Expired") {
                         localStorage.removeItem("loginToken");
                         this.loginData();
                     }
@@ -449,7 +454,7 @@ export class StudentTimetableComponent implements OnInit {
             },
             error: (error: any) => {
                 if (error) {
-                    if (error.message == "Token has expired") {
+                    if (error.message == "Token Expired") {
                         localStorage.removeItem("loginToken");
                         this.loginData();
                     }
@@ -480,7 +485,7 @@ export class StudentTimetableComponent implements OnInit {
             },
             error: (error: any) => {
                 if (error) {
-                    if (error.message == "Token has expired") {
+                    if (error.message == "Token Expired") {
                         localStorage.removeItem("loginToken");
                         this.loginData();
                     }
@@ -500,7 +505,7 @@ export class StudentTimetableComponent implements OnInit {
             },
             error: (error: any) => {
                 if (error) {
-                    if (error.message == "Token has expired") {
+                    if (error.message == "Token Expired") {
                         localStorage.removeItem("loginToken");
                         this.loginData();
                     }
@@ -583,7 +588,7 @@ export class StudentTimetableComponent implements OnInit {
             },
             error: (error: any) => {
                 if (error) {
-                    if (error.message == "Token has expired") {
+                    if (error.message == "Token Expired") {
                         localStorage.removeItem("loginToken");
                         this.loginData();
                     }
@@ -661,7 +666,7 @@ export class StudentTimetableComponent implements OnInit {
             },
             error: (error: any) => {
                 if (error) {
-                    if (error.message == "Token has expired") {
+                    if (error.message == "Token Expired") {
                         localStorage.removeItem("loginToken");
                     }
                 }
@@ -685,7 +690,7 @@ export class StudentTimetableComponent implements OnInit {
             },
             error: (error: any) => {
                 if (error) {
-                    if (error.message == "Token has expired") {
+                    if (error.message == "Token Expired") {
                         localStorage.removeItem("loginToken");
                     }
                 }
@@ -770,7 +775,7 @@ export class StudentTimetableComponent implements OnInit {
                 },
                 error: (error: any) => {
                     if (error) {
-                        if (error.message == "Token has expired") {
+                        if (error.message == "Token Expired") {
                             localStorage.removeItem("loginToken");
                         }
                     }
@@ -801,7 +806,7 @@ export class StudentTimetableComponent implements OnInit {
             },
             error: (error: any) => {
                 if (error) {
-                    if (error.message == "Token has expired") {
+                    if (error.message == "Token Expired") {
                         localStorage.removeItem("loginToken");
                         this.loginData();
                     }
