@@ -580,8 +580,8 @@ class StudentAdmissionTable extends ControllerActionTable
         }
 
         $newEntity = $StudentEnrolments->newEntity($enrolmentArr);
-        if ($StudentEnrolments->save($entity)) { // POCOR-9323
-            $this->handleCandidateNumber($entity);
+        if ($StudentEnrolments->save($newEntity)) { // POCOR-9323
+            $this->handleCandidateNumber($newEntity);
         }
     }
 
