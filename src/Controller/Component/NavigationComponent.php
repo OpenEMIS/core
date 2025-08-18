@@ -3059,11 +3059,11 @@ class NavigationComponent extends Component
                             'parent' => 'SystemSetup',
                             'link' => false
                         ],
-                        'Credentials.index' => [
+                        'Credentials.Credentials.index' => [ //POCOR-9256
                             'title' => 'Credentials',
                             'parent' => 'API',
                             'selected' => [
-                                'Credentials.Credentials' //POCOR-9256
+                                'Credentials.Credentials'
                             ]
                         ],
                     ];
@@ -3158,11 +3158,13 @@ class NavigationComponent extends Component
                     //     'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
                     // ],
                     //POCOR-7312[END]
-                    'Credentials.index' => [
+                    'Credentials.Credentials.index' => [ //POCOR-9256
                         'title' => 'Credentials',
                         'parent' => 'API',
-                       'Credentials.Credentials' //POCOR-9256
-                    ],
+                        'selected' => [
+                            'Credentials.Credentials'
+                        ],
+                    ]
                 ];
             }
         } else {
@@ -3250,14 +3252,11 @@ class NavigationComponent extends Component
                     //     'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
                     // ],
                     //POCOR-7312[END]
-                    'Credentials.Credentials' => [
+                    'Credentials.Credentials.index' => [ //POCOR-9256
                         'title' => 'Credentials',
                         'parent' => 'API',
                         'selected' => [
-                            'Credentials.view',
-                            'Credentials.add',
-                            'Credentials.edit',
-                            'Credentials.delete'
+                            'Credentials.Credentials'
                         ]
                     ],
                 ];
@@ -4792,14 +4791,15 @@ class NavigationComponent extends Component
                     //POCOR-9256 start
                     $allowedRoutes = [
                         ['Labels', 'Labels'],
-                        ['Credentials', 'index'],
+                        ['Credentials', 'Credentials'],
                     ];
 
                     if (!in_array([$url['controller'], $url['action']], $allowedRoutes)) {
                         unset($navigations[$key]);
+                        continue;
                     }
                     //POCOR-9256 end
-                    continue;
+
                 }
 
                 // Check if $restrictedTo is an array
