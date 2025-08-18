@@ -27,7 +27,9 @@ class LabelsTable extends AppTable
                 $label = __('Not Set');
             }
             if(!$module) {
-                $label = __($field);
+                if (!empty($field)) { //POCOR-9307
+                  $label = __($field);
+                }
             }
             if (!empty($field) && !empty($module)) {
                 $entity = $this->find()
