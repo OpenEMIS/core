@@ -114,10 +114,9 @@ class StaffExcelReportBehavior extends Behavior
 
         $extra['vars'] = $this->getVars($params, $extra);
 
-
         $extra['file'] = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $format;
         $extra['path'] = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
-
+        Log::debug($extra['file']);
         $temppath = tempnam($extra['path'], $this->getConfig('filename') . '_');
         $extra['file_path'] = $temppath;
 
@@ -126,7 +125,6 @@ class StaffExcelReportBehavior extends Behavior
         $this->generateExcel($objSpreadsheet, $extra);
 
         Log::write('debug', 'StaffExcelReportBehavior >>> renderExcelTemplate');
-
 
         $this->saveFile($objSpreadsheet, $temppath, $format, $params['staff_id']);
 
@@ -337,7 +335,7 @@ class StaffExcelReportBehavior extends Behavior
         $imageMarginTop = $attr['imageMarginTop'];
 
         $objDrawing = new MemoryDrawing();
-
+        Log::debug(print_r([$imagePath],true));
         if (!isset($extra['image_resource']) && $imagePath) {
             if (!file_exists($imagePath)) {
                 throw new \Exception("Image file does not exist: $imagePath");
