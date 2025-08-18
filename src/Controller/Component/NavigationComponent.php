@@ -3063,10 +3063,7 @@ class NavigationComponent extends Component
                             'title' => 'Credentials',
                             'parent' => 'API',
                             'selected' => [
-                                'Credentials.view',
-                                'Credentials.add',
-                                'Credentials.edit',
-                                'Credentials.delete'
+                                'Credentials.Credentials' //POCOR-9256
                             ]
                         ],
                     ];
@@ -3164,12 +3161,7 @@ class NavigationComponent extends Component
                     'Credentials.index' => [
                         'title' => 'Credentials',
                         'parent' => 'API',
-                        'selected' => [
-                            'Credentials.view',
-                            'Credentials.add',
-                            'Credentials.edit',
-                            'Credentials.delete'
-                        ]
+                       'Credentials.Credentials' //POCOR-9256
                     ],
                 ];
             }
@@ -4807,7 +4799,6 @@ class NavigationComponent extends Component
                         unset($navigations[$key]);
                     }
                     //POCOR-9256 end
-                    unset($navigations[$key]);
                     continue;
                 }
 
