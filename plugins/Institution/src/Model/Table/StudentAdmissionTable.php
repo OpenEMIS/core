@@ -565,7 +565,7 @@ class StudentAdmissionTable extends ControllerActionTable
             'end_date' => $entity->end_date,
             'student_id' => $entity->student_id,
             'status_id' => $WorkflowsRes->id,
-            'assignee_id' => $this->Auth->user('id'),
+            'assignee_id' => $entity->assignee_id,//POCOR-9277
             'institution_id' => $entity->institution_id,
             'academic_period_id' => $entity->academic_period_id,
             'education_grade_id' => $entity->education_grade_id,
@@ -579,9 +579,9 @@ class StudentAdmissionTable extends ControllerActionTable
             $enrolmentArr['institution_class_id'] = 'NULL';
         }
 
-        $newEntity = $StudentEnrolments->newEntity($enrolmentArr);
-        if ($StudentEnrolments->save($entity)) { // POCOR-9323
-            $this->handleCandidateNumber($entity);
+        $newEnrolmentEntity = $StudentEnrolments->newEntity($enrolmentArr);
+        if ($StudentEnrolments->save($newEnrolmentEntity)) { // POCOR-9323
+            $this->handleCandidateNumber($newEnrolmentEntity);
         }
     }
 
@@ -1881,52 +1881,24 @@ class StudentAdmissionTable extends ControllerActionTable
 //        Log::debug(print_r([__LINE__, 'path' => $useTemplate ? 'template' : 'fallback'], true));
 
         if ($useTemplate) {
-            // ==============================
-            // === NEW: TEMPLATE-DRIVEN  ===
-            // ==============================
             $tokenMap = [
-                'area_code'            => $areaCode,
-                'institution_code'     => $institutionCode,
-                'academic_period_code' => $academicPeriodCode,
+                // IMPORTANT: Do not coalesce to '' – keep "0"
+                'area_code'            => isset($areaCode) ? (string)$areaCode : '',
+                'institution_code'     => isset($institutionCode) ? (string)$institutionCode : '',
+                'academic_period_code' => isset($academicPeriodCode) ? (string)$academicPeriodCode : '',
             ];
 
-            // Extract width from first numeric token ${N}; default 4
-            $seqWidth = 4;
-            if (preg_match('/\${\s*(\d+)\s*}/', $template, $m)) {
-                $seqWidth = max(1, (int)$m[1]);
-            }
-//            Log::debug(print_r([__LINE__, 'seqWidth' => $seqWidth], true));
+            [$prefix, $seqWidth, $subs] = $this->compileCandidateTemplate($template, $tokenMap);
 
-            // Replace named tokens first
-            $prefix = $template;
-            foreach ($tokenMap as $k => $v) {
-                $prefix = preg_replace('/\${\s*' . preg_quote($k, '/') . '\s*}/', $v, $prefix);
-            }
-//            Log::debug(print_r([__LINE__, 'prefix_after_named_tokens' => $prefix], true));
+            // (Optional) visibility into exactly what changed
+//            Log::debug(print_r([
+//                'template' => $template,
+//                'resolved_prefix' => $prefix,
+//                'seq_width' => $seqWidth,
+//                'subs' => $subs, // e.g. ['area_code' => '0', 'institution_code' => 'SCH01', ...]
+//            ], true));
 
-            // Replace the first numeric token with %SEQ%
-            $prefix = preg_replace('/\${\s*\d+\s*}/', '%SEQ%', $prefix, 1);
-            // Remove any extra numeric tokens cleanly
-            $prefix = preg_replace('/\${\s*\d+\s*}/', '', $prefix);
-//            Log::debug(print_r([__LINE__, 'prefix_after_numeric_token' => $prefix], true));
-
-            // If no %SEQ% present, append it
-            if (strpos($prefix, '%SEQ%') === false) {
-                $prefix = rtrim($prefix, '/') . '/%SEQ%';
-            }
-
-            // Remove any unknown ${...} tokens to avoid persisting raw placeholders
-            $prefix = preg_replace('/\${\s*[^}]+\s*}/', '', $prefix);
-
-            // Clean double slashes and trailing slash
-            $prefix = preg_replace('#/{2,}#', '/', $prefix);
-            $prefix = rtrim($prefix, '/');
-
-//            Log::debug(print_r([__LINE__, 'prefix_final' => $prefix], true));
-
-            // Find last sequence for this prefix and increment
             $likePrefix = str_replace(['%', '_'], ['\%', '\_'], str_replace('%SEQ%', '', $prefix)) . '%';
-//            Log::debug(print_r([__LINE__, 'likePrefix' => $likePrefix], true));
 
             $conn = ConnectionManager::get('default');
             $nextNumberPadded = $conn->transactional(function () use ($InstitutionStudentProgrammes, $likePrefix, $seqWidth) {
@@ -1936,28 +1908,19 @@ class StudentAdmissionTable extends ControllerActionTable
                     ->order([$InstitutionStudentProgrammes->aliasField('id') => 'DESC'])
                     ->first();
 
-//                Log::debug(print_r([__LINE__, 'txn:last_found' => (bool)$last, 'last_reg' => $last->registration_number ?? null, 'last_id' => $last->id ?? null], true));
-
                 $next = 1;
                 if ($last && !empty($last->registration_number)) {
-                    $parts = explode('/', $last->registration_number);
+                    $parts = preg_split('#[/:]#', $last->registration_number);
                     $lastSeg = end($parts);
                     if (ctype_digit($lastSeg)) {
                         $next = (int)$lastSeg + 1;
                     }
                 }
-
-                $padded = str_pad((string)$next, $seqWidth, '0', STR_PAD_LEFT);
-//                Log::debug(print_r([__LINE__, 'txn:next' => $next, 'txn:padded' => $padded], true));
-                return $padded;
+                return str_pad((string)$next, $seqWidth, '0', STR_PAD_LEFT);
             });
 
-//            Log::debug(print_r([__LINE__, 'nextNumberPadded' => $nextNumberPadded], true));
-
             $finalCandidateNumber = str_replace('%SEQ%', $nextNumberPadded, $prefix);
-//            Log::debug(print_r([__LINE__, 'finalCandidateNumber' => $finalCandidateNumber], true));
 
-            // Save
             $data = [
                 'institution_id'         => $institutionId,
                 'student_id'             => $userRecordId,
@@ -1968,82 +1931,68 @@ class StudentAdmissionTable extends ControllerActionTable
                 'created'                => FrozenTime::now(),
                 'modified'               => FrozenTime::now(),
             ];
-//            Log::debug(print_r([__LINE__, 'save(template):data' => $data], true));
 
             try {
                 $entity = $InstitutionStudentProgrammes->newEntity($data);
                 $InstitutionStudentProgrammes->saveOrFail($entity);
-//                Log::debug(print_r([__LINE__, 'save(template):ok', 'new_id' => $entity->id ?? null], true));
             } catch (\Throwable $e) {
-                Log::error(print_r([__LINE__, 'save(template):error', 'msg' => $e->getMessage()], true));
+                Log::error('save(template): ' . $e->getMessage());
                 throw $e;
             }
-//            Log::debug(print_r([__LINE__, 'end(template)'], true));
             return;
         }
-
-        // ==================================
-        // === FALLBACK (default) version ===
-        // ==================================
-//        Log::debug(print_r([__LINE__, 'fallback:start'], true));
-
-        $lastProgramme = $InstitutionStudentProgrammes->find()
-            ->order([$InstitutionStudentProgrammes->aliasField('id') => 'DESC'])
-            ->limit(1)
-            ->first();
-//        Log::debug(print_r([__LINE__, 'fallback:last_found' => (bool)$lastProgramme, 'last_reg' => $lastProgramme->registration_number ?? null, 'last_id' => $lastProgramme->id ?? null], true));
-
-        if (empty($lastProgramme)) {
-            $formattedNumber = str_pad('1', 4, '0', STR_PAD_LEFT);
-//            Log::debug(print_r([__LINE__, 'fallback:seed' => $formattedNumber], true));
-        } else {
-            $registrationNumber = $lastProgramme->registration_number;
-            if (!empty($registrationNumber)) {
-                $segments = explode('/', $registrationNumber);
-                $lastSegment = end($segments);
-                if (ctype_digit($lastSegment)) {
-                    $next = (int)$lastSegment + 1;
-                    $formattedNumber = str_pad((string)$next, strlen($lastSegment), '0', STR_PAD_LEFT);
-//                    Log::debug(print_r([__LINE__, 'fallback:next' => $next, 'fallback:formatted' => $formattedNumber], true));
-                } else {
-                    $formattedNumber = str_pad('1', 4, '0', STR_PAD_LEFT);
-//                    Log::debug(print_r([__LINE__, 'fallback:non_numeric_last_segment_reset' => $formattedNumber], true));
                 }
+
+    /**
+     * POCOR-9346
+     * Compile a candidate-number template.
+     * - Named tokens: ${area_code}, ${institution_code}, ${academic_period_code}
+     * - Numeric token: first ${N} becomes %SEQ%, N = padding width. Others removed.
+     * - Unknown ${...} are removed.
+     *
+     * @return array [string $prefixWithSeq, int $seqWidth, array $substitutionLog]
+     */
+    private function compileCandidateTemplate(string $template, array $tokenMap): array
+    {
+        // Replace named tokens (preserve "0")
+        $subs = [];
+        $prefix = preg_replace_callback('/\${\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*}/', function ($m) use ($tokenMap, &$subs) {
+            $key = $m[1];
+            if (array_key_exists($key, $tokenMap)) {
+                $val = (string)$tokenMap[$key]; // "0" stays "0"
             } else {
-                $formattedNumber = str_pad('1', 4, '0', STR_PAD_LEFT);
-//                Log::debug(print_r([__LINE__, 'fallback:empty_last_reset' => $formattedNumber], true));
+                $val = ''; // unknown named token -> drop
             }
+            $subs[$key] = $val;
+            return $val;
+        }, $template);
+
+        // Width from first numeric token
+        $seqWidth = 4;
+        if (preg_match('/\${\s*(\d+)\s*}/', $prefix, $m)) {
+            $seqWidth = max(1, (int)$m[1]);
         }
 
-        $finalCandidateNumber = implode('/', [
-            $areaCode,
-            $institutionCode,
-            $academicPeriodCode,
-            $formattedNumber,
-        ]);
-//        Log::debug(print_r([__LINE__, 'fallback:finalCandidateNumber' => $finalCandidateNumber], true));
+        // First numeric -> %SEQ%, others removed
+        $seenNumeric = false;
+        $prefix = preg_replace_callback('/\${\s*(\d+)\s*}/', function () use (&$seenNumeric) {
+            if (!$seenNumeric) { $seenNumeric = true; return '%SEQ%'; }
+            return '';
+        }, $prefix);
 
-        $data = [
-            'institution_id'         => $institutionId,
-            'student_id'             => $userRecordId,
-            'education_programme_id' => $educationProgrammeId,
-            'registration_number'    => $finalCandidateNumber,
-            'created_user_id'        => $userId,
-            'modified_user_id'       => $userId,
-            'created'                => FrozenTime::now(),
-            'modified'               => FrozenTime::now(),
-        ];
-//        Log::debug(print_r([__LINE__, 'save(fallback):data' => $data], true));
+        // Strip any remaining ${...}
+        $prefix = preg_replace('/\${\s*[^}]+\s*}/', '', $prefix);
 
-        try {
-            $fallbackEntity = $InstitutionStudentProgrammes->newEntity($data);
-            $InstitutionStudentProgrammes->saveOrFail($fallbackEntity);
-//            Log::debug(print_r([__LINE__, 'save(fallback):ok', 'new_id' => $fallbackEntity->id ?? null], true));
-        } catch (\Throwable $e) {
-            Log::error(print_r([__LINE__, 'save(fallback):error', 'msg' => $e->getMessage()], true));
-            throw $e;
+        // Normalize repeated separators (// or ::) and trailing separator
+        $prefix = preg_replace('#([/:])\1+#', '$1', $prefix);
+        $prefix = preg_replace('#([/:])$#', '', $prefix);
+
+        // Ensure we have a %SEQ% slot
+        if (strpos($prefix, '%SEQ%') === false) {
+            // If no separator is present, default to '/'
+            $prefix .= (strpbrk($prefix, '/:') ? '' : '/') . '%SEQ%';
         }
 
-//        Log::debug(print_r([__LINE__, __METHOD__, 'end(fallback)'], true));
+        return [$prefix, $seqWidth, $subs];
     }
 }
