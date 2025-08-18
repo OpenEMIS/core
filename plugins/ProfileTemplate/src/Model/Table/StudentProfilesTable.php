@@ -117,7 +117,13 @@ class StudentProfilesTable extends ControllerActionTable
 
         if (!is_null($reportCardId) && $this->StudentTemplates->exists([$this->StudentTemplates->getPrimaryKey() => $reportCardId])) {
 
-            $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+            $indexAttr = ['role' => 'menuitem',
+                'tabindex' => '-1',
+                'escape' => false,
+                'target' => '_blank'];
+            $generateAttr = ['role' => 'menuitem',
+                'tabindex' => '-1',
+                'escape' => false];
             $params = [
                 'student_profile_template_id' => $reportCardId,
                 'student_id' => $entity->student_id,
@@ -173,14 +179,14 @@ class StudentProfilesTable extends ControllerActionTable
                 if ((!empty($generateStartDate) && !empty($generateEndDate)) && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                             $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => $generateUrl
                             ];
                 } else {
-                    $indexAttr['title'] = $this->getMessage('StudentProfiles.date_closed');
+                    $generateAttr['title'] = $this->getMessage('StudentProfiles.date_closed');
                     $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => 'javascript:void(0)'
                             ];
                 }
@@ -195,7 +201,7 @@ class StudentProfilesTable extends ControllerActionTable
                 $publishUrl = $this->setQueryString($this->url('publish'), $params);
                 $buttons['publish'] = [
                     'label' => '<i class="fa kd-publish"></i>'.__('Publish'),
-                    'attr' => $indexAttr,
+                    'attr' => $generateAttr,
                     'url' => $publishUrl
                 ];
             }
@@ -210,7 +216,7 @@ class StudentProfilesTable extends ControllerActionTable
                 $unpublishUrl = $this->setQueryString($this->url('unpublish'), $params);
                 $buttons['unpublish'] = [
                     'label' => '<i class="fa kd-unpublish"></i>'.__('Unpublish'),
-                    'attr' => $indexAttr,
+                    'attr' => $generateAttr,
                     'url' => $unpublishUrl
                 ];
             }
@@ -227,7 +233,7 @@ class StudentProfilesTable extends ControllerActionTable
                     $emailUrl = $this->setQueryString($this->url('email'), $params);
                     $buttons['email'] = [
                         'label' => '<i class="fa fa-envelope"></i>'.__('Email'),
-                        'attr' => $indexAttr,
+                        'attr' => $generateAttr,
                         'url' => $emailUrl
                     ];
                 }

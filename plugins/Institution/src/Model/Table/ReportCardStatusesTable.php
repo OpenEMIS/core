@@ -2462,7 +2462,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     private function addGenerateButton(array $buttons, $params)
     {
         $params['institution_id'] = $this->getInstitutionID();
-        $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+        $generateAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
         $reportCardId = $this->request->getQuery('report_card_id');
         $isAdmin = $this->AccessControl->isAdmin();
         if (!$isAdmin) {
@@ -2486,7 +2486,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             if ($canGenerateAnyDate) {
                 $buttons['generate'] = [
                     'label' => '<i class="fa fa-refresh"></i>' . __('Generate'),
-                    'attr' => $indexAttr,
+                    'attr' => $generateAttr,
                     'url' => $generateUrl,
                 ];
             }
@@ -2529,14 +2529,14 @@ class ReportCardStatusesTable extends ControllerActionTable
                         && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                         $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>' . __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => $generateUrl
                         ];
                     } else {
-                        $indexAttr['title'] = $this->getMessage('ReportCardStatuses.date_closed');
+                        $generateAttr['title'] = $this->getMessage('ReportCardStatuses.date_closed');
                         $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>' . __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => 'javascript:void(0)'
                         ];
                     }
