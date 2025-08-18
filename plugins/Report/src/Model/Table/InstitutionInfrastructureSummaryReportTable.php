@@ -56,6 +56,10 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
         }else{
             $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['area_level_id' => $areaLevelId])->toArray();
         }
+
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $acedmicPeriodData = $AcademicPeriods->find()->where([$AcademicPeriods->aliasField('id') => $academic_period_id])->first();
+        $AcademicPeriodsStartYear = $acedmicPeriodData->start_year;
         
         $childArea =[];
         $childAreaMain = [];
@@ -165,7 +169,7 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
             ,COUNT(DISTINCT(institution_lands.id)) land_counter
         FROM institution_lands
         WHERE institution_lands.land_status_id = 1
-        AND institution_lands.academic_period_id = $academic_period_id
+        AND institution_lands.start_year = $AcademicPeriodsStartYear
         GROUP BY institution_lands.institution_id)",
             'conditions' => [
                 'lands_info.institution_id = institutions.id' 
@@ -178,7 +182,7 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
             ,COUNT(DISTINCT(institution_buildings.id)) building_counter
         FROM institution_buildings
         WHERE institution_buildings.building_status_id = 1
-        AND institution_buildings.academic_period_id = $academic_period_id
+        AND institution_buildings.start_year = $AcademicPeriodsStartYear
         GROUP BY institution_buildings.institution_id)",
             'conditions' => [
                 'buildings_info.institution_id = institutions.id' 
@@ -191,7 +195,7 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
             ,COUNT(DISTINCT(institution_floors.id)) floor_counter
         FROM institution_floors
         WHERE institution_floors.floor_status_id = 1
-        AND institution_floors.academic_period_id = $academic_period_id
+        AND institution_floors.start_year = $AcademicPeriodsStartYear
         GROUP BY institution_floors.institution_id)",
             'conditions' => [
                 'floors_info.institution_id = institutions.id' 
@@ -207,7 +211,7 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
         INNER JOIN room_types
         ON room_types.id = institution_rooms.room_type_id
         WHERE institution_rooms.room_status_id = 1
-        AND institution_rooms.academic_period_id = $academic_period_id
+         AND institution_rooms.start_year =  $AcademicPeriodsStartYear
         GROUP BY institution_rooms.institution_id)",
             'conditions' => [
                 'rooms_info.institution_id = institutions.id' 
