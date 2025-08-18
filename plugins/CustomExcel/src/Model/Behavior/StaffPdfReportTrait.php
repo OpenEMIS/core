@@ -326,10 +326,11 @@ trait StaffPdfReportTrait
 
     private function savePDF($objSpreadsheet, $filepath, $staff_id)
     {
-        Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
         // POCOR-9336: start . Convert spreadsheet object into pdf
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $printer = $ConfigItems->value('pdf_service');
+        Log::write('debug', 'ExcelReportBehavior >>> filepath: ' . $filepath . ' using PDF OPTION ' . $printer);
+
         switch ($printer) {
             case self::PRINTER_MPDF:
                 $pdfContent = $this->printPdfViaMpdf($objSpreadsheet, $filepath, $staff_id);
@@ -346,7 +347,7 @@ trait StaffPdfReportTrait
             $filename = $this->getConfig('filename') . '_' . (!empty($staff_id) ? $staff_id : date('Ymd\THis')) . '.txt';
             $outputPath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $filename;
             file_put_contents($outputPath, $pdfContent);
-            Log::write('debug', "Saved PDF to: $outputPath");
+            Log::write('debug', "Saved PDF using " . $printer .  " to: $outputPath");
         } else {
             Log::error("PDF content  is empty");
         }
