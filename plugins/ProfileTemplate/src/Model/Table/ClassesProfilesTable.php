@@ -685,26 +685,36 @@ class ClassesProfilesTable extends ControllerActionTable
     {
 		$model = $this->ClassProfiles;
         $ids = $this->getQueryString();
-        unset($ids['area_id']);//POCOR-7382
-		if ($model->exists($ids)) {
-            $data = $model->get($ids);
-            $fileName = $data->file_name;
-            $pathInfo = pathinfo($fileName);
-            $file = $this->getFile($data->file_content);
-            $fileType = 'image/jpg';
-            if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
-                $fileType = $this->fileTypes[$pathInfo['extension']];
-            }
-            // echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
-            header("Pragma: public", true);
-            header("Expires: 0"); // set expiration time
-            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-            header("Content-Type: application/force-download");
-            header("Content-Type: application/octet-stream");
-            header("Content-Type: " . $fileType);
-            header('Content-Disposition: attachment; filename="' . $fileName . '"');
+        $clean = array_filter(
+            $ids,
+            fn($v) => !is_null($v)
+        );
+// keep only keys that exist as columns in the table schema
+        $fields = $model->getSchema()->columns();
+        $clean  = array_intersect_key($clean, array_flip($fields));
+        if ($model->exists($clean)) {
+            $data = $model->find()
+                ->where($clean)
+                ->first();   // similar to get(), returns first entity or null
+            if (!empty($data)) {
+                $fileName = $data->file_name;
+                $pathInfo = pathinfo($fileName);
+                $file = $this->getFile($data->file_content);
+                $fileType = 'image/jpg';
+                if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
+                    $fileType = $this->fileTypes[$pathInfo['extension']];
+                }
+                // echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
+                header("Pragma: public", true);
+                header("Expires: 0"); // set expiration time
+                header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+                header("Content-Type: application/force-download");
+                header("Content-Type: application/octet-stream");
+                header("Content-Type: " . $fileType);
+                header('Content-Disposition: attachment; filename="' . $fileName . '"');
 
-            echo $file;
+                echo $file;
+            }
         }
         exit();
     }
@@ -713,28 +723,37 @@ class ClassesProfilesTable extends ControllerActionTable
     {
 		$model = $this->ClassProfiles;
         $ids = $this->getQueryString();
+        $clean = array_filter(
+            $ids,
+            fn($v) => !is_null($v)
+        );
+        $fields = $model->getSchema()->columns();
+        $clean  = array_intersect_key($clean, array_flip($fields));
+        if ($model->exists($clean)) {
+            $data = $model->find()
+                ->where($clean)
+                ->first();   // similar to get(), returns first entity or null
+            if (!empty($data)) {
+                $fileName = $data->file_name;
+                $fileNameData = explode(".", $fileName);
+                $fileName = $fileNameData[0] . '.pdf';
+                $pathInfo['extension'] = 'pdf';
+                $file = $this->getFile($data->file_content_pdf);
+                $fileType = 'image/jpg';
+                if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
+                    $fileType = $this->fileTypes[$pathInfo['extension']];
+                }
+                // echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
+                header("Pragma: public", true);
+                header("Expires: 0"); // set expiration time
+                header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+                header("Content-Type: application/force-download");
+                header("Content-Type: application/octet-stream");
+                header("Content-Type: " . $fileType);
+                header('Content-Disposition: attachment; filename="' . $fileName . '"');
 
-        if ($model->exists($ids)) {
-            $data = $model->get($ids);
-            $fileName = $data->file_name;
-            $fileNameData = explode(".",$fileName);
-			$fileName = $fileNameData[0].'.pdf';
-			$pathInfo['extension'] = 'pdf';
-            $file = $this->getFile($data->file_content_pdf);
-            $fileType = 'image/jpg';
-            if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
-                $fileType = $this->fileTypes[$pathInfo['extension']];
+                echo $file;
             }
-            // echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
-            header("Pragma: public", true);
-            header("Expires: 0"); // set expiration time
-            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-            header("Content-Type: application/force-download");
-            header("Content-Type: application/octet-stream");
-            header("Content-Type: " . $fileType);
-            header('Content-Disposition: attachment; filename="' . $fileName . '"');
-
-            echo $file;
         }
         exit();
     }
@@ -753,7 +772,8 @@ class ClassesProfilesTable extends ControllerActionTable
             $ids,
             fn($v) => !is_null($v)
         );
-
+        $fields = $model->getSchema()->columns();
+        $clean  = array_intersect_key($clean, array_flip($fields));
         if ($model->exists($clean)) {
             $data = $model->find()
                 ->where($clean)
