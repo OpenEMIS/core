@@ -984,7 +984,7 @@ class NavigationComponent extends Component
                 ]
             ],
             //POCOR-5208 Start
-             'Institutions.InfrastructureAttachments.index' => [
+            'Institutions.InfrastructureAttachments.index' => [
                 'title' => 'Attachments',
                 'parent' => 'Infrastructures',
                 'selected' => [
@@ -1160,7 +1160,7 @@ class NavigationComponent extends Component
             ],
 
             'Institutions.Survey' => [
-                'title' => $label,//POCOR-9033
+                'title' => $label, //POCOR-9033
                 'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
@@ -1185,8 +1185,10 @@ class NavigationComponent extends Component
             'Institutions.VisitRequests.index' => [
                 'title' => 'Visits',
                 'parent' => 'Institutions.Institutions.index',
-                'selected' => ['Institutions.VisitRequests',
-                    'Institutions.Visits']
+                'selected' => [
+                    'Institutions.VisitRequests',
+                    'Institutions.Visits'
+                ]
             ],
             // POCOR-9059[END]
             'Institutions.Transport' => [
@@ -1776,7 +1778,7 @@ class NavigationComponent extends Component
     {
         $session = $this->getController()->getRequest()->getSession();
         $institutionId = $this->getInstitutionID(); // POCOR-9081
-//        $institutionId = $session->read('Institution.Institutions.id');
+        //        $institutionId = $session->read('Institution.Institutions.id');
 
         if (!empty($institutionId)) {
             //$Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
@@ -2650,12 +2652,12 @@ class NavigationComponent extends Component
                 'title' => 'Custom',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
-            ],//POCOR-9267 Starts
+            ], //POCOR-9267 Starts
             'Reports.Meals' => [
                 'title' => 'Meals',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
-            ]//POCOR-9267 Ends
+            ] //POCOR-9267 Ends
         ];
         return $navigation;
     }
@@ -2863,7 +2865,7 @@ class NavigationComponent extends Component
                         'Configurations.Theme' => [
                             'title' => 'Themes',
                             'parent' => 'Themes',
-                           // 'selected' => ['Notices.Notices']
+                            // 'selected' => ['Notices.Notices']
                         ]
                     ],
                 ],
@@ -2882,7 +2884,7 @@ class NavigationComponent extends Component
                     ]
                 ],
                 // End POCOR-5188
-/*
+                /*
                 'Notices.index' => [
                     'title' => 'Notices',
                     'parent' => 'SystemSetup',
@@ -3778,11 +3780,11 @@ class NavigationComponent extends Component
                     'selected' => ['Alerts.Logs']
                 ],
                 'Alerts.Notices' => [
-                        'title' => 'Notices',
-                        'parent' => 'Administration.Communications',
-                        'params' => ['plugin' => 'Alert'],
-                        'selected' => ['Alerts.Notices']
-                    ],
+                    'title' => 'Notices',
+                    'parent' => 'Administration.Communications',
+                    'params' => ['plugin' => 'Alert'],
+                    'selected' => ['Alerts.Notices']
+                ],
             ];
         }
         return $navfour;
@@ -4795,6 +4797,16 @@ class NavigationComponent extends Component
                 if (!is_array($url) || !isset($url['controller'], $url['action'], $url['plugin'])) {
                     // Log or handle the case where $url is not as expected
                     // Example: Log error and continue or skip this navigation item
+                    //POCOR-9256 start
+                    $allowedRoutes = [
+                        ['Labels', 'Labels'],
+                        ['Credentials', 'index'],
+                    ];
+
+                    if (!in_array([$url['controller'], $url['action']], $allowedRoutes)) {
+                        unset($navigations[$key]);
+                    }
+                    //POCOR-9256 end
                     unset($navigations[$key]);
                     continue;
                 }
