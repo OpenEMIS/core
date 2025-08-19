@@ -1487,7 +1487,7 @@ class InstitutionsController extends AppController
 
         $user = $this->getRequest()->getSession()->read('sbn');
         $pass = $this->getRequest()->getSession()->read('nbn');
-        // $pass = $this->paramsEncode($pass);
+        $pass = $this->paramsEncode([$pass]);
         $institutionName = $this->Institutions->get($institutionId)->name;
 
         $this->set('encodedPart', $encodedPart);

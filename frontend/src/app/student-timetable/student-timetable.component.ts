@@ -210,8 +210,8 @@ export class StudentTimetableComponent implements OnInit {
         if (!token) {
             let userName = sessionStorage.getItem('nbn');
             let password = sessionStorage.getItem('pbn');
-            const chars = password.split('.');
-            password = chars[0];
+            const chars = password?.split('.');
+            password = chars ? chars[0]: null;
             if (userName == null && password == null) {
                 setTimeout(() => {
                     this.counter = this.counter + 1;
@@ -379,7 +379,7 @@ export class StudentTimetableComponent implements OnInit {
 
                             // Step 2: Replace start_time and end_time from the time_slots array
                             const updatedResponseArray = response_array.map(item => {
-                                const timeSlot = time_slots[item.order - 1]; // Using order to match time_slot index
+                                const timeSlot = time_slots[item.id - 1]; // Using order to match time_slot index
                                 return {
                                     ...item,
                                     start_time: timeSlot.start_time,
