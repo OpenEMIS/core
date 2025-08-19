@@ -60,7 +60,7 @@ class UsersMergeCommand extends Command
         }
 
         if ($systemProcessId === '' || $baseId === '' || $mergeId === '') {
-            $io->err('Something is missing. Usage: bin/cake users_merge system_process_id=<system_process_id> base_id=<base_id> merge_id=<merge_id>');
+            $io->err('Something is missing. Usage: bin/cake users_merge -s <system_process_id> -b <base_id> -m <merge_id>');
             return self::CODE_ERROR;
         }
 
