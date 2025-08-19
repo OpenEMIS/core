@@ -42,8 +42,8 @@ class MergeBehavior extends Behavior
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.merge'] = 'merge';
         $events['ControllerAction.Model.beforeAction'] = 'beforeAction';
-//        $events['ControllerAction.Model.merge.beforeSave'] = ['callable' => 'mergeBeforeSave', 'priority' => 100];
-//        $events['ControllerAction.Model.merge.afterSave'] = ['callable' => 'mergeAfterSave', 'priority' => 100];
+//        $events['ControllerAction.Model.merge.beforeSave'] = ['callable' => 'mergeBeforeSave', 'priority' => 100]; // POCOR-8633
+//        $events['ControllerAction.Model.merge.afterSave'] = ['callable' => 'mergeAfterSave', 'priority' => 100]; // POCOR-8633
         $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';
         $events['ControllerAction.Model.merge.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';
         $events['ControllerAction.Model.onGetFieldLabel'] = ['callable' => 'onGetFieldLabel', 'priority' => 100];
@@ -91,7 +91,7 @@ class MergeBehavior extends Behavior
         $request = $model->request;
 
         if ($request->is(['post', 'put'])) {
-            $entity = $first_entity;
+        // POCOR-8633 start
             $submit = $request->getData('submit') ?? 'merge';
 
             if ($submit === 'merge') {
@@ -116,7 +116,7 @@ class MergeBehavior extends Behavior
 
                 // Spawn command in background, capture PID
                 $args = sprintf(
-                    '%s %s %s',
+                    '-s %s -b %s -m %s',
                     escapeshellarg((string)$systemProcessId),
                     escapeshellarg($baseId),
                     escapeshellarg($mergeId)
@@ -126,6 +126,7 @@ class MergeBehavior extends Behavior
 
                 $logFile = ROOT . DS . 'logs' . DS . 'UsersMerge.log';
                 $shellCmd = $cmd . ' >> ' . escapeshellarg($logFile) . ' 2>&1 & echo $!';
+                Log::debug($shellCmd);
 
                 try {
                     $pid = exec($shellCmd);
@@ -138,7 +139,7 @@ class MergeBehavior extends Behavior
                     \Cake\Log\Log::error(__METHOD__ . ' UsersMerge start error: ' . $ex->getMessage());
                     $model->Alert->error(__('Failed to start background merge. See logs.'), ['type' => 'string', 'reset' => true]);
                 }
-
+                // POCOR-8633 end
                 $mainEvent->stopPropagation();
                 return $model->controller->redirect($model->url('view'));
             }
@@ -321,102 +322,102 @@ class MergeBehavior extends Behavior
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
-    /**
-     * @param Event $event
-     * @param Entity $entity
-     * @param ArrayObject $options
-     * @param ArrayObject $extra
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
-     */
-    public function _mergeBeforeSave(Event $event, Entity $entity, ArrayObject $options, ArrayObject $extra)
-    {
-        $model = $this->_table;
-        try {
-            $merge_fields = $extra['merge_fields'];
-            foreach ($merge_fields as $merge_field) {
-                if ($merge_field['to_change']) {
-                    $field = $merge_field['field'];
-                    $entity->{$field} = $merge_field['result_value'];
-                }
-            }
-        } catch (\Exception $exception) {
-            $model->log($exception->getMessage(), 'debug');
-        }
-    }
+//    /**
+//     * @param Event $event
+//     * @param Entity $entity
+//     * @param ArrayObject $options
+//     * @param ArrayObject $extra
+//     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+//     */
+//    public function _mergeBeforeSave(Event $event, Entity $entity, ArrayObject $options, ArrayObject $extra) // POCOR-8633
+//    {
+//        $model = $this->_table;
+//        try {
+//            $merge_fields = $extra['merge_fields'];
+//            foreach ($merge_fields as $merge_field) {
+//                if ($merge_field['to_change']) {
+//                    $field = $merge_field['field'];
+//                    $entity->{$field} = $merge_field['result_value'];
+//                }
+//            }
+//        } catch (\Exception $exception) {
+//            $model->log($exception->getMessage(), 'debug');
+//        }
+//    }
 
-    /**
-     * @param Event $event
-     * @param Entity $entity
-     * @param ArrayObject $options
-     * @param ArrayObject $extra
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
-     */
-    public function _mergeAfterSave(Event $event, Entity $entity, ArrayObject $options, ArrayObject $extra)
-    {
-        // POCOR-9015 start
-        $model = $this->_table;
-        $associations = $extra['associations'];
-        $base_id = $options[$model->getAlias()]['first_id'];
-        $merge_id = $options[$model->getAlias()]['merge_id'];
-        $connection = ConnectionManager::get('default'); // Replace 'default' with your connection name
-
-        $connection->disableForeignKeys();
-        $connection->execute("SET FOREIGN_KEY_CHECKS = 0");
-
-        $success = true;
-        $connection->transactional(function ($connection) use ($associations, $base_id, $merge_id, $model) {
-            foreach ($associations as $association) {
-                $table_name = $association['table_name'];
-                $column_name = $association['column_name'];
-
-                try {
-                    $connection->execute("ALTER TABLE $table_name DISABLE KEYS");
-                } catch (\Exception $exception) {
-                    $model->log($exception->getMessage(), 'debug');
-                }
-
-                $updateSql = "UPDATE $table_name SET $column_name = $base_id WHERE $column_name = $merge_id";
-                try {
-                    $connection->execute($updateSql);
-                } catch (\Exception $exception) {
-                    $model->log($exception->getMessage(), 'debug');
-                }
-
-                // Delete old records after updating
-                $deleteSql = "DELETE FROM $table_name WHERE $column_name = $merge_id";
-                try {
-                    $connection->execute($deleteSql);
-                } catch (\Exception $exception) {
-                    $model->log($exception->getMessage(), 'debug');
-                }
-
-                try {
-                    $connection->execute("ALTER TABLE $table_name ENABLE KEYS");
-                } catch (\Exception $exception) {
-                    $model->log($exception->getMessage(), 'debug');
-                }
-            }
-
-            if ($base_id && $merge_id) {
-                $updateStatusSql = "UPDATE security_users SET `status` = 0 WHERE `id` = $merge_id";
-                try {
-                    $connection->execute($updateStatusSql);
-                } catch (\Exception $exception) {
-                    $model->log($exception->getMessage(), 'debug');
-                }
-            }
-        });
-
-        $connection->execute("SET FOREIGN_KEY_CHECKS = 1");
-        $connection->enableForeignKeys();
-
-        if ($success) {
-            $model->Alert->success(__('User Accounts Are Merged Successfully'), ['type' => 'string', 'reset' => true]);
-        } else {
-            $model->Alert->error(__('User Accounts Were Not Merged'), ['type' => 'string', 'reset' => true]);
-        }
-        // POCOR-9015 end
-    }
+//    /**
+//     * @param Event $event
+//     * @param Entity $entity
+//     * @param ArrayObject $options
+//     * @param ArrayObject $extra
+//     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+//     */
+//    public function _mergeAfterSave(Event $event, Entity $entity, ArrayObject $options, ArrayObject $extra) // POCOR-8633
+//    {
+//        // POCOR-9015 start
+//        $model = $this->_table;
+//        $associations = $extra['associations'];
+//        $base_id = $options[$model->getAlias()]['first_id'];
+//        $merge_id = $options[$model->getAlias()]['merge_id'];
+//        $connection = ConnectionManager::get('default'); // Replace 'default' with your connection name
+//
+//        $connection->disableForeignKeys();
+//        $connection->execute("SET FOREIGN_KEY_CHECKS = 0");
+//
+//        $success = true;
+//        $connection->transactional(function ($connection) use ($associations, $base_id, $merge_id, $model) {
+//            foreach ($associations as $association) {
+//                $table_name = $association['table_name'];
+//                $column_name = $association['column_name'];
+//
+//                try {
+//                    $connection->execute("ALTER TABLE $table_name DISABLE KEYS");
+//                } catch (\Exception $exception) {
+//                    $model->log($exception->getMessage(), 'debug');
+//                }
+//
+//                $updateSql = "UPDATE $table_name SET $column_name = $base_id WHERE $column_name = $merge_id";
+//                try {
+//                    $connection->execute($updateSql);
+//                } catch (\Exception $exception) {
+//                    $model->log($exception->getMessage(), 'debug');
+//                }
+//
+//                // Delete old records after updating
+//                $deleteSql = "DELETE FROM $table_name WHERE $column_name = $merge_id";
+//                try {
+//                    $connection->execute($deleteSql);
+//                } catch (\Exception $exception) {
+//                    $model->log($exception->getMessage(), 'debug');
+//                }
+//
+//                try {
+//                    $connection->execute("ALTER TABLE $table_name ENABLE KEYS");
+//                } catch (\Exception $exception) {
+//                    $model->log($exception->getMessage(), 'debug');
+//                }
+//            }
+//
+//            if ($base_id && $merge_id) {
+//                $updateStatusSql = "UPDATE security_users SET `status` = 0 WHERE `id` = $merge_id";
+//                try {
+//                    $connection->execute($updateStatusSql);
+//                } catch (\Exception $exception) {
+//                    $model->log($exception->getMessage(), 'debug');
+//                }
+//            }
+//        });
+//
+//        $connection->execute("SET FOREIGN_KEY_CHECKS = 1");
+//        $connection->enableForeignKeys();
+//
+//        if ($success) {
+//            $model->Alert->success(__('User Accounts Are Merged Successfully'), ['type' => 'string', 'reset' => true]);
+//        } else {
+//            $model->Alert->error(__('User Accounts Were Not Merged'), ['type' => 'string', 'reset' => true]);
+//        }
+//        // POCOR-9015 end
+//    }
 
 
     /**
