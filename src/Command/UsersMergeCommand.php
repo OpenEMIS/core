@@ -48,7 +48,7 @@ class UsersMergeCommand extends Command
         $mergeId = $this->mergeId;
         $io->out("system_process_id=[$systemProcessId] base_id=[$baseId] merge_id=[$mergeId]" . FrozenTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
         $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
-
+        $pid = getmypid();
         // Mark RUNNING + PID
         if (method_exists($SystemProcesses, 'updatePid')) {
             $SystemProcesses->updatePid((int)$systemProcessId, $pid);
