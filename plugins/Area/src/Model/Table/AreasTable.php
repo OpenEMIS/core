@@ -14,10 +14,11 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Utility\Hash;
 use Cake\Log\Log;
 use Cake\Http\ServerRequest;
+use Cake\ORM\ResultSet;
 
 class AreasTable extends ControllerActionTable
 {
-    private $fieldsOrder = ['visible', 'code', 'name', 'area_level_id'];
+    private $fieldsOrder = ['visible', 'zero_code', 'code', 'name', 'area_level_id'];
 
     public function initialize(array $config): void
     {
@@ -234,6 +235,7 @@ class AreasTable extends ControllerActionTable
                 if (isset($options['skip_callbacks']) && $options['skip_callbacks']) {}
                 else{
                 if ($this->Auth->user()) {
+                    $username = $this->Auth->user()['username'];
                     $Webhooks->triggerShell('area_education_create', ['username' => $username], $body);
                 }
                 }
@@ -275,6 +277,7 @@ class AreasTable extends ControllerActionTable
         ];
         $Webhooks = TableRegistry::get('Webhook.Webhooks');
         if($this->Auth->user()){
+            $username = $this->Auth->user()['username'];
             $Webhooks->triggerShell('area_education_delete', ['username' => $username], $body);
         }
         // Webhook Education Grade Subject Delete -- End
@@ -423,6 +426,12 @@ class AreasTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $sortList = ['zero_code'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
+
         $serverRequest = $this->request;
         $parentId = !is_null($serverRequest->getQuery('parent')) ? $serverRequest->getQuery('parent') : null;
         if ($parentId != null) {
@@ -525,8 +534,13 @@ class AreasTable extends ControllerActionTable
                 return $results;
             });
     }
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+        $this->field('code', ['visible' => false]);
+        $this->field('zero_code', ['visible' => true, 'sort' => ['field'=>'code']]);
+    }
 
-    private function unsetEmptyArr(&$array, &$authorisedAreaIds, $selected, $superAdmin)
+        private function unsetEmptyArr(&$array, &$authorisedAreaIds, $selected, $superAdmin)
     {
         foreach ($array as &$value) {
             if (isset($value['id'])) {
@@ -608,6 +622,10 @@ class AreasTable extends ControllerActionTable
             'parent' => $entity->id
         ]);
     }
+    public function onGetZeroCode(Event $event, Entity $entity)
+    {
+        return ' ' . $entity->code;
+    }
 
     public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request){
         $serverRequest = $this->request;
@@ -681,6 +699,14 @@ class AreasTable extends ControllerActionTable
         }
 
         return $buttons;
+    }
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true){
+
+        if ($field == 'zero_code') {
+            return __('Code');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
