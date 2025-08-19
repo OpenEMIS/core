@@ -42,8 +42,8 @@ class MergeBehavior extends Behavior
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.merge'] = 'merge';
         $events['ControllerAction.Model.beforeAction'] = 'beforeAction';
-        $events['ControllerAction.Model.merge.beforeSave'] = ['callable' => 'mergeBeforeSave', 'priority' => 100];
-        $events['ControllerAction.Model.merge.afterSave'] = ['callable' => 'mergeAfterSave', 'priority' => 100];
+//        $events['ControllerAction.Model.merge.beforeSave'] = ['callable' => 'mergeBeforeSave', 'priority' => 100];
+//        $events['ControllerAction.Model.merge.afterSave'] = ['callable' => 'mergeAfterSave', 'priority' => 100];
         $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';
         $events['ControllerAction.Model.merge.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';
         $events['ControllerAction.Model.onGetFieldLabel'] = ['callable' => 'onGetFieldLabel', 'priority' => 100];
@@ -92,44 +92,61 @@ class MergeBehavior extends Behavior
 
         if ($request->is(['post', 'put'])) {
             $entity = $first_entity;
-            $submit = ($request->getData('submit') != null) ? $request->getData('submit') : 'merge';
-            $patchOptions = new ArrayObject([]);
-            $patchOptions['associations'] = $associations;
-            $requestData = new ArrayObject($request->getData());
+            $submit = $request->getData('submit') ?? 'merge';
 
-            $params = [$entity, $requestData, $extra];
+            if ($submit === 'merge') {
+                $baseId = (string)$first_entity->id;
+                $mergeId = (string)($request->getData($model->getAlias())['merge_id'] ?? '');
 
-            if ($submit == 'merge') {
-                $process = function ($model, $entity) {
-                    return $model->save($entity);
-                };
-
-                $event = $model->dispatchEvent('ControllerAction.Model.merge.beforeSave', [$entity, $requestData, $extra], $this);
-                if ($event->isStopped()) {
-                    $mainEvent->stopPropagation();
-                    return $event->getResult();
-                }
-                if (is_callable($event->getResult())) {
-                    $process = $event->getResult();
-                }
-                $result = $process($model, $entity);
-
-                if (!$result) {
-                    Log::write('debug', $entity->getErrors());
+                if ($mergeId === '') {
+                    $model->Alert->error(__('Please select an account to merge.'), ['type' => 'string', 'reset' => true]);
+                    return $first_entity;
                 }
 
-                $event = $model->dispatchEvent('ControllerAction.Model.merge.afterSave', $params, $this);
-                if ($event->isStopped()) {
-                    return $event->getResult();
+                $SystemProcesses = \Cake\ORM\TableRegistry::getTableLocator()->get('SystemProcesses');
+
+                $name = 'UsersMerge';
+                $pid = '';
+                $processModel = $model->getRegistryAlias(); // or $model->registryAlias() in older 3.x shims
+                $eventName = 'merge';
+                $params = json_encode(['base_id' => $baseId, 'merge_id' => $mergeId], JSON_UNESCAPED_UNICODE);
+
+                $systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $params);
+                $SystemProcesses->updateProcess((int)$systemProcessId, null, $SystemProcesses::RUNNING, 0);
+
+                // Spawn command in background, capture PID
+                $args = sprintf(
+                    '%s %s %s',
+                    escapeshellarg((string)$systemProcessId),
+                    escapeshellarg($baseId),
+                    escapeshellarg($mergeId)
+                );
+
+                $cmd = ROOT . DS . 'bin' . DS . 'cake users_merge ' . $args;
+
+                $logFile = ROOT . DS . 'logs' . DS . 'UsersMerge.log';
+                $shellCmd = $cmd . ' >> ' . escapeshellarg($logFile) . ' 2>&1 & echo $!';
+
+                try {
+                    $pid = exec($shellCmd);
+                    if ($pid) {
+                        $SystemProcesses->updatePid((int)$systemProcessId, (int)$pid);
+                    }
+                    $model->Alert->success(__('Merge queued. Job #{0}', [$systemProcessId]), ['type' => 'string', 'reset' => true]);
+                } catch (\Throwable $ex) {
+                    $SystemProcesses->updateProcess((int)$systemProcessId, \Cake\I18n\FrozenTime::now(), $SystemProcesses::ERROR);
+                    \Cake\Log\Log::error(__METHOD__ . ' UsersMerge start error: ' . $ex->getMessage());
+                    $model->Alert->error(__('Failed to start background merge. See logs.'), ['type' => 'string', 'reset' => true]);
                 }
-                if ($result) {
-                    $mainEvent->stopPropagation();
-                    return $model->controller->redirect($model->url('view'));
-                }
+
+                $mainEvent->stopPropagation();
+                return $model->controller->redirect($model->url('view'));
             }
         }
         return $first_entity;
+
     }
+
 
     /**
      * @param Event $event
@@ -311,7 +328,7 @@ class MergeBehavior extends Behavior
      * @param ArrayObject $extra
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function mergeBeforeSave(Event $event, Entity $entity, ArrayObject $options, ArrayObject $extra)
+    public function _mergeBeforeSave(Event $event, Entity $entity, ArrayObject $options, ArrayObject $extra)
     {
         $model = $this->_table;
         try {
@@ -334,7 +351,7 @@ class MergeBehavior extends Behavior
      * @param ArrayObject $extra
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function mergeAfterSave(Event $event, Entity $entity, ArrayObject $options, ArrayObject $extra)
+    public function _mergeAfterSave(Event $event, Entity $entity, ArrayObject $options, ArrayObject $extra)
     {
         // POCOR-9015 start
         $model = $this->_table;
