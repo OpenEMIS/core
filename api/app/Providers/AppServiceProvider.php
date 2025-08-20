@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\DB;
 
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -32,12 +33,14 @@ class AppServiceProvider extends ServiceProvider
         //For POCOR-8215 end...
         // AppServiceProvider::boot()
         //For POCOR-9352 start..
-        DB::whenQueryingForLongerThan(200, function ($conn, $event) {
-            Log::warning('Slow query', [
-                'sql'      => $event->sql,
-                'time_ms'  => $event->time,
-                'bindings' => $event->bindings,
-            ]);
+        DB::listen(function ($query) {
+            if ($query->time > 200) { // миллисекунды
+                Log::warning('Slow query detected', [
+                    'sql' => $query->sql,
+                    'bindings' => $query->bindings,
+                    'time_ms' => $query->time,
+                ]);
+            }
         });
         DB::disableQueryLog();
         //For POCOR-9352 end...
