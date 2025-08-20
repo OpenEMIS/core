@@ -1355,7 +1355,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 'title' => __('Undo')
             ],
         ];
-        if($this->checkUserAccessForPendingTransferOut()){
+//        if($this->checkUserAccessForPendingTransferOut()){
             $extraButtons['bulkTransferOut'] = [
                 'permission' => ['Institutions', 'Transfer', 'add'],
                 'action' => 'BulkStudentTransferOut',
@@ -1363,7 +1363,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 'icon' => '<i class="fa kd-transfer"></i>',
                 'title' => __('Bulk Student Transfer Out')
             ];
-        }
+//        }
 
         foreach ($extraButtons as $key => $config) {
             if (!empty($config['external'])) {
