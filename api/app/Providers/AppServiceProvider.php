@@ -34,10 +34,12 @@ class AppServiceProvider extends ServiceProvider
         //For POCOR-8215 end...
         // AppServiceProvider::boot()
         //For POCOR-9352 start..
-        DB::statement('SET SESSION max_execution_time=60000'); // 60s
+        DB::enableQueryLog();
+
+        DB::statement('SET SESSION max_execution_time=600'); // 60s
 
         DB::listen(function ($query) {
-            if ($query->time > 30000) { // миллисекунды
+            if ($query->time > 300) { // миллисекунды
                 Log::warning('Slow query detected', [
                     'sql' => $query->sql,
                     'bindings' => $query->bindings,
@@ -54,7 +56,6 @@ class AppServiceProvider extends ServiceProvider
                 ]);
             }
         });
-        DB::disableQueryLog();
         //For POCOR-9352 end...
     }
 }
