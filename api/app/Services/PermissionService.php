@@ -218,7 +218,7 @@ class PermissionService
                 ->whereIn('area_id', $areaIds)
                 ->pluck('id')
                 ->toArray();
-            Log::debug(print_r([$areaIds, $institutionIds],true));
+            Log::debug(print_r([$groupAreas, $areaIds, $institutionIds],true));
             return ['allowAllInstitutions' => 0, 'institutionIds' => $institutionIds];
         } catch (\Exception $e) {
             Log::error("Error in getGroupAreaInstitutions: " . $e->getMessage());
