@@ -27,6 +27,9 @@ use Cake\Event\EventInterface;
 use Cake\Auth\DefaultPasswordHasher;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Cake\I18n\Time;
+use Cake\Datasource\ConnectionManager;
+use Cake\I18n\FrozenTime;
+use Cake\Datasource\EntityInterface;
 
 //POCOR-5672
 
@@ -6770,7 +6773,8 @@ class InstitutionsController extends AppController
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
         }
         $securityUserResult = $this->saveSecurityUser($studentData);
-        if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
+//        Log::debug(print_r($securityUserResult, true));
+        if ($securityUserResult instanceof \Cake\ORM\Entity || $securityUserResult instanceof EntityInterface) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
             $this->handleIdentities($requestData, $userRecordId, $userId);
@@ -6778,7 +6782,6 @@ class InstitutionsController extends AppController
             $this->handleCustomFields('student', $requestData, $userRecordId, $userId);
             //if ($requestData['student_admission_status_value'] == 0 || strtolower($requestData['student_admission_status']) == "enrolled") {//POCOR-8434
             $saved_student = $this->handleStudentInstitutionData($requestData, $userRecordId, $userId) ?? $securityUserResult; // POCOR-8776
-            $handle_candidate_number = $this->handleCandidateNumber($requestData, $userRecordId); // POCOR-9164
             //}//POCOR-8434
             $this->triggerWebhooks($userRecordId, $requestData);
 //            Log::debug(print_r($studentData,true));
@@ -6787,7 +6790,7 @@ class InstitutionsController extends AppController
             return $securityUserResult;
         } else {
 //            Log::debug(print_r($studentData,true));
-            return $this->sendJsonResponse(['message' => 'Failed to save user'], 500);
+            return $this->sendJsonResponse(['message' => 'Failed to save user ' . json_encode(print_r($securityUserResult,true)) ], 500);
         }
     }
 
@@ -6892,49 +6895,89 @@ class InstitutionsController extends AppController
      * Saves a security user. POCOR-8231
      *
      * @param array $userData
-     * @return \Cake\Datasource\EntityInterface|false
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private function saveSecurityUser($userData)
+    /**
+     * Save or update a Security User by openemis_no.
+     * Returns the saved Entity on success, or a JSON Response on failure.
+     *
+     * @return \Cake\Datasource\EntityInterface|\Cake\Http\Response
+     */
+    private function saveSecurityUser(array $userData): \Cake\Datasource\EntityInterface|Response
     {
-        $securityUsers = self::getDynamicTableInstance('User.Users');//POCOR-8706
-        $checkStudentExist = $securityUsers->find()->where(['openemis_no' => $userData['openemis_no']])->first();
-//        self::debug($userData);
-        if ($checkStudentExist) {
-            $userData['id'] = $checkStudentExist->id;
+        $securityUsers = self::getDynamicTableInstance('User.Users'); // POCOR-8706
+
+        // Find existing by openemis_no
+        $existing = $securityUsers->find()
+            ->where(['openemis_no' => $userData['openemis_no'] ?? null])
+            ->first();
+
+        if ($existing) {
+            // Prevent accidental username/password overwrite during update
+            $userData['id'] = $existing->id;
             unset($userData['username'], $userData['password']);
-            $entity = $securityUsers->patchEntity($checkStudentExist, $userData);
+            $entity = $securityUsers->patchEntity($existing, $userData);
         } else {
-            //POCOR-9181[START]
+            // POCOR-9181 [START]
             try {
                 $entity = $securityUsers->newEntity($userData);
-            } catch (\Exception $e) {
-                Log::debug(__FUNCTION__);
-
-                Log::debug('Error: ' . $e->getMessage());
+            } catch (\Throwable $e) {
+                Log::error(__FUNCTION__ . ': newEntity failed: ' . $e->getMessage());
+                return $this->sendJsonResponse(
+                    ['message' => 'Failed to create user', 'detail' => $e->getMessage()],
+                    500
+                );
             }
-            //POCOR-9181[END]
+            // POCOR-9181 [END]
         }
-        //POCOR-8706(attached behaviour to reflect users in moodle created from directory)
-        $securityUsers->addBehavior('User.MoodleCreateUser');
+
+        // Validation errors from patch/new stage
+        if ($entity->hasErrors()) {
+            return $this->sendJsonResponse(
+                ['message' => 'Validation failed', 'errors' => $entity->getErrors()],
+                422
+            );
+        }
+
+        // Attach behavior once (avoid duplicate add on multiple calls)
+        $behaviors = $securityUsers->behaviors();
+        if (!$behaviors->has('MoodleCreateUser')) {
+            $securityUsers->addBehavior('User.MoodleCreateUser');
+        }
 
         try {
-            return $securityUsers->save($entity);
-        } catch (\Exception $e) {
-            Log::debug(__FUNCTION__);
+            $saved = $securityUsers->save($entity, ['atomic' => false]);
 
-            Log::debug('Error: ' . $e->getMessage());
-//            Log::debug($entity);
-// POCOR-9011 start
-            if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
-                if (strpos($e->getMessage(), 'unique_email') !== false) {
+            if ($saved === false) {
+                // buildRules or persistence failed without throwing
+                return $this->sendJsonResponse(
+                    ['message' => 'Failed to save user', 'errors' => $entity->getErrors()],
+                    400
+                );
+            }
+
+            // Success: return the persisted entity (same instance, PK set/updated)
+            return $saved;
+
+        } catch (\Throwable $e) {
+            Log::error(__FUNCTION__ . ': save failed: ' . $e->getMessage());
+
+            $msg = $e->getMessage();
+            // POCOR-9011 start — keep your duplicate parsing
+            if (str_contains($msg, 'Duplicate entry')) {
+                if (str_contains($msg, 'unique_email')) {
                     return $this->sendJsonResponse(['message' => 'Duplicate email'], 400);
-                } elseif (strpos($e->getMessage(), 'unique_mobile_number') !== false) {
+                }
+                if (str_contains($msg, 'unique_mobile_number')) {
                     return $this->sendJsonResponse(['message' => 'Duplicate mobile number'], 400);
                 }
             }
-            return $this->sendJsonResponse(['message' => 'Failed to save user'], 500);
             // POCOR-9011 end
+
+            return $this->sendJsonResponse(
+                ['message' => 'Failed to save moodle user', 'detail' => $msg],
+                500
+            );
         }
     }
 
@@ -7386,9 +7429,29 @@ class InstitutionsController extends AppController
                         'created_user_id' => $userId,
                         'created' => date('Y-m-d H:i:s')
                     ];
-                    //save in institution_student_admission table
-                    $entityAdmissionData = $institutionStudentAdmission->newEntity($entityAdmissionData);
-                    $InstitutionAdmissionResult = $institutionStudentAdmission->save($entityAdmissionData);
+                    // POCOR-9323: start save in institution_student_admission table
+                    $entityAdmission = $institutionStudentAdmission->newEntity($entityAdmissionData);
+
+// Check validation errors before attempting save
+                    $errors = method_exists($entityAdmission, 'getErrors')
+                        ? $entityAdmission->getErrors()
+                        : $entityAdmission->errors(); // CakePHP <3.4
+
+                    if (!empty($errors)) {
+                        Log::debug('Admission validation failed; skipping candidate number gen.');
+                        // optionally Log::debug(print_r($errors, true));
+                        return;
+                    }
+
+// Try save
+                    $admissionSaved = $institutionStudentAdmission->save($entityAdmission);
+
+                    if (!$admissionSaved) {
+                        Log::debug('Admission save failed; skipping candidate number gen.');
+                        return;
+                    }
+
+                    // POCOR-9323: end
                     unset($entityAdmissionData);//POCOR-7716
                     unset($InstitutionAdmissionResult);//POCOR-7716
                 }
@@ -7472,95 +7535,6 @@ class InstitutionsController extends AppController
         return $saved_student;
     }
 
-    /**
-     * POCOR-9164
-     * @author Ehteram Ahmad
-     * Create Registration Number(Candidate Number) on new student enrollment  
-     **/
-
-    private function handleCandidateNumber(array $requestData, $userRecordId)
-    {
-        $institutionId = $requestData['institution_id'] ?? null;
-        $institutionClassId = $requestData['institution_class_id'] ?? null;
-        $educationGradeId = $requestData['education_grade_id'] ?? null;
-        $academicPeriodId = $requestData['academic_period_id'] ?? null;
-
-
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $InstitutionStudentProgrammes = TableRegistry::get('Student.InstitutionStudentProgrammes');
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-
-        $institutionResult = $Institutions->find()
-                    ->contain('Areas')
-                    ->where([$Institutions->aliasField('id') => $requestData['institution_id']])
-                    ->first();
-
-        $AcademicPeriodsResult = $AcademicPeriods->find()
-                    ->where([$AcademicPeriods->aliasField('id') => $academicPeriodId])
-                    ->first();
-
-        $EducationGradesResult = $EducationGrades->find()
-                    ->where([$EducationGrades->aliasField('id') => $educationGradeId])
-                    ->first();
-
-        $areaCode = $institutionResult->area['code'];
-        $institutionCode = $institutionResult->code;
-        $AcademicPeriodsCode = $AcademicPeriodsResult->code;
-        $EducationProgrammeId = $EducationGradesResult->education_programme_id;
-
-        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
-        $autoGeneratedCandidateNumber = $ConfigItemTable
-            ->find()
-            ->select([$ConfigItemTable->aliasField('value')])
-            ->where([$ConfigItemTable->aliasField('code') => 'auto_generated_candidate_number'])
-            ->first();
-        
-        $autoGeneratedCandidateNumberValueSelection = $autoGeneratedCandidateNumber['value_selection'];
-        $isEnabled = $autoGeneratedCandidateNumber['value'];
-        if($isEnabled){
-            preg_match_all('/\${([^}]+)}/', $autoGeneratedCandidateNumberValueSelection, $matches);
-
-            $cleanedArray = $matches[1];
-
-            $InstitutionStudentProgrammesData = $InstitutionStudentProgrammes->find()
-                        ->order([$InstitutionStudentProgrammes->aliasField('id') => 'desc']) //POCOR-8074
-                        ->limit(1)
-                        ->first();
-                
-            $registration_number = $InstitutionStudentProgrammesData->registration_number;
-            if(!empty($registration_number)){
-                $registration_number = explode("/", $registration_number);
-                $last_registration_number = end($registration_number);
-                $next_registration_number = (int)$last_registration_number + 1;
-                $nextNumberPadded = str_pad($next_registration_number, strlen($last_registration_number), '0', STR_PAD_LEFT);
-                $formattedNumber = $nextNumberPadded;
-            }else{
-                $digits = 4;
-                $number = 1;
-                $formattedNumber = str_pad($number, $digits, '0', STR_PAD_LEFT);
-            }
-            $rawCandidateNumber = [
-                $areaCode,
-                $institutionCode,
-                $AcademicPeriodsCode,
-                $formattedNumber
-            ];
-            $finalCandidateNumber = implode('/', $rawCandidateNumber);
-
-            $data = $InstitutionStudentProgrammes->newEntity([
-                'institution_id' =>$institutionId,
-                'student_id'=>$userRecordId,
-                'education_programme_id'=>$EducationProgrammeId,
-                'registration_number'=> $finalCandidateNumber,
-                'modified_user_id'=>$this->Auth->user('id'),
-                'modified'=>date('Y-m-d h:i:s'),
-                'created_user_id'=>$this->Auth->user('id'),
-                'created'=> date('Y-m-d h:i:s')
-            ]);
-            $InstitutionStudentProgrammes->save($data);
-        }
-    }
 
     /**
      * POCOR-7146

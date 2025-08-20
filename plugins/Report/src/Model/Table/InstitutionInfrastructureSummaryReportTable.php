@@ -56,10 +56,11 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
         }else{
             $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['area_level_id' => $areaLevelId])->toArray();
         }
+
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $acedmicPeriodData = $AcademicPeriods->find()->where([$AcademicPeriods->aliasField('id') => $academic_period_id])->first();
         $AcademicPeriodsStartYear = $acedmicPeriodData->start_year;
-
+        
         $childArea =[];
         $childAreaMain = [];
         $childArea3 = [];
@@ -210,7 +211,7 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
         INNER JOIN room_types
         ON room_types.id = institution_rooms.room_type_id
         WHERE institution_rooms.room_status_id = 1
-        AND institution_rooms.start_year = $AcademicPeriodsStartYear
+         AND institution_rooms.start_year =  $AcademicPeriodsStartYear
         GROUP BY institution_rooms.institution_id)",
             'conditions' => [
                 'rooms_info.institution_id = institutions.id' 

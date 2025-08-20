@@ -1,3 +1,17 @@
+### [4.39.1] - 2025-08-18
+- Bug Fixed: Institutions > Students > Student Admission > Bulk Student Admission: User receives 404 error 
+- Bug Fixed: Administration > System Setup > System Configuration > Auto Generated Candidate ID: Registration number should be displayed according to placeholders.
+
+### [4.39.0] - 2025-08-15
+- Implemented: Develop changes to student report to include registration number
+- Bug Fixed: Institutions > Import Feature : System is still showing fax column despite having the fax removed from the institutions table
+- Bug Fixed: Administration > Communications > Alert Rules: ${guardian.name} & ${grade.name} placeholders do not exist in Student Admission Alert Rules Page
+- Bug Fixed: Administration > System Setup > System Configuration > Auto Generated Candidate Number:
+- Bug Fixed: Institutions > Statistics > Standard > Add: Report receives a "Error" status.
+- Bug Fixed: Reports > Institutions > Add > Feature: Staff: Date of birth column is blank.
+- Bug Fixed: Institutions > Appointments > Positions: There is no option to delete an inactive position
+- Bug Fixed: Administration > Profiles > Institutions > Profile: Unable to generate
+
 ### [4.38.0] - 2025-08-12
 - Implemented: Develop changes to the url variable names in the .env file
 - Implemented: Institutions > Academics > Subjects : Changes in Subject should be reflected in Moodle Courses
@@ -12,9 +26,9 @@
 - Bug Fixed: Develop changes to rename infrastructure attachments to attachments
 
 ### [4.37.1] - 2025-08-01
-Bug Fixed: Institutions > Performances > Assessments > Unassign/Exempt page : Retrieve all students regardless if the marks are entered
-Bug Fixed: Administration>Profiles>Students: Left border is not showing
-Bug Fixed: Institutions>Staff>Career>Leave: Entitlements for staff are not showing
+- Bug Fixed: Institutions > Performances > Assessments > Unassign/Exempt page : Retrieve all students regardless if the marks are entered
+- Bug Fixed: Administration>Profiles>Students: Left border is not showing
+- Bug Fixed: Institutions>Staff>Career>Leave: Entitlements for staff are not showing
 
 ### [4.37.0] - 2025-07-29
 - Implemented: Develop institution logo placeholder in the student profile feature
