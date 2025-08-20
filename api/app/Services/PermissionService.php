@@ -218,7 +218,7 @@ class PermissionService
                 ->whereIn('area_id', $areaIds)
                 ->pluck('id')
                 ->toArray();
-
+            Log::debug(print_r([$areaIds, $institutionIds],true));
             return ['allowAllInstitutions' => 0, 'institutionIds' => $institutionIds];
         } catch (\Exception $e) {
             Log::error("Error in getGroupAreaInstitutions: " . $e->getMessage());
@@ -227,18 +227,34 @@ class PermissionService
     }
     function getChildrenIdFromDb(array $parentAreaIds): array
     {
-        $areaIds = $parentAreaIds;
+        // Хотим вернуть: исходные узлы + все их потомки
+        $seen = array_values(array_unique($parentAreaIds));
+        $frontier = $seen;
 
-        do {
-            $newAreas = DB::table('areas')
-                ->whereIn('parent_id', $areaIds)
+        while (!empty($frontier)) {
+            // 1) Достаём детей только для текущего уровня
+            $children = DB::table('areas')
+                ->whereIn('parent_id', $frontier)
                 ->pluck('id')
                 ->toArray();
 
-            $newCount = count($newAreas);
-            $areaIds = array_merge($areaIds, $newAreas);
-        } while ($newCount > 0);
+            if (empty($children)) {
+                break;
+            }
 
-        return array_unique($areaIds);
+            // 2) Отбрасываем уже виденные
+            $children = array_values(array_unique($children));
+            $new = array_values(array_diff($children, $seen));
+
+            if (empty($new)) {
+                break; // больше нечего расширять — выходим
+            }
+
+            // 3) Добавляем в множество и двигаем фронтир
+            $seen = array_merge($seen, $new);
+            $frontier = $new;
+        }
+
+        return array_values(array_unique($seen));
     }
 }
