@@ -195,29 +195,17 @@ class InstitutionPositionsTable extends ControllerActionTable
         return $validator;
     }
 
-    //POCOR-8143
+    //POCOR-9321
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        // Check if there are associated records in InstitutionStaff
-        $institutionStaffCount = $this->InstitutionStaff->find()
-            ->where(['institution_position_id' => $entity->id])
-            ->count();
+        // Check for related records in InstitutionStaff
+        if ($this->InstitutionStaff->exists(['institution_position_id' => $entity->id]) ||
+            $this->StaffTransferIn->exists(['new_institution_position_id' => $entity->id])) {
 
-        // Check if there are associated records in StaffTransferIn
-        $staffTransferInCount = $this->StaffTransferIn->find()
-            ->where(['new_institution_position_id' => $entity->id])
-            ->count();
-
-        // Check if any associated records exist
-        $associatedRecordsExist = ($institutionStaffCount > 0) || ($staffTransferInCount > 0);
-        //print_r($associatedRecordsExist);exit;
-        if ($associatedRecordsExist) {
             $message = __('Delete operation is not allowed as there are other information linked to this record.');
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-            //POCOR-8457 starts
-            if (isset($this->controller) && $this->controller->getRequest()) {
-                $url = $this->controller->getRequest()->referer();
-            }//POCOR-8457 ends
+            $url = $this->controller->getRequest()?->referer();
+
             $event->stopPropagation();
             return $this->controller->redirect($url);
         }
