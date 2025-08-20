@@ -105,7 +105,7 @@ class InstitutionRepository extends Controller
         try {
 
             $params = $request->all();
-            //For POCOR-7772 Start
+            //For POCOR-7772 Start // POCOR-9352 removed
 //            Log::debug('start check access');
 //            $permissions = checkAccess();
 //            Log::debug('end check access');
