@@ -1355,7 +1355,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 'title' => __('Undo')
             ],
         ];
-//        if($this->checkUserAccessForPendingTransferOut()){
+//        if($this->checkUserAccessForPendingTransferOut()){ // POCOR-9347
             $extraButtons['bulkTransferOut'] = [
                 'permission' => ['Institutions', 'Transfer', 'add'],
                 'action' => 'BulkStudentTransferOut',
