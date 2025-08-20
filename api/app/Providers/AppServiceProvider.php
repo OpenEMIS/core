@@ -34,7 +34,7 @@ class AppServiceProvider extends ServiceProvider
         // AppServiceProvider::boot()
         //For POCOR-9352 start..
         DB::listen(function ($query) {
-            if ($query->time > 200) { // миллисекунды
+            if ($query->time > 30000) { // миллисекунды
                 Log::warning('Slow query detected', [
                     'sql' => $query->sql,
                     'bindings' => $query->bindings,
