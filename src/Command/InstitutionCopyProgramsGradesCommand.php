@@ -200,7 +200,7 @@ class InstitutionCopyProgramsGradesCommand extends Command
 
             if (!$newGrade) {
                 $skipped++;
-                $this->v($io, "  ↷ IG#{$oldIgId} skipped: no grade map for grade {$oldGrade}");
+                $this->v($io, "  ~ IG#{$oldIgId} skipped: no grade map for grade {$oldGrade}");
                 continue;
             }
 
@@ -214,7 +214,7 @@ class InstitutionCopyProgramsGradesCommand extends Command
             if ($exists) {
                 $outMap[$oldIgId] = (int)$exists['id'];
                 $existing++;
-                $this->v($io, "  ↺ IG exists for inst {$instId}, grade {$newGrade} → #{$exists['id']}");
+                $this->v($io, "  ↺ IG exists for inst {$instId}, grade {$newGrade} -> #{$exists['id']}");
                 continue;
             }
 
@@ -222,7 +222,7 @@ class InstitutionCopyProgramsGradesCommand extends Command
                 $fakeId = -1 * ($inserted + 1);
                 $outMap[$oldIgId] = $fakeId;
                 $inserted++;
-                $this->v($io, "  ✎ (dry-run) Would insert IG for inst={$instId}, grade={$newGrade}, period={$toPeriod}");
+                $this->v($io, " ? (dry-run) Would insert IG for inst={$instId}, grade={$newGrade}, period={$toPeriod}");
                 continue;
             }
 
@@ -242,7 +242,7 @@ class InstitutionCopyProgramsGradesCommand extends Command
 
             // pre-insert context
             $this->v($io, sprintf(
-                "  → IG insert pending: inst=%d, grade=%d, period=%d, start_date=%s, start_year=%s",
+                "  -> IG insert pending: inst=%d, grade=%d, period=%d, start_date=%s, start_year=%s",
                 $instId, $newGrade, $toPeriod,
                 $params['sdate'] ?? 'NULL',
                 (string)($params['syear'] ?? 'NULL')
@@ -270,12 +270,12 @@ class InstitutionCopyProgramsGradesCommand extends Command
 
                 $outMap[$oldIgId] = $newId;
                 $inserted++;
-                $this->v($io, "  ✓ IG inserted → #{$newId} (inst {$instId}, grade {$newGrade})");
+                $this->v($io, "  ✓ IG inserted -> #{$newId} (inst {$instId}, grade {$newGrade})");
             } catch (\Throwable $e) {
                 $failed++;
                 // log the failure and keep going (do NOT rethrow)
                 $io->err(sprintf(
-                    "  ✗ IG insert FAILED: inst=%d, grade=%d, period=%d. Error: %s",
+                    "  x IG insert FAILED: inst=%d, grade=%d, period=%d. Error: %s",
                     $instId, $newGrade, $toPeriod, $e->getMessage()
                 ));
                 continue;
@@ -304,20 +304,20 @@ class InstitutionCopyProgramsGradesCommand extends Command
         // Pull source IPGS with their *old* IG and Grade
         $src = $this->conn->execute(
             "SELECT ipgs.institution_grade_id,
-                    ipgs.education_grade_id,
-                    ipgs.education_grade_subject_id,  -- this references education_subjects.id
-                    ipgs.institution_id
-             FROM institution_program_grade_subjects ipgs
-             INNER JOIN institution_grades ig
-                     ON ig.id = ipgs.institution_grade_id
-             WHERE ig.academic_period_id = ?",
+                ipgs.education_grade_id,
+                ipgs.education_grade_subject_id,  -- this references education_subjects.id
+                ipgs.institution_id
+         FROM institution_program_grade_subjects ipgs
+         INNER JOIN institution_grades ig
+                 ON ig.id = ipgs.institution_grade_id
+         WHERE ig.academic_period_id = ?",
             [$fromPeriod]
         )->fetchAll('assoc');
 
         // Build a fast set of allowed (grade, subject) based on EGS
         $egs = $this->conn->execute(
             "SELECT education_grade_id, education_subject_id
-             FROM education_grades_subjects"
+         FROM education_grades_subjects"
         )->fetchAll('assoc');
 
         $allowed = [];
@@ -325,7 +325,28 @@ class InstitutionCopyProgramsGradesCommand extends Command
             $allowed[(int)$r['education_grade_id'] . ':' . (int)$r['education_subject_id']] = true;
         }
 
-        $inserted = 0; $existing = 0; $skipped = 0; $blocked = 0;
+        // Cache of valid institutions to avoid FK failures due to orphans
+        $instRows = $this->conn->execute("SELECT id FROM institutions")->fetchAll('assoc');
+        $validInst = [];
+        foreach ($instRows as $ir) {
+            $validInst[(int)$ir['id']] = true;
+        }
+
+        // Quick set of valid NEW IG ids (skip negative fake ids from a dry-run feed)
+        $validNewIG = [];
+        foreach ($igMap as $old => $new) {
+            if ($new && $new > 0) {
+                $validNewIG[(int)$new] = true;
+            }
+        }
+
+        $inserted = 0;
+        $existing = 0;
+        $skipped  = 0;     // no map
+        $blocked  = 0;     // not in EGS
+        $missInst = 0;     // missing institution
+        $missIG   = 0;     // missing/new IG not persisted
+        $failed   = 0;     // exception on insert
 
         foreach ($src as $r) {
             $oldIG   = (int)$r['institution_grade_id'];
@@ -333,28 +354,40 @@ class InstitutionCopyProgramsGradesCommand extends Command
             $subjId  = (int)$r['education_grade_subject_id'];
             $instId  = (int)$r['institution_id'];
 
-            $newIG   = $igMap[$oldIG]   ?? null;
+            $newIG   = $igMap[$oldIG]    ?? null;
             $newGr   = $gradeMap[$oldGr] ?? null;
 
+            // require maps
             if (!$newIG || !$newGr) {
                 $skipped++;
-                $this->v($io, "  ↷ IPGS skip: missing IG/Grade map (oldIG {$oldIG} -> ".($newIG ?? '∅').", oldGr {$oldGr} -> ".($newGr ?? '∅').")");
+                $this->v($io, "  ~ IPGS skip: missing IG/Grade map (oldIG {$oldIG} -> ".($newIG ?? '∅').", oldGr {$oldGr} -> ".($newGr ?? '∅').")");
                 continue;
             }
-
-            // Guard: only copy if (newGr, subjId) exists in EGS
+            // skip negative ids from a dry-run feed or if IG not actually persisted
+            if ($newIG <= 0 || empty($validNewIG[$newIG])) {
+                $missIG++;
+                $this->v($io, "  ~ IPGS skip: new IG#{$newIG} not persisted/valid (oldIG {$oldIG})");
+                continue;
+            }
+            // guard: institution must exist (avoid FK error if DB has orphans)
+            if (empty($validInst[$instId])) {
+                $missInst++;
+                $this->v($io, "  ~ IPGS skip: institution #{$instId} missing");
+                continue;
+            }
+            // guard: (grade, subject) must exist in EGS
             if (empty($allowed[$newGr . ':' . $subjId])) {
                 $blocked++;
-                $this->v($io, "  ⚠︎ IPGS blocked: subject {$subjId} is not linked to grade {$newGr} in EGS");
+                $this->v($io, "  ^ IPGS blocked: subject {$subjId} is not linked to grade {$newGr} in EGS");
                 continue;
             }
 
             // Exists?
             $exists = $this->conn->execute(
                 "SELECT id FROM institution_program_grade_subjects
-                 WHERE institution_grade_id = ? AND education_grade_id = ?
-                   AND education_grade_subject_id = ? AND institution_id = ?
-                 LIMIT 1",
+             WHERE institution_grade_id = ? AND education_grade_id = ?
+               AND education_grade_subject_id = ? AND institution_id = ?
+             LIMIT 1",
                 [$newIG, $newGr, $subjId, $instId]
             )->fetch('assoc');
 
@@ -365,28 +398,41 @@ class InstitutionCopyProgramsGradesCommand extends Command
 
             if ($this->dryRun) {
                 $inserted++;
-                $this->v($io, "  ^ (dry-run) Would add IPGS: IG#{$newIG}, grade#{$newGr}, subject#{$subjId}, inst#{$instId}");
+                $this->v($io, " ? (dry-run) Would add IPGS: IG#{$newIG}, grade#{$newGr}, subject#{$subjId}, inst#{$instId}");
                 continue;
             }
 
-            $this->conn->execute(
-                "INSERT INTO institution_program_grade_subjects
+            // pre-insert context for troubleshooting
+            $this->v($io, "  -> IPGS insert pending: IG={$newIG}, grade={$newGr}, subject={$subjId}, inst={$instId}");
+
+            try {
+                $this->conn->execute(
+                    "INSERT INTO institution_program_grade_subjects
                  (institution_grade_id, education_grade_id, education_grade_subject_id,
                   institution_id, created_user_id, created)
                  VALUES (:ig, :gr, :subj, :inst, :uid, :ts)",
-                [
-                    'ig'  => $newIG,
-                    'gr'  => $newGr,
-                    'subj'=> $subjId,
-                    'inst'=> $instId,
-                    'uid' => $this->userId,
-                    'ts'  => date('Y-m-d H:i:s'),
-                ]
-            );
-            $inserted++;
+                    [
+                        'ig'  => $newIG,
+                        'gr'  => $newGr,
+                        'subj'=> $subjId,
+                        'inst'=> $instId,
+                        'uid' => $this->userId,
+                        'ts'  => date('Y-m-d H:i:s'),
+                    ]
+                );
+                $inserted++;
+            } catch (\Throwable $e) {
+                $failed++;
+                $io->err(sprintf(
+                    "  x IPGS insert FAILED: IG=%d, grade=%d, subject=%d, inst=%d. Error: %s",
+                    $newIG, $newGr, $subjId, $instId, $e->getMessage()
+                ));
+                // keep going
+                continue;
+            }
         }
 
-        $io->out("  IPGS: inserted={$inserted}, existing={$existing}, skipped_no_map={$skipped}, blocked_not_in_EGS={$blocked}");
+        $io->out("  IPGS: inserted={$inserted}, existing={$existing}, skipped_no_map={$skipped}, blocked_not_in_EGS={$blocked}, missing_institution={$missInst}, missing_new_IG={$missIG}, failed={$failed}");
     }
 
     // ---------------------------------------------------------------------
