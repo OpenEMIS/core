@@ -46,6 +46,7 @@ class InstitutionCopyProgramsGradesCommand extends Command
         $this->verbose = !$args->getOption('quiet');
         $this->userId  = (int)$args->getOption('user') ?: 2;
         $this->conn    = ConnectionManager::get('default');
+        $this->conn->getDriver()->enableAutoQuoting(true);
 
         $io->out("=== Institution copy (programs → grades → IPGS) ===");
         $io->out("from=$fromId → to=$toId " . ($this->dryRun ? '[dry-run]' : ''));
