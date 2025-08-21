@@ -48,8 +48,8 @@ class InstitutionCopyProgramsGradesCommand extends Command
         $this->conn    = ConnectionManager::get('default');
         $this->conn->getDriver()->enableAutoQuoting(true);
 
-        $io->out("=== Institution copy (programs → grades → IPGS) ===");
-        $io->out("from=$fromId → to=$toId " . ($this->dryRun ? '[dry-run]' : ''));
+        $io->out("=== Institution copy (programs -> grades -> IPGS) ===");
+        $io->out("from=$fromId -> to=$toId " . ($this->dryRun ? '[dry-run]' : ''));
 
         // Academic period names (for tail swap in structure names)
         [$fromApName, $toApName] = $this->getPeriodNames($fromId, $toId);
@@ -67,14 +67,14 @@ class InstitutionCopyProgramsGradesCommand extends Command
 
         $this->conn->begin();
         try {
-            $io->out("→ Building grade map (by path + codes) …");
+            $io->out("-> Building grade map (by path + codes) …");
             $gradeMap = $this->buildGradeMap($fromId, $toId, $fromApName, $toApName, $io);
             $io->out("  Grade map entries: " . count($gradeMap));
 
-            $io->out("→ Copying institution_grades …");
+            $io->out("-> Copying institution_grades …");
             $igMap = $this->copyInstitutionGrades($fromId, $toId, $toPeriodMeta, $gradeMap, $io);
 
-            $io->out("→ Copying institution_program_grade_subjects (valid EGS only) …");
+            $io->out("-> Copying institution_program_grade_subjects (valid EGS only) …");
             $this->copyIPGS($fromId, $igMap, $gradeMap, $io);
 
             if ($this->dryRun) {
@@ -93,7 +93,7 @@ class InstitutionCopyProgramsGradesCommand extends Command
     }
 
     // ---------------------------------------------------------------------
-    // STEP 1: Map grades FROM → TO using path + codes
+    // STEP 1: Map grades FROM -> TO using path + codes
     // Key: "sys|lvl|cyc|prog_code|grade_code"
     // Path names are normalized by swapping a trailing " <fromApName>" to " <toApName>"
     // so "National System 2025" will match "National System 2026", etc.
@@ -132,7 +132,7 @@ class InstitutionCopyProgramsGradesCommand extends Command
             WHERE s.academic_period_id = :pid
         ";
 
-        // (Fix minor typo: INNERJOIN → INNER JOIN)
+        // (Fix minor typo: INNERJOIN -> INNER JOIN)
         $sqlTo = str_replace('INNERJOIN', 'INNER JOIN', $sqlTo);
 
         $fromRows = $this->conn->execute($sqlFrom, ['pid' => $fromPeriod])->fetchAll('assoc');
@@ -157,7 +157,7 @@ class InstitutionCopyProgramsGradesCommand extends Command
                 $map[(int)$r['grade_id']] = $toIndex[$key];
             } else {
                 $missing++;
-                $this->v($io, "  ↷ No target grade for {$key} (skipping related IG/IPGS rows)");
+                $this->v($io, "  ~ No target grade for {$key} (skipping related IG/IPGS rows)");
             }
         }
         if ($missing) {
@@ -197,7 +197,7 @@ class InstitutionCopyProgramsGradesCommand extends Command
 
             if (!$newGrade) {
                 $skipped++;
-                $this->v($io, "  ↷ IG#{$oldIgId} skipped: no grade map for grade {$oldGrade}");
+                $this->v($io, "  ~ IG#{$oldIgId} skipped: no grade map for grade {$oldGrade}");
                 continue;
             }
 
@@ -211,7 +211,7 @@ class InstitutionCopyProgramsGradesCommand extends Command
             if ($exists) {
                 $outMap[$oldIgId] = (int)$exists['id'];
                 $existing++;
-                $this->v($io, "  ↺ IG exists for inst {$instId}, grade {$newGrade} → #{$exists['id']}");
+                $this->v($io, "  x IG exists for inst {$instId}, grade {$newGrade} -> #{$exists['id']}");
                 continue;
             }
 
@@ -219,9 +219,10 @@ class InstitutionCopyProgramsGradesCommand extends Command
                 $fakeId = -1 * ($inserted + 1);
                 $outMap[$oldIgId] = $fakeId;
                 $inserted++;
-                $this->v($io, "  ✎ (dry-run) Would insert IG for inst {$instId}, grade {$newGrade}");
+                $this->v($io, "  = (dry-run) Would insert IG for inst {$instId}, grade {$newGrade}");
                 continue;
             }
+            $this->v($io, "  ?  Would insert IG for inst -> #{$instId} (inst {$instId}, grade {$newGrade})");
 
             $this->conn->execute(
                 "INSERT INTO institution_grades
@@ -245,7 +246,7 @@ class InstitutionCopyProgramsGradesCommand extends Command
             $newId = (int)$this->conn->getDriver()->lastInsertId();
             $outMap[$oldIgId] = $newId;
             $inserted++;
-            $this->v($io, "  ✓ IG inserted → #{$newId} (inst {$instId}, grade {$newGrade})");
+            $this->v($io, "  + IG inserted -> #{$newId} (inst {$instId}, grade {$newGrade})");
         }
 
         $io->out("  InstitutionGrades: inserted={$inserted}, existing={$existing}, skipped={$skipped}");
@@ -331,7 +332,7 @@ class InstitutionCopyProgramsGradesCommand extends Command
 
             if ($this->dryRun) {
                 $inserted++;
-                $this->v($io, "  ✎ (dry-run) Would add IPGS: IG#{$newIG}, grade#{$newGr}, subject#{$subjId}, inst#{$instId}");
+                $this->v($io, "  ^ (dry-run) Would add IPGS: IG#{$newIG}, grade#{$newGr}, subject#{$subjId}, inst#{$instId}");
                 continue;
             }
 
