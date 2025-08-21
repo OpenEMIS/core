@@ -410,7 +410,7 @@ class EducationSystemsTable extends ControllerActionTable
                                                                 foreach ($educationGradesSubjects as $sub_key => $sub_val) {
 
                                                                     $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['id'] = Text::uuid();
-                                                                    $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['requirement'] = $sub_val['requirement'];
+                                                                    $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['requirement'] = $sub_val['requirement']; // POCOR-9354
                                                                     $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['hours_required'] = $sub_val['hours_required'];
                                                                     $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['visible'] = $sub_val['visible'];
                                                                     $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['auto_allocation'] = $sub_val['auto_allocation'];

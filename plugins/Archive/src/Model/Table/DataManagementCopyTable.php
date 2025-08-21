@@ -93,7 +93,7 @@ class DataManagementCopyTable extends ControllerActionTable
     }
 
     /*───────────────────────────────────────────────────────────────────────────
-     | beforeSave → delegate to feature-specific validation (unchanged logic)
+     | POCOR-9354: beforeSave → delegate to feature-specific validation (unchanged logic)
      ───────────────────────────────────────────────────────────────────────────*/
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
@@ -108,7 +108,7 @@ class DataManagementCopyTable extends ControllerActionTable
     }
 
     /*───────────────────────────────────────────────────────────────────────────
-     | afterSave → delegate to feature-specific triggers (Shell → Command where ready)
+     | POCOR-9354: afterSave → delegate to feature-specific triggers (Shell → Command where ready)
      ───────────────────────────────────────────────────────────────────────────*/
     public function afterSave(Event $event, Entity $entity, ArrayObject $data)
     {
@@ -139,7 +139,7 @@ class DataManagementCopyTable extends ControllerActionTable
                 }
             } else {
                 if (empty($EducationSystemsdata)) {
-                    $this->Alert->error('CopyData.nodataexisteducationsystem1', ['reset' => true]);
+                    $this->Alert->error('CopyData.educationsystemnotexist', ['reset' => true]);
                     return false;
                 }
             }
@@ -490,7 +490,7 @@ class DataManagementCopyTable extends ControllerActionTable
                 return $this->triggerShell('CopyReportCard', $entity->from_academic_period, $entity->to_academic_period);
 
             case self::PERFORMANCE_OUTCOMES:
-                return $this->triggePerformanceOutcomesShell('PerformanceOutcomes', $entity->from_academic_period, $entity->to_academic_period);
+                return $this->triggerPerformanceOutcomesShell('PerformanceOutcomes', $entity->from_academic_period, $entity->to_academic_period);
 
             case self::MASS_STUDENT_GRAD:
                 return $this->triggerShell('CopyMassGraduation', $entity->from_academic_period, $entity->to_academic_period);
@@ -624,6 +624,126 @@ class DataManagementCopyTable extends ControllerActionTable
             ->first();
 
         return $entity->generated_by = $result->first_name . ' ' . $result->last_name;
+    }
+
+    private function checkInstitutionCopiedData($copyFrom, $copyTo)
+    {
+        $educationGradesTable = TableRegistry::get('Education.EducationGrades');
+        $institutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
+
+
+        $query = $institutionGradesTable
+            ->find()
+            ->select([
+                'period_id' => 'AcademicPeriods.id',
+                'period_name' => 'AcademicPeriods.name',
+                'period_code' => 'AcademicPeriods.code',
+                'grade_id' => 'EducationGrades.id',
+                'grade_name' => 'EducationGrades.name',
+                'programme_name' => 'EducationProgrammes.name',
+                'institution_id' => 'Institutions.id'
+            ])
+            ->innerJoin(
+                ['EducationGrades' => 'education_grades'],
+                ['EducationGrades.id = InstitutionGrades.education_grade_id']
+            )
+            ->innerJoin(
+                ['Institutions' => 'institutions'],
+                ['Institutions.id = InstitutionGrades.institution_id']
+            )
+            ->innerJoin(
+                ['EducationProgrammes' => 'education_programmes'],
+                ['EducationGrades.education_programme_id = EducationProgrammes.id']
+            )
+            ->innerJoin(
+                ['EducationCycles' => 'education_cycles'],
+                ['EducationProgrammes.education_cycle_id = EducationCycles.id']
+            )
+            ->innerJoin(
+                ['EducationLevels' => 'education_levels'],
+                ['EducationCycles.education_level_id = EducationLevels.id']
+            )
+            ->innerJoin(
+                ['EducationSystems' => 'education_systems'],
+                ['EducationLevels.education_system_id = EducationSystems.id']
+            )
+            ->innerJoin(
+                ['AcademicPeriods' => 'academic_periods'],
+                ['EducationSystems.academic_period_id = AcademicPeriods.id']
+            )
+            ->order([
+                'AcademicPeriods.order' => 'ASC',
+                'EducationLevels.order' => 'ASC',
+                'EducationCycles.order' => 'ASC',
+                'EducationProgrammes.order' => 'ASC',
+                'EducationGrades.order' => 'ASC',
+                'Institutions.id' => 'ASC'
+            ]);
+        $copyFromData = $this->filter_array($query, $copyFrom, 'period_id');
+        $copyToData = $this->filter_array($query, $copyTo, 'period_id');
+        $insIds = array_unique(array_column($copyFromData, 'institution_id'));
+        $count = 0;
+
+        foreach ($insIds as $val) {
+
+            $data1 = array_filter($copyFromData, function ($value, $key) use ($val) {
+                return $value['institution_id'] == $val;
+            }, ARRAY_FILTER_USE_BOTH);
+            $data2 = array_filter($copyToData, function ($value, $key) use ($val) {
+                return $value['institution_id'] == $val;
+            }, ARRAY_FILTER_USE_BOTH);
+            if (count($data1) > count($data2)) {
+                $count = $count + (count($data1) - count($data2));
+            }
+
+        }
+        if ($count > 0) {
+            return false;
+        }
+        return true;
+
+    }
+
+    //POCOR-7576-institution programme end
+    public function filter_array($array, $term, $column)
+    {
+        $matches = array();
+        foreach ($array as $a) {
+            if ($a[$column] == $term)
+                $matches[] = $a;
+        }
+        return $matches;
+    }
+
+    public function triggerPerformanceCompetenciesShell($shellName, $from_academic_period, $to_academic_period = null, $competency_criterias_value = null, $competency_templates_value = null, $competency_items_value = null, $competency_periods_value = null)
+    {
+        $args = '';
+        $args .= !is_null($from_academic_period) ? ' '.$from_academic_period : '';
+        $args .= !is_null($to_academic_period) ? ' '.$to_academic_period : '';
+        $args .= !is_null($competency_criterias_value) ? ' '.$competency_criterias_value : '';
+        $args .= !is_null($competency_templates_value) ? ' '.$competency_templates_value : '';
+        $args .= !is_null($competency_items_value) ? ' '.$competency_items_value : '';
+        $args .= !is_null($competency_periods_value) ? ' '.$competency_periods_value : ''; //POCOR-8504
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
+        return true;
+     }
+
+    public function triggerPerformanceOutcomesShell($shellName, $from_academic_period = null, $to_academic_period = null)
+    {
+        $args = '';
+        $args .= !is_null($from_academic_period) ? ' ' . $from_academic_period : '';
+        $args .= !is_null($to_academic_period) ? ' ' . $to_academic_period : '';
+        $cmd = ROOT . DS . 'bin' . DS . 'cake ' . $shellName . $args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName . '.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
+        return true;
     }
 
     /* ======================================================================
