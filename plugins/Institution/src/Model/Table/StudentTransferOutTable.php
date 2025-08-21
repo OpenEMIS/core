@@ -171,66 +171,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $Navigation->addCrumb($previousTitle);
 
     }
-    /**
-     * @return bool
-     */
-    private function checkUserAccessForPendingTransferOut()
-    {
-        $check = false;
-        $newQ = clone $this->query();
-        $institutionId = $this->getInstitutionID();
-        // POCOR-4347 check there is at least one transfer out open or pending admission
-        $session = $this->controller->getRequest()->getSession();
-        $userId = $session->read('Auth.User.id');
-        $superAdmin = $session->read('Auth.User.super_admin');
-        $newQ->find('InstitutionStudentTransferOut', ['institution_id' => $institutionId]);
-        $where = [
-            'Statuses.category IN ' => [self::IN_PROGRESS, self::TO_DO],
-            $this->aliasField('assignee_id') => $userId
-        ];
 
-        if ($superAdmin) {
-            $where = ['Statuses.category NOT IN ' => [self::DONE],
-            ];
-        }
-        $newQ->where($where); // POCOR-4347
-        $one_req = $newQ->find('all')->first();
-        if ($one_req) {
-            $status_id = $one_req->status_id;
-//            $this->log($status_id, 'debug');
-        } else {
-            return false;
-        }
-        // check if super_admin
-        if ($superAdmin) {
-            return true;
-        }
-        // check if user role has permission to work with student transfer our
-        $roleIds = [];
-        $event = $this->dispatchEvent('Workflow.onUpdateRoles', null, $this);
-        if ($event->getResult()) {
-            $roleIds = $event->getResult();
-        } else {
-            $roles = $this->AccessControl->getRolesByUser()->toArray();
-            foreach ($roles as $key => $role) {
-                $roleIds[$role->security_role_id] = $role->security_role_id;
-            }
-        }
-        if (empty($roleIds)) {
-            $roleIds = [0];
-        }
-        $all_steps_and_roles = TableRegistry::get('Workflow.WorkflowStepsRoles');
-        $distinct_step = $all_steps_and_roles->find()
-            ->select(['workflow_step_id'])
-            ->where(['workflow_step_id' => $status_id,
-                'security_role_id IN' => $roleIds])
-            ->distinct(['workflow_step_id'])
-            ->first();
-        if ($distinct_step) {
-            $check = true;
-        }
-        return $check;
-    }
     public function onGetAssociatedRecordsElement(Event $event, $action, $entity, $attr, $options = [])
     {
         $fieldKey = 'associated_records';
@@ -1366,15 +1307,14 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 'title' => __('Undo')
             ],
         ];
-        if($this->checkUserAccessForPendingTransferOut()){ // POCOR-9347
-            $extraButtons['bulkTransferOut'] = [
-                'permission' => ['Institutions', 'Transfer', 'add'],
-                'action' => 'BulkStudentTransferOut',
-                'next_action' => 'edit',
-                'icon' => '<i class="fa kd-transfer"></i>',
-                'title' => __('Bulk Student Transfer Out')
-            ];
-        }
+
+        $extraButtons['bulkTransferOut'] = [
+            'permission' => ['Institutions', 'Transfer', 'add'],
+            'action' => 'BulkStudentTransferOut',
+            'next_action' => 'edit',
+            'icon' => '<i class="fa kd-transfer"></i>',
+            'title' => __('Bulk Student Transfer Out')
+        ];
 
         foreach ($extraButtons as $key => $config) {
             if (!empty($config['external'])) {
