@@ -86,6 +86,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
         $io->out("$dryRun, $verbose");
 
         $this->conn = ConnectionManager::get('default');
+        $this->conn->getDriver()->enableAutoQuoting(true);
 
         $t = $this->getTableLocator();
         $this->AcademicPeriods                  = self::getDynamicTableInstance('academic_periods');
@@ -166,7 +167,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                 $entity = $this->EducationSystems->newEntity([
                     'name'               => $newSystemName,
                     'academic_period_id' => $toPeriod,
-                    '`order`'            => $sys->order ?? 1,
+                    'order'            => $sys->order ?? 1,
                     'visible'            => $sys->visible ?? 1,
                     'created_user_id'    => $sys->created_user_id ?? $userId,
                     'created'            => $sys->created ?? $now,
@@ -191,7 +192,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                     'education_system_id'      => $newSystemId,
                     'education_level_isced_id' => $lvl->education_level_isced_id,
                     'name'                     => $lvlName,
-                    '`order`'                  => $lvl->order,
+                    'order'                  => $lvl->order,
                     'visible'                  => $lvl->visible ?? 1,
                     'created_user_id'          => $userId,
                     'created'                  => $now,
@@ -215,7 +216,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                         'education_level_id' => $newLevelId,
                         'name'               => $cycName,
                         'admission_age'      => $cyc->admission_age,
-                        '`order`'            => $cyc->order,
+                        'order'            => $cyc->order,
                         'visible'            => $cyc->visible ?? 1,
                         'created_user_id'    => $userId,
                         'created'            => $now,
@@ -240,7 +241,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                             'code'                        => $prg->code,
                             'name'                        => $progName,
                             'duration'                    => $prg->duration,
-                            '`order`'                     => $prg->order,
+                            'order'                     => $prg->order,
                             'visible'                     => $prg->visible ?? 1,
                             'created_user_id'             => $userId,
                             'created'                     => $now,
@@ -291,7 +292,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                                 'code'                   => $gr->code,
                                 'name'                   => $gradeName,
                                 'admission_age'          => $gr->admission_age,
-                                '`order`'                => $gr->order,
+                                'order'                => $gr->order,
                                 'visible'                => $gr->visible ?? 1,
                                 'created_user_id'        => $userId,
                                 'created'                => $now,
