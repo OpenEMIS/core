@@ -451,25 +451,31 @@ class AssessmentsTable extends AppTable
                 return '';
         }
     }
+
+    //POCOR-9305
     public function onExcelRenderAssessmentPeriodWeightedMark(Event $event, Entity $entity, array $attr)
     {
         $weightsum = array_sum($this->assessmentPeriodWeights);
         $assessmentPeriodWeightedMark = $this->assessmentPeriodWeightedMark;
-        if ($weightsum > 0) {
-            $assessmentPeriodWeightedMark = $assessmentPeriodWeightedMark / $weightsum;
-        }
+
+        //remove the average/weight re-calculation
         $this->assessmentPeriodWeights = [];
+
         if (is_numeric($assessmentPeriodWeightedMark)) {
             $this->totalMark += $assessmentPeriodWeightedMark;
             $this->totalWeightedMark += ($assessmentPeriodWeightedMark * $attr['subjectWeight']);
         }
-        // reset the assessmentPeriodWeightedMark mark
+
+        // reset
         $this->assessmentPeriodWeightedMark = 0;
-        if(is_numeric($assessmentPeriodWeightedMark)){
+
+        if (is_numeric($assessmentPeriodWeightedMark)) {
             $assessmentPeriodWeightedMark = number_format($assessmentPeriodWeightedMark, 2);
         }
-        return ' '.$assessmentPeriodWeightedMark;
+
+        return ' ' . $assessmentPeriodWeightedMark;
     }
+
 
     public function onExcelRenderTotalWeightedMark(Event $event, Entity $entity, array $attr)
     {
