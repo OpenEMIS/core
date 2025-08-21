@@ -164,24 +164,23 @@ class StaffLeaveReportTable extends AppTable
         $entity->date_to = $date_to;
         return $entity->date_to;
     }
-
-    public function onExcelRenderStartTime(Event $event, Entity $entity, $attr)
+    //  POCOR-9314 start
+    public function onExcelRenderStartTime(Event $e, Entity $entity, $attr)
     {
-        if (!empty($entity->start_time)) {
-            $start_time = $entity->start_time->format('h:i:s a');
-            $entity->start_time = $start_time;
-        }
-        return $entity->start_time;
+        $time = $entity->get('start_time');
+        if ($time instanceof \DateTimeInterface) return $time->format('h:i:s a');
+        if (is_string($time) && $time !== '')     return date('h:i:s a', strtotime($time));
+        return '';
     }
 
-    public function onExcelRenderEndTime(Event $event, Entity $entity, $attr)
+    public function onExcelRenderEndTime(Event $e, Entity $entity, $attr)
     {
-        if (!empty($entity->end_time)) {
-            $end_time = $entity->end_time->format('h:i:s a');
-            $entity->end_time = $end_time;
-        }
-        return $entity->end_time;
+        $time = $entity->get('end_time');
+        if ($time instanceof \DateTimeInterface) return $time->format('h:i:s a');
+        if (is_string($time) && $time !== '')       return date('h:i:s a', strtotime($time));
+        return '';
     }
+    // POCOR-9314 end
 
     public function onExcelGetIdentityType(Event $event, Entity $entity)
     {
