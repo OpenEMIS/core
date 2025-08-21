@@ -181,13 +181,16 @@ class InstitutionCopyProgramsGradesCommand extends Command
     ): array {
         $rows = $this->conn->execute(
             "SELECT id, education_grade_id, academic_period_id, institution_id
-             FROM institution_grades
-             WHERE academic_period_id = ?",
+         FROM institution_grades
+         WHERE academic_period_id = ?",
             [$fromPeriod]
         )->fetchAll('assoc');
 
         $outMap   = []; // old_ig_id => new_ig_id
-        $inserted = 0; $existing = 0; $skipped = 0;
+        $inserted = 0;
+        $existing = 0;
+        $skipped  = 0;
+        $failed   = 0;
 
         foreach ($rows as $r) {
             $oldIgId   = (int)$r['id'];
@@ -197,21 +200,21 @@ class InstitutionCopyProgramsGradesCommand extends Command
 
             if (!$newGrade) {
                 $skipped++;
-                $this->v($io, "  ~ IG#{$oldIgId} skipped: no grade map for grade {$oldGrade}");
+                $this->v($io, "  ↷ IG#{$oldIgId} skipped: no grade map for grade {$oldGrade}");
                 continue;
             }
 
-            // Exists?
+            // Already exists?
             $exists = $this->conn->execute(
                 "SELECT id FROM institution_grades
-                 WHERE education_grade_id = ? AND academic_period_id = ? AND institution_id = ? LIMIT 1",
+             WHERE education_grade_id = ? AND academic_period_id = ? AND institution_id = ? LIMIT 1",
                 [$newGrade, $toPeriod, $instId]
             )->fetch('assoc');
 
             if ($exists) {
                 $outMap[$oldIgId] = (int)$exists['id'];
                 $existing++;
-                $this->v($io, "  x IG exists for inst {$instId}, grade {$newGrade} -> #{$exists['id']}");
+                $this->v($io, "  ↺ IG exists for inst {$instId}, grade {$newGrade} → #{$exists['id']}");
                 continue;
             }
 
@@ -219,37 +222,67 @@ class InstitutionCopyProgramsGradesCommand extends Command
                 $fakeId = -1 * ($inserted + 1);
                 $outMap[$oldIgId] = $fakeId;
                 $inserted++;
-                $this->v($io, "  = (dry-run) Would insert IG for inst {$instId}, grade {$newGrade}");
+                $this->v($io, "  ✎ (dry-run) Would insert IG for inst={$instId}, grade={$newGrade}, period={$toPeriod}");
                 continue;
             }
-            $this->v($io, "  ?  Would insert IG for inst -> #{$instId} (inst {$instId}, grade {$newGrade})");
 
-            $this->conn->execute(
-                "INSERT INTO institution_grades
+            $params = [
+                'grade' => $newGrade,
+                'period'=> $toPeriod,
+                'sdate' => $toPeriodMeta['start_date'] ?? null,
+                'syear' => $toPeriodMeta['start_year'] ?? null,
+                'edate' => null,
+                'eyear' => null,
+                'inst'  => $instId,
+                'muid'  => $this->userId,
+                'mod'   => date('Y-m-d H:i:s'),
+                'cuid'  => $this->userId,
+                'crt'   => date('Y-m-d H:i:s'),
+            ];
+
+            // pre-insert context
+            $this->v($io, sprintf(
+                "  → IG insert pending: inst=%d, grade=%d, period=%d, start_date=%s, start_year=%s",
+                $instId, $newGrade, $toPeriod,
+                $params['sdate'] ?? 'NULL',
+                (string)($params['syear'] ?? 'NULL')
+            ));
+
+            try {
+                $this->conn->execute(
+                    "INSERT INTO institution_grades
                  (education_grade_id, academic_period_id, start_date, start_year, end_date, end_year,
                   institution_id, modified_user_id, modified, created_user_id, created)
                  VALUES (:grade,:period,:sdate,:syear,:edate,:eyear,:inst,:muid,:mod,:cuid,:crt)",
-                [
-                    'grade' => $newGrade,
-                    'period'=> $toPeriod,
-                    'sdate' => $toPeriodMeta['start_date'],
-                    'syear' => $toPeriodMeta['start_year'],
-                    'edate' => null,
-                    'eyear' => null,
-                    'inst'  => $instId,
-                    'muid'  => $this->userId,
-                    'mod'   => date('Y-m-d H:i:s'),
-                    'cuid'  => $this->userId,
-                    'crt'   => date('Y-m-d H:i:s'),
-                ]
-            );
-            $newId = (int)$this->conn->getDriver()->lastInsertId();
-            $outMap[$oldIgId] = $newId;
-            $inserted++;
-            $this->v($io, "  + IG inserted -> #{$newId} (inst {$instId}, grade {$newGrade})");
+                    $params
+                );
+
+                // get the new id (MySQL / MariaDB path; works with Cake's PDO driver)
+                $newId = (int)$this->conn->getDriver()->lastInsertId();
+                if ($newId <= 0) {
+                    // defensive: some drivers require a fallback
+                    $newId = (int)$this->conn->execute("SELECT LAST_INSERT_ID() AS id")->fetch('assoc')['id'];
+                }
+
+                if ($newId <= 0) {
+                    throw new \RuntimeException('lastInsertId() returned 0/NULL');
+                }
+
+                $outMap[$oldIgId] = $newId;
+                $inserted++;
+                $this->v($io, "  ✓ IG inserted → #{$newId} (inst {$instId}, grade {$newGrade})");
+            } catch (\Throwable $e) {
+                $failed++;
+                // log the failure and keep going (do NOT rethrow)
+                $io->err(sprintf(
+                    "  ✗ IG insert FAILED: inst=%d, grade=%d, period=%d. Error: %s",
+                    $instId, $newGrade, $toPeriod, $e->getMessage()
+                ));
+                continue;
+            }
         }
 
-        $io->out("  InstitutionGrades: inserted={$inserted}, existing={$existing}, skipped={$skipped}");
+        $io->out("  InstitutionGrades: inserted={$inserted}, existing={$existing}, skipped={$skipped}, failed={$failed}");
         return $outMap;
     }
 
