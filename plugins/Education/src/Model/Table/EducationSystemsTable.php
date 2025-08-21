@@ -29,6 +29,7 @@ class EducationSystemsTable extends ControllerActionTable
     //POCOR-5696 start
     public function setupFields(Entity $entity)
     {
+
         if($this->request->getParam('action') == 'CopySystems'){
     		$this->field('start_year', ['type' => 'select', 'entity' => $entity,'attr' => ['label' => __('From Academic Period')]]);
     		$this->field('education_system_id', ['type' => 'select', 'entity' => $entity,'attr' => ['label' => __('From Education System')]]);
@@ -81,7 +82,7 @@ class EducationSystemsTable extends ControllerActionTable
 
     //added academic filter on systme listing
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    { 
+    {
         //$serverRequest = $this->request;
         if($this->request->getParam('action') != 'CopySystems'){
         	$academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -94,7 +95,7 @@ class EducationSystemsTable extends ControllerActionTable
         }
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Education Systems','Education');       
+		$is_manual_exist = $this->getManualUrl('Administration','Education Systems','Education');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -282,7 +283,7 @@ class EducationSystemsTable extends ControllerActionTable
                                     ->where([$education_levels->aliasField('education_system_id') => $entity->education_system_id])
                                     ->All()
                                     ->toArray();
-            
+
             if(!empty($educationLevelsData)){
                 $level_data_arr = [];
                 $cycle_data_arr = [];
@@ -304,7 +305,7 @@ class EducationSystemsTable extends ControllerActionTable
                     //insert level data
                     $newLevelEntites = $education_levels->newEntity($level_data_arr[$level_key]);
                     $level_result = $education_levels->save($newLevelEntites);
-                    
+
                     if(!empty($level_result)){
                         //cycle data
                         $education_cycles = TableRegistry::get('Education.EducationCycles');
@@ -365,7 +366,7 @@ class EducationSystemsTable extends ControllerActionTable
                                                     $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['id'] = Text::uuid();
                                                         $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['education_programme_id'] = $program_result->id;
                                                     $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['next_programme_id'] = $value['next_programme_id'];
-                                                    
+
                                                         //insert next programmes data
                                                         $newNextProgramEntites = $EducationProgrammesNextProgrammesTable->newEntity($nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]);
                                                         $nextProgramResult = $EducationProgrammesNextProgrammesTable->save($newNextProgramEntites);
@@ -409,6 +410,7 @@ class EducationSystemsTable extends ControllerActionTable
                                                                 foreach ($educationGradesSubjects as $sub_key => $sub_val) {
 
                                                                     $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['id'] = Text::uuid();
+                                                                    $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['requirement'] = $sub_val['requirement'];
                                                                     $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['hours_required'] = $sub_val['hours_required'];
                                                                     $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['visible'] = $sub_val['visible'];
                                                                     $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['auto_allocation'] = $sub_val['auto_allocation'];
@@ -433,7 +435,7 @@ class EducationSystemsTable extends ControllerActionTable
                         } // if educationCyclesData
                     }//level ends
                 }
-            } //if educationLevelsData 
+            } //if educationLevelsData
         }
 
         /*POCOR-6544 starts*/
@@ -454,7 +456,7 @@ class EducationSystemsTable extends ControllerActionTable
                                     ])->toArray();
                 $nextIds = [];
                 if (!empty($nextProgrammesData)) {
-                    foreach ($nextProgrammesData as $next_programme_key => $next_programme_value) { 
+                    foreach ($nextProgrammesData as $next_programme_key => $next_programme_value) {
                         $nextIds[] = $next_programme_value->next_programme_id;
                     }
                     $allData = $EducationProgrammes->find()
@@ -490,11 +492,11 @@ class EducationSystemsTable extends ControllerActionTable
                     $nextProgrammes->deleteAll([
                             $nextProgrammes->aliasField('education_programme_id') => $val->id,
                             $nextProgrammes->aliasField('next_programme_id IN') => $nextIds,
-                        ]);  
+                        ]);
                 }
             }
         }
-        /*POCOR-6544 ends*/    		
+        /*POCOR-6544 ends*/
 		// Webhook Education Structure System create starts
 		//POCOR-6085 starts
 		if($entity->isNew()) {
@@ -510,7 +512,7 @@ class EducationSystemsTable extends ControllerActionTable
 				$Webhooks->triggerShell('education_structure_system_create', [], $educationStructure);
 			}*/
 		}
-		
+
 		//POCOR-6085 ends
 		// Webhook Education Structure System create ends
 
@@ -597,7 +599,7 @@ class EducationSystemsTable extends ControllerActionTable
             $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
             $event->stopPropagation();
             return $this->controller->redirect($this->url('remove'));
-        } 
+        }
     }
 
 }
