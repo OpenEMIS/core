@@ -159,10 +159,13 @@ class ImportUsersTable extends AppTable
 
         $usernameNoIndex = key($extractedUsername->toArray()) + 1;
         $username = $sheet->getCellByColumnAndRow($usernameNoIndex, $row)->getValue();
-
-//        dd($username);
         // POCOR-8683 start
         Log::debug(strval($username));
+        if (empty($username)) {
+            $rowInvalidCodeCols['username'] = 'Username is required';
+            return false;
+        }
+
         if ($username) {
             $userCount = $this->Users->find()->where(['username' => $username])->count();
         }
@@ -1890,4 +1893,7 @@ class ImportUsersTable extends AppTable
         }
         return $have_error;
     }
+
+    
+
 }
