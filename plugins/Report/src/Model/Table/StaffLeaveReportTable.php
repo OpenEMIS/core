@@ -151,20 +151,29 @@ class StaffLeaveReportTable extends AppTable
         });
     }
 
+    //  POCOR-9314 start
+    private function formatDateCell($value): string
+    {
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+        if (is_string($value) && $value !== '') {
+            $ts = strtotime($value);
+            return $ts ? date('Y-m-d', $ts) : '';
+        }
+        return '';
+    }
+
     public function onExcelRenderDateFrom(Event $event, Entity $entity, $attr)
     {
-        $date_from = $entity->date_from->format('Y-m-d');
-        $entity->date_from = $date_from;
-        return $entity->date_from;
+        return $this->formatDateCell($entity->get('date_from'));
     }
 
     public function onExcelRenderDateTo(Event $event, Entity $entity, $attr)
     {
-        $date_to = $entity->date_to->format('Y-m-d');
-        $entity->date_to = $date_to;
-        return $entity->date_to;
+        return $this->formatDateCell($entity->get('date_to'));
     }
-    //  POCOR-9314 start
+
     public function onExcelRenderStartTime(Event $e, Entity $entity, $attr)
     {
         $time = $entity->get('start_time');
