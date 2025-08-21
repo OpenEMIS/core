@@ -4,7 +4,7 @@ namespace Attendance\Model\Table;
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -86,7 +86,7 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
         $query->contain($this->_contain);
     }
 
-	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+	public function addBeforeSaveBkp(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
 	{   
 		if(!empty($entity->education_grades) && !empty($entity->academic_period_id) && !empty($entity->student_attendance_mark_type_id) && !empty($entity->date_enabled)) {
 			$educationGrades = [];
@@ -114,6 +114,41 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
 			}	
 		}
 	}
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {  
+        if (!empty($entity->education_grades) 
+            && !empty($entity->academic_period_id) 
+            && !empty($entity->student_attendance_mark_type_id) 
+            && !empty($entity->date_enabled)) {
+
+            $educationGrades = [];
+            foreach ($entity->education_grades as $educationGrade) {
+                $educationGrades[] = $educationGrade->id;   
+            }
+
+            $existingStatusCount = $this->find()
+                ->innerJoinWith('StudentMarkTypeStatusGrades')
+                ->where([
+                    $this->aliasField('academic_period_id') => $entity->academic_period_id,
+                    'StudentMarkTypeStatusGrades.education_grade_id IN' => $educationGrades,
+                    $this->aliasField('date_enabled <=') => $entity->date_disabled,
+                    $this->aliasField('date_disabled >=') => $entity->date_enabled,
+                ])
+                ->count();
+
+            if ($existingStatusCount) {
+                $message = __('Attendance for the selected Education Grade already added.');
+                $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+
+                // stop saving entity
+                $event->stopPropagation();
+                return false;
+            }
+        }
+
+        return $entity; // continue save if all ok
+    }
 	
 	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
@@ -166,6 +201,7 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
             ->find('order')
 			->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
             ->where(['EducationSystems.academic_period_id' => $academicPeriodId])
+            ->order([$EducationGrades->aliasField('id') => 'DESC'])
 			->toArray();
         $selectedEducationGrade = key($educationGradeOptions);
         return compact('educationGradeOptions', 'selectedEducationGrade');
