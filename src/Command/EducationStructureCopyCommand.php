@@ -144,7 +144,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
         // 1) Education Systems in FROM period
         $systems = $this->EducationSystems->find()
             ->where(['academic_period_id' => $fromPeriod])
-//            ->orderAsc('`order`')
+            ->order(['`order`'])
             ->all();
 
         foreach ($systems as $sys) {
@@ -166,7 +166,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                 $entity = $this->EducationSystems->newEntity([
                     'name'               => $newSystemName,
                     'academic_period_id' => $toPeriod,
-                    'order'            => $sys->order ?? 1,
+                    '`order`'            => $sys->order ?? 1,
                     'visible'            => $sys->visible ?? 1,
                     'created_user_id'    => $sys->created_user_id ?? $userId,
                     'created'            => $sys->created ?? $now,
@@ -180,7 +180,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
             // 2) Levels under this system
             $levels = $this->EducationLevels->find()
                 ->where(['education_system_id' => $sys->id])
-//                ->orderAsc('`order`')
+                ->order(['`order`'])
                 ->all();
 
             foreach ($levels as $lvl) {
@@ -191,7 +191,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                     'education_system_id'      => $newSystemId,
                     'education_level_isced_id' => $lvl->education_level_isced_id,
                     'name'                     => $lvlName,
-                    'order'                  => $lvl->order,
+                    '`order`'                  => $lvl->order,
                     'visible'                  => $lvl->visible ?? 1,
                     'created_user_id'          => $userId,
                     'created'                  => $now,
@@ -205,7 +205,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                 // 3) Cycles under level
                 $cycles = $this->EducationCycles->find()
                     ->where(['education_level_id' => $lvl->id])
-//                    ->orderAsc('`order`')
+                    ->order(['`order`'])
                     ->all();
 
                 foreach ($cycles as $cyc) {
@@ -215,7 +215,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                         'education_level_id' => $newLevelId,
                         'name'               => $cycName,
                         'admission_age'      => $cyc->admission_age,
-                        'order'            => $cyc->order,
+                        '`order`'            => $cyc->order,
                         'visible'            => $cyc->visible ?? 1,
                         'created_user_id'    => $userId,
                         'created'            => $now,
@@ -227,7 +227,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                     // 4) Programmes under cycle
                     $progs = $this->EducationProgrammes->find()
                         ->where(['education_cycle_id' => $cyc->id])
-//                        ->orderAsc('`order`')
+                        ->order(['`order`'])
                         ->all();
 
                     foreach ($progs as $prg) {
@@ -240,7 +240,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                             'code'                        => $prg->code,
                             'name'                        => $progName,
                             'duration'                    => $prg->duration,
-                            'order'                     => $prg->order,
+                            '`order`'                     => $prg->order,
                             'visible'                     => $prg->visible ?? 1,
                             'created_user_id'             => $userId,
                             'created'                     => $now,
@@ -279,7 +279,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                         // 5) Grades under programme
                         $grades = $this->EducationGrades->find()
                             ->where(['education_programme_id' => $prg->id])
-//                            ->orderAsc('`order`')
+                            ->order(['`order`'])
                             ->all();
 
                         foreach ($grades as $gr) {
@@ -291,7 +291,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                                 'code'                   => $gr->code,
                                 'name'                   => $gradeName,
                                 'admission_age'          => $gr->admission_age,
-                                'order'                => $gr->order,
+                                '`order`'                => $gr->order,
                                 'visible'                => $gr->visible ?? 1,
                                 'created_user_id'        => $userId,
                                 'created'                => $now,
