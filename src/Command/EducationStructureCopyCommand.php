@@ -172,7 +172,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                     'created_user_id'    => $sys->created_user_id ?? $userId,
                     'created'            => $sys->created ?? $now,
                 ]);
-                $this->v($io, "System to create: " . print_r($entity, true));
+//                $this->v($io, "System to create: " . print_r($entity, true));
                 $this->saveOrThrow($this->EducationSystems, $entity, 'education_systems');
                 $newSystemId = (int)$entity->id;
                 $this->v($io, "System +: {$newSystemName} (id={$newSystemId})");
@@ -197,7 +197,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                     'created_user_id'          => $userId,
                     'created'                  => $now,
                 ]);
-                $this->v($io, "Level to create: " . print_r($lvlEntity, true));
+//                $this->v($io, "Level to create: " . print_r($lvlEntity, true));
 
                 $this->saveOrThrow($this->EducationLevels, $lvlEntity, 'education_levels');
                 $newLevelId = (int)$lvlEntity->id;
