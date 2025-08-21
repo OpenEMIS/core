@@ -144,7 +144,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
         // 1) Education Systems in FROM period
         $systems = $this->EducationSystems->find()
             ->where(['academic_period_id' => $fromPeriod])
-            ->orderAsc('order')
+//            ->orderAsc('`order`')
             ->all();
 
         foreach ($systems as $sys) {
@@ -180,7 +180,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
             // 2) Levels under this system
             $levels = $this->EducationLevels->find()
                 ->where(['education_system_id' => $sys->id])
-                ->orderAsc('order')
+//                ->orderAsc('`order`')
                 ->all();
 
             foreach ($levels as $lvl) {
@@ -205,7 +205,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                 // 3) Cycles under level
                 $cycles = $this->EducationCycles->find()
                     ->where(['education_level_id' => $lvl->id])
-                    ->orderAsc('order')
+//                    ->orderAsc('`order`')
                     ->all();
 
                 foreach ($cycles as $cyc) {
@@ -227,7 +227,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                     // 4) Programmes under cycle
                     $progs = $this->EducationProgrammes->find()
                         ->where(['education_cycle_id' => $cyc->id])
-                        ->orderAsc('order')
+//                        ->orderAsc('`order`')
                         ->all();
 
                     foreach ($progs as $prg) {
@@ -279,7 +279,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                         // 5) Grades under programme
                         $grades = $this->EducationGrades->find()
                             ->where(['education_programme_id' => $prg->id])
-                            ->orderAsc('order')
+//                            ->orderAsc('`order`')
                             ->all();
 
                         foreach ($grades as $gr) {
