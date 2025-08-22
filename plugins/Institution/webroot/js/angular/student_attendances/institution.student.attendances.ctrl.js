@@ -333,6 +333,7 @@ function InstitutionStudentAttendancesController(
         vm.attendanceByOptions = [
             { id: "subject", name: "Subject" },
             { id: "period", name: "Period" },
+            { id: "day_and_subject", name: "Day and Subject" },
         ];
         // console.log("already selected",vm.selectedAttendanceBy);
         if (vm.isMarkableAttendance == true) {
