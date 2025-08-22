@@ -21,6 +21,9 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use Cake\ORM\Table;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
 class StaffExcelReportBehavior extends Behavior
 {
@@ -114,10 +117,9 @@ class StaffExcelReportBehavior extends Behavior
 
         $extra['vars'] = $this->getVars($params, $extra);
 
-
         $extra['file'] = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $format;
         $extra['path'] = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
-
+        Log::debug($extra['file']);
         $temppath = tempnam($extra['path'], $this->getConfig('filename') . '_');
         $extra['file_path'] = $temppath;
 
@@ -126,7 +128,6 @@ class StaffExcelReportBehavior extends Behavior
         $this->generateExcel($objSpreadsheet, $extra);
 
         Log::write('debug', 'StaffExcelReportBehavior >>> renderExcelTemplate');
-
 
         $this->saveFile($objSpreadsheet, $temppath, $format, $params['staff_id']);
 
@@ -330,63 +331,31 @@ class StaffExcelReportBehavior extends Behavior
         $objWorksheet->getCell($cellCoordinate)->setValue($cellValue);
     }
 
-    public function renderImage($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $imagePath, $attr, $extra)
-    {
-        $imageWidth = $attr['imageWidth'];
-        $imageMarginLeft = $attr['imageMarginLeft'];
-        $imageMarginTop = $attr['imageMarginTop'];
+    public function renderImage(
+        Spreadsheet $objSpreadsheet,
+        Worksheet $objWorksheet,
+                    $objCell,
+        string $cellCoordinate,
+        ?string $imagePath,
+        array $attr,
+        array|ArrayObject $extra = []
+    ): void {
+        $imageWidth      = (int)($attr['imageWidth']      ?? 120);
+        $imageMarginLeft = (int)($attr['imageMarginLeft'] ?? 0);
+        $imageMarginTop  = (int)($attr['imageMarginTop']  ?? 0);
 
-        $objDrawing = new MemoryDrawing();
-
-        if (!isset($extra['image_resource']) && $imagePath) {
-            if (!file_exists($imagePath)) {
-                throw new \Exception("Image file does not exist: $imagePath");
-            }
-
-            switch ($attr['mime_type']) {
-                case 'image/png':
-                    $imageResource = imagecreatefrompng($imagePath);
-                    if ($imageResource === false) {
-                        throw new \Exception("Failed to create image from PNG: $imagePath");
-                    }
-                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_PNG);
-                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_PNG);
-                    break;
-                case 'image/jpeg':
-                    $imageResource = imagecreatefromjpeg($imagePath);
-                    if ($imageResource === false) {
-                        throw new \Exception("Failed to create image from JPEG: $imagePath");
-                    }
-                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_JPEG);
-                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_JPEG);
-                    break;
-                case 'image/gif':
-                    $imageResource = imagecreatefromgif($imagePath);
-                    if ($imageResource === false) {
-                        throw new \Exception("Failed to create image from GIF: $imagePath");
-                    }
-                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_GIF);
-                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_GIF);
-                    break;
-                default:
-                    throw new \Exception("Unsupported image type: " . $attr['mime_type']);
-            }
-
-            $extra['image_resource'] = $imageResource;
+        if (!$imagePath || !is_file($imagePath) || !is_readable($imagePath)) {
+            Log::warning('renderImage: missing or unreadable image: ' . (string)$imagePath);
+            return;
         }
 
-        if (isset($extra['image_resource']) && is_resource($extra['image_resource'])) {
-            // Retain transparency on png/gif files
-            imageAlphaBlending($extra['image_resource'], true);
-            imageSaveAlpha($extra['image_resource'], true);
-
-            $objDrawing->setImageResource($extra['image_resource']);
-            $objDrawing->setWidth($imageWidth);
-            $objDrawing->setCoordinates($cellCoordinate);
-            $objDrawing->setOffsetX($imageMarginLeft);
-            $objDrawing->setOffsetY($imageMarginTop);
-            $objDrawing->setWorksheet($objSpreadsheet->getActiveSheet());
-        }
+        $drawing = new Drawing();
+        $drawing->setPath($imagePath);                 // auto-detects type (png/jpg/gif)
+        $drawing->setCoordinates($cellCoordinate);
+        $drawing->setOffsetX($imageMarginLeft);
+        $drawing->setOffsetY($imageMarginTop);
+        $drawing->setWidth($imageWidth);               // keep aspect by default
+        $drawing->setWorksheet($objWorksheet);         // use the sheet we were given
     }
 
     //POCOR-8551
@@ -397,29 +366,37 @@ class StaffExcelReportBehavior extends Behavior
         $imageMarginTop = $attr['imageMarginTop'];
 
         $objDrawing = new MemoryDrawing();
-
+        $imageResource = null;
         if (!isset($extra['image_resource']) && $imagePath) {
             switch ($attr['mime_type']) {
                 case 'image/png':
-                    $imageResource = imagecreatefrompng($imagePath);
-                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_PNG);
-                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_PNG);
+                    if (function_exists('imagecreatefrompng')) {
+                        $imageResource = imagecreatefrompng($imagePath);
+                        $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_PNG);
+                        $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_PNG);
+                    }
                     break;
                 case 'image/jpeg':
-                    $imageResource = imagecreatefromjpeg($imagePath);
-                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_JPEG);
-                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_JPEG);
+                    if (function_exists('imagecreatefromjpeg')) {
+                        $imageResource = imagecreatefromjpeg($imagePath);
+                        $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_JPEG);
+                        $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_JPEG);
+                    }
                     break;
                 case 'image/gif':
-                    $imageResource = imagecreatefromgif($imagePath);
-                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_GIF);
-                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_GIF);
+                    if (function_exists('imagecreatefromgif')) {
+                        $imageResource = imagecreatefromgif($imagePath);
+                        $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_GIF);
+                        $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_GIF);
+                    }
                     break;
                 default:
-                    $imageResource = '';
+                    $imageResource = null;
                     break;
             }
-            $extra['image_resource'] = $imageResource;
+            if ($imageResource) {
+                $extra['image_resource'] = $imageResource;
+            }
         }
 
         if (isset($extra['image_resource'])) {
@@ -443,6 +420,7 @@ class StaffExcelReportBehavior extends Behavior
 
         if ($format == 'pdf') {
             $this->savePDF($objSpreadsheet, $filepath, $staff_id);
+            return;
         } else {
 			// pdf
 			if(!empty($staff_id)) {
@@ -1414,6 +1392,8 @@ class StaffExcelReportBehavior extends Behavior
         $data = Hash::extract($extra['vars'], $attr['displayValue']);
         $imageContent = current($data);
         //for staff photo
+        $tempImagePath = ROOT . DS . 'plugins' . DS . 'ReportCard' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.png';
+
         if ($attr['displayValue'] == 'StaffUsers.photo_content' ) {
             if (is_resource($imageContent)) {
                 $institutionId = Hash::extract($extra['vars'], 'Institutions.id');

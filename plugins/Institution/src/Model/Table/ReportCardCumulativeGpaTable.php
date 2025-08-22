@@ -2002,7 +2002,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             ,main_q.education_grade_id
             ,ind_gpa.education_grades_gpa_id;
         ";
-        
+
         $result = $connection->execute($sql)->fetch('assoc');
         return $result['cum_gpa'] ?? 0.00;
     }
@@ -2015,7 +2015,10 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
     private function addGenerateButton(array $buttons, $params)
     {
         $params['institution_id'] = $this->getInstitutionID();
-        $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+        $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false,
+            'target' => '_blank'];
+        $generateAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+
         $educationGradeId = $this->request->getQuery('education_grade_id');
         $isAdmin = $this->AccessControl->isAdmin();
         if (!$isAdmin) {
@@ -2062,7 +2065,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             if ($canGenerateAnyDate) {
                 $buttons['generate'] = [
                     'label' => '<i class="fa fa-refresh"></i>' . __('Generate'),
-                    'attr' => $indexAttr,
+                    'attr' => $generateAttr,
                     'url' => $generateUrl,
                 ];
             }
@@ -2102,14 +2105,14 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                         && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                         $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>' . __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => $generateUrl
                         ];
                     } else {
-                        $indexAttr['title'] = $this->getMessage('ReportCardStatuses.date_closed');
+                        $generateAttr['title'] = $this->getMessage('ReportCardStatuses.date_closed');
                         $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>' . __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => 'javascript:void(0)'
                         ];
                     }
