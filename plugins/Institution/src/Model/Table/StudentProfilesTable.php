@@ -123,7 +123,11 @@ class StudentProfilesTable extends ControllerActionTable
 
         if (!is_null($reportCardId) && $this->StudentTemplates->exists([$this->StudentTemplates->getPrimaryKey() => $reportCardId])) {
 
-            $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+            $indexAttr = ['role' => 'menuitem',
+                'tabindex' => '-1',
+                'escape' => false,
+                'target' => '_blank'];
+            $generateAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
             $viewAttr = ['role' => 'menuitem', // POCOR-9292 start
                 'tabindex' => '-1',
                 'escape' => false,
@@ -186,15 +190,15 @@ class StudentProfilesTable extends ControllerActionTable
                 if ((!empty($generateStartDate) && !empty($generateEndDate)) && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                             $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => $generateUrl,
                             0 => $encodedQueryString
                             ];
                 } else {
-                    $indexAttr['title'] = $this->getMessage('StudentProfiles.date_closed');
+                    $generateAttr['title'] = $this->getMessage('StudentProfiles.date_closed');
                     $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => 'javascript:void(0)',
                             0 => $encodedQueryString
                             ];
@@ -761,7 +765,7 @@ class StudentProfilesTable extends ControllerActionTable
             // header("Content-Type: application/force-download");
             header("Content-Type: application/octet-stream");
             header("Content-Type: " . $fileType);
-            header('Content-Disposition: inline; filename="' . $filename . '"');
+            header('Content-Disposition: inline; filename="' . $fileName . '"');
 
             echo $file;
         }
