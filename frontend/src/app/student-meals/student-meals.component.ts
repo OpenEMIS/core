@@ -302,12 +302,24 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
     this._row.forEach((item) => {
       const indexInArray2: any = this.findIndexInArray2(item.meal_received_id, item.user.openemis_no, item.meal_benefit_id);
       if (indexInArray2.index != -1 && indexInArray2.data == 'notNull') {
+        if (item.meal_received_id == 1) {
+          if (item.meal_benefit_id == null) {
+            item.meal_benefit_id = 1;
+          }
+        }
         this.callPostMealAPI(item);
         this.setDashboard();
       } else if (indexInArray2.index != -1 && indexInArray2.data == null) {
         item.meal_received_id = 1;
+        item.meal_benefit_id = 1;
         this.callPostMealAPI(item);
         this.setDashboard();
+      } else if (indexInArray2.index == -1 && indexInArray2.data == 'notNull') {
+        if (item.meal_received_id == 1) {
+          if (item.meal_benefit_id == null) {
+            item.meal_benefit_id = 1;
+          }
+        }
       }
     });
     this.oldRow = JSON.parse(JSON.stringify(this._row));
