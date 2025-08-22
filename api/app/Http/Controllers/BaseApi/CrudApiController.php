@@ -1504,7 +1504,7 @@ class CrudApiController extends Controller
     private function successResponse($message, $data, $statusCode = 200)
     {
         $safeData = $this->sanitizeForJson($data);
-        Log::info("Response data: " . print_r($safeData, true)); // POCOR-9135
+//        Log::info("Response data: " . print_r($safeData, true)); // POCOR-9135 // POCOR-9352
         return response()->json(['message' => $message, 'data' => $safeData], $statusCode);
     }
 

@@ -3,6 +3,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use DateTime;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
@@ -613,6 +614,11 @@ class InstitutionStandardsTable extends AppTable
 
                 $row['student_full_name'] = $row['first_name'] . ' ' .  $row['last_name'];
                 $row['institution_name_code'] = $row['institution_code'] . ' ' .  $row['institution_name'];
+                //POCOR-9343
+                if (!empty($row['date_of_birth'])) {
+                    $row['date_of_birth'] = (new \DateTime($row['date_of_birth']))->format('Y-m-d');
+                }
+                //POCOR-9343
                 return $row;
             });
         });
