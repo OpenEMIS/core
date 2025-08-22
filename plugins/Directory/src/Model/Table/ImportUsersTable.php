@@ -159,10 +159,13 @@ class ImportUsersTable extends AppTable
 
         $usernameNoIndex = key($extractedUsername->toArray()) + 1;
         $username = $sheet->getCellByColumnAndRow($usernameNoIndex, $row)->getValue();
-
-//        dd($username);
         // POCOR-8683 start
         Log::debug(strval($username));
+        if (empty($username)) {
+            $rowInvalidCodeCols['username'] = 'Username is required';
+            return false;
+        }
+
         if ($username) {
             $userCount = $this->Users->find()->where(['username' => $username])->count();
         }
@@ -661,7 +664,7 @@ class ImportUsersTable extends AppTable
         $data[$columnOrder]['data'][] = [$translatedReadableCol, $startDateLabel, $endDateLabel, $translatedCol];
         if (!empty($modelData)) {
             foreach($modelData as $row) {
-                if ($row->academic_period_level_id == 1) { //validate that only period level "year" will be shown
+                if ($row->academic_period_level_id == 1 && $row->current == 1) { // POCOR-9358 validate that only current period level "year" will be shown
                     $date = $row->start_date;
                     $data[$columnOrder]['data'][] = [
                         $row->name,
@@ -679,13 +682,20 @@ class ImportUsersTable extends AppTable
      */
     public function onImportPopulateEducationGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
+
         $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
         $programmeHeader = $this->getExcelLabel($lookedUpTable, 'education_programme_id');
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 3;
         $data[$columnOrder]['data'][] = [$programmeHeader, $translatedReadableCol, $translatedCol];
+        $AcademicPeriod = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods'); // POCOR-9358 start
+        $academicPeriodId = $AcademicPeriod->getCurrent();
         $modelData = $lookedUpTable->find('visible')
-            ->contain(['EducationProgrammes'])
+            ->contain(['EducationProgrammes',
+                'EducationProgrammes.EducationCycles',
+                'EducationProgrammes.EducationCycles.EducationLevels',
+                'EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+            ->where(['EducationSystems.academic_period_id' => $academicPeriodId])  // POCOR-9358 end
             ->select(['code', 'name', 'EducationProgrammes.name'])
             ->order([
                 'EducationProgrammes.order',
@@ -1890,4 +1900,7 @@ class ImportUsersTable extends AppTable
         }
         return $have_error;
     }
+
+    
+
 }

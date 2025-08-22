@@ -18,7 +18,7 @@ class ProfilesTable extends ControllerActionTable
     CONST IN_PROGRESS = 2;
     CONST GENERATED = 3;
     CONST PUBLISHED = 4;
-	
+
 	public $fileTypes = [
         'jpeg'  => 'image/jpeg',
         'jpg'   => 'image/jpeg',
@@ -44,15 +44,15 @@ class ProfilesTable extends ControllerActionTable
         $this->setTable('student_report_cards');
 
         parent::initialize($config);
-		
+
 		$this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
-		
+
 		$this->InstitutionStudentsProfileTemplates = TableRegistry::get('Institution.InstitutionStudentsProfileTemplates');
         $this->addBehavior('Institution.InstitutionTab');
     }
-	
+
 	public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
@@ -83,7 +83,7 @@ class ProfilesTable extends ControllerActionTable
 
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Student Profile','Students');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Student Profile','Students');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -102,14 +102,14 @@ class ProfilesTable extends ControllerActionTable
 		}
 		// End POCOR-5188
     }
-	
+
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
 		$institutionId = $this->getInstitutionID();
 
 		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$StudentTemplates = TableRegistry::get('ProfileTemplate.StudentTemplates');
-		
+
 		$where[$this->aliasField('institution_id')] = $institutionId;
 		$where[$this->aliasField('status')] = self::PUBLISHED;
 
@@ -137,12 +137,12 @@ class ProfilesTable extends ControllerActionTable
             ->all();
 
     }
-	
+
 	public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
 		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$StudentTemplates = TableRegistry::get('ProfileTemplate.StudentTemplates');
-				
+
         $query
             ->select([
                 'file_name' => $this->aliasField('file_name'),
@@ -161,7 +161,7 @@ class ProfilesTable extends ControllerActionTable
             )
             ->autoFields(true);
     }
-	
+
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period');
@@ -184,7 +184,10 @@ class ProfilesTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+        $indexAttr = ['role' => 'menuitem',
+            'tabindex' => '-1',
+            'escape' => false,
+            'target' => '_blank'];
         //echo '<pre>';print_r($entity);die;
 		$params = [
 			'student_profile_template_id' => $entity->student_profile_template_id,
@@ -193,7 +196,7 @@ class ProfilesTable extends ControllerActionTable
 			'education_grade_id' => $entity->education_grade_id,
 			'academic_period_id' => $entity->academic_period_id,
 		];
-		//START:POCOR-6667	
+		//START:POCOR-6667
 		$viewPdfUrl = $this->setQueryString($this->url('viewPDF'), $params);
 		$buttons['viewPdf'] = [
 			'label' => '<i class="fa fa-eye"></i>'.__('View PDF'),
@@ -242,12 +245,12 @@ class ProfilesTable extends ControllerActionTable
                 }
             }else{
                 unset($buttons);
-            }    
+            }
         }
         //POCOR-5191::end
         return $buttons;
     }
-	
+
 	public function downloadExcel(Event $event, ArrayObject $extra)
     {
 		$model = $this->InstitutionStudentsProfileTemplates;
@@ -277,12 +280,12 @@ class ProfilesTable extends ControllerActionTable
         }
         exit();
     }
-	
+
 	public function downloadPDF(Event $event, ArrayObject $extra)
     {
 		$model = $this->InstitutionStudentsProfileTemplates;
         $ids = $this->getQueryString();
-		
+
         if ($model->exists($ids)) {
             $data = $model->find()->where($ids)->first();
             $fileName = $data->file_name;
@@ -321,7 +324,7 @@ class ProfilesTable extends ControllerActionTable
     {
 		$model = $this->InstitutionStudentsProfileTemplates;
         $ids = $this->getQueryString();
-		
+
         if ($model->exists($ids)) {
             $data = $model->find()->where($ids)->first();
             $fileName = $data->file_name;
@@ -348,7 +351,7 @@ class ProfilesTable extends ControllerActionTable
         }
         exit();
     }
-	
+
 	private function getFile($phpResourceFile) {
         $file = '';
         while (!feof($phpResourceFile)) {
@@ -370,5 +373,5 @@ class ProfilesTable extends ControllerActionTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-	
+
 }
