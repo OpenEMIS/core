@@ -1,3 +1,21 @@
+### [4.40.0] - 2025-08-22
+- Implemented: Develop system configuration for LibreOffice for PDF generation 
+- Implemented: Develop changes to remove old files from master branch
+- Implemented: Develop docker and docker-compose upgrade files for OpenEMIS Core 
+- Implemented: Develop additional filters for the Administration > Performance > Report Cards > Overview page 
+- Bug Fixed: Administration>System Setup>Custom Fields>Infrastructure: User is unable to view and edit 
+- Bug Fixed: Institutions > Students > Transfer: User receives a 404 error
+- Bug Fixed: Reports > Institutions > Institution Infrastructure Summary Report: User is getting 404 error
+- Bug Fixed: Directory>Import: Username and password are not mandatory in the template however when importing, it is mandatory
+- Bug Fixed: Administration > System Setup > Administrative Boundaries > Areas (Education) -> 0 should be displayed as 0
+- Bug Fixed: Institutions > Academic > Programmes : Programmes are not copied over
+- Bug Fixed: Reports > Performance > Add: Data is not showing correctly
+- Bug Fixed: Directory: User that is inactive should not be showing in the directory
+- Bug Fixed: Directory > Import: Template displays Education Grade Code for all academic years.
+- Bug Fixed: Institution API is not working when logged in as non admin user
+- Bug Fixed: Directory: Merge should be a background process
+- Bug Fixed: Institutions > Statistics > Standard > Add: Student overview does not show dob
+
 ### [4.39.1] - 2025-08-18
 - Bug Fixed: Institutions > Students > Student Admission > Bulk Student Admission: User receives 404 error 
 - Bug Fixed: Administration > System Setup > System Configuration > Auto Generated Candidate ID: Registration number should be displayed according to placeholders.
