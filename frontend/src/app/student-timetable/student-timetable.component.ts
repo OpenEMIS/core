@@ -180,6 +180,7 @@ export class StudentTimetableComponent implements OnInit {
     institution_class_id: any;
     institution_id: any;
     timetable_id: any;
+    schedule_term_id: any;
     institution_name: any = '';
     timetable_name: string = '';
 
@@ -348,6 +349,7 @@ export class StudentTimetableComponent implements OnInit {
                         this.timetable_name = response?.data?.name;
                         this.academic_period_id = response?.data?.academic_period_id;
                         this.institution_class_id = response?.data?.institution_class_id;
+                        this.schedule_term_id = response?.data?.institution_schedule_term_id;
                         this.timeSlotById();
                     }
                 }
@@ -365,69 +367,98 @@ export class StudentTimetableComponent implements OnInit {
     }
 
     timeSlotById() {
-        this.Rest.getWithToken(`schedule/timetable-overview?limit=1&page=1&academic_period_id=${this.academic_period_id}&institution_id=${this.institution_id}&institution_class_id=${this.institution_class_id}&institution_schedule_term_id=${this.timetable_id}`).subscribe({
+        this.Rest.getWithToken(`schedule/timetable-overview?limit=1&page=1&academic_period_id=${this.academic_period_id}&institution_id=${this.institution_id}&institution_class_id=${this.institution_class_id}&institution_schedule_term_id=${this.schedule_term_id}`).subscribe({
             next: (res:any)=>{
                 // console.log(res.data.data[0].time_slots) //array
                 const time_slots = res.data.data[0].time_slots;
-                this.Rest.getWithToken(`schedules/timeslots/${this.timetable_id}`).subscribe({
-                    next: (response: any) => {
-                        if (response) {
-                            const response_array = response?.data;
+                // this.Rest.getWithToken(`schedules/timeslots/${this.timetable_id}`).subscribe({
+                //     next: (response: any) => {
+                //         if (response) {
+                //             const response_array = response?.data;
 
-                            // Step 1: Sort response_array by order
-                            response_array.sort((a, b) => a.order - b.order);
+                //             // Step 1: Sort response_array by order
+                //             response_array.sort((a, b) => a.order - b.order);
 
-                            // Step 2: Replace start_time and end_time from the time_slots array
-                            const updatedResponseArray = response_array.map(item => {
-                                const timeSlot = time_slots[item.id - 1]; // Using order to match time_slot index
-                                return {
-                                    ...item,
-                                    start_time: timeSlot.start_time,
-                                    end_time: timeSlot.end_time
-                                };
-                            });
+                //             // Step 2: Replace start_time and end_time from the time_slots array
+                //             const updatedResponseArray = response_array.map(item => {
+                //                 const timeSlot = time_slots[item.id - 1]; // Using order to match time_slot index
+                //                 return {
+                //                     ...item,
+                //                     start_time: timeSlot.start_time,
+                //                     end_time: timeSlot.end_time
+                //                 };
+                //             });
 
-                            updatedResponseArray.forEach((element: any) => {
-                                let obj = {
-                                    time: `${element?.start_time} - ${element?.end_time}`,
-                                    data: [
-                                        {
-                                            day: this.days[0],
-                                            subject: []
-                                        },
-                                        {
-                                            day: this.days[1],
-                                            subject: [],
-                                        },
-                                        {
-                                            day: this.days[2],
-                                            subject: [],
-                                        },
-                                        {
-                                            day: this.days[3],
-                                            subject: [],
-                                        },
-                                        {
-                                            day: this.days[4],
-                                            subject: []
-                                        },
-                                    ]
-                                }
-                                this.timetableData.push(obj);
-                            });
-                            this.getClassGrade();
-                        }
+                //             updatedResponseArray.forEach((element: any) => {
+                //                 let obj = {
+                //                     time: `${element?.start_time} - ${element?.end_time}`,
+                //                     data: [
+                //                         {
+                //                             day: this.days[0],
+                //                             subject: []
+                //                         },
+                //                         {
+                //                             day: this.days[1],
+                //                             subject: [],
+                //                         },
+                //                         {
+                //                             day: this.days[2],
+                //                             subject: [],
+                //                         },
+                //                         {
+                //                             day: this.days[3],
+                //                             subject: [],
+                //                         },
+                //                         {
+                //                             day: this.days[4],
+                //                             subject: []
+                //                         },
+                //                     ]
+                //                 }
+                //                 this.timetableData.push(obj);
+                //             });
+                //             this.getClassGrade();
+                //         }
         
-                    },
-                    error: (error: any) => {
-                        if (error) {
-                            if (error.message == "Token Expired") {
-                                localStorage.removeItem("loginToken");
-                                this.loginData();
-                            }
-                        }
+                //     },
+                //     error: (error: any) => {
+                //         if (error) {
+                //             if (error.message == "Token Expired") {
+                //                 localStorage.removeItem("loginToken");
+                //                 this.loginData();
+                //             }
+                //         }
+                //     }
+                // })
+                time_slots.forEach((element: any) => {
+                    let obj = {
+                        time: `${element?.start_time} - ${element?.end_time}`,
+                        data: [
+                            {
+                                day: this.days[0],
+                                subject: []
+                            },
+                            {
+                                day: this.days[1],
+                                subject: [],
+                            },
+                            {
+                                day: this.days[2],
+                                subject: [],
+                            },
+                            {
+                                day: this.days[3],
+                                subject: [],
+                            },
+                            {
+                                day: this.days[4],
+                                subject: []
+                            },
+                        ]
                     }
-                })
+                    this.timetableData.push(obj);
+                });
+                this.getClassGrade();
             },
             error: (err:any)=>{
                 if (err) {
@@ -515,13 +546,14 @@ export class StudentTimetableComponent implements OnInit {
     }
 
     backToData() {
+        window.history.back();
     }
 
     overViewData() {
         this._kdSplitterEvent.toggleSubPane(true);
         this.showFullWidth = false;
         this.displayLessons = false;
-        this.Rest.getWithToken(`schedule/timetable-overview?limit=10&page=1&academic_period_id=${this.academic_period_id}&institution_id=${this.institution_id}&institution_class_id=${this.institution_class_id}&institution_schedule_term_id=${this.timetable_id}`).subscribe({
+        this.Rest.getWithToken(`schedule/timetable-overview?limit=10&page=1&academic_period_id=${this.academic_period_id}&institution_id=${this.institution_id}&institution_class_id=${this.institution_class_id}&institution_schedule_term_id=${this.schedule_term_id}`).subscribe({
             next: (response: any) => {
                 console.log(response.data.data[0], "response");
                 if (response.data.data[0]) {
