@@ -83,7 +83,7 @@ function InstitutionStudentAttendancesController(
     vm.selectedAttendancePeriod = "";
 
     vm.classStudentList = [];
-    vm.isMarkableSubjectAttendance = false;
+    vm.isMarkableSubjectAttendance = 0;
 
     vm.superAdmin = 1;
     vm.permissionView = 1;
@@ -295,7 +295,7 @@ function InstitutionStudentAttendancesController(
                 }, vm.error)
                 .then(function (classStudents) {
                     if (
-                        vm.isMarkableSubjectAttendance == true &&
+                        vm.isMarkableSubjectAttendance == 1 &&
                         vm.subjectListOptions.length == 0
                     ) {
                         classStudents = [];
@@ -335,12 +335,19 @@ function InstitutionStudentAttendancesController(
             { id: "period", name: "Period" },
             { id: "day_and_subject", name: "Day and Subject" },
         ];
-        // console.log("already selected",vm.selectedAttendanceBy);
+        console.log("already selected", vm.isMarkableSubjectAttendance);
         if (vm.isMarkableAttendance == true) {
-            if (vm.isMarkableSubjectAttendance == true) {
+            if (vm.isMarkableSubjectAttendance == 1) {
                 vm.selectedAttendanceBy = vm.attendanceByOptions[0].id; // Default selection
-            } else {
+            } else if (vm.isMarkableSubjectAttendance == 0) {
                 vm.selectedAttendanceBy = vm.attendanceByOptions[1].id; // Default selection
+            } else {
+                vm.selectedAttendanceBy = vm.attendanceByOptions[2].id; // Default selection
+                vm.attendanceByOptions = [
+                    { id: "subject", name: "Subject" },
+                    // { id: "period", name: "Period" },
+                    { id: "day_and_subject", name: "Day and Subject" },
+                ];
             }
         } else {
             vm.selectedAttendanceBy = vm.attendanceByOptions[1].id; // Default selection
@@ -361,7 +368,7 @@ function InstitutionStudentAttendancesController(
                 if (
                     angular.isDefined(
                         academicPeriodOptions[i]["selected"] &&
-                            academicPeriodOptions[i]["selected"]
+                        academicPeriodOptions[i]["selected"]
                     )
                 ) {
                     selectedAcademicPeriodId = i;
