@@ -426,7 +426,7 @@ function InstitutionStudentAttendancesSvc(
 
     function getClassStudent(params) {
         //POCOR-8874 start
-        if (params.attendance_by == "period") {
+        if (params.attendance_by == "period" || params.attendance_by == "day_and_subject") {
             params.subject_id = 0;
         }
         //POCOR-8874 end
@@ -478,7 +478,7 @@ function InstitutionStudentAttendancesSvc(
     }
 
     function getIsMarked(params) {
-        if (params.attendance_by == "period") {
+        if (params.attendance_by == "period" || params.attendance_by == 'day_and_subject') {
             params.subject_id = 0;
         }
         console.log("parms", params);
@@ -576,6 +576,8 @@ function InstitutionStudentAttendancesSvc(
     // save
     function saveAbsences(data, context) {
         //POCOR-8874 start
+        console.log(context,"context-----", data);
+        
         if (context.attendance_by == "subject") {
             context.period = 0;
         } else {
@@ -977,6 +979,8 @@ function InstitutionStudentAttendancesSvc(
             setTimeout(function () {
                 setRowDatas(context, data);
             }, 200);
+            console.log(data,"data",dataKey, eSelect);
+            
             var oldValue = data.institution_student_absences[dataKey];
             var newValue = eSelect.value;
             //POCOR-5846 start
@@ -987,7 +991,7 @@ function InstitutionStudentAttendancesSvc(
             var absenceTypeObj = absenceTypeList.find(
                 (obj) => obj.id == newValue
             );
-            // console.log("absenceTypeObj", absenceTypeObj)
+            console.log("absenceTypeObj", absenceTypeObj)
             // data.institution_student_absences.absence_type_id = newValue;
 
             if (newValue != oldValue) {
@@ -1487,12 +1491,14 @@ function InstitutionStudentAttendancesSvc(
             console.log("isMarkableSubjectAttendance");
             console.log(response);
             if (angular.isDefined(response.data.data[0].code)) {
-                var isMarkableSubjectAttendance = false;
+                var isMarkableSubjectAttendance = 0;
 
                 if (response.data.data[0].code == "SUBJECT") {
-                    isMarkableSubjectAttendance = true;
+                    isMarkableSubjectAttendance = 1;
+                } else if(response.data.data[0].code == "DAY"){
+                    isMarkableSubjectAttendance = 0;
                 } else {
-                    isMarkableSubjectAttendance = false;
+                    isMarkableSubjectAttendance = 2;
                 }
                 deferred.resolve(isMarkableSubjectAttendance);
             } else {
