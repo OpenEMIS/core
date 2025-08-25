@@ -20,23 +20,17 @@ class UsersMergeCommand extends Command
     private $systemProcessId = '';
     private $baseId = '';
     private $mergeId = '';
+
     public function setIo(ConsoleIo $io): void
     {
         $this->io = $io;
     }
 
-    protected function buildOptionParser(ConsoleOptionParser $parser): ConsoleOptionParser
-    {
-        return $parser
-            ->addOption('system_process_id', ['short' => 's', 'help' => 'System process ID', 'required' => true])
-            ->addOption('base_id',           ['short' => 'b', 'help' => 'Base user ID',      'required' => true])
-            ->addOption('merge_id',          ['short' => 'm', 'help' => 'User ID to merge',  'required' => true]);
-    }
     public function execute(Arguments $args, ConsoleIo $io): int
     {
         $this->systemProcessId = (int)$args->getOption('system_process_id');
-        $this->baseId          = (int)$args->getOption('base_id');
-        $this->mergeId         = (int)$args->getOption('merge_id');
+        $this->baseId = (int)$args->getOption('base_id');
+        $this->mergeId = (int)$args->getOption('merge_id');
 
         if (!$this->systemProcessId || !$this->baseId || !$this->mergeId) {
             $io->error('Missing required options: --system_process_id, --base_id, --merge_id');
@@ -53,7 +47,7 @@ class UsersMergeCommand extends Command
         if (method_exists($SystemProcesses, 'updatePid')) {
             $SystemProcesses->updatePid((int)$systemProcessId, $pid);
         }
-        if ((int)$systemProcessId > 0){
+        if ((int)$systemProcessId > 0) {
             if (method_exists($SystemProcesses, 'updateProcess')) {
                 $SystemProcesses->updateProcess((int)$systemProcessId, FrozenTime::now(), $SystemProcesses::ERROR);
             }
@@ -100,13 +94,15 @@ class UsersMergeCommand extends Command
                         $conn->execute("ALTER TABLE `{$table}` DISABLE KEYS");
                     } catch (\Throwable $e) {
                     }
-
-                    // Re-point references
-                    $conn->execute(
-                        "UPDATE `{$table}` SET `{$col}` = :base WHERE `{$col}` = :merge",
-                        ['base' => $baseId, 'merge' => $mergeId]
-                    );
-
+                    try {
+                        // Re-point references
+                        $conn->execute(
+                            "UPDATE `{$table}` SET `{$col}` = :base WHERE `{$col}` = :merge",
+                            ['base' => $baseId, 'merge' => $mergeId]
+                        );
+                    } catch (\Throwable $e) {
+                        Log::debug($e->getMessage());
+                    }
                     // Cleanup any remaining rows with merge id (safety)
                     $conn->execute(
                         "DELETE FROM `{$table}` WHERE `{$col}` = :merge",
@@ -152,31 +148,6 @@ class UsersMergeCommand extends Command
     }
 
     /**
-     * Copy of your INFORMATION_SCHEMA scan (schema-agnostic)
-     * Returns [['table_name'=>..., 'column_name'=>...], ...]
-     */
-    private function getRelatedRecords($conn): array
-    {
-        $db = $conn->config()['database'];
-        $rows = $conn->execute(
-            "SELECT COLUMN_NAME, TABLE_NAME
-             FROM INFORMATION_SCHEMA.COLUMNS
-             WHERE COLUMN_NAME IN ('security_user_id','student_id','user_id','core_user_id',
-                                   'staff_id','secondary_staff_id','assignee_id','guardian_id')
-               AND COLUMN_NAME NOT IN ('modified_user_id','created_user_id')
-               AND TABLE_NAME NOT LIKE 'z%'
-               AND TABLE_SCHEMA = :db",
-            ['db' => $db]
-        )->fetchAll('assoc');
-
-        $out = [];
-        foreach ($rows as $row) {
-            $out[] = ['table_name' => $row['TABLE_NAME'], 'column_name' => $row['COLUMN_NAME']];
-        }
-        return $out;
-    }
-
-    /**
      * Rule: if base field is empty -> take merge value.
      */
     private function compareEntities($base, $merge, array $exclude = []): array
@@ -217,5 +188,38 @@ class UsersMergeCommand extends Command
             ];
         }
         return $result;
+    }
+
+    /**
+     * Copy of your INFORMATION_SCHEMA scan (schema-agnostic)
+     * Returns [['table_name'=>..., 'column_name'=>...], ...]
+     */
+    private function getRelatedRecords($conn): array
+    {
+        $db = $conn->config()['database'];
+        $rows = $conn->execute(
+            "SELECT COLUMN_NAME, TABLE_NAME
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE COLUMN_NAME IN ('security_user_id','student_id','user_id','core_user_id',
+                                   'staff_id','secondary_staff_id','assignee_id','guardian_id')
+               AND COLUMN_NAME NOT IN ('modified_user_id','created_user_id')
+               AND TABLE_NAME NOT LIKE 'z%'
+               AND TABLE_SCHEMA = :db",
+            ['db' => $db]
+        )->fetchAll('assoc');
+
+        $out = [];
+        foreach ($rows as $row) {
+            $out[] = ['table_name' => $row['TABLE_NAME'], 'column_name' => $row['COLUMN_NAME']];
+        }
+        return $out;
+    }
+
+    protected function buildOptionParser(ConsoleOptionParser $parser): ConsoleOptionParser
+    {
+        return $parser
+            ->addOption('system_process_id', ['short' => 's', 'help' => 'System process ID', 'required' => true])
+            ->addOption('base_id', ['short' => 'b', 'help' => 'Base user ID', 'required' => true])
+            ->addOption('merge_id', ['short' => 'm', 'help' => 'User ID to merge', 'required' => true]);
     }
 }
