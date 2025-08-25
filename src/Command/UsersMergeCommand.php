@@ -176,10 +176,9 @@ class UsersMergeCommand extends Command
             $toChange = false;
             if ($bNorm === null || $bNorm === '' || ($bNorm === 0 && $mNorm)) {
                 $res = $mNorm;
-                $toChange = ($mNorm !== null && $mNorm !== '');
+                $toChange = ($res !== $bNorm && $mNorm !== null && $mNorm !== '');
             }
 
-            if ($bNorm != $mNorm) {
                 $result[] = [
                     'field' => $field,
                     'base_value' => $bNorm,
@@ -187,7 +186,7 @@ class UsersMergeCommand extends Command
                     'result_value' => $res,
                     'to_change' => $toChange,
                 ];
-            }
+
         }
         return $result;
     }
