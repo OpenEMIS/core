@@ -179,13 +179,15 @@ class UsersMergeCommand extends Command
                 $toChange = ($mNorm !== null && $mNorm !== '');
             }
 
-            $result[] = [
-                'field' => $field,
-                'base_value' => $bNorm,
-                'merge_value' => $mNorm,
-                'result_value' => $res,
-                'to_change' => $toChange,
-            ];
+            if ($bNorm != $mNorm) {
+                $result[] = [
+                    'field' => $field,
+                    'base_value' => $bNorm,
+                    'merge_value' => $mNorm,
+                    'result_value' => $res,
+                    'to_change' => $toChange,
+                ];
+            }
         }
         return $result;
     }
