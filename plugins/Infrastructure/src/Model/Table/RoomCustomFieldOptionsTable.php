@@ -11,7 +11,7 @@ class RoomCustomFieldOptionsTable extends CustomFieldOptionsTable
         parent::initialize($config);
         $this->belongsTo('CustomFields', ['className' => 'Infrastructure.RoomCustomFields', 'foreignKey' => 'infrastructure_custom_field_id']);
         if ($this->behaviors()->has('Reorder')) {
-            $this->behaviors()->get('Reorder')->config([
+            $this->behaviors()->get('Reorder')->setConfig([
                 'filter' => 'infrastructure_custom_field_id',
             ]);
         }

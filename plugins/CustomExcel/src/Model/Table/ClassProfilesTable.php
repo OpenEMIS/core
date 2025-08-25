@@ -373,7 +373,7 @@ class ClassProfilesTable extends AppTable
      */
     public function onExcelTemplateInitialiseInfrastructureRoomCustomFields(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
+        if (isset($params['institution_id']) ) { // POCOR-9336
             $InstitutionRooms = TableRegistry::get('institution_rooms');
             $RoomTypes = TableRegistry::get('room_types');
             $RoomCustomFieldValues = TableRegistry::get('room_custom_field_values');
@@ -390,7 +390,6 @@ class ClassProfilesTable extends AppTable
                     $InstitutionRooms->aliasField('room_type_id') . '= ' . $RoomTypes->aliasField('id')
                 ])
                 ->where([$InstitutionRooms->aliasField('institution_id') => $params['institution_id']])
-                ->where([$InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id']])
                 ->enableHydration(false)
                 ->toArray()
                 ;
