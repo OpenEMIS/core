@@ -451,8 +451,6 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
   }
 
   callPostMealAPI(data: any) {
-    console.log(data,"data");
-    
     let obj = {
       "institution_id": data?.institution_id,
       "institution_class_id": data?.institution_class_id,
@@ -671,7 +669,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
           this.academic_Period = this.academicYear[0].key;
           this.academicPeriod[0].options = this.academicYear;
           this.getAcademicWeek(this.academic_Period);
-          this.getClassData()
+          this.getClassData();
         }
       },
       error: (error: any) => {
@@ -724,7 +722,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
     })
   }
 
-  getAcademicDay(id: any) {
+  getAcademicDay(id: any, status?: boolean) {
     this.academic_period_week = id;
     this.Rest.getWithToken('academic-periods/' + this.academic_Period + '/weeks/' + this.academic_period_week + '/days?institution_id=' + this.institution_id + '&school_closed_required=true').subscribe({
       next: (response: any) => {
@@ -753,7 +751,9 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
         newDay[0].options = this.academic_day;
         newDay[0].value = this.academic_period_day;
         this.day = [...newDay];
-        this.getClassData();
+        if(status) {
+          this.getMealStudent(this.selected_meal_program);
+        }
       },
       error: (error: any) => {
         if (error) {
@@ -781,6 +781,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
           this.selected_academic_class = this.academic_class[0]?.key;
           let classData = this.class;
           classData[0].options = this.academic_class;
+          classData[0].value = this.academic_class[0]?.key;
           this.class = [...classData];
           this.displayLoading = false;
           this.getMealProgramData();
@@ -968,25 +969,28 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
     window.open(this.mealHelpUrl, "_self");
   }
 
-  _submitEvent(event: any, type: any) {
+  async _submitEvent(event: any, type: any) {
     this.displayLoading = true;
     switch (type) {
       case 'academicPeriod': {
-        this.getAcademicWeek(event.target.value);
+        await this.getAcademicWeek(event.target.value);
         this.academicPeriod[0].value = event.target.value;
+        this.academic_Period = event.target.value;
+        this.getClassData();
         break;
       }
       case 'week': {
-        this.getAcademicDay(event.target.value);
+        this.getAcademicDay(event.target.value, true);
         this.week[0].value = event.target.value;
         break;
       }
       case 'day': {
-        this.getClassData();
+        // this.getClassData();
         this.day[0].value = event.target.value;
         this.academic_period_day = event.target.value;
-        this.getClassData();
-        this.getMealProgramData();
+        // this.getClassData();
+        // this.getMealProgramData();
+        this.getMealStudent(this.selected_meal_program);
         break;
       }
       case 'class': {
