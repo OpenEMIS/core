@@ -75,8 +75,9 @@ class UsersMergeCommand extends Command
                     $base->set($mf['field'], $mf['result_value']);
                 }
             }
+            $conn->execute('SET FOREIGN_KEY_CHECKS = 0');
             $Users->saveOrFail($base, ['checkRules' => false, 'atomic' => true]);
-
+            $conn->execute('SET FOREIGN_KEY_CHECKS = 1');
             // 3) Cross-table re-point in one transaction
             $conn->transactional(function ($conn) use ($baseId, $mergeId, $SystemProcesses, $systemProcessId, $io) {
                 // turn off FK checks for this session
@@ -94,7 +95,7 @@ class UsersMergeCommand extends Command
                         $conn->execute("ALTER TABLE `{$table}` DISABLE KEYS");
                     } catch (\Throwable $e) {
                     }
-                    try {
+                    try { // POCOR-9340 ignore errors;
                         // Re-point references
                         $conn->execute(
                             "UPDATE `{$table}` SET `{$col}` = :base WHERE `{$col}` = :merge",
@@ -176,7 +177,7 @@ class UsersMergeCommand extends Command
             $toChange = false;
             if ($bNorm === null || $bNorm === '' || ($bNorm === 0 && $mNorm)) {
                 $res = $mNorm;
-                $toChange = ($res !== $bNorm && $mNorm !== null && $mNorm !== '');
+                $toChange = ($res !== $bNorm && $mNorm !== null && $mNorm !== ''); // POCOR-9340 ignore the same
             }
 
                 $result[] = [
