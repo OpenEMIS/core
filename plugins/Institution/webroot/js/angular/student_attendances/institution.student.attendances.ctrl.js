@@ -83,7 +83,7 @@ function InstitutionStudentAttendancesController(
     vm.selectedAttendancePeriod = "";
 
     vm.classStudentList = [];
-    vm.isMarkableSubjectAttendance = 0;
+    vm.isMarkableSubjectAttendance = false;
 
     vm.superAdmin = 1;
     vm.permissionView = 1;
@@ -295,7 +295,7 @@ function InstitutionStudentAttendancesController(
                 }, vm.error)
                 .then(function (classStudents) {
                     if (
-                        vm.isMarkableSubjectAttendance == 1 &&
+                        vm.isMarkableSubjectAttendance == true &&
                         vm.subjectListOptions.length == 0
                     ) {
                         classStudents = [];
@@ -333,21 +333,13 @@ function InstitutionStudentAttendancesController(
         vm.attendanceByOptions = [
             { id: "subject", name: "Subject" },
             { id: "period", name: "Period" },
-            { id: "day_and_subject", name: "Day and Subject" },
         ];
-        console.log("already selected", vm.isMarkableSubjectAttendance);
+        // console.log("already selected",vm.selectedAttendanceBy);
         if (vm.isMarkableAttendance == true) {
-            if (vm.isMarkableSubjectAttendance == 1) {
+            if (vm.isMarkableSubjectAttendance == true) {
                 vm.selectedAttendanceBy = vm.attendanceByOptions[0].id; // Default selection
-            } else if (vm.isMarkableSubjectAttendance == 0) {
-                vm.selectedAttendanceBy = vm.attendanceByOptions[1].id; // Default selection
             } else {
-                vm.selectedAttendanceBy = vm.attendanceByOptions[2].id; // Default selection
-                vm.attendanceByOptions = [
-                    { id: "subject", name: "Subject" },
-                    // { id: "period", name: "Period" },
-                    { id: "day_and_subject", name: "Day and Subject" },
-                ];
+                vm.selectedAttendanceBy = vm.attendanceByOptions[1].id; // Default selection
             }
         } else {
             vm.selectedAttendanceBy = vm.attendanceByOptions[1].id; // Default selection
@@ -368,7 +360,7 @@ function InstitutionStudentAttendancesController(
                 if (
                     angular.isDefined(
                         academicPeriodOptions[i]["selected"] &&
-                        academicPeriodOptions[i]["selected"]
+                            academicPeriodOptions[i]["selected"]
                     )
                 ) {
                     selectedAcademicPeriodId = i;

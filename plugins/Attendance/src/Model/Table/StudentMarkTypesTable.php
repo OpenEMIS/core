@@ -19,6 +19,12 @@ class StudentMarkTypesTable extends ControllerActionTable
     {
         $this->setTable('student_attendance_mark_types');
         parent::initialize($config);
+        $this->hasMany('StudentMarkTypeStatuses', [
+            'className' => 'Attendance.StudentMarkTypeStatuses',
+            'foreignKey' => 'student_attendance_mark_type_id',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         //$this->toggle('add', false);
         $this->toggle('remove', true);//POCOR-7393 Case 2nd
@@ -27,10 +33,12 @@ class StudentMarkTypesTable extends ControllerActionTable
         // $this->removeBehavior('Reorder');
         $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
         $this->defaultMarkType = $StudentAttendanceMarkTypes->getDefaultMarkType();
+        $this->setDeleteStrategy('restrict');
     }
 
     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         $validator
             ->add('code', [
                 'unique' => [
@@ -132,6 +140,16 @@ class StudentMarkTypesTable extends ControllerActionTable
     }
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+
+        $associatedRecordsExist = 
+            $this->exists(['code ' => $data['StudentMarkTypes']['code']]);
+        if ($associatedRecordsExist) {
+            $message = __('This code already exists in the system');
+            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+            $url = $this->request->referer();
+            $event->stopPropagation();
+            return $this->controller->redirect($url);
+        }
         $student_attendance_type_id = $entity->student_attendance_type_id; 
         $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
         $attendanceType = $StudentAttendanceTypes
@@ -596,9 +614,20 @@ class StudentMarkTypesTable extends ControllerActionTable
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+
+    //POCOR-9353
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $connection = $this->getConnection();
-        $connection->getDriver()->enableAutoQuoting();
+        // Check if any associated records exist in related tables.
+        $associatedRecordsExist = 
+            $this->StudentMarkTypeStatuses->exists(['student_attendance_mark_type_id ' => $entity->id]);
+        // If associated records exist, show alert message and abort deletion
+        if ($associatedRecordsExist) {
+            $message = __('Delete operation is not allowed as there are other information linked to this record.');
+            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+            $url = $this->request->referer();
+            $event->stopPropagation();
+            return $this->controller->redirect($url);
+        }
     }
 }
