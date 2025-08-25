@@ -371,13 +371,13 @@ $panelHeader = $this->fetch('panelHeader');
                     <!-- POCOR-8874 starts -->
                     <h5><?= __('Attendance By') ?>: </h5>
                     <div class="input-select-wrapper">
-                        <select name="attendance_by" ng-disabled="($ctrl.action !='edit' && $ctrl.isMarkableAttendance==true) || ($ctrl.action == 'edit' && $ctrl.isMarkableSubjectAttendance != 2)"  ng-model="$ctrl.selectedAttendanceBy" ng-options="option.id as option.name for option in $ctrl.attendanceByOptions" ng-change="$ctrl.changeAttendanceBy();">
+                        <select name="attendance_by" ng-disabled="$ctrl.action=='edit' || $ctrl.isMarkableAttendance==true" ng-model="$ctrl.selectedAttendanceBy" ng-options="option.id as option.name for option in $ctrl.attendanceByOptions" ng-change="$ctrl.changeAttendanceBy();">
                             <option value="">Select Attendance By</option>
                         </select>
                     </div>
 
-                    <h5 ng-if="$ctrl.selectedAttendanceBy=='period' || $ctrl.selectedAttendanceBy == 'day_and_subject'"><?= __('Attendance per day') ?>: </h5>
-                    <div class="input" ng-if="$ctrl.selectedAttendanceBy=='period' || $ctrl.selectedAttendanceBy == 'day_and_subject'">
+                    <h5 ng-if="$ctrl.selectedAttendanceBy=='period'"><?= __('Attendance per day') ?>: </h5>
+                    <div class="input" ng-if="$ctrl.selectedAttendanceBy=='period'">
                         <div class="input-selection attendance" ng-class="{'disabled': $ctrl.action=='edit' || $ctrl.selectedattendanceBy=='subject'}">
                             <div class="input" ng-repeat="attendance_period in $ctrl.attendancePeriodOptions">
                                 <input ng-disabled="$ctrl.action=='edit' || $ctrl.selectedattendanceBy=='subject'" kd-checkbox-radio="{{attendance_period.name}}" ng-model="$ctrl.selectedAttendancePeriod" ng-change="$ctrl.changeAttendancePeriod();" value="{{attendance_period.id}}" type="radio" name="attendance_per_day">
@@ -387,7 +387,7 @@ $panelHeader = $this->fetch('panelHeader');
 
                     <h5 ng-if="$ctrl.selectedAttendanceBy=='subject'"><?= __('Subjects') ?>: </h5>
                     <div class="input-select-wrapper" ng-if="$ctrl.selectedAttendanceBy=='subject'">
-                        <select name="subject" ng-options="subject.id as subject.name for subject in $ctrl.subjectListOptions" ng-model="$ctrl.selectedSubject" ng-change="$ctrl.changeSubject();">
+                        <select ng-disabled="$ctrl.action=='edit'" name="subject" ng-options="subject.id as subject.name for subject in $ctrl.subjectListOptions" ng-model="$ctrl.selectedSubject" ng-change="$ctrl.changeSubject();">
                             <option value="" ng-if="$ctrl.subjectListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>

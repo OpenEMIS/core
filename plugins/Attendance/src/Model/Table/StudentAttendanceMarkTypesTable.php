@@ -140,12 +140,56 @@ class StudentAttendanceMarkTypesTable extends AppTable
     }
 
     public function getAttendancePerDayOptionsByClass($classId, $academicPeriodId, $dayId, $educationGradeId, $weekStartDay = '', $weekEndDay = '')
-    {// POCOR-7183 add parmas $weekStartDay, $weekEndDay
+    {
+        // POCOR-7183 add parmas $weekStartDay, $weekEndDay
         $prefix = 'Period ';
         $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
         $StudentMarkTypeStatuses = TableRegistry::get('Attendance.StudentMarkTypeStatuses');
         $StudentMarkTypeStatusGrades = TableRegistry::get('Attendance.StudentMarkTypeStatusGrades');
+        $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods'); 
+
+        $results = $StudentMarkTypeStatuses->find()
+                    ->select([
+                        'education_grade_id' => $StudentMarkTypeStatusGrades->aliasField('education_grade_id'),
+                        'period' => $StudentAttendancePerDayPeriods->aliasField('period'),
+                        'period_id' => $StudentAttendancePerDayPeriods->aliasField('id'),
+                        'period_name' => $StudentAttendancePerDayPeriods->aliasField('name'),
+                    ])
+                    ->innerJoin(
+                    ['StudentAttendanceMarkTypes' => 'student_attendance_mark_types'],
+                    ['StudentAttendanceMarkTypes.id = ' . $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id')]
+                )
+                ->innerJoin(
+                    [$StudentAttendanceTypes->getAlias() => $StudentAttendanceTypes->getTable()],
+                    [$StudentAttendanceTypes->aliasField('id') . ' = StudentAttendanceMarkTypes.student_attendance_type_id']
+                )
+                ->innerJoin(
+                    [$StudentMarkTypeStatusGrades->getAlias() => $StudentMarkTypeStatusGrades->getTable()],
+                    [$StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id') . ' = ' . $StudentMarkTypeStatuses->aliasField('id')]
+                )
+                ->innerJoin(
+                    [$StudentAttendancePerDayPeriods->getAlias() => $StudentAttendancePerDayPeriods->getTable()],
+                    [$StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id') . ' = StudentAttendanceMarkTypes.id']
+                )->where([
+                        $StudentMarkTypeStatuses->aliasField('date_enabled <=') => $dayId,
+                        $StudentMarkTypeStatuses->aliasField('date_disabled >=') => $dayId,
+                        $StudentAttendanceTypes->aliasField('code IS') => 'DAY_AND_SUBJECT',
+                        $StudentMarkTypeStatusGrades->aliasField('education_grade_id IS') => $educationGradeId,
+                        $StudentMarkTypeStatuses->aliasField('academic_period_id IS') => $academicPeriodId
+                    ])->toArray();
+
+        if (!empty($results)) {
+            $options = [];
+            foreach ($results as $row) {
+                $options[] = [
+                    'id'   => $row['period_id'],
+                    'name' => $row['period_name'] ?? 'Period ' . $row['period']
+                ];
+            }
+            return $options; 
+        }
+
         $gradesResultSet = $InstitutionClassGrades
             ->find('list', [
                 'keyField' => 'education_grade_id',
@@ -274,6 +318,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
 
     public function findPeriodByClass(Query $query, array $options)
     {
+        
         $institionClassId = $options['institution_class_id'];
         $academicPeriodId = $options['academic_period_id'];
         $dayId = $options['day_id'];
@@ -287,4 +332,56 @@ class StudentAttendanceMarkTypesTable extends AppTable
                 return $attendanceOptions;
             });
     }
+
+    public function findDayAndSubject(Query $query, array $options)
+    {
+        $institionClassId = $options['institution_class_id'];
+        $academicPeriodId = $options['academic_period_id'];
+        $dayId = $options['day_id'];
+        $educationGradeId = $options['education_grade_id'];
+        $weekStartDay = $options['week_start_day']; 
+        $weekEndDay = $options['week_end_day'];    
+
+        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+        $StudentMarkTypeStatuses = TableRegistry::get('Attendance.StudentMarkTypeStatuses');
+        $StudentMarkTypeStatusGrades = TableRegistry::get('Attendance.StudentMarkTypeStatusGrades');
+        $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods'); 
+
+        $data = $StudentMarkTypeStatuses->find()
+            ->select([
+                'education_grade_id' => $StudentMarkTypeStatusGrades->aliasField('education_grade_id'),
+                'attendance_type_id' => $StudentAttendanceTypes->aliasField('id'),
+                'code' => $StudentAttendanceTypes->aliasField('code'),
+                'name' => $StudentAttendanceTypes->aliasField('name'),
+                'period_id' => $StudentAttendancePerDayPeriods->aliasField('id'),
+                'period_name' => $StudentAttendancePerDayPeriods->aliasField('name'),
+            ])
+            ->innerJoin(
+                ['StudentAttendanceMarkTypes' => 'student_attendance_mark_types'],
+                ['StudentAttendanceMarkTypes.id = ' . $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id')]
+            )
+            ->innerJoin(
+                [$StudentAttendanceTypes->getAlias() => $StudentAttendanceTypes->getTable()],
+                [$StudentAttendanceTypes->aliasField('id') . ' = StudentAttendanceMarkTypes.student_attendance_type_id']
+            )
+            ->innerJoin(
+                [$StudentMarkTypeStatusGrades->getAlias() => $StudentMarkTypeStatusGrades->getTable()],
+                [$StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id') . ' = ' . $StudentMarkTypeStatuses->aliasField('id')]
+            )
+            ->innerJoin(
+                [$StudentAttendancePerDayPeriods->getAlias() => $StudentAttendancePerDayPeriods->getTable()],
+                [$StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id') . ' = StudentAttendanceMarkTypes.id']
+            )
+            ->where([
+                $StudentMarkTypeStatuses->aliasField('date_enabled <=') => $dayId,
+                $StudentMarkTypeStatuses->aliasField('date_disabled >=') => $dayId,
+                $StudentAttendanceTypes->aliasField('code IS') => 'DAY_AND_SUBJECT',
+                $StudentMarkTypeStatusGrades->aliasField('education_grade_id IS') => $educationGradeId,
+                $StudentMarkTypeStatuses->aliasField('academic_period_id IS') => $academicPeriodId
+            ]);
+
+        return $data;
+    }
+
 }
