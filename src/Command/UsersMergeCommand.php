@@ -63,25 +63,25 @@ class UsersMergeCommand extends Command
         $conn = ConnectionManager::get('default');
 
         try {
-            $Users = TableRegistry::getTableLocator()->get('User.Users');
 
-            // 1) Fetch base & merge entities
-            $base = $Users->get($baseId);
-            $merge = $Users->get($mergeId);
-
-            // 2) Compute field-level merge & apply to base
-            foreach ($this->compareEntities($base, $merge) as $mf) {
-                if (!empty($mf['to_change'])) {
-                    $base->set($mf['field'], $mf['result_value']);
-                }
-            }
-            $conn->execute('SET FOREIGN_KEY_CHECKS = 0');
-            $Users->saveOrFail($base, ['checkRules' => false, 'atomic' => true]);
-            $conn->execute('SET FOREIGN_KEY_CHECKS = 1');
             // 3) Cross-table re-point in one transaction
-            $conn->transactional(function ($conn) use ($baseId, $mergeId, $SystemProcesses, $systemProcessId, $io) {
+            $conn->transactional(function ($conn) use ( $baseId, $mergeId, $SystemProcesses, $systemProcessId, $io) {
                 // turn off FK checks for this session
+                $Users = TableRegistry::getTableLocator()->get('User.Users');
+
+                // 1) Fetch base & merge entities
+                $base = $Users->get($baseId);
+                $merge = $Users->get($mergeId);
+
+                // 2) Compute field-level merge & apply to base
+                foreach ($this->compareEntities($base, $merge) as $mf) {
+                    if (!empty($mf['to_change'])) {
+                        $base->set($mf['field'], $mf['new_result_value']);
+                        $base->set($mf['field'], $mf['old_result_value']);
+                    }
+                }
                 $conn->execute('SET FOREIGN_KEY_CHECKS = 0');
+                $Users->saveOrFail($base, ['checkRules' => false, 'atomic' => true]);
 
                 $related = $this->getRelatedRecords($conn);
 
@@ -153,6 +153,8 @@ class UsersMergeCommand extends Command
      */
     private function compareEntities($base, $merge, array $exclude = []): array
     {
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
+
         if (!$exclude) {
             $exclude = [
                 'id', 'password', 'status', 'created_user_id', 'created',
@@ -164,6 +166,10 @@ class UsersMergeCommand extends Command
         $result = [];
         $fields = array_keys(array_merge($base->toArray(), $merge->toArray()));
         foreach ($fields as $field) {
+            $schema = $Users->getSchema();
+            $col = $schema->getColumn($field);
+            $isNullable = $col['null'] ?? false;
+            $type = $col['type'] ?? 'string';
             if (in_array($field, $exclude, true)) {
                 continue;
             }
@@ -175,16 +181,26 @@ class UsersMergeCommand extends Command
 
             $res = $bNorm;
             $toChange = false;
+            if (isset($fieldMeta[$field])) {
+                if ($fieldMeta[$field]['nullable']) {
+                    $oldResult = null;
+                }
+                if ($fieldMeta[$field]['type'] === 'string') {
+                    $oldResult = '_' . str_pad((string)random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+                }
+            }
             if ($bNorm === null || $bNorm === '' || ($bNorm === 0 && $mNorm)) {
                 $res = $mNorm;
                 $toChange = ($res !== $bNorm && $mNorm !== null && $mNorm !== ''); // POCOR-9340 ignore the same
+                $old_res = $oldResult;
             }
 
                 $result[] = [
                     'field' => $field,
                     'base_value' => $bNorm,
                     'merge_value' => $mNorm,
-                    'result_value' => $res,
+                    'new_result_value' => $res,
+                    'old_result_value' => $old_res,
                     'to_change' => $toChange,
                 ];
 
