@@ -163,7 +163,7 @@ class StudentMarkTypesTable extends ControllerActionTable
                         ->where([
                             $StudentAttendanceTypes->aliasField('id') => $student_attendance_type_id
                         ])
-                        ->first();
+                        ->toArray();
         if ($attendanceType[0]->code == 'SUBJECT') {
             $entity->attendance_per_day = 0;
         }
