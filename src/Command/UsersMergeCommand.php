@@ -191,8 +191,11 @@ class UsersMergeCommand extends Command
             }
             if ($bNorm === null || $bNorm === '' || ($bNorm === 0 && $mNorm)) {
                 $res = $mNorm;
-                $toChange = ($res !== $bNorm && $mNorm !== null && $mNorm !== ''); // POCOR-9340 ignore the same
-                $old_res = $oldResult;
+                $toChange = ($mNorm !== null && $mNorm !== ''); // POCOR-9340 ignore the same
+                $old_res = $res;
+                if ($res == $bNorm) {
+                    $old_res = $oldResult;
+                }
             }
 
                 $result[] = [
