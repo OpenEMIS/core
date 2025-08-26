@@ -164,13 +164,6 @@ class StudentMarkTypesTable extends ControllerActionTable
                             $StudentAttendanceTypes->aliasField('id') => $student_attendance_type_id
                         ])
                         ->first();
-            if ($attendanceType->code == 'DAY_AND_SUBJECT') {
-                $message = __('This DAY AND SUBJECT already exists in the system');
-                $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-                $url = $this->request->referer();
-                $event->stopPropagation();
-                return $this->controller->redirect($url);
-            }
         if ($attendanceType[0]->code == 'SUBJECT') {
             $entity->attendance_per_day = 0;
         }
