@@ -1434,11 +1434,18 @@ class InstitutionSurveysTable extends ControllerActionTable
             )
             ->where(['survey_form_id' => $institutionServery->survey_form_id, 'SurveyQuestions.is_mandatory' => self::IS_MANDATORY])
             ->count();
-        //echo "<pre>";print_r($SurveyFormsQuestionDatas);die();
-        if ($SurveyFormsQuestionDatas < 0) {
+        //POCOR-9334[START]
+        // echo "<pre>";print_r($SurveyFormsQuestionDatas);die();
+        // if ($SurveyFormsQuestionDatas < 0) {
+        //     $errors = true;
+        //     $this->Alert->error('InstitutionSurveys.mandatoryFieldFill', ['reset' => true]);
+        // }
+
+        if ($SurveyFormsQuestionDatas > 0) {
             $errors = true;
             $this->Alert->error('InstitutionSurveys.mandatoryFieldFill', ['reset' => true]);
         }
+        //POCOR-9334[END]
 
         if ($errors) {
             $event->stopPropagation();
@@ -1446,6 +1453,7 @@ class InstitutionSurveysTable extends ControllerActionTable
             return $this->controller->redirect($url);
         }
     }
+
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
 
