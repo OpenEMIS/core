@@ -139,6 +139,8 @@ class StudentMarkTypesTable extends ControllerActionTable
         }         
     }
 
+
+    //POCOR-9353
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 
         $associatedRecordsExist = 
@@ -153,10 +155,22 @@ class StudentMarkTypesTable extends ControllerActionTable
         $student_attendance_type_id = $entity->student_attendance_type_id; 
         $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
         $attendanceType = $StudentAttendanceTypes
-                      ->find()
-                      ->select([$StudentAttendanceTypes->aliasField('code')])
-                      ->where([$StudentAttendanceTypes->aliasField('id') => $student_attendance_type_id])
-                      ->toArray();
+                        ->find()
+                        ->select([
+                            'code' => $StudentAttendanceTypes->aliasField('code'),
+                            'id'   => $StudentAttendanceTypes->aliasField('id')
+                        ])
+                        ->where([
+                            $StudentAttendanceTypes->aliasField('id') => $student_attendance_type_id
+                        ])
+                        ->first();
+            if ($attendanceType->code == 'DAY_AND_SUBJECT') {
+                $message = __('This DAY AND SUBJECT already exists in the system');
+                $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                $url = $this->request->referer();
+                $event->stopPropagation();
+                return $this->controller->redirect($url);
+            }
         if ($attendanceType[0]->code == 'SUBJECT') {
             $entity->attendance_per_day = 0;
         }

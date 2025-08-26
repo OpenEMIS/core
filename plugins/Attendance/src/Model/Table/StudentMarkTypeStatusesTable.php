@@ -115,6 +115,8 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
 		}
 	}
 
+
+    //POCOR-9353
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {  
         if (!empty($entity->education_grades) 
@@ -140,7 +142,6 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
             if ($existingStatusCount) {
                 $message = __('Attendance for the selected Education Grade already added.');
                 $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-
                 // stop saving entity
                 $event->stopPropagation();
                 return false;
