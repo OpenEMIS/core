@@ -247,28 +247,37 @@ class AssessmentItemsTable extends AppTable
                 $InstitutionSubjects->aliasField('education_subject_id'),
                 $InstitutionSubjects->aliasField('id'),
                 $InstitutionSubjects->aliasField('name'),
-                $EducationSubject->aliasField('id')
+                $EducationSubject->aliasField('id'),
+                $EducationSubject->aliasField('name'),
             ])
             ->contain('EducationSubjects')
-            /*POCOR-6183 Starts*/
             ->leftJoin([$Assessments->getAlias() => $Assessments->getTable()], [
                 $Assessments->aliasField('id = ') . $this->aliasField('assessment_id')
             ])
-            /*POCOR-6183 Ends*/
             ->innerJoin([$ClassSubjects->getAlias() => $ClassSubjects->getTable()], [
                 $ClassSubjects->aliasField('institution_class_id') => $class_id
             ])
             ->leftJoin([$InstitutionSubjects->getAlias() => $InstitutionSubjects->getTable()], [
                 $InstitutionSubjects->aliasField('id = ') . $ClassSubjects->aliasField('institution_subject_id'),
                 $InstitutionSubjects->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id'),
-                $InstitutionSubjects->aliasField('education_grade_id = ') . $Assessments->aliasField('education_grade_id') //POCOR-6183
+                $InstitutionSubjects->aliasField('education_grade_id = ') . $Assessments->aliasField('education_grade_id')
             ])
             ->where([
                 $this->aliasField('assessment_id') => $assessment_id,
                 $InstitutionSubjects->aliasField('institution_id') => $institution_id,
                 $InstitutionSubjects->aliasField('academic_period_id') => $academic_period_id,
             ])
-            ->order(['EducationSubjects.order', 'EducationSubjects.code', 'EducationSubjects.name']);
+            ->group([
+                $this->aliasField('education_subject_id'), //POCOR-9291
+                $EducationSubject->aliasField('id'),
+                $EducationSubject->aliasField('name')
+            ])
+            ->order([
+                'EducationSubjects.order',
+                'EducationSubjects.code',
+                'EducationSubjects.name'
+            ]);
+
         //POCOR-5999 starts
         $query
             ->formatResults(function (ResultSetInterface $results) use (
