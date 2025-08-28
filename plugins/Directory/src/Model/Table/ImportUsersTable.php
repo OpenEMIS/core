@@ -203,26 +203,32 @@ class ImportUsersTable extends AppTable
                 // POCOR-8683 start
                 // POCOR-8835 start
                 $newOpenemisNo = "";
-                // POCOR-8835 start
-//                if(strlen($openemisNo) > 1){
-//                    $username = Text::slug($openemisNo);
-//                }
-//                if(strlen($username) < 6){
-                // POCOR-8835 end
+                
                 $newOpenemisNo = $newOpenemisNo . $this->getNewOpenEmisNo();
-                    $tempRow['openemis_no'] = $newOpenemisNo;
-//                } // POCOR-8835
+                $tempRow['openemis_no'] = $newOpenemisNo;
                 $tempRow['username'] = $username ?? $newOpenemisNo;
-                if (isset($tempRow['username']) && preg_match('/^\w+$/', $tempRow['username'])) {
+                //POCOR-9327 start
+                if (empty($tempRow['username'])) { 
+                    // Empty username is allowed
                     $validUserName = true;
                 } else {
-                    $validUserName = false;
-                }
-                if (!$validUserName) {
+                    $username = $tempRow['username'];
+
+                    if (strpos($username, '@') !== false && strpos($username, '.') !== false) { 
+                        // Has both @ and .
+                        $validUserName = true;
+                    } elseif (preg_match('/^\w+$/', $username)) {
+                        // Plain alphanumeric with underscores only
+                        $validUserName = true;
+                    } else {
+                        $validUserName = false;
+                    }
+                } 
+
+                if (!$validUserName && !empty($username)) {
                     $rowInvalidCodeCols['username'] = 'The Username has invalid characters';
                     return false;
-                }
-                // POCOR-8683 end
+                } //POCOR-9327 end
             } catch (\Exception $exception) {
                 $rowInvalidCodeCols['username'] = 'New User Creation Error: ' . __($exception->getMessage());
                 return false;
@@ -394,7 +400,7 @@ class ImportUsersTable extends AppTable
      */
     public function onImportModelSpecificValidation(Event $event, $references, $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-
+       
         $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
         $isStaff = ($tempRow['account_type'] == self::IS_STAFF);
         $isStudent = ($tempRow['account_type'] == self::IS_STUDENT);
@@ -1378,11 +1384,8 @@ class ImportUsersTable extends AppTable
         // $periodStartDate = DateTime::createFromFormat('d/m/Y', $periodStartDay, $dateTimeZone);
 
         $periodEndDay = $period->end_date->format('d/m/Y');
-        try { // POCOR-9313 start
-            $dateTimeZone = new \DateTimeZone($this->getTimeZone());
-        } catch (\Exception $e) {
-            $dateTimeZone = new \DateTimeZone('GMT');
-        } // POCOR-9313 end
+        $timeZone = $this->getTimeZone();
+        $dateTimeZone = new \DateTimeZone($timeZone);
         $periodEndDate = DateTime::createFromFormat('d/m/Y', $periodEndDay, $dateTimeZone);
 
         $tempRow['end_date'] = $periodEndDate;
@@ -1391,11 +1394,8 @@ class ImportUsersTable extends AppTable
 
     private function parseDate($date, string $format): ?DateTime
     {
-        try { // POCOR-9313 start
-            $dateTimeZone = new \DateTimeZone($this->getTimeZone());
-        } catch (\Exception $e) {
-            $dateTimeZone = new \DateTimeZone('GMT');
-        } // POCOR-9313 end
+        $dateTimeZone = new \DateTimeZone($this->getTimeZone());
+
         // If the input is already a DateTime object, return it
         if ($date instanceof \DateTime) {
             return $date;
