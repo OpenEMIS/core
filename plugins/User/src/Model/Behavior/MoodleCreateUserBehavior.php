@@ -23,7 +23,7 @@ class MoodleCreateUserBehavior extends Behavior
     {
         $isNew = $entity->isNew();
         //POCOR-9277 -- Start
-        $model = $this->_table;       
+        $model = $this->_table;
         // Get the current request
         $request = Router::getRequest();
 
@@ -41,6 +41,12 @@ class MoodleCreateUserBehavior extends Behavior
             }
         }
         //POCOR-9277 -- End
+        //POCOR-9068
+        //check if user already exist
+        $existingUser = $this->findExistingUser($entity);
+        if ($existingUser) {
+            return;
+        }
 
         if ($entity instanceof \Institution\Model\Entity\Student) {
             $entity = $this->convertStudentToUser($entity);
@@ -118,4 +124,43 @@ class MoodleCreateUserBehavior extends Behavior
         }
         return $response;
     }
+    //POCOR-9068 start
+    /**
+     * Checks if a user already exists in Moodle based on the provided entity.
+     *
+     * This method uses the MoodleApi to determine if a user with the given
+     * 'openemis' identifier exists. If user creation is not enabled in the
+     * MoodleApi, the method returns true immediately. If the 'openemis'
+     * property is set on the entity, it attempts to check for the user's
+     * existence and logs any exceptions encountered during the process.
+     *
+     * @param object $entity The entity containing user information, expected to have an 'openemis' property.
+     * @return bool Returns true if the user exists or user creation is disabled, false otherwise.
+     */
+    private function findExistingUser($entity)
+    {
+        $moodleApi = new MoodleApi();
+        // Only check if user creation is enabled
+        if (!$moodleApi->enableUserCreation()) {
+            return true;
+        }
+
+        if (isset($entity->openemis)) {
+            try {
+                $existingUser = $moodleApi->userExists($entity->openemis);
+                if ($existingUser && !empty($existingUser)) {
+                    return true;
+                }
+            } catch (Exception $e) {
+                Log::error('Error checking existing user by username: ' . $e->getMessage(), [
+                    'exception' => $e,
+                ]);
+
+            }
+
+        }
+
+        return false;
+    }
+    //POCOR-9068 end
 }
