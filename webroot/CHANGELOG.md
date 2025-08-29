@@ -1,3 +1,9 @@
+### [4.40.2] - 2025-08-29
+- Bug Fixed: Administrations > Data Management : Education Structure Copy gets the programme_id from the previous academic period
+- Bug Fixed: Administration > System Setup > Education Structure > Cycles tab > Delete: Able to delete even when there is parent/child relations.
+- Bug Fixed: Directory > Import Users : Auto generate Username and Password fields if blank
+- Bug Fixed: Institutions > Finances > Consumables: System allows user to add same bin number in the same institutions
+
 ### [4.40.1] - 2025-08-26
 - Bug Fixed: Administration>Performance>Report Cards:Processes showing error even though it is in progress
 - Bug Fixed: Directory>Import: It is showing Password password*
