@@ -141,6 +141,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
         $cycleMap = [];
         $programmeMap = [];
         $gradeMap = [];
+        $pendingEdges = []; // POCOR-9356
 
         // 1) Education Systems in FROM period
         $systems = $this->EducationSystems->find()
@@ -251,31 +252,39 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                         $programmeMap[(int)$prg->id] = $newProgId;
 
                         // (A) Programme edges (next_programmes) — MAP to new IDs (fixes legacy shell behavior)
+                        //POCOR-9356 -- START
                         $edges = $this->EducationProgrammesNextProgrammes->find()
                             ->where(['education_programme_id' => $prg->id])
                             ->all();
+
                         foreach ($edges as $edge) {
                             $oldNext = (int)$edge->next_programme_id;
                             $newNext = $programmeMap[$oldNext] ?? null;
-                            if (!$newNext) {
-                                // Edge target not yet created or outside this tree → skip silently
-                                continue;
+
+                            if ($newNext) {
+                                // insert now (and avoid duplicates)
+                                $exists = $this->EducationProgrammesNextProgrammes->find()
+                                    ->where([
+                                        'education_programme_id' => $newProgId,
+                                        'next_programme_id'      => $newNext
+                                    ])->first();
+                                if (!$exists) {
+                                    $npEntity = $this->EducationProgrammesNextProgrammes->newEntity([
+                                        'id'                     => $this->uuid(),
+                                        'education_programme_id' => $newProgId,
+                                        'next_programme_id'      => $newNext,
+                                    ]);
+                                    $this->saveOrThrow($this->EducationProgrammesNextProgrammes, $npEntity, 'education_programmes_next_programmes');
+                                }
+                            } else {
+                                // target not created yet — resolve later
+                                $pendingEdges[] = [
+                                    'new_programme_id' => $newProgId,
+                                    'old_next_id'      => $oldNext,
+                                ];
                             }
-                            $exists = $this->EducationProgrammesNextProgrammes->find()
-                                ->where([
-                                    'education_programme_id' => $newProgId,
-                                    'next_programme_id'      => $newNext
-                                ])->first();
-                            if ($exists) {
-                                continue;
-                            }
-                            $npEntity = $this->EducationProgrammesNextProgrammes->newEntity([
-                                'id'                     => $this->uuid(),
-                                'education_programme_id' => $newProgId,
-                                'next_programme_id'      => $newNext,
-                            ]);
-                            $this->saveOrThrow($this->EducationProgrammesNextProgrammes, $npEntity, 'education_programmes_next_programmes');
                         }
+                        //POCOR-9356 -- END
 
                         // 5) Grades under programme
                         $grades = $this->EducationGrades->find()
@@ -336,6 +345,33 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                 } // cycles
             } // levels
         } // systems
+        // POCOR-9356 -- START resolve any deferred edges now that $programmeMap is complete
+        foreach ($pendingEdges as $pe) {
+            $newProgId = (int)$pe['new_programme_id'];
+            $oldNext   = (int)$pe['old_next_id'];
+            $newNext   = $programmeMap[$oldNext] ?? null;
+
+            // skip edges that point outside the copied tree (e.g., old 23)
+            if (!$newNext) {
+                continue;
+            }
+
+            $exists = $this->EducationProgrammesNextProgrammes->find()
+                ->where([
+                    'education_programme_id' => $newProgId,
+                    'next_programme_id'      => $newNext
+                ])->first();
+
+            if (!$exists) {
+                $npEntity = $this->EducationProgrammesNextProgrammes->newEntity([
+                    'id'                     => $this->uuid(),
+                    'education_programme_id' => $newProgId,
+                    'next_programme_id'      => $newNext,
+                ]);
+                $this->saveOrThrow($this->EducationProgrammesNextProgrammes, $npEntity, 'education_programmes_next_programmes');
+            }
+        }
+        //POCOR-9356 -- END
 
         $this->v($io, 'Copy complete.');
     }
