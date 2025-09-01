@@ -16,7 +16,7 @@ use InstitutionScope;
     // ✅ Allow mass assignment
     // POCOR-8919 removed academic period
     protected $fillable = ['id', 'name', 'code', 'address', 'postal_code',
-        'contact_person', 'telephone', 'fax', 'email', 'website',
+        'contact_person', 'telephone', 'email', 'website',
         'institution_id', 'area_id',
         'modified_user_id', 'modified', 'created_user_id', 'created'];
 
