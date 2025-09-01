@@ -1,9 +1,24 @@
+### [4.40.2] - 2025-08-29
+- Bug Fixed: Administrations > Data Management : Education Structure Copy gets the programme_id from the previous academic period
+- Bug Fixed: Administration > System Setup > Education Structure > Cycles tab > Delete: Able to delete even when there is parent/child relations.
+- Bug Fixed: Directory > Import Users : Auto generate Username and Password fields if blank
+- Bug Fixed: Institutions > Finances > Consumables: System allows user to add same bin number in the same institutions
+
+### [4.40.1] - 2025-08-26
+- Bug Fixed: Administration>Performance>Report Cards:Processes showing error even though it is in progress
+- Bug Fixed: Directory>Import: It is showing Password password*
+- Bug Fixed: Institutions>Students>Transfer Out/Transfer In: Bulk student transfer button is missing
+- Bug Fixed: Reports > Staff: Report status is displaying "error". Demo PRD is fine.
+- Bug Fixed: Reports > Institutions > Add: Staff is still showing in the following attendance report even though status is "End of Assignment". Happens in Demo PRD as well.
+- Bug Fixed: Institutions>Schedule>Timetable: Intervals are not showing correctly
+- Bug Fixed: Administration>Performance>Report Cards:Processes showing error even though it is in progress
+
 ### [4.40.0] - 2025-08-22
-- Implemented: Develop system configuration for LibreOffice for PDF generation 
+- Implemented: Develop system configuration for LibreOffice for PDF generation
 - Implemented: Develop changes to remove old files from master branch
-- Implemented: Develop docker and docker-compose upgrade files for OpenEMIS Core 
-- Implemented: Develop additional filters for the Administration > Performance > Report Cards > Overview page 
-- Bug Fixed: Administration>System Setup>Custom Fields>Infrastructure: User is unable to view and edit 
+- Implemented: Develop docker and docker-compose upgrade files for OpenEMIS Core
+- Implemented: Develop additional filters for the Administration > Performance > Report Cards > Overview page
+- Bug Fixed: Administration>System Setup>Custom Fields>Infrastructure: User is unable to view and edit
 - Bug Fixed: Institutions > Students > Transfer: User receives a 404 error
 - Bug Fixed: Reports > Institutions > Institution Infrastructure Summary Report: User is getting 404 error
 - Bug Fixed: Directory>Import: Username and password are not mandatory in the template however when importing, it is mandatory
@@ -15,6 +30,7 @@
 - Bug Fixed: Institution API is not working when logged in as non admin user
 - Bug Fixed: Directory: Merge should be a background process
 - Bug Fixed: Institutions > Statistics > Standard > Add: Student overview does not show dob
+- Bug Fixed: Directory > Import: System doesn't allow username to have special characters for email.
 
 ### [4.39.1] - 2025-08-18
 - Bug Fixed: Institutions > Students > Student Admission > Bulk Student Admission: User receives 404 error 
