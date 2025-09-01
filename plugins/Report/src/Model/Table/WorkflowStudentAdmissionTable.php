@@ -1,16 +1,17 @@
 <?php
+
 namespace Report\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\ORM\Query;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
+use Cake\ORM\TableRegistry;
 
-class WorkflowStudentAdmissionTable extends AppTable  
+class WorkflowStudentAdmissionTable extends AppTable
 {
 
-    public function initialize(array $config): void 
+    public function initialize(array $config): void
     {
         $this->setTable("institution_student_admission");
         parent::initialize($config);
@@ -35,10 +36,53 @@ class WorkflowStudentAdmissionTable extends AppTable
     public function onExcelGetOpenemisNo(Event $event, Entity $entity)
     {
         $openemisNo = '';
-        if(!empty($entity['user'])){
+        if (!empty($entity['user'])) {
             $openemisNo = $entity['user']['openemis_no'];
         }
-        
+
         return $openemisNo;
     }
+
+    //POCOR-9367 start
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    {
+        $InstitutionStudentProgrammes = TableRegistry::getTableLocator()->get('Student.InstitutionStudentProgrammes');
+
+        $query->contain(['EducationGrades.EducationProgrammes']);
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($InstitutionStudentProgrammes) {
+            return $results->map(function ($row) use ($InstitutionStudentProgrammes) {
+                $conditions = [];
+
+                $educationProgrammeId = null;
+                if ($row->has('education_grade') && ($row->education_grade->education_programme_id ?? null)) {
+                    $educationProgrammeId = (int)$row->education_grade->education_programme_id;
+                }
+                if ($educationProgrammeId) {
+                    $conditions['student_id'] = $row->student_id;
+                    $conditions['institution_id'] = $row->institution_id ?? null;
+                    $conditions['education_programme_id'] = $educationProgrammeId;
+                }
+                $InstitutionStudentProgrammesResult = $InstitutionStudentProgrammes->find()
+                    ->select(['registration_number', 'id'])
+                    ->where($conditions)
+                    ->orderDesc('id')
+                    ->first();
+                $row['registration_number'] = $InstitutionStudentProgrammesResult->registration_number ?? '';
+                return $row;
+            });
+        });
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $fields[] = [
+            'key' => 'registration_number',
+            'field' => 'registration_number',
+            'type' => 'string',
+            'label' => __('Registration Number')
+        ];
+        return $fields;
+    }
+    //POCOR-9367 end
 }
