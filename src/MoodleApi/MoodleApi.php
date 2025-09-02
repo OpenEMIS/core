@@ -360,7 +360,7 @@ class MoodleApi
      * @return void
      */
 
-    public function saveStaffToMoodleCourse(array $staffList=[], int $courseId): void
+    public function saveStaffToMoodleCourse(array $staffList = [], int $courseId): void
     {
         $Users = TableRegistry::get('Security.Users');
 
@@ -480,7 +480,7 @@ class MoodleApi
      * @return void
      */
 
-    public function saveStudentToMoodleCourse(array $studentList=[], int $courseId): void
+    public function saveStudentToMoodleCourse(array $studentList = [], int $courseId): void
     {
         $Users = TableRegistry::get('Security.Users');
 
@@ -546,4 +546,38 @@ class MoodleApi
             $this->createCourseUser($studentId, self::STUDENT_ROLE_ID, $courseId);
         }
     }
+    //POCOR-9068 start
+    /**
+     * Checks if a single user exists in Moodle by username.
+     *
+     * @param string $username The username to check in Moodle.
+     * @return bool True if the user exists, false otherwise.
+     */
+    public function userExists(string $username): bool
+    {
+        if (empty($username)) {
+            return false;
+        }
+
+        $criteria = [
+            'criteria' => [
+                [
+                    'key' => 'username',
+                    'value' => $username
+                ]
+            ]
+        ];
+
+        $response = $this->get('core_user_get_users', $criteria);
+
+        if ($response && $response->isOk()) {
+            $data = $response->getJson();
+            if (!empty($data['users']) && !empty($data['users'][0]['id'])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    //POCOR-9068 end
 }
