@@ -51,6 +51,7 @@ class UsersMergeCommand extends Command
         'username',
         'email',
         'openemis_no',
+        'unique_mobile', // present in some deployments (generated/normalized mobile)
         'mobile_number', // present in some deployments (generated/normalized mobile)
         // 'mobile_number', // include only if you truly have a unique on it
         // 'identity_number',
@@ -64,6 +65,7 @@ class UsersMergeCommand extends Command
 
     public function execute(Arguments $args, ConsoleIo $io): int
     {
+        $this->io = $io;
         // Parse required CLI options
         $this->systemProcessId = (int) $args->getOption('system_process_id');
         $this->baseId          = (int) $args->getOption('base_id');
@@ -95,7 +97,6 @@ class UsersMergeCommand extends Command
         }
 
         $conn = ConnectionManager::get('default');
-
         try {
             // One transaction for the whole merge (locks + saves + FK repoints + deactivate)
             $conn->transactional(function ($conn) use ($SystemProcesses) {
@@ -113,14 +114,11 @@ class UsersMergeCommand extends Command
 
                 // 2) Compute move plan according to your rule: "if base is empty → take merge"
                 $plan = $this->buildMovePlan($Users, $base, $merge);
-
                 // 3) Neutralize MERGE row for any fields that are unique and we plan to move
                 //    This avoids UNIQUE violations when we later assign those values to BASE.
-                $this->neutralizeMergeForUniqueFields($Users, $merge, $plan, $this->mergeId);
-
+                $this->neutralizeMergeForUniqueFields($Users, $merge, $plan, $this->mergeId, $base);
                 // 4) Save MERGE FIRST (now neutralized → cannot collide with anyone)
                 $Users->saveOrFail($merge, ['checkRules' => false, 'atomic' => false]);
-
                 // 5) Optional preflight: if moving a unique value into BASE collides with a third row, decide policy
                 //    Here we *fail fast* with a clear message, but you can also "skip move" instead.
                 $this->preflightThirdPartyCollisionsOrFail($Users, $base->id, $merge->id, $plan);
@@ -204,38 +202,67 @@ class UsersMergeCommand extends Command
         return $plan;
     }
 
-    /**
-     * For every field we will move, if it belongs to the (possible) unique set,
-     * change the MERGE row to a non-colliding "neutral" value BEFORE we save it.
-     *  - If column is nullable → set NULL
-     *  - Else set a short "MERGED-<mergeId>-<hash>" truncated to col length
-     */
-    private function neutralizeMergeForUniqueFields(Table $Users, Entity $merge, array $plan, int $mergeId): void
+    private function neutralizeMergeForUniqueFields(Table $Users, Entity $merge, array $plan, int $mergeId, Entity $base): void
     {
-        // Only consider fields present on this table & listed in candidate set
-        $schema = $Users->getSchema();
-        $present = array_intersect(self::CANDIDATE_UNIQUE_FIELDS, array_keys($schema->columns()));
+        $schema  = $Users->getSchema();
+        $columns = $schema->columns();
 
-        foreach ($plan as $field => $incoming) {
-            if (!in_array($field, $present, true)) {
+        $present = array_intersect(self::CANDIDATE_UNIQUE_FIELDS, array_keys($columns));
+        if(empty($present)){
+            $present = array_intersect(self::CANDIDATE_UNIQUE_FIELDS, array_values($columns));
+        }
+
+        foreach ($present as $field) {
+            $mergeVal = $merge->get($field);
+            $baseVal  = $base->get($field);
+            $normalize = function ($val) {
+                if (is_string($val)) {
+                    return trim($val);
+                }
+                return $val;
+            };
+
+            $mergeVal = $normalize($mergeVal);
+            $baseVal  = $normalize($baseVal);
+
+            $incoming = $plan[$field] ?? null;
+
+            // If it's the generated unique_mobile, blank the SOURCE instead
+            if ($field === 'unique_mobile' && $schema->getColumn('mobile_number')) {
+                if ($mergeVal !== null && $mergeVal === $baseVal) {
+                    $merge->set('mobile_number', null); // force unique_mobile → NULL
+                }
                 continue;
             }
-            $current = $merge->get($field);
 
-            // Neutralize only when merge currently equals the value we intend to move (most common case)
-            if ($current === $incoming) {
-                $colMeta     = $schema->getColumn($field) ?? [];
-                $isNullable  = (bool)($colMeta['null'] ?? false);
-                $maxLen      = (int)($colMeta['length'] ?? 191);
 
-                if ($isNullable) {
-                    $merge->set($field, null);
-                } else {
-                    $token = sprintf('MERGED-%d-%s', $mergeId, substr(sha1((string)$incoming), 0, 6));
-                    // ensure not longer than column length
-                    $merge->set($field, mb_substr($token, 0, max(1, $maxLen)));
-                }
+            // Case 1: merge has the same as base → must neutralize
+            if ($mergeVal !== null && $mergeVal === $baseVal) {
+                $this->forceNeutralize($merge, $field, $mergeVal, $mergeId, $schema);
+                continue;
             }
+
+            // Case 2: merge has the same as the value we plan to move → must neutralize
+            if ($incoming !== null && $mergeVal === $incoming) {
+                $this->forceNeutralize($merge, $field, $mergeVal, $mergeId, $schema);
+            }
+        }
+    }
+
+    private function forceNeutralize(Entity $merge, string $field, mixed $current, int $mergeId, \Cake\Database\Schema\TableSchema $schema): void
+    {
+
+        $colMeta    = $schema->getColumn($field) ?? [];
+        $isNullable = (bool)($colMeta['null'] ?? false);
+        $maxLen     = (int)($colMeta['length'] ?? 191);
+
+        if ($isNullable) {
+            $merge->set($field, null);
+            $this->io->out('Force Nulled');
+        } else {
+            $token = sprintf('MERGED-%d-%s', $mergeId, substr(sha1((string)$current), 0, 6));
+            $merge->set($field, mb_substr($token, 0, max(1, $maxLen)));
+            $this->io->out("Force Changed to $token");
         }
     }
 
