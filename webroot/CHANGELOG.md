@@ -1,3 +1,16 @@
+### [4.41.0] - 2025-09-04
+- Implemented: Develop changes to Administration > System Setup > Attendances
+- Implemented: Develop student workflow report
+- Implemented: Institutions>Survey>Forms: When approving or rejecting, it should check the survey form for unanswered mandatory questions
+- Implemented: Develop changes to installation wizard to use docker database name
+- Bug Fixed: Workbench > Staff Workflow: The buttons should be showing the same in the page when accessing from workbench
+- Bug Fixed: Institutions>Meals>Students: Meals are not saved properly for students
+- Bug Fixed: Demo OpenEMIS Core:Logs being logged but user does not show up in demo moodle
+- Bug Fixed: Institutions > Performances > Assessments : System should group tabs according to Education Subjects and show all students that takes that subjects
+- Bug Fixed: Institutions>Students>List: Default status should be enrolled
+- Bug Fixed: Directory > Merge: Merge feature showing 404 error
+- Bug Fixed: Report>Institutions>Students: Education Programme should show asterisk
+
 ### [4.40.2] - 2025-08-29
 - Bug Fixed: Administrations > Data Management : Education Structure Copy gets the programme_id from the previous academic period
 - Bug Fixed: Administration > System Setup > Education Structure > Cycles tab > Delete: Able to delete even when there is parent/child relations.
