@@ -179,9 +179,10 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $canAddButtons = false;
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
         $getInstitutionId = $this->getQueryString('institution_id');
-        $requestInstitutionId = $this->request->getParam('institutionId');
-        $currentInstitutionId = isset($requestInstitutionId) ? $this->paramsDecode($requestInstitutionId)['id'] : $getInstitutionId;
-
+        //$requestInstitutionId = $this->request->getParam('institutionId');
+        //$currentInstitutionId = isset($requestInstitutionId) ? $this->paramsDecode($requestInstitutionId)['id'] : $getInstitutionId;
+        $requestInstitutionId = $this->request->getQueryParams()['institution_id'] ?? null; //POCOR-9373
+        $currentInstitutionId = isset($requestInstitutionId) ? $requestInstitutionId : $getInstitutionId; //POCOR-9373
         $ConfigStaffTransfersTable = TableRegistry::get('Configuration.ConfigStaffTransfers');
         $isRestricted = $ConfigStaffTransfersTable->checkStaffTransferRestricted($entity->previous_institution_id, $entity->new_institution_id);
 
