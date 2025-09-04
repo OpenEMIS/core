@@ -163,6 +163,7 @@ class InstitutionsTable extends AppTable
         $validator = $this->validationDefault($validator);
         $validator = $validator
             ->notEmpty('education_programme_id')
+            ->notEmpty('institution_id') //POCOR-9345
             ->notEmpty('status');
         return $validator;
     }
@@ -751,7 +752,7 @@ class InstitutionsTable extends AppTable
     {
         return isset($entity->date_opened) ? $entity->date_opened->format('Y-m-d') : '';
     }
-    
+
     public function onExcelGetDateClosed(Event $event, Entity $entity)
     {
         return isset($entity->date_closed) ? $entity->date_closed->format('Y-m-d') : '';
@@ -1311,6 +1312,7 @@ class InstitutionsTable extends AppTable
                     $attr['default'] = 1;
                 }
                 /*POCOR-6337 starts*/
+                $attr['attr']['required'] = true; //POCOR-9345
                 $attr['onChangeReload'] = true;
             } else {
                 $attr['value'] = self::NO_FILTER;
@@ -2663,7 +2665,7 @@ class InstitutionsTable extends AppTable
             return $locator->get($tableName);
         } catch (\Exception $exception) {
         }
-        if($tableName == 'Institution.InstitutionStatuses'){
+        if ($tableName == 'Institution.InstitutionStatuses') {
             $tableName = 'Institution.Statuses';
         }
         $parts = explode('.', $tableName);
