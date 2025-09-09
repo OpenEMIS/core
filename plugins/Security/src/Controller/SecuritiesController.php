@@ -172,10 +172,12 @@ class SecuritiesController extends AppController
         $plugin = $this->getPlugin();
         $name = $this->getName();
         $id = isset($options['id']) ? $options['id'] : $this->request->getSession()->read($name . '.id');
-
+       
         $tabElements = [];
-
-        if ($this->request->getQuery('super') == 1) {  
+        $currentUser = $this->Auth->user(); 
+        $Users = TableRegistry::getTableLocator()->get('Security.Users');
+        $checkUser = $Users->find()->where(['id' => $id])->first();
+        if ($checkUser && $checkUser->super_admin === 1) { 
             $tabElements['Accounts'] = [
                 'url' => [
                     'plugin' => $plugin,
