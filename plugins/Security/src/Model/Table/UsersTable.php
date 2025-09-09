@@ -646,11 +646,7 @@ class UsersTable extends ControllerActionTable
                 'controller' => 'Securities',
                 'action' => 'Accounts',
                 0 => 'edit',
-                1  => $this->ControllerAction->paramsEncode($params),
-                '?' => [
-                    'super' => true,
-                    'mode' => 'admin'
-                ]
+                1  => $this->ControllerAction->paramsEncode($params)
             ];
             $manageUsersBtn['manage_users']['label'] = '<i class="fa fa-key"></i>' . __('Change Password');
             unset($buttons['view'], $buttons['remove'], $buttons['edit']);
