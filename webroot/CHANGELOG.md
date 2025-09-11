@@ -1,3 +1,9 @@
+### [4.41.1] - 2025-09-11
+- Bug Fixed: Institutions>Students>Import: Unable to import students
+- Bug Fixed: Administration>Performance>Competencies: Unable to modify the name of the competency template. Error while saving after editing the name (refer screenshot)
+- Bug Fixed: Report>Institutions: Institution needs to get refreshed to show correct filters
+- Bug Fixed: Institutions>Attendance>Students: Attendance should be reflected on all days
+
 ### [4.41.0] - 2025-09-04
 - Implemented: Develop changes to Administration > System Setup > Attendances
 - Implemented: Develop student workflow report
