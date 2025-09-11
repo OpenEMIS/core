@@ -526,25 +526,26 @@ class ImportBehavior extends Behavior
                     // POCOR-4258 - shifted saving model before updating errors to implement try-catch to catch database errors
                     try {
                         //POCOR-9294[START]
-                        $checkRequest = $this->_table->request->getData()['ImportStudentAdmission']['feature'];
-                        if($checkRequest == 'Institution.Institutions.ImportStudentAdmission'){
-                            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-                            $AcademicPeriodsData = $AcademicPeriods
-                                    ->find('all')
-                                    ->select([$AcademicPeriods->aliasField('start_year'), $AcademicPeriods->aliasField('end_year')])
-                                    ->where([$AcademicPeriods->aliasField('id') => $tableEntity['academic_period_id']])
-                                    ->first();
+                        // $checkRequest = $this->_table->request->getData()['ImportStudentAdmission']['feature'];
+                        // if($checkRequest == 'Institution.Institutions.ImportStudentAdmission'){
+                        //     $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                        //     $AcademicPeriodsData = $AcademicPeriods
+                        //             ->find('all')
+                        //             ->select([$AcademicPeriods->aliasField('start_year'), $AcademicPeriods->aliasField('end_year')])
+                        //             ->where([$AcademicPeriods->aliasField('id') => $tableEntity['academic_period_id']])
+                        //             ->first();
 
-                            $tableEntity['student_status_id'] = 1;
-                            $tableEntity['start_year'] = $AcademicPeriodsData->start_year;
-                            $tableEntity['end_year'] = $AcademicPeriodsData->end_year;
-                            $activeModel = TableRegistry::get('Institution.InstitutionStudents');
-                            $supprtiveModel = TableRegistry::get('Institution.InstitutionClassStudents');
-                            $newEntity = $activeModel->save($tableEntity);
-                        }else{
-                            $newEntity = $activeModel->save($tableEntity); // Initial code
-                        }
+                        //     $tableEntity['student_status_id'] = 1;
+                        //     $tableEntity['start_year'] = $AcademicPeriodsData->start_year;
+                        //     $tableEntity['end_year'] = $AcademicPeriodsData->end_year;
+                        //     $activeModel = TableRegistry::get('Institution.InstitutionStudents');
+                        //     $supprtiveModel = TableRegistry::get('Institution.InstitutionClassStudents');
+                        //     $newEntity = $activeModel->save($tableEntity);
+                        // }else{
+                        //     $newEntity = $activeModel->save($tableEntity); // Initial code
+                        // }
                         //POCOR-9294[END]
+                        $newEntity = $activeModel->save($tableEntity);
                     } catch (Exception $e) {
                         $newEntity = false;
                         $message = $e->getMessage();
