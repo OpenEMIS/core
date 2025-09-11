@@ -13,7 +13,6 @@ use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Cake\Validation\Validator;
-
 use Directory\Model\Table\DirectoriesTable as UserTypeOption;
 
 class AuditsTable extends AppTable
@@ -49,8 +48,7 @@ class AuditsTable extends AppTable
                         return true;
                     }
                 ],
-            ]);
-
+            ])->notEmptyString('report_start_date', 'Start Date is required');
         return $validator;
     }
 
@@ -154,8 +152,6 @@ class AuditsTable extends AppTable
                     UserTypeOption::STAFF => __('Staff'),
                     UserTypeOption::GUARDIAN => __('Guardian')
                 ];
-        
-
                 $attr['options'] = $userTypeOptions;
                 $attr['type'] = 'select';
                 $attr['select'] = false;
@@ -233,7 +229,7 @@ class AuditsTable extends AppTable
             case 'academic_period_id':
                 return __('Academic Period');
             case 'report_start_date':
-                return __('Start Date');
+                return '<span style="color:#CC5C5C; margin-right:3px; margin-left:-9px;">*</span>' . __('Start Date'); //POCOR-9382
             case 'report_end_date':
                 return __('End Date');
             case 'sort_by':

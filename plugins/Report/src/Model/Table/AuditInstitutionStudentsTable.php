@@ -19,7 +19,7 @@ use Cake\I18n\FrozenDate;
 /**
  * POCOR-9382
  * Develop institution students audit report
- *  This table maps to `institution_students`. 
+ * This table maps to `institution_students`. 
  * Generate xlsx report
  * */
 
@@ -86,7 +86,7 @@ class AuditInstitutionStudentsTable extends AppTable
                 'student_name'           => 'Users.first_name',
                 'education_grade'   => 'EducationGrades.name',
                 $this->aliasField('start_date'),
-                 $this->aliasField('end_date'),
+                $this->aliasField('end_date'),
                 'start_year'        => $this->aliasField('start_year'),
                 'end_year'          => $this->aliasField('end_year'),
                 'modified_user'     => 'ModifiedUser.username',
