@@ -105,6 +105,8 @@ class RenderFileBehavior extends RenderBehavior
 
             if (!is_null($savedValue)) {
                 $attr['value'] = $savedValue;
+            }else{
+                $attr['value'] = '';
             }
 
             // Rely on session variable to show file name, if session has value, read from session
