@@ -1,7 +1,7 @@
 {
-  "name": "attendance-service",
+  "name": "exam-service",
   "version": "1.0.0",
-  "description": "A microservice to manage student attendance.",
+  "description": "A microservice to manage exams, questions, and results.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -9,7 +9,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "attendance",
+    "exam",
     "education",
     "microservice"
   ],

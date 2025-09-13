@@ -2,19 +2,19 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const attendanceRoutes = require('./src/routes/attendanceRoutes');
+const examRoutes = require('./src/routes/examRoutes');
 const logger = require('./src/services/loggingService');
 
 const app = express();
-const PORT = process.env.ATTENDANCE_SERVICE_PORT || 3002;
+const PORT = process.env.EXAM_SERVICE_PORT || 3003;
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Mount the attendance routes
-app.use('/api', attendanceRoutes);
+// Mount the exam routes
+app.use('/api', examRoutes);
 
 // A simple health check endpoint
 app.get('/health', (req, res) => {
@@ -32,8 +32,8 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Attendance Service listening on port ${PORT}`);
-    logger.info(`Attendance Service started on port ${PORT}`);
+    console.log(`Exam Service listening on port ${PORT}`);
+    logger.info(`Exam Service started on port ${PORT}`);
 });
 
 module.exports = app; // For testing

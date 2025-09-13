@@ -1,5 +1,4 @@
 const winston = require('winston');
-const path = require('path');
 const config = require('../../config/config');
 
 const { combine, timestamp, printf, colorize, align } = winston.format;
@@ -26,7 +25,7 @@ const logger = winston.createLogger({
                 logFormat
             ),
         }),
-        // File transport for all attendance logs
+        // File transport for all exam logs
         new winston.transports.File({
             filename: config.logging.logFile
         }),

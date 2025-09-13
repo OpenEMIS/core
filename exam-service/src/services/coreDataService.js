@@ -22,42 +22,36 @@ const initializeDb = async () => {
 };
 
 /**
- * Validates that a student and class exist in the core system's database.
+ * Validates that a student exists in the core system's database.
  * @param {string} studentId The ID of the student.
- * @param {string} classId The ID of the class.
- * @returns {Promise<boolean>} True if both exist, false otherwise.
+ * @returns {Promise<boolean>} True if the student exists, false otherwise.
  */
-const validateRecordWithDb = async (studentId, classId) => {
-    // For simplicity, we check for the student's existence.
-    // A full implementation would also check the class and the student's enrollment in that class.
+const studentExistsInDb = async (studentId) => {
     const query = 'SELECT id FROM students WHERE id = ?';
     try {
         const [rows] = await pool.query(query, [studentId]);
-        if (rows.length === 0) {
-            logger.warn(`Validation failed: Student with ID ${studentId} not found in core DB.`);
-            return false;
+        if (rows.length > 0) {
+            return true;
         }
-        return true;
+        logger.warn(`Validation failed: Student with ID ${studentId} not found in core DB.`);
+        return false;
     } catch (error) {
         logger.error(`DB validation error for studentId ${studentId}: ${error.message}`);
-        throw new Error('Failed to validate record against core database.');
+        throw new Error('Failed to validate student against core database.');
     }
 };
 
 /**
- * Validates that a student and class exist using the core system's API.
+ * Validates that a student exists using the core system's API.
  * @param {string} studentId The ID of the student.
- * @param {string} classId The ID of the class.
- * @returns {Promise<boolean>} True if both exist, false otherwise.
+ * @returns {Promise<boolean>} True if the student exists, false otherwise.
  */
-const validateRecordWithApi = async (studentId, classId) => {
+const studentExistsInApi = async (studentId) => {
     const url = `${apiConfig.baseUrl}students/${studentId}`;
     try {
         await axios.get(url, {
             headers: { 'Authorization': `Bearer ${apiConfig.apiKey}` }
         });
-        // If the request succeeds, the student exists.
-        // A full implementation would also check the class.
         return true;
     } catch (error) {
         if (error.response && error.response.status === 404) {
@@ -65,7 +59,7 @@ const validateRecordWithApi = async (studentId, classId) => {
             return false;
         }
         logger.error(`API validation error for studentId ${studentId}: ${error.message}`);
-        throw new Error('Failed to validate record against core API.');
+        throw new Error('Failed to validate student against core API.');
     }
 };
 
@@ -80,5 +74,5 @@ if (coreDataMode === 'db') {
 }
 
 module.exports = {
-    validateRecord: coreDataMode === 'db' ? validateRecordWithDb : validateRecordWithApi,
+    studentExists: coreDataMode === 'db' ? studentExistsInDb : studentExistsInApi,
 };
