@@ -1,7 +1,7 @@
 {
-  "name": "transcript-service",
+  "name": "attendance-service",
   "version": "1.0.0",
-  "description": "A microservice to generate student transcripts.",
+  "description": "A microservice to manage student attendance.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -9,7 +9,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "transcript",
+    "attendance",
     "education",
     "microservice"
   ],
@@ -22,7 +22,6 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "mysql2": "^3.10.0",
-    "pdfkit": "^0.15.0",
     "winston": "^3.13.0"
   },
   "devDependencies": {
