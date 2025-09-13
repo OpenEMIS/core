@@ -2,18 +2,18 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const notificationRoutes = require('./src/routes/notificationRoutes');
+const analysisRoutes = require('./src/routes/analysisRoutes');
 const logger = require('./src/services/loggingService');
 
 const app = express();
-const PORT = process.env.NOTIFICATION_SERVICE_PORT || 3004;
+const PORT = process.env.AI_SERVICE_PORT || 3005;
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// Mount the notification routes
-app.use('/api', notificationRoutes);
+// Mount the analysis routes
+app.use('/api', analysisRoutes);
 
 // A simple health check endpoint
 app.get('/health', (req, res) => {
@@ -31,8 +31,8 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Notifications Service listening on port ${PORT}`);
-    logger.info(`Notifications Service started on port ${PORT}`);
+    console.log(`AI Service listening on port ${PORT}`);
+    logger.info(`AI Service started on port ${PORT}`);
 });
 
 module.exports = app; // For testing

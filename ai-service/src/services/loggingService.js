@@ -25,7 +25,7 @@ const logger = winston.createLogger({
                 logFormat
             ),
         }),
-        // File transport for all notification logs
+        // File transport for all AI service logs
         new winston.transports.File({
             filename: config.logging.logFile
         }),
