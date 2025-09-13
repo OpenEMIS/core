@@ -1,0 +1,31 @@
+{
+  "name": "transcript-service",
+  "version": "1.0.0",
+  "description": "A microservice to generate student transcripts.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "transcript",
+    "education",
+    "microservice"
+  ],
+  "author": "Jules",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mysql2": "^3.10.0",
+    "pdfkit": "^0.15.0",
+    "winston": "^3.13.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.2"
+  }
+}
