@@ -1,70 +1,88 @@
 const coreDataService = require('../services/coreDataService');
 const pdfService = require('../services/pdfService');
-const logger = require('../services/loggingService');
+const logReaderService = require('../services/logReaderService');
+const { logger, logTranscriptEvent } = require('../services/loggingService');
 
 /**
- * Handles the request to get a student's transcript.
- *
- * This function orchestrates the process:
- * 1. Extracts student ID and desired format from the request.
- * 2. Calls the `coreDataService` to fetch the student's academic records.
- * 3. If the student is not found, it returns a 404 error.
- * 4. Based on the 'format' query parameter ('json' or 'pdf'), it either:
- *    a) Sends the data back as a JSON response.
- *    b) Calls the `pdfService` to generate and stream a PDF document.
- * 5. Logs the outcome of the request.
- *
- * @param {object} req - The Express request object, containing params and query.
- * @param {object} res - The Express response object, used to send the response.
+ * Controller for handling transcript-related API requests.
  */
-const getTranscript = async (req, res) => {
-  const { studentId } = req.params;
-  // The desired output format can be specified via a query param, e.g., /transcripts/123?format=pdf
-  const { format = 'json' } = req.query;
 
-  logger.info(`Processing transcript request for student ID: ${studentId} [format: ${format}]`);
+/**
+ * Handles the request to get a student's transcript by their ID.
+ * It validates the request, fetches data, and returns it in the specified format (JSON or PDF).
+ * All outcomes (success, not found, error) are logged.
+ * @param {object} req - The Express request object.
+ * @param {object} res - The Express response object.
+ */
+const getTranscriptById = async (req, res) => {
+  const { studentId } = req.params;
+  const format = (req.query.format || 'json').toLowerCase();
+
+  // 1. Validate the 'format' query parameter.
+  if (format !== 'json' && format !== 'pdf') {
+    logger.warn(`Invalid format requested: ${format}`);
+    return res.status(400).json({
+      success: false,
+      message: "Invalid format specified. Please use 'json' or 'pdf'.",
+    });
+  }
 
   try {
-    // 1. Fetch the student data from the core system.
+    // 2. Fetch data from the core system.
     const studentData = await coreDataService.getStudentData(studentId);
 
-    // 2. Handle the case where the student is not found.
+    // 3. Handle case where student is not found.
     if (!studentData) {
-      logger.warn(`No data found for student ID: ${studentId}.`);
+      logTranscriptEvent({ studentId, format, status: 'NOT_FOUND' });
       return res.status(404).json({
         success: false,
         message: `Student with ID ${studentId} not found.`,
       });
     }
 
-    // 3. Generate the response based on the requested format.
-    if (format.toLowerCase() === 'pdf') {
-      // For PDF, set appropriate headers for file download.
+    // 4. Generate and return the response based on the format.
+    if (format === 'pdf') {
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="transcript-${studentId}.pdf"`);
-
-      // The pdfService will stream the PDF directly to the HTTP response stream.
       pdfService.generateTranscriptPdf(studentData, res);
-
-      logger.info(`Successfully streamed PDF transcript for student ID: ${studentId}.`);
     } else {
-      // For JSON, send the data with a 200 OK status.
-      res.status(200).json({
-        success: true,
-        data: studentData,
-      });
-      logger.info(`Successfully sent JSON transcript for student ID: ${studentId}.`);
+      res.status(200).json({ success: true, data: studentData });
     }
+
+    // 5. Log the successful event.
+    logTranscriptEvent({ studentId, format, status: 'SUCCESS' });
+
   } catch (error) {
-    logger.error(`Error processing transcript for student ID ${studentId}:`, error);
-    // Send a generic error response to the client.
+    // 6. Handle any unexpected server errors.
+    logger.error(`An unexpected error occurred while processing transcript for student ID ${studentId}:`, error);
+    logTranscriptEvent({ studentId, format, status: 'ERROR', message: error.message });
     res.status(500).json({
       success: false,
-      message: 'An internal server error occurred while generating the transcript.',
+      message: 'An internal server error occurred.',
+    });
+  }
+};
+
+/**
+ * Handles the request to get all transcript generation logs.
+ * It retrieves the logs from the log reader service and returns them as a JSON array.
+ * @param {object} req - The Express request object.
+ * @param {object} res - The Express response object.
+ */
+const getLogs = async (req, res) => {
+  try {
+    const logs = await logReaderService.getTranscriptLogs();
+    res.status(200).json({ success: true, count: logs.length, logs });
+  } catch (error) {
+    logger.error('Failed to retrieve transcript logs:', error);
+    res.status(500).json({
+      success: false,
+      message: 'An internal server error occurred while retrieving logs.',
     });
   }
 };
 
 module.exports = {
-  getTranscript,
+  getTranscriptById,
+  getLogs,
 };

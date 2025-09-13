@@ -1,7 +1,7 @@
 {
   "name": "transcript-service",
   "version": "1.0.0",
-  "description": "A microservice to generate student transcripts.",
+  "description": "An enhanced microservice to generate and manage student transcripts.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -11,7 +11,8 @@
     "transcript",
     "microservice",
     "node.js",
-    "express"
+    "express",
+    "education"
   ],
   "author": "Jules",
   "license": "ISC",
@@ -21,6 +22,7 @@
     "express": "^4.19.2",
     "mysql2": "^3.10.0",
     "pdfkit": "^0.15.0",
-    "winston": "^3.13.0"
+    "winston": "^3.13.0",
+    "winston-daily-rotate-file": "^5.0.0"
   }
 }

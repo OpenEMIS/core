@@ -1,47 +1,51 @@
 const dotenv = require('dotenv');
+const path = require('path');
 
-/**
- * Load environment variables from a .env file in the project root.
- * By default, `dotenv.config()` will look for a .env file in the current
- * working directory, which is exactly what we want when the user runs
- * `npm start` from the `transcript-service` directory.
- */
+// Load environment variables from the .env file in the project root.
 dotenv.config();
 
 /**
- * Application configuration object.
- * It reads values from environment variables, providing defaults for some.
- * This centralization of configuration makes the application easier to manage.
+ * Application configuration module.
+ *
+ * This module reads environment variables from the .env file,
+ * provides default values for some settings, and exports a
+ * configuration object for use throughout the application.
+ * This centralizes configuration and keeps sensitive data
+ * out of the codebase.
  */
 const config = {
   // The port the server will listen on.
   port: process.env.PORT || 3000,
 
-  // The method for connecting to the core system.
-  // Valid options are 'DB' (direct database connection) or 'API' (REST API).
+  // The method for connecting to the core system ('DB' or 'API').
   connectionMode: process.env.CONNECTION_MODE || 'DB',
 
-  // Configuration for the direct database connection.
-  // These values are only used if connectionMode is 'DB'.
+  // Database connection details.
   database: {
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    name: process.env.DB_NAME,
+    host: process.env.CORE_DB_HOST,
+    user: process.env.CORE_DB_USER,
+    password: process.env.CORE_DB_PASSWORD,
+    name: process.env.CORE_DB_NAME,
+    port: process.env.CORE_DB_PORT || 3306,
   },
 
-  // Configuration for the core system's REST API.
-  // These values are only used if connectionMode is 'API'.
+  // Core system API details.
   api: {
-    baseUrl: process.env.CORE_API_BASE_URL,
+    baseUrl: process.env.CORE_API_URL,
     apiKey: process.env.CORE_API_KEY,
   },
 
-  // Configuration for the logger.
+  // Logging configuration.
   logging: {
     level: process.env.LOG_LEVEL || 'info',
   },
+
+  /**
+   * The absolute path to the directory for output files (e.g., logs).
+   * It resolves the path relative to the project's root directory
+   * to prevent issues with where the start script is called from.
+   */
+  outputDir: path.resolve(process.cwd(), process.env.OUTPUT_DIR || 'output'),
 };
 
 module.exports = config;

@@ -1,5 +1,5 @@
 const PDFDocument = require('pdfkit');
-const logger = require('./loggingService');
+const { logger } = require('./loggingService');
 
 /**
  * Generates a professional-looking transcript PDF from student data.
@@ -19,7 +19,7 @@ const generateTranscriptPdf = (data, stream) => {
       },
     });
 
-    // Pipe the PDF document to the provided stream.
+    // Pipe the PDF document to the provided writable stream.
     doc.pipe(stream);
 
     // --- Document Header ---
@@ -29,7 +29,7 @@ const generateTranscriptPdf = (data, stream) => {
 
     // --- Student Information Section ---
     doc.font('Helvetica-Bold').fontSize(12).text('Student Information');
-    doc.rect(doc.x, doc.y, 500, 1).stroke(); // Underline
+    doc.rect(doc.x, doc.y, 500, 0.5).stroke(); // Underline
     doc.moveDown(0.5);
     doc.font('Helvetica').fontSize(10)
       .text(`Name: ${data.studentInfo.studentName || 'N/A'}`)
@@ -38,7 +38,7 @@ const generateTranscriptPdf = (data, stream) => {
 
     // --- Academic Record Section ---
     doc.font('Helvetica-Bold').fontSize(12).text('Academic Record');
-    doc.rect(doc.x, doc.y, 500, 1).stroke(); // Underline
+    doc.rect(doc.x, doc.y, 500, 0.5).stroke(); // Underline
     doc.moveDown(0.5);
 
     // --- Grades Table ---
@@ -61,19 +61,23 @@ const generateTranscriptPdf = (data, stream) => {
 
     // Table Rows
     doc.font('Helvetica');
-    data.grades.forEach(grade => {
-      const rowY = doc.y;
-      doc.text(grade.courseName, positions.course, rowY, { width: colWidths.course - 10 });
-      doc.text(grade.grade, positions.grade, rowY, { width: colWidths.grade, align: 'center' });
-      doc.text(grade.credits.toString(), positions.credits, rowY, { width: colWidths.credits, align: 'center' });
-      doc.moveDown(0.5);
-    });
+    if (data.grades && data.grades.length > 0) {
+      data.grades.forEach(grade => {
+        const rowY = doc.y;
+        doc.text(grade.courseName, positions.course, rowY, { width: colWidths.course - 10 });
+        doc.text(grade.grade, positions.grade, rowY, { width: colWidths.grade, align: 'center' });
+        doc.text((grade.credits || '0').toString(), positions.credits, rowY, { width: colWidths.credits, align: 'center' });
+        doc.moveDown(0.5);
+      });
+    } else {
+      doc.text('No grade information available.', { align: 'center' });
+    }
     doc.moveDown(1);
 
     // --- Summary Section ---
     doc.font('Helvetica-Bold').fontSize(11)
-      .text(`Total Credits Earned: ${data.summary.totalCredits}`, { align: 'right' })
-      .text(`Cumulative GPA: ${data.summary.gpa}`, { align: 'right' });
+      .text(`Total Credits Earned: ${data.summary.totalCredits || '0'}`, { align: 'right' })
+      .text(`Cumulative GPA: ${data.summary.gpa || 'N/A'}`, { align: 'right' });
     doc.moveDown(4);
 
     // --- Footer ---
@@ -85,12 +89,10 @@ const generateTranscriptPdf = (data, stream) => {
     // Finalize the PDF. This is important to end the stream correctly.
     doc.end();
 
-    logger.info(`Successfully initiated PDF generation for student ID: ${data.studentInfo.id}`);
-
   } catch (error) {
-    logger.error(`Failed to generate PDF for student ID ${data.studentInfo.id}:`, error);
+    logger.error(`Failed to generate PDF for student ID ${data.studentInfo.id}:`, { error: error.toString(), stack: error.stack });
     // If an error occurs and the stream is still open, end it to prevent hanging.
-    if (!stream.writableEnded) {
+    if (stream && !stream.writableEnded) {
       stream.end('An error occurred while generating the PDF.');
     }
   }

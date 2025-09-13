@@ -1,7 +1,7 @@
 const mysql = require('mysql2/promise');
 const axios = require('axios');
 const config = require('../../config/config');
-const logger = require('./loggingService');
+const { logger } = require('./loggingService');
 
 // --- Database Connection (Singleton Pool) ---
 
@@ -9,8 +9,7 @@ let dbPool;
 
 /**
  * Initializes and returns a singleton MySQL connection pool.
- * This prevents creating a new connection for every request, which is more efficient.
- * The connection details are read from the central configuration.
+ * This is more efficient than creating a new connection for every request.
  * @returns {object} The MySQL connection pool.
  */
 const getDbPool = () => {
@@ -24,13 +23,14 @@ const getDbPool = () => {
         database: config.database.name,
         port: config.database.port,
         waitForConnections: true,
-        connectionLimit: 10, // Max number of connections in the pool
-        queueLimit: 0, // No limit on the number of queued connection requests
+        connectionLimit: 10,
+        queueLimit: 0,
       });
       logger.info('Database pool initialized successfully.');
     } catch (error) {
       logger.error('Failed to initialize database pool:', error);
-      throw error; // Re-throw to prevent the application from running with a bad DB config
+      // If the pool can't be created, the application can't function in DB mode.
+      throw new Error('Database configuration error.');
     }
   }
   return dbPool;
@@ -40,7 +40,7 @@ const getDbPool = () => {
 
 /**
  * Fetches student transcript data directly from the core database.
- * NOTE: These queries are examples and MUST be adapted to your actual database schema.
+ * IMPORTANT: These queries are examples and MUST be adapted to your actual database schema.
  * @param {string} studentId - The ID of the student.
  * @returns {Promise<object|null>} The student's data or null if not found.
  */
@@ -48,8 +48,7 @@ const getStudentDataFromDb = async (studentId) => {
   logger.debug(`Querying database for student ID: ${studentId}`);
   const pool = getDbPool();
 
-  // IMPORTANT: The table and column names (e.g., 'students', 'grades', 'courses')
-  // are assumptions. You must update these queries to match your schema.
+  // The table and column names (e.g., 'students', 'grades', 'courses') are assumptions.
   const [studentRows] = await pool.query('SELECT id, name as studentName, student_id as studentIdentifier FROM students WHERE id = ?', [studentId]);
   if (studentRows.length === 0) {
     return null;
@@ -62,7 +61,7 @@ const getStudentDataFromDb = async (studentId) => {
 
   // In a real scenario, you would calculate GPA and other summary statistics here.
   const summary = {
-    totalCredits: gradeRows.reduce((acc, row) => acc + row.credits, 0),
+    totalCredits: gradeRows.reduce((acc, row) => acc + (row.credits || 0), 0),
     gpa: 'N/A', // Placeholder for GPA calculation
   };
 
@@ -89,7 +88,6 @@ const getStudentDataFromApi = async (studentId) => {
       headers: { 'X-API-Key': config.api.apiKey },
       timeout: 5000, // 5-second timeout
     });
-    // Assuming the API returns data in the exact structure needed by the other services.
     return response.data;
   } catch (error) {
     if (error.response && error.response.status === 404) {
@@ -97,7 +95,6 @@ const getStudentDataFromApi = async (studentId) => {
       return null;
     }
     logger.error('Error fetching data from core API:', error.message);
-    // Re-throw a more generic error to avoid leaking implementation details.
     throw new Error('An error occurred while communicating with the core API.');
   }
 };
@@ -113,12 +110,8 @@ const getStudentDataFromApi = async (studentId) => {
  */
 const getStudentData = async (studentId) => {
   if (config.connectionMode.toUpperCase() === 'API') {
-    logger.info('Fetching data via API mode.');
     return getStudentDataFromApi(studentId);
   }
-
-  // Default to DB connection
-  logger.info('Fetching data via DB mode.');
   return getStudentDataFromDb(studentId);
 };
 
