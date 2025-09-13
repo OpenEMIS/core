@@ -25,7 +25,7 @@ const logger = winston.createLogger({
                 logFormat
             ),
         }),
-        // File transport for all exam logs
+        // File transport for all notification logs
         new winston.transports.File({
             filename: config.logging.logFile
         }),

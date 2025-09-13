@@ -1,7 +1,7 @@
 {
-  "name": "exam-service",
+  "name": "notifications-service",
   "version": "1.0.0",
-  "description": "A microservice to manage exams, questions, and results.",
+  "description": "A microservice to handle sending notifications like email and SMS.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -9,8 +9,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "exam",
-    "education",
+    "notifications",
+    "email",
+    "sms",
     "microservice"
   ],
   "author": "Jules",
@@ -22,6 +23,8 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "mysql2": "^3.10.0",
+    "nodemailer": "^6.9.13",
+    "twilio": "^5.1.0",
     "winston": "^3.13.0"
   },
   "devDependencies": {
