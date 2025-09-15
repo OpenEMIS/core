@@ -162,6 +162,8 @@ class ReportCardGpaTable extends ControllerActionTable
         $InstitutionGrades = self::getDynamicTableInstance('Institution.InstitutionGrades');
         $UsersTable = self::getDynamicTableInstance('Security.Users');
         $GpaTable = self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
+        $InstitutionStudents = self::getDynamicTableInstance('Institution.InstitutionStudents'); //POCOR-9389
+        $EducationGradesGpa = self::getDynamicTableInstance('Gpa.EducationGradesGpa'); //POCOR-9389
 
         // Academic Period filter dropdown
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -234,6 +236,8 @@ class ReportCardGpaTable extends ControllerActionTable
             $this->aliasField('academic_period_id') => $academicPeriodId,
             $this->aliasField('education_grade_id') => $educationGradeId,
             $this->aliasField('student_status_id NOT IN') => 3,
+            $InstitutionStudents->aliasField('start_date') . ' <= ' . $EducationGradesGpa->aliasField('start_date'), //POCOR-9389
+            $InstitutionStudents->aliasField('start_date') . ' <= ' . $EducationGradesGpa->aliasField('end_date') // POCOR-9389
         ];
 
         if ($institutionClassId !== 'all' && $institutionClassId > 0) {
@@ -247,7 +251,6 @@ class ReportCardGpaTable extends ControllerActionTable
         if ($gpaId > 0) {
             $leftJoin[] = $GpaTable->aliasField('education_grades_gpa_id') . ' = ' . $gpaId;
         }
-
 
         // Final query build
         $query
@@ -274,6 +277,12 @@ class ReportCardGpaTable extends ControllerActionTable
                 [$GpaTable->getAlias() => $GpaTable->getTable()],
                 $leftJoin
             )
+            //POCOR-9389[START]
+            ->leftJoin([$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],
+                    [$InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id')])
+            ->leftJoin([$EducationGradesGpa->getAlias() => $EducationGradesGpa->getTable()],
+                    [$EducationGradesGpa->aliasField('id = ') . $gpaId])
+            //POCOR-9389[END]
             ->where($where)
             ->group([$this->aliasField('student_id'),
                 $GpaTable->aliasField('education_grades_gpa_id')
