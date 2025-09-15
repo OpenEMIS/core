@@ -236,8 +236,7 @@ class ReportCardGpaTable extends ControllerActionTable
             $this->aliasField('academic_period_id') => $academicPeriodId,
             $this->aliasField('education_grade_id') => $educationGradeId,
             $this->aliasField('student_status_id NOT IN') => 3,
-            $InstitutionStudents->aliasField('start_date') . ' <= ' . $EducationGradesGpa->aliasField('start_date'), //POCOR-9389
-            $InstitutionStudents->aliasField('start_date') . ' <= ' . $EducationGradesGpa->aliasField('end_date') // POCOR-9389
+            $InstitutionStudents->aliasField('start_date') . ' <= ' . $EducationGradesGpa->aliasField('start_date') //POCOR-9389
         ];
 
         if ($institutionClassId !== 'all' && $institutionClassId > 0) {
