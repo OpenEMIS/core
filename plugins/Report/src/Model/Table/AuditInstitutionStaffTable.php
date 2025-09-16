@@ -75,6 +75,12 @@ class AuditInstitutionStaffTable extends AppTable
                 'institution_code'   => 'Institutions.code',
                 'institution_name'   => 'Institutions.name',
                 'openemis_no'      => 'Users.openemis_no',
+                'staff_name'      => $query->func()->concat([
+                                                'Users.first_name' => 'literal',
+                                                ' ',
+                                                'Users.last_name'  => 'literal'
+                                            ])
+                                        ]),
                 'staff_status'       => 'StaffStatuses.name',
                 'staff_type'         => 'StaffTypes.name',
                 'institution_position' => 'Positions.position_no',
