@@ -76,11 +76,10 @@ class AuditInstitutionStaffTable extends AppTable
                 'institution_name'   => 'Institutions.name',
                 'openemis_no'      => 'Users.openemis_no',
                 'staff_name'      => $query->func()->concat([
-                                                'Users.first_name' => 'literal',
-                                                ' ',
-                                                'Users.last_name'  => 'literal'
-                                            ])
-                                        ]),
+                    'Users.first_name' => 'literal',
+                    " ",
+                    'Users.last_name' => 'literal'
+                ]),
                 'staff_status'       => 'StaffStatuses.name',
                 'staff_type'         => 'StaffTypes.name',
                 'institution_position' => 'Positions.position_no',
@@ -108,12 +107,8 @@ class AuditInstitutionStaffTable extends AppTable
                 'SecurityGroupUsers.SecurityGroups',
                 'ModifiedUser',
                 'CreatedUser'
-            ]);
-            //->where($where);
-           // ->group($this->aliasField('staff_id'))
-         //   ->order(['Institutions.code' => 'ASC']);
-         //   echo "<pre>"; print_r($query->toArray());die;
-        
+            ])
+            ->order(['Institutions.name' => 'ASC']);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -131,7 +126,13 @@ class AuditInstitutionStaffTable extends AppTable
             'type' => 'string',
             'label' => __('Institution Name')
         ];
-         $newFields[] = [
+        $newFields[] = [
+            'key' => 'staff_name',
+            'field' => 'staff_name',
+            'type' => 'string',
+            'label' => __('Staff Name')
+        ];
+        $newFields[] = [
             'key' => 'openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
