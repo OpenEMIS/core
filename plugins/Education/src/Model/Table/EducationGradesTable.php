@@ -1114,6 +1114,7 @@ class EducationGradesTable extends ControllerActionTable
         return $locator->get($tableFullAlias);
     }
 
+    // POCOR-9397 start
     public static function decodeMaybeB64Url(string $v): string {
         if (strncmp($v, 'b64.', 4) !== 0) return $v;
         $payload = substr($v, 4);
@@ -1126,14 +1127,16 @@ class EducationGradesTable extends ControllerActionTable
         if (!mb_check_encoding($decoded, 'UTF-8')) return $v;
         return $decoded;
     }
+    // POCOR-9397 end
+
     public function findRepeaterEducationGradeAddStudent(Query $query, array $options)
     {
         $validation = 'no';
         echo json_encode($validation);die;
         $educationGradeId = $options['education_grade_id'];
         $openemis_no = $options['openemis_no'];
-        $first_name = self::decodeMaybeB64Url($options['first_name']);
-        $last_name = self::decodeMaybeB64Url($options['last_name']);
+        $first_name = self::decodeMaybeB64Url($options['first_name']); // POCOR-9397
+        $last_name = self::decodeMaybeB64Url($options['last_name']); // POCOR-9397
         if(!$educationGradeId){
             $validation = 'no';
             echo json_encode($validation);die;
