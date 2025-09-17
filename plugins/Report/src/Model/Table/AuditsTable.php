@@ -43,7 +43,7 @@ class AuditsTable extends AppTable
                                 'Report.AuditUsers',
                                 'Report.AuditSecuritiesRolesPermissions', // POCOR-499
                                 'Report.AuditSecuritiesGroupUserRoles', // POCOR-499
-                                 'Report.AuditDeletedRecords' //POCOR-9381
+                                'Report.AuditDeletedRecords' //POCOR-9381
                             ]);         
                         }
                         return true;
@@ -108,14 +108,14 @@ class AuditsTable extends AppTable
                     $fieldsOrder[] = 'report_start_date';
                     $fieldsOrder[] = 'report_end_date';
                     $fieldsOrder[] = 'format';
-                    break;
+                    break; //END POCOR-499
                 case 'Report.AuditDeletedRecords':  //POCOR-9381
                     $fieldsOrder[] = 'reference_table';
                     $fieldsOrder[] = 'report_start_date';
                     $fieldsOrder[] = 'report_end_date';
                     $fieldsOrder[] = 'format';
                     break;
-                // End POCOR-499
+                // End POCOR-9381
                 default:
                     break;
             }

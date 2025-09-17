@@ -151,11 +151,6 @@ class AuditDeletedRecordsTable extends AppTable
             return $this->formatDate($entity->end_date);
         }
     }
-    public function onExcelGetModified(Event $event, Entity $entity) {
-        if (!empty($entity->modified)) {
-            return $this->formatDate($entity->modified);
-        }
-    }
     public function onExcelGetCreated(Event $event, Entity $entity) {
         if (!empty($entity->created)) {
             return $this->formatDate($entity->created);
