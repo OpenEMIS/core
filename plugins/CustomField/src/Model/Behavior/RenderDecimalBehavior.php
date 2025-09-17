@@ -47,6 +47,8 @@ class RenderDecimalBehavior extends RenderBehavior
             $options['type'] = 'number';
             if (!is_null($savedValue)) {
                 $options['value'] = $savedValue;
+            }else{
+                $options['value'] = '';
             }
 
             // set the options
