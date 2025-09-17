@@ -206,10 +206,10 @@ function InstitutionStudentAttendancesController(
                     );
                 }, vm.error)
                 .then(function (attendanceType) {
-                    console.log(
-                        "attendanceType",
-                        vm.isMarkableSubjectAttendance
-                    );
+                    // console.log(
+                    //     "attendanceType",
+                    //     vm.isMarkableSubjectAttendance
+                    // );
                     vm.isMarkableSubjectAttendance = attendanceType;
                     return InstitutionStudentAttendancesSvc.getSubjectOptions(
                         vm.institutionId,
@@ -253,11 +253,11 @@ function InstitutionStudentAttendancesController(
                 .then(function (isMarkable) {
                     vm.isMarkableAttendance = isMarkable; // Store the resolved value
                     vm.updateAttendanceByList();
-                    console.log(
-                        "Final isMarkableAttendance:",
-                        vm.isMarkableAttendance
-                    );
-    
+                    // console.log(
+                    //     "Final isMarkableAttendance:",
+                    //     vm.isMarkableAttendance
+                    // );
+
                     return InstitutionStudentAttendancesSvc.getIsMarked(
                         vm.getIsMarkedParams()
                     );
@@ -326,8 +326,8 @@ function InstitutionStudentAttendancesController(
     // vm.gridOptions.context.attendance_by = vm.selectedAttendanceBy;
     // console.log("attendanceByOptions:", vm.attendanceByOptions);
     vm.updateAttendanceByList = function () {
-        console.log("is markable", vm.isMarkableAttendance);
-        console.log("is markable sub", vm.isMarkableSubjectAttendance);
+        // console.log("is markable", vm.isMarkableAttendance);
+        // console.log("is markable sub", vm.isMarkableSubjectAttendance);
 
 
         vm.attendanceByOptions = [
@@ -344,10 +344,10 @@ function InstitutionStudentAttendancesController(
         } else {
             vm.selectedAttendanceBy = vm.attendanceByOptions[1].id; // Default selection
         }
-        console.log("selected attendance by",vm.selectedAttendanceBy);
+        // console.log("selected attendance by",vm.selectedAttendanceBy);
 
         vm.gridOptions.context.attendance_by = vm.selectedAttendanceBy;
-        console.log("attendanceByOptions1:", vm.attendanceByOptions);
+        // console.log("attendanceByOptions1:", vm.attendanceByOptions);
     };
     //POCOR- 8874 ends
 
@@ -453,7 +453,7 @@ function InstitutionStudentAttendancesController(
     };
 
     /*vm.isMarkableSubjectAttendance = function(selectedClass) {
-        return 
+        return
         {attendanceTypeCode: InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(selectedClass)};
     }*/
 
@@ -1059,10 +1059,10 @@ function InstitutionStudentAttendancesController(
             .then(function (isMarkable) {
                 vm.isMarkableAttendance = isMarkable; // Store the resolved value
                 vm.updateAttendanceByList();
-                console.log(
-                    "Final isMarkableAttendance:",
-                    vm.isMarkableAttendance
-                );
+                // console.log(
+                //     "Final isMarkableAttendance:",
+                //     vm.isMarkableAttendance
+                // );
 
                 // Continue with getSubjectOptions
                 return InstitutionStudentAttendancesSvc.getSubjectOptions(
@@ -1229,11 +1229,14 @@ function InstitutionStudentAttendancesController(
             }, vm.error)
             .then(function (isMarked) {
                 vm.updateIsMarked(isMarked);
+                var params = vm.getClassStudentParams();
+                // console.log(params);
                 return InstitutionStudentAttendancesSvc.getClassStudent(
-                    vm.getClassStudentParams()
+                    params
                 );
             }, vm.error)
             .then(function (classStudents) {
+                // console.log(classStudents);
                 vm.updateClassStudentList(classStudents);
             }, vm.error)
             .finally(function () {
@@ -1292,7 +1295,7 @@ function InstitutionStudentAttendancesController(
     //POCOR-8874 start
     vm.changeAttendanceBy = function () {
         UtilsSvc.isAppendLoader(true);
-        console.log("selected", vm.selectedAttendanceBy);
+        // console.log("selected", vm.selectedAttendanceBy);
         vm.gridOptions.context.attendance_by = vm.selectedAttendanceBy;
         if (vm.superAdmin == 0) {
             vm.updateClassRoles(vm.selectedClass);
@@ -1363,8 +1366,8 @@ function InstitutionStudentAttendancesController(
                 } else {
                     vm.selectedSubject = "";
                 }
-                console.log("attendancePeriod", vm.selectedAttendancePeriod);
-                console.log("subjectlist", vm.selectedSubject);
+                // console.log("attendancePeriod", vm.selectedAttendancePeriod);
+                // console.log("subjectlist", vm.selectedSubject);
                 vm.setGridData();
                 vm.setColumnDef();
                 UtilsSvc.isAppendLoader(false);
