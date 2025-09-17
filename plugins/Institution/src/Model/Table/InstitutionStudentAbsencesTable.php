@@ -284,6 +284,8 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
     private function addInstitutionStudentAbsenceDayRecord($entity, $startDate, $endDate)
     {
+        $startDate = $startDate->setTime(0,0,0); // POCOR-9392
+        $endDate   = $endDate->setTime(0,0,0); // POCOR-9392
         $entityStart = clone $startDate;
         $entityStart->subDay(1);
         $entityEnd = clone $endDate;
@@ -351,22 +353,38 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 $i = 0;
                 $s = clone $startDate;
                 $daysAbsent = 0;
-                do {
-                    if (!in_array($s->format('l'), $days)) {
-                        $daysAbsent++;
-                    }
-                    $s->addDay(1);
-                    if ($i++ == 7) {
-                        break;
-                    }
-                } while ($s->lte($endDate));
+                // POCOR-9392 start
+// safety: if inputs are reversed or null, bail early
+                if (!$startDate || !$endDate || $startDate->gt($endDate)) {
+                    $daysAbsent = 0;
+                } else {
+                    $s = clone $startDate;
+                    $end = clone $endDate;
+
+                    // optional: normalize to midnight to avoid time-of-day off-by-one
+                    // $s = $s->setTime(0,0,0);
+                    // $end = $end->setTime(0,0,0);
+
+                    // optional: hard cap based on range length to prevent accidental infinite loops
+                    $maxSteps = $s->diffInDays($end) + 2; // inclusive range + small buffer
+                    $steps = 0;
+
+                    do {
+                        if (!in_array($s->format('l'), $days, true)) {
+                            $daysAbsent++;
+                        }
+                        $s = $s->addDay(1);   // ← REASSIGN for immutable dates
+                        if (++$steps > $maxSteps) { break; } // safety fuse
+                    } while ($s->lte($end));
+                }
+                // POCOR-9392 end
                 $dayEntity = $InstitutionStudentAbsenceDays->newEntity([
-                    'student_id' => $entity->student_id,
-                    'institution_id' => $entity->institution_id,
+                    'student_id'      => $entity->student_id,
+                    'institution_id'  => $entity->institution_id,
                     'absence_type_id' => $entity->absence_type_id,
-                    'absent_days' => $daysAbsent,
-                    'start_date' => $startDate,
-                    'end_date' => $endDate
+                    'absent_days'     => $daysAbsent,
+                    'start_date'      => $startDate,
+                    'end_date'        => $endDate
                 ]);
 
                 $dayEntity = $InstitutionStudentAbsenceDays->save($dayEntity);
@@ -377,7 +395,9 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 $i = 0;
                 $recordEntity = $consecutiveRecords->first();
                 $recordStartDate = $recordEntity->start_date;
+                $recordStartDate   = $recordStartDate->setTime(0,0,0); // POCOR-9392
                 $recordEndDate = $recordEntity->end_date;
+                $recordEndDate   = $recordEndDate->setTime(0,0,0); // POCOR-9392
 
                 if ($startDate->lt($recordStartDate)) {
                     $recordStartDate = $startDate;
@@ -442,11 +462,15 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 //     'end_date' => $recordEndDate
                 // ]);
                 // $dayEntity = $InstitutionStudentAbsenceDays->save($dayEntity);
-                $InstitutionStudentAbsenceDays->updateAll(['absence_type_id' => $entity->absence_type_id], ['student_id' => $entity->student_id, 'institution_id'=>$entity->institution_id, 'start_date'=>$startDate, 'end_date'=>$endDate]);
+                $InstitutionStudentAbsenceDays->updateAll(['absence_type_id' => $entity->absence_type_id],
+                    ['student_id' => $entity->student_id,
+                        'institution_id'=>$entity->institution_id,
+                        'start_date'=>$startDate,
+                        'end_date'=>$endDate]);
 
                 //POCOR-7035[END]
-                $this->updateAll(['institution_student_absence_day_id' => $dayEntity->id], ['institution_student_absence_day_id IN ' => $recordsId]);
-                $this->updateAll(['institution_student_absence_day_id' => $dayEntity->id], ['id' => $entity->id]);
+//                $this->updateAll(['institution_student_absence_day_id' => $dayEntity->id], ['institution_student_absence_day_id IN ' => $recordsId]); // POCOR-9392 no day entity
+//                $this->updateAll(['institution_student_absence_day_id' => $dayEntity->id], ['id' => $entity->id]); // POCOR-9392 no day entity
                 break;
         }
     }
