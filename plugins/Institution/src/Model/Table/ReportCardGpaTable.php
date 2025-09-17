@@ -235,9 +235,9 @@ class ReportCardGpaTable extends ControllerActionTable
             $this->aliasField('institution_id') => $institutionId,
             $this->aliasField('academic_period_id') => $academicPeriodId,
             $this->aliasField('education_grade_id') => $educationGradeId,
-            $this->aliasField('student_status_id NOT IN') => 3,
-            $InstitutionStudents->aliasField('start_date') . ' <= ' . $EducationGradesGpa->aliasField('start_date') //POCOR-9389
+            $this->aliasField('student_status_id NOT IN') => 3
         ];
+
 
         if ($institutionClassId !== 'all' && $institutionClassId > 0) {
             $where[$this->aliasField('institution_class_id IS')] = $institutionClassId;
@@ -249,6 +249,15 @@ class ReportCardGpaTable extends ControllerActionTable
         ];
         if ($gpaId > 0) {
             $leftJoin[] = $GpaTable->aliasField('education_grades_gpa_id') . ' = ' . $gpaId;
+        }
+        if($gpaId > 0){
+            $orWhere = function ($exp) use ($InstitutionStudents, $EducationGradesGpa) {
+                return $exp->or_([
+                    $InstitutionStudents->aliasField('start_date') . ' <= ' . $EducationGradesGpa->aliasField('start_date'),
+                    $InstitutionStudents->aliasField('start_date') . ' <= ' . $EducationGradesGpa->aliasField('end_date'),
+                ]);
+            };
+            $where = array_merge($where, array($orWhere));
         }
 
         // Final query build
