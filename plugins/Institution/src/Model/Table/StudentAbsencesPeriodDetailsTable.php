@@ -13,6 +13,8 @@ use Cake\Validation\Validator;
 use Cake\ORM\Locator\TableLocator;
 use Cake\Log\Log;
 use App\Controller\DashboardController;
+use Cake\ORM\Table;
+use Cake\Utility\Inflector;
 
 class StudentAbsencesPeriodDetailsTable extends AppTable
 {
@@ -300,7 +302,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                 $rule = $rule->toArray();
             }
             Log::debug('Absence Alerts to do');
-//            DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['attendance_id' => (int) $entity->id, 'status_id' => (int) $entity->status_id]);
+            DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['attendance_id' => (int) $entity->id]);
         }
 
 //        $shellName = "AlertAttendance";
@@ -614,5 +616,59 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 //                }
 //            }
 //        }
+    }
+
+    /**
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName . POCOR-8231
+     * @return \Cake\ORM\Table
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+
+        try {
+            // Try to get the table instance directly
+            return $locator->get($tableName);
+        } catch (\Exception $e) {
+            Log::debug('Error: ' . $e->getMessage());
+        }
+
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
     }
 }
