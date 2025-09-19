@@ -242,7 +242,9 @@ class ReportCardGpaTable extends ControllerActionTable
 
         // LEFT JOIN condition for GPA
         $leftJoin = [
-            $GpaTable->aliasField('student_id') . ' = ' . $this->aliasField('student_id')
+            $GpaTable->aliasField('student_id') . ' = ' . $this->aliasField('student_id'),
+            $GpaTable->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id'), //POCOR-9398
+            $GpaTable->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id') //POCOR-9398
         ];
         if ($gpaId > 0) {
             $leftJoin[] = $GpaTable->aliasField('education_grades_gpa_id') . ' = ' . $gpaId;
