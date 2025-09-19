@@ -1,4 +1,5 @@
 <?php
+
 namespace Report\Model\Table;
 
 use ArrayObject;
@@ -28,7 +29,7 @@ class StaffAttendancesTable extends ControllerActionTable
         $this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
         $this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
         $this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
-        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'staff_id']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('AcademicPeriod.Period');
         $this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
@@ -63,12 +64,11 @@ class StaffAttendancesTable extends ControllerActionTable
             'query' => $this->find(),
             'orientation' => 'landscape'
         ];
-
     }
 
     /**
      *  POCOR-9003 refactured
-    **/
+     **/
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
@@ -112,7 +112,7 @@ class StaffAttendancesTable extends ControllerActionTable
                 return $row;
             });
         });
-//        Log::debug($query->sql());
+        //        Log::debug($query->sql());
     }
 
     private function applySelectFields(Query $query)
@@ -122,7 +122,7 @@ class StaffAttendancesTable extends ControllerActionTable
             'institution_name' => 'Institutions.name',
             'institution_id' => 'Institutions.id',
             'position_title' =>
-                'CONCAT(`InstitutionPositions`.`position_no`, " - ", `StaffPositionTitles`.`name`)',
+            'CONCAT(`InstitutionPositions`.`position_no`, " - ", `StaffPositionTitles`.`name`)',
             'identity_type' => 'IdentityTypes.name',
             'identity_number' => 'UserIdentity.number',
             'openemis_no' => 'security_users.openemis_no',
@@ -176,11 +176,11 @@ class StaffAttendancesTable extends ControllerActionTable
             ->leftJoin(['UserIdentity' => 'user_identities'], [
                 'UserIdentity.security_user_id = ' . $this->aliasField('staff_id'),
             ])->join([
-        'academic_periods' => [
-            'type' => 'INNER',
-            'table' => 'academic_periods',
-            'conditions' => [
-                "(
+                'academic_periods' => [
+                    'type' => 'INNER',
+                    'table' => 'academic_periods',
+                    'conditions' => [
+                        "(
                 {$institution_staff}.end_date IS NOT NULL
                 AND {$institution_staff}.start_date <= academic_periods.end_date
                 AND {$institution_staff}.end_date >= academic_periods.start_date
@@ -189,18 +189,28 @@ class StaffAttendancesTable extends ControllerActionTable
                 {$institution_staff}.end_date IS NULL
                 AND {$institution_staff}.start_date <= academic_periods.end_date
             )"
-            ]
-        ]
-    ]);
-        ;
+                    ]
+                ]
+            ]);;
 
         // Month generator join (creates one row per month)
         $monthSql = $this->buildMonthGeneratorSQL($academicPeriodId, $startDate, $endDate);
+        $institution_staff = $this->getAlias();  //POCOR-9311
+
         $query->join([
             'month_generator' => [
                 'type' => 'INNER',
                 'table' => "({$monthSql})",
-                'conditions' => ['month_generator.academic_period_id = academic_periods.id']
+                'conditions' => [ //POCOR-9311
+                    'month_generator.academic_period_id = academic_periods.id',
+                    "(
+                        {$institution_staff}.start_date <= month_generator.month_end
+                        AND (
+                                {$institution_staff}.end_date IS NULL
+                            OR {$institution_staff}.end_date >= month_generator.month_start
+                        )
+                        )"
+                ]
             ]
         ]);
 
@@ -221,12 +231,19 @@ class StaffAttendancesTable extends ControllerActionTable
     }
 
     private function buildMonthGeneratorSQL($academicPeriodId, $startDate, $endDate)
-    {
+    { //POCOR-9311 start
         return <<<SQL
-        SELECT academic_period_id, YEAR(m1) year_name, MONTH(m1) month_id, MONTHNAME(m1) month_name
+        SELECT
+            academic_period_id,
+            YEAR(m1)  AS year_name,
+            MONTH(m1) AS month_id,
+            MONTHNAME(m1) AS month_name,
+            DATE_FORMAT(m1, '%Y-%m-01') AS month_start, 
+            LAST_DAY(m1)                AS month_end
         FROM (
             SELECT (ap.start_date - INTERVAL DAYOFMONTH(ap.start_date)-1 DAY) + INTERVAL m MONTH AS m1,
-                   ap.end_date, ap.id academic_period_id
+                   ap.end_date,
+                   ap.id academic_period_id
             FROM academic_periods ap
             CROSS JOIN (
                 SELECT @rownum := @rownum + 1 AS m
@@ -242,7 +259,9 @@ class StaffAttendancesTable extends ControllerActionTable
           AND m1 BETWEEN '{$startDate}' AND '{$endDate}'
         ORDER BY m1
     SQL;
+        //POCOR-9311 end
     }
+
 
     private function buildAttendanceInfoSQL($academicPeriodId, $startDate, $endDate, $conditionSQL)
     {
@@ -344,13 +363,13 @@ class StaffAttendancesTable extends ControllerActionTable
             'label' => __('Month')
         ];
 
-        for( $i=1; $i<=$i_max; $i++ ) //POCOR-5181
+        for ($i = 1; $i <= $i_max; $i++) //POCOR-5181
         {
-            $newArray[]=[
-            'key'   => 'day_'.$i,
-            'field' => 'day_'.$i,
-            'type'  => 'string',
-            'label' => __('day_'.$i),
+            $newArray[] = [
+                'key'   => 'day_' . $i,
+                'field' => 'day_' . $i,
+                'type'  => 'string',
+                'label' => __('day_' . $i),
             ];
         }
 
