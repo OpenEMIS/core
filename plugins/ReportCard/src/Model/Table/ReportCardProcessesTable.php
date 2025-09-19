@@ -227,30 +227,51 @@ class ReportCardProcessesTable extends ControllerActionTable
             'status' => '2' //POCOR-7989 start
         ]])->where([$ReportCardProcessesTable->aliasField('modified IS NOT NULL')])->toArray();
 
+        //POCOR-9228[START]
+        // foreach ($entitydata as $keyy => $entity) {
+        //     //POCOR-7067 Starts
+        //     $now = new DateTime();
+        //     $currentDateTime = $now->format('Y-m-d H:i:s');
+        //     $c_timestap = strtotime($currentDateTime);
+        //     $modifiedDate = $entity->modified->format('Y-m-d H:i:s');
+        //     //POCOR-6841 starts
+        //     if ($entity->status == 2) {
+        //         $currentTimeZone = new DateTime();
+        //         $modifiedDate = ($modifiedDate === null) ? $currentTimeZone : $modifiedDate;
+        //         $m_timestap = strtotime($modifiedDate);
+        //         $interval = abs($c_timestap - $m_timestap);
+        //         $diff_mins = round($interval / 60);
+        //         if ($diff_mins > 5 && $diff_mins < 30) {
+        //             $entity->status = 1;
+        //             $ReportCardProcessesTable->save($entity);
+        //         } elseif ($diff_mins > 30) {
+        //             $entity->status = self::ERROR;
+        //             $entity->modified = $currentTimeZone;//POCOR-6841
+        //             $ReportCardProcessesTable->save($entity);
+        //         }
+        //         //POCOR-7067 Ends
+        //     }//POCOR-6841 ends
+        // }
+
         foreach ($entitydata as $keyy => $entity) {
-            //POCOR-7067 Starts
             $now = new DateTime();
             $currentDateTime = $now->format('Y-m-d H:i:s');
             $c_timestap = strtotime($currentDateTime);
-            $modifiedDate = $entity->modified->format('Y-m-d H:i:s');
-            //POCOR-6841 starts
+            $modifiedDate = $entity->modified->timezone($timeZone)->format('Y-m-d H:i:s');
             if ($entity->status == 2) {
                 $currentTimeZone = new DateTime();
                 $modifiedDate = ($modifiedDate === null) ? $currentTimeZone : $modifiedDate;
                 $m_timestap = strtotime($modifiedDate);
                 $interval = abs($c_timestap - $m_timestap);
                 $diff_mins = round($interval / 60);
-                if ($diff_mins > 5 && $diff_mins < 30) {
-                    $entity->status = 1;
-                    $ReportCardProcessesTable->save($entity);
-                } elseif ($diff_mins > 30) {
+                if ($diff_mins > 30) {
                     $entity->status = self::ERROR;
-                    $entity->modified = $currentTimeZone;//POCOR-6841
+                    $entity->modified = $currentTimeZone;
                     $ReportCardProcessesTable->save($entity);
                 }
-                //POCOR-7067 Ends
-            }//POCOR-6841 ends
+            }
         }
+        //POCOR-9228[END]
         $extra['elements']['controls'] = ['name' => 'ReportCard.controls', 'data' => [], 'options' => [], 'order' => 1];
         //  //END:POCOR-6785
         $sortList = ['status', 'Users.openemis_no', 'InstitutionClasses.name', 'Institutions.name', 'EducationGrades.name'];//POCOR-7319

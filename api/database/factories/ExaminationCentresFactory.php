@@ -23,7 +23,7 @@ class ExaminationCentresFactory extends Factory
     'postal_code' => $this->faker->lexify(str_repeat("?", 20)),
     'contact_person' => $this->faker->lexify(str_repeat("?", 100)),
     'telephone' => $this->faker->lexify(str_repeat("?", 30)),
-    'fax' => $this->faker->lexify(str_repeat("?", 30)),
+//    'fax' => $this->faker->lexify(str_repeat("?", 30)),
     'email' => $this->faker->lexify(str_repeat("?", 100)),
     'website' => $this->faker->lexify(str_repeat("?", 100)),
     'institution_id' => $this->faker->numberBetween(1, 1000),

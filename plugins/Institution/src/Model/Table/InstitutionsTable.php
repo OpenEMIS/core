@@ -618,12 +618,12 @@ class InstitutionsTable extends ControllerActionTable
                         'type' => 'string',
                         'label' => 'Mobile Number'
                     ];
-                    $newFields[] = [
+                    /*$newFields[] = [
                         'key' => 'fax',
                         'field' => 'faxs',
                         'type' => 'string',
                         'label' => 'Fax'
-                    ];
+                    ];*/
                     $newFields[] = [
                         'key' => 'institution_contact_persons.email',
                         'field' => 'contact_email',
@@ -737,7 +737,7 @@ class InstitutionsTable extends ControllerActionTable
                 'department' => $institutionContactPersons->aliasField('department'),
                 'tel' => $institutionContactPersons->aliasField('telephone'),
                 'mobile_no' => $institutionContactPersons->aliasField('mobile_number'),
-                'faxs' => $institutionContactPersons->aliasField('fax'),
+              //  'faxs' => $institutionContactPersons->aliasField('fax'),
                 'contact_email' => $institutionContactPersons->aliasField('email'),
                 'preferred' => $institutionContactPersons->aliasField('preferred'),
             ])

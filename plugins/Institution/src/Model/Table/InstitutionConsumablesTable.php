@@ -8,18 +8,14 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use Cake\I18n\Date;
-
 use Cake\Log\Log;
-
 use App\Model\Table\ControllerActionTable;
 use Cake\Http\ServerRequest;
 use Cake\ORM\ResultSet;
-
 
 class InstitutionConsumablesTable extends ControllerActionTable
 {
@@ -65,13 +61,27 @@ class InstitutionConsumablesTable extends ControllerActionTable
             ->allowEmpty('bin_no');
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $entity->institution_id = $this->getInstitutionID();
-       
-        $connection = $this->getConnection();
-        $connection->getDriver()->enableAutoQuoting();
+        $binNo = $entity->bin_no;
+        $institutionId = $entity->institution_id ?? $this->getInstitutionID();
+
+        //POCOR-9333 start
+        $checkBinRecord = $this->find()
+            ->where([
+                $this->aliasField('bin_no') => $binNo,
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('id !=') => $entity->id ?? 0 // exclude self when editing
+            ])
+            ->first();
+        if ($checkBinRecord) {
+            $entity->setError('bin_no', __('This Bin Number already exists in this institution.'));
+            return false; // stop saving
+        } //POCOR-9333 end
+
+        return $entity; // allow save
     }
+
 
     public function beforeDelete(Event $event, Entity $entity)
     {
