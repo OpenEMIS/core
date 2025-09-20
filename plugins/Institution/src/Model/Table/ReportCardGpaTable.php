@@ -326,7 +326,7 @@ class ReportCardGpaTable extends ControllerActionTable
         $institutionClassExists = $this->InstitutionClasses->exists([
             $this->InstitutionClasses->getPrimaryKey() => $classId
         ]);
-       
+
         if (!$institutionClassExists) {
             return;
         }
@@ -592,7 +592,7 @@ class ReportCardGpaTable extends ControllerActionTable
     private function addGenerateButton(array $buttons, $encodedQueryParams)
     {
 
-        $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+        $generateAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
         $educationGradeId = $this->request->getQuery('education_grade_id');
         $isAdmin = $this->AccessControl->isAdmin();
         if (!$isAdmin) {
@@ -646,7 +646,7 @@ class ReportCardGpaTable extends ControllerActionTable
             if ($canGenerateAnyDate) {
                 $buttons['generate'] = [
                     'label' => '<i class="fa fa-refresh"></i>' . __('Generate'),
-                    'attr' => $indexAttr,
+                    'attr' => $generateAttr,
                     'url' => $url
                 ];
            }
@@ -687,14 +687,14 @@ class ReportCardGpaTable extends ControllerActionTable
                         && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                         $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>' . __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => $url
                         ];
                     } else {
-                        $indexAttr['title'] = $this->getMessage('ReportCardStatuses.date_closed');
+                        $generateAttr['title'] = $this->getMessage('ReportCardStatuses.date_closed');
                         $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>' . __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => 'javascript:void(0)'
                         ];
                     }
@@ -934,7 +934,7 @@ class ReportCardGpaTable extends ControllerActionTable
             IFNULL(ind_gpa.gpa_per_student, 0.00) gpa,
             ind_gpa.points_list
         FROM
-            ( 
+            (
             SELECT
                 institution_students.student_id,
                 institution_students.institution_id,
@@ -1142,7 +1142,7 @@ class ReportCardGpaTable extends ControllerActionTable
         return $result['gpa'] ?? 0.00;
     }
 
-    //Commenting Dr.Khindol's logic as the exemption scenario is not working as expected. 
+    //Commenting Dr.Khindol's logic as the exemption scenario is not working as expected.
     //DO NOT DELETE -- Needed for reference.
     public static function getGpaForStudentGpaOriginal(
         int $institutionId,

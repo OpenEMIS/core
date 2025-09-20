@@ -465,11 +465,15 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
 
     function getEducationGradeAddStudent(params, first_name, last_name,openemis_no) {
+        const b64url = s =>
+            'b64.' + btoa(unescape(encodeURIComponent(s)))  // UTF-8 safe
+                .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/,'');
+
         var extra = {
-            education_grade_id: params,
-            first_name: first_name,
-            last_name: last_name,
-            openemis_no: openemis_no //POCOR-7386
+            education_grade_id: params,                 // keep as is
+            first_name: b64url(first_name),
+            last_name:  b64url(last_name),
+            openemis_no: openemis_no                    // keep as is
         };
 
         var success = function(response, deferred) {

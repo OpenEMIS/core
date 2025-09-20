@@ -1,3 +1,65 @@
+### [4.42.0] - 2025-09-17
+- Implemented: Develop changes to add highest qualification to the reports > institutions > staff report 
+- Implemented: Develop changes to the openemis_temps table to rename the event
+- Bug Fixed: Institutions > Survey > Forms > Facility Input: Answers from questions in School Information appear in questions in Facility Input
+- Bug Fixed: Institutions>Students>Add: User is not able to add
+- Bug Fixed: Reports>Audit>Institutions: Modified on column is empty
+- Bug Fixed: Gitignore file update: environment.prod.ts
+- Bug Fixed: Institutions > Contacts > People : System is still showing fax column despite having the fax removed from the institutions table
+
+### [4.41.1] - 2025-09-11
+- Bug Fixed: Institutions>Students>Import: Unable to import students
+- Bug Fixed: Administration>Performance>Competencies: Unable to modify the name of the competency template. Error while saving after editing the name (refer screenshot)
+- Bug Fixed: Report>Institutions: Institution needs to get refreshed to show correct filters
+- Bug Fixed: Institutions>Attendance>Students: Attendance should be reflected on all days
+
+### [4.41.0] - 2025-09-04
+- Implemented: Develop changes to Administration > System Setup > Attendances
+- Implemented: Develop student workflow report
+- Implemented: Institutions>Survey>Forms: When approving or rejecting, it should check the survey form for unanswered mandatory questions
+- Implemented: Develop changes to installation wizard to use docker database name
+- Bug Fixed: Workbench > Staff Workflow: The buttons should be showing the same in the page when accessing from workbench
+- Bug Fixed: Institutions>Meals>Students: Meals are not saved properly for students
+- Bug Fixed: Demo OpenEMIS Core:Logs being logged but user does not show up in demo moodle
+- Bug Fixed: Institutions > Performances > Assessments : System should group tabs according to Education Subjects and show all students that takes that subjects
+- Bug Fixed: Institutions>Students>List: Default status should be enrolled
+- Bug Fixed: Directory > Merge: Merge feature showing 404 error
+- Bug Fixed: Report>Institutions>Students: Education Programme should show asterisk
+
+### [4.40.2] - 2025-08-29
+- Bug Fixed: Administrations > Data Management : Education Structure Copy gets the programme_id from the previous academic period
+- Bug Fixed: Administration > System Setup > Education Structure > Cycles tab > Delete: Able to delete even when there is parent/child relations.
+- Bug Fixed: Directory > Import Users : Auto generate Username and Password fields if blank
+- Bug Fixed: Institutions > Finances > Consumables: System allows user to add same bin number in the same institutions
+
+### [4.40.1] - 2025-08-26
+- Bug Fixed: Administration>Performance>Report Cards:Processes showing error even though it is in progress
+- Bug Fixed: Directory>Import: It is showing Password password*
+- Bug Fixed: Institutions>Students>Transfer Out/Transfer In: Bulk student transfer button is missing
+- Bug Fixed: Reports > Staff: Report status is displaying "error". Demo PRD is fine.
+- Bug Fixed: Reports > Institutions > Add: Staff is still showing in the following attendance report even though status is "End of Assignment". Happens in Demo PRD as well.
+- Bug Fixed: Institutions>Schedule>Timetable: Intervals are not showing correctly
+- Bug Fixed: Administration>Performance>Report Cards:Processes showing error even though it is in progress
+
+### [4.40.0] - 2025-08-22
+- Implemented: Develop system configuration for LibreOffice for PDF generation
+- Implemented: Develop changes to remove old files from master branch
+- Implemented: Develop docker and docker-compose upgrade files for OpenEMIS Core
+- Implemented: Develop additional filters for the Administration > Performance > Report Cards > Overview page
+- Bug Fixed: Administration>System Setup>Custom Fields>Infrastructure: User is unable to view and edit
+- Bug Fixed: Institutions > Students > Transfer: User receives a 404 error
+- Bug Fixed: Reports > Institutions > Institution Infrastructure Summary Report: User is getting 404 error
+- Bug Fixed: Directory>Import: Username and password are not mandatory in the template however when importing, it is mandatory
+- Bug Fixed: Administration > System Setup > Administrative Boundaries > Areas (Education) -> 0 should be displayed as 0
+- Bug Fixed: Institutions > Academic > Programmes : Programmes are not copied over
+- Bug Fixed: Reports > Performance > Add: Data is not showing correctly
+- Bug Fixed: Directory: User that is inactive should not be showing in the directory
+- Bug Fixed: Directory > Import: Template displays Education Grade Code for all academic years.
+- Bug Fixed: Institution API is not working when logged in as non admin user
+- Bug Fixed: Directory: Merge should be a background process
+- Bug Fixed: Institutions > Statistics > Standard > Add: Student overview does not show dob
+- Bug Fixed: Directory > Import: System doesn't allow username to have special characters for email.
+
 ### [4.39.1] - 2025-08-18
 - Bug Fixed: Institutions > Students > Student Admission > Bulk Student Admission: User receives 404 error 
 - Bug Fixed: Administration > System Setup > System Configuration > Auto Generated Candidate ID: Registration number should be displayed according to placeholders.

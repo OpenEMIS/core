@@ -163,6 +163,7 @@ class InstitutionsTable extends AppTable
         $validator = $this->validationDefault($validator);
         $validator = $validator
             ->notEmpty('education_programme_id')
+            ->notEmpty('institution_id') //POCOR-9345
             ->notEmpty('status');
         return $validator;
     }
@@ -751,7 +752,7 @@ class InstitutionsTable extends AppTable
     {
         return isset($entity->date_opened) ? $entity->date_opened->format('Y-m-d') : '';
     }
-    
+
     public function onExcelGetDateClosed(Event $event, Entity $entity)
     {
         return isset($entity->date_closed) ? $entity->date_closed->format('Y-m-d') : '';
@@ -762,19 +763,23 @@ class InstitutionsTable extends AppTable
         return __($this->classificationOptions[$entity->classification]);
     }
 
+    //POCOR-9380 start
     public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
+            $options = $this->controller->getFeatureOptions($this->getAlias());
             $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
             $attr['onChangeReload'] = true;
             if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->getData($this->getAlias())['feature'] = key($option);
+                $defaultFeatureValue = key($options);
+                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
             }
             return $attr;
         }
     }
+    //POCOR-9380 end
 
     public function onUpdateFieldInstitutionFilter(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -1097,7 +1102,7 @@ class InstitutionsTable extends AppTable
     public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $alias = $this->getAlias();
-        $data = $request->getData($alias);
+        $data = $this->request->getData($alias);//POCOR-9380
 
         if (isset($data['feature'])) {
             $feature = $data['feature'];
@@ -1167,7 +1172,7 @@ class InstitutionsTable extends AppTable
     public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $alias = $this->getAlias();
-        $data = $request->getData($alias);
+        $data = $this->request->getData($alias);//POCOR-9380
         if (isset($data['feature'])) {
             $feature = $data['feature'];
             $areaLevelId = $data['area_level_id']; //POCOR-6333
@@ -1214,7 +1219,7 @@ class InstitutionsTable extends AppTable
 
                 if ($action == 'add') {
                     $where = [];
-                    if ($areaLevelId != -1) {
+                    if ($areaLevelId != -1 && !empty($areaLevelId)) {//POCOR-9380
                         $where[$Areas->aliasField('area_level_id')] = $areaLevelId;
                     }
                     $areas = $Areas
@@ -1311,6 +1316,7 @@ class InstitutionsTable extends AppTable
                     $attr['default'] = 1;
                 }
                 /*POCOR-6337 starts*/
+                $attr['attr']['required'] = true; //POCOR-9345
                 $attr['onChangeReload'] = true;
             } else {
                 $attr['value'] = self::NO_FILTER;
@@ -2662,6 +2668,9 @@ class InstitutionsTable extends AppTable
         try {
             return $locator->get($tableName);
         } catch (\Exception $exception) {
+        }
+        if ($tableName == 'Institution.InstitutionStatuses') {
+            $tableName = 'Institution.Statuses';
         }
         $parts = explode('.', $tableName);
         $plugin = count($parts) > 1 ? $parts[0] : null;

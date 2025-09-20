@@ -1531,7 +1531,11 @@ class DirectoriesTable extends ControllerActionTable
         $notSuperAdminCondition = [
             $this->aliasField('super_admin') => 0
         ];
+        $onlyActive = [
+            $this->aliasField('status') => 1
+        ];
         $conditions = array_merge($conditions, $notSuperAdminCondition);
+        $conditions = array_merge($conditions, $onlyActive);
 
         // POCOR-2547 sort list of staff and student by name
         $orders = [];
