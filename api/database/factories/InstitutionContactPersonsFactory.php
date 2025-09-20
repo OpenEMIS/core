@@ -22,7 +22,7 @@ class InstitutionContactPersonsFactory extends Factory
     'department' => $this->faker->lexify(str_repeat("?", 100)),
     'telephone' => $this->faker->lexify(str_repeat("?", 30)),
     'mobile_number' => $this->faker->lexify(str_repeat("?", 30)),
-    'fax' => $this->faker->lexify(str_repeat("?", 30)),
+//    'fax' => $this->faker->lexify(str_repeat("?", 30)),
     'email' => $this->faker->lexify(str_repeat("?", 100)),
     'preferred' => $this->faker->numberBetween(1, 1000),
     'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? \App\Models\Institutions::factory()->create()->id,

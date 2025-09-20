@@ -21,12 +21,16 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
      * @return array List of next education programmes id
      */
 	public function getNextProgrammeList($id) {
-		return $this
-			->find('list', ['keyField' => 'next_programme_id', 'valueField' => 'next_programme_id'])
-			->where([
-				$this->aliasField('education_programme_id') => $id
-			])
-			->toArray();
+		$query = $this
+			->find('list', ['keyField' => 'next_programme_id', 'valueField' => 'next_programme_id']);
+		//POCOR-9342 -- Start Updated where condition to handle null id
+		if ($id === null) {
+			$query->where([$this->aliasField('education_programme_id IS') => null]);
+		} else {
+			$query->where([$this->aliasField('education_programme_id') => $id]);
+		}
+		//POCOR-9342 -- End 
+		return $query->toArray();
 	}
 
     /**

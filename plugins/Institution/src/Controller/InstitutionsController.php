@@ -1487,7 +1487,7 @@ class InstitutionsController extends AppController
 
         $user = $this->getRequest()->getSession()->read('sbn');
         $pass = $this->getRequest()->getSession()->read('nbn');
-        // $pass = $this->paramsEncode($pass);
+        $pass = $this->paramsEncode([$pass]);
         $institutionName = $this->Institutions->get($institutionId)->name;
 
         $this->set('encodedPart', $encodedPart);
@@ -6906,7 +6906,12 @@ class InstitutionsController extends AppController
     private function saveSecurityUser(array $userData): \Cake\Datasource\EntityInterface|Response
     {
         $securityUsers = self::getDynamicTableInstance('User.Users'); // POCOR-8706
-
+        if($userData['mobile_number'] == ''){
+            unset($userData['mobile_number']);
+        }
+        if($userData['email'] == ''){
+            unset($userData['email']);
+        }
         // Find existing by openemis_no
         $existing = $securityUsers->find()
             ->where(['openemis_no' => $userData['openemis_no'] ?? null])
@@ -6965,10 +6970,10 @@ class InstitutionsController extends AppController
             $msg = $e->getMessage();
             // POCOR-9011 start — keep your duplicate parsing
             if (str_contains($msg, 'Duplicate entry')) {
-                if (str_contains($msg, 'unique_email')) {
+                if (str_contains($msg, 'email')) {
                     return $this->sendJsonResponse(['message' => 'Duplicate email'], 400);
                 }
-                if (str_contains($msg, 'unique_mobile_number')) {
+                if (str_contains($msg, 'mobile')) {
                     return $this->sendJsonResponse(['message' => 'Duplicate mobile number'], 400);
                 }
             }

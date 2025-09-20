@@ -2649,11 +2649,13 @@ trait MessagesTrait
         ],
         'CopyData' => [
             'updatedRecord' => 'This record has been updated successfully.',
-            'genralerror' => 'To and from academic period can not be same.',
-            'alreadyexist' => 'There are existing data in the selected To Academic Period.',
-            'nodataexist' => 'Data does not exist for seleceted from academic period.',
+            'toandfromacademicperiods' => 'To and from academic period can not be same.', // POCOR-9354
+            'alreadyexist' => 'There is existing data in the Selected To Academic Period.',
+            'educationsystemalreadyexist' => 'Education System already exists in the Selected To Academic Period.', // POCOR-9354
+            'nodataexist' => 'Data does not exist for Selected from Academic Period.',
             'invalidDate' => 'From academic period cannot be greater than to academic period.',
-            'nodataexisteducationsystem' => 'Data does not exist in education system for seleceted to academic period.'
+            'educationsystemnotexist' => 'Education System does not exist in the Selected to Academic period.', // POCOR-9354
+            'nodataexisteducationsystem2' => 'Data 2 does not exist in education system for seleceted to academic period.'
         ],
         'UserNationalities' => [
             'ValidateNumberSuccess' => 'Identity number validate successfully.',

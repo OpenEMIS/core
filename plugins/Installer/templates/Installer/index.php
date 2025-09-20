@@ -83,7 +83,8 @@
                     <div class="section-header">Database Connection Information</div>
                     <div class="clearfix">&nbsp;</div>
                     <?php
-                         echo $this->Form->input('database_server_host', ['label' => __('Database Server Host'),'class' => 'form-control db-host', 'value' => 'localhost','required' => true]);
+                        //  echo $this->Form->input('database_server_host', ['label' => __('Database Server Host'),'class' => 'form-control db-host', 'value' => 'localhost','required' => true]); // POCOR-9290
+                         echo $this->Form->input('database_server_host', ['label' => __('Database Server Host'),'class' => 'form-control db-host', 'value' => 'openemis-core-database','required' => true]); // POCOR-9290
                          echo $this->Form->input('database_server_port', ['label' => __('Database Server Port'),'class' => 'form-control db-port', 'value' => '3306','required' => true]);
                          echo $this->Form->input('database_admin_user', ['label' => __('Admin User'), 'class' => 'form-control admin-user', 'value' => 'root','required' => true]);
                          echo $this->Form->input('database_admin_password', ['label' => __('Admin Password'), 'class' => 'form-control admin-password', 'type' => 'password','required' => true]);
