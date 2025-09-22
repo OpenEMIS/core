@@ -10,6 +10,7 @@ use Cake\Http\Response;
 use Cake\Controller\Exception\MissingActionException;
 use Cake\Http\Session;
 use Cake\Http\ServerRequest;
+use Cake\Log\Log;
 
 //use ControllerAction\Model\Traits\ControllerActionV4Trait;
 //use ControllerActionV4Trait; // extended functionality from v4
@@ -248,6 +249,9 @@ trait ControllerActionV4Trait {
 		$event = $model->dispatchEvent('ControllerAction.Model.beforeAction', [$extra], $this);
 
 		if ($event->isStopped()) { return $event->getResult(); }
+        Log::debug(print_r(['eventResult' => $event->getResult(),
+            'action' => $action,
+            'paramPass' => $paramsPass], true));
 		// dispatch event for specific action
 		$event = $model->dispatchEvent("ControllerAction.Model.$action", [$extra], $this);
 		if ($event->isStopped()) { return $event->getResult(); }
