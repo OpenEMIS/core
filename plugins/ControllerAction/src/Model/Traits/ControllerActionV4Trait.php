@@ -249,11 +249,11 @@ trait ControllerActionV4Trait {
 		$event = $model->dispatchEvent('ControllerAction.Model.beforeAction', [$extra], $this);
 
 		if ($event->isStopped()) { return $event->getResult(); }
-        Log::debug(print_r(['eventResult' => $event->getResult(),
-            'action' => $action,
-            'paramPass' => $paramsPass,
-            'extra' => $extra,
-            'this' => $this], true));
+//        Log::debug(print_r(['eventResult' => $event->getResult(),
+//            'action' => $action,
+//            'paramPass' => $paramsPass,
+//            'extra' => $extra,
+//            'this' => $this], true));
 		// dispatch event for specific action
         try {
             $event = $model->dispatchEvent("ControllerAction.Model.$action", [$extra], $this);
