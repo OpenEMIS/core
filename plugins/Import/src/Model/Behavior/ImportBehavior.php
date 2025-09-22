@@ -1412,7 +1412,6 @@ class ImportBehavior extends Behavior
             ])
             ->order($model->aliasField('order'))
             ->toArray();
-
         $data = new ArrayObject;
         foreach ($mapping as $row) {
             $foreignKey = $row->foreign_key;
