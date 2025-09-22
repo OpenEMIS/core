@@ -139,7 +139,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
         }
     }
 
-    public function editAfterAction(Event $event, $entity, ArrayObject $extra)
+    public function editAfterAction(Event $event, $entity, ArrayObject $extra): void
     {
         $this->setupFields($entity);
     }
