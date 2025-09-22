@@ -183,6 +183,9 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         // Generate encoded query string once
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
+        $bulkQueryString = $queryString;
+        $bulkQueryString['id'] = 1;
+        $encodedBulqQueryString = $this->paramsEncode($bulkQueryString);
 
 // Common button attributes
         $baseBtnAttr = [
@@ -240,6 +243,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                 'next_action' => 'edit',
                 'icon' => '<i class="fa kd-transfer"></i>',
                 'title' => __('Bulk Student Transfer In')
+
             ];
 
         foreach ($extraButtons as $key => $config) {
@@ -268,6 +272,18 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                 0 => $config['next_action'] ?? 'add',
                 1 => $encodedQueryString
             ];
+
+            $bulkUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => $config['action'],
+                0 => $config['next_action'] ?? 'add',
+                1 => $encodedBulqQueryString
+            ];
+
+            if ($key == 'bulkTransferIn') {
+                $url = $bulkUrl;
+            }
 
             if (!empty($config['extraParams'])) {
                 $url = array_merge($url, ['?' => $config['extraParams']]);
