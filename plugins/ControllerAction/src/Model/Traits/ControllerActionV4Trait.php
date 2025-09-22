@@ -253,8 +253,18 @@ trait ControllerActionV4Trait {
             'action' => $action,
             'paramPass' => $paramsPass], true));
 		// dispatch event for specific action
-		$event = $model->dispatchEvent("ControllerAction.Model.$action", [$extra], $this);
-		if ($event->isStopped()) { return $event->getResult(); }
+        try {
+            $event = $model->dispatchEvent("ControllerAction.Model.$action", [$extra], $this);
+        } catch (\Exception $exception) {
+            Log::debug($exception->getMessage());
+            throw new MissingActionException([
+                'controller' => $controller->getName() . "Controller",
+                'action' => $action,
+                'prefix' => '',
+                'plugin' => $this->controller->getRequest()->getParam('plugin')
+            ]);
+        }
+        if ($event->isStopped()) { return $event->getResult(); }
 		if ($event->getResult() instanceof Entity) {
 			$entity = $event->getResult();
 		} else if ($event->getResult() instanceof Response) {
