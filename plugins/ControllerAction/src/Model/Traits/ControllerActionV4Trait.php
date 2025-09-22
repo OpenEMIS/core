@@ -10,7 +10,6 @@ use Cake\Http\Response;
 use Cake\Controller\Exception\MissingActionException;
 use Cake\Http\Session;
 use Cake\Http\ServerRequest;
-use Cake\Log\Log;
 
 //use ControllerAction\Model\Traits\ControllerActionV4Trait;
 //use ControllerActionV4Trait; // extended functionality from v4
@@ -249,24 +248,9 @@ trait ControllerActionV4Trait {
 		$event = $model->dispatchEvent('ControllerAction.Model.beforeAction', [$extra], $this);
 
 		if ($event->isStopped()) { return $event->getResult(); }
-//        Log::debug(print_r(['eventResult' => $event->getResult(),
-//            'action' => $action,
-//            'paramPass' => $paramsPass,
-//            'extra' => $extra,
-//            'this' => $this], true));
 		// dispatch event for specific action
-        try {
-            $event = $model->dispatchEvent("ControllerAction.Model.$action", [$extra], $this);
-        } catch (\Exception $exception) {
-            Log::debug($exception->getMessage());
-//            throw new MissingActionException([
-//                'controller' => $controller->getName() . "Controller",
-//                'action' => $action,
-//                'prefix' => '',
-//                'plugin' => $this->controller->getRequest()->getParam('plugin')
-//            ]);
-        }
-        if ($event->isStopped()) { return $event->getResult(); }
+		$event = $model->dispatchEvent("ControllerAction.Model.$action", [$extra], $this);
+		if ($event->isStopped()) { return $event->getResult(); }
 		if ($event->getResult() instanceof Entity) {
 			$entity = $event->getResult();
 		} else if ($event->getResult() instanceof Response) {
