@@ -31,6 +31,7 @@ class EditBehavior extends Behavior
         }// end
         // POCOR-8543 START
 
+
         $request = $model->request;
         $editAccess = $this->getEditAccess($request, $model);
         if (!$editAccess) {
@@ -74,11 +75,14 @@ class EditBehavior extends Behavior
                 $ids = $model->ControllerAction->getQueryString($primaryKey);
             }
         }
-
+        //POCOR-9402 START bulk process edits for workflow_steps
+        if ($model->getTable() === 'workflow_steps' && preg_match('/^Bulk.*/', $model->getAlias())) {
+            $ids['id'] = 1;
+        }
+        // POCOR-9402 END
         $idKeys = $model->getIdKeys($model, $ids);
 
         $entity = false;
-        Log::debug(print_r(['idKeys' => $idKeys, 'ids' => $ids, 'model' => $model], true));
 
         if ($model->exists($idKeys)) {
             $query = $model->find()->where($idKeys);
@@ -99,7 +103,6 @@ class EditBehavior extends Behavior
         if ($event->isStopped()) {
             return $event->getResult();
         }
-        Log::debug(print_r(['entityLongBefore' => $entity], true));
 
         if ($entity) {
             if ($request->is(['get'])) {
@@ -197,13 +200,12 @@ class EditBehavior extends Behavior
             }
             $model->controller->set('data', $entity);
         }
-        Log::debug(print_r(['entityBefore' => $entity], true));
 
         $event = $model->dispatchEvent('ControllerAction.Model.addEdit.afterAction', [$entity, $extra], $this);
         if ($event->isStopped()) {
             return $event->getResult();
         }
-        Log::debug(print_r(['entityAfter' => $entity], true));
+
         $event = $model->dispatchEvent('ControllerAction.Model.edit.afterAction', [$entity, $extra], $this);
         if ($event->isStopped()) {
             return $event->getResult();
