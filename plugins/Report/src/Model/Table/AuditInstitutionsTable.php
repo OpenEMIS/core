@@ -1,4 +1,5 @@
 <?php
+
 namespace Report\Model\Table;
 
 use ArrayObject;
@@ -18,12 +19,13 @@ class AuditInstitutionsTable extends AppTable
 {
     public function initialize(array $config): void
     {
+
         $this->setTable('institution_activities');
         parent::initialize($config);
 
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey'=>'institution_id']);
-        $this->belongsTo('CreatedUser',  ['className' => 'User.Users', 'foreignKey'=>'created_user_id']);
-        
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('CreatedUser',  ['className' => 'User.Users', 'foreignKey' => 'created_user_id']);
+
         $this->addBehavior('Excel', [
             'pages' => false,
             'autoFields' => false
@@ -34,9 +36,9 @@ class AuditInstitutionsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        
+
         $requestData = json_decode($settings['process']['params']);
-        
+
         $reportStartDate = (new DateTime($requestData->report_start_date))->format('Y-m-d H:i:s');
         $reportEndDate = (new DateTime($requestData->report_end_date))->format('Y-m-d H:i:s');
 
@@ -82,13 +84,22 @@ class AuditInstitutionsTable extends AppTable
     {
         return $entity->institution->code_name;
     }
-
+    //POCOR-9384 start
+    public function onExcelGetModifiedOn(Event $event, Entity $entity)
+    {
+        $modified_on = '';
+        if ($entity->has('modified_on') && !empty($entity->modified_on)) {
+            $modified_on = $entity->modified_on->format('jS M, Y');
+        }
+        return $modified_on;
+    }
+    //POCOR-9384 end
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
 
         $newFields[] = [
-            'key' => 'Institutions.modified_on',
+            'key' => 'modified_on', //POCOR-9384
             'field' => 'modified_on',
             'type' => 'string',
             'label' => __('Modified On')

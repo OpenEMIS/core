@@ -1,3 +1,12 @@
+### [4.42.0] - 2025-09-17
+- Implemented: Develop changes to add highest qualification to the reports > institutions > staff report 
+- Implemented: Develop changes to the openemis_temps table to rename the event
+- Bug Fixed: Institutions > Survey > Forms > Facility Input: Answers from questions in School Information appear in questions in Facility Input
+- Bug Fixed: Institutions>Students>Add: User is not able to add
+- Bug Fixed: Reports>Audit>Institutions: Modified on column is empty
+- Bug Fixed: Gitignore file update: environment.prod.ts
+- Bug Fixed: Institutions > Contacts > People : System is still showing fax column despite having the fax removed from the institutions table
+
 ### [4.41.1] - 2025-09-11
 - Bug Fixed: Institutions>Students>Import: Unable to import students
 - Bug Fixed: Administration>Performance>Competencies: Unable to modify the name of the competency template. Error while saving after editing the name (refer screenshot)
