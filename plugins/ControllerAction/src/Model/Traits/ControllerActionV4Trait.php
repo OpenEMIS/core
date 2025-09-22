@@ -251,18 +251,20 @@ trait ControllerActionV4Trait {
 		if ($event->isStopped()) { return $event->getResult(); }
         Log::debug(print_r(['eventResult' => $event->getResult(),
             'action' => $action,
-            'paramPass' => $paramsPass], true));
+            'paramPass' => $paramsPass,
+            'extra' => $extra,
+            'this' => $this], true));
 		// dispatch event for specific action
         try {
             $event = $model->dispatchEvent("ControllerAction.Model.$action", [$extra], $this);
         } catch (\Exception $exception) {
             Log::debug($exception->getMessage());
-            throw new MissingActionException([
-                'controller' => $controller->getName() . "Controller",
-                'action' => $action,
-                'prefix' => '',
-                'plugin' => $this->controller->getRequest()->getParam('plugin')
-            ]);
+//            throw new MissingActionException([
+//                'controller' => $controller->getName() . "Controller",
+//                'action' => $action,
+//                'prefix' => '',
+//                'plugin' => $this->controller->getRequest()->getParam('plugin')
+//            ]);
         }
         if ($event->isStopped()) { return $event->getResult(); }
 		if ($event->getResult() instanceof Entity) {
