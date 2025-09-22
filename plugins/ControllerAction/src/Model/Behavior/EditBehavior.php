@@ -98,6 +98,7 @@ class EditBehavior extends Behavior
         if ($event->isStopped()) {
             return $event->getResult();
         }
+        Log::debug(print_r(['entityLongBefore' => $entity], true));
 
         if ($entity) {
             if ($request->is(['get'])) {
@@ -195,12 +196,13 @@ class EditBehavior extends Behavior
             }
             $model->controller->set('data', $entity);
         }
+        Log::debug(print_r(['entityBefore' => $entity], true));
 
         $event = $model->dispatchEvent('ControllerAction.Model.addEdit.afterAction', [$entity, $extra], $this);
         if ($event->isStopped()) {
             return $event->getResult();
         }
-        Log::debug(print_r(['entity' => $entity], true));
+        Log::debug(print_r(['entityAfter' => $entity], true));
         $event = $model->dispatchEvent('ControllerAction.Model.edit.afterAction', [$entity, $extra], $this);
         if ($event->isStopped()) {
             return $event->getResult();
