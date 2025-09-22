@@ -200,7 +200,7 @@ class EditBehavior extends Behavior
         if ($event->isStopped()) {
             return $event->getResult();
         }
-
+        Log::debug(print_r(['entity' => $entity], true));
         $event = $model->dispatchEvent('ControllerAction.Model.edit.afterAction', [$entity, $extra], $this);
         if ($event->isStopped()) {
             return $event->getResult();
