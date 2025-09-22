@@ -78,6 +78,7 @@ class EditBehavior extends Behavior
         $idKeys = $model->getIdKeys($model, $ids);
 
         $entity = false;
+        Log::debug(print_r(['idKeys' => $idKeys, 'ids' => $ids, 'model' => $model], true));
 
         if ($model->exists($idKeys)) {
             $query = $model->find()->where($idKeys);
