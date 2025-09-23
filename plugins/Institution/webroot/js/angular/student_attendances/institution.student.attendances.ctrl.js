@@ -257,7 +257,7 @@ function InstitutionStudentAttendancesController(
                         "Final isMarkableAttendance:",
                         vm.isMarkableAttendance
                     );
-    
+
                     return InstitutionStudentAttendancesSvc.getIsMarked(
                         vm.getIsMarkedParams()
                     );
@@ -453,7 +453,7 @@ function InstitutionStudentAttendancesController(
     };
 
     /*vm.isMarkableSubjectAttendance = function(selectedClass) {
-        return 
+        return
         {attendanceTypeCode: InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(selectedClass)};
     }*/
 
@@ -1380,7 +1380,7 @@ function InstitutionStudentAttendancesController(
         AlertSvc.info($scope, "Attendances will be automatically saved.");
         //ticket POCOR-6658 Starts=> comment savePeriodMarked function becuase it is not working for multigrade class
         //InstitutionStudentAttendancesSvc.savePeriodMarked(vm.getPeriodMarkedParams(), $scope);
-        InstitutionStudentAttendancesSvc.getsavePeriodMarked(
+        InstitutionStudentAttendancesSvc.editSavePeriodMarked(
             vm.getPeriodMarkedParams(),
             $scope
         );
