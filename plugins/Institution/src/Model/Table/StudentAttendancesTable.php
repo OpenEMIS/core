@@ -1167,7 +1167,7 @@ class StudentAttendancesTable extends ControllerActionTable
         // Treat '', '0', 0, null, 'undefined' as NULL (no specific subject)
         $subjectRaw         = $options['subject_id'] ?? null;
         $subjectId          = ($subjectRaw === null || $subjectRaw === '' || $subjectRaw === '0' || $subjectRaw === 0 || $subjectRaw === 'undefined')
-            ? null : (int)$subjectRaw;
+            ? 0 : (int)$subjectRaw;
         // Debug log for troubleshooting
         Log::debug('Attendance save params: ' . print_r([
                 'institutionId'      => $institutionId,
