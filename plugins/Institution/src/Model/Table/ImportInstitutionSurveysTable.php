@@ -327,12 +327,8 @@ class ImportInstitutionSurveysTable extends AppTable {
             // This is to sort the questions by the order
             $surveyFormQuestions = [];
             foreach ($questions as $question) {
-                //POCOR-9349 use this condittion for testing purpose for not include TABLE type, will remove later
-                if($question->field_type !== 'TABLE'){
-                    $order = $question['_joinData']['order'];
-                    $surveyFormQuestions[$order] = $question;
-                }
-                //POCOR-9349 ends
+                $order = $question['_joinData']['order'];
+                $surveyFormQuestions[$order] = $question;
             }
             ksort($surveyFormQuestions);
             $surveyFormQuestions = array_values($surveyFormQuestions);
@@ -516,7 +512,7 @@ class ImportInstitutionSurveysTable extends AppTable {
                                                 'survey_table_column_id' => $c->id,
                                                 'text_value' => $originalRow[$colCount++]
                                             ];
-                                            $entityItem = $this->InstitutionSurveyTableCells->newEntity();
+                                            $entityItem = $this->InstitutionSurveyTableCells->newEmptyEntity();
                                             $this->InstitutionSurveyTableCells->patchEntity($entityItem, $obj);
                                             $tempTableRow[] = $entityItem;
                                         } else {
