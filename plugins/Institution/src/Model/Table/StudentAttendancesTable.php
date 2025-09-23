@@ -1222,8 +1222,8 @@ class StudentAttendancesTable extends ControllerActionTable
 //                'no_scheduled_class'   => 0,
 //            ]);
             $connection = ConnectionManager::get('default');
-            $dbConfig = $connection->config();
-            $dbname = $dbConfig['database'];
+//            $dbConfig = $connection->config();
+//            $dbname = $dbConfig['database'];
             $results = $connection->execute("INSERT INTO `student_attendance_marked_records` (
                                                  `institution_id`,
                                                  `academic_period_id`,
