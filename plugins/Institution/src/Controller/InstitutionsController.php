@@ -7987,6 +7987,7 @@ class InstitutionsController extends AppController
                         'academic_period' => 'AcademicPeriods.name',
                         'education_grade' => 'EducationGrades.name',
                         'institution_class' => $InstitutionClasses->aliasField('name'),
+                        'institution_class_id' => $InstitutionClasses->aliasField('id'),
 
                         // demographics
                         'gender'         => 'Genders.name',
@@ -8125,6 +8126,7 @@ class InstitutionsController extends AppController
             'academic_period' => $student['academic_period'] ?? null,
             'education_grade' => $student['education_grade'] ?? null,
             'institution_class' => $student['institution_class'] ?? null,
+            'institution_class_id' => $student['institution_class_id'] ?? null,
             'gender'          => $student['gender'] ?? null,
             'address_area'    => $student['address_area'] ?? null,
             'birthplace_area' => $student['birthplace_area'] ?? null,
