@@ -21,7 +21,7 @@ use Cake\Log\Log;
 use Cake\Datasource\ConnectionManager; //POCOR-6658
 use Cake\ORM\Locator\TableLocator;
 use App\Model\Table\ControllerActionTable;
-use Cake\ORM\Table;
+use Cake\ORM\Table; // POCOR-9406
 
 class StudentAttendancesTable extends ControllerActionTable
 {
