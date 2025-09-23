@@ -297,6 +297,15 @@ class InstitutionInfrastructuresTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
+    /**
+     * POCOR-9400
+     * 
+     * Changes in existing query because acadmeic period id column no loger exist 
+     * institution_land, institution_building , institution_floor, institution_room
+     * Changes in conditions
+     * 
+     * */
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
 
@@ -319,6 +328,7 @@ class InstitutionInfrastructuresTable extends AppTable
         $infrastructureOwnerships = TableRegistry::get('Institution.InfrastructureOwnerships');
         $infrastructureLevels = TableRegistry::get('Institution.InfrastructureLevels');
         $areas = TableRegistry::get('Area.Areas');
+        //POCOR-9400 start
         if ($areaId != -1 && $areaId != '') {
             $areaIds = [];
             $allgetArea = $this->getChildren($selectedArea, $areaIds);
@@ -329,7 +339,7 @@ class InstitutionInfrastructuresTable extends AppTable
                 $allselectedAreas = $selectedArea1;
             }
                 $conditions['Institutions.area_id IN'] = $allselectedAreas;
-        }
+        } //POCOR-9400 end
 
         $institutions = TableRegistry::get('Institution.Institutions');
 
@@ -433,7 +443,6 @@ class InstitutionInfrastructuresTable extends AppTable
                         //shift
                         ->LeftJoin(['InstitutionShifts' => 'institution_shifts'],[
                             'Institution'.$level.'.'.'institution_id = InstitutionShifts.institution_id',
-                            //'Institution'.$level.'.'.'academic_period_id = InstitutionShifts.academic_period_id'
                         ])
                         ->LeftJoin(['ShiftOptions' => 'shift_options'],[
                             'ShiftOptions.id = InstitutionShifts.shift_option_id'
@@ -496,7 +505,6 @@ class InstitutionInfrastructuresTable extends AppTable
                         //shift
                         ->LeftJoin(['InstitutionShifts' => 'institution_shifts'],[
                             'Institution'.$level.'.'.'institution_id = InstitutionShifts.institution_id',
-                            //'Institution'.$level.'.'.'academic_period_id = InstitutionShifts.academic_period_id'
                         ])
                         ->LeftJoin(['ShiftOptions' => 'shift_options'],[
                             'ShiftOptions.id = InstitutionShifts.shift_option_id'
@@ -531,8 +539,8 @@ class InstitutionInfrastructuresTable extends AppTable
                         'land_infrastructure_ownership'=>$infrastructureOwnerships->aliasField('name'),
                         'land_infrastructure_accessibility' => 'Institution'.$level.'.'.'accessibility',
                         //Start POCOR-6731
-                        'institution_buildings_name' => 'Institution'.$InstitutionBuildings.'.'.'name',
-                        'institution_floor_name' => 'Institution'.$InstitutionFloors.'.'.'name',
+                        'institution_buildings_name' => 'InstitutionBuildings.name',
+                        'institution_floor_name' => 'InstitutionFloors.name',
                         //End POCOR-6731
                         ])
                 ->innerJoin([$areas->getAlias() => $areas->getTable()],[
@@ -548,7 +556,7 @@ class InstitutionInfrastructuresTable extends AppTable
                 ])
                 ->LeftJoin(['Institution'.$level => 'institution_'.lcfirst($level)], [
                     'Institution'.$level.'.institution_id = ' . $this->aliasField('id')
-                    // academic_period_id join removed (invalid)
+                    // academic_period_id join removed
                 ])
                 ->LeftJoin(['InfrastructureTypes' => $type.'_types'], [
                         'InfrastructureTypes.id = ' . 'Institution'.$level.'.'.'room_type_id',
@@ -739,6 +747,7 @@ class InstitutionInfrastructuresTable extends AppTable
         });
     }
 
+    //POCOR-9400
     public function getChildren($id, $idArray) {
         $Areas = TableRegistry::get('Area.Areas');
         $result = $Areas->find()
