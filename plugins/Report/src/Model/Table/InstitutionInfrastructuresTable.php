@@ -300,7 +300,7 @@ class InstitutionInfrastructuresTable extends AppTable
     /**
      * POCOR-9400
      * 
-     * Changes in existing query because acadmeic period id column no loger exist 
+     * Made changes in the existing query as the academic_period_id column no longer exists. 
      * institution_land, institution_building , institution_floor, institution_room
      * Changes in conditions
      * 
