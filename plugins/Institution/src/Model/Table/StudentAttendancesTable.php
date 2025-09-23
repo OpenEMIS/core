@@ -1192,6 +1192,7 @@ class StudentAttendancesTable extends ControllerActionTable
                 'academic_period_id'   => $academicPeriodId,
                 'date'                 => $day,
                 'period'               => $attendancePeriodId,
+                'subjectId'          => $subjectId,
             ]
         );
 
@@ -1204,32 +1205,38 @@ class StudentAttendancesTable extends ControllerActionTable
             $StudentAttendanceMarkedRecords->aliasField('period')               => $attendancePeriodId,
             $StudentAttendanceMarkedRecords->aliasField('date')                 => $day,
         ];
-        if ($subjectId === null) {
-            // Cake syntax for IS NULL
-            $where[$StudentAttendanceMarkedRecords->aliasField('subject_id') . ' IS'] = null;
-        } else {
-            $where[$StudentAttendanceMarkedRecords->aliasField('subject_id')] = $subjectId;
-        }
+
 
         $existing = $StudentAttendanceMarkedRecords->find()->where($where)->count();
 
         if ($existing === 0) {
             // Prefer ORM to get proper types & NULLs
-            $entity = $StudentAttendanceMarkedRecords->newEntity([
-                'institution_id'       => $institutionId,
-                'academic_period_id'   => $academicPeriodId,
-                'institution_class_id' => $institutionClassId,
-                'education_grade_id'   => $educationGradeId,
-                'date'                 => $day,
-                'period'               => $attendancePeriodId,
-                'subject_id'           => $subjectId,          // NULL if not provided
-                'no_scheduled_class'   => 0,
-            ]);
+//            $entity = $StudentAttendanceMarkedRecords->newEntity([
+//                'institution_id'       => $institutionId,
+//                'academic_period_id'   => $academicPeriodId,
+//                'institution_class_id' => $institutionClassId,
+//                'education_grade_id'   => $educationGradeId,
+//                'date'                 => $day,
+//                'period'               => $attendancePeriodId,
+//                'subject_id'           => $subjectId,          // NULL if not provided
+//                'no_scheduled_class'   => 0,
+//            ]);
+            $connection = ConnectionManager::get('default');
+            $dbConfig = $connection->config();
+            $dbname = $dbConfig['database'];
+            $results = $connection->execute("INSERT INTO `student_attendance_marked_records` (
+                                                 `institution_id`,
+                                                 `academic_period_id`,
+                                                 `institution_class_id`,
+                                                 `education_grade_id`, `date`, `period`, `subject_id`, `no_scheduled_class`)
+VALUES ('$institutionId', '$academicPeriodId',
+        '$institutionClassId', '$educationGradeId',
+        '$day', '$attendancePeriodId', '$subjectId', '0')");
 
-            if (!$StudentAttendanceMarkedRecords->save($entity)) {
-                // Bubble up a helpful exception message
-                throw new \RuntimeException('Unable to save attendance marker: ' . json_encode($entity->getErrors()));
-            }
+//            if (!$StudentAttendanceMarkedRecords->save($entity)) {
+//                // Bubble up a helpful exception message
+//                throw new \RuntimeException('Unable to save attendance marker: ' . json_encode($entity->getErrors()));
+//            }
         }
 
         return $query->find('list')->where([
