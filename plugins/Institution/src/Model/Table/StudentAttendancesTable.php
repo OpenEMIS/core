@@ -1158,20 +1158,6 @@ class StudentAttendancesTable extends ControllerActionTable
     }
 
     // POCOR-9406
-<?php
-declare(strict_types=1);
-
-namespace App\Model\Table;
-
-    use Cake\Database\Connection;
-    use Cake\Datasource\ConnectionManager;
-    use Cake\Log\Log;
-    use Cake\ORM\Query;
-    use Cake\ORM\Table;
-    use Cake\ORM\TableRegistry;
-
-class InstitutionStudentAttendancesTable extends Table
-{
     /**
      * Finder: ensures a marker row exists and resets no_scheduled_class for the slice,
      * then returns the original query filtered by class/grade/period.
@@ -1331,7 +1317,6 @@ SQL;
             throw $e;
         }
     }
-}
 
 
 /*
