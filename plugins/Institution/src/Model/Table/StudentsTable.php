@@ -945,11 +945,24 @@ class StudentsTable extends ControllerActionTable
         $student_id = !empty($entity->student_id) ? $entity->student_id : NULL;
         $institution_id = !empty($entity->institution_id) ? $entity->institution_id : 0;
         $result = $this->checkStudentRecords($entity);
+        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        //POCOR-9393 start
+        $StudentClass = $InstitutionClassStudents->find()
+            ->where([
+                $InstitutionClassStudents->aliasField('academic_period_id') => $entity->academic_period_id,
+                $InstitutionClassStudents->aliasField('student_id') => $entity->student_id,
+                $InstitutionClassStudents->aliasField('institution_id') => $entity->institution_id,
+            ])
+            ->first();
+
+        $StudentClassId = $StudentClass ? $StudentClass->institution_class_id : null; //POCOR-9393 end
+
         $body = array();
         $institution_student_id = !empty($entity->id) ? $entity->id : NULL;
         $body = [
             'institution_student_id' => $student_id,
             'institution_id' => $institution_id,
+            'institution_class_id' => $StudentClassId, //POCOR-9393
         ];
         $affected = $this->removeIndividualChildRecords($student_id, $institution_student_id);
         // $this->log("removed $affected security records", 'debug');
@@ -960,7 +973,7 @@ class StudentsTable extends ControllerActionTable
                 $Webhooks->triggerShell('student_delete', ['username' => $username], $body);
             }
         }
-        //}
+        
     }
 
     /**
