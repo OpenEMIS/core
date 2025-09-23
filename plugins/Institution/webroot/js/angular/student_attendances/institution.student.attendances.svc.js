@@ -124,7 +124,7 @@ function InstitutionStudentAttendancesSvc(
 
         saveAbsences: saveAbsences,
         savePeriodMarked: savePeriodMarked,
-        editSavePeriodMarked: editSavePeriodMarked, //POCOR-6658
+        editSavePeriodMarked: editSavePeriodMarked, //POCOR-6658 // POCOR-9406
         isMarkableSubjectAttendance: isMarkableSubjectAttendance,
         isMarkableAttendance: isMarkableAttendance, // POCOR-8874
     };
