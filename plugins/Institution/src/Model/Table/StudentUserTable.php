@@ -161,7 +161,7 @@ class StudentUserTable extends ControllerActionTable
     public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
-        $events['Model.Students.afterSave'] = 'studentsAfterSave';
+        $events['Model.Students.afterSaveCustom'] = 'studentsAfterSave';
         $events['ControllerAction.Model.pull.beforePatch'] = 'pullBeforePatch';
         return $events;
     }
@@ -270,8 +270,7 @@ class StudentUserTable extends ControllerActionTable
         }else{
             $extra['institutionStudentId'] = $institutionStudentId;
         }
-//         echo "<pre>"; print_r($extra);
-// die;
+
         // this is required if the student link is clicked from the Institution Classes or Subjects
         if (empty($studentId)) { // if value is empty, redirect back to the list page
             $event->stopPropagation();
@@ -640,12 +639,12 @@ class StudentUserTable extends ControllerActionTable
     //POCOR-9393
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $this->getEventManager()->dispatch(new Event('Model.Students.afterSave', $this, [
+        $this->triggerWebhooks($entity->id, $entity);
+        $this->getEventManager()->dispatch(new Event('Model.Students.afterSaveCustom', $this, [
             'entity' => $entity,
             'options' => $options
         ]));
-         
-        $this->triggerWebhooks($entity->id, $entity); //POCOR-9393
+        
     }
 
     //POCOR-9393
@@ -656,7 +655,6 @@ class StudentUserTable extends ControllerActionTable
             $this->updateAll(['is_student' => 1], ['id' => $entity->student_id]);
         }
     }
-
 
     //to handle identity_number field that is automatically created by mandatory behaviour.
 
