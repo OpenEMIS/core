@@ -1409,7 +1409,6 @@ class StudentsTable extends ControllerActionTable
             //POCOR-8801::end
         }
         //POCOR-8092::end
-        $selectedStatus = $this->queryString('status_id', $statusOptions);
         $educationGradesOptions = $InstitutionEducationGrades
             ->find('list', [
                 'keyField' => 'id',
@@ -3909,7 +3908,7 @@ class StudentsTable extends ControllerActionTable
      */
     private function setStatusOptions()
     {
-        
+
         $statusOptions = $this->student_status_names_array;
         //POCOR-9369 start
         // Find the key in $student_status_names_array where the value (status name) is 'Enrolled'
@@ -3921,8 +3920,12 @@ class StudentsTable extends ControllerActionTable
             }
         }
         //POCOR-9369 end
-        $selectedStatus = $this->queryString('status_id', $statusOptions);
-
+        //POCOR-9395 start
+        $selectedStatus = $this->request->getQueryParams()['status_id'];
+        if (empty($selectedStatus)) {
+            $selectedStatus = $defaultStatusKey;
+        }
+        //POCOR-9395 end
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
         return array($statusOptions, $selectedStatus, $defaultStatusKey); //POCOR-9369 start
     }
