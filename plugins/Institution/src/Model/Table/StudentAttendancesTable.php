@@ -1237,14 +1237,14 @@ class StudentAttendancesTable extends ControllerActionTable
      * Same goal, but groups many PKs into a single UPDATE with OR’ed PK predicates.
      * Good compromise between A (many queries) and a single wide UPDATE (big locks).
      */
-    private function resetNoScheduledClass(Table $MarkedRecords, array $sliceConds): void
+    private function resetNoScheduledClass(Table $MarkedRecords, array $searchConds): void
     {
         $rows = $MarkedRecords->find()
             ->select([
                 'institution_id', 'academic_period_id', 'institution_class_id',
                 'education_grade_id', 'date', 'period', 'subject_id'
             ])
-            ->where($sliceConds + ['no_scheduled_class !=' => 0])
+            ->where($searchConds + ['no_scheduled_class !=' => 0])
             ->enableHydration(false)
             ->all()
             ->toList();
