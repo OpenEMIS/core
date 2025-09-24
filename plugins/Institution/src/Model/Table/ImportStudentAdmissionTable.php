@@ -64,6 +64,11 @@ class ImportStudentAdmissionTable extends AppTable
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $session = $this->request->getSession();
+        $academic_period_id = $this->request->getData()['ImportStudentAdmission']['academic_period_id'];
+        if(!empty($academic_period_id)){
+           $session->write('period', $academic_period_id);
+        }
         list($periodOptions, $selectedPeriod) = array_values(
             $this->getAcademicPeriod($this->request->getQuery('period'), true)
         );
@@ -78,7 +83,7 @@ class ImportStudentAdmissionTable extends AppTable
     public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        
+
         if ($request->is(['post', 'put'])) {
             $thisAlias = $this->getAlias();
             $requestData = $request->getData();
@@ -87,9 +92,9 @@ class ImportStudentAdmissionTable extends AppTable
                     //POCOR-9394[START]
                     //$academic_period_id = $requestData[$thisAlias]['academic_period_id'];
                     $academic_period_id = $request->getData()['ImportStudentAdmission']['academic_period_id'];
-                    $this->request->getSession()->write('period', $academic_period_id);
+                    //$this->request->getSession()->write('period', $academic_period_id);
                     //$request->getQuery['period'] = $academic_period_id;
-                   
+
                     //$requestWithParams = $this->request->withQueryParams($academic_period_id);
                     //POCOR-9394[END]
                     $this->gradesInInstitution = $this->getCustomInstitudeGradeIds($academic_period_id);
@@ -144,6 +149,38 @@ class ImportStudentAdmissionTable extends AppTable
             ->toArray();
     }
 
+    // public function beforeAction($event)
+    // {
+    //     $session = $this->request->getSession();
+    //     if ($session->check('Institution.Institutions.id')) {
+    //         $this->institutionId = $session->read('Institution.Institutions.id');
+    //         $academicPeriodId = $this->AcademicPeriods->getCurrent();
+    //         $requestQuery = $this->request->getQuery();
+    //         if (isset($requestQuery['period']) && !empty($requestQuery['period'])) {
+    //             $academicPeriodId = $requestQuery['period'];
+    //         }
+    //         $this->academicPeriodId = $academicPeriodId;
+    //         $this->gradesInInstitution = $this->getCustomInstitudeGradeIds($academicPeriodId);
+    //     } else {
+    //         $this->institutionId = false;
+    //         $academicPeriodId = $this->AcademicPeriods->getCurrent();
+    //         $this->academicPeriodId = $academicPeriodId;
+    //         $this->gradesInInstitution = [];
+    //     }
+    //     //POCOR-8343 Start
+
+    //     if(empty($this->institutionId) && $this->request->getParam('pass')[0] != 'downloadFailed' && $this->request->getParam('pass')[0] != 'downloadPassed' && isset($this->request->getParam('pass')[1])) {
+    //         $queryString = $this->paramsDecode($this->request->getParam('pass')[1]);
+    //         $this->institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : $this->institutionId ;
+    //         if(empty( $this->academicPeriodId )) {
+    //             $academicPeriodId = $this->AcademicPeriods->getCurrent();
+    //             $this->academicPeriodId = $academicPeriodId;
+    //         }
+    //         $this->gradesInInstitution = $this->getCustomInstitudeGradeIds($academicPeriodId);
+    //     }
+    //     //POCOR-8343 End
+    // }
+
     public function beforeAction($event)
     {
         $session = $this->request->getSession();
@@ -161,6 +198,22 @@ class ImportStudentAdmissionTable extends AppTable
             $academicPeriodId = $this->AcademicPeriods->getCurrent();
             $this->academicPeriodId = $academicPeriodId;
             $this->gradesInInstitution = [];
+        }
+        //$academic_period_id = $this->request->getData()['ImportStudentAdmission']['academic_period_id'];
+        $academic_period_id = $session->read('period');
+        if(empty($academic_period_id)){
+            $session->delete('period');
+            $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+            $academic_period_id = array_key_first($academicPeriodOptions);
+            $session->write('period', $academic_period_id);
+        }else{
+            //$academicPeriodOptions = $this->AcademicPeriods->getYearList();
+            //$academic_period_id = array_key_first($academicPeriodOptions);
+            $checkKey = $session->read('period');
+            if(empty($checkKey)){
+            $session->write('period', $academic_period_id);
+            }
+            //$session->write('period', $academic_period_id);
         }
         //POCOR-8343 Start
 
