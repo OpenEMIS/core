@@ -952,11 +952,59 @@ class InstitutionsTable extends ControllerActionTable
         if (!$hasSecurityGroupId) {
             $id = $this->createSecurityGroup($entity); //POCOR-7166
             $entity->security_group_id = $id;
-//            $this->log('createSecurityGroup', 'debug');
         }
 
         // adding debug log to monitor when there was a different between date_opened's year and year_opened
         $this->debugMonitorYearOpened($entity, $options);
+        $customFields = $this->request->getData('Institutions.custom_field_values');
+        $InstitutionCustomFieldValues = TableRegistry::get('InstitutionCustomField.InstitutionCustomFieldValues');
+
+        if (!empty($customFields)) {
+            if (!empty($entity->getOriginal('custom_field_values'))) {
+                foreach ($entity->getOriginal('custom_field_values') as $cfv) {
+                    // check if this custom field is FILE type
+                    if (
+                        isset($cfv->custom_field) &&
+                        strtoupper($cfv->custom_field->field_type) === 'FILE'
+                    ) {
+                        $institutionCustomFieldId = $cfv->institution_custom_field_id;
+                    }
+                }
+            }
+
+            foreach ($customFields as $field) {
+                $uploadedFile = $field['file'] ?? null;
+
+                if (
+                    $uploadedFile &&
+                    $uploadedFile->getError() === UPLOAD_ERR_OK &&
+                    !empty($institutionCustomFieldId)
+                ) {
+                    $originalFilename = $uploadedFile->getClientFilename();
+                    $mimeType         = $uploadedFile->getClientMediaType();
+                    $size             = $uploadedFile->getSize();
+                    $tmpPath          = $uploadedFile->getStream()->getMetadata('uri'); // temp location
+
+                    // optional: move to permanent folder
+                    /*
+                    $newPath = WWW_ROOT . 'upload' . DS . $originalFilename;
+                    $uploadedFile->moveTo($newPath);
+                    */
+
+                    // save into institution_classes_custom_field_values
+                    $customFieldEntity = $InstitutionCustomFieldValues->newEntity([
+                        'file'                       => $originalFilename,
+                        'institution_custom_field_id'=> $institutionCustomFieldId,
+                        'institution_id'             => $entity->id, // if you actually want class_id, replace here
+                        'created_user_id'            => 2,
+                    ]);
+
+                    $InstitutionCustomFieldValues->save($customFieldEntity);
+                }
+            }
+        }
+
+
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
