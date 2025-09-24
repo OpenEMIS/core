@@ -1233,28 +1233,56 @@ class StudentAttendancesTable extends ControllerActionTable
     /**
      * Narrow, lock-friendly reset: only update rows where no_scheduled_class != 0, in ID chunks.
      */
-    private function resetNoScheduledClass(Table $MarkedRecords, array $searchConds): void
+    /**
+     * Same goal, but groups many PKs into a single UPDATE with OR’ed PK predicates.
+     * Good compromise between A (many queries) and a single wide UPDATE (big locks).
+     */
+    private function resetNoScheduledClass(Table $MarkedRecords, array $sliceConds): void
     {
-        // Probe for rows that actually need change
-        $ids = $MarkedRecords->find()
-            ->select(['id'])
-            ->where($searchConds + ['no_scheduled_class !=' => 0])
+        $rows = $MarkedRecords->find()
+            ->select([
+                'institution_id', 'academic_period_id', 'institution_class_id',
+                'education_grade_id', 'date', 'period', 'subject_id'
+            ])
+            ->where($sliceConds + ['no_scheduled_class !=' => 0])
             ->enableHydration(false)
             ->all()
-            ->extract('id')
             ->toList();
 
-        if (empty($ids)) {
+        if (empty($rows)) {
             return;
         }
 
-        foreach (array_chunk($ids, 200) as $chunk) {
-            // Update narrowed by PKs → smaller lock footprint
-            $this->retryOnLock(function () use ($MarkedRecords, $chunk) {
-                $MarkedRecords->updateAll(
-                    ['no_scheduled_class' => 0],
-                    ['id IN' => $chunk, 'no_scheduled_class !=' => 0]
+        $conn = ConnectionManager::get('default');
+
+        foreach (array_chunk($rows, 100) as $chunk) {
+            // Build OR of full PK matches, plus the != 0 guard
+            $whereParts = [];
+            $params     = [];
+
+            foreach ($chunk as $i => $pk) {
+                $whereParts[] = sprintf(
+                    '(institution_id = :i%d AND academic_period_id = :ap%d AND institution_class_id = :ic%d AND education_grade_id = :eg%d AND `date` = :d%d AND period = :p%d AND subject_id = :s%d)',
+                    $i,$i,$i,$i,$i,$i,$i
                 );
+                $params += [
+                    "i{$i}"  => (int)$pk['institution_id'],
+                    "ap{$i}" => (int)$pk['academic_period_id'],
+                    "ic{$i}" => (int)$pk['institution_class_id'],
+                    "eg{$i}" => (int)$pk['education_grade_id'],
+                    "d{$i}"  => (string)$pk['date'],
+                    "p{$i}"  => (int)$pk['period'],
+                    "s{$i}"  => (int)$pk['subject_id'],
+                ];
+            }
+
+            $sql = 'UPDATE student_attendance_marked_records
+                SET no_scheduled_class = 0
+                WHERE ('.implode(' OR ', $whereParts).')
+                  AND no_scheduled_class != 0';
+
+            $this->retryOnLock(function () use ($conn, $sql, $params) {
+                $conn->execute($sql, $params);
             });
         }
     }
