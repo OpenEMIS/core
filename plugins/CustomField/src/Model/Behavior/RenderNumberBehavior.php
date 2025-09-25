@@ -32,8 +32,14 @@ class RenderNumberBehavior extends RenderBehavior {
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
             $options['type'] = 'number';
-            if ($savedValue !== null) {
+            // if ($savedValue !== null) {
+            //     $options['value'] = $savedValue;
+            // }
+
+            if (!is_null($savedValue)) {
                 $options['value'] = $savedValue;
+            }else { // POCOR-9066
+                $options['value'] = '';
             }
 
             $params = [];

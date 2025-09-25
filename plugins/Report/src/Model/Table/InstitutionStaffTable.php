@@ -625,6 +625,12 @@ class InstitutionStaffTable extends AppTable
             'type' => 'string',
             'label' => __('Username')
         ];
+        $newFields[] = [
+            'key' => 'staff_qualifications',
+            'field' => 'staff_qualifications',
+            'type' => 'string',
+            'label' => __('Highest Qualification')
+        ];
 
         $displayContactOptions = ['MOBILE', 'PHONE', 'EMAIL'];
         $ContactOptionsTable = TableRegistry::get('User.ContactOptions');
@@ -651,4 +657,27 @@ class InstitutionStaffTable extends AppTable
 
         $fields->exchangeArray($newFields);
     }
+
+    /**
+     * POCOR-9386
+    * Get staff highest qualification
+    */
+    public function onExcelGetStaffQualifications(Event $event, Entity $entity)
+    {
+        $qualification = TableRegistry::get('Staff.Qualifications');
+
+        $staffQualification = $qualification->find()
+            ->contain([
+                'QualificationTitles' => [
+                    'QualificationLevels'
+                ]
+            ])
+            ->where([$qualification->aliasField('staff_id') => $entity->staff_id])
+            ->order(['QualificationLevels.order' => 'ASC']) // use association alias directly
+            ->limit(1)
+            ->first();
+
+        return $entity->staff_qualification = $staffQualification->qualification_title->name ?? '';
+    }
+
 }

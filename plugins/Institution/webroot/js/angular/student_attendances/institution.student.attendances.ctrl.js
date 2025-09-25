@@ -1383,7 +1383,7 @@ function InstitutionStudentAttendancesController(
         AlertSvc.info($scope, "Attendances will be automatically saved.");
         //ticket POCOR-6658 Starts=> comment savePeriodMarked function becuase it is not working for multigrade class
         //InstitutionStudentAttendancesSvc.savePeriodMarked(vm.getPeriodMarkedParams(), $scope);
-        InstitutionStudentAttendancesSvc.getsavePeriodMarked(
+        InstitutionStudentAttendancesSvc.editSavePeriodMarked(
             vm.getPeriodMarkedParams(),
             $scope
         );
