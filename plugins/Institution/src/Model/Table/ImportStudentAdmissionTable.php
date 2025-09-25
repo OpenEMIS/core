@@ -309,25 +309,38 @@ class ImportStudentAdmissionTable extends AppTable
 
     public function onImportPopulateEducationGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
+        $session = $this->request->getSession();
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $programmeHeader = $this->getExcelLabel($lookedUpTable, 'education_programme_id');
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 3;
         $data[$columnOrder]['data'][] = [$programmeHeader, $translatedReadableCol, $translatedCol];
+        $academic_period_id = $session->read('period');
         if (!empty($this->gradesInInstitution)) {
+            //POCOR-9394
+            $subquery = $this->InstitutionGrades->find()
+                        ->select(['education_grade_id'])
+                        ->where([
+                            'InstitutionGrades.academic_period_id' => $academic_period_id,
+                            'InstitutionGrades.institution_id' => $this->institutionId
+                        ]);
+            //POCOR-9394
             $modelData = $lookedUpTable->find('all')
                 ->contain(['EducationProgrammes'])
                 ->select(['code', 'name', 'EducationProgrammes.name'])
                 ->where([
-                    $lookedUpTable->aliasField('visible') . ' = 1'
+                    $lookedUpTable->aliasField('visible') . ' = 1',
+                    'EducationGrades.id IN' => $subquery // POCOR-9394
                 ])
                 ->order([
                     $lookupModel . '.order',
                     $lookupModel . '.education_programme_id'
-                ])
-                ->where([
-                    $lookedUpTable->aliasField('id') . ' IN' => $this->gradesInInstitution
                 ]);
+                //POCOR-9394
+                // ->where([
+                //     $lookedUpTable->aliasField('id') . ' IN' => $this->gradesInInstitution
+                // ]);
+                //POCOR-9394
             if (!empty($modelData)) {
                 foreach ($modelData->toArray() as $row) {
                     $data[$columnOrder]['data'][] = [
