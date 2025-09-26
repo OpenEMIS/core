@@ -1,3 +1,6 @@
+### [4.43.1] - 2025-09-26
+- Bug Fixed: Institutions>Students>Import: Unable to import students
+
 ### [4.43.0] - 2025-09-24
 - Implemented: Update the change log
 - Bug Fixed: Institutions>Attendance>Students: Unable to mark attendance
