@@ -5,6 +5,9 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use CustomField\Model\Behavior\RenderBehavior;
+use Cake\Http\Session;
+use Cake\Log\Log;
+use Laminas\Diactoros\UploadedFile;
 
 class RenderFileBehavior extends RenderBehavior
 {
@@ -68,6 +71,7 @@ class RenderFileBehavior extends RenderBehavior
         $savedValue = null;
         $savedFile = null;
         if (!empty($fieldValues) && array_key_exists($fieldId, $fieldValues)) {
+            
             if (isset($fieldValues[$fieldId]['id'])) {
                 $savedId = $fieldValues[$fieldId]['id'];
             }
@@ -76,12 +80,48 @@ class RenderFileBehavior extends RenderBehavior
             }
             if (isset($fieldValues[$fieldId]['file'])) {
                 $savedFile = $fieldValues[$fieldId]['file'];
+                $savedValue = $fieldValues[$fieldId]['file_name']; //POCOR-9407
+                
             }
         }
         // End
-
-        if ($action == 'view') {
+        if ($action == 'view' && !empty($savedFile)) { //POCOR-9407  add this new condition  
             if (!is_null($savedValue)) {
+                $value = $savedValue;
+
+                // If file resource exists and is an image → show thumbnail
+                $mimeType = (!empty($savedFile) && is_resource($savedFile)) 
+                    ? mime_content_type($savedFile) 
+                    : '';
+
+                if (!empty($savedFile) && is_resource($savedFile) && in_array($mimeType, $this->fileImagesMap)) {
+                    $imgSrc = base64_encode(stream_get_contents($savedFile));
+                    if (base64_decode($imgSrc, true)) {
+                        $value = $event->getSubject()->renderElement(
+                            'ControllerAction.thumbnail',
+                            ['attr' => ['src' => "data:$mimeType;base64,$imgSrc", 'title' => $savedValue]]
+                        );
+                    }
+                }
+
+                // Always provide a download link (even if file resource is missing)
+                if (!empty($savedId)) { //POCOR-9407 start
+                    $url = $model->url('view');
+                    $url['action'] = 'downloadFile';
+                    $url[0] = 'downloadFile';
+                    $url[1] = $model->paramsEncode(['id' => $savedId, 'institution_id' => $model->getInstitutionID()]);
+
+                    // Append download link below/next to the image or name
+                    $value .= '<br>' . $event->getSubject()->Html->link(
+                        'Download ' . h($savedValue),
+                        $url,
+                        ['target' => '_blank']
+                    );
+                } 
+            } //POCOR-9407 end
+        }else if ($action == 'view') {
+            if (!is_null($savedValue)) {
+
                 $value = $savedValue;
                 $mimeType = !is_null($savedFile) ? mime_content_type($savedFile) : '';
 
@@ -114,7 +154,7 @@ class RenderFileBehavior extends RenderBehavior
             $sessionKey = $model->getRegistryAlias().'.parseFile.'.$fieldId;
             if ($session->check($sessionKey)) {
                 $parseFileData = $session->read($sessionKey);
-                $attr['value'] = $parseFileData['file']['name'];
+                $attr['value'] = $fieldValues[$fieldId]['file_name'];
             }
             // End
 
@@ -163,83 +203,168 @@ class RenderFileBehavior extends RenderBehavior
         $fieldKey = $settings['fieldKey'];
         $customValue = $settings['customValue'];
 
-        $fieldId = $customValue[$fieldKey];
-        $file = $customValue['file'];
+        $fieldId = $customValue[$fieldKey] ?? null;
+        $file = $customValue['file'] ?? null;
 
-        $model = $this->_table;
-        $session = $model->request->getSession();
-        $sessionKey = $model->getRegistryAlias().'.parseFile.'.$fieldId;
-        $sessionErrorKey = $model->getRegistryAlias().'.parseFileError.'.$fieldId;
+        $session = new \Cake\Http\Session();
+        $sessionKey = $this->_table->getRegistryAlias() . '.parseFile.' . $fieldId;
+        $sessionErrorKey = $this->_table->getRegistryAlias() . '.parseFileError.' . $fieldId;
         $session->delete($sessionErrorKey);
 
-        if (!is_array($file)) {
-            if ($session->check($sessionKey)) {
-                $session->delete($sessionKey);
-            }
-        } else {
-            if (!empty($file) && $file['error'] == 0) { // success
-                if ($this->fileSizeAllowed($file)) {
-                    $parseFileData = $this->parseFile($file);
-                    $parseFileData['file'] = $file;
-                    $session->write($sessionKey, $parseFileData);
-                } else {
-                    // File size too big
-                    $session->delete($sessionKey);
-                    $session->write($sessionErrorKey, [
-                        'file' => [
-                            'ruleCustomFile' => $model->getMessage('CustomField.file.maxSize', ['sprintf' => $this->getConfig('size')])
-                        ]
-                    ]);
-                }
-            } else if (!empty($file) && $file['error'] != 4) {  // allow empty
-                $session->delete($sessionKey);
-                $session->write($sessionErrorKey, [
-                    'file' => [
-                        'ruleCustomFile' => $model->getMessage('fileUpload.'.$file['error'])
-                    ]
-                ]);
-            }
+        // Only if new file uploaded
+        if ($file instanceof \Laminas\Diactoros\UploadedFile && $file->getError() === UPLOAD_ERR_OK) {
+            $parseFileData = [
+                'fileContent' => $file->getStream()->getContents(),
+                'fileName'    => $file->getClientFilename()
+            ];
+            $session->write($sessionKey, $parseFileData);
+
+        } elseif (is_array($file) && isset($file['tmp_name']) && $file['error'] === 0) {
+            $parseFileData = [
+                'fileContent' => file_get_contents($file['tmp_name']),
+                'fileName'    => $file['name']
+            ];
+            $session->write($sessionKey, $parseFileData);
         }
 
         $settings['customValue'] = $customValue;
     }
 
+    /**
+     * POCOR-9407
+     *
+     * Main entry point for processing custom field file values.
+     * Decides which handler method to call based on whether a new file
+     * was uploaded in the request or not.
+     *
+     * @param Event        $event    The event instance triggered by the save operation.
+     * @param Entity       $entity   The entity being saved (with custom field data).
+     * @param ArrayObject  $data     Additional request data passed into the process.
+     * @param ArrayObject  $settings Field configuration and custom values.
+     *
+     * @return mixed Result of the delegated file processing method.
+     */
     public function processFileValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
     {
-        $settings['valueKey'] = 'text_value';
-
-        $fieldKey = $settings['fieldKey'];
-        $valueKey = $settings['valueKey'];
+        $fieldKey    = $settings['fieldKey'];
         $customValue = $settings['customValue'];
 
-        $fieldId = $customValue[$fieldKey];
-        $model = $this->_table;
-        $session = $model->request->getSession();
-        $sessionKey = $model->getRegistryAlias().'.parseFile.'.$fieldId;
+        $hasRequestFile = (
+            isset($customValue['file']) &&
+            $customValue['file'] instanceof UploadedFile
+        );
+        if (isset($customValue['file']) &&$customValue['file'] instanceof UploadedFile) {
+            /** @var UploadedFile $uploadedFile */
+            $uploadedFile = $customValue['file'];
+            
+            // Get original file name 
+            $fileName = $uploadedFile->getClientFilename();
+        }
 
-        $uploadNewFile = true;
+        //Case 1: If request contains a file (new upload attempt and file in entity already) 
+        if ($hasRequestFile && !empty($customValue['id'])) {
+            return $this->processFileExist($event, $entity, $data, $settings);
+        }elseif($hasRequestFile && empty($customValue['id']) && !empty($fileName)){
+            return $this->processFileExist($event, $entity, $data, $settings);
+        }
+
+        //Case 2: If NO request file → use this (handles empty case and preserve existing)
+        return $this->processFileNewRequest($event, $entity, $data, $settings);
+    }
+
+    //POCOR-9407  
+    public function processFileExist(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
+    {
+        $settings['valueKey'] = 'file';
+
+        $fieldKey    = $settings['fieldKey'];
+        $customValue = $settings['customValue'];
+        $fieldId     = $customValue[$fieldKey] ?? null;
+
+        $session = new \Cake\Http\Session();
+        $sessionKey = $this->_table->getRegistryAlias() . '.parseFile.' . $fieldId;
+
+        $uploadNewFile = false;
+
         if ($session->check($sessionKey)) {
             $parseFileData = $session->read($sessionKey);
 
-            if (isset($parseFileData['fileContent'])) {
-                // upload new file
-                $customValue['text_value'] = $parseFileData['fileName'];
-                $customValue['file'] = $parseFileData['fileContent'];
-            } else {
-                $uploadNewFile = false;
+            if (!empty($parseFileData['fileContent'])) {
+
+                //store both file and file_name
+                $customValue['file']      = $parseFileData['fileContent'];
+                $customValue['file_name'] = $parseFileData['fileName'];
+                $uploadNewFile = true;
+              
             }
 
             $session->delete($sessionKey);
-        } else {
-            // will delete
-            $customValue['text_value'] = '';
-            $customValue['file'] = '';
+        }
+        $settings['customValue'] = $customValue;
+        $this->processValuesFile($entity, $data, $settings); //POCOR-9407
+    }
+
+    //POCOR-9407
+    public function processFileNewRequest(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
+    {
+        $settings['valueKey'] = 'file';
+
+        $fieldKey    = $settings['fieldKey'];
+        $customValue = $settings['customValue'];
+        $fieldId     = $customValue[$fieldKey] ?? null;
+
+        $session = new \Cake\Http\Session();
+        $sessionKey = $this->_table->getRegistryAlias() . '.parseFile.' . $fieldId;
+
+        $uploadNewFile = false;
+
+        //Preserve existing file from entity if no new file
+        if (!$uploadNewFile) {
+            $foundInEntity = false;
+            foreach ($entity->custom_field_values ?? [] as $cf) {
+                if ($cf[$fieldKey] == $fieldId) {
+                    $existingFile = $cf->file ?? null;
+                    $existingFileName = $cf->file_name ?? null;
+
+                    if ($existingFile instanceof UploadedFile) {
+                        $customValue['file'] = $existingFile->getError() === UPLOAD_ERR_OK
+                            ? $existingFile->getStream()->getContents()
+                            : null;
+                    } else {
+                        $customValue['file'] = $existingFile;
+                    }
+
+                    $customValue['file_name'] = $existingFileName;
+                    $foundInEntity = true;
+                    break;
+                }
+            }
+
+            // Final fallback: no file anywhere
+            if (!$foundInEntity && !isset($customValue['file'])) {
+                $customValue['file'] = null;
+                $customValue['file_name'] = null;
+            }
         }
 
-        if ($uploadNewFile) {
-            $settings['customValue'] = $customValue;
-            $this->processValues($entity, $data, $settings);
+        //Final strict check before saving
+        if (isset($customValue['file'])) {
+            if ($customValue['file'] instanceof UploadedFile) {
+                
+                $uploadedFile = $customValue['file'];
+                $customValue['file'] = $uploadedFile->getError() === UPLOAD_ERR_OK
+                    ? $uploadedFile->getStream()->getContents()
+                    : null;
+                $customValue['file_name'] = $uploadedFile->getClientFilename();
+            } elseif (!is_string($customValue['file']) && !is_null($customValue['file'])) {
+                Log::error('Invalid file type detected: ' . gettype($customValue['file']));
+                $customValue['file'] = null;
+                $customValue['file_name'] = null;
+            }
         }
+
+        $settings['customValue'] = $customValue;
+        $this->processValuesFile($entity, $data, $settings);
     }
 
     private function getFileComment()
@@ -333,4 +458,89 @@ class RenderFileBehavior extends RenderBehavior
 
         return $file;
     }
+
+
+    /*public function patchFileValuesbkp(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
+    {
+        $fieldKey = $settings['fieldKey'];
+        $customValue = $settings['customValue'];
+
+        $fieldId = $customValue[$fieldKey];
+        $file = $customValue['file'];
+
+        $model = $this->_table;
+        $session = $model->request->getSession();
+        $sessionKey = $model->getRegistryAlias().'.parseFile.'.$fieldId;
+        $sessionErrorKey = $model->getRegistryAlias().'.parseFileError.'.$fieldId;
+        $session->delete($sessionErrorKey);
+
+        if (!is_array($file)) {
+            if ($session->check($sessionKey)) {
+                $session->delete($sessionKey);
+            }
+        } else {
+            if (!empty($file) && $file['error'] == 0) { // success
+                if ($this->fileSizeAllowed($file)) {
+                    $parseFileData = $this->parseFile($file);
+                    $parseFileData['file'] = $file;
+                    $session->write($sessionKey, $parseFileData);
+                } else {
+                    // File size too big
+                    $session->delete($sessionKey);
+                    $session->write($sessionErrorKey, [
+                        'file' => [
+                            'ruleCustomFile' => $model->getMessage('CustomField.file.maxSize', ['sprintf' => $this->getConfig('size')])
+                        ]
+                    ]);
+                }
+            } else if (!empty($file) && $file['error'] != 4) {  // allow empty
+                $session->delete($sessionKey);
+                $session->write($sessionErrorKey, [
+                    'file' => [
+                        'ruleCustomFile' => $model->getMessage('fileUpload.'.$file['error'])
+                    ]
+                ]);
+            }
+        }
+
+        $settings['customValue'] = $customValue;
+    }*/
+
+    /*public function processFileValuesbkp(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
+    {
+        $settings['valueKey'] = 'text_value';
+
+        $fieldKey = $settings['fieldKey'];
+        $valueKey = $settings['valueKey'];
+        $customValue = $settings['customValue'];
+
+        $fieldId = $customValue[$fieldKey];
+        $model = $this->_table;
+        $session = $model->request->getSession();
+        $sessionKey = $model->getRegistryAlias().'.parseFile.'.$fieldId;
+
+        $uploadNewFile = true;
+        if ($session->check($sessionKey)) {
+            $parseFileData = $session->read($sessionKey);
+
+            if (isset($parseFileData['fileContent'])) {
+                // upload new file
+                $customValue['text_value'] = $parseFileData['fileName'];
+                $customValue['file'] = $parseFileData['fileContent'];
+            } else {
+                $uploadNewFile = false;
+            }
+
+            $session->delete($sessionKey);
+        } else {
+            // will delete
+            $customValue['text_value'] = '';
+            $customValue['file'] = '';
+        }
+
+        if ($uploadNewFile) {
+            $settings['customValue'] = $customValue;
+            $this->processValues($entity, $data, $settings);
+        }
+    }*/
 }
