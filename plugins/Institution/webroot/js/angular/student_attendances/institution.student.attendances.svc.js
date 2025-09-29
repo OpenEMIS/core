@@ -124,7 +124,7 @@ function InstitutionStudentAttendancesSvc(
 
         saveAbsences: saveAbsences,
         savePeriodMarked: savePeriodMarked,
-        getsavePeriodMarked: getsavePeriodMarked, //POCOR-6658
+        editSavePeriodMarked: editSavePeriodMarked, //POCOR-6658 // POCOR-9406
         isMarkableSubjectAttendance: isMarkableSubjectAttendance,
         isMarkableAttendance: isMarkableAttendance, // POCOR-8874
     };
@@ -637,7 +637,7 @@ function InstitutionStudentAttendancesSvc(
      * Create function for save attendance for multigrade class also.
      * author : Anubhav Jain <anubhav.jain@mail.vinove.com>
      */
-    function getsavePeriodMarked(params) {
+    function editSavePeriodMarked(params) {
         //POCOR-8874 start
         if (params.attendance_by == "subject") {
             params.attendance_period_id = 0;
@@ -670,7 +670,7 @@ function InstitutionStudentAttendancesSvc(
         };
 
         return StudentAttendances.find(
-            "classStudentsWithAbsenceSave",
+            "editSavePeriodMarked",
             extra
         ).ajax({ success: success, defer: true });
     }

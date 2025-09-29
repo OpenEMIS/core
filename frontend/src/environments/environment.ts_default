@@ -4,17 +4,8 @@
 
 export const environment = {
   production: false,
-  //baseUrl: 'http://127.0.0.1:8000/exams/api' /* Local Laravel V6*/
-  // baseUrl: 'http://127.0.0.1:8000' /* Local Laravel V8*/
-  //baseUrl: "https://dmo-tst2.openemis.org/exams/api" /* DMO-TST */,
-  // baseUrl: 'https://dmo-tst.openemis.org/core/api/v4/',
   apiV4BaseUrl: 'https://dmo-tst.openemis.org/core/api/v4/',
-  apiV5BaseUrl: 'https://dmo-tst.openemis.org/core/api/v5/',
-  // baseUrl: 'https://demo.openemis.org/core/api/v4/'
-
-  // baseUrl: 'http://openemis.n2.iworklab.com/api' /* Staging */
-  // baseUrl: 'https://testingopenemis-exam.n2.iworklab.com/api' /* Testing */
-  // baseUrl: 'http://openemis-exam.n2.iworklab.com/api' /* Main */
+  apiV5BaseUrl: 'https://dmo-tst.openemis.org/core/api/v5/'
 };
 
 /*
