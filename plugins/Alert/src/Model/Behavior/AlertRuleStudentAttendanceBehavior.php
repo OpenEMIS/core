@@ -17,8 +17,9 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
         'method' => ['Email','SMS'], // POCOR-8286
         'threshold' => [],
         'placeholder' => [
-            '${total_days}' => 'Total number of unexcused absence.',
-            '${threshold}' => 'Threshold value.',
+            '${total_times}' => 'Total number of unexcused absence.',
+            '${total_days}' => 'Total days of unexcused absence.',
+            '${threshold}' => 'Threshold (times) value.',
             '${user.openemis_no}' => 'Student OpenEMIS ID.',
             '${user.first_name}' => 'Student first name.',
             '${user.middle_name}' => 'Student middle name.',

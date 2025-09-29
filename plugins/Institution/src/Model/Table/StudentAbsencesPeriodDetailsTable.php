@@ -15,6 +15,7 @@ use Cake\Log\Log;
 use App\Controller\DashboardController;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
+use Cake\Datasource\ConnectionManager;
 
 class StudentAbsencesPeriodDetailsTable extends AppTable
 {
@@ -161,6 +162,10 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
         $this->updateStudentAbsencesRecord($entity);
+        //POCOR-6584 :: START
+        $this->sendStudentAbsenceAlert($entity); // POCOR-9392 commented out alerts for absence
+        //POCOR-6584 :: END
+
     }
 
 
@@ -192,9 +197,6 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                     // $this->aliasField('absence_type_id') => $absenceTypeId //POCOR-7205
                 ])
                 ->count();
-            //POCOR-6584 :: START
-            $this->sendStudentAbsenceAlert($entity); // POCOR-9392 commented out alerts for absence
-            //POCOR-6584 :: END
 
             // if count matches, the student is absences for full day
             if ($totalRecordCount == $periodCount) {
@@ -268,11 +270,15 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
      */
     private function sendStudentAbsenceAlert($entity): void
     {
-        if (property_exists($entity, 'modified_user_id') && $entity->modified_user_id) {
-            $userId = $entity->modified_user_id;
-        } else {
-            $userId = $entity->created_user_id;
+        Log::debug(print_r(['sendAlert' => $entity], true));
+        $AbsenceTypesTable = self::getDynamicTableInstance('absence_types'); // POCOR-9162
+        $AbsenceTypeUnexcused = $AbsenceTypesTable->find()->where(['code' => 'UNEXCUSED'])->first();
+        $absence_type_id = $entity->absence_type_id;
+        if($absence_type_id != $AbsenceTypeUnexcused->id){
+            Log::debug('no send alert becouse absence type');
+            return;
         }
+
         $alertsTable = self::getDynamicTableInstance('Alert.Alerts');
         $alertRulesTable = self::getDynamicTableInstance('Alert.AlertRules');
         $systemProcessesTable = self::getDynamicTableInstance('SystemProcesses');
@@ -280,7 +286,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 
         $alert = $alertsTable
             ->find()
-            ->where([$alertsTable->aliasField('process_name') => 'AlertAttendance',
+            ->where([$alertsTable->aliasField('process_name') => 'AlertStudentAbsence',
                 $alertsTable->aliasField('frequency') => 'once'])
             ->first();
         if(!$alert){
@@ -296,13 +302,31 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                 $alertRulesTable->aliasField('enabled') => 1
             ])
             ->toArray();
+        if(empty($activeRules)){
+            Log::debug('No Alerts Rules for AlertAttendance');
+            return;
+        }
+        if (property_exists($entity, 'modified_user_id')
+            && (int) $entity->modified_user_id != 0) {
+            $userId = (int) $entity->modified_user_id;
+        } else {
+            $userId = (int) $entity->created_user_id;
+        }
 
         foreach ($activeRules as $rule) {
             if(!is_array($rule)){
                 $rule = $rule->toArray();
             }
-            Log::debug('Absence Alerts to do');
-            DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['attendance_id' => (int) $entity->id]);
+            $extraOptions = [
+                'student_id' => (int)$entity->student_id,
+                'institution_id' => (int)$entity->institution_id,
+                'institution_class_id' => (int)$entity->institution_class_id,
+                'academic_period_id' => (string)$entity->academic_period_id,
+                'period' => (int)$entity->period,
+                'subject_id' => (int)$entity->subject_id,
+            ];
+            Log::debug(print_r(['Absence Alerts to do'=> $extraOptions, 'userid' => $userId, $alert], true));
+            DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, $extraOptions);
         }
 
 //        $shellName = "AlertAttendance";
