@@ -28,7 +28,7 @@ class POCOR9256 extends AbstractMigration
                 `_view` = 'Credentials.index|Credentials.view',
                 `_edit` = 'Credentials.edit',
                 `_add` = 'Credentials.add',
-                `_delete` = 'Credentials.delete'
+                `_delete` = 'Credentials.remove'
             WHERE 
                 `name` = 'Credentials'
                 AND `controller` = 'Credentials'
