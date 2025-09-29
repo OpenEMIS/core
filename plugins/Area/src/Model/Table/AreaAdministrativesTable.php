@@ -86,7 +86,7 @@ class AreaAdministrativesTable extends ControllerActionTable
     {
         if($this->action != 'index'){
             $this->field('area_administrative_level_id');
-            
+
             $this->field('name');
             $count = $this->find()->where([
                     'OR' => [
@@ -159,7 +159,11 @@ class AreaAdministrativesTable extends ControllerActionTable
                 ->formatResults(function ($results) use ($selected) {
                     $results = $results->toArray();
                     foreach ($results as &$result) {
-                        $result['name'] = $result['name'] . ' - ' . __($result['area_administrative_level']['name']);
+                        // POCOR-9406 start
+                        $levelName = $result['area_administrative_level']['name'] ?? "Undefined";
+                        $name = $result['name'] ?? "Undefined";
+                        $result['name'] = $name . ' - ' . __($levelName);
+                        // POCOR-9406 end
                         $result['selected'] = true;
                     }
                     $defaultSelect = ['id' => null, 'name' => __('-- Select --')];
@@ -574,7 +578,7 @@ class AreaAdministrativesTable extends ControllerActionTable
             TableRegistry::get('Directory.Directories')
         ];
 
-        $this->dispatchEventToModels('Model.AreaAdministrative.afterDelete', [$entity], $this, $listeners);    
+        $this->dispatchEventToModels('Model.AreaAdministrative.afterDelete', [$entity], $this, $listeners);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
