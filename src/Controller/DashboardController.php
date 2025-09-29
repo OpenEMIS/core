@@ -828,7 +828,9 @@ class DashboardController extends AppController
 
         if ($existing) {
             // 🦕 Skip creating duplicate process
-            Log::debug(__FUNCTION__ . 'Already Present');
+            Log::debug(print_r([
+                __FUNCTION__ => ' Already Present',
+                'params' => $paramsJson], true));
             return;
         }
 

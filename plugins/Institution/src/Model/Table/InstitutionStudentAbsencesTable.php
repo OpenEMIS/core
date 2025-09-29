@@ -1252,13 +1252,15 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
     {
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $currentAcademicPeriodId = $AcademicPeriods->getCurrent();
-        $currentPeriodStartDate = $AcademicPeriods->get($currentAcademicPeriodId)->start_date;
-        $currentPeriodEndDate = $AcademicPeriods->get($currentAcademicPeriodId)->end_date;
+        $currentPeriod = $AcademicPeriods->get($currentAcademicPeriodId);
 
-        // will do the comparison with threshold when retrieving the absence data
-        $unexcusedAbsenceResults = $this->find()
+        // Fetch raw data grouped by absence record, including the `date`
+        $rawAbsences = $this->find()
             ->select([
-                'total_days' => $this->find()->func()->count('*'),
+                'institution_id',
+                'student_id',
+                'absence_type_id',
+                'date',
                 'Institutions.id',
                 'Institutions.name',
                 'Institutions.code',
@@ -1266,7 +1268,6 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 'Institutions.postal_code',
                 'Institutions.contact_person',
                 'Institutions.telephone',
-               // 'Institutions.fax',
                 'Institutions.email',
                 'Institutions.website',
                 'Users.id',
@@ -1294,14 +1295,49 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 ]);
             })
             ->where([
-                'date' . ' >='  => $currentPeriodStartDate->format('Y-m-d'),
-                'date' . ' <='  => $currentPeriodEndDate->format('Y-m-d'),
+                'date >=' => $currentPeriod->start_date->format('Y-m-d'),
+                'date <=' => $currentPeriod->end_date->format('Y-m-d'),
             ])
-            ->group(['institution_id', 'student_id', 'absence_type_id'])
-            ->having(['total_days >= ' => $threshold])
-            ->disableHydration() // POCOR-8533
-            ;
+            ->disableHydration()
+            ->toArray();
 
-        return $unexcusedAbsenceResults->toArray();
+        // Group the results in PHP
+        $grouped = [];
+
+        foreach ($rawAbsences as $row) {
+            $key = $row['institution_id'] . '_' . $row['student_id'] . '_' . $row['absence_type_id'];
+
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = [
+                    'institution_id' => $row['institution_id'],
+                    'student_id' => $row['student_id'],
+                    'absence_type_id' => $row['absence_type_id'],
+                    'total_times' => 0,
+                    'dates' => [],
+                    'institution' => $row['Institutions'],
+                    'user' => $row['Users'],
+                    'gender' => $row['Genders']['name'] ?? null,
+                    'nationality' => $row['MainNationalities']['name'] ?? null,
+                    'identity_type' => $row['MainIdentityTypes']['name'] ?? null,
+                ];
+            }
+
+            $grouped[$key]['total_times'] += 1;
+            $grouped[$key]['dates'][$row['date']] = true;
+        }
+
+        // Final result: count unique days
+        $finalResults = [];
+
+        foreach ($grouped as $item) {
+            $item['total_days'] = count($item['dates']);
+            unset($item['dates']); // clean up
+
+            if ($item['total_times'] >= $threshold) {
+                $finalResults[] = $item;
+            }
+        }
+
+        return $finalResults;
     }
 }
