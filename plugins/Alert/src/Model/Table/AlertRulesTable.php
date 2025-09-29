@@ -601,34 +601,38 @@ class AlertRulesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onGetSecurityRoleIds(Event $event, Entity $entity)
+    public function getSecurityRolesList(Entity $entity): string
     {
-
         if (!$entity->has('security_roles')) {
             $query = $this->find()
                 ->where([$this->aliasField($this->getPrimaryKey()) => $entity->id])
                 ->contain(['SecurityRoles']);
 
-            $data = $query->first();
-        } else {
-            $data = $entity;
+            $entity = $query->first();
         }
 
-        $role = [];
-//        $feature = $this->featureList[$entity->id];
-//        if (in_array($feature, ['ScholarshipApplication'])) {
-//            $role[] = __(self::ASSIGNEE_ROLE);
-//        } else {
-            if ($data->has('security_roles')) {
-                foreach ($data->security_roles as $key => $value) {
-                    $role[] = $value->name;
-                }
-            }
-//        }
+        $roles = [];
 
-        return (!empty($role)) ? implode(', ', $role) : __('No Role To Send Alert Selected');
+        if ($entity && $entity->has('security_roles')) {
+            foreach ($entity->security_roles as $roleEntity) {
+                $roles[] = $roleEntity->name;
+            }
+        }
+
+        return !empty($roles)
+            ? implode(', ', $roles)
+            : __('No Role To Send Alert Selected');
     }
 
+    public function onGetSecurityRoleIds(Event $event, Entity $entity): string
+    {
+        return $this->getSecurityRolesList($entity);
+    }
+
+    public function onGetSecurityRoles(Event $event, Entity $entity): string
+    {
+        return $this->getSecurityRolesList($entity);
+    }
     public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options = [])
     {
         if ($action == 'add' || $action == 'edit') {
