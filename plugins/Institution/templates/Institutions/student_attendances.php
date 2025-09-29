@@ -52,7 +52,7 @@ $session = $this->getRequest()->getSession();
 $superAdmin = $session->read('Auth.User.super_admin');
 $is_connection_is_online = $session->read('is_connection_stablished');
 ?>
-<!-- <?php //if(($is_connection_is_online == 1 && $is_button_accesible == 1)) :
+<!-- <?php //if(($is_connection_is_online == 1 && $is_button_accesible == 1)) :  
         ?> -->
 <?php if ($archiveUrl) : ?>
     <a href="<?= $archiveUrl ?>" ng-show="$ctrl.action == 'view'">
@@ -62,7 +62,7 @@ $is_connection_is_online = $session->read('is_connection_stablished');
     </a>
     </button>
 <?php endif; ?>
-<?php //endif;
+<?php //endif; 
 ?>
 <?php /*************** Start POCOR-5188 */ ?>
 <?php
@@ -387,11 +387,7 @@ $panelHeader = $this->fetch('panelHeader');
 
                     <h5 ng-if="$ctrl.selectedAttendanceBy=='subject'"><?= __('Subjects') ?>: </h5>
                     <div class="input-select-wrapper" ng-if="$ctrl.selectedAttendanceBy=='subject'">
-                        <select ng-disabled="$ctrl.action=='edit'"
-                                name="subject"
-                                ng-options="subject.id as subject.name for subject in $ctrl.subjectListOptions"
-                                ng-model="$ctrl.selectedSubject"
-                                ng-change="$ctrl.changeSubject();">
+                        <select ng-disabled="$ctrl.action=='edit'" name="subject" ng-options="subject.id as subject.name for subject in $ctrl.subjectListOptions" ng-model="$ctrl.selectedSubject" ng-change="$ctrl.changeSubject();">
                             <option value="" ng-if="$ctrl.subjectListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>
