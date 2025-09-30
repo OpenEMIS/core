@@ -104,6 +104,7 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
             'student_address' => $first['user']['address'],
             'student_postal_code' => $first['user']['postal_code'],
             'student_date_of_birth' => $first['user']['date_of_birth'],
+            'student_identity_number' => $first['user']['identity_number'],
             'institution_name' => $first['institution']['name'],
             'institution_code' => $first['institution']['code'],
             'institution_address' => $first['institution']['address'],
@@ -125,13 +126,13 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
     public function prepareContext(Arguments $args, ConsoleIo $io): bool
     {
         $this->setIo($io);
-        $io->out(__FUNCTION__ . print_r($args, true));
+//        $io->out(__FUNCTION__ . print_r($args, true));
         $this->userId = (int)$args->getOption('user_id');
-        $io->out($this->userId);
+//        $io->out($this->userId);
         $this->ruleId = (int)$args->getOption('rule_id');
-        $io->out($this->ruleId);
+//        $io->out($this->ruleId);
         $this->processId = (int)$args->getOption('process_id');
-        $io->out($this->processId);
+//        $io->out($this->processId);
 
         $this->studentId = (int)$args->getOption('student_id');
         $this->institutionId = (int)$args->getOption('institution_id');
@@ -192,6 +193,9 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
             '${student.address}' => $item['student_address'] ?? '',
             '${student.postal_code}' => $item['student_postal_code'] ?? '',
             '${student.date_of_birth}' => $item['student_date_of_birth'] ?? '',
+            '${student.gender}' => $item['user.gender.name'] ?? '',
+            '${student.identity_number}' => $item['student_identity_number'] ?? '',
+            '${student.main_nationality}' => $item['user.main_nationality.name'] ?? '',
             '${institution.name}' => $item['institution_name'] ?? '',
             '${institution.code}' => $item['institution_code'] ?? '',
             '${institution.address}' => $item['institution_address'] ?? '',
@@ -200,9 +204,6 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
             '${institution.telephone}' => $item['institution_telephone'] ?? '',
             '${institution.email}' => $item['institution_email'] ?? '',
             '${institution.website}' => $item['institution_website'] ?? '',
-            '${user.gender.name}' => $item['user.gender.name'] ?? '',
-            '${user.main_nationality.name}' => $item['user.main_nationality.name'] ?? '',
-            '${user.main_identity_type.name}' => $item['user.main_identity_type.name'] ?? '',
             '${total_days}' => $item['total_days'] ?? '',
             '${total_times}' => $item['total_times'] ?? '',
         ];
