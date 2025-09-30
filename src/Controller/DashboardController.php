@@ -813,10 +813,11 @@ class DashboardController extends AppController
     public static function triggerSystemProcess($systemProcessesTable, $rule, string $processName, int $userId, array $extraOptions = []): void
     {
         $now = FrozenTime::now();
+        // POCOR-9391 start
         $extraRuleOptions = $extraOptions;
         $extraRuleOptions['rule_id'] = $rule['id'];
         $paramsJson = json_encode($extraRuleOptions);
-
+        // POCOR-9391 end
         // Check for an existing process with same model, name, rule and params
         $existing = $systemProcessesTable->find()
             ->where([
