@@ -34,7 +34,6 @@ class AlertRuleBehavior extends Behavior
 
     public function implementedEvents(): array
     {
-
         $events = parent::implementedEvents();
         $eventMap = [
             'AlertRule.'.$this->alertRule.'.SetupFields' => 'on'.$this->alertRule.'SetupFields',
@@ -42,10 +41,8 @@ class AlertRuleBehavior extends Behavior
             'AlertRule.onGet.'.$this->alertRule.'.Threshold' => 'onGet'.$this->alertRule.'Threshold'
         ];
 
-
         foreach ($eventMap as $event => $method) {
             if (!method_exists($this, $method)) {
-//                die('No!' . $event);
                 continue;
             }
             $events[$event] = $method;

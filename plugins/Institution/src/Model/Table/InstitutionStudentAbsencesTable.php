@@ -428,7 +428,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 $InstitutionStudentAbsenceDays->updateAll(['absence_type_id' => $entity->absence_type_id], ['student_id' => $entity->student_id, 'institution_id'=>$entity->institution_id, 'start_date'=>$startDate, 'end_date'=>$endDate]);
 
                 //POCOR-7035[END]
-                $this->updateAll(['institution_student_absence_day_id' => $dayEntity->id], ['id' => $entity->id]);
+                $this->updateAll(['institution_student_absence_day_id' => $recordEntity->id], ['id' => $entity->id]);
                 break;
             // When there is two records found, it means this record happen to fall in between the two record
             case 2:

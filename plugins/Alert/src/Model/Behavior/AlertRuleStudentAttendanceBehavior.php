@@ -12,11 +12,12 @@ use Cake\Event\Event;
 class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
 {
     protected $_defaultConfig = [
-        'feature' => 'StudentAbsence', //POCOR-6584
+        'feature' => 'StudentAbsence', //POCOR-9391
         'name' => 'Student Absent',
         'method' => ['Email','SMS'], // POCOR-8286
         'threshold' => [],
         'placeholder' => [
+            // POCOR-9391 start
             '${total_times}' => 'Total number of absence.',
             '${total_days}' => 'Total days of absence.',
             '${threshold}' => 'Threshold (times) value.',
@@ -37,6 +38,7 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
             '${student.main_identity_type}' => 'Student identity type.',
             '${student.main_nationality}' => 'Student nationality.',
             '${student.gender}' => 'Student gender.',
+            // POCOR-9391 end
             '${institution.name}' => 'Institution name.',
             '${institution.code}' => 'Institution code.',
             '${institution.address}' => 'Institution address.',
