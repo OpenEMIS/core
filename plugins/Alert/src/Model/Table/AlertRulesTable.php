@@ -103,11 +103,11 @@ class AlertRulesTable extends ControllerActionTable
             // POCOR-8286 end
             if (isset($data['feature']) && !empty($data['feature'])) {
                 $alertRuleTypes = $this->getAlertRuleTypes();
-                $feature = $data['feature'];
+                $feature = $data['feature']; // POCOR-9391 start
                 if($feature == 'StudentAbsence') {
                     $feature = 'StudentAttendance';
                 }
-                $thresholdConfig = $alertRuleTypes[$feature]['threshold'];
+                $thresholdConfig = $alertRuleTypes[$feature]['threshold']; // POCOR-9391 end
                 if (!empty($thresholdConfig)) {
                     $thresholdArray = [];
                     foreach ($thresholdConfig as $field => $attr) {
@@ -592,12 +592,12 @@ class AlertRulesTable extends ControllerActionTable
         }
 
         if ($entity->has('feature') && !empty($entity->feature)) {
-            $feature = $entity->feature;
+            $feature = $entity->feature; // POCOR-9391 start
             if ($feature == 'StudentAbsence') {
                 $feature = 'StudentAttendance';
             }
             $event = $this->dispatchEvent('AlertRule.UpdateField.' . $feature . '.Threshold', [$attr, $action, $request], $this);
-
+            // POCOR-9391 end
             if ($event->isStopped()) {
                 return $event->getResult();
             }
@@ -610,7 +610,7 @@ class AlertRulesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function getSecurityRolesList(Entity $entity): string
+    public function getSecurityRolesList(Entity $entity): string // POCOR-9391 start
     {
         if (!$entity->has('security_roles')) {
             $query = $this->find()
@@ -641,7 +641,7 @@ class AlertRulesTable extends ControllerActionTable
     public function onGetSecurityRoles(Event $event, Entity $entity): string
     {
         return $this->getSecurityRolesList($entity);
-    }
+    } // POCOR-9391 end
     public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options = [])
     {
         if ($action == 'add' || $action == 'edit') {
