@@ -84,7 +84,9 @@ abstract class AlertCommandBase extends \Cake\Command\Command
 //                $pendingItems = [$pendingItems[0]];
 //            }
             foreach ($pendingItems as $item) {
-                if (property_exists($this, 'studentId') && $this->studentId) {
+                if (
+                    $featureKey != 'StudentAbsence' &&
+                    (property_exists($this, 'studentId') && $this->studentId)) {
                     $this->contacts = $this->getStudentAssociatedContactList($this->rule->security_roles, $this->studentId);
                 } else {
                     $institutionId = (int) $item['institution_id'] ?? null;
