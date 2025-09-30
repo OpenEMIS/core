@@ -444,7 +444,7 @@ function InstitutionStudentAttendancesSvc(
         //POCOR-8874 start
         // console.log("getclass",extra.attendance_period_id);
         if (extra.attendance_period_id == "") {
-            extra.attendance_period_id = 1;
+            extra.attendance_period_id = 0;
         }
         //POCOR-8874 end
         // console.log(extra);
