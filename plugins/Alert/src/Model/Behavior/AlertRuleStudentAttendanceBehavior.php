@@ -12,7 +12,7 @@ use Cake\Event\Event;
 class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
 {
     protected $_defaultConfig = [
-        'feature' => 'StudentAttendance', //POCOR-6584
+        'feature' => 'StudentAbsence', //POCOR-6584
         'name' => 'Student Absent',
         'method' => ['Email','SMS'], // POCOR-8286
         'threshold' => [],
