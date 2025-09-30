@@ -17,8 +17,8 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
         'method' => ['Email','SMS'], // POCOR-8286
         'threshold' => [],
         'placeholder' => [
-            '${total_times}' => 'Total number of unexcused absence.',
-            '${total_days}' => 'Total days of unexcused absence.',
+            '${total_times}' => 'Total number of absence.',
+            '${total_days}' => 'Total days of absence.',
             '${threshold}' => 'Threshold (times) value.',
             '${student.openemis_no}' => 'Student OpenEMIS ID.',
             '${student.name}' => 'Student name.',
@@ -52,10 +52,12 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
     public function initialize(array $config): void
     {
         parent::initialize($config);
+
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
+
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
@@ -74,6 +76,7 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
     public function onStudentAttendanceSetupFields(Event $event, Entity $entity)
     { ////echo "heey";die;
         $this->onAlertRuleSetupFields($event, $entity);
+
     }
 
     public function onUpdateFieldStudentAttendanceThreshold(Event $event, array $attr, $action, ServerRequest $request)

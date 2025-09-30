@@ -103,7 +103,11 @@ class AlertRulesTable extends ControllerActionTable
             // POCOR-8286 end
             if (isset($data['feature']) && !empty($data['feature'])) {
                 $alertRuleTypes = $this->getAlertRuleTypes();
-                $thresholdConfig = $alertRuleTypes[$data['feature']]['threshold'];
+                $feature = $data['feature'];
+                if($feature == 'StudentAbsence') {
+                    $feature = 'StudentAttendance';
+                }
+                $thresholdConfig = $alertRuleTypes[$feature]['threshold'];
                 if (!empty($thresholdConfig)) {
                     $thresholdArray = [];
                     foreach ($thresholdConfig as $field => $attr) {
@@ -588,7 +592,12 @@ class AlertRulesTable extends ControllerActionTable
         }
 
         if ($entity->has('feature') && !empty($entity->feature)) {
-            $event = $this->dispatchEvent('AlertRule.UpdateField.' . $entity->feature . '.Threshold', [$attr, $action, $request], $this);
+            $feature = $entity->feature;
+            if ($feature == 'StudentAbsence') {
+                $feature = 'StudentAttendance';
+            }
+            $event = $this->dispatchEvent('AlertRule.UpdateField.' . $feature . '.Threshold', [$attr, $action, $request], $this);
+
             if ($event->isStopped()) {
                 return $event->getResult();
             }
