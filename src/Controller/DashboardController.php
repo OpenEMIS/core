@@ -813,9 +813,11 @@ class DashboardController extends AppController
     public static function triggerSystemProcess($systemProcessesTable, $rule, string $processName, int $userId, array $extraOptions = []): void
     {
         $now = FrozenTime::now();
-        $paramsJson = json_encode($extraOptions);
+        $extraRuleOptions = $extraOptions;
+        $extraRuleOptions['rule_id'] = $rule['id'];
+        $paramsJson = json_encode($extraRuleOptions);
 
-        // Check for an existing process with same model, name, and params
+        // Check for an existing process with same model, name, rule and params
         $existing = $systemProcessesTable->find()
             ->where([
                 'model' => $processName,
@@ -845,6 +847,7 @@ class DashboardController extends AppController
 
         $process = $systemProcessesTable->newEntity($processValues);
         if ($systemProcessesTable->save($process)) {
+            Log::debug(__FUNCTION__ . 'Fired!');
             self::triggerAlertCommand($processName, $userId, $rule['id'], $process->id, $extraOptions);
         } else {
             Log::debug(__FUNCTION__ . 'Could Not Fire');

@@ -341,6 +341,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
             'institution_class_id' => (int) $entity->institution_class_id,
             'academic_period_id' => (string) $entity->academic_period_id,
             'period' => (int) $entity->period,
+            'date' => $entity->date->format('Y-m-d'),
             'subject_id' => (int) $entity->subject_id,
         ];
 

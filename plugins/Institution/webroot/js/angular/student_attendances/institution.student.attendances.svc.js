@@ -444,7 +444,7 @@ function InstitutionStudentAttendancesSvc(
         //POCOR-8874 start
         // console.log("getclass",extra.attendance_period_id);
         if (extra.attendance_period_id == "") {
-            extra.attendance_period_id = 0;
+            extra.attendance_period_id = 1;
         }
         //POCOR-8874 end
         // console.log(extra);
@@ -575,7 +575,7 @@ function InstitutionStudentAttendancesSvc(
     function saveAbsences(data, context) {
         //POCOR-8874 start
         if (context.attendance_by == "subject") {
-            context.period = 0;
+            context.period = 1;
         } else {
             context.subject_id = 0;
         }
@@ -640,7 +640,7 @@ function InstitutionStudentAttendancesSvc(
     function editSavePeriodMarked(params) {
         //POCOR-8874 start
         if (params.attendance_by == "subject") {
-            params.attendance_period_id = 0;
+            params.attendance_period_id = 1;
         } else {
             params.subject_id = 0;
         }

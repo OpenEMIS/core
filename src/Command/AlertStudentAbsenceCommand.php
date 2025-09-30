@@ -42,7 +42,7 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
         $this->loadModel('Institution.Students');
         $this->loadModel('Institution.Institutions');
         $this->loadModel('User.Users');
-        $io->out('start');
+//        $io->out('start');
         if (!$this->prepareContext($args, $io)) {
             return static::CODE_SUCCESS;
         }
@@ -58,7 +58,7 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
      */
     protected function getPendingItems(string $featureKey): array
     {
-        $this->io->out(__FUNCTION__);
+//        $this->io->out(__FUNCTION__);
         $threshold = (int)($this->rule->threshold ?? 1);
 
         $query = $this->StudentAbsencesPeriodDetails->find()
@@ -69,27 +69,27 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
             ->where([
                 'student_id' => $this->studentId,
                 'academic_period_id' => $this->academicPeriodId,
-                'absence_type_id IS NOT' => null
+                'absence_type_id IN' => [1,2]
             ])
             ->order(['date' => 'ASC'])
             ->disableHydration(); // for performance
-        $this->io->out(__LINE__);
+//        $this->io->out(__LINE__);
 
         $absences = $query->toArray();
 
         if (count($absences) < $threshold) {
             return [];
         }
-        $this->io->out(__LINE__);
+//        $this->io->out(__LINE__);
         $uniqueDates = [];
         foreach ($absences as $absence) {
             if (!empty($absence['date'])) {
                 $stringAbsenceDate = $absence['date']->format('Y-m-d');
-                $this->io->out(print_r([__LINE__ => $stringAbsenceDate], true));
+//                $this->io->out(print_r([__LINE__ => $stringAbsenceDate], true));
                 $uniqueDates[$stringAbsenceDate] = true;
             }
         }
-        $this->io->out(__LINE__);
+//        $this->io->out(__LINE__);
         $first = $absences[0];
         $answer = [[
             'academic_period_name' => '', // Can load if needed
@@ -165,7 +165,7 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
         }
 
         if (empty($this->rule->security_roles)) {
-            $io->out("No roles assigned to alert rule ID {$this->ruleId}. Skipping.");
+            $io->error("No roles assigned to alert rule ID {$this->ruleId}. Skipping.");
             return false;
         }
 
@@ -207,7 +207,7 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
             '${total_days}' => $item['total_days'] ?? '',
             '${total_times}' => $item['total_times'] ?? '',
         ];
-        $this->io->out(print_r([__FUNCTION__ => $answer],true));
+//        $this->io->out(print_r([__FUNCTION__ => $answer],true));
         return $answer;
     }
 
@@ -223,7 +223,8 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
             ->addOption('institution_class_id', ['help' => 'Institution Class ID', 'required' => true, 'short' => 'c'])
             ->addOption('academic_period_id', ['help' => 'Academic Period ID', 'required' => true, 'short' => 'a'])
             ->addOption('period', ['help' => 'Period ID', 'required' => true, 'short' => 'p'])
-            ->addOption('subject_id', ['help' => 'Subject ID', 'required' => true, 'short' => 'j']);
+            ->addOption('subject_id', ['help' => 'Subject ID', 'required' => true, 'short' => 'j'])
+            ->addOption('date', ['help' => 'Date', 'short' => 'd']);
     }
 
 
