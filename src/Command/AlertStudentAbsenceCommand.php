@@ -26,13 +26,11 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
      */
     public function logAlert($method, $feature, $recipient, $subject, $message)
     {
+
         $this->AlertLogs->insertAlertLog($method, $feature, $recipient, $subject, $message);
         $shortSubject = mb_strimwidth((string)$subject, 0, 100, '...');
         $shortMessage = mb_strimwidth((string)$message, 0, 100, '...');
-
         $this->logMsg("✅ Alert {$feature} logged via {$method} to {$recipient}. Subject: {$shortSubject} Message: {$shortMessage}");
-
-
     }
 
     /**
@@ -41,12 +39,15 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
     public function execute(Arguments $args, ConsoleIo $io): int
     {
         $this->loadModel('Institution.StudentAbsencesPeriodDetails');
-//        $this->loadModel('Institution.StudentAdmission');
+        $this->loadModel('Institution.Students');
+        $this->loadModel('Institution.Institutions');
+        $this->loadModel('User.Users');
+        $io->out('start');
         if (!$this->prepareContext($args, $io)) {
             return static::CODE_SUCCESS;
         }
 
-        return $this->runFeatureAlert('StudentAttendance');
+        return $this->runFeatureAlert('StudentAbsence');
     }
 
     /**
@@ -57,128 +58,116 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
      */
     protected function getPendingItems(string $featureKey): array
     {
-        $thresholdValue = $this->rule['threshold'] ?? '{}';
-        $threshold = json_decode($thresholdValue, true);
-//        $workflowCategory = $threshold['workflow_steps'];
-//        $where = [
-//            'StudentAdmission.id' => $this->admissionId,
-//            'Statuses.id IN' => $workflowCategory,
-//
-//        ];
-////        $this->logMsg("Where: " . print_r($where, true));
-//        // POCOR-9320 start
-//        $query = $this->StudentAdmission->find();
-//        $query->contain(['Users',
-//            'Statuses',
-//            'AcademicPeriods',
-//            'Institutions',
-//            'EducationGrades'])
-//            ->where($where)
-////            ->group($this->StudentAdmission->aliasField('student_id'))
-//        ;
-//        $query = $this->addStudentGuardianFields($query);
-          return [];
-//        return $query->toArray();
-    }
+        $this->io->out(__FUNCTION__);
+        $threshold = (int)($this->rule->threshold ?? 1);
 
-//    private function addStudentGuardianFields(Query $query)
-//    {
-//        $guardians = TableRegistry::getTableLocator()->get('User.Users');
-//        $student_guardians = TableRegistry::getTableLocator()->get('Student.StudentGuardians');
-//        $guardian_relations = TableRegistry::getTableLocator()->get('Student.GuardianRelations');
-//        $guardian_contacts = TableRegistry::getTableLocator()->get('User.Contacts');
-//        $guardians->setAlias('guardians');
-//        $student_guardians->setAlias('student_guardians');
-//        $guardian_relations->setAlias('guardian_relations');
-//        $guardian_contacts->setAlias('guardian_contacts');
-//        $query
-//            ->leftJoin([$student_guardians->getAlias() => $student_guardians->getTable()], [
-//                $student_guardians->aliasField('student_id = ') . $this->StudentAdmission->aliasField('student_id')
-//            ])
-//            ->leftJoin([$guardians->getAlias() => $guardians->getTable()], [
-//                $guardians->aliasField('id = ') . $student_guardians->aliasField('guardian_id')
-//            ])
-//            ->leftJoin([$guardian_relations->getAlias() => $guardian_relations->getTable()], [
-//                $guardian_relations->aliasField('id = ') . $student_guardians->aliasField('guardian_relation_id')
-//            ])
-//            ->leftJoin([$guardian_contacts->getAlias() => $guardian_contacts->getTable()], [
-//                $guardian_contacts->aliasField('security_user_id = ') . $guardians->aliasField('id'),
-//            ])
-//            ->orderAsc($guardian_relations->aliasField('order'))
-//            ->orderDesc($guardian_contacts->aliasField('preferred'));
-//        $query = $query->enableAutoFields();
-////        $this->logMsg($query->sql());
-//        $query->select([
-//            'academic_period_name' => 'AcademicPeriods.name',
-//            'status_name' => 'Statuses.name',
-//            'start_date' => 'StudentAdmission.start_date',
-//            'end_date' => 'StudentAdmission.end_date',
-//            'admission_status' => 'Statuses.name',
-//            'student_name' => "CONCAT(`Users`.`first_name`, ' ', `Users`.`last_name`)",
-//            'student_openemis_no' => 'Users.openemis_no',
-//            'student_first_name' => 'Users.first_name',
-//            'student_middle_name' => 'Users.middle_name',
-//            'student_third_name' => 'Users.third_name',
-//            'student_last_name' => 'Users.last_name',
-//            'student_preferred_name' => 'Users.preferred_name',
-//            'student_email' => 'Users.email',
-//            'student_postal_code' => 'Users.postal_code',
-//            'student_date_of_birth' => 'Users.date_of_birth',
-//            'institution_name' => 'Institutions.name',
-//            'institution_code' => 'Institutions.code',
-//            'institution_address' => 'Institutions.address',
-//            'institution_postal_code' => 'Institutions.postal_code',
-//            'institution_contact_person' => 'Institutions.contact_person',
-//            'institution_telephone' => 'Institutions.telephone',
-//            'institution_email' => 'Institutions.email',
-//            'institution_website' => 'Institutions.website',
-//            'grade_name' => 'EducationGrades.name',
-//            'guardian_name' => "CONCAT(`guardians`.`first_name`, ' ', `guardians`.`last_name`)",
-//            'guardian_relation' => $guardian_relations->aliasField('name'),
-//            'guardian_contact' => $guardian_contacts->aliasField('value'),
-//        ])
-//        ;
-//
-//        return $query;
-//        // POCOR-9320 end
-//    }
+        $query = $this->StudentAbsencesPeriodDetails->find()
+            ->contain([
+                'Users' => ['MainNationalities', 'MainIdentityTypes', 'Genders'],
+                'Institutions'
+            ])
+            ->where([
+                'student_id' => $this->studentId,
+                'academic_period_id' => $this->academicPeriodId,
+                'absence_type_id IS NOT' => null
+            ])
+            ->order(['date' => 'ASC'])
+            ->disableHydration(); // for performance
+        $this->io->out(__LINE__);
+
+        $absences = $query->toArray();
+
+        if (count($absences) < $threshold) {
+            return [];
+        }
+        $this->io->out(__LINE__);
+        $uniqueDates = [];
+        foreach ($absences as $absence) {
+            if (!empty($absence['date'])) {
+                $stringAbsenceDate = $absence['date']->format('Y-m-d');
+                $this->io->out(print_r([__LINE__ => $stringAbsenceDate], true));
+                $uniqueDates[$stringAbsenceDate] = true;
+            }
+        }
+        $this->io->out(__LINE__);
+        $first = $absences[0];
+        $answer = [[
+            'academic_period_name' => '', // Can load if needed
+            'student_name' => $first['user']['first_name'] . ' ' . $first['user']['last_name'],
+            'student_openemis_no' => $first['user']['openemis_no'],
+            'student_first_name' => $first['user']['first_name'],
+            'student_middle_name' => $first['user']['middle_name'],
+            'student_third_name' => $first['user']['third_name'],
+            'student_last_name' => $first['user']['last_name'],
+            'student_preferred_name' => $first['user']['preferred_name'],
+            'student_email' => $first['user']['email'],
+            'student_address' => $first['user']['address'],
+            'student_postal_code' => $first['user']['postal_code'],
+            'student_date_of_birth' => $first['user']['date_of_birth'],
+            'institution_name' => $first['institution']['name'],
+            'institution_code' => $first['institution']['code'],
+            'institution_address' => $first['institution']['address'],
+            'institution_postal_code' => $first['institution']['postal_code'],
+            'institution_contact_person' => $first['institution']['contact_person'],
+            'institution_telephone' => $first['institution']['telephone'],
+            'institution_email' => $first['institution']['email'],
+            'institution_website' => $first['institution']['website'],
+            'user.gender.name' => $first['user']['gender']['name'] ?? '',
+            'user.main_nationality.name' => $first['user']['main_nationality']['name'] ?? '',
+            'user.main_identity_type.name' => $first['user']['main_identity_type']['name'] ?? '',
+            'total_days' => count($uniqueDates),
+            'total_times' => count($absences),
+        ]];
+//        $this->io->out(print_r([__FUNCTION__ => $answer], true));
+        return $answer;
+    }
 
     public function prepareContext(Arguments $args, ConsoleIo $io): bool
     {
         $this->setIo($io);
+        $io->out(__FUNCTION__ . print_r($args, true));
         $this->userId = (int)$args->getOption('user_id');
+        $io->out($this->userId);
         $this->ruleId = (int)$args->getOption('rule_id');
+        $io->out($this->ruleId);
         $this->processId = (int)$args->getOption('process_id');
-        $this->admissionId = (int)$args->getOption('admission_id');
-        $ruleId = $this->ruleId;
+        $io->out($this->processId);
 
+        $this->studentId = (int)$args->getOption('student_id');
+        $this->institutionId = (int)$args->getOption('institution_id');
+        $this->institutionClassId = (int)$args->getOption('institution_class_id');
+        $this->academicPeriodId = (int)$args->getOption('academic_period_id');
+        $this->period = (int)$args->getOption('period');
+        $this->subjectId = (int)$args->getOption('subject_id');
 
-        if (!$this->userId ||
-            !$this->ruleId ||
-            !$this->processId ||
-            !$this->admissionId
-        ) {
-            $io->error("Missing required option");
+        if (!$this->userId ) {
+            $this->userId = 1;
+        }
+        if (!$this->ruleId ) {
+            $io->error("Missing required options (rule_id");
             return false;
         }
-        try {
-            $this->absence = $this->StudentAdmission->get($this->admissionId);
-            $this->studentId = $this->admission->student_id;
-        } catch (\Cake\Datasource\Exception\RecordNotFoundException $e) {
-            $io->error("Admission with ID {$this->admissionId} not found.");
+        if (!$this->processId ) {
+            $io->error("Missing required options (process_id)");
             return false;
         }
+        if (!$this->studentId || !$this->academicPeriodId) {
+            $io->error("Missing required options (student_id, academic_period_id)");
+            return false;
+        }
+
         try {
-            $this->rule = $this->AlertRules->get($ruleId, ['contain' => ['SecurityRoles']]);
+            $this->rule = $this->AlertRules->get($this->ruleId, ['contain' => ['SecurityRoles']]);
         } catch (\Cake\Datasource\Exception\RecordNotFoundException $e) {
-            $io->error("Alert rule with ID {$ruleId} not found.");
+            $io->error("Alert rule with ID {$this->ruleId} not found.");
             return false;
         }
 
         if (empty($this->rule->security_roles)) {
-            $io->out("No roles assigned to alert rule ID {$ruleId}. Skipping.");
+            $io->out("No roles assigned to alert rule ID {$this->ruleId}. Skipping.");
             return false;
         }
+
         return true;
     }
 
@@ -190,13 +179,8 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
      */
     protected function fillPlaceholders($item): array
     {
-        // POCOR-9320 calculate fields
-//        $this->logMsg(print_r($item, true));
-        return [
-            '${academic_period.name}' => $item['academic_period_name'] ?? '',
-            '${start_date}' => $item['start_date'] ?? '',
-            '${end_date}' => $item['end_date'] ?? '',
-            '${admission_status}' => $item['admission_status'] ?? '',
+
+        $answer = [
             '${student.name}' => $item['student_name'] ?? '',
             '${student.openemis_no}' => $item['student_openemis_no'] ?? '',
             '${student.first_name}' => $item['student_first_name'] ?? '',
@@ -208,7 +192,6 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
             '${student.address}' => $item['student_address'] ?? '',
             '${student.postal_code}' => $item['student_postal_code'] ?? '',
             '${student.date_of_birth}' => $item['student_date_of_birth'] ?? '',
-
             '${institution.name}' => $item['institution_name'] ?? '',
             '${institution.code}' => $item['institution_code'] ?? '',
             '${institution.address}' => $item['institution_address'] ?? '',
@@ -217,11 +200,14 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
             '${institution.telephone}' => $item['institution_telephone'] ?? '',
             '${institution.email}' => $item['institution_email'] ?? '',
             '${institution.website}' => $item['institution_website'] ?? '',
-            '${grade.name}' => $item['grade_name'] ?? '',
-            '${guardian.name}' => $item['guardian_name'] ?? '',
-            '${guardian.relation}' => $item['guardian_relation'] ?? '',
-            '${guardian.contact}' => $item['guardian_contact'] ?? '', // POCOR-9320 end
+            '${user.gender.name}' => $item['user.gender.name'] ?? '',
+            '${user.main_nationality.name}' => $item['user.main_nationality.name'] ?? '',
+            '${user.main_identity_type.name}' => $item['user.main_identity_type.name'] ?? '',
+            '${total_days}' => $item['total_days'] ?? '',
+            '${total_times}' => $item['total_times'] ?? '',
         ];
+        $this->io->out(print_r([__FUNCTION__ => $answer],true));
+        return $answer;
     }
 
 
@@ -230,38 +216,13 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
     {
         $parser = parent::getOptionParser();
 
-        $parser->addOption('student_id', [
-            'help' => 'Specify the admission ID for targeted alerts.',
-            'required' => true,
-            'short' => 's'
-        ]);
-        $parser->addOption('institution_id', [
-            'help' => 'Specify the Status ID for targeted alerts.',
-            'required' => false,
-            'short' => 'i'
-        ]);
-        $parser->addOption('institution_class_id', [
-            'help' => 'Specify the Status ID for targeted alerts.',
-            'required' => false,
-            'short' => 'c'
-        ]);
-        $parser->addOption('academic_period_id', [
-            'help' => 'Specify the Status ID for targeted alerts.',
-            'required' => false,
-            'short' => 'a'
-        ]);
-        $parser->addOption('period', [
-            'help' => 'Specify the Status ID for targeted alerts.',
-            'required' => false,
-            'short' => 'p'
-        ]);
-        $parser->addOption('subject_id', [
-            'help' => 'Specify the Status ID for targeted alerts.',
-            'required' => false,
-            'short' => 'j'
-        ]);
-
-        return $parser;
+        return $parser
+            ->addOption('student_id', ['help' => 'Student ID', 'required' => true, 'short' => 's'])
+            ->addOption('institution_id', ['help' => 'Institution ID', 'required' => true, 'short' => 'i'])
+            ->addOption('institution_class_id', ['help' => 'Institution Class ID', 'required' => true, 'short' => 'c'])
+            ->addOption('academic_period_id', ['help' => 'Academic Period ID', 'required' => true, 'short' => 'a'])
+            ->addOption('period', ['help' => 'Period ID', 'required' => true, 'short' => 'p'])
+            ->addOption('subject_id', ['help' => 'Subject ID', 'required' => true, 'short' => 'j']);
     }
 
 

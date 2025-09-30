@@ -268,66 +268,98 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
      * @param $total_days
      * @return void
      */
+    /**
+     * Sends alert for a student absence if applicable.
+     *
+     * @param \Cake\ORM\Entity $entity The absence entity
+     * @return void
+     */
     private function sendStudentAbsenceAlert($entity): void
     {
-        Log::debug(print_r(['sendAlert' => $entity], true));
+//        Log::debug(print_r(['sendAlert' => $entity], true));
+
         $AbsenceTypesTable = self::getDynamicTableInstance('absence_types'); // POCOR-9162
-        $AbsenceTypeUnexcused = $AbsenceTypesTable->find()->where(['code' => 'UNEXCUSED'])->first();
-        $absence_type_id = $entity->absence_type_id;
-        if($absence_type_id != $AbsenceTypeUnexcused->id){
-            Log::debug('no send alert becouse absence type');
+
+        $unexcused = $AbsenceTypesTable->find()->where(['code' => 'UNEXCUSED'])->first();
+        $excused = $AbsenceTypesTable->find()->where(['code' => 'EXCUSED'])->first();
+
+        if (!$unexcused || !$excused) {
+            Log::debug('Absence type IDs not found');
             return;
         }
 
+        $validAbsenceTypeIds = [$unexcused->id, $excused->id];
+
+        if (!in_array($entity->absence_type_id, $validAbsenceTypeIds, true)) {
+            Log::debug('No alert sent because absence type is not valid for alert');
+            return;
+        }
+
+        // Load necessary tables
         $alertsTable = self::getDynamicTableInstance('Alert.Alerts');
         $alertRulesTable = self::getDynamicTableInstance('Alert.AlertRules');
         $systemProcessesTable = self::getDynamicTableInstance('SystemProcesses');
 
-
-        $alert = $alertsTable
-            ->find()
-            ->where([$alertsTable->aliasField('process_name') => 'AlertStudentAbsence',
-                $alertsTable->aliasField('frequency') => 'once'])
+        // Find the relevant alert
+        $alert = $alertsTable->find()
+            ->where([
+                $alertsTable->aliasField('process_name') => 'AlertStudentAbsence',
+                $alertsTable->aliasField('frequency') => 'once'
+            ])
             ->first();
-        if(!$alert){
-            Log::debug('No Alerts for AlertAttendance');
+
+        if (!$alert) {
+            Log::debug('No Alerts for AlertStudentAbsence');
             return;
         }
-        if(!is_array($alert)){
-            $alert = $alert->toArray();
-        }
+
         $activeRules = $alertRulesTable->find()
             ->where([
-                $alertRulesTable->aliasField('feature') => $alert['name'],
+                $alertRulesTable->aliasField('feature') => $alert->name,
                 $alertRulesTable->aliasField('enabled') => 1
             ])
             ->toArray();
-        if(empty($activeRules)){
-            Log::debug('No Alerts Rules for AlertAttendance');
+
+        if (empty($activeRules)) {
+            Log::debug('No active alert rules for AlertStudentAbsence');
             return;
         }
-        if (property_exists($entity, 'modified_user_id')
-            && (int) $entity->modified_user_id != 0) {
-            $userId = (int) $entity->modified_user_id;
-        } else {
-            $userId = (int) $entity->created_user_id;
+
+        $userId = isset($entity->modified_user_id) && (int) $entity->modified_user_id !== 0
+            ? (int) $entity->modified_user_id
+            : (int) $entity->created_user_id;
+
+        if ($userId === 0) {
+            $userId = 1; // fallback default user ID
+            Log::debug('Fallback user ID used. Entity dump:');
+            Log::debug(print_r($entity, true));
         }
 
+        $extraOptions = [
+            'student_id' => (int) $entity->student_id,
+            'institution_id' => (int) $entity->institution_id,
+            'institution_class_id' => (int) $entity->institution_class_id,
+            'academic_period_id' => (string) $entity->academic_period_id,
+            'period' => (int) $entity->period,
+            'subject_id' => (int) $entity->subject_id,
+        ];
+
         foreach ($activeRules as $rule) {
-            if(!is_array($rule)){
-                $rule = $rule->toArray();
-            }
-            $extraOptions = [
-                'student_id' => (int)$entity->student_id,
-                'institution_id' => (int)$entity->institution_id,
-                'institution_class_id' => (int)$entity->institution_class_id,
-                'academic_period_id' => (string)$entity->academic_period_id,
-                'period' => (int)$entity->period,
-                'subject_id' => (int)$entity->subject_id,
-            ];
-            Log::debug(print_r(['Absence Alerts to do'=> $extraOptions, 'userid' => $userId, $alert], true));
-            DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, $extraOptions);
+//            Log::debug(print_r([
+//                'Absence Alert Triggering' => $extraOptions,
+//                'user_id' => $userId,
+//                'alert' => $alert->toArray()
+//            ], true));
+
+            DashboardController::triggerSystemProcess(
+                $systemProcessesTable,
+                is_array($rule) ? $rule : $rule->toArray(),
+                $alert->process_name,
+                $userId,
+                $extraOptions
+            );
         }
+    }
 
 //        $shellName = "AlertAttendance";
 //        if ($this->isShellStopExist($shellName)) {
@@ -640,7 +672,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 //                }
 //            }
 //        }
-    }
+//    }
 
     /**
      * Get a dynamic table instance with all associations.
