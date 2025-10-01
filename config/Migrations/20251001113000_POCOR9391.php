@@ -16,10 +16,7 @@ class POCOR9391 extends AbstractMigration
 
         $this->execute('CREATE TABLE `z_9391_alerts` LIKE `alerts`');
         $this->execute('INSERT INTO `z_9391_alerts` SELECT * FROM `alerts`');
-        $this->execute('CREATE TABLE `z_9391_alert_rules` LIKE `alert_rules`');
-        $this->execute('INSERT INTO `z_9391_alert_rules` SELECT * FROM `alert_rules`');
-        $this->execute("UPDATE `alerts` SET `name` = 'StudentAbsence', `process_name`='AlertStudentAbsence' WHERE `alerts`.`name` = 'StudentAttendance';");
-        $this->execute("UPDATE `alert_rules` SET `feature` = 'StudentAbsence' WHERE `alert_rules`.`feature` = 'StudentAttendance';");
+        $this->execute("UPDATE `alerts` SET `process_name`='AlertStudentAbsence' WHERE `alerts`.`name` = 'StudentAttendance';");
     }
 
     public function down()
@@ -29,12 +26,6 @@ class POCOR9391 extends AbstractMigration
 
             $this->execute('DROP TABLE IF EXISTS `alerts`');
             $this->execute('RENAME TABLE `z_9391_alerts` TO `alerts`');
-            $this->execute('SET FOREIGN_KEY_CHECKS=1;');
-        }
-        if ($this->hasTable('z_9391_alert_rules')) {
-            $this->execute('SET FOREIGN_KEY_CHECKS=0;');
-            $this->execute('DROP TABLE IF EXISTS `alert_rules`');
-            $this->execute('RENAME TABLE `z_9391_alert_rules` TO `alert_rules`');
             $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
     }
