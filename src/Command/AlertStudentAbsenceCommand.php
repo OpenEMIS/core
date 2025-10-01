@@ -47,7 +47,7 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
             return static::CODE_SUCCESS;
         }
 
-        return $this->runFeatureAlert('StudentAbsence');
+        return $this->runFeatureAlert('StudentAttendance');
     }
 
     /**
@@ -180,7 +180,7 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
      */
     protected function fillPlaceholders($item): array
     {
-
+        $threshold = (int)($this->rule->threshold ?? 1);
         $answer = [
             '${student.name}' => $item['student_name'] ?? '',
             '${student.openemis_no}' => $item['student_openemis_no'] ?? '',
@@ -204,8 +204,9 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
             '${institution.telephone}' => $item['institution_telephone'] ?? '',
             '${institution.email}' => $item['institution_email'] ?? '',
             '${institution.website}' => $item['institution_website'] ?? '',
-            '${total_days}' => $item['total_days'] ?? '',
-            '${total_times}' => $item['total_times'] ?? '',
+            '${total_days}' => $item['total_days'] ?? 0,
+            '${total_times}' => $item['total_times'] ?? 0,
+            '${threshold}' => $threshold ?? 0,
         ];
 //        $this->io->out(print_r([__FUNCTION__ => $answer],true));
         return $answer;

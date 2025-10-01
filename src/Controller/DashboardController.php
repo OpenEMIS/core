@@ -819,10 +819,11 @@ class DashboardController extends AppController
         $paramsJson = json_encode($extraRuleOptions);
         // POCOR-9391 end
         // Check for an existing process with same model, name, rule and params
+        $feature = $rule['feature'];
         $existing = $systemProcessesTable->find()
             ->where([
                 'model' => $processName,
-                'name' => $rule['feature'],
+                'name' => $feature,
                 'params' => $paramsJson,
                 'created_user_id' => $userId,
 //                'status IN' => [1, 2, 3] // Start, Running, Finished
@@ -838,7 +839,7 @@ class DashboardController extends AppController
         }
 
         $processValues = [
-            'name' => $rule['feature'],
+            'name' => $feature,
             'status' => 1,
             'start_date' => $now,
             'model' => $processName,
