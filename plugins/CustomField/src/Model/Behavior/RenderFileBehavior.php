@@ -211,24 +211,52 @@ class RenderFileBehavior extends RenderBehavior
         $sessionErrorKey = $this->_table->getRegistryAlias() . '.parseFileError.' . $fieldId;
         $session->delete($sessionErrorKey);
 
-        // Only if new file uploaded
+        //---- fileSizeAllowed() ----
         if ($file instanceof \Laminas\Diactoros\UploadedFile && $file->getError() === UPLOAD_ERR_OK) {
-            $parseFileData = [
-                'fileContent' => $file->getStream()->getContents(),
-                'fileName'    => $file->getClientFilename()
+            // convert UploadedFile to array-like for consistency
+            $tmpFile = [
+                'name' => $file->getClientFilename(),
+                'size' => $file->getSize(),
+                'tmp_name' => $file->getStream()->getMetadata('uri'),
+                'type' => $file->getClientMediaType(),
+                'error' => $file->getError(),
             ];
-            $session->write($sessionKey, $parseFileData);
+
+            if ($this->fileSizeAllowed($tmpFile)) {
+                $parseFileData = $this->parseFile($tmpFile);
+                $session->write($sessionKey, $parseFileData);
+            } else {
+                $session->delete($sessionKey);
+                $session->write($sessionErrorKey, [
+                    'file' => [
+                        'ruleCustomFile' => $this->_table->getMessage(
+                            'CustomField.file.maxSize',
+                            ['sprintf' => $this->getConfig('size')]
+                        )
+                    ]
+                ]);
+            }
 
         } elseif (is_array($file) && isset($file['tmp_name']) && $file['error'] === 0) {
-            $parseFileData = [
-                'fileContent' => file_get_contents($file['tmp_name']),
-                'fileName'    => $file['name']
-            ];
-            $session->write($sessionKey, $parseFileData);
+            if ($this->fileSizeAllowed($file)) {
+                $parseFileData = $this->parseFile($file);
+                $session->write($sessionKey, $parseFileData);
+            } else {
+                $session->delete($sessionKey);
+                $session->write($sessionErrorKey, [
+                    'file' => [
+                        'ruleCustomFile' => $this->_table->getMessage(
+                            'CustomField.file.maxSize',
+                            ['sprintf' => $this->getConfig('size')]
+                        )
+                    ]
+                ]);
+            }
         }
 
         $settings['customValue'] = $customValue;
     }
+
 
     /**
      * POCOR-9407
@@ -381,20 +409,22 @@ class RenderFileBehavior extends RenderBehavior
         $GIGA = $MEGA * 1024;
         $TERA = $GIGA * 1024;
 
-        if (substr_count(strtolower($this->getConfig('size')), 'kb')) {
-            $size = intval(str_replace('kb', '', (strtolower($this->getConfig('size')))));
+        $sizeConfig = strtolower((string)$this->getConfig('size')); // always fetch as string
+
+        if (strpos($sizeConfig, 'kb') !== false) {
+            $size = (int) str_replace('kb', '', $sizeConfig);
             return $size * $KILO;
-        } else if (substr_count(strtolower($this->config('size')), 'mb')) {
-            $size = intval(str_replace('mb', '', (strtolower($this->getConfig('size')))));
+        } elseif (strpos($sizeConfig, 'mb') !== false) {
+            $size = (int) str_replace('mb', '', $sizeConfig);
             return $size * $MEGA;
-        } else if (substr_count(strtolower($this->config('size')), 'gb')) {
-            $size = intval(str_replace('gb', '', (strtolower($this->getConfig('size')))));
+        } elseif (strpos($sizeConfig, 'gb') !== false) {
+            $size = (int) str_replace('gb', '', $sizeConfig);
             return $size * $GIGA;
-        } else if (substr_count(strtolower($this->config('size')), 'tb')) {
-            $size = intval(str_replace('tb', '', (strtolower($this->getConfig('size')))));
+        } elseif (strpos($sizeConfig, 'tb') !== false) {
+            $size = (int) str_replace('tb', '', $sizeConfig);
             return $size * $TERA;
         } else {
-            return intval($this->getConfig('size'));
+            return (int) $this->getConfig('size'); // fallback: numeric value directly
         }
     }
 
@@ -543,4 +573,28 @@ class RenderFileBehavior extends RenderBehavior
             $this->processValues($entity, $data, $settings);
         }
     }*/
+
+    private function readableFormatToBytesbkp()
+    {
+        $KILO = 1024;
+        $MEGA = $KILO * 1024;
+        $GIGA = $MEGA * 1024;
+        $TERA = $GIGA * 1024;
+
+        if (substr_count(strtolower($this->setConfig('size')), 'kb')) {
+            $size = intval(str_replace('kb', '', (strtolower($this->getConfig('size')))));
+            return $size * $KILO;
+        } else if (substr_count(strtolower($this->setConfig('size')), 'mb')) {
+            $size = intval(str_replace('mb', '', (strtolower($this->getConfig('size')))));
+            return $size * $MEGA;
+        } else if (substr_count(strtolower($this->setConfig('size')), 'gb')) {
+            $size = intval(str_replace('gb', '', (strtolower($this->getConfig('size')))));
+            return $size * $GIGA;
+        } else if (substr_count(strtolower($this->setConfig('size')), 'tb')) {
+            $size = intval(str_replace('tb', '', (strtolower($this->getConfig('size')))));
+            return $size * $TERA;
+        } else {
+            return intval($this->getConfig('size'));
+        }
+    }
 }
