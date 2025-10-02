@@ -515,13 +515,16 @@ class ImportBehavior extends Behavior
                     $academic_period_id = $AcademicPeriods->getCurrent();
                     if (isset($tempRow['academic_period_id'])) { //POCOR-9417
                         $academic_period_id = $tempRow['academic_period_id'];
+                    } else {
+                        $tempRow['academic_period_id'] = $academic_period_id;
                     }
+
                     if($academic_period_id)
                     {
                         $AcademicPeriodsData = $AcademicPeriods
                             ->find('all')
                             ->select([$AcademicPeriods->aliasField('end_date')])
-                            ->where([$AcademicPeriods->aliasField('id') => $academic_period_id
+                            ->where([$AcademicPeriods->aliasField('id') => $academic_period_id])
                             ->first();
                         $tempRow['end_date'] = $AcademicPeriodsData->end_date->format('d/m/Y');
                     } //POCOR-9417[END]
