@@ -77,9 +77,7 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
 
         $absences = $query->toArray();
 
-        if (count($absences) < $threshold) {
-            return [];
-        }
+
 //        $this->io->out(__LINE__);
         $uniqueDates = [];
         foreach ($absences as $absence) {
@@ -88,6 +86,10 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
 //                $this->io->out(print_r([__LINE__ => $stringAbsenceDate], true));
                 $uniqueDates[$stringAbsenceDate] = true;
             }
+        }
+        $total_days = count($uniqueDates);
+        if ($total_days < $threshold) {
+            return [];
         }
 //        $this->io->out(__LINE__);
         $first = $absences[0];
