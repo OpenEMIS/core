@@ -510,13 +510,16 @@ class ImportBehavior extends Behavior
 
                 if ($extra['entityValidate'] == true) {
                     //POCOR-9394[START]
-                    $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-                    $AcademicPeriodsData = $AcademicPeriods
+                    if (isset($tempRow['academic_period_id'])) { //POCOR-9417
+
+                        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                        $AcademicPeriodsData = $AcademicPeriods
                             ->find('all')
                             ->select([$AcademicPeriods->aliasField('end_date')])
                             ->where([$AcademicPeriods->aliasField('id') => $tempRow['academic_period_id']])
                             ->first();
-                    $tempRow['end_date'] = $AcademicPeriodsData->end_date->format('d/m/Y');
+                        $tempRow['end_date'] = $AcademicPeriodsData->end_date->format('d/m/Y');
+                    } //POCOR-9417
                     //POCOR-9394[END]
                     // added for POCOR-4577 import staff leave for workflow related record to save the transition record
                     $tempRow['action_type'] = 'imported';
