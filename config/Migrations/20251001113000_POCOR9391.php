@@ -13,12 +13,13 @@ class POCOR9391 extends AbstractMigration
      */
     public function up()
     {
-
+        $this->execute('DROP TABLE IF EXISTS `z_9391_alerts`');
         $this->execute('CREATE TABLE `z_9391_alerts` LIKE `alerts`');
         $this->execute('INSERT INTO `z_9391_alerts` SELECT * FROM `alerts`');
         $this->execute("UPDATE `alerts` SET `process_name`='AlertStudentAbsence' WHERE `alerts`.`name` = 'StudentAbsence';"); // For some errors
         $this->execute("UPDATE `alerts` SET `name`='StudentAttendance' WHERE `alerts`.`name` = 'StudentAbsence';"); // For some errors
         $this->execute("UPDATE `alerts` SET `process_name`='AlertStudentAbsence' WHERE `alerts`.`name` = 'StudentAttendance';");
+        $this->execute('DROP TABLE IF EXISTS `z_9391_alert_rules`');
         $this->execute('CREATE TABLE `z_9391_alert_rules` LIKE `alerts`');
         $this->execute('INSERT INTO `z_9391_alert_rules` SELECT * FROM `alerts`');
         $this->execute("UPDATE `alert_rules` SET `feature`='StudentAttendance' WHERE `alert_rules`.`feature` = 'StudentAbsence';"); // For some errors
