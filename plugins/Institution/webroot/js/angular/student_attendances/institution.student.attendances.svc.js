@@ -155,8 +155,6 @@ function InstitutionStudentAttendancesSvc(
     function getTranslatedText() {
         var success = function (response, deferred) {
             var translatedObj = response.data;
-            console.log("response.data");
-            console.log(response);
             if (angular.isDefined(translatedObj)) {
                 translateText = translatedObj;
             }
@@ -173,8 +171,8 @@ function InstitutionStudentAttendancesSvc(
     function getAbsenceTypeOptions() {
         var success = function (response, deferred) {
             var absenceType = response.data.data;
-            console.log("absenceType");
-            console.log(absenceType);
+            // console.log("absenceType");
+            // console.log(absenceType);
             if (angular.isObject(absenceType) && absenceType.length > 0) {
                 deferred.resolve(absenceType);
             } else {
@@ -193,8 +191,8 @@ function InstitutionStudentAttendancesSvc(
     function getStudentAbsenceReasonOptions() {
         var success = function (response, deferred) {
             var studentAbsenceReasons = response.data.data;
-            console.log("studentAbsenceReasons");
-            console.log(studentAbsenceReasons);
+            // console.log("studentAbsenceReasons");
+            // console.log(studentAbsenceReasons);
             if (
                 angular.isObject(studentAbsenceReasons) &&
                 studentAbsenceReasons.length > 0
@@ -217,8 +215,8 @@ function InstitutionStudentAttendancesSvc(
     function getAcademicPeriodOptions(institutionId) {
         var success = function (response, deferred) {
             var periods = response.data.data;
-            console.log("periods");
-            console.log(periods);
+            // console.log("periods");
+            // console.log(periods);
             if (angular.isObject(periods) && periods.length > 0) {
                 deferred.resolve(periods);
             } else {
@@ -236,8 +234,8 @@ function InstitutionStudentAttendancesSvc(
     function getWeekListOptions(academicPeriodId) {
         var success = function (response, deferred) {
             var academicPeriodObj = response.data.data;
-            console.log("academicPeriodObj");
-            console.log(academicPeriodObj);
+            // console.log("academicPeriodObj");
+            // console.log(academicPeriodObj);
             if (
                 angular.isDefined(academicPeriodObj) &&
                 academicPeriodObj.length > 0
@@ -266,8 +264,8 @@ function InstitutionStudentAttendancesSvc(
     function getDayListOptions(academicPeriodId, weekId, institutionId) {
         var success = function (response, deferred) {
             var dayList = response.data.data;
-            console.log("dayList");
-            console.log(dayList);
+            // console.log("dayList");
+            // console.log(dayList);
             if (angular.isObject(dayList) && dayList.length > 0) {
                 deferred.resolve(dayList);
             } else {
@@ -288,8 +286,8 @@ function InstitutionStudentAttendancesSvc(
     function getClassOptions(institutionId, academicPeriodId) {
         var success = function (response, deferred) {
             var classList = response.data.data;
-            console.log("classList");
-            console.log(classList);
+            // console.log("classList");
+            // console.log(classList);
             if (angular.isObject(classList)) {
                 if (classList.length > 0) {
                     deferred.resolve(classList);
@@ -298,7 +296,7 @@ function InstitutionStudentAttendancesSvc(
                         controllerScope,
                         "You do not have any classes"
                     );
-                    deferred.reject("You do not have any classess");
+                    deferred.reject("You do not have any classes");
                 }
             } else {
                 deferred.reject(
@@ -325,15 +323,15 @@ function InstitutionStudentAttendancesSvc(
     ) {
         var success = function (response, deferred) {
             var educationGradeList = response.data.data;
-            console.log("educationGradeList");
-            console.log(educationGradeList);
+            // console.log("educationGradeList");
+            // console.log(educationGradeList);
             if (angular.isObject(educationGradeList)) {
                 if (educationGradeList.length > 0) {
                     deferred.resolve(educationGradeList);
                 } else {
                     AlertSvc.warning(
                         controllerScope,
-                        "You do not have any education grade"
+                        "You do not have any education grades"
                     );
                     deferred.reject("You do not have any education grades");
                 }
@@ -364,8 +362,8 @@ function InstitutionStudentAttendancesSvc(
     ) {
         var success = function (response, deferred) {
             var subjectList = response.data.data;
-            console.log("subjectList");
-            console.log(subjectList);
+            // console.log("subjectList");
+            // console.log(subjectList);
             if (angular.isObject(subjectList)) {
                 deferred.resolve(subjectList);
             } else {
@@ -400,8 +398,8 @@ function InstitutionStudentAttendancesSvc(
         //POCOR-7183 add params weekStartDay, weekEndDay
         var success = function (response, deferred) {
             var attendancePeriodList = response.data.data;
-            console.log("attendancePeriodList");
-            console.log(attendancePeriodList);
+            // console.log("attendancePeriodList");
+            // console.log(attendancePeriodList);
             if (
                 angular.isObject(attendancePeriodList) &&
                 attendancePeriodList.length > 0
@@ -446,10 +444,10 @@ function InstitutionStudentAttendancesSvc(
         //POCOR-8874 start
         // console.log("getclass",extra.attendance_period_id);
         if (extra.attendance_period_id == "") {
-            extra.attendance_period_id = 0;
+            extra.attendance_period_id = 1;
         }
         //POCOR-8874 end
-
+        // console.log(extra);
         if (
             extra.attendance_period_id == "" ||
             extra.institution_class_id == "" ||
@@ -481,7 +479,7 @@ function InstitutionStudentAttendancesSvc(
         if (params.attendance_by == "period") {
             params.subject_id = 0;
         }
-        console.log("parms", params);
+        // console.log("parms", params);
         var extra = {
             institution_id: params.institution_id,
             institution_class_id: params.institution_class_id,
@@ -498,8 +496,8 @@ function InstitutionStudentAttendancesSvc(
 
         var success = function (response, deferred) {
             var count = response.data.total;
-            console.log("count");
-            console.log(count);
+            // console.log("count");
+            // console.log(count);
             if (angular.isDefined(count)) {
                 var isMarked = count > 0;
                 deferred.resolve(isMarked);
@@ -534,8 +532,8 @@ function InstitutionStudentAttendancesSvc(
 
         var success = function (response, deferred) {
             var count = response.data.total;
-            console.log("getNoScheduledClassMarked");
-            console.log(count);
+            // console.log("getNoScheduledClassMarked");
+            // console.log(count);
             if (angular.isDefined(count)) {
                 var isMarked = count > 0;
                 deferred.resolve(isMarked);
@@ -577,7 +575,7 @@ function InstitutionStudentAttendancesSvc(
     function saveAbsences(data, context) {
         //POCOR-8874 start
         if (context.attendance_by == "subject") {
-            context.period = 0;
+            context.period = 1;
         } else {
             context.subject_id = 0;
         }
@@ -642,7 +640,7 @@ function InstitutionStudentAttendancesSvc(
     function editSavePeriodMarked(params) {
         //POCOR-8874 start
         if (params.attendance_by == "subject") {
-            params.attendance_period_id = 0;
+            params.attendance_period_id = 1;
         } else {
             params.subject_id = 0;
         }
@@ -679,10 +677,10 @@ function InstitutionStudentAttendancesSvc(
 
     // column definitions
     function getAllDayColumnDefs(dayList, attendancePeriodList) {
-        console.log("dayList");
-        console.log(dayList);
-        console.log("attendancePeriodList");
-        console.log(attendancePeriodList);
+        // console.log("dayList");
+        // console.log(dayList);
+        // console.log("attendancePeriodList");
+        // console.log(attendancePeriodList);
         var columnDefs = [];
         var menuTabs = ["filterMenuTab"];
         var filterParams = {
@@ -718,8 +716,8 @@ function InstitutionStudentAttendancesSvc(
         });
 
         angular.forEach(dayList, function (dayObj, dayKey) {
-            console.log("dayObj");
-            console.log(dayObj);
+            // console.log("dayObj");
+            // console.log(dayObj);
             if (dayObj.id != -1) {
                 var childrenColDef = [];
                 angular.forEach(
@@ -1484,8 +1482,8 @@ function InstitutionStudentAttendancesSvc(
         selectedDay
     ) {
         var success = function (response, deferred) {
-            console.log("isMarkableSubjectAttendance");
-            console.log(response);
+            // console.log("isMarkableSubjectAttendance");
+            // console.log(response);
             if (angular.isDefined(response.data.data[0].code)) {
                 var isMarkableSubjectAttendance = false;
 
@@ -1503,10 +1501,10 @@ function InstitutionStudentAttendancesSvc(
         };
 
         var error = function (error) {
-            console.log(
+            console.error(
                 "Error in retrieving isMarkableSubjectAttendance record"
             );
-            console.log(error);
+            console.error(error);
             // Handle the error here
         };
 
@@ -1526,12 +1524,12 @@ function InstitutionStudentAttendancesSvc(
     ) {
         var success = function (response, deferred) {
 
-            console.log(response);
+            // console.log(response);
             if (angular.isDefined(response.data.data[0].code)) {
 
                 var isMarkableAttendance = false;
 
-                console.log("stude",response.data.data[0].StudentAttendanceMarkTypes);
+                // console.log("stude",response.data.data[0].StudentAttendanceMarkTypes);
                 if(response.data.data[0].StudentAttendanceMarkTypes)
                 {
                     isMarkableAttendance = true;
@@ -1545,14 +1543,14 @@ function InstitutionStudentAttendancesSvc(
                     "There was an error when retrieving the isMarkableSubjectAttendance record"
                 );
             }
-            console.log("isMarkableAttendance",isMarkableAttendance);
+            // console.log("isMarkableAttendance",isMarkableAttendance);
         };
 
         var error = function (error) {
-            console.log(
+            console.error(
                 "Error in retrieving isMarkableSubjectAttendance record"
             );
-            console.log(error);
+            console.error(error);
             // Handle the error here
         };
 
