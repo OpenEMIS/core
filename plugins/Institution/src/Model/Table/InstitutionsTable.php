@@ -1360,7 +1360,7 @@ class InstitutionsTable extends ControllerActionTable
 
             // Webhook institution update --start
             if ($this->webhookAction == 'edit') {
-                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.WebhookEvents');
+                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
                 if ($this->Auth->user()) {
                     $Webhooks->triggerShell('institutions_update', ['username' => ''], $body);
                 }
