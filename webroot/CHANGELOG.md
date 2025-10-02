@@ -1,3 +1,12 @@
+### [4.43.2] - 2025-10-02
+- Bug Fixed: Institutions>Attendance>Students: Attendance is not recorded correctly
+- Bug Fixed: Directory>Import: User getting 404 error
+- Bug Fixed: Institutions>Performance>Report Card: When publishing report card, status is not changed
+- Bug Fixed: Institutions > Attendance > Students : Marking subject attendance will update other subjects as well.
+- Bug Fixed: Administration>System Configurations>Webhooks: Missing fields such as institution_classes_id
+- Bug Fixed: Reports > Institutions > Add > Infrastructure Option: User receives Error status when generating report.
+- Bug Fixed: Administration>Communication>Alerts: Email alert not received
+
 ### [4.43.1] - 2025-09-26
 - Bug Fixed: Institutions>Students>Import: Unable to import students
 

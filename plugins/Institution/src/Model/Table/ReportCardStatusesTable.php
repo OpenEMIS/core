@@ -438,7 +438,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     "  ",
                     $UsersTable->aliasfield('last_name') => 'literal']),
                 'openemis_no' => $UsersTable->aliasField('openemis_no'),
-                'report_card_status' => $this->ReportCardProcesses->aliasField('status'), //POCOR-9228
+                'report_card_status' => $this->StudentsReportCards->aliasField('status'), //POCOR-9411
                 'report_card_started_on' => $this->StudentsReportCards->aliasField('started_on'),
                 'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on'),
                 'email_status_id' => $this->ReportCardEmailProcesses->aliasField('status'),
@@ -1221,7 +1221,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             ->order(['report_card_id' => 'DESC']);
     }
 
-    public function onGetStatus(Event $event, Entity $entity)
+    /*public function onGetStatus(Event $event, Entity $entity)
     {
         if ($entity->has('report_card_status')) {
             $value = $this->statusOptions[$entity->report_card_status];
@@ -1229,6 +1229,69 @@ class ReportCardStatusesTable extends ControllerActionTable
             $value = $this->statusOptions[self::NEW_REPORT];
         }
         return $value;
+    }*/
+
+    //POCOR-9411
+    private function determineReportCardStatus(array $conditions)
+    {
+        $ProcessesTable = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
+        $InstitutionTable = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
+
+        $process = $ProcessesTable->find()
+            ->select(['status'])
+            ->where($conditions)
+            ->enableHydration(false)
+            ->first();
+
+        $institution = $InstitutionTable->find()
+            ->select(['status'])
+            ->where($conditions)
+            ->enableHydration(false)
+            ->first();
+
+        $processStatus = isset($process['status']) ? (int)$process['status'] : null;
+        $institutionStatus = isset($institution['status']) ? (int)$institution['status'] : null;
+
+        // Priority 1: Institution = 4 (Published) → always use
+        if ($institutionStatus === 4) {
+            return 4;
+        }
+
+        // Priority 2: Otherwise → use process status (even if -1)
+        if ($processStatus !== null) {
+            return $processStatus;
+        }
+
+        // Priority 3:  institution status
+        if ($institutionStatus !== null) {
+            return $institutionStatus;
+        }
+
+        return self::NEW_REPORT;
+    }
+
+    //POCOR-9411
+    public function onGetStatus(Event $event, Entity $entity)
+    {
+        if ($this->action === 'index') {
+            $conditions = [
+                'report_card_id IS'      => $entity->report_card_id,
+                'student_id'          => $entity->student_id,
+                'institution_id IS'      => $this->getInstitutionID(),
+                'academic_period_id IS'  => $entity->academic_period_id,
+                'education_grade_id IS'  => $entity->education_grade_id,
+            ];
+            $finalStatus = $this->determineReportCardStatus($conditions);
+            return $this->statusOptions[$finalStatus] ?? $this->statusOptions[self::NEW_REPORT];
+
+        }else{
+            if ($entity->has('report_card_status')) {
+            $value = $this->statusOptions[$entity->report_card_status];
+            } else {
+                $value = $this->statusOptions[self::NEW_REPORT];
+            }
+            return $value;
+        }
     }
 
     public function onGetStartedOn(Event $event, Entity $entity)
