@@ -194,7 +194,7 @@ class StaffTable extends AppTable  {
                 'Report.StaffHealthReports',
                 'Report.Staff','Report.StaffPhoto',
                 'Report.StaffIdentities','Report.StaffContacts',
-                'Report.StaffQualifications','Report.StaffLicenses',
+                'Report.StaffQualifications',
                 'Report.StaffEmploymentStatuses',
                 'Report.StaffTrainingReports','Report.StaffPositions','Report.PositionSummary',
                 'Report.InstitutionStaffDetailed','Report.StaffSubjects', 'Report.StaffRequirements','Report.StaffOutOfSchool'])) {   // POCOR-4827
@@ -313,13 +313,14 @@ class StaffTable extends AppTable  {
         }
     }
 
-    public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request) {
+    public function onUpdateFieldStatusbkp(Event $event, array $attr, $action, ServerRequest $request) {
         if ($action == 'add') {
+            $Workflow = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
             if (isset($this->request->getData($this->getAlias())['feature'])) {
                 $feature = $this->request->getData($this->getAlias())['feature'];
 
                 if (in_array($feature, ['Report.StaffLicenses'])) {
-                    $licenseStatuses = $this->Workflow->getWorkflowStatuses('Staff.Licenses');
+                    $licenseStatuses = $Workflow->getWorkflowStatuses('Staff.Licenses');
                     $licenseStatuses = ['-1' => __('All Statuses')] + $licenseStatuses;
 
                     $attr['type'] = 'select';
@@ -327,6 +328,50 @@ class StaffTable extends AppTable  {
                     $attr['options'] = $licenseStatuses;
                     return $attr;
                 }
+            }
+        }
+    }
+    public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action === 'add') {
+            $feature = $request->getData($this->getAlias())['feature'] ?? null;
+
+            if ($feature === 'Report.StaffLicenses') {
+                $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+
+                $workflowNames = ['Staff.Licenses', 'Staff Licenses - General'];
+
+               $steps = $WorkflowSteps->find()
+                ->contain(['Workflows'])
+                ->where(['Workflows.name IN' => ['Staff Licenses', 'Staff Licenses - General']])
+                ->order(['WorkflowSteps.id' => 'ASC'])
+                ->toArray();
+
+            
+                $uniqueStatuses = [];
+            foreach ($steps as $step) {
+                if (!isset($uniqueStatuses[$step->name])) {
+                    $uniqueStatuses[$step->name] = $step->id;
+                }
+            }
+
+            $licenseStatuses = ['-1' => __('All Statuses')];
+            foreach ($uniqueStatuses as $name => $id) {
+                $licenseStatuses[$id] = $name;
+            }
+
+                // Build dropdown: key = ID, value = name
+                $licenseStatuses = ['-1' => __('All Statuses')];
+                foreach ($uniqueStatuses as $name => $id) {
+                    $licenseStatuses[$id] = $name;
+                }
+
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = $licenseStatuses;
+                $attr['onChangeReload'] = true;
+
+                return $attr;
             }
         }
     }
