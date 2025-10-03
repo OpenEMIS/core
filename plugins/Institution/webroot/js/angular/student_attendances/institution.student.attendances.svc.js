@@ -972,134 +972,82 @@ function InstitutionStudentAttendancesSvc(
 
         eSelect.value = data.institution_student_absences[dataKey];
         eSelect.addEventListener("change", function () {
-            setTimeout(function () {
-                setRowDatas(context, data);
-            }, 200);
             var oldValue = data.institution_student_absences[dataKey];
             var newValue = eSelect.value;
-            //POCOR-5846 start
+
+            // Save scroll position
             var div = document.querySelector(".ag-body-viewport");
             var scrollbar_value = div.scrollTop;
             localStorage.setItem("scrollbar-value", scrollbar_value);
-            //POCOR-5846 end
-            var absenceTypeObj = absenceTypeList.find(
-                (obj) => obj.id == newValue
-            );
-            // console.log("absenceTypeObj", absenceTypeObj)
-            // data.institution_student_absences.absence_type_id = newValue;
 
-            if (newValue != oldValue) {
-                var oldParams = {
-                    absence_type_id: oldValue,
-                };
+            var absenceTypeObj = absenceTypeList.find(obj => obj.id == newValue);
+            var oldParams = {
+                absence_type_id: oldValue,
+                student_absence_reason_id: data.institution_student_absences.student_absence_reason_id,
+                comment: data.institution_student_absences.comment
+            };
 
-                // reset not related data, store old params for reset purpose
-                switch (absenceTypeObj.code) {
-                    case attendanceType.PRESENT.code:
-                        oldParams.student_absence_reason_id =
-                            data.institution_student_absences.student_absence_reason_id;
-                        oldParams.comment =
-                            data.institution_student_absences.comment;
+            // UI: disable until saved
+            eSelect.disabled = true;
 
-                        data.institution_student_absences.student_absence_reason_id =
-                            null;
-                        data.institution_student_absences.comment = null;
-                        data.institution_student_absences.absence_type_id =
-                            null;
-                        break;
-                    case attendanceType.LATE.code:
-                    case attendanceType.UNEXCUSED.code:
-                        oldParams.student_absence_reason_id =
-                            data.institution_student_absences.student_absence_reason_id;
-                        oldParams.comment =
-                            data.institution_student_absences.comment;
+            UtilsSvc.isAppendSpinner(true, "institution-student-attendances-table");
 
-                        data.institution_student_absences.student_absence_reason_id =
-                            null;
-                        data.institution_student_absences.comment = null;
-                        break;
-                    case attendanceType.EXCUSED.code:
-                        oldParams.comment =
-                            data.institution_student_absences.comment;
+            // Prepare temp copy for save
+            let tempData = angular.copy(data);
+            tempData.institution_student_absences.absence_type_id = newValue;
+            tempData.institution_student_absences.absence_type_code = absenceTypeObj.code;
 
-                        data.institution_student_absences.comment = null;
-                        break;
+            switch (absenceTypeObj.code) {
+                case attendanceType.PRESENT.code:
+                    tempData.institution_student_absences.student_absence_reason_id = null;
+                    tempData.institution_student_absences.comment = null;
+                    break;
+                case attendanceType.LATE.code:
+                case attendanceType.UNEXCUSED.code:
+                    tempData.institution_student_absences.student_absence_reason_id = null;
+                    tempData.institution_student_absences.comment = null;
+                    break;
+                case attendanceType.EXCUSED.code:
+                    tempData.institution_student_absences.comment = null;
+                    break;
+            }
+
+            saveAbsences(tempData, context).then(
+                function (response) {
+                    clearError(data, dataKey);
+                    if (response.data?.error?.length > 0) {
+                        // Server validation failed
+                        data.save_error[dataKey] = true;
+                        eSelect.value = oldValue;
+                        AlertSvc.error(scope, "There was an error when saving the record");
+                    } else {
+                        // ✅ Success: apply changes
+                        data.save_error[dataKey] = false;
+                        data.institution_student_absences = tempData.institution_student_absences;
+                        AlertSvc.info(scope, "Attendance saved.");
+                    }
+                },
+                function () {
+                    // ❌ Save failed
+                    clearError(data, dataKey);
+                    data.save_error[dataKey] = true;
+                    eSelect.value = oldValue;
+                    AlertSvc.error(scope, "There was an error when saving the record");
                 }
-
-                oldValue = newValue;
-                data.institution_student_absences.absence_type_id = newValue;
-                data.institution_student_absences.absence_type_code =
-                    absenceTypeObj.code;
-
+            ).finally(function () {
                 var refreshParams = {
                     columns: [
                         "institution_student_absences.student_absence_reason_id",
+                        "institution_student_absences.absence_type_id"
                     ],
                     force: true,
                 };
+                let scrollTop = localStorage.getItem("scrollbar-value");
+                div.scrollTop = scrollTop;
                 api.refreshCells(refreshParams);
-            }
-
-            UtilsSvc.isAppendSpinner(
-                true,
-                "institution-student-attendances-table"
-            );
-            saveAbsences(data, context)
-                .then(
-                    function (response) {
-                        clearError(data, dataKey);
-                        if (
-                            angular.isDefined(response.data.error) &&
-                            response.data.error.length > 0
-                        ) {
-                            data.save_error[dataKey] = true;
-                            angular.forEach(oldParams, function (value, key) {
-                                data.institution_student_absences[key] = value;
-                            });
-                            AlertSvc.error(
-                                scope,
-                                "There was an error when saving the record"
-                            );
-                        } else {
-                            data.save_error[dataKey] = false;
-                            AlertSvc.info(
-                                scope,
-                                "Attendances will be automatically saved."
-                            );
-                        }
-                    },
-                    function (error) {
-                        clearError(data, dataKey);
-                        data.save_error[dataKey] = true;
-                        angular.forEach(oldParams, function (value, key) {
-                            data.institution_student_absences[key] = value;
-                        });
-                        AlertSvc.error(
-                            scope,
-                            "There was an error when saving the record"
-                        );
-                    }
-                )
-                .finally(function () {
-                    var refreshParams = {
-                        columns: [
-                            "institution_student_absences.student_absence_reason_id",
-                            "institution_student_absences.absence_type_id",
-                        ],
-                        force: true,
-                    };
-                    //POCOR-5846 start
-                    var scrollbar_value2 =
-                        localStorage.getItem("scrollbar-value");
-                    var div = document.querySelector(".ag-body-viewport");
-                    div.scrollTop = scrollbar_value2;
-                    //POCOR-5846 end
-                    api.refreshCells(refreshParams);
-                    UtilsSvc.isAppendSpinner(
-                        false,
-                        "institution-student-attendances-table"
-                    );
-                });
+                eSelect.disabled = false;
+                UtilsSvc.isAppendSpinner(false, "institution-student-attendances-table");
+            });
         });
 
         eCell.appendChild(eSelect);
@@ -1138,59 +1086,46 @@ function InstitutionStudentAttendancesSvc(
         eTextarea.value = data.institution_student_absences[dataKey];
         eTextarea.addEventListener("blur", function () {
             var oldValue = data.institution_student_absences.comment;
-            data.institution_student_absences[dataKey] = eTextarea.value;
+            var newValue = eTextarea.value;
 
-            UtilsSvc.isAppendSpinner(
-                true,
-                "institution-student-attendances-table"
-            );
-            saveAbsences(data, context)
-                .then(
-                    function (response) {
-                        clearError(data, dataKey);
-                        if (
-                            angular.isDefined(response.data.error) &&
-                            response.data.error.length > 0
-                        ) {
-                            data.save_error[dataKey] = true;
-                            data.institution_student_absences[dataKey] =
-                                oldValue;
-                            AlertSvc.error(
-                                scope,
-                                "There was an error when saving the record"
-                            );
-                        } else {
-                            data.save_error[dataKey] = false;
-                            AlertSvc.info(
-                                scope,
-                                "Attendances will be automatically saved."
-                            );
-                        }
-                    },
-                    function (error) {
-                        clearError(data, dataKey);
+            if (newValue === oldValue) return; // No change
+
+            eTextarea.disabled = true;
+            UtilsSvc.isAppendSpinner(true, "institution-student-attendances-table");
+
+            let tempData = angular.copy(data);
+            tempData.institution_student_absences.comment = newValue;
+
+            saveAbsences(tempData, context).then(
+                function (response) {
+                    clearError(data, dataKey);
+                    if (response.data?.error?.length > 0) {
                         data.save_error[dataKey] = true;
-                        AlertSvc.error(
-                            scope,
-                            "There was an error when saving the record"
-                        );
-                        data.institution_student_absences[dataKey] = oldValue;
+                        eTextarea.value = oldValue;
+                        AlertSvc.error(scope, "There was an error when saving the comment");
+                    } else {
+                        data.save_error[dataKey] = false;
+                        data.institution_student_absences.comment = newValue;
+                        AlertSvc.info(scope, "Comment saved.");
                     }
-                )
-                .finally(function () {
-                    var refreshParams = {
-                        columns: [
-                            "institution_student_absences.student_absence_reason_id",
-                            "institution_student_absences.absence_type_id",
-                        ],
-                        force: true,
-                    };
-                    api.refreshCells(refreshParams);
-                    UtilsSvc.isAppendSpinner(
-                        false,
-                        "institution-student-attendances-table"
-                    );
+                },
+                function () {
+                    clearError(data, dataKey);
+                    data.save_error[dataKey] = true;
+                    eTextarea.value = oldValue;
+                    AlertSvc.error(scope, "There was an error when saving the comment");
+                }
+            ).finally(function () {
+                api.refreshCells({
+                    columns: [
+                        "institution_student_absences.student_absence_reason_id",
+                        "institution_student_absences.absence_type_id"
+                    ],
+                    force: true
                 });
+                eTextarea.disabled = false;
+                UtilsSvc.isAppendSpinner(false, "institution-student-attendances-table");
+            });
         });
 
         return eTextarea;
@@ -1232,59 +1167,46 @@ function InstitutionStudentAttendancesSvc(
         eSelect.value = data.institution_student_absences[dataKey];
         eSelect.addEventListener("change", function () {
             var oldValue = data.institution_student_absences[dataKey];
-            data.institution_student_absences[dataKey] = eSelect.value;
+            var newValue = eSelect.value;
 
-            UtilsSvc.isAppendSpinner(
-                true,
-                "institution-student-attendances-table"
-            );
-            saveAbsences(data, context)
-                .then(
-                    function (response) {
-                        clearError(data, dataKey);
-                        if (
-                            angular.isDefined(response.data.error) &&
-                            response.data.error.length > 0
-                        ) {
-                            data.save_error[dataKey] = true;
-                            data.institution_student_absences[dataKey] =
-                                oldValue;
-                            AlertSvc.error(
-                                scope,
-                                "There was an error when saving the record"
-                            );
-                        } else {
-                            data.save_error[dataKey] = false;
-                            AlertSvc.info(
-                                scope,
-                                "Attendances will be automatically saved."
-                            );
-                        }
-                    },
-                    function (error) {
-                        clearError(data, dataKey);
+            if (newValue == oldValue) return;
+
+            eSelect.disabled = true;
+            UtilsSvc.isAppendSpinner(true, "institution-student-attendances-table");
+
+            let tempData = angular.copy(data);
+            tempData.institution_student_absences[dataKey] = newValue;
+
+            saveAbsences(tempData, context).then(
+                function (response) {
+                    clearError(data, dataKey);
+                    if (response.data?.error?.length > 0) {
                         data.save_error[dataKey] = true;
-                        AlertSvc.error(
-                            scope,
-                            "There was an error when saving the record"
-                        );
-                        data.institution_student_absences[dataKey] = oldValue;
+                        eSelect.value = oldValue;
+                        AlertSvc.error(scope, "There was an error when saving the reason");
+                    } else {
+                        data.save_error[dataKey] = false;
+                        data.institution_student_absences[dataKey] = newValue;
+                        AlertSvc.info(scope, "Reason saved.");
                     }
-                )
-                .finally(function () {
-                    var refreshParams = {
-                        columns: [
-                            "institution_student_absences.student_absence_reason_id",
-                            "institution_student_absences.absence_type_id",
-                        ],
-                        force: true,
-                    };
-                    api.refreshCells(refreshParams);
-                    UtilsSvc.isAppendSpinner(
-                        false,
-                        "institution-student-attendances-table"
-                    );
+                },
+                function () {
+                    clearError(data, dataKey);
+                    data.save_error[dataKey] = true;
+                    eSelect.value = oldValue;
+                    AlertSvc.error(scope, "There was an error when saving the reason");
+                }
+            ).finally(function () {
+                api.refreshCells({
+                    columns: [
+                        "institution_student_absences.student_absence_reason_id",
+                        "institution_student_absences.absence_type_id"
+                    ],
+                    force: true
                 });
+                eSelect.disabled = false;
+                UtilsSvc.isAppendSpinner(false, "institution-student-attendances-table");
+            });
         });
 
         eSelectWrapper.appendChild(eSelect);
