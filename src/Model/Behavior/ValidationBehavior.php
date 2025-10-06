@@ -1570,8 +1570,10 @@ class ValidationBehavior extends Behavior
             }
         }
 
-        $validationResult = (($FTEused+$globalData['data']['FTE']) <= 1);
-
+        //POCOR-9421 start
+        $FTEused = (float)$FTEused;
+        $globalFTE = (float)$globalData['data']['FTE'];
+        $validationResult = (($FTEused + $globalFTE) <= 1); //POCOR-9421 end
         return $validationResult;
     }
 
