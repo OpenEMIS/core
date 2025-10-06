@@ -640,7 +640,7 @@ function InstitutionStudentAttendancesSvc(
                                 (!saved.comment && !expected.comment));
 
                         if (matches) {
-                            return { success: true, updated: hasRecord };
+                            return { success: true, updated: hasRecord, verified: saved };
                         } else {
                             console.warn('Final DB mismatch:', saved, expected);
                             return { success: false, reason: 'DB verification mismatch' };
@@ -1057,7 +1057,8 @@ function InstitutionStudentAttendancesSvc(
 
         selectAttendanceType.value = data.institution_student_absences[dataKey];
         selectAttendanceType.addEventListener("change", function () {
-            // setTimeout(function () { setRowDatas(context, data); }, 200)
+
+
             const oldValue = data.institution_student_absences[dataKey];
             data.institution_student_absences[dataKey] = selectAttendanceType.value;
 
@@ -1066,6 +1067,28 @@ function InstitutionStudentAttendancesSvc(
             saveAbsences(data, context)
                 .then(function (response) {
                     handleSaveResponse(response, data, dataKey, oldValue);
+                    const saved = response?.verified;
+
+
+                    if (saved) {
+                        // ✅ Normal saved or updated record
+                        const id = saved.absence_type_id;
+                        const absenceTypeObj = absenceTypeList.find((obj) => obj.id == id);
+
+                        const abs = data.institution_student_absences;
+                        abs.absence_type_id = saved.absence_type_id;
+                        abs.absence_type_code = absenceTypeObj ? absenceTypeObj.code : null;
+                        abs.student_absence_reason_id = saved.student_absence_reason_id;
+                        abs.comment = saved.comment;
+
+                    } else if (response?.deleted) {
+                        // ✅ Special case: record deleted or absence_type_id=0 => student is Present
+                        const abs = data.institution_student_absences;
+                        abs.absence_type_id = 0;
+                        abs.absence_type_code = "PRESENT";  // or null, depending on your default
+                        abs.student_absence_reason_id = null;
+                        abs.comment = null;
+                    }
                 })
                 .catch(function (error) {
                     console.error(error);
@@ -1082,7 +1105,9 @@ function InstitutionStudentAttendancesSvc(
                         ],
                         force: true,
                     };
-                    api.refreshCells(refreshParams);
+                    setTimeout(function () { setRowDatas(context, data); }, 200)
+
+                    context?.api?.refreshCells(refreshParams);
                     UtilsSvc.isAppendSpinner(false, "institution-student-attendances-table");
                 });
         });
@@ -1092,37 +1117,34 @@ function InstitutionStudentAttendancesSvc(
     }
 
     function setRowDatas(context, data) {
-        const studentList = context.scope.$ctrl.classStudentList;
+        const gridBody = document.querySelector('.ag-body-viewport');
+        const previousScrollTop = gridBody ? gridBody.scrollTop : 0;
 
-        let anyRowChanged = false;
+        const studentList = context.scope.$ctrl.classStudentList;
 
         studentList.forEach(function (dataItem) {
             const code = dataItem.institution_student_absences.absence_type_code;
 
-            let newHeight;
             switch (code) {
                 case "EXCUSED":
-                    newHeight = 130;
+                    dataItem.rowHeight = 130;
                     break;
                 case "UNEXCUSED":
                 case "LATE":
-                    newHeight = 80;
+                    dataItem.rowHeight = 80;
                     break;
                 case null:
                 case "PRESENT":
                 default:
-                    newHeight = 60;
-            }
-
-            if (dataItem.rowHeight !== newHeight) {
-                dataItem.rowHeight = newHeight;
-                anyRowChanged = true;
+                    dataItem.rowHeight = 60;
             }
         });
 
-        // Only re-render if something changed
-        if (anyRowChanged) {
-            context.scope.$ctrl.gridOptions.api.setRowData(studentList);
+        context.scope.$ctrl.gridOptions.api.setRowData(studentList);
+
+        // Restore scroll position
+        if (gridBody && previousScrollTop !== undefined) {
+            gridBody.scrollTop = previousScrollTop;
         }
     }
 
@@ -1147,7 +1169,15 @@ function InstitutionStudentAttendancesSvc(
             saveAbsences(data, context)
                 .then(function (response) {
                     handleSaveResponse(response, data, dataKey, oldValue);
+                    const saved = response?.verified;
+                    if (saved) {
+                        const abs = data.institution_student_absences;
 
+                        abs.absence_type_id = saved.absence_type_id;
+                        abs.absence_type_code = saved.absence_type_code;
+                        abs.student_absence_reason_id = saved.student_absence_reason_id;
+                        abs.comment = saved.comment;
+                    }
                 })
                 .catch(function (error) {
                     console.error(error);
@@ -1215,6 +1245,15 @@ function InstitutionStudentAttendancesSvc(
             saveAbsences(data, context)
                 .then(function (response) {
                     handleSaveResponse(response, data, dataKey, oldValue);
+                    const saved = response?.verified;
+                    if (saved) {
+                        const abs = data.institution_student_absences;
+
+                        abs.absence_type_id = saved.absence_type_id;
+                        abs.absence_type_code = saved.absence_type_code;
+                        abs.student_absence_reason_id = saved.student_absence_reason_id;
+                        abs.comment = saved.comment;
+                    }
                 })
                 .catch(function (error) {
                     console.error(error);
