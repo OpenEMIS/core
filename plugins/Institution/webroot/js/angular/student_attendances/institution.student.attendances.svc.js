@@ -572,81 +572,6 @@ function InstitutionStudentAttendancesSvc(
     }
 
     function saveAbsences(data, context) {
-        // Determine attendance type
-        const isSubjectBased = context.attendance_by === "subject";
-
-        // Prepare data to send
-        const studentAbsenceData = {
-            student_id: Number(data.student_id),
-            institution_id: Number(data.institution_id),
-            academic_period_id: Number(data.academic_period_id),
-            institution_class_id: Number(data.institution_class_id),
-            absence_type_id: Number(data.institution_student_absences.absence_type_id),
-            student_absence_reason_id: data.institution_student_absences.student_absence_reason_id != null
-                ? Number(data.institution_student_absences.student_absence_reason_id)
-                : 0,
-            comment: data.institution_student_absences.comment,
-            period: isSubjectBased ? 0 : Number(context.period),
-            date: context.date,
-            subject_id: isSubjectBased ? Number(context.subject_id) : 0,
-            education_grade_id: Number(context.education_grade_id),
-        };
-
-        // Define composite key for fetch
-        const compositeKey = {
-            student_id: studentAbsenceData.student_id,
-            institution_id: studentAbsenceData.institution_id,
-            academic_period_id: studentAbsenceData.academic_period_id,
-            institution_class_id: studentAbsenceData.institution_class_id,
-            date: studentAbsenceData.date,
-            period: studentAbsenceData.period,
-            subject_id: studentAbsenceData.subject_id,
-        };
-
-        // Step 1: Check if record exists
-        return StudentAbsencesPeriodDetails.find('first', compositeKey)
-            .ajax({ defer: true })
-            .then(function (existing) {
-                const hasRecord =
-                    existing &&
-                    Array.isArray(existing.data) &&
-                    existing.data.length > 0;
-
-                const action = hasRecord ? 'edit' : 'save';
-                const operation = StudentAbsencesPeriodDetails[action](studentAbsenceData);
-
-                // Step 2: Perform save/edit
-                return operation
-                    .then(() => {
-                        // Step 3: Re-fetch the saved record to verify
-                        return StudentAbsencesPeriodDetails.find('first', compositeKey)
-                            .ajax({ defer: true });
-                    })
-                    .then((verifyResult) => {
-                        const saved = Array.isArray(verifyResult.data) ? verifyResult.data[0] : verifyResult.data;
-                        const expected = studentAbsenceData;
-
-                        const matches =
-                            saved &&
-                            saved.absence_type_id == expected.absence_type_id &&
-                            (saved.student_absence_reason_id == expected.student_absence_reason_id ||
-                                (!saved.student_absence_reason_id && !expected.student_absence_reason_id)) &&
-                            (saved.comment === expected.comment ||
-                                (!saved.comment && !expected.comment));
-
-                        if (matches) {
-                            return { success: true, updated: hasRecord };
-                        } else {
-                            console.warn('Final DB mismatch:', saved, expected);
-                            return { success: false, reason: 'DB verification mismatch' };
-                        }
-                    });
-            })
-            .catch(function (err) {
-                console.error('Save or fetch failed:', err);
-                return { success: false, reason: 'Save or fetch failed' };
-            });
-    }function saveAbsences(data, context) {
         const isSubjectBased = context.attendance_by === "subject";
 
         const studentAbsenceData = {
@@ -784,7 +709,7 @@ function InstitutionStudentAttendancesSvc(
             } else {
                 data.institution_student_absences[dataKey] = oldValue;
             }
-
+            console.log('hasError', response);
             // AlertSvc.error(scope, "There was an error when saving the record");
         } else {
             data.save_error[dataKey] = false;
@@ -1053,8 +978,6 @@ function InstitutionStudentAttendancesSvc(
                             }
                         } else if (mode == "edit") {
                             var api = params.api;
-                            console.log(absenceTypeObj.code);
-                            console.log(attendanceType.EXCUSED.code)
                             switch (absenceTypeObj.code) {
 
                                 case attendanceType.PRESENT.code:
@@ -1077,24 +1000,23 @@ function InstitutionStudentAttendancesSvc(
                                     return eCell;
                                 case attendanceType.EXCUSED.code:
                                     var eCell = document.createElement("div");
-                                    eCell.setAttribute("class", "reason-wrapper");
-
-                                    eCell.style.display = 'flex';
-                                    eCell.style.flexDirection = 'column';
-
-                                    var eSelect = getEditAbsenceReasonElement(data, studentAbsenceReasonList, context, api);
-                                    var eTextarea = getEditCommentElement(data, context, api);
-
-                                    eSelect.style.display = 'block';
-                                    eTextarea.style.display = 'block';
-                                    eTextarea.style.marginTop = '4px';
-
+                                    eCell.setAttribute(
+                                        "class",
+                                        "reason-wrapper"
+                                    );
+                                    var eSelect = getEditAbsenceReasonElement(
+                                        data,
+                                        studentAbsenceReasonList,
+                                        context,
+                                        api
+                                    );
+                                    var eTextarea = getEditCommentElement(
+                                        data,
+                                        context,
+                                        api
+                                    );
                                     eCell.appendChild(eSelect);
                                     eCell.appendChild(eTextarea);
-
-                                    // Optional: auto-adjust row height
-                                    setTimeout(() => api.resetRowHeights(), 0);
-
                                     return eCell;
                                 default:
                                     break;
@@ -1120,24 +1042,24 @@ function InstitutionStudentAttendancesSvc(
             data.institution_student_absences[dataKey] = 0;
         }
 
-        var eSelect = document.createElement("select");
+        var selectAttendanceType = document.createElement("select");
         angular.forEach(absenceTypeList, function (obj, key) {
             var eOption = document.createElement("option");
             var labelText = obj.name;
             eOption.setAttribute("value", obj.id);
             eOption.innerHTML = labelText;
-            eSelect.appendChild(eOption);
+            selectAttendanceType.appendChild(eOption);
         });
 
         if (hasError(data, dataKey)) {
-            eSelect.setAttribute("class", "error");
+            selectAttendanceType.setAttribute("class", "error");
         }
 
-        eSelect.value = data.institution_student_absences[dataKey];
-        eSelect.addEventListener("change", function () {
-            setTimeout(function () { setRowDatas(context, data); }, 200)
+        selectAttendanceType.value = data.institution_student_absences[dataKey];
+        selectAttendanceType.addEventListener("change", function () {
+            // setTimeout(function () { setRowDatas(context, data); }, 200)
             const oldValue = data.institution_student_absences[dataKey];
-            data.institution_student_absences[dataKey] = eSelect.value;
+            data.institution_student_absences[dataKey] = selectAttendanceType.value;
 
             UtilsSvc.isAppendSpinner(true, "institution-student-attendances-table");
 
@@ -1165,49 +1087,67 @@ function InstitutionStudentAttendancesSvc(
                 });
         });
 
-        eCell.appendChild(eSelect);
+        eCell.appendChild(selectAttendanceType);
         return eCell;
     }
 
     function setRowDatas(context, data) {
-        var studentList = context.scope.$ctrl.classStudentList;
-        // console.log("studentList", studentList)
-        studentList.forEach(function (dataItem, index) {
-            if (
-                dataItem.institution_student_absences.absence_type_code ==
-                    null ||
-                dataItem.institution_student_absences.absence_type_code ==
-                    "PRESENT"
-            ) {
-                dataItem.rowHeight = 60;
-            } else {
-                dataItem.rowHeight = 120;
+        const studentList = context.scope.$ctrl.classStudentList;
+
+        let anyRowChanged = false;
+
+        studentList.forEach(function (dataItem) {
+            const code = dataItem.institution_student_absences.absence_type_code;
+
+            let newHeight;
+            switch (code) {
+                case "EXCUSED":
+                    newHeight = 130;
+                    break;
+                case "UNEXCUSED":
+                case "LATE":
+                    newHeight = 80;
+                    break;
+                case null:
+                case "PRESENT":
+                default:
+                    newHeight = 60;
+            }
+
+            if (dataItem.rowHeight !== newHeight) {
+                dataItem.rowHeight = newHeight;
+                anyRowChanged = true;
             }
         });
-        context.scope.$ctrl.gridOptions.api.setRowData(studentList);
+
+        // Only re-render if something changed
+        if (anyRowChanged) {
+            context.scope.$ctrl.gridOptions.api.setRowData(studentList);
+        }
     }
 
     function getEditCommentElement(data, context, api) {
         var dataKey = "comment";
         var scope = context.scope;
-        var eTextarea = document.createElement("textarea");
-        eTextarea.setAttribute("placeholder", "Comments");
-        eTextarea.setAttribute("id", dataKey);
+        var attendanceComment = document.createElement("textarea");
+        attendanceComment.setAttribute("placeholder", "Comments");
+        attendanceComment.setAttribute("id", dataKey);
 
         if (hasError(data, dataKey)) {
-            eTextarea.setAttribute("class", "error");
+            attendanceComment.setAttribute("class", "error");
         }
 
-        eTextarea.value = data.institution_student_absences[dataKey];
-        eTextarea.addEventListener("blur", function () {
+        attendanceComment.value = data.institution_student_absences[dataKey];
+        attendanceComment.addEventListener("blur", function () {
             const oldValue = data.institution_student_absences.comment;
-            data.institution_student_absences[dataKey] = eTextarea.value;
+            data.institution_student_absences[dataKey] = attendanceComment.value;
 
             UtilsSvc.isAppendSpinner(true, "institution-student-attendances-table");
 
             saveAbsences(data, context)
                 .then(function (response) {
                     handleSaveResponse(response, data, dataKey, oldValue);
+
                 })
                 .catch(function (error) {
                     console.error(error);
@@ -1229,7 +1169,7 @@ function InstitutionStudentAttendancesSvc(
                 });
         });
 
-        return eTextarea;
+        return attendanceComment;
     }
 
     function getEditAbsenceReasonElement(
@@ -1247,9 +1187,9 @@ function InstitutionStudentAttendancesSvc(
         );
         eSelectWrapper.setAttribute("id", dataKey);
 
-        var eSelect = document.createElement("select");
+        var selectAbsenceReason = document.createElement("select");
         if (hasError(data, dataKey)) {
-            eSelect.setAttribute("class", "error");
+            selectAbsenceReason.setAttribute("class", "error");
         }
 
         if (data.institution_student_absences[dataKey] == null) {
@@ -1262,14 +1202,13 @@ function InstitutionStudentAttendancesSvc(
             var labelText = obj.name;
             eOption.setAttribute("value", obj.id);
             eOption.innerHTML = labelText;
-            eSelect.appendChild(eOption);
+            selectAbsenceReason.appendChild(eOption);
         });
 
-        eSelect.value = data.institution_student_absences[dataKey];
-        eSelect.addEventListener("change", function () {
-            setTimeout(function () { setRowDatas(context, data); }, 200)
+        selectAbsenceReason.value = data.institution_student_absences[dataKey];
+        selectAbsenceReason.addEventListener("change", function () {
             const oldValue = data.institution_student_absences[dataKey];
-            data.institution_student_absences[dataKey] = eSelect.value;
+            data.institution_student_absences[dataKey] = selectAbsenceReason.value;
 
             UtilsSvc.isAppendSpinner(true, "institution-student-attendances-table");
 
@@ -1297,7 +1236,7 @@ function InstitutionStudentAttendancesSvc(
                 });
         });
 
-        eSelectWrapper.appendChild(eSelect);
+        eSelectWrapper.appendChild(selectAbsenceReason);
         return eSelectWrapper;
     }
 
@@ -1412,7 +1351,8 @@ function InstitutionStudentAttendancesSvc(
         if (absenceReasonId === null) {
             html = '<i class="' + icons.PRESENT + '"></i>';
         } else {
-            console.log(absenceReasonObj);
+            // console.log(absenceReasonId);
+            // console.log(absenceReasonObj);
             if (absenceReasonObj && absenceReasonObj.name) {
                 var reasonName = absenceReasonObj.name;
                 html =
