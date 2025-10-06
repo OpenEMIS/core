@@ -57,6 +57,8 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 
     public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
     {
+        Log::debug(print_r([__FUNCTION__ => $entity], true));
+
         //For Import StudentAbsenceExcel only. Insert into student_attendace_mark_records once import sucessfully as attendance is counted as marked
         if ($entity->has('record_source') && $entity->record_source == 'import_student_attendances') {
             $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
@@ -100,6 +102,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
     */
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        Log::debug(print_r([__FUNCTION__ => $entity], true));
         if ($entity->absence_type_id == 0) {
             $this->delete($entity);
         }
@@ -112,6 +115,8 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
+        Log::debug(print_r([__FUNCTION__ => $entity], true));
+
         $this->sendStudentAbsenceAlert($entity); // POCOR-9392 commented out alerts for absence
 
     }
