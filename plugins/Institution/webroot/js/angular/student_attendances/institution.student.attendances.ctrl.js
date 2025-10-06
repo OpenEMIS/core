@@ -551,6 +551,24 @@ function InstitutionStudentAttendancesController(
     };
 
     function getRowHeight(params) {
+        var attendanceType =
+            InstitutionStudentAttendancesSvc.getAttendanceTypeList();
+        // console.log(params);
+        var code =  params.data.institution_student_absences.absence_type_code;
+        // console.log('getRowHeight', code);
+        switch (code) {
+            case null:
+            case attendanceType.PRESENT.code:
+                return 60;
+                break;
+            case attendanceType.UNEXCUSED.code:
+            case attendanceType.LATE.code:
+                return 80;
+                break;
+            case attendanceType.EXCUSED.code:
+                return 130;
+                break;
+        }
         return params.data.rowHeight || 130;
     }
     function getRowNodeId(data) {

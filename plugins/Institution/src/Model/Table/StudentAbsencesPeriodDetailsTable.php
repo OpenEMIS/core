@@ -17,7 +17,7 @@ use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\Query;
-use http\Exception\InvalidArgumentException;
+use InvalidArgumentException;
 
 class StudentAbsencesPeriodDetailsTable extends AppTable
 {
