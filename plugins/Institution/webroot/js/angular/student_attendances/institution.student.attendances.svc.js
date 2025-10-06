@@ -709,7 +709,7 @@ function InstitutionStudentAttendancesSvc(
             } else {
                 data.institution_student_absences[dataKey] = oldValue;
             }
-            console.log('hasError', response);
+            console.error('hasError', response);
             // AlertSvc.error(scope, "There was an error when saving the record");
         } else {
             data.save_error[dataKey] = false;
