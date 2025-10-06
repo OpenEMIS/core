@@ -571,10 +571,11 @@ function InstitutionStudentAttendancesSvc(
         );
     }
 
-    // save
     function saveAbsences(data, context) {
-        // Set subject_id and period based on attendance type
+        // Determine attendance type
         const isSubjectBased = context.attendance_by === "subject";
+
+        // Prepare data to send
         const studentAbsenceData = {
             student_id: Number(data.student_id),
             institution_id: Number(data.institution_id),
@@ -591,7 +592,7 @@ function InstitutionStudentAttendancesSvc(
             education_grade_id: Number(context.education_grade_id),
         };
 
-        // Construct composite key to check if record exists
+        // Define composite key for fetch
         const compositeKey = {
             student_id: studentAbsenceData.student_id,
             institution_id: studentAbsenceData.institution_id,
@@ -602,9 +603,9 @@ function InstitutionStudentAttendancesSvc(
             subject_id: studentAbsenceData.subject_id,
         };
 
-        // Attempt to find the existing record first
+        // Step 1: Check if record exists
         return StudentAbsencesPeriodDetails.find('first', compositeKey)
-            .ajax({ defer: true })  // FIXED: include `defer: true`
+            .ajax({ defer: true })
             .then(function (existing) {
                 const hasRecord =
                     existing &&
@@ -614,32 +615,119 @@ function InstitutionStudentAttendancesSvc(
                 const action = hasRecord ? 'edit' : 'save';
                 const operation = StudentAbsencesPeriodDetails[action](studentAbsenceData);
 
-                return operation.then((response) => {
-                    const saved = response?.data?.data;
-                    const expected = studentAbsenceData;
+                // Step 2: Perform save/edit
+                return operation
+                    .then(() => {
+                        // Step 3: Re-fetch the saved record to verify
+                        return StudentAbsencesPeriodDetails.find('first', compositeKey)
+                            .ajax({ defer: true });
+                    })
+                    .then((verifyResult) => {
+                        const saved = Array.isArray(verifyResult.data) ? verifyResult.data[0] : verifyResult.data;
+                        const expected = studentAbsenceData;
 
-                    const matches =
-                        saved &&
-                        saved.absence_type_id == expected.absence_type_id &&
-                        (saved.student_absence_reason_id == expected.student_absence_reason_id ||
-                            (!saved.student_absence_reason_id && !expected.student_absence_reason_id)) &&
-                        (saved.comment === expected.comment ||
-                            (!saved.comment && !expected.comment));
+                        const matches =
+                            saved &&
+                            saved.absence_type_id == expected.absence_type_id &&
+                            (saved.student_absence_reason_id == expected.student_absence_reason_id ||
+                                (!saved.student_absence_reason_id && !expected.student_absence_reason_id)) &&
+                            (saved.comment === expected.comment ||
+                                (!saved.comment && !expected.comment));
 
-                    if (matches) {
-                        return { success: true, updated: !!existing };
-                    } else {
-                        console.warn('Mismatch between saved and expected:', saved, expected);
-                        return { success: false, reason: 'Mismatch in saved data' };
-                    }
-                });
+                        if (matches) {
+                            return { success: true, updated: hasRecord };
+                        } else {
+                            console.warn('Final DB mismatch:', saved, expected);
+                            return { success: false, reason: 'DB verification mismatch' };
+                        }
+                    });
             })
             .catch(function (err) {
-                console.log(err);
-                console.error('Error during attendance save/edit:', err);
-                return { success: false, reason: 'Fetch or save failed' };
+                console.error('Save or fetch failed:', err);
+                return { success: false, reason: 'Save or fetch failed' };
+            });
+    }function saveAbsences(data, context) {
+        const isSubjectBased = context.attendance_by === "subject";
+
+        const studentAbsenceData = {
+            student_id: Number(data.student_id),
+            institution_id: Number(data.institution_id),
+            academic_period_id: Number(data.academic_period_id),
+            institution_class_id: Number(data.institution_class_id),
+            absence_type_id: Number(data.institution_student_absences.absence_type_id),
+            student_absence_reason_id: data.institution_student_absences.student_absence_reason_id != null
+                ? Number(data.institution_student_absences.student_absence_reason_id)
+                : 0,
+            comment: data.institution_student_absences.comment,
+            period: isSubjectBased ? 0 : Number(context.period),
+            date: context.date,
+            subject_id: isSubjectBased ? Number(context.subject_id) : 0,
+            education_grade_id: Number(context.education_grade_id),
+        };
+
+        const compositeKey = {
+            student_id: studentAbsenceData.student_id,
+            institution_id: studentAbsenceData.institution_id,
+            academic_period_id: studentAbsenceData.academic_period_id,
+            institution_class_id: studentAbsenceData.institution_class_id,
+            date: studentAbsenceData.date,
+            period: studentAbsenceData.period,
+            subject_id: studentAbsenceData.subject_id,
+        };
+
+        return StudentAbsencesPeriodDetails.find('first', compositeKey)
+            .ajax({ defer: true })
+            .then(function (existing) {
+                const hasRecord =
+                    existing &&
+                    Array.isArray(existing.data) &&
+                    existing.data.length > 0;
+
+                const action = hasRecord ? 'edit' : 'save';
+                const operation = StudentAbsencesPeriodDetails[action](studentAbsenceData);
+
+                return operation
+                    .then(() => {
+                        return StudentAbsencesPeriodDetails.find('first', compositeKey)
+                            .ajax({ defer: true });
+                    })
+                    .then((verifyResult) => {
+                        const saved =
+                            Array.isArray(verifyResult.data) && verifyResult.data.length > 0
+                                ? verifyResult.data[0]
+                                : null;
+                        const expected = studentAbsenceData;
+
+                        // ✅ Special handling: if absence_type_id is 0/null, the record should not exist
+                        if (!expected.absence_type_id || expected.absence_type_id == 0) {
+                            const deleted = !saved;
+                            return deleted
+                                ? { success: true, deleted: true }
+                                : { success: false, reason: "Expected record to be deleted" };
+                        }
+
+                        const matches =
+                            saved &&
+                            saved.absence_type_id == expected.absence_type_id &&
+                            (saved.student_absence_reason_id == expected.student_absence_reason_id ||
+                                (!saved.student_absence_reason_id && !expected.student_absence_reason_id)) &&
+                            (saved.comment === expected.comment ||
+                                (!saved.comment && !expected.comment));
+
+                        if (matches) {
+                            return { success: true, updated: hasRecord };
+                        } else {
+                            console.warn('Final DB mismatch:', saved, expected);
+                            return { success: false, reason: 'DB verification mismatch' };
+                        }
+                    });
+            })
+            .catch(function (err) {
+                console.error('Save or fetch failed:', err);
+                return { success: false, reason: 'Save or fetch failed' };
             });
     }
+
 
 
     function savePeriodMarked(params, scope) {
