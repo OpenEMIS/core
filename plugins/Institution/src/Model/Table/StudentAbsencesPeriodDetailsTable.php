@@ -108,9 +108,10 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         Log::debug(print_r([__FUNCTION__ => $entity], true));
         if ($entity->absence_type_id == 0) {
             $this->delete($entity);
+            $event->stopPropagation();
+            return $entity;
         }
-        $event->stopPropagation();
-        return $entity;
+
 
         // if ($entity->isNew() || $entity->dirty('absence_type_id')) {
         //     $this->updateStudentAbsencesRecord($entity);

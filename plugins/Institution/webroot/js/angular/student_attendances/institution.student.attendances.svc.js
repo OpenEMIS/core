@@ -965,7 +965,10 @@ function InstitutionStudentAttendancesSvc(
                             }
                         } else if (mode == "edit") {
                             var api = params.api;
+                            console.log(absenceTypeObj.code);
+                            console.log(attendanceType.EXCUSED.code)
                             switch (absenceTypeObj.code) {
+
                                 case attendanceType.PRESENT.code:
                                     return (
                                         '<i class="' + icons.PRESENT + '"></i>'
@@ -1044,6 +1047,7 @@ function InstitutionStudentAttendancesSvc(
 
         eSelect.value = data.institution_student_absences[dataKey];
         eSelect.addEventListener("change", function () {
+            setTimeout(function () { setRowDatas(context, data); }, 200)
             const oldValue = data.institution_student_absences[dataKey];
             data.institution_student_absences[dataKey] = eSelect.value;
 
@@ -1175,6 +1179,7 @@ function InstitutionStudentAttendancesSvc(
 
         eSelect.value = data.institution_student_absences[dataKey];
         eSelect.addEventListener("change", function () {
+            setTimeout(function () { setRowDatas(context, data); }, 200)
             const oldValue = data.institution_student_absences[dataKey];
             data.institution_student_absences[dataKey] = eSelect.value;
 
@@ -1319,13 +1324,16 @@ function InstitutionStudentAttendancesSvc(
         if (absenceReasonId === null) {
             html = '<i class="' + icons.PRESENT + '"></i>';
         } else {
-            var reasonName = absenceReasonObj.name;
-            html =
-                '<div class="absence-reason"><i class="' +
-                icons.REASON +
-                '"></i><span>' +
-                reasonName +
-                "</span></div>";
+            console.log(absenceReasonObj);
+            if (absenceReasonObj && absenceReasonObj.name) {
+                var reasonName = absenceReasonObj.name;
+                html =
+                    '<div class="absence-reason"><i class="' +
+                    icons.REASON +
+                    '"></i><span>' +
+                    reasonName +
+                    "</span></div>";
+            }
         }
 
         return html;
