@@ -1,3 +1,6 @@
+### [4.43.3] - 2025-10-07
+- Bug Fixed: Institutions>Attendance>Students: Attendance not updated correctly
+
 ### [4.43.2] - 2025-10-02
 - Bug Fixed: Institutions>Attendance>Students: Attendance is not recorded correctly
 - Bug Fixed: Directory>Import: User getting 404 error
