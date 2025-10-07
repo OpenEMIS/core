@@ -699,7 +699,7 @@ class StudentAdmissionTable extends ControllerActionTable
         $security_group_id = self::getInstitutionSecurityGroupId($institution_id);
         //check student already exist
         $student_security_groups = self::getStudentSecurityGroups($student_id, $student_role_id);
-        //Log::write('debug', $student_security_groups);
+//        Log::write('debug', $student_security_groups);
         //check that the student is not in other groups
         if (sizeof($student_security_groups) == 0) {
             //Log::write('debug', $student_id);
@@ -737,6 +737,7 @@ class StudentAdmissionTable extends ControllerActionTable
     }
 
     /**
+     * POCOR-9423
      * @param $institution_id
      * @return integer
      * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
@@ -761,10 +762,10 @@ class StudentAdmissionTable extends ControllerActionTable
             return $security_group_id;
         }
 
-        // 1️Find a security group with only this institution
+        // 1 Find a security group with only this institution
         $subQuery = $securityGroupInstitutionsTbl->find()
-            ->select(['security_group_id'])
-            ->group('security_group_id')
+            ->select(['security_group_id' => $securityGroupInstitutionsTbl->aliasField('security_group_id')])
+            ->group($securityGroupInstitutionsTbl->aliasField('security_group_id'))
             ->having(['COUNT(*) =' => 1])
             ->matching('Institutions', function ($q) use ($institution_id) {
                 return $q->where(['Institutions.id' => $institution_id]);
@@ -775,13 +776,14 @@ class StudentAdmissionTable extends ControllerActionTable
             $new_group_id = $subQuery->security_group_id;
 
             // Update institution to point to this valid group
-            $institution->security_group_id = $new_group_id;
-            $institutionTbl->save($institution);
+            $connection = ConnectionManager::get('default');
+                $updateQuery = 'UPDATE institutions SET security_group_id = ' . $new_group_id . ' WHERE id = ' . $institution_id;
+            $connection->execute($updateQuery);
 
             return $new_group_id;
         }
 
-        // 2️No group found — create new one (auto-incremented ID)
+        // 2 No group found — create new one (auto-incremented ID)
         $newGroup = $securityGroupsTbl->newEntity([
             'name' => 'Auto-Recovered Group for Institution ' . $institution_id,
             'created_user_id' => 1,
@@ -795,7 +797,7 @@ class StudentAdmissionTable extends ControllerActionTable
 
         $new_group_id = $newGroup->id;
 
-        // 3️Link new group to institution
+        // 3 Link new group to institution
         $linkEntity = $securityGroupInstitutionsTbl->newEntity([
             'security_group_id' => $new_group_id,
             'institution_id' => $institution_id,
@@ -808,9 +810,10 @@ class StudentAdmissionTable extends ControllerActionTable
             return null;
         }
 
-        // 4️Update institution to use new group ID
-        $institution->security_group_id = $new_group_id;
-        $institutionTbl->save($institution);
+        // 4 Update institution to use new group ID
+        $connection = ConnectionManager::get('default');
+        $updateQuery = 'UPDATE institutions SET security_group_id = ' . $new_group_id . ' WHERE id = ' . $institution_id;
+        $connection->execute($updateQuery);
 
         return $new_group_id;
     }
