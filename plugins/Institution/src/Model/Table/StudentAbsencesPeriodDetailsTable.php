@@ -16,6 +16,8 @@ use App\Controller\DashboardController;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\Datasource\ConnectionManager;
+use Cake\ORM\Query;
+use InvalidArgumentException;
 
 class StudentAbsencesPeriodDetailsTable extends AppTable
 {
@@ -57,6 +59,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 
     public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
     {
+
         //For Import StudentAbsenceExcel only. Insert into student_attendace_mark_records once import sucessfully as attendance is counted as marked
         if ($entity->has('record_source') && $entity->record_source == 'import_student_attendances') {
             $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
@@ -90,6 +93,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         //     $this->updateStudentAbsencesRecord($entity);
         // }
         //POCOR-7165[END]
+        return $entity;
     }
 
     /*
@@ -102,18 +106,46 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
     {
         if ($entity->absence_type_id == 0) {
             $this->delete($entity);
+            $event->stopPropagation();
+            return $entity;
         }
+
 
         // if ($entity->isNew() || $entity->dirty('absence_type_id')) {
         //     $this->updateStudentAbsencesRecord($entity);
         // }
     }
 
+    public function findFirst(Query $query, array $options)
+    {
+        $compositeKeyFields = [
+            'student_id',
+            'institution_id',
+            'academic_period_id',
+            'institution_class_id',
+            'date',
+            'period',
+            'subject_id'
+        ];
+
+        $conditions = [];
+
+        foreach ($compositeKeyFields as $field) {
+            if (isset($options[$field])) {
+                $conditions[$field] = $options[$field];
+            } else {
+                throw new InvalidArgumentException("Missing composite key field: {$field}");
+            }
+        }
+
+        return $query->where($conditions)->limit(1);
+    }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
-        $this->sendStudentAbsenceAlert($entity); // POCOR-9392 commented out alerts for absence
 
+        $this->sendStudentAbsenceAlert($entity); // POCOR-9392 commented out alerts for absence
+        return $entity;
     }
 
 
@@ -187,7 +219,6 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         if ($userId === 0) {
             $userId = 1; // fallback default user ID
             Log::debug('Fallback user ID used. Entity dump:');
-            Log::debug(print_r($entity, true));
         }
 
         $extraOptions = [
