@@ -1228,7 +1228,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
             ->first();
             $startDate = $getStaffStartDateData->start_date;
 
-            $attr['value'] = $startDate->format('Y-m-d');
+            $attr['value'] = !empty($startDate) ? $startDate->format('Y-m-d') : null; //POCOR-9421
             $attr['attr']['value'] = $this->formatDate($startDate);
             $attr['type'] = 'hidden';
         }
