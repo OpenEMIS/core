@@ -131,6 +131,8 @@ function InstitutionStudentAttendancesController(
             attendance_by: vm.selectedAttendanceBy, //POCOR-8874
         },
         getRowHeight: getRowHeight,
+        getRowNodeId: getRowNodeId,
+
     };
 
     // ready
@@ -549,36 +551,57 @@ function InstitutionStudentAttendancesController(
     };
 
     function getRowHeight(params) {
-        return params.data.rowHeight;
+        var attendanceType =
+            InstitutionStudentAttendancesSvc.getAttendanceTypeList();
+        // console.log(params);
+        var code =  params.data.institution_student_absences.absence_type_code;
+        // console.log('getRowHeight', code);
+        switch (code) {
+            case null:
+            case attendanceType.PRESENT.code:
+                return 60;
+                break;
+            case attendanceType.UNEXCUSED.code:
+            case attendanceType.LATE.code:
+                return 80;
+                break;
+            case attendanceType.EXCUSED.code:
+                return 130;
+                break;
+        }
+        return params.data.rowHeight || 130;
+    }
+    function getRowNodeId(data) {
+        return String(data.student_id);
     }
 
     vm.setGridData = function () {
         if (angular.isDefined(vm.gridOptions.api)) {
-            // vm.gridOptions.api.setRowData(vm.classStudentList);
-            vm.setRowDatas(vm.classStudentList);
+            vm.gridOptions.api.setRowData(vm.classStudentList);
+            // vm.setRowDatas(vm.classStudentList);
             vm.countStudentData();
         }
     };
 
-    vm.setRowDatas = function (studentList) {
-        studentList.forEach(function (dataItem, index) {
-            if (dataItem.hasOwnProperty("institution_student_absences")) {
-                if (
-                    dataItem.institution_student_absences.absence_type_code ==
-                        null ||
-                    dataItem.institution_student_absences.absence_type_code ==
-                        "PRESENT"
-                ) {
-                    dataItem.rowHeight = 60;
-                } else {
-                    dataItem.rowHeight = 60;
-                }
-            } else {
-                dataItem.rowHeight = 80;
-            }
-        });
-        vm.gridOptions.api.setRowData(studentList);
-    };
+    // vm.setRowDatas = function (studentList) {
+    //     studentList.forEach(function (dataItem, index) {
+    //         if (dataItem.hasOwnProperty("institution_student_absences")) {
+    //             if (
+    //                 dataItem.institution_student_absences.absence_type_code ==
+    //                     null ||
+    //                 dataItem.institution_student_absences.absence_type_code ==
+    //                     "PRESENT"
+    //             ) {
+    //                 dataItem.rowHeight = 60;
+    //             } else {
+    //                 dataItem.rowHeight = 130;
+    //             }
+    //         } else {
+    //             dataItem.rowHeight = 130;
+    //         }
+    //     });
+    //     vm.gridOptions.api.setRowData(studentList);
+    // };
 
     vm.setColumnDef = function (noScheduledClicked) {
         if (!noScheduledClicked) noScheduledClicked = false;
