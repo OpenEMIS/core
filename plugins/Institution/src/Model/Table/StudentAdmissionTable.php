@@ -744,35 +744,75 @@ class StudentAdmissionTable extends ControllerActionTable
     private static function getInstitutionSecurityGroupId($institution_id)
     {
         $institutionTbl = self::getDynamicTableInstance('Institution.Institutions');
-        $security_group_id = null;
-        $institutions = $institutionTbl->find()
-            ->where([
-                $institutionTbl->aliasField('id') => $institution_id
-            ])->first();
-        if (!empty($institutions)) {
-            $security_group_id = $institutions->security_group_id;
+        $securityGroupsTbl = self::getDynamicTableInstance('Security.SecurityGroups');
+        $securityGroupInstitutionsTbl = self::getDynamicTableInstance('Security.SecurityGroupInstitutions');
+
+        $institution = $institutionTbl->find()
+            ->where([$institutionTbl->aliasField('id') => $institution_id])
+            ->first();
+
+        if (empty($institution)) {
+            return null;
         }
-        if ($security_group_id != null) {
-            $securityGroupInstitutionsTbl = self::getDynamicTableInstance('Security.SecurityGroupInstitutions');
-            $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
-                ->where([
-                    $securityGroupInstitutionsTbl->aliasField('security_group_id') => $security_group_id,
-                    $securityGroupInstitutionsTbl->aliasField('institution_id') => $institutions->id
-                ])
-                ->first();
-            //save security group for institution
-            if (empty($securityGroupInstitutions)) {
-                $security_group_ins_data = [
-                    'security_group_id' => $security_group_id,
-                    'institution_id' => $institution_id,
-                    'created_user_id' => 1,
-                    'created' => new FrozenTime('NOW')
-                ];
-                $securityGroupInstitutionsEntity = $securityGroupInstitutionsTbl->newEntity($security_group_ins_data);
-                $securityGroupInstitutionsTbl->save($securityGroupInstitutionsEntity);
-            }
+
+        $security_group_id = $institution->security_group_id;
+
+        if ($securityGroupsTbl->exists(['id' => $security_group_id])) {
+            return $security_group_id;
         }
-        return $security_group_id;
+
+        // 1️Find a security group with only this institution
+        $subQuery = $securityGroupInstitutionsTbl->find()
+            ->select(['security_group_id'])
+            ->group('security_group_id')
+            ->having(['COUNT(*) =' => 1])
+            ->matching('Institutions', function ($q) use ($institution_id) {
+                return $q->where(['Institutions.id' => $institution_id]);
+            })
+            ->first();
+
+        if (!empty($subQuery)) {
+            $new_group_id = $subQuery->security_group_id;
+
+            // Update institution to point to this valid group
+            $institution->security_group_id = $new_group_id;
+            $institutionTbl->save($institution);
+
+            return $new_group_id;
+        }
+
+        // 2️No group found — create new one (auto-incremented ID)
+        $newGroup = $securityGroupsTbl->newEntity([
+            'name' => 'Auto-Recovered Group for Institution ' . $institution_id,
+            'created_user_id' => 1,
+            'created' => new FrozenTime('now')
+        ]);
+
+        if (!$securityGroupsTbl->save($newGroup)) {
+            Log::error('Failed to create new security group: ' . print_r($newGroup->getErrors(), true));
+            return null;
+        }
+
+        $new_group_id = $newGroup->id;
+
+        // 3️Link new group to institution
+        $linkEntity = $securityGroupInstitutionsTbl->newEntity([
+            'security_group_id' => $new_group_id,
+            'institution_id' => $institution_id,
+            'created_user_id' => 1,
+            'created' => new FrozenTime('now')
+        ]);
+
+        if (!$securityGroupInstitutionsTbl->save($linkEntity)) {
+            Log::error('Failed to link institution to new group: ' . print_r($linkEntity->getErrors(), true));
+            return null;
+        }
+
+        // 4️Update institution to use new group ID
+        $institution->security_group_id = $new_group_id;
+        $institutionTbl->save($institution);
+
+        return $new_group_id;
     }
 
     /**
