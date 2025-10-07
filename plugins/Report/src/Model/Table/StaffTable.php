@@ -313,14 +313,14 @@ class StaffTable extends AppTable  {
         }
     }
 
-    public function onUpdateFieldStatusbkp(Event $event, array $attr, $action, ServerRequest $request) {
+    public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request) {
         if ($action == 'add') {
             $Workflow = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
             if (isset($this->request->getData($this->getAlias())['feature'])) {
                 $feature = $this->request->getData($this->getAlias())['feature'];
 
                 if (in_array($feature, ['Report.StaffLicenses'])) {
-                    $licenseStatuses = $Workflow->getWorkflowStatuses('Staff.Licenses');
+                    $licenseStatuses = $licenseStatuses = $this->getWorkflowStatuses(); //POCOR-9418
                     $licenseStatuses = ['-1' => __('All Statuses')] + $licenseStatuses;
 
                     $attr['type'] = 'select';
@@ -331,49 +331,49 @@ class StaffTable extends AppTable  {
             }
         }
     }
-    public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request)
+    
+    //POCOR-9418
+    public function getWorkflowStatuses()
     {
-        if ($action === 'add') {
-            $feature = $request->getData($this->getAlias())['feature'] ?? null;
+        $WorkflowModels = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+        $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        $WorkflowFilters = TableRegistry::getTableLocator()->get('Workflow.WorkflowsFilters');
+        $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        //workflow_model_id for Staff.Licenses
+        $workflowModel = $WorkflowModels->find()
+            ->select(['id'])
+            ->where(['model' => 'Staff.Licenses'])
+            ->first();
 
-            if ($feature === 'Report.StaffLicenses') {
-                $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
-
-                $workflowNames = ['Staff.Licenses', 'Staff Licenses - General'];
-
-               $steps = $WorkflowSteps->find()
-                ->contain(['Workflows'])
-                ->where(['Workflows.name IN' => ['Staff Licenses', 'Staff Licenses - General']])
-                ->order(['WorkflowSteps.id' => 'ASC'])
-                ->toArray();
-
-            
-                $uniqueStatuses = [];
-            foreach ($steps as $step) {
-                if (!isset($uniqueStatuses[$step->name])) {
-                    $uniqueStatuses[$step->name] = $step->id;
-                }
-            }
-
-            $licenseStatuses = ['-1' => __('All Statuses')];
-            foreach ($uniqueStatuses as $name => $id) {
-                $licenseStatuses[$id] = $name;
-            }
-
-                // Build dropdown: key = ID, value = name
-                $licenseStatuses = ['-1' => __('All Statuses')];
-                foreach ($uniqueStatuses as $name => $id) {
-                    $licenseStatuses[$id] = $name;
-                }
-
-                $attr['type'] = 'select';
-                $attr['select'] = false;
-                $attr['options'] = $licenseStatuses;
-                $attr['onChangeReload'] = true;
-
-                return $attr;
-            }
+        if (!$workflowModel) {
+            return [];
         }
+        //latest workflow for this model
+        $latestWorkflow = $Workflows->find()
+            ->where(['workflow_model_id' => $workflowModel->id, ])
+            ->order(['id' => 'DESC'])
+            ->first();
+        if (!$latestWorkflow) {
+            return [];
+        }
+        $hasFilters = $WorkflowFilters->exists([
+            'workflow_id' => $latestWorkflow->id,
+            'filter_id !=' => 0
+        ]);
+
+        if (!$hasFilters) {
+            return [];
+        }
+        $steps = $WorkflowSteps->find()
+            ->select(['id', 'name'])
+            ->where(['workflow_id' => $latestWorkflow->id])
+            ->order(['id' => 'ASC'])
+            ->toArray();
+        $statuses = [];
+        foreach ($steps as $step) {
+            $statuses[$step->id] = $step->name;
+        }
+        return $statuses;
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
