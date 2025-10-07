@@ -320,7 +320,7 @@ class StaffTable extends AppTable  {
                 $feature = $this->request->getData($this->getAlias())['feature'];
 
                 if (in_array($feature, ['Report.StaffLicenses'])) {
-                    $licenseStatuses = $licenseStatuses = $this->getWorkflowStatuses(); //POCOR-9418
+                    $licenseStatuses = $this->getWorkflowStatuses(); //POCOR-9418
                     $licenseStatuses = ['-1' => __('All Statuses')] + $licenseStatuses;
 
                     $attr['type'] = 'select';
