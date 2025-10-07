@@ -318,11 +318,9 @@ class StaffTable extends AppTable  {
             $Workflow = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
             if (isset($this->request->getData($this->getAlias())['feature'])) {
                 $feature = $this->request->getData($this->getAlias())['feature'];
-
                 if (in_array($feature, ['Report.StaffLicenses'])) {
                     $licenseStatuses = $this->getWorkflowStatuses(); //POCOR-9418
                     $licenseStatuses = ['-1' => __('All Statuses')] + $licenseStatuses;
-
                     $attr['type'] = 'select';
                     $attr['select'] = false;
                     $attr['options'] = $licenseStatuses;
