@@ -1539,14 +1539,16 @@ class ValidationBehavior extends Behavior
         $todayDate = $todayDate->format('Y-m-d');
 
         if (empty($endDate)) {
-            // current position has no end date
+            //POCOR-9421 start
             $dateCondition['OR'][] = 'end_date IS NULL';
-            $dateCondition['OR'][] = [
-                "end_date IS NOT NULL",
-                "end_date >= '" . $startDate . "'",
-                "end_date >= '" . $todayDate . "'" //to exclude staff which assignment has been ended.
-            ];
-        } else {
+            $dateSubCondition = ["end_date IS NOT NULL"];
+            if (!empty($startDate)) {
+                $dateSubCondition[] = "end_date >= '" . $startDate . "'";
+            }
+            $dateSubCondition[] = "end_date >= '" . $todayDate . "'";
+            $dateCondition['OR'][] = $dateSubCondition;
+            //POCOR-9421 end
+        }else {
             // current position HAS end date
             $dateCondition['OR'][] = [
                 'end_date IS NULL',
@@ -1569,7 +1571,6 @@ class ValidationBehavior extends Behavior
                 $FTEused += $value->FTE;
             }
         }
-
         //POCOR-9421 start
         $FTEused = (float)$FTEused;
         $globalFTE = (float)$globalData['data']['FTE'];
