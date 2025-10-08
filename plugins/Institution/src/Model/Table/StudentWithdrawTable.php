@@ -496,7 +496,7 @@ class StudentWithdrawTable extends ControllerActionTable
     {
         $url  = $_SERVER['REQUEST_URI'];
         $stringUrl = 'academic_period_id';
-        $stringUrlTwo = 'institution_id'; //POCOR-9418 if user came from Dashboard page
+        $stringUrlTwo = 'institution_id'; //POCOR-9414 if user came from Dashboard page
         if (strpos($url, $stringUrlTwo) !== false && strpos($url, $stringUrl) === false){ //POCOR-9414 start
             $findstudent = TableRegistry::get('Institution.InstitutionStudents');
             $studentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
