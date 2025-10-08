@@ -497,7 +497,7 @@ class StudentWithdrawTable extends ControllerActionTable
         $url  = $_SERVER['REQUEST_URI'];
         $stringUrl = 'academic_period_id';
         $stringUrlTwo = 'institution_id'; //POCOR-9418 if user came from Dashboard page
-        if (strpos($url, $stringUrlTwo) !== false && strpos($url, $stringUrl) === false){ //POCOR-9418 start
+        if (strpos($url, $stringUrlTwo) !== false && strpos($url, $stringUrl) === false){ //POCOR-9414 start
             $findstudent = TableRegistry::get('Institution.InstitutionStudents');
             $studentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
             $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
@@ -519,7 +519,7 @@ class StudentWithdrawTable extends ControllerActionTable
             if(!empty($studentdata) && !empty($studentdraw)){
                  return true;
             }    
-            //POCOR-9418 end     
+            //POCOR-9414 end     
         }elseif(strpos($url, $stringUrl) == false){
             $findstudent = TableRegistry::get('Institution.InstitutionStudents');
             $studentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
