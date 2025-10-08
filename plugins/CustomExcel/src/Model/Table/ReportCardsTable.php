@@ -783,7 +783,7 @@ class ReportCardsTable extends AppTable
             $institutionId = $params['institution_id'];
             //POCOR-8093 to fetch staff position
             $StaffPositionTitles = self::getDynamicTableInstance('Institution.StaffPositionTitles'); // POCOR-9162
-            $staffPosnId = $StaffPositionTitles->getPrincipalRoleId();
+            $staffPosnId = $StaffPositionTitles->getPrincipalRoleId($staffRoleId); //POCOR-9413
             $staff = self::getInstitutionSecurityStaff($institutionId, $staffPosnId);
             if (!empty($staff)) {
                 $staff->principal = $staff->user->name;
