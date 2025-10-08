@@ -1,4 +1,5 @@
 <?php
+
 namespace Examination\Controller;
 
 use App\Controller\AppController;
@@ -7,10 +8,12 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
+use Cake\Http\Response; //POCOR-7510
 
 class ExaminationsController extends AppController
 {
-	public function initialize(): void {
+    public function initialize(): void
+    {
         parent::initialize();
         $this->ControllerAction->models = [
             'ImportResults' => ['className' => 'Examination.ImportResults', 'actions' => ['add']],
@@ -21,31 +24,85 @@ class ExaminationsController extends AppController
     }
 
     // CAv4
-    public function Exams() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.Examinations']); }
-    public function GradingTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationGradingTypes']); }
-    public function ExamCentres($pass = 'index') { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentres']);}
-    public function ExamCentreExams() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminations']);}
-    public function RegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminationsStudents']); }
-    public function BulkStudentRegistration() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.BulkStudentRegistration']); }
-    public function NotRegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreNotRegisteredStudents']); }
-    public function RegistrationDirectory() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.RegistrationDirectory']); }
-    public function ExamCentreRooms() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreRooms']); }
-    public function ExamResults() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationResults']); }
-    public function ExamCentreStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExamCentreStudents']); }
-    public function ExamCentreSubjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminationsSubjects']); }
-    public function ExamCentreInvigilators() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminationsInvigilators']); }
-    public function ExamCentreLinkedInstitutions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminationsInstitutions']); }
+    public function Exams()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.Examinations']);
+    }
+    public function GradingTypes()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationGradingTypes']);
+    }
+    public function ExamCentres($pass = 'index')
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentres']);
+    }
+    public function ExamCentreExams()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminations']);
+    }
+    public function RegisteredStudents()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminationsStudents']);
+    }
+    public function BulkStudentRegistration()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.BulkStudentRegistration']);
+    }
+    public function NotRegisteredStudents()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreNotRegisteredStudents']);
+    }
+    public function RegistrationDirectory()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.RegistrationDirectory']);
+    }
+    public function ExamCentreRooms()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreRooms']);
+    }
+    public function ExamResults()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationResults']);
+    }
+    public function ExamCentreStudents()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExamCentreStudents']);
+    }
+    public function ExamCentreSubjects()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminationsSubjects']);
+    }
+    public function ExamCentreInvigilators()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminationsInvigilators']);
+    }
+    public function ExamCentreLinkedInstitutions()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminationsInstitutions']);
+    }
     // End
 
     // AngularJS
-    public function Results() {
+    public function Results() //POCOR-7510
+    {
         $this->set('_edit', $this->AccessControl->check(['Examinations', 'Results', 'edit']));
+        $syncUserConfigured = TableRegistry::getTableLocator()->get('Configuration.ConfigExternalDataSourceExam')->getOpenemisExamConfiguration();
+
+        if ($syncUserConfigured) {
+            $examinationId = $this->request->getQuery('examination_id');
+            if (($this->AccessControl->check(['Examinations', 'syncResultFromExam', 'execute']) || $this->AccessControl->isAdmin())
+                && !empty($examinationId) && $examinationId != -1
+            ) {
+                $this->set('_sync', true);
+            }
+        }
+
         $this->set('ngController', 'ExaminationsResultsCtrl as ExaminationsResultsController');
     }
     // End
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
-
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    {
         if ($this->getPlugin() == 'Examination') {
             $this->Security->setConfig('validatePost', false);
         }
@@ -54,7 +111,7 @@ class ExaminationsController extends AppController
 
         if ($action == 'Results') {
             $header = __('Examination');
-            $header .= ' - '.__(Inflector::humanize($action));
+            $header .= ' - ' . __(Inflector::humanize($action));
 
             $this->Navigation->addCrumb('Examination', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'ExamResults']);
             $this->Navigation->addCrumb('Exam Results');
@@ -63,7 +120,8 @@ class ExaminationsController extends AppController
         }
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    {
         $header = __('Examination');
 
         $alias = ($model->alias == 'ExamResults') ? 'Results' : $model->alias;
@@ -80,7 +138,7 @@ class ExaminationsController extends AppController
 
     public function getExamsTab()
     {
-    	$tabElements = [
+        $tabElements = [
             'Exams' => [
                 'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Exams'],
                 'text' => __('Exams')
@@ -160,11 +218,13 @@ class ExaminationsController extends AppController
         $this->set('selectedAction', $action);
     }
 
-    private function checkExamCentresPermission() {
+    private function checkExamCentresPermission()
+    {
         return $this->Auth->user('super_admin') == 1 || $this->AccessControl->check(['Examinations', 'Centres', 'add']);
     }
 
-    private function attachAngularModules() {
+    private function attachAngularModules()
+    {
         $action = $this->request->getParam('action');
         switch ($action) {
             case 'Results':
@@ -193,23 +253,67 @@ class ExaminationsController extends AppController
      *
      * @return \Cake\Http\Response|null Redirects to the referring URL.
      */
+    //POCOR-7510 start
     public function syncResultsExam()
     {
         error_reporting(0);
         $this->autoRender = false;
 
-        $params = $this->buildParams([
-            'academic_period_id' => 'AcademicPeriod.AcademicPeriods',
-            'examination_id' => 'Examination.Examinations',
-            'examination_centre_id' => 'Examination.ExaminationCentres',
-        ]);
-        if (!empty($params)) {
-            $this->SyncExam->getResultFromExam($params);
+        try {
+            // If academic_period_id is not in the request, fetch it from the Examinations table using examination_id
+            if (
+                empty($this->request->getQuery('academic_period_id')) &&
+                !empty($this->request->getQuery('examination_id'))
+            ) {
+                $examinationId = $this->request->getQuery('examination_id');
+                $ExaminationsTable = TableRegistry::getTableLocator()->get('Examination.Examinations');
+                $examination = $ExaminationsTable->find()
+                    ->select(['academic_period_id'])
+                    ->where(['id' => $examinationId])
+                    ->first();
+
+                if ($examination && $examination->academic_period_id) {
+                    // Add academic_period_id to the request query array
+                    $this->request = $this->request->withQueryParams(
+                        array_merge(
+                            $this->request->getQueryParams(),
+                            ['academic_period_id' => $examination->academic_period_id]
+                        )
+                    );
+                }
+            }
+
+            $params = $this->buildParams([
+                'academic_period_id' => 'AcademicPeriod.AcademicPeriods',
+                'examination_id' => 'Examination.Examinations',
+                'examination_centre_id' => 'Examination.ExaminationCentres',
+            ]);
+
+            if (!empty($params)) {
+                $result = $this->SyncExam->getResultFromExam($params);
+
+                // Always return JSON response for this API endpoint
+                return $this->sendJsonResponse([
+                    'success' => $result['success'] ?? true,
+                    'message' => $result['message'] ?? __('Exam results synchronized successfully'),
+                    'data' => $result
+                ]);
+            } else {
+                // Return error response for invalid parameters
+                return $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => __('Invalid parameters provided for synchronization')
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            // Handle exceptions - always return JSON
+            return $this->sendJsonResponse([
+                'success' => false,
+                'message' => __('Synchronization failed: {0}', $e->getMessage())
+            ], 500);
         }
-
-        return $this->redirect($this->referer());
     }
-
+    //POCOR-7510 end
     /**
      * Build parameters by fetching codes from corresponding tables.
      *
@@ -248,7 +352,7 @@ class ExaminationsController extends AppController
      * 
      * @return \Cake\Http\Response|null Redirects the user back to the previous page after processing.
      */
-   public function syncStudentsToExam()
+    public function syncStudentsToExam()
     {
         error_reporting(0);
         $this->autoRender = false;
@@ -283,6 +387,16 @@ class ExaminationsController extends AppController
 
         return $this->redirect($referrerUrl);
     }
+    //POCOR-7510 start
+    private function sendJsonResponse(array $data, int $statusCode = 200): Response
+    {
+        $this->autoRender = false;
+        $this->response = $this->response
+            ->withStatus($statusCode)
+            ->withType('application/json')
+            ->withStringBody(json_encode($data, JSON_PRETTY_PRINT));
+        return $this->response;
+    }
 
-    //POCOR-7509 end
+    //POCOR-7510 end
 }
