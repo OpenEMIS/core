@@ -15,7 +15,7 @@ use Exception;
 
 /**
  * SyncExamComponent
- * 
+ * Ticket: POCOR-7510, POCOR-7509
  * This component handles synchronization of examination data with the OpenEMIS Exam Project
  * through its API endpoints. It manages authentication, fetching exam results, and updating
  * local records.
@@ -52,8 +52,6 @@ class SyncExamComponent extends Component
      * 
      * Sets up the component configurations and dependencies
      * 
-     * Sets up the component configurations and dependencies
-     * 
      * @param array $config Configuration settings
      * @return void
      */
@@ -61,9 +59,6 @@ class SyncExamComponent extends Component
 
     /**
      * Connect to OpenEMIS Exam Project API and get authentication token
-     * 
-     * Establishes connection with the exam API using provided credentials and obtains
-     * an authentication token for subsequent requests.
      * 
      * Establishes connection with the exam API using provided credentials and obtains
      * an authentication token for subsequent requests.
@@ -84,11 +79,8 @@ class SyncExamComponent extends Component
         $headers = [
             "Accept: application/json, text/plain, */*",
             "Content-Type: application/json",
-            "Accept: application/json, text/plain, */*",
-            "Content-Type: application/json",
         ];
 
-        $loginUrl = $url . self::API_ENDPOINTS['login'];
         $loginUrl = $url . self::API_ENDPOINTS['login'];
 
         // Log connection attempt details
@@ -139,9 +131,9 @@ class SyncExamComponent extends Component
      * the result retrieval process.
      * 
      * @param array $params Parameters containing academic_period_code and examination_code
-     * @return void
+     * @return array Status array with success/failure information
      */
-    public function getResultFromExam(array $params): void
+    public function getResultFromExam(array $params): array
     {
         ini_set('memory_limit', '-1');
         ini_set('max_execution_time', '900');
@@ -164,27 +156,39 @@ class SyncExamComponent extends Component
                 // Check if required parameters are provided
                 if (!empty($params['academic_period_code']) && !empty($params['examination_code'])) {
                     $this->token = $response['token'];
-                    $this->getExamResult($params, $config);
+                    $resultStatus = $this->getExamResult($params, $config);
+                    Log::write('debug', '=================== END RESULT SYNC ===================');
+                    return $resultStatus;
                 } else {
-                    Log::write('error', 'Invalid parameters: academic period code or examination code is missing.');
-                    $this->Alert->error(__('Invalid parameters: academic period code or examination code is missing.'), ['type' => 'string', 'reset' => true]);
-                    Log::write('error', 'Invalid parameters: academic period code or examination code is missing.');
-                    $this->Alert->error(__('Invalid parameters: academic period code or examination code is missing.'), ['type' => 'string', 'reset' => true]);
+                    $errorMsg = 'Invalid parameters: academic period code or examination code is missing.';
+                    Log::write('error', $errorMsg);
+                    $this->Alert->error(__($errorMsg), ['type' => 'string', 'reset' => true]);
+                    Log::write('debug', '=================== END RESULT SYNC ===================');
+                    return [
+                        'success' => false,
+                        'message' => $errorMsg
+                    ];
                 }
             } else {
-                Log::write('error', 'Connection failed: ' . $response['message']);
+                $errorMsg = 'Connection failed: ' . $response['message'];
+                Log::write('error', $errorMsg);
                 $this->Alert->error(__('Connection failed: {0}', h($response['message'])), ['type' => 'string', 'reset' => true]);
-                Log::write('error', 'Connection failed: ' . $response['message']);
-                $this->Alert->error(__('Connection failed: {0}', h($response['message'])), ['type' => 'string', 'reset' => true]);
+                Log::write('debug', '=================== END RESULT SYNC ===================');
+                return [
+                    'success' => false,
+                    'message' => $errorMsg
+                ];
             }
         } else {
-            Log::write('error', 'OpenEMIS Exam Configuration not found.');
-            $this->Alert->error(__('OpenEMIS Exam Configuration not found.'), ['type' => 'string', 'reset' => true]);
-            Log::write('error', 'OpenEMIS Exam Configuration not found.');
-            $this->Alert->error(__('OpenEMIS Exam Configuration not found.'), ['type' => 'string', 'reset' => true]);
+            $errorMsg = 'OpenEMIS Exam Configuration not found.';
+            Log::write('error', $errorMsg);
+            $this->Alert->error(__($errorMsg), ['type' => 'string', 'reset' => true]);
+            Log::write('debug', '=================== END RESULT SYNC ===================');
+            return [
+                'success' => false,
+                'message' => $errorMsg
+            ];
         }
-
-        Log::write('debug', '=================== END RESULT SYNC ===================');
     }
 
     /**
@@ -194,38 +198,25 @@ class SyncExamComponent extends Component
      * Creates a temporary file with result data and initiates a background shell task
      * for processing the data asynchronously.
      * 
-     * Makes API request to fetch examination results based on the provided parameters.
-     * Creates a temporary file with result data and initiates a background shell task
-     * for processing the data asynchronously.
-     * 
      * @param array $params Parameters for the API request
      * @param array $config Configuration settings
-     * @return void
+     * @return array Status array with success/failure information  
      */
-    private function getExamResult(array $params, array $config): void
+    private function getExamResult(array $params, array $config): array
     {
         Log::write('debug', '=================== BEGIN FETCH RESULTS ===================');
 
         // Prepare request headers with authentication token
         $headers = [
             "Accept: application/json, text/plain, */*",
-            "Accept: application/json, text/plain, */*",
             "Authorization: Bearer " . $this->token,
             "Content-Type: application/json",
-            "Content-Type: application/json",
-        ];
-
-        // Override params for testing - this should be removed in production
-        $params = [
-            "academic_period_code" => '24',
-            'examination_code' => 'FO202411',
         ];
 
         Log::write('debug', 'Using params for result fetch: ' . json_encode($params));
 
         // Build API request URL
         $queryString = http_build_query($params);
-        $resultUrl = $config['url'] . self::API_ENDPOINTS['result'] . "?" . $queryString;
         $resultUrl = $config['url'] . self::API_ENDPOINTS['result'] . "?" . $queryString;
         Log::write('debug', 'Sending results request to: ' . $resultUrl);
         Log::write('debug', 'Request headers: ' . json_encode($headers));
@@ -241,15 +232,13 @@ class SyncExamComponent extends Component
             $params = json_encode($params);
             Log::write('debug', 'Response status code: ' . $response['statusCode']);
             Log::write('debug', 'Response data received: ' . (isset($responseData['data']) ? 'Yes' : 'No'));
+            Log::write('debug', 'Full API response: ' . json_encode($responseData));
         }
 
         // Check if results were successfully fetched
         if ($response['statusCode'] == 200 && isset($responseData['data'])) {
             Log::write('debug', 'Results fetched successfully. Creating temporary file and launching sync shell.');
 
-            // Create temporary file to store results data with unique timestamp
-            $timestamp = time();
-            $tempFile = TMP . 'exam_data_' . $timestamp . '.json';
             // Create temporary file to store results data with unique timestamp
             $timestamp = time();
             $tempFile = TMP . 'exam_data_' . $timestamp . '.json';
@@ -275,34 +264,46 @@ class SyncExamComponent extends Component
                     Log::write('debug', 'Shell command executing with PID: ' . $pid);
                     // Success message to browser
                     $this->Alert->info(__('Sync process started in background (Process ID: {0}). You can view progress in the logs.', $pid), ['type' => 'string', 'reset' => true]);
+                    Log::write('debug', '=================== END FETCH RESULTS ===================');
+                    return [
+                        'success' => true,
+                        'message' => 'Sync process started in background (Process ID: ' . $pid . '). You can view progress in the logs.',
+                        'process_id' => $pid
+                    ];
                 } else {
                     Log::write('error', 'Failed to get valid PID: ' . $pid);
                     $this->Alert->error(__('Sync process may have failed to start. Please check the logs.'), ['type' => 'string', 'reset' => true]);
+                    Log::write('debug', '=================== END FETCH RESULTS ===================');
+                    return [
+                        'success' => false,
+                        'message' => 'Sync process may have failed to start. Please check the logs.'
+                    ];
                 }
             } catch (\Exception $ex) {
                 Log::write('error', __METHOD__ . ' exception syncing exam result: ' . $ex->getMessage());
                 Log::write('error', 'Exception trace: ' . $ex->getTraceAsString());
                 $this->Alert->error(__('Error starting sync process: {0}', $ex->getMessage()), ['type' => 'string', 'reset' => true]);
-                $this->Alert->error(__('Error starting sync process: {0}', $ex->getMessage()), ['type' => 'string', 'reset' => true]);
+                Log::write('debug', '=================== END FETCH RESULTS ===================');
+                return [
+                    'success' => false,
+                    'message' => 'Error starting sync process: ' . $ex->getMessage()
+                ];
             }
         } else {
             $errorMessage = $responseData['message'] ?? 'Unknown error';
             Log::write('error', 'Sync Request Failed: ' . $errorMessage);
             Log::write('error', 'Full response: ' . json_encode($response));
             $this->Alert->error(__('Unable to fetch data: {0}', h($errorMessage)), ['type' => 'string', 'reset' => true]);
-            Log::write('error', 'Sync Request Failed: ' . $errorMessage);
-            Log::write('error', 'Full response: ' . json_encode($response));
-            $this->Alert->error(__('Unable to fetch data: {0}', h($errorMessage)), ['type' => 'string', 'reset' => true]);
+            Log::write('debug', '=================== END FETCH RESULTS ===================');
+            return [
+                'success' => false,
+                'message' => 'Unable to fetch data: ' . $errorMessage
+            ];
         }
-
-        Log::write('debug', '=================== END FETCH RESULTS ===================');
     }
 
     /**
      * Decrypt sensitive data using provided secret key
-     * 
-     * Uses AES-256-CBC encryption to decrypt sensitive data strings using the
-     * provided secret key. The first 16 bytes of the key are used as the IV.
      * 
      * Uses AES-256-CBC encryption to decrypt sensitive data strings using the
      * provided secret key. The first 16 bytes of the key are used as the IV.
@@ -321,9 +322,6 @@ class SyncExamComponent extends Component
 
     /**
      * Update local sync status based on API response
-     * 
-     * Updates the sync_status and last_synced fields in the local database
-     * for each student based on the response received from the API.
      * 
      * Updates the sync_status and last_synced fields in the local database
      * for each student based on the response received from the API.
@@ -437,7 +435,7 @@ class SyncExamComponent extends Component
 
         // Get student data to register
         [$studentData, $rawData] = $this->getRegisterStudentData($params);
-      
+
         if (empty($studentData)) {
             Log::write('error', 'No student data available for registration');
             $this->Alert->error(__('No student data available for registration'), ['type' => 'string', 'reset' => true]);
@@ -466,6 +464,7 @@ class SyncExamComponent extends Component
         $httpResponse = $this->CurlRequest->makeCurlRequests($url, 'PUT', $headers, $studentData);
 
         Log::write('debug', 'Response status code: ' . $httpResponse['statusCode']);
+        Log::write('debug', 'Full HTTP response: ' . json_encode($httpResponse));
 
         // Process the response
         if ($httpResponse['statusCode'] == 200) {
