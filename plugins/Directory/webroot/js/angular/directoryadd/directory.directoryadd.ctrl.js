@@ -8,12 +8,14 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
     const userCtrl = $scope;
     const userSvc = DirectoryaddSvc;
     const directorySvc = DirectoryaddSvc;
+    // POCOR-9427 start
     const USER_TYPES = {
         STUDENT: 1,
         STAFF: 2,
         GUARDIAN: 3,
         OTHER: 4
     };
+    // POCOR-9427 end
 
     userCtrl.step = "user_details";
     userCtrl.selectedUserData = {};
@@ -133,6 +135,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
             return directorySvc.setContactTypes(userCtrl);
         }
 
+        // POCOR-9427
         function handleConfigItem(configCode, configValue) {
             // Init main config container
             userCtrl.config = userCtrl.config || {};
@@ -196,6 +199,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
             }
         }
 
+        // POCOR-9427
         function getAddNewUserConfig() {
             const configCodes = [
                 // Student
@@ -229,7 +233,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
                 .then(getNationalities)
                 .then(getIdentityTypes)
                 .then(getContactTypes)
-                .then(getAddNewUserConfig)
+                .then(getAddNewUserConfig) // POCOR-9427
                 .then(() => {
             UtilsSvc.isAppendLoader(false);
                 })
@@ -436,7 +440,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
         const todayDate = new Date();
         scope.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
 
-        if (scope.selectedUserData.userType.id === USER_TYPES.STUDENT) {
+        if (scope.selectedUserData.user_type_id === USER_TYPES.STUDENT) { // POCOR-9427
             scope.getRedirectToGuardian();
         }
     };
@@ -455,15 +459,15 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
                 return scope.generatePassword();
             })
             .then(() => {
-                if (scope.selectedUserData.userType.id === USER_TYPES.STUDENT) {
+                if (scope.selectedUserData.user_type_id === USER_TYPES.STUDENT) { // POCOR-9427
                     return scope.getStudentCustomFields();
-                } else if (scope.selectedUserData.userType.id === USER_TYPES.STAFF) {
+                } else if (scope.selectedUserData.user_type_id === USER_TYPES.STAFF) { // POCOR-9427
                     // return Promise.resolve();
                     return scope.getStaffCustomFields();
                 }
             })
             .then(() => {
-                if (scope.selectedUserData.userType.id === USER_TYPES.STUDENT) {
+                if (scope.selectedUserData.user_type_id === USER_TYPES.STUDENT) { // POCOR-9427
                     return scope.getRedirectToGuardian();
                 }
             })
@@ -1175,7 +1179,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
             photo_content: scope.selectedUserData.photo_base_64,
             custom: [],
         };
-        if(scope.selectedUserData.userType.id === USER_TYPES.STUDENT) {
+        if(scope.selectedUserData.user_type_id === USER_TYPES.STUDENT) { // POCOR-9427
             scope.customFieldsArray.forEach((customField)=> {
                 customField.data.forEach((field)=> {
                     if(field.field_type !== 'CHECKBOX') {
@@ -1228,7 +1232,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
                 })
             });
         }
-        if(scope.selectedUserData.userType.name === 'Staff') {
+        if(scope.selectedUserData.user_type_id === USER_TYPES.STAFF) { // POCOR-9427
             scope.customFieldsArray.forEach((customField)=> {
                 customField.data.forEach((field)=> {
                     if(field.field_type !== 'CHECKBOX') {
