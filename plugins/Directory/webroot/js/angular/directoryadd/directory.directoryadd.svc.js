@@ -8,7 +8,8 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
 
     var models = {
         Genders: 'User.Genders',
-        Nationalities: 'FieldOption.Nationalities'
+        Nationalities: 'FieldOption.Nationalities',
+        ConfigItems: 'Configuration.ConfigItems'
     };
     var service = {
         init: init,
@@ -66,6 +67,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         getCspdData: getCspdData,
         getRedirectToGuardian: getRedirectToGuardian,
         isNextButtonShouldDisable: isNextButtonShouldDisable,
+        getConfigItemValue: getConfigItemValue,
     };
     return service;
 
@@ -455,26 +457,38 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
 
     async function validateUserDetails(scope) {
         scope.error = {};
+
+        const userTypeName = scope.selectedUserData.userType?.name?.toLowerCase(); // 'student' or 'staff'
+        const config = userCtrl.config[userTypeName] || {};
+
         const checkAndSetError = (field, message) => {
-            if (!scope.selectedUserData[field]) {
+            const value = scope.selectedUserData[field];
+            if (value === '' || value === undefined || value === null) {
                 scope.error[field] = message;
             }
         };
+
+        // Validate user type and relation type if options exist
         if (scope.userTypeOptions) {
             checkAndSetError('user_type_id', 'This field cannot be left empty');
         }
         if (scope.relationTypeOptions) {
             checkAndSetError('relation_type_id', 'This field cannot be left empty');
         }
+
         if (Object.keys(scope.error).length > 0) return;
 
         if (scope.step === 'user_details') {
             const [blockName, hasError] = await checkUserDetailValidationBlocksHasError(scope);
 
             if (blockName === 'Identity' && hasError) {
-                checkAndSetError('nationality_id', 'This field cannot be left empty');
-                checkAndSetError('identity_type_id', 'This field cannot be left empty');
-                checkAndSetError('identity_number', 'This field cannot be left empty');
+                if (!config.nationalitySkipped && config.nationalitiesRequired === 'required') {
+                    checkAndSetError('nationality_id', 'This field cannot be left empty');
+                }
+                if (!config.identitySkipped && config.identitiesRequired === 'required') {
+                    checkAndSetError('identity_type_id', 'This field cannot be left empty');
+                    checkAndSetError('identity_number', 'This field cannot be left empty');
+                }
             } else if (blockName === 'General_Info' && hasError) {
                 checkAndSetError('first_name', 'This field cannot be left empty');
                 checkAndSetError('last_name', 'This field cannot be left empty');
@@ -485,13 +499,16 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                     scope.selectedUserData.date_of_birth = $filter('date')(scope.selectedUserData.date_of_birth, 'yyyy-MM-dd');
                 }
             }
+
             if (Object.keys(scope.error).length > 0) return;
 
+            // Move to next step
             scope.step = 'internal_search';
             scope.internalGridOptions = null;
             scope.goToInternalSearch();
         }
     }
+
 
     function goToExternalSearch(scope) {
         UtilsSvc.isAppendLoader(true);
@@ -922,6 +939,10 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
     }
 
     async function checkUserDetailValidationBlocksHasError(scope) {
+        const userData = scope.selectedUserData;
+        const userTypeName = userData.userType?.name?.toLowerCase(); // 'student' or 'staff'
+        const config = userCtrl.config[userTypeName] || {};
+
         const {
             first_name,
             last_name,
@@ -932,43 +953,61 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             openemis_no,
             nationality_id,
             identity_type_name
-        } = scope.selectedUserData;
+        } = userData;
+
         const externalSearchSourceName = scope.externalSearchSourceName;
-        const user_exists = await checkUserAlreadyExistByIdentity(scope);
+        const userExists = await checkUserAlreadyExistByIdentity(scope);
 
-        const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth);
-        const isIdentityHasError = (identity_number?.length > 1 || nationality_id || identity_type_id) &&
-            (!identity_number || !nationality_id || !identity_type_id);
-        const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
-        let isSkipableForIdentity = identity_number?.length > 1 && nationality_id > 0 && identity_type_id > 0;
-
-        if (identity_type_name === 'UNHCR') {
-            isSkipableForIdentity = false;
+        // 🧠 Check General Info block
+        const generalInfoMissing = !first_name || !last_name || !gender_id || !date_of_birth;
+        if (generalInfoMissing) {
+            return ["General_Info", true];
         }
 
-        if (isOpenEmisNoHasError) {
+        // 🧠 Check OpenEMIS ID
+        const hasOpenEmisNo = openemis_no !== "" && openemis_no !== undefined;
+        if (hasOpenEmisNo) {
             return ["OpenEMIS_ID", false];
         }
 
-        if (isIdentityHasError) {
-                return ['Identity', true];
+        // 🧠 Check Identity block based on config
+        const identityRequired = !config.identitySkipped && config.identitiesRequired === 'required';
+        const nationalityRequired = !config.nationalitySkipped && config.nationalitiesRequired === 'required';
+
+        let identityHasError = false;
+
+        if (identityRequired) {
+            identityHasError = !identity_type_id || !identity_number;
         }
 
-        if (isSkipableForIdentity) {
-            if (user_exists === true) {
-                return ['Identity', false];
-            }
-            if (externalSearchSourceName === 'OpenEMIS Core') {
-                return ['Identity', false];
-            }
+        if (nationalityRequired) {
+            identityHasError = identityHasError || !nationality_id;
         }
 
-        if (isGeneralInfodHasError) {
-            return ["General_Info", true];
+        if (identityHasError) {
+            return ['Identity', true];
+        }
+
+        // 🧠 Check for skipable conditions
+        const hasFullIdentity =
+            identity_number?.length > 1 &&
+            nationality_id > 0 &&
+            identity_type_id > 0;
+
+        if (identity_type_name === 'UNHCR') {
+            // UNHCR should not be skipped
+            return ["Identity", false];
+        }
+
+        if (hasFullIdentity) {
+            if (userExists === true || externalSearchSourceName === 'OpenEMIS Core') {
+                return ['Identity', false];
+            }
         }
 
         return ["", false];
     }
+
 
 
     function getInternalSearchData(params) {
@@ -1463,6 +1502,27 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
 
     function unsetAllErrors(scope) {
         scope.error = {};
+    }
+
+    function getConfigItemValue(code) {
+        var success = function(response, deferred) {
+            var results = response.data.data;
+            if (angular.isObject(results) && results.length > 0) {
+                var configItemValue = (results[0].value.length > 0) ? results[0].value : results[0].default_value;
+                deferred.resolve(configItemValue);
+            } else {
+                deferred.reject('There is no ' + code + ' configured');
+            }
+        };
+
+        return ConfigItems
+            .where({
+                code: code
+            })
+            .ajax({
+                success: success,
+                defer: true
+            });
     }
 
     function isNextButtonShouldDisable(scope) {
