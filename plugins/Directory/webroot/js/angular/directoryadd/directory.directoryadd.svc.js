@@ -524,33 +524,6 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             scope.internalGridOptions = null;
             scope.goToInternalSearch();
         }
-        if (scope.step === 'confirmation') {
-            const [blockName, hasError] = await checkUserDetailValidationBlocksHasError(scope);
-
-            if (blockName === 'Identity' && hasError) {
-                if (!config.nationalitySkipped && config.nationalitiesRequired === 'required') {
-                    checkAndSetError('nationality_id', 'This field cannot be left empty');
-                }
-                if (!config.identitySkipped && config.identitiesRequired === 'required') {
-                    checkAndSetError('identity_type_id', 'This field cannot be left empty');
-                    checkAndSetError('identity_number', 'This field cannot be left empty');
-                }
-            } else if (blockName === 'General_Info' && hasError) {
-                checkAndSetError('first_name', 'This field cannot be left empty');
-                checkAndSetError('last_name', 'This field cannot be left empty');
-                checkAndSetError('gender_id', 'This field cannot be left empty');
-                checkAndSetError('date_of_birth', 'This field cannot be left empty');
-
-                if (scope.selectedUserData.date_of_birth) {
-                    scope.selectedUserData.date_of_birth = $filter('date')(scope.selectedUserData.date_of_birth, 'yyyy-MM-dd');
-                }
-            }
-
-            console.log(scope.error);
-            if (Object.keys(scope.error).length > 0) return;
-            scope.step = 'confirmation';
-
-        }
     }
 
 
@@ -929,25 +902,53 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
     }
 
     function validateConfirmDetails(scope) {
+        scope.error = {};
         let isCustomFieldNotValidated = false;
 
+        const selectedUserData = scope.selectedUserData;
+        const userTypeId = selectedUserData.user_type_id;
+        const configKey = USER_TYPE_KEYS[userTypeId]; // from USER_TYPES mapping
+        const config = scope.config[configKey] || {};
+
         const checkAndSetError = (field, message) => {
-            if (!scope.selectedUserData[field]) {
+            const value = selectedUserData[field];
+            if (value === '' || value === undefined || value === null) {
                 scope.error[field] = message;
             }
         };
-        if(!scope.isInternalSearchSelected){
-        checkAndSetError('username', 'This field cannot be left empty');
-        checkAndSetError('password', 'This field cannot be left empty');
+
+        // 🧾 Username / Password check
+        if (!scope.isInternalSearchSelected) {
+            checkAndSetError('username', 'This field cannot be left empty');
+            checkAndSetError('password', 'This field cannot be left empty');
         }
+
+        // 🧾 Email and Mobile Number (from config)
+        if (!config.email_skipped && config.email_required === 'required') {
+            checkAndSetError('email', 'This field cannot be left empty');
+        }
+        if (!config.mobile_number_skipped && config.mobile_number_required === 'required') {
+            checkAndSetError('mobile_number', 'This field cannot be left empty');
+        }
+
+        // 🧾 Identity + Nationality (re-validation based on config)
+        if (!config.identitySkipped && config.identitiesRequired === 'required') {
+            checkAndSetError('identity_type_id', 'This field cannot be left empty');
+            checkAndSetError('identity_number', 'This field cannot be left empty');
+        }
+        if (!config.nationalitySkipped && config.nationalitiesRequired === 'required') {
+            checkAndSetError('nationality_id', 'This field cannot be left empty');
+        }
+
+        // 🧾 Custom Fields
         if (scope.customFieldsArray) {
             scope.customFieldsArray.forEach((customField) => {
                 customField.data.forEach((field) => {
                     if (field.is_mandatory === 1) {
                         const needsAnswer = ['TEXT', 'TEXTAREA', 'NOTE', 'DROPDOWN', 'NUMBER', 'DECIMAL', 'DATE', 'TIME'].includes(field.field_type);
                         const needsNonEmptyArray = field.field_type === 'CHECKBOX';
-                        if ((needsAnswer && !field.answer) || (needsNonEmptyArray && field.answer.length === 0)) {
-                            scope.error[field.name] = 'This field is required.'
+                        if ((needsAnswer && !field.answer) || (needsNonEmptyArray && (!Array.isArray(field.answer) || field.answer.length === 0))) {
+                            scope.error[field.name] = 'This field is required.';
                             field.errorMessage = 'This field is required.';
                             isCustomFieldNotValidated = true;
                         }
@@ -956,7 +957,9 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             });
         }
 
-        if (isCustomFieldNotValidated || Object.keys(scope.error).length > 0) return;
+        if (isCustomFieldNotValidated || Object.keys(scope.error).length > 0) {
+            return;
+        }
 
         scope.saveDetails();
     }
