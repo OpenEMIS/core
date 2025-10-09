@@ -131,6 +131,8 @@ function InstitutionStudentAttendancesController(
             attendance_by: vm.selectedAttendanceBy, //POCOR-8874
         },
         getRowHeight: getRowHeight,
+        getRowNodeId: getRowNodeId,
+
     };
 
     // ready
@@ -206,10 +208,10 @@ function InstitutionStudentAttendancesController(
                     );
                 }, vm.error)
                 .then(function (attendanceType) {
-                    console.log(
-                        "attendanceType",
-                        vm.isMarkableSubjectAttendance
-                    );
+                    // console.log(
+                    //     "attendanceType",
+                    //     vm.isMarkableSubjectAttendance
+                    // );
                     vm.isMarkableSubjectAttendance = attendanceType;
                     return InstitutionStudentAttendancesSvc.getSubjectOptions(
                         vm.institutionId,
@@ -253,10 +255,10 @@ function InstitutionStudentAttendancesController(
                 .then(function (isMarkable) {
                     vm.isMarkableAttendance = isMarkable; // Store the resolved value
                     vm.updateAttendanceByList();
-                    console.log(
-                        "Final isMarkableAttendance:",
-                        vm.isMarkableAttendance
-                    );
+                    // console.log(
+                    //     "Final isMarkableAttendance:",
+                    //     vm.isMarkableAttendance
+                    // );
 
                     return InstitutionStudentAttendancesSvc.getIsMarked(
                         vm.getIsMarkedParams()
@@ -326,8 +328,8 @@ function InstitutionStudentAttendancesController(
     // vm.gridOptions.context.attendance_by = vm.selectedAttendanceBy;
     // console.log("attendanceByOptions:", vm.attendanceByOptions);
     vm.updateAttendanceByList = function () {
-        console.log("is markable", vm.isMarkableAttendance);
-        console.log("is markable sub", vm.isMarkableSubjectAttendance);
+        // console.log("is markable", vm.isMarkableAttendance);
+        // console.log("is markable sub", vm.isMarkableSubjectAttendance);
 
 
         vm.attendanceByOptions = [
@@ -344,10 +346,10 @@ function InstitutionStudentAttendancesController(
         } else {
             vm.selectedAttendanceBy = vm.attendanceByOptions[1].id; // Default selection
         }
-        console.log("selected attendance by",vm.selectedAttendanceBy);
+        // console.log("selected attendance by",vm.selectedAttendanceBy);
 
         vm.gridOptions.context.attendance_by = vm.selectedAttendanceBy;
-        console.log("attendanceByOptions1:", vm.attendanceByOptions);
+        // console.log("attendanceByOptions1:", vm.attendanceByOptions);
     };
     //POCOR- 8874 ends
 
@@ -549,36 +551,57 @@ function InstitutionStudentAttendancesController(
     };
 
     function getRowHeight(params) {
-        return params.data.rowHeight;
+        var attendanceType =
+            InstitutionStudentAttendancesSvc.getAttendanceTypeList();
+        // console.log(params);
+        var code =  params.data.institution_student_absences.absence_type_code;
+        // console.log('getRowHeight', code);
+        switch (code) {
+            case null:
+            case attendanceType.PRESENT.code:
+                return 60;
+                break;
+            case attendanceType.UNEXCUSED.code:
+            case attendanceType.LATE.code:
+                return 80;
+                break;
+            case attendanceType.EXCUSED.code:
+                return 130;
+                break;
+        }
+        return params.data.rowHeight || 130;
+    }
+    function getRowNodeId(data) {
+        return String(data.student_id);
     }
 
     vm.setGridData = function () {
         if (angular.isDefined(vm.gridOptions.api)) {
-            // vm.gridOptions.api.setRowData(vm.classStudentList);
-            vm.setRowDatas(vm.classStudentList);
+            vm.gridOptions.api.setRowData(vm.classStudentList);
+            // vm.setRowDatas(vm.classStudentList);
             vm.countStudentData();
         }
     };
 
-    vm.setRowDatas = function (studentList) {
-        studentList.forEach(function (dataItem, index) {
-            if (dataItem.hasOwnProperty("institution_student_absences")) {
-                if (
-                    dataItem.institution_student_absences.absence_type_code ==
-                        null ||
-                    dataItem.institution_student_absences.absence_type_code ==
-                        "PRESENT"
-                ) {
-                    dataItem.rowHeight = 60;
-                } else {
-                    dataItem.rowHeight = 60;
-                }
-            } else {
-                dataItem.rowHeight = 80;
-            }
-        });
-        vm.gridOptions.api.setRowData(studentList);
-    };
+    // vm.setRowDatas = function (studentList) {
+    //     studentList.forEach(function (dataItem, index) {
+    //         if (dataItem.hasOwnProperty("institution_student_absences")) {
+    //             if (
+    //                 dataItem.institution_student_absences.absence_type_code ==
+    //                     null ||
+    //                 dataItem.institution_student_absences.absence_type_code ==
+    //                     "PRESENT"
+    //             ) {
+    //                 dataItem.rowHeight = 60;
+    //             } else {
+    //                 dataItem.rowHeight = 130;
+    //             }
+    //         } else {
+    //             dataItem.rowHeight = 130;
+    //         }
+    //     });
+    //     vm.gridOptions.api.setRowData(studentList);
+    // };
 
     vm.setColumnDef = function (noScheduledClicked) {
         if (!noScheduledClicked) noScheduledClicked = false;
@@ -1059,10 +1082,10 @@ function InstitutionStudentAttendancesController(
             .then(function (isMarkable) {
                 vm.isMarkableAttendance = isMarkable; // Store the resolved value
                 vm.updateAttendanceByList();
-                console.log(
-                    "Final isMarkableAttendance:",
-                    vm.isMarkableAttendance
-                );
+                // console.log(
+                //     "Final isMarkableAttendance:",
+                //     vm.isMarkableAttendance
+                // );
 
                 // Continue with getSubjectOptions
                 return InstitutionStudentAttendancesSvc.getSubjectOptions(
@@ -1229,11 +1252,14 @@ function InstitutionStudentAttendancesController(
             }, vm.error)
             .then(function (isMarked) {
                 vm.updateIsMarked(isMarked);
+                var params = vm.getClassStudentParams();
+                // console.log(params);
                 return InstitutionStudentAttendancesSvc.getClassStudent(
-                    vm.getClassStudentParams()
+                    params
                 );
             }, vm.error)
             .then(function (classStudents) {
+                // console.log(classStudents);
                 vm.updateClassStudentList(classStudents);
             }, vm.error)
             .finally(function () {
@@ -1292,7 +1318,7 @@ function InstitutionStudentAttendancesController(
     //POCOR-8874 start
     vm.changeAttendanceBy = function () {
         UtilsSvc.isAppendLoader(true);
-        console.log("selected", vm.selectedAttendanceBy);
+        // console.log("selected", vm.selectedAttendanceBy);
         vm.gridOptions.context.attendance_by = vm.selectedAttendanceBy;
         if (vm.superAdmin == 0) {
             vm.updateClassRoles(vm.selectedClass);
@@ -1363,8 +1389,8 @@ function InstitutionStudentAttendancesController(
                 } else {
                     vm.selectedSubject = "";
                 }
-                console.log("attendancePeriod", vm.selectedAttendancePeriod);
-                console.log("subjectlist", vm.selectedSubject);
+                // console.log("attendancePeriod", vm.selectedAttendancePeriod);
+                // console.log("subjectlist", vm.selectedSubject);
                 vm.setGridData();
                 vm.setColumnDef();
                 UtilsSvc.isAppendLoader(false);
