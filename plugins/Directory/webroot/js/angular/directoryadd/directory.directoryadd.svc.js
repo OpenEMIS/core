@@ -5,6 +5,7 @@ angular
 DirectoryaddSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc','AggridLocaleSvc', 'AlertSvc', 'UtilsSvc', '$window'];
 
 function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc, UtilsSvc, $window) {
+    // POCOR-9427 start
     const USER_TYPES = {
         STUDENT: 1,
         STAFF: 2,
@@ -18,11 +19,12 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         [USER_TYPES.GUARDIAN]: 'guardian',
         [USER_TYPES.OTHER]: 'other'
     };
+    // POCOR-9427 end
 
     var models = {
         Genders: 'User.Genders',
-        Nationalities: 'FieldOption.Nationalities',
-        ConfigItems: 'Configuration.ConfigItems'
+        Nationalities: 'FieldOption.Nationalities', // POCOR-9427
+        ConfigItems: 'Configuration.ConfigItems' // POCOR-9427
     };
     var service = {
         init: init,
@@ -80,7 +82,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         getCspdData: getCspdData,
         getRedirectToGuardian: getRedirectToGuardian,
         isNextButtonShouldDisable: isNextButtonShouldDisable,
-        getConfigItemValue: getConfigItemValue,
+        getConfigItemValue: getConfigItemValue, // POCOR-9427
     };
     return service;
 
@@ -470,7 +472,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
 
     async function validateUserDetails(scope) {
         scope.error = {};
-
+        // POCOR-9427 start
         const userTypeId = scope.selectedUserData.user_type_id;
         const configKey = USER_TYPE_KEYS[userTypeId];
         const config = scope.config[configKey] || {};
@@ -518,12 +520,18 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             }
 
             if (Object.keys(scope.error).length > 0) return;
-
+            if (scope.selectedUserData.identity_number) {
+                scope.canSkipIdentity = true;
+            }
+            if (scope.selectedUserData.nationality_id) {
+                scope.canSkipNationality = true;
+            }
             // Move to next step
             scope.step = 'internal_search';
             scope.internalGridOptions = null;
             scope.goToInternalSearch();
         }
+        // POCOR-9427 end
     }
 
 
@@ -902,6 +910,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
     }
 
     function validateConfirmDetails(scope) {
+        // POCOR-9427 start
         scope.error = {};
         let isCustomFieldNotValidated = false;
 
@@ -960,7 +969,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         if (isCustomFieldNotValidated || Object.keys(scope.error).length > 0) {
             return;
         }
-
+        // POCOR-9427 end
         scope.saveDetails();
     }
 
@@ -986,6 +995,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
     }
 
     async function checkUserDetailValidationBlocksHasError(scope) {
+        // POCOR-9427 start
         const userData = scope.selectedUserData;
         const userTypeId = userData.user_type_id;
         const configKey = USER_TYPE_KEYS[userTypeId];
@@ -1006,19 +1016,19 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         const externalSearchSourceName = scope.externalSearchSourceName;
         const userExists = await checkUserAlreadyExistByIdentity(scope);
 
-        // 🧠 Check General Info block
+        // Check General Info block
         const generalInfoMissing = !first_name || !last_name || !gender_id || !date_of_birth;
         if (generalInfoMissing) {
             return ["General_Info", true];
         }
 
-        // 🧠 Check OpenEMIS ID
+        // Check OpenEMIS ID
         const hasOpenEmisNo = openemis_no !== "" && openemis_no !== undefined;
         if (hasOpenEmisNo) {
             return ["OpenEMIS_ID", false];
         }
 
-        // 🧠 Check Identity block based on config
+        // Check Identity block based on config
         const identityRequired = !config.identitySkipped && config.identitiesRequired === 'required';
         const nationalityRequired = !config.nationalitySkipped && config.nationalitiesRequired === 'required';
 
@@ -1036,7 +1046,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             return ['Identity', true];
         }
 
-        // 🧠 Check for skipable conditions
+        // Check for skipable conditions
         const hasFullIdentity =
             identity_number?.length > 1 &&
             nationality_id > 0 &&
@@ -1051,6 +1061,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                 return ['Identity', false];
             }
         }
+        // POCOR-9427 end
 
         return ["", false];
     }
@@ -1552,6 +1563,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         scope.error = {};
     }
 
+    // POCOR-9427
     function getConfigItemValue(code) {
         var success = function(response, deferred) {
             var results = response.data.data;
