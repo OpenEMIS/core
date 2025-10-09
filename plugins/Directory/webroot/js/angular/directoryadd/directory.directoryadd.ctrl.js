@@ -140,12 +140,12 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
             // Match config keys to user types and fields
             const configMap = {
                 student_email:       { type: 'student', field: 'email' },
-                student_mobile:      { type: 'student', field: 'mobile' },
+                student_mobile:      { type: 'student', field: 'mobile_number' },
                 StudentIdentities:   { type: 'student', field: 'identity' },
                 StudentNationalities:{ type: 'student', field: 'nationality' },
 
                 staff_email:         { type: 'staff', field: 'email' },
-                staff_mobile:        { type: 'staff', field: 'mobile' },
+                staff_mobile:        { type: 'staff', field: 'mobile_number' },
                 StaffIdentities:     { type: 'staff', field: 'identity' },
                 StaffNationalities:  { type: 'staff', field: 'nationality' },
 
@@ -172,9 +172,9 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
 
             switch (field) {
                 case 'email':
-                case 'mobile':
-                    userCtrl.config[type][`${field}Skipped`] = configValue === 2;
-                    userCtrl.config[type][`${field}Required`] = configValue === 1 ? 'required' : '';
+                case 'mobile_number':
+                    userCtrl.config[type][`${field}_skipped`] = configValue === 2;
+                    userCtrl.config[type][`${field}_required`] = configValue === 1 ? 'required' : '';
                     break;
 
                 case 'identity':
@@ -304,11 +304,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
 
     userCtrl.goToNextStep = async function () {
         if (userCtrl.step === 'confirmation') {
-            scope.validateUserDetails();
             const result =
                 await userCtrl.checkUserExistByIdentityFromConfiguration();
-
-
             // if (result) return;
         }
 
