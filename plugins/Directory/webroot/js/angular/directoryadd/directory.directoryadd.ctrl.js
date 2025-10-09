@@ -134,85 +134,93 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
         }
 
         function handleConfigItem(configCode, configValue) {
-            // Make sure the config structure exists
+            // Init main config container
             userCtrl.config = userCtrl.config || {};
-            userCtrl.config.student = userCtrl.config.student || {};
-            userCtrl.config.staff = userCtrl.config.staff || {};
 
-            switch (configCode) {
-                // 🧑‍🎓 Student Configs
-                case "student_email":
-                    userCtrl.config.student.emailSkipped = configValue === 2;
-                    userCtrl.config.student.emailRequired = configValue === 1 ? 'required' : '';
+            // Match config keys to user types and fields
+            const configMap = {
+                student_email:       { type: 'student', field: 'email' },
+                student_mobile:      { type: 'student', field: 'mobile' },
+                StudentIdentities:   { type: 'student', field: 'identity' },
+                StudentNationalities:{ type: 'student', field: 'nationality' },
+
+                staff_email:         { type: 'staff', field: 'email' },
+                staff_mobile:        { type: 'staff', field: 'mobile' },
+                StaffIdentities:     { type: 'staff', field: 'identity' },
+                StaffNationalities:  { type: 'staff', field: 'nationality' },
+
+                // guardian_email:       { type: 'guardian', field: 'email' },
+                // guardian_mobile:      { type: 'guardian', field: 'mobile' },
+                GuardianIdentities:   { type: 'guardian', field: 'identity' },
+                GuardianNationalities:{ type: 'guardian', field: 'nationality' },
+
+                // other_email:       { type: 'other', field: 'email' },
+                // other_mobile:      { type: 'other', field: 'mobile' },
+                OtherIdentities:   { type: 'other', field: 'identity' },
+                OtherNationalities:{ type: 'other', field: 'nationality' }
+            };
+
+            const configItem = configMap[configCode];
+
+            if (!configItem) {
+                console.warn(`Unhandled config code: ${configCode}`);
+                return;
+            }
+
+            const { type, field } = configItem;
+            userCtrl.config[type] = userCtrl.config[type] || {};
+
+            switch (field) {
+                case 'email':
+                case 'mobile':
+                    userCtrl.config[type][`${field}Skipped`] = configValue === 2;
+                    userCtrl.config[type][`${field}Required`] = configValue === 1 ? 'required' : '';
                     break;
 
-                case "student_mobile":
-                    userCtrl.config.student.mobileSkipped = configValue === 2;
-                    userCtrl.config.student.mobileRequired = configValue === 1 ? 'required' : '';
+                case 'identity':
+                    userCtrl.config[type].identitySkipped = configValue === 2;
+                    userCtrl.config[type].identitiesRequired = configValue === 1 ? 'required' : '';
                     break;
 
-                case "StudentIdentities":
-                    userCtrl.config.student.identitySkipped = configValue === 2;
-                    userCtrl.config.student.identitiesRequired = configValue === 1 ? 'required' : '';
-                    break;
-
-                case "StudentNationalities":
-                    if (configValue === 2 && userCtrl.config.student.identitySkipped) {
-                        userCtrl.config.student.nationalitySkipped = true;
-                        userCtrl.config.student.nationalitiesRequired = '';
+                case 'nationality':
+                    // Ensure dependency on identitySkipped is handled
+                    const identitySkipped = userCtrl.config[type].identitySkipped;
+                    if (configValue === 2 && identitySkipped) {
+                        userCtrl.config[type].nationalitySkipped = true;
+                        userCtrl.config[type].nationalitiesRequired = '';
                     } else {
-                        userCtrl.config.student.nationalitySkipped = configValue === 2;
-                        userCtrl.config.student.nationalitiesRequired = configValue === 1 ? 'required' : '';
+                        userCtrl.config[type].nationalitySkipped = configValue === 2;
+                        userCtrl.config[type].nationalitiesRequired = configValue === 1 ? 'required' : '';
                     }
                     break;
-
-                // 👨‍🏫 Staff Configs
-                case "staff_email":
-                    userCtrl.config.staff.emailSkipped = configValue === 2;
-                    userCtrl.config.staff.emailRequired = configValue === 1 ? 'required' : '';
-                    break;
-
-                case "staff_mobile":
-                    userCtrl.config.staff.mobileSkipped = configValue === 2;
-                    userCtrl.config.staff.mobileRequired = configValue === 1 ? 'required' : '';
-                    break;
-
-                case "StaffIdentities":
-                    userCtrl.config.staff.identitySkipped = configValue === 2;
-                    userCtrl.config.staff.identitiesRequired = configValue === 1 ? 'required' : '';
-                    break;
-
-                case "StaffNationalities":
-                    if (configValue === 2 && userCtrl.config.staff.identitySkipped) {
-                        userCtrl.config.staff.nationalitySkipped = true;
-                        userCtrl.config.staff.nationalitiesRequired = '';
-                    } else {
-                        userCtrl.config.staff.nationalitySkipped = configValue === 2;
-                        userCtrl.config.staff.nationalitiesRequired = configValue === 1 ? 'required' : '';
-                    }
-                    break;
-
-                default:
-                    console.warn(`Unhandled config code: ${configCode}`);
             }
         }
 
         function getAddNewUserConfig() {
             const configCodes = [
+                // Student
+                "student_email", "student_mobile", "StudentIdentities", "StudentNationalities",
+                // Staff
                 "staff_email", "staff_mobile", "StaffIdentities", "StaffNationalities",
-                "student_email", "student_mobile", "StudentIdentities", "StudentNationalities"
+                // Guardian
+                // "guardian_email", "guardian_mobile",
+                "GuardianIdentities", "GuardianNationalities",
+                // Other
+                // "other_email", "other_mobile",
+                "OtherIdentities", "OtherNationalities"
             ];
 
             return Promise.all(configCodes.map(code => userSvc.getConfigItemValue(code)))
                 .then(configValues => {
-                    configValues.forEach((configValue, index) => {
-                        handleConfigItem(configCodes[index], parseInt(configValue));
+                    configValues.forEach((value, index) => {
+                        handleConfigItem(configCodes[index], parseInt(value));
                     });
                 })
                 .catch(error => {
                     console.error('Error fetching user config values:', error);
                 });
         }
+
 
 
         function loadUserData() {
@@ -296,8 +304,11 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
 
     userCtrl.goToNextStep = async function () {
         if (userCtrl.step === 'confirmation') {
+            scope.validateUserDetails();
             const result =
                 await userCtrl.checkUserExistByIdentityFromConfiguration();
+
+
             // if (result) return;
         }
 
