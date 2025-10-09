@@ -291,7 +291,7 @@ class StudentAttendancesTable extends ControllerActionTable
                                     'date' => $entity->date,
                                     'period' => $entity->period,
                                     'comment' => $entity->comment,
-                                    'absence_type_id' => $entity->absence_type_id,
+                                    'absence_type_id' => $entity->absence_type_id ?? 0,
                                     'student_absence_reason_id' => $entity->student_absence_reason_id,
                                     'absence_type_code' => $entity->absence_type->code
                                 ];
@@ -311,7 +311,7 @@ class StudentAttendancesTable extends ControllerActionTable
                                         }
                                     }
                                     $AbsenceTypes = TableRegistry::get('Institution.AbsenceTypes');
-                                    if (isset($entity->absence_type_id)) {
+                                    if (isset($entity->absence_type_id) && $entity->absence_type_id != 0) {
                                         $absenceType = $AbsenceTypes
                                             ->find()
                                             ->select([
@@ -355,7 +355,7 @@ class StudentAttendancesTable extends ControllerActionTable
                                 if (!empty($isMarkedRecords)) {
                                     $data = [
                                         'date' => $findDay,
-                                        'period' => $attendancePeriodId,
+                                        'period' => (int) $attendancePeriodId,
                                         'comment' => null,
                                         'absence_type_id' => $PRESENT,
                                         'student_absence_reason_id' => null,
@@ -364,9 +364,9 @@ class StudentAttendancesTable extends ControllerActionTable
                                 } else {
                                     $data = [
                                         'date' => $findDay,
-                                        'period' => $attendancePeriodId,
+                                        'period' => (int) $attendancePeriodId,
                                         'comment' => null,
-                                        'absence_type_id' => null,
+                                        'absence_type_id' => 0,
                                         'student_absence_reason_id' => null,
                                         'absence_type_code' => null
                                     ];
@@ -607,7 +607,7 @@ class StudentAttendancesTable extends ControllerActionTable
 
                                         //POCOR-7929 start
                                         foreach ($periodList as $Key => $PeriodData) {
-                                            $id = (int)$PeriodData['id'];
+                                            $id = (int) $PeriodData['id'];
                                             if ($value[$id] == "NoScheduledClicked") {
                                                 $value[$id] = "No Scheduled Classes";
                                             }

@@ -103,7 +103,11 @@ class AlertRulesTable extends ControllerActionTable
             // POCOR-8286 end
             if (isset($data['feature']) && !empty($data['feature'])) {
                 $alertRuleTypes = $this->getAlertRuleTypes();
-                $thresholdConfig = $alertRuleTypes[$data['feature']]['threshold'];
+                $feature = $data['feature']; // POCOR-9391 start
+                if($feature == 'StudentAbsence') {
+                    $feature = 'StudentAttendance';
+                }
+                $thresholdConfig = $alertRuleTypes[$feature]['threshold']; // POCOR-9391 end
                 if (!empty($thresholdConfig)) {
                     $thresholdArray = [];
                     foreach ($thresholdConfig as $field => $attr) {
@@ -588,7 +592,12 @@ class AlertRulesTable extends ControllerActionTable
         }
 
         if ($entity->has('feature') && !empty($entity->feature)) {
-            $event = $this->dispatchEvent('AlertRule.UpdateField.' . $entity->feature . '.Threshold', [$attr, $action, $request], $this);
+            $feature = $entity->feature; // POCOR-9391 start
+            if ($feature == 'StudentAbsence') {
+                $feature = 'StudentAttendance';
+            }
+            $event = $this->dispatchEvent('AlertRule.UpdateField.' . $feature . '.Threshold', [$attr, $action, $request], $this);
+            // POCOR-9391 end
             if ($event->isStopped()) {
                 return $event->getResult();
             }
@@ -601,34 +610,38 @@ class AlertRulesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onGetSecurityRoleIds(Event $event, Entity $entity)
+    public function getSecurityRolesList(Entity $entity): string // POCOR-9391 start
     {
-
         if (!$entity->has('security_roles')) {
             $query = $this->find()
                 ->where([$this->aliasField($this->getPrimaryKey()) => $entity->id])
                 ->contain(['SecurityRoles']);
 
-            $data = $query->first();
-        } else {
-            $data = $entity;
+            $entity = $query->first();
         }
 
-        $role = [];
-//        $feature = $this->featureList[$entity->id];
-//        if (in_array($feature, ['ScholarshipApplication'])) {
-//            $role[] = __(self::ASSIGNEE_ROLE);
-//        } else {
-            if ($data->has('security_roles')) {
-                foreach ($data->security_roles as $key => $value) {
-                    $role[] = $value->name;
-                }
-            }
-//        }
+        $roles = [];
 
-        return (!empty($role)) ? implode(', ', $role) : __('No Role To Send Alert Selected');
+        if ($entity && $entity->has('security_roles')) {
+            foreach ($entity->security_roles as $roleEntity) {
+                $roles[] = $roleEntity->name;
+            }
+        }
+
+        return !empty($roles)
+            ? implode(', ', $roles)
+            : __('No Role To Send Alert Selected');
     }
 
+    public function onGetSecurityRoleIds(Event $event, Entity $entity): string
+    {
+        return $this->getSecurityRolesList($entity);
+    }
+
+    public function onGetSecurityRoles(Event $event, Entity $entity): string
+    {
+        return $this->getSecurityRolesList($entity);
+    } // POCOR-9391 end
     public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options = [])
     {
         if ($action == 'add' || $action == 'edit') {

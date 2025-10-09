@@ -813,13 +813,17 @@ class DashboardController extends AppController
     public static function triggerSystemProcess($systemProcessesTable, $rule, string $processName, int $userId, array $extraOptions = []): void
     {
         $now = FrozenTime::now();
-        $paramsJson = json_encode($extraOptions);
-
-        // Check for an existing process with same model, name, and params
+        // POCOR-9391 start
+        $extraRuleOptions = $extraOptions;
+        $extraRuleOptions['rule_id'] = $rule['id'];
+        $paramsJson = json_encode($extraRuleOptions);
+        // POCOR-9391 end
+        // Check for an existing process with same model, name, rule and params
+        $feature = $rule['feature'];
         $existing = $systemProcessesTable->find()
             ->where([
                 'model' => $processName,
-                'name' => $rule['feature'],
+                'name' => $feature,
                 'params' => $paramsJson,
                 'created_user_id' => $userId,
 //                'status IN' => [1, 2, 3] // Start, Running, Finished
@@ -828,12 +832,14 @@ class DashboardController extends AppController
 
         if ($existing) {
             // 🦕 Skip creating duplicate process
-            Log::debug(__FUNCTION__ . 'Already Present');
+            Log::debug(print_r([
+                __FUNCTION__ => ' Already Present',
+                'params' => $paramsJson], true));
             return;
         }
 
         $processValues = [
-            'name' => $rule['feature'],
+            'name' => $feature,
             'status' => 1,
             'start_date' => $now,
             'model' => $processName,
@@ -843,6 +849,7 @@ class DashboardController extends AppController
 
         $process = $systemProcessesTable->newEntity($processValues);
         if ($systemProcessesTable->save($process)) {
+            Log::debug(__FUNCTION__ . 'Fired!');
             self::triggerAlertCommand($processName, $userId, $rule['id'], $process->id, $extraOptions);
         } else {
             Log::debug(__FUNCTION__ . 'Could Not Fire');
