@@ -788,6 +788,10 @@ class ReportCardsTable extends AppTable
             if (!empty($staff)) {
                 $staff->principal = $staff->user->name;
                 $staff->principal_gender = $staff->gender;
+                //POCOR-9413 -- if preferred name is empty then return '-'
+                if (empty($staff->user->preferred_name)) {
+                    $staff->user->preferred_name = '-';
+                }
             }
             return $staff;
         }
