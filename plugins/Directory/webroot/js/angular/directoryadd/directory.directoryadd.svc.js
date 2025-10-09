@@ -5,6 +5,19 @@ angular
 DirectoryaddSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc','AggridLocaleSvc', 'AlertSvc', 'UtilsSvc', '$window'];
 
 function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc, UtilsSvc, $window) {
+    const USER_TYPES = {
+        STUDENT: 1,
+        STAFF: 2,
+        GUARDIAN: 3,
+        OTHER: 4
+    };
+
+    const USER_TYPE_KEYS = {
+        [USER_TYPES.STUDENT]: 'student',
+        [USER_TYPES.STAFF]: 'staff',
+        [USER_TYPES.GUARDIAN]: 'guardian',
+        [USER_TYPES.OTHER]: 'other'
+    };
 
     var models = {
         Genders: 'User.Genders',
@@ -458,9 +471,13 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
     async function validateUserDetails(scope) {
         scope.error = {};
 
-        const userTypeName = scope.selectedUserData.userType?.name?.toLowerCase(); // 'student' or 'staff'
-        const config = userCtrl.config[userTypeName] || {};
-
+        const userTypeId = scope.selectedUserData.user_type_id;
+        const configKey = USER_TYPE_KEYS[userTypeId];
+        const config = scope.config[configKey] || {};
+        // console.log(scope.selectedUserData)
+        // console.log(configKey)
+        // console.log(scope.config)
+        // console.log(config)
         const checkAndSetError = (field, message) => {
             const value = scope.selectedUserData[field];
             if (value === '' || value === undefined || value === null) {
@@ -506,6 +523,33 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             scope.step = 'internal_search';
             scope.internalGridOptions = null;
             scope.goToInternalSearch();
+        }
+        if (scope.step === 'confirmation') {
+            const [blockName, hasError] = await checkUserDetailValidationBlocksHasError(scope);
+
+            if (blockName === 'Identity' && hasError) {
+                if (!config.nationalitySkipped && config.nationalitiesRequired === 'required') {
+                    checkAndSetError('nationality_id', 'This field cannot be left empty');
+                }
+                if (!config.identitySkipped && config.identitiesRequired === 'required') {
+                    checkAndSetError('identity_type_id', 'This field cannot be left empty');
+                    checkAndSetError('identity_number', 'This field cannot be left empty');
+                }
+            } else if (blockName === 'General_Info' && hasError) {
+                checkAndSetError('first_name', 'This field cannot be left empty');
+                checkAndSetError('last_name', 'This field cannot be left empty');
+                checkAndSetError('gender_id', 'This field cannot be left empty');
+                checkAndSetError('date_of_birth', 'This field cannot be left empty');
+
+                if (scope.selectedUserData.date_of_birth) {
+                    scope.selectedUserData.date_of_birth = $filter('date')(scope.selectedUserData.date_of_birth, 'yyyy-MM-dd');
+                }
+            }
+
+            console.log(scope.error);
+            if (Object.keys(scope.error).length > 0) return;
+            scope.step = 'confirmation';
+
         }
     }
 
@@ -940,8 +984,9 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
 
     async function checkUserDetailValidationBlocksHasError(scope) {
         const userData = scope.selectedUserData;
-        const userTypeName = userData.userType?.name?.toLowerCase(); // 'student' or 'staff'
-        const config = userCtrl.config[userTypeName] || {};
+        const userTypeId = userData.user_type_id;
+        const configKey = USER_TYPE_KEYS[userTypeId];
+        const config = scope.config[configKey] || {};
 
         const {
             first_name,
@@ -995,7 +1040,6 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             identity_type_id > 0;
 
         if (identity_type_name === 'UNHCR') {
-            // UNHCR should not be skipped
             return ["Identity", false];
         }
 
@@ -1007,6 +1051,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
 
         return ["", false];
     }
+
 
 
 
