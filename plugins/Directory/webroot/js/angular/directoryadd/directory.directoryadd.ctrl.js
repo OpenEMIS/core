@@ -8,6 +8,13 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
     const userCtrl = $scope;
     const userSvc = DirectoryaddSvc;
     const directorySvc = DirectoryaddSvc;
+    const USER_TYPES = {
+        STUDENT: 1,
+        STAFF: 2,
+        GUARDIAN: 3,
+        OTHER: 4
+    };
+
     userCtrl.step = "user_details";
     userCtrl.selectedUserData = {};
     userCtrl.internalGridOptions = null;
@@ -126,12 +133,95 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
             return directorySvc.setContactTypes(userCtrl);
         }
 
+        function handleConfigItem(configCode, configValue) {
+            // Make sure the config structure exists
+            userCtrl.config = userCtrl.config || {};
+            userCtrl.config.student = userCtrl.config.student || {};
+            userCtrl.config.staff = userCtrl.config.staff || {};
+
+            switch (configCode) {
+                // 🧑‍🎓 Student Configs
+                case "student_email":
+                    userCtrl.config.student.emailSkipped = configValue === 2;
+                    userCtrl.config.student.emailRequired = configValue === 1 ? 'required' : '';
+                    break;
+
+                case "student_mobile":
+                    userCtrl.config.student.mobileSkipped = configValue === 2;
+                    userCtrl.config.student.mobileRequired = configValue === 1 ? 'required' : '';
+                    break;
+
+                case "StudentIdentities":
+                    userCtrl.config.student.identitySkipped = configValue === 2;
+                    userCtrl.config.student.identitiesRequired = configValue === 1 ? 'required' : '';
+                    break;
+
+                case "StudentNationalities":
+                    if (configValue === 2 && userCtrl.config.student.identitySkipped) {
+                        userCtrl.config.student.nationalitySkipped = true;
+                        userCtrl.config.student.nationalitiesRequired = '';
+                    } else {
+                        userCtrl.config.student.nationalitySkipped = configValue === 2;
+                        userCtrl.config.student.nationalitiesRequired = configValue === 1 ? 'required' : '';
+                    }
+                    break;
+
+                // 👨‍🏫 Staff Configs
+                case "staff_email":
+                    userCtrl.config.staff.emailSkipped = configValue === 2;
+                    userCtrl.config.staff.emailRequired = configValue === 1 ? 'required' : '';
+                    break;
+
+                case "staff_mobile":
+                    userCtrl.config.staff.mobileSkipped = configValue === 2;
+                    userCtrl.config.staff.mobileRequired = configValue === 1 ? 'required' : '';
+                    break;
+
+                case "StaffIdentities":
+                    userCtrl.config.staff.identitySkipped = configValue === 2;
+                    userCtrl.config.staff.identitiesRequired = configValue === 1 ? 'required' : '';
+                    break;
+
+                case "StaffNationalities":
+                    if (configValue === 2 && userCtrl.config.staff.identitySkipped) {
+                        userCtrl.config.staff.nationalitySkipped = true;
+                        userCtrl.config.staff.nationalitiesRequired = '';
+                    } else {
+                        userCtrl.config.staff.nationalitySkipped = configValue === 2;
+                        userCtrl.config.staff.nationalitiesRequired = configValue === 1 ? 'required' : '';
+                    }
+                    break;
+
+                default:
+                    console.warn(`Unhandled config code: ${configCode}`);
+            }
+        }
+
+        function getAddNewUserConfig() {
+            const configCodes = [
+                "staff_email", "staff_mobile", "StaffIdentities", "StaffNationalities",
+                "student_email", "student_mobile", "StudentIdentities", "StudentNationalities"
+            ];
+
+            return Promise.all(configCodes.map(code => userSvc.getConfigItemValue(code)))
+                .then(configValues => {
+                    configValues.forEach((configValue, index) => {
+                        handleConfigItem(configCodes[index], parseInt(configValue));
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching user config values:', error);
+                });
+        }
+
+
         function loadUserData() {
                 getGenders()
                 .then(getUserTypes)
                 .then(getNationalities)
                 .then(getIdentityTypes)
                 .then(getContactTypes)
+                .then(getAddNewUserConfig)
                 .then(() => {
             UtilsSvc.isAppendLoader(false);
                 })
@@ -338,7 +428,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
         const todayDate = new Date();
         scope.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
 
-        if (scope.selectedUserData.userType.name === 'Students') {
+        if (scope.selectedUserData.userType.id === USER_TYPES.STUDENT) {
             scope.getRedirectToGuardian();
         }
     };
@@ -357,15 +447,15 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
                 return scope.generatePassword();
             })
             .then(() => {
-                if (scope.selectedUserData.userType.name === 'Students') {
+                if (scope.selectedUserData.userType.id === USER_TYPES.STUDENT) {
                     return scope.getStudentCustomFields();
-                } else if (scope.selectedUserData.userType.name === 'Staff') {
+                } else if (scope.selectedUserData.userType.id === USER_TYPES.STAFF) {
                     // return Promise.resolve();
                     return scope.getStaffCustomFields();
                 }
             })
             .then(() => {
-                if (scope.selectedUserData.userType.name === 'Students') {
+                if (scope.selectedUserData.userType.id === USER_TYPES.STUDENT) {
                     return scope.getRedirectToGuardian();
                 }
             })
@@ -1077,7 +1167,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
             photo_content: scope.selectedUserData.photo_base_64,
             custom: [],
         };
-        if(scope.selectedUserData.userType.name === 'Students') {
+        if(scope.selectedUserData.userType.id === USER_TYPES.STUDENT) {
             scope.customFieldsArray.forEach((customField)=> {
                 customField.data.forEach((field)=> {
                     if(field.field_type !== 'CHECKBOX') {
