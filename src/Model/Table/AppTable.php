@@ -220,7 +220,7 @@ class AppTable extends Table
      */
     public function formatTime($timeInput): string
     {
-        Log::debug(print_r(['timeInput' => $timeInput], true));
+//        Log::debug(print_r(['timeInput' => $timeInput], true));
 
         $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $format = $ConfigItem->value('time_format') ?: 'H:i:s'; // default fallback
