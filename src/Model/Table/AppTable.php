@@ -18,6 +18,8 @@ use Page\Traits\OptionListTrait;
 use Cake\I18n\I18n;
 use Cake\Database\Schema\TableSchema;
 use Cake\Http\ServerRequest;
+use Cake\Log\Log;
+use Cake\I18n\FrozenTime;
 
 class AppTable extends Table
 {
@@ -214,20 +216,37 @@ class AppTable extends Table
      * For calling from view files
      * @param  Time   $dateObject [description]
      * @return [type]             [description]
+     * POCOR-9415 more error-save
      */
-    public function formatTime($timeObject)
+    public function formatTime($timeInput): string
     {
+        Log::debug(print_r(['timeInput' => $timeInput], true));
+
         $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $format = $ConfigItem->value('time_format');
+        $format = $ConfigItem->value('time_format') ?: 'H:i:s'; // default fallback
         $value = '';
-        if (is_object($timeObject)) {
-            $value = $timeObject->format($format);
+
+        try {
+            // Normalize to FrozenTime
+            if (is_string($timeInput)) {
+                $time = new FrozenTime($timeInput);
+            } elseif ($timeInput instanceof \DateTimeInterface) {
+                $time = FrozenTime::instance($timeInput);
+            } else {
+                throw new \InvalidArgumentException('Invalid time input format');
+            }
+
+            $value = $time->format($format);
+        } catch (\Exception $e) {
+            Log::error('formatTime error: ' . $e->getMessage());
+            $value = ''; // fallback value for safety
         }
+
         return $value;
     }
 
     // Event: 'ControllerAction.Model.onFormatDateTime'
-    public function onFormatDateTime(Event $event, $timeObject)
+    public function onFormatDateTime(Event $event, $timeObject): string
     {
         return $this->formatDateTime($timeObject);
     }
@@ -236,15 +255,34 @@ class AppTable extends Table
      * For calling from view files
      * @param  Time   $dateObject [description]
      * @return [type]             [description]
+     * POCOR-9415 more error-save
      */
-    public function formatDateTime($dateObject)
+    public function formatDateTime($dateInput): string
     {
         $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $format = $ConfigItem->value('date_format') . ' - ' . $ConfigItem->value('time_format');
+
+        $dateFormat = $ConfigItem->value('date_format') ?: 'Y-m-d';
+        $timeFormat = $ConfigItem->value('time_format') ?: 'H:i:s';
+        $format = $dateFormat . ' - ' . $timeFormat;
+
         $value = '';
-        if (is_object($dateObject)) {
-            $value = $dateObject->format($format);
+
+        try {
+            // Normalize input to FrozenTime
+            if (is_string($dateInput)) {
+                $date = new FrozenTime($dateInput);
+            } elseif ($dateInput instanceof \DateTimeInterface) {
+                $date = FrozenTime::instance($dateInput);
+            } else {
+                throw new \InvalidArgumentException('Invalid date input format');
+            }
+
+            $value = $date->format($format);
+        } catch (\Exception $e) {
+            Log::error('formatDateTime error: ' . $e->getMessage());
+            $value = ''; // fallback empty value
         }
+
         return $value;
     }
 
