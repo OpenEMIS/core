@@ -2,7 +2,7 @@
 
 use Migrations\AbstractMigration;
 
-class POCOR9437 extends AbstractMigration
+class POCOR9431 extends AbstractMigration
 {
     public function up()
     {
@@ -10,12 +10,12 @@ class POCOR9437 extends AbstractMigration
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
 
         // Backup original table (just the affected rows for clarity and safety)
-        $this->execute('DROP TABLE IF EXISTS `z_9437_institution_classes_secondary_staff`');
+        $this->execute('DROP TABLE IF EXISTS `z_9431_institution_classes_secondary_staff`');
         $this->execute('
-            CREATE TABLE `z_9437_institution_classes_secondary_staff` LIKE `institution_classes_secondary_staff`
+            CREATE TABLE `z_9431_institution_classes_secondary_staff` LIKE `institution_classes_secondary_staff`
         ');
         $this->execute('
-            INSERT INTO `z_9437_institution_classes_secondary_staff`
+            INSERT INTO `z_9431_institution_classes_secondary_staff`
             SELECT *
             FROM institution_classes_secondary_staff');
 
@@ -35,12 +35,12 @@ class POCOR9437 extends AbstractMigration
     public function down()
     {
         // Restore from backup if available
-        if ($this->hasTable('z_9437_institution_classes_secondary_staff')) {
+        if ($this->hasTable('z_9431_institution_classes_secondary_staff')) {
             $this->execute('SET FOREIGN_KEY_CHECKS=0;');
 
             // Restore deleted
             $this->execute('DROP TABLE IF EXISTS `institution_classes_secondary_staff`');
-            $this->execute('RENAME TABLE `z_9437_institution_classes_secondary_staff` TO `institution_classes_secondary_staff`');
+            $this->execute('RENAME TABLE `z_9431_institution_classes_secondary_staff` TO `institution_classes_secondary_staff`');
 
             $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
