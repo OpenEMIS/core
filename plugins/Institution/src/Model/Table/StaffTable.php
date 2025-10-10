@@ -2740,44 +2740,44 @@ class StaffTable extends ControllerActionTable
                     $row->present = $attendance ? 1 : 0;
                     $row->late = 0;
 
-                    if ($attendance) {
-                        $staffTimeIn = FrozenTime::parse($attendance->time_in)->format('H:i:s');
-
-                        $StaffShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffShifts');
-                        $InstitutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
-
-                        $shiftMappings = $StaffShifts->find()
-                            ->where(['staff_id' => $staffId])
-                            ->toArray();
-
-                        if (!empty($shiftMappings)) {
-                            foreach ($shiftMappings as $shiftMap) {
-                                $shift = $InstitutionShifts->get($shiftMap->shift_id);
-                                $shiftStart = FrozenTime::parse($shift->start_time)->format('H:i:s');
-
-                                if ($staffTimeIn > $shiftStart) {
-                                    $row->late = 1;
-                                    break;
-                                }
-                            }
-                        } else {
-                            $defaultShift = $InstitutionShifts->find()
-                                ->select(['start_time' => 'MIN(InstitutionShifts.start_time)'])
-                                ->where([
-                                    'institution_id' => $institutionId,
-                                    'academic_period_id' => $currentYearId
-                                ])
-                                ->first();
-
-                            if ($defaultShift) {
-                                $defaultStartTime = FrozenTime::parse($defaultShift->start_time)->format('H:i:s');
-
-                                if ($staffTimeIn > $defaultStartTime) {
-                                    $row->late = 1;
-                                }
-                            }
-                        }
-                    }
+//                    if ($attendance) {
+//                        $staffTimeIn = FrozenTime::parse($attendance->time_in)->format('H:i:s');
+//
+//                        $StaffShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffShifts');
+//                        $InstitutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
+//
+//                        $shiftMappings = $StaffShifts->find()
+//                            ->where(['staff_id' => $staffId])
+//                            ->toArray();
+//
+//                        if (!empty($shiftMappings)) {
+//                            foreach ($shiftMappings as $shiftMap) {
+//                                $shift = $InstitutionShifts->get($shiftMap->shift_id);
+//                                $shiftStart = FrozenTime::parse($shift->start_time)->format('H:i:s');
+//
+//                                if ($staffTimeIn > $shiftStart) {
+//                                    $row->late = 1;
+//                                    break;
+//                                }
+//                            }
+//                        } else {
+//                            $defaultShift = $InstitutionShifts->find()
+//                                ->select(['start_time' => 'MIN(InstitutionShifts.start_time)'])
+//                                ->where([
+//                                    'institution_id' => $institutionId,
+//                                    'academic_period_id' => $currentYearId
+//                                ])
+//                                ->first();
+//
+//                            if ($defaultShift) {
+//                                $defaultStartTime = FrozenTime::parse($defaultShift->start_time)->format('H:i:s');
+//
+//                                if ($staffTimeIn > $defaultStartTime) {
+//                                    $row->late = 1;
+//                                }
+//                            }
+//                        }
+//                    }
 
                     $StaffLeave = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
                     $onLeave = $StaffLeave->find()
@@ -4511,8 +4511,8 @@ class StaffTable extends ControllerActionTable
                                 'date' => $this->formatDate($attendanceRecord['date']),
 //                                'time_in' => $attendanceRecord['time_in'],//$this->formatTime($attendanceRecord['time_in']),
 //                                'time_out' => $attendanceRecord['time_out'],//$this->formatTime($attendanceRecord['time_out']),
-                                'time_in' => $this->formatTime($attendanceRecord['time_in']),
-                                'time_out' => $this->formatTime($attendanceRecord['time_out']),
+                                'time_in' => $this->formatTime($attendanceRecord['time_in']), // POCOR-9415
+                                'time_out' => $this->formatTime($attendanceRecord['time_out']), // POCOR-9415
                                 'comment' => $attendanceRecord['comment'],
                                 'absence_type_id' => $attendanceRecord['absence_type_id'],
                                 'isNew' => false
