@@ -643,7 +643,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         return timeInputDivElement;
     }
 
-    unction convert24Timeformat(hours, minutes, seconds, meridian) {
+    function convert24Timeformat(hours, minutes, seconds, meridian) {
         try {
             hours = parseInt(hours, 10);
             minutes = parseInt(minutes, 10);
