@@ -4509,8 +4509,10 @@ class StaffTable extends ControllerActionTable
                             $attendanceData = [
                                 'dateStr' => $dateStr,
                                 'date' => $this->formatDate($attendanceRecord['date']),
-                                'time_in' => $attendanceRecord['time_in'],//$this->formatTime($attendanceRecord['time_in']),
-                                'time_out' => $attendanceRecord['time_out'],//$this->formatTime($attendanceRecord['time_out']),
+//                                'time_in' => $attendanceRecord['time_in'],//$this->formatTime($attendanceRecord['time_in']),
+//                                'time_out' => $attendanceRecord['time_out'],//$this->formatTime($attendanceRecord['time_out']),
+                                'time_in' => $this->formatTime($attendanceRecord['time_in']),
+                                'time_out' => $this->formatTime($attendanceRecord['time_out']),
                                 'comment' => $attendanceRecord['comment'],
                                 'absence_type_id' => $attendanceRecord['absence_type_id'],
                                 'isNew' => false
