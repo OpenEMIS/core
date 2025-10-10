@@ -4647,7 +4647,7 @@ class StaffTable extends ControllerActionTable
             ->group([
                 $this->aliasField('staff_id')
             ])
-            ->formatResults($this->getFormattedStaffAttendanceArchivedRow($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $day_id));
+            ->formatResults($this->getFormattedStaffAttendanceArchivedRow($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId));
 
         return $query;
 
