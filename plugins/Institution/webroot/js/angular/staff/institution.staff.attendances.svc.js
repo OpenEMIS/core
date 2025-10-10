@@ -664,7 +664,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             return sHours + ":" + sMinutes + ":" + sSeconds;
         } catch (error) {
             console.error("convert24Timeformat - Invalid input:", error.message);
-            return "00:00:00";
+            return "--:--:--";
         }
     }
 
@@ -694,7 +694,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             return sHours + ":" + sMinutes + " " + meridian;
         } catch (error) {
             console.error("convert12Timeformat - Invalid input:", error.message);
-            return "12:00 AM";
+            return "--:-- --";
         }
     }
 
