@@ -3,7 +3,6 @@
 namespace App\Shell;
 
 use Cake\Console\Shell;
-use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\ConnectionManager;
 
@@ -51,17 +50,39 @@ class SyncExamResultShell extends Shell
     public function main()
     {
         $tempFile = $this->args[0];
-        $params = json_decode($this->args[1], true);
-        $academicPeriodId = $this->getAcademicPeriodId($params['academic_period_code']);
+        $this->log('Received tempFile argument: ' . $tempFile, 'info');
+
+        $this->out('Received parameters: ' . json_encode($this->args));
+        $this->log('Received parameters (raw args): ' . json_encode($this->args), 'info');
+
+        // Fix: Accept both JSON with/without quotes around keys and values
+        $paramsRaw = $this->args[1];
+        // Remove outer braces and split by commas
+        $paramsArr = [];
+        $paramsStr = trim($paramsRaw, '{} ');
+        foreach (explode(',', $paramsStr) as $pair) {
+            if (strpos($pair, ':') !== false) {
+                list($key, $value) = explode(':', $pair, 2);
+                $key = trim($key, " \t\n\r\0\x0B\"'");
+                $value = trim($value, " \t\n\r\0\x0B\"'");
+                $paramsArr[$key] = $value;
+            }
+        }
+        $params = $paramsArr;
+
+        $this->out('Received parameters: ' . json_encode($params));
+        $this->log('Decoded parameters: ' . json_encode($params), 'info');
+
+        $academicPeriodId = $this->getAcademicPeriodId($params['academic_period_code'] ?? null);
+        $this->log('Resolved Academic Period ID: ' . json_encode($academicPeriodId), 'info');
 
         if (!file_exists($tempFile)) {
             $this->err("Temporary file not found: $tempFile");
-            Log::write('error', "Temporary file not found: $tempFile");
             return false;
         }
+        $this->out('Academic Period ID: ' . json_encode($academicPeriodId));
 
-        Log::write('info', 'Starting sync process with params: ' . json_encode($params));
-        $this->out("Starting sync process...");
+        $this->out('Starting sync process with params: ' . json_encode($params));
 
         try {
             // Read the temporary file
@@ -69,7 +90,6 @@ class SyncExamResultShell extends Shell
 
             if (!isset($responseData['data']) || empty($responseData['data'])) {
                 $this->err("No data found in the temporary file");
-                Log::write('error', "No data found in the temporary file");
                 return false;
             }
 
@@ -83,7 +103,6 @@ class SyncExamResultShell extends Shell
                 // Get total count for progress reporting
                 $totalCandidates = count($data);
                 $this->out("Processing $totalCandidates candidates...");
-                Log::write('info', "Processing $totalCandidates candidates");
 
                 $processed = 0;
                 $success = 0;
@@ -107,7 +126,7 @@ class SyncExamResultShell extends Shell
 
                         if (!$studentId || !$examinationId || !$examinationCentreId || !$academicPeriodId) {
                             $this->warn("Unable to find matching IDs for candidate: $openemisNo");
-                            Log::write('warning', "Unable to find matching IDs for candidate: $openemisNo");
+                            $this->warn("Student ID: $studentId, Examination ID: $examinationId, Centre ID: $examinationCentreId, Academic Period ID: $academicPeriodId");
                             $failed++;
                             continue;
                         }
@@ -128,7 +147,6 @@ class SyncExamResultShell extends Shell
 
                                 if (!$subjectId) {
                                     $this->warn("Unable to find examination subject with code: $optionCode");
-                                    Log::write('warning', "Unable to find examination subject with code: $optionCode");
                                     $gradesFailed++;
                                     continue;
                                 }
@@ -136,7 +154,7 @@ class SyncExamResultShell extends Shell
                                 // Get grading option ID if available
                                 $gradingOptionId = null;
                                 if ($gradingCode) {
-                                    $gradingOptionId = $this->getGradingOptionId($gradingCode, $examinationId);
+                                    $gradingOptionId = $this->getGradingOptionId($gradingCode, $examinationId, $subjectId);
                                 }
 
                                 // Process the grade
@@ -156,13 +174,11 @@ class SyncExamResultShell extends Shell
                                 }
                             } catch (\Exception $e) {
                                 $this->err("Error processing grade: " . $e->getMessage());
-                                Log::write('error', "Error processing grade: " . $e->getMessage());
                                 $gradesFailed++;
                             }
                         }
 
                         $this->out("Candidate $candidateId: $gradesProcessed grades processed, $gradesFailed failed");
-                        Log::write('info', "Candidate $candidateId: $gradesProcessed grades processed, $gradesFailed failed");
 
                         if ($gradesFailed === 0) {
                             $success++;
@@ -171,7 +187,6 @@ class SyncExamResultShell extends Shell
                         }
                     } catch (\Exception $e) {
                         $this->err("Error processing candidate $candidateId: " . $e->getMessage());
-                        Log::write('error', "Error processing candidate $candidateId: " . $e->getMessage());
                         $failed++;
                     }
                 }
@@ -180,7 +195,6 @@ class SyncExamResultShell extends Shell
                 $connection->commit();
 
                 $this->success("Sync completed: $success successful, $failed failed out of $totalCandidates candidates");
-                Log::write('info', "Sync completed: $success successful, $failed failed out of $totalCandidates candidates");
 
                 // Clean up temporary file
                 unlink($tempFile);
@@ -189,12 +203,10 @@ class SyncExamResultShell extends Shell
             } catch (\Exception $e) {
                 $connection->rollback();
                 $this->err("Error during processing: " . $e->getMessage());
-                Log::write('error', "Error during processing: " . $e->getMessage());
                 return false;
             }
         } catch (\Exception $e) {
             $this->err("Error: " . $e->getMessage());
-            Log::write('error', "Error: " . $e->getMessage());
             return false;
         }
     }
@@ -243,11 +255,11 @@ class SyncExamResultShell extends Shell
         if (!$academicYear) {
             return null;
         }
-
+        $this->out('Looking up Academic Period for code: ' . $academicYear);
         $academicPeriod = $this->AcademicPeriods->find()
-            ->where(['academic_period_code' => $academicYear])
+            ->where(['code' => $academicYear])
             ->first();
-
+        $this->out('Found Academic Period: ' . ($academicPeriod ? $academicPeriod->id : 'None'));
         return $academicPeriod ? $academicPeriod->id : null;
     }
 
@@ -264,17 +276,33 @@ class SyncExamResultShell extends Shell
         return $subject ? $subject->id : null;
     }
 
-    private function getGradingOptionId($gradingCode, $examinationId)
+    private function getGradingOptionId($gradingCode, $examinationId, $subjectId = null)
     {
-        if (!$gradingCode || !$examinationId) {
+        if (!$gradingCode) {
             return null;
         }
 
+        // If we have a subject ID, get the grading type from the subject
+        if ($subjectId) {
+            $examinationSubject = $this->ExaminationSubjects->find()
+                ->where(['id' => $subjectId])
+                ->first();
+
+            if ($examinationSubject && $examinationSubject->examination_grading_type_id) {
+                $gradingOption = $this->ExaminationGradingOptions->find()
+                    ->where([
+                        'code' => $gradingCode,
+                        'examination_grading_type_id' => $examinationSubject->examination_grading_type_id
+                    ])
+                    ->first();
+
+                return $gradingOption ? $gradingOption->id : null;
+            }
+        }
+
+        // Fallback: try to find grading option by code only (may not be unique)
         $gradingOption = $this->ExaminationGradingOptions->find()
-            ->where([
-                'code' => $gradingCode,
-                'examination_id' => $examinationId
-            ])
+            ->where(['code' => $gradingCode])
             ->first();
 
         return $gradingOption ? $gradingOption->id : null;
@@ -283,7 +311,7 @@ class SyncExamResultShell extends Shell
     private function processGrade($studentId, $examinationId, $examinationCentreId, $optionId, $mark, $gradingOptionId = null)
     {
         if (!$studentId || !$examinationId || !$examinationCentreId || !$optionId) {
-            Log::write('warning', "Missing required ID for processing grade");
+            $this->warn("Missing required ID for processing grade");
             return false;
         }
 
@@ -293,7 +321,7 @@ class SyncExamResultShell extends Shell
                 'student_id' => $studentId,
                 'examination_id' => $examinationId,
                 'examination_centre_id' => $examinationCentreId,
-                'examination_option_id' => $optionId
+                'examination_subject_id' => $optionId,
             ])
             ->first();
 
@@ -301,7 +329,7 @@ class SyncExamResultShell extends Shell
             'student_id' => $studentId,
             'examination_id' => $examinationId,
             'examination_centre_id' => $examinationCentreId,
-            'examination_option_id' => $optionId,
+            'examination_subject_id' => $optionId,
             'marks' => $mark
         ];
 
@@ -309,23 +337,85 @@ class SyncExamResultShell extends Shell
             $data['examination_grading_option_id'] = $gradingOptionId;
         }
 
+        $data['academic_period_id'] = $this->getAcademicPeriodIdFromExamination($examinationId);
+        $data['education_subject_id'] = $this->getEducationSubjectIdFromExaminationSubject($optionId);
+        $data['institution_id'] = $this->getInstitutionIdFromStudent($studentId);
+
         if ($existingResult) {
             // Update existing record
             $existingResult = $this->ExaminationStudentSubjectResults->patchEntity($existingResult, $data);
-            Log::write('info', "Updating existing grade for student $studentId, option $optionId");
+            $this->out("Updating existing grade for student $studentId, option $optionId");
         } else {
             // Create new record
+            // Add a unique id when creating a new entity
+            $data['id'] = bin2hex(random_bytes(32));
             $existingResult = $this->ExaminationStudentSubjectResults->newEntity($data);
-            Log::write('info', "Creating new grade for student $studentId, option $optionId");
+            $this->out("Creating new grade for student $studentId, option $optionId");
         }
 
         $result = $this->ExaminationStudentSubjectResults->save($existingResult);
 
         if (!$result) {
-            Log::write('error', "Failed to save grade: " . json_encode($existingResult->getErrors()));
+            $this->err("Failed to save grade: " . json_encode($existingResult->getErrors()));
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * Get the academic period ID from an examination ID.
+     *
+     * @param int|null $examinationId
+     * @return int|null
+     */
+    private function getAcademicPeriodIdFromExamination($examinationId)
+    {
+        if (!$examinationId) {
+            return null;
+        }
+        $examination = $this->Examinations->find()
+            ->where(['id' => $examinationId])
+            ->first();
+        return $examination ? $examination->academic_period_id : null;
+    }
+
+    /**
+     * Get the education subject ID from an examination subject ID.
+     *
+     * @param int|null $examinationSubjectId
+     * @return int|null
+     */
+    private function getEducationSubjectIdFromExaminationSubject($examinationSubjectId)
+    {
+        if (!$examinationSubjectId) {
+            return null;
+        }
+        $examinationSubject = $this->ExaminationSubjects->find()
+            ->where(['id' => $examinationSubjectId])
+            ->first();
+        return $examinationSubject ? $examinationSubject->education_subject_id : null;
+    }
+
+    /**
+     * Get the institution ID from a student ID.
+     *
+     * @param int|null $studentId
+     * @return int|null
+     */
+    private function getInstitutionIdFromStudent($studentId)
+    {
+        if (!$studentId) {
+            return null;
+        }
+
+        // Use the InstitutionStudents table to get the institution_id
+        $institutionStudentsTable = TableRegistry::getTableLocator()->get('InstitutionStudents');
+        $institutionStudent = $institutionStudentsTable->find()
+            ->where(['student_id' => $studentId])
+            ->order(['id' => 'DESC'])
+            ->first();
+
+        return $institutionStudent ? $institutionStudent->institution_id : null;
     }
 }

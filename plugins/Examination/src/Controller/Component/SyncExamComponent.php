@@ -229,7 +229,6 @@ class SyncExamComponent extends Component
         // Process response
         if ($response['data']) {
             $responseData = json_decode($response['data'], true);
-            $params = json_encode($params);
             Log::write('debug', 'Response status code: ' . $response['statusCode']);
             Log::write('debug', 'Response data received: ' . (isset($responseData['data']) ? 'Yes' : 'No'));
             Log::write('debug', 'Full API response: ' . json_encode($responseData));
@@ -246,7 +245,8 @@ class SyncExamComponent extends Component
             Log::write('debug', 'Temporary file created: ' . $tempFile);
 
             // Prepare shell command to process results in background
-            $cmd = ROOT . DS . 'bin' . DS . 'cake SyncExamResult ' . escapeshellarg($tempFile) . ' ' . escapeshellarg($params);
+            $jsonParams = json_encode($params);
+            $cmd = ROOT . DS . 'bin' . DS . 'cake SyncExamResult ' . escapeshellarg($tempFile) . ' ' . escapeshellarg($jsonParams);
             $logs = ROOT . DS . 'logs' . DS . 'SyncExamResult_' . $timestamp . '.log';
 
             // Ensure the shell runs in background and redirects output properly
