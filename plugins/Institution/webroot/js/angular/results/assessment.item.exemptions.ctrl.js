@@ -93,6 +93,12 @@ function AssessmentItemExemptionsController(
     function initPage() {
         AssessmentItemExemptionsSvc.init(angular.baseUrl);
         UtilsSvc.isAppendLoader(true);
+        /*if (!ctrl.student_status_id) {
+            console.log('No student status selected. Skipping load.');
+            return;
+        }*/
+
+        loadStudentStatuses(); // POCOR-9428
 
         if (ctrl.institution_class_id &&
             ctrl.assessment_item_id &&
@@ -204,6 +210,35 @@ function AssessmentItemExemptionsController(
         UtilsSvc.isAppendLoader(false);
     }//POCOR-9042 ends
 
+    function onStudentStatusChange() {
+        ctrl.statusEnabled = !!ctrl.assessment_period_id;
+
+        if (ctrl.institution_class_id &&
+            ctrl.assessment_item_id &&
+            ctrl.assessment_period_id &&
+            ctrl.student_status_id) {
+
+            UtilsSvc.isAppendLoader(true);
+            loadClassDetails().finally(function() {
+                UtilsSvc.isAppendLoader(false);
+            });
+        }
+    }
+    ctrl.onStudentStatusChange = onStudentStatusChange;
+
+    // Load the Student Status options once page loads
+    // Load the Student Status options once page loads
+   function loadStudentStatuses() {
+    var options = {};
+    AssessmentItemExemptionsSvc.getStudentStatus(options).then(function(data) {
+        ctrl.studentStatuses = data;
+    });
+}
+
+
+
+
+
     function loadClassDetails() {
         // console.log(options);
         ctrl.message = '';
@@ -223,7 +258,8 @@ function AssessmentItemExemptionsController(
             assessment_item_id: ctrl.assessment_item_id,
             assessment_period_id: ctrl.assessment_period_id,
             classification: ctrl.classification, //POCOR-9289
-            excempttype_id: ctrl.excempttype_id //POCOR-9289
+            excempttype_id: ctrl.excempttype_id, //POCOR-9289
+            student_status_id: ctrl.student_status_id //POOCR-9428
         }
         // console.log(options);
         //     .then(loadAdditionalClassData)
