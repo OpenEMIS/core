@@ -474,6 +474,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         scope.error = {};
         // POCOR-9427 start
         const userTypeId = scope.selectedUserData.user_type_id;
+        console.log(scope);
         const configKey = USER_TYPE_KEYS[userTypeId];
         const config = scope.config[configKey] || {};
         // console.log(scope.selectedUserData)
@@ -501,13 +502,13 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             const [blockName, hasError] = await checkUserDetailValidationBlocksHasError(scope);
 
             if (blockName === 'Identity' && hasError) {
-                if (!config.nationalitySkipped && config.nationalitiesRequired === 'required') {
+                // if (!config.nationalitySkipped && config.nationalitiesRequired === 'required') {
                     checkAndSetError('nationality_id', 'This field cannot be left empty');
-                }
-                if (!config.identitySkipped && config.identitiesRequired === 'required') {
+                // }
+                // if (!config.identitySkipped && config.identitiesRequired === 'required') {
                     checkAndSetError('identity_type_id', 'This field cannot be left empty');
                     checkAndSetError('identity_number', 'This field cannot be left empty');
-                }
+                // }
             } else if (blockName === 'General_Info' && hasError) {
                 checkAndSetError('first_name', 'This field cannot be left empty');
                 checkAndSetError('last_name', 'This field cannot be left empty');
@@ -995,12 +996,6 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
     }
 
     async function checkUserDetailValidationBlocksHasError(scope) {
-        // POCOR-9427 start
-        const userData = scope.selectedUserData;
-        const userTypeId = userData.user_type_id;
-        const configKey = USER_TYPE_KEYS[userTypeId];
-        const config = scope.config[configKey] || {};
-
         const {
             first_name,
             last_name,
@@ -1011,57 +1006,40 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             openemis_no,
             nationality_id,
             identity_type_name
-        } = userData;
-
+        } = scope.selectedUserData;
         const externalSearchSourceName = scope.externalSearchSourceName;
-        const userExists = await checkUserAlreadyExistByIdentity(scope);
+        const user_exists = await checkUserAlreadyExistByIdentity(scope);
 
-        // Check General Info block
-        const generalInfoMissing = !first_name || !last_name || !gender_id || !date_of_birth;
-        if (generalInfoMissing) {
-            return ["General_Info", true];
+        const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth);
+        const isIdentityHasError = (identity_number?.length > 1 || nationality_id || identity_type_id) &&
+            (!identity_number || !nationality_id || !identity_type_id);
+        const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
+        let isSkipableForIdentity = identity_number?.length > 1 && nationality_id > 0 && identity_type_id > 0;
+
+        if (identity_type_name === 'UNHCR') {
+            isSkipableForIdentity = false;
         }
 
-        // Check OpenEMIS ID
-        const hasOpenEmisNo = openemis_no !== "" && openemis_no !== undefined;
-        if (hasOpenEmisNo) {
+        if (isOpenEmisNoHasError) {
             return ["OpenEMIS_ID", false];
         }
 
-        // Check Identity block based on config
-        const identityRequired = !config.identitySkipped && config.identitiesRequired === 'required';
-        const nationalityRequired = !config.nationalitySkipped && config.nationalitiesRequired === 'required';
-
-        let identityHasError = false;
-
-        if (identityRequired) {
-            identityHasError = !identity_type_id || !identity_number;
-        }
-
-        if (nationalityRequired) {
-            identityHasError = identityHasError || !nationality_id;
-        }
-
-        if (identityHasError) {
+        if (isIdentityHasError) {
             return ['Identity', true];
         }
 
-        // Check for skipable conditions
-        const hasFullIdentity =
-            identity_number?.length > 1 &&
-            nationality_id > 0 &&
-            identity_type_id > 0;
-
-        if (identity_type_name === 'UNHCR') {
-            return ["Identity", false];
+        if (isSkipableForIdentity) {
+            if (user_exists === true) {
+                return ['Identity', false];
         }
-
-        if (hasFullIdentity) {
-            if (userExists === true || externalSearchSourceName === 'OpenEMIS Core') {
+            if (externalSearchSourceName === 'OpenEMIS Core') {
                 return ['Identity', false];
             }
         }
-        // POCOR-9427 end
+
+        if (isGeneralInfodHasError) {
+            return ["General_Info", true];
+        }
 
         return ["", false];
     }

@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
             'class' => 'form-control chosenSelect', //POCOR-9225
             'label' => false,
             'type' => 'select',
-            'options' => ['-1' => __('-- Select Type --')] + $typeOptions,
+            'options' => ['-1' => __('-- Select Type --')] + $typeOptions, // POCOR-9427
 			'url' => $baseUrl,
             'data-named-key' => 'type',
         ]);
