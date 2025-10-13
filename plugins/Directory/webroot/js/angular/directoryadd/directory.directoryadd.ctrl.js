@@ -302,8 +302,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
         directorySvc.validateUserDetails(scope);
     };
 
-    userCtrl.validateConfirmDetails = function () {
-        directorySvc.validateConfirmDetails(scope);
+    userCtrl.validateConfirmDetails = async function () {
+        await directorySvc.validateConfirmDetails(scope);
     };
 
     userCtrl.goToNextStep = async function () {
