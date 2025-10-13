@@ -41,6 +41,8 @@ class RenderTextareaBehavior extends RenderBehavior {
             $options['type'] = 'textarea';
             if (!is_null($savedValue)) {
                 $options['value'] = $savedValue;
+            }else{
+                $options['value'] = '';
             }
             $value .= $form->input($fieldPrefix.".textarea_value", $options);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);

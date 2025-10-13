@@ -49,6 +49,7 @@ class StudentsTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
+
         $this->setTable('institution_students');
         parent::initialize($config);
 
@@ -944,22 +945,24 @@ class StudentsTable extends ControllerActionTable
         $student_id = !empty($entity->student_id) ? $entity->student_id : NULL;
         $institution_id = !empty($entity->institution_id) ? $entity->institution_id : 0;
         $result = $this->checkStudentRecords($entity);
-        // if ($result) {
-        //     // POCOR-8411 start
-        //     try {
-        //         $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
-        //     } catch (\Exception $exception) {
-        //         Log::error(__FUNCTION__ . ':' . $exception->getMessage());
-        //     }
-        //     // POCOR-8411 end
-        //     $event->stopPropagation();
-        //     return $this->controller->redirect($this->url('remove'));
-        // } else {
+        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        //POCOR-9393 start
+        $StudentClass = $InstitutionClassStudents->find()
+            ->where([
+                $InstitutionClassStudents->aliasField('academic_period_id') => $entity->academic_period_id,
+                $InstitutionClassStudents->aliasField('student_id') => $entity->student_id,
+                $InstitutionClassStudents->aliasField('institution_id') => $entity->institution_id,
+            ])
+            ->first();
+
+        $StudentClassId = $StudentClass ? $StudentClass->institution_class_id : null; //POCOR-9393 end
+
         $body = array();
         $institution_student_id = !empty($entity->id) ? $entity->id : NULL;
         $body = [
             'institution_student_id' => $student_id,
             'institution_id' => $institution_id,
+            'institution_class_id' => $StudentClassId, //POCOR-9393
         ];
         $affected = $this->removeIndividualChildRecords($student_id, $institution_student_id);
         // $this->log("removed $affected security records", 'debug');
@@ -970,7 +973,7 @@ class StudentsTable extends ControllerActionTable
                 $Webhooks->triggerShell('student_delete', ['username' => $username], $body);
             }
         }
-        //}
+        
     }
 
     /**
@@ -1409,7 +1412,6 @@ class StudentsTable extends ControllerActionTable
             //POCOR-8801::end
         }
         //POCOR-8092::end
-        $selectedStatus = $this->queryString('status_id', $statusOptions);
         $educationGradesOptions = $InstitutionEducationGrades
             ->find('list', [
                 'keyField' => 'id',
@@ -3909,7 +3911,7 @@ class StudentsTable extends ControllerActionTable
      */
     private function setStatusOptions()
     {
-        
+
         $statusOptions = $this->student_status_names_array;
         //POCOR-9369 start
         // Find the key in $student_status_names_array where the value (status name) is 'Enrolled'
@@ -3921,8 +3923,12 @@ class StudentsTable extends ControllerActionTable
             }
         }
         //POCOR-9369 end
-        $selectedStatus = $this->queryString('status_id', $statusOptions);
-
+        //POCOR-9395 start
+        $selectedStatus = $this->request->getQueryParams()['status_id'];
+        if (empty($selectedStatus)) {
+            $selectedStatus = $defaultStatusKey;
+        }
+        //POCOR-9395 end
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
         return array($statusOptions, $selectedStatus, $defaultStatusKey); //POCOR-9369 start
     }

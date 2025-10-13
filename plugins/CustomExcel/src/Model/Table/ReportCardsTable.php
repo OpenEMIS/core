@@ -783,11 +783,15 @@ class ReportCardsTable extends AppTable
             $institutionId = $params['institution_id'];
             //POCOR-8093 to fetch staff position
             $StaffPositionTitles = self::getDynamicTableInstance('Institution.StaffPositionTitles'); // POCOR-9162
-            $staffPosnId = $StaffPositionTitles->getPrincipalRoleId();
+            $staffPosnId = $StaffPositionTitles->getPrincipalRoleId($staffRoleId); //POCOR-9413
             $staff = self::getInstitutionSecurityStaff($institutionId, $staffPosnId);
             if (!empty($staff)) {
                 $staff->principal = $staff->user->name;
                 $staff->principal_gender = $staff->gender;
+                //POCOR-9413 -- if preferred name is empty then return '-'
+                if (empty($staff->user->preferred_name)) {
+                    $staff->user->preferred_name = '-';
+                }
             }
             return $staff;
         }
@@ -1071,7 +1075,9 @@ class ReportCardsTable extends AppTable
                     $InstitutionStudentAbsenceDetails->aliasField('student_id') => $params['student_id'],
                     $InstitutionStudentAbsenceDetails->aliasField('academic_period_id') => $params['academic_period_id'], //POCOR-7128
                     $InstitutionStudentAbsenceDetails->aliasField('education_grade_id') => $params['education_grade_id'], //POCOR-7128
-                    $InstitutionStudentAbsenceDetails->aliasField('institution_class_id') => $params['institution_class_id'] //POCOR-7128
+                    $InstitutionStudentAbsenceDetails->aliasField('institution_class_id') => $params['institution_class_id'], //POCOR-7128
+                    $InstitutionStudentAbsenceDetails->aliasField('date >=') => $startDate,//POCOR-9298
+                    $InstitutionStudentAbsenceDetails->aliasField('date <=') => $endDate//POCOR-9298
                 ])
                 ->group([$InstitutionStudentAbsenceDetails->aliasField('date')])
                 ->enableHydration(false)
@@ -1314,6 +1320,7 @@ class ReportCardsTable extends AppTable
             AND institution_student_absence_details.institution_id = $institution_id
             AND institution_student_absence_details.institution_class_id = $institution_class_id
             AND institution_student_absence_details.education_grade_id = $education_grade_id
+            AND institution_student_absence_details.date BETWEEN '$startDate' AND '$endDate'
             GROUP BY institution_student_absence_details.academic_period_id
                 ,institution_student_absence_details.institution_id
                 ,institution_student_absence_details.education_grade_id
