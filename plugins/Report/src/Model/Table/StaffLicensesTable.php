@@ -7,8 +7,9 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
+use Cake\I18n\FrozenDate;
 
 class StaffLicensesTable extends AppTable  {
     public function initialize(array $config): void
@@ -35,7 +36,250 @@ class StaffLicensesTable extends AppTable  {
         ]);
         $this->addBehavior('Report.ReportList');
     }
+
+    //POCOR-9418 query changes
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    {
+        $requestData = json_decode($settings['process']['params']);
+        $selectedStatus = $requestData->status;
+        $areaId = $requestData->area_education_id;
+        $institutionId = $requestData->institution_id;
+
+        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+
+        $conditions = [];
+
+        if (!empty($institutionId) && $institutionId > 0) {
+            $conditions['InstitutionStaff.institution_id'] = $institutionId;
+        }
+
+        if (!empty($areaId) && $areaId != -1) {
+            $conditions[$InstitutionsTable->aliasField('area_id')] = $areaId;
+        }
+
+        // Build query
+        $query
+            ->select([
+                'openemis_no' => 'Users.openemis_no',
+                'assignee_name' => $query->func()->concat([
+                    'Assignees.first_name' => 'literal',
+                    " ",
+                    'Assignees.last_name' => 'literal'
+                ]),
+                'security_user_name' => $query->func()->concat([
+                    'Users.first_name' => 'literal',
+                    " ",
+                    'Users.last_name' => 'literal'
+                ]),
+                'issue_date' => $this->aliasField('issue_date'),
+                'expiry_date' => $this->aliasField('expiry_date'),
+                'license_number' => $this->aliasField('license_number'),
+            ])
+            ->contain(['Users', 'Classifications', 'Assignees'])
+            ->leftJoin(
+                ['InstitutionStaff' => 'institution_staff'],
+                ['InstitutionStaff.staff_id = ' . $this->aliasField('security_user_id')]
+            )
+            ->leftJoin(
+                [$InstitutionsTable->getAlias() => $InstitutionsTable->getTable()],
+                [$InstitutionsTable->aliasField('id = ') . 'InstitutionStaff.institution_id']
+            )
+            ->where($conditions)
+            ->distinct(['StaffLicenses.id'])
+            ->order([$this->aliasField('security_user_id')]);
+
+       
+            if (!empty($selectedStatus) && $selectedStatus != '-1') {
+                $query->where([$this->aliasField('status_id') => $selectedStatus]);
+            }
+           $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row) {
+                    // If there is no license, clear the license-related fields
+                    if (empty($row->license_number)) {
+                        $row->assignee_name = null;
+                        $row->issue_date = null;
+                        $row->expiry_date = null;
+                        $row->license_number = null;
+                        $row->license_type_id = null;
+                        $row->status_id = null;
+                        $row->comments = null;
+                        $row->classifications = null;
+                        $row->issuer = null;
+                        return $row;
+                    }else{
+                        return $row;
+                    }
+                    
+                });
+            });
+    }
+    
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $newArray = [];
+
+        $newArray[] = [
+            'key' => 'Users.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => '', 
+        ];
+
+        $newArray[] = [
+            'key' => 'security_user_id',
+            'field' => 'security_user_id',
+            'type' => 'string',
+            'label' => __('Name'),
+        ];
+
+
+        $newArray[] = [
+            'key' => 'Classifications.name',
+            'field' => 'classification',
+            'type' => 'string',
+            'label' => __('Classification'),
+        ];
+
+        $newArray[] = [
+            'key' => 'StaffLicenses.license_type_id',
+            'field' => 'license_type_id',
+            'type' => 'integer',
+            'label' => __('License Type'),
+        ];
+
+        $newArray[] = [
+            'key' => 'assignee_name',
+            'field' => 'assignee_name',
+            'type' => 'string',
+            'label' => __('Assignee'),
+        ];
+
+        $newArray[] = [
+            'key' => 'StaffLicenses.license_number',
+            'field' => 'license_number',
+            'type' => 'string',
+            'label' => __('License Number'),
+        ];
+
+        $newArray[] = [
+            'key' => 'issue_date',
+            'field' => 'issue_date',
+            'type' => 'string',
+            'label' => __('Issue Date'),
+        ];
+
+        $newArray[] = [
+            'key' => 'expiry_date',
+            'field' => 'expiry_date',
+            'type' => 'string',
+            'label' => __('Expiry Date'),
+        ];
+
+        $newArray[] = [
+            'key' => 'issuer',
+            'field' => 'issuer',
+            'type' => 'string',
+            'label' => __('Issuer'),
+        ];
+
+        $newArray[] = [
+            'key' => 'StaffLicenses.comments',
+            'field' => 'comments',
+            'type' => 'string',
+            'label' => __('Comments'),
+        ];
+
+        $newArray[] = [
+            'key' => 'StaffLicenses.status_id',
+            'field' => 'status_id',
+            'type' => 'integer',
+            'label' => __('Status'),
+        ];
+
+        // Replace existing fields instead of merging
+        $fields->exchangeArray($newArray);
+    }
+
+    public function onExcelGetOpenemisNo(Event $event, Entity $entity)
+    {
+        $security_user_id = $entity['security_user_id'];
+        $user = self::getRelatedRecord('security_users', $security_user_id);
+        $entity['security_user'] = $user['first_name'] . ' ' . $user['last_name'];
+        return $user['openemis_no'];
+    }
+
+    /**
+     * common proc to show related field with id in the index table
+     * @param $tableName
+     * @param $relatedField
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getRelatedRecord($tableName, $relatedField)
+    {
+        if (!$relatedField) {
+            return null;
+        }
+        $Table = TableRegistry::get($tableName);
+        try {
+            $related = $Table->get($relatedField);
+            return $related->toArray();
+        } catch (RecordNotFoundException $e) {
+            return null;
+        }
+        return null;
+    }
+
+
+    public function onExcelGetClassification(Event $event, Entity $entity)
+    {
+        if ($entity->has('classifications')) {
+            $classifications = [];
+            foreach ($entity->classifications as $obj) {
+                $classifications[] = $obj->name;
+            }
+            return implode(', ', $classifications);
+        } else {
+            return '';
+        }
+    }
+
+    //POCOR-9418
+    public function onExcelGetIssueDate(Event $event, Entity $entity)
+    {
+        if(!empty($entity->issue_date)){
+            return isset($entity->issue_date) ? $entity->issue_date->format('Y-m-d') : '';
+        }else{
+            return '';
+        }
+    }
+
+    //POCOR-9418
+    public function onExcelGetExpiryDate(Event $event, Entity $entity)
+    {
+        if(!empty($entity->expiry_date)){
+            return isset($entity->expiry_date) ? $entity->expiry_date->format('Y-m-d') : '';
+        }else{
+            return '';
+        }
+    }
+
+    /**
+     * @param $query
+     */
+   /* private function addInstitutionJoinToQuery($query)
+    {
+        $InstitutionStaffTable = TableRegistry::get('Institution.InstitutionStaff');
+        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $query
+            ->leftJoin([$InstitutionStaffTable->getAlias() => $InstitutionStaffTable->getTable()], [
+                $InstitutionStaffTable->aliasField('staff_id') => $this->aliasField('security_user_id')
+            ])->leftJoin([$InstitutionsTable->getAlias() => $InstitutionsTable->getTable()], [
+                $InstitutionsTable->aliasField('id') => $InstitutionStaffTable->aliasField('institution_id')
+            ]);
+    }*/
+
+    public function onExcelBeforeQuerybkp(Event $event, ArrayObject $settings, $query)
     {
 //        $query = $this->addInstitutionJoinToQuery($query);
         $requestData = json_decode($settings['process']['params']);
@@ -101,39 +345,7 @@ class StaffLicensesTable extends AppTable  {
 
     }
 
-    public function onExcelGetOpenemisNo(Event $event, Entity $entity)
-    {
-//        $this->log('onExcelGetOpenemisNo', 'debug');
-//        $this->log($entity, 'debug');
-//        $this->log($this->query()->sql(), 'debug');
-        $security_user_id = $entity['security_user_id'];
-        $user = self::getRelatedRecord('security_users', $security_user_id);
-        $entity['security_user'] = $user['first_name'] . ' ' . $user['last_name'];
-        return $user['openemis_no'];
-    }
-
-    /**
-     * common proc to show related field with id in the index table
-     * @param $tableName
-     * @param $relatedField
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
-     */
-    private static function getRelatedRecord($tableName, $relatedField)
-    {
-        if (!$relatedField) {
-            return null;
-        }
-        $Table = TableRegistry::get($tableName);
-        try {
-            $related = $Table->get($relatedField);
-            return $related->toArray();
-        } catch (RecordNotFoundException $e) {
-            return null;
-        }
-        return null;
-    }
-
-//    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    //    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
 //    {
 //        $requestData = json_decode($settings['process']['params']);
 //        $selectedStatus = $requestData->status;
@@ -199,75 +411,5 @@ class StaffLicensesTable extends AppTable  {
 //        $this->log($query->sql());
 //    }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
-    {
-        $newArray = [];
-
-        $newArray[] = [
-            'key' => 'StaffLicenses.status_id',
-            'field' => 'status_id',
-            'type' => 'integer',
-            'label' => '',
-        ];
-
-        $newArray[] = [
-            'key' => 'Users.openemis_no',
-            'field' => 'openemis_no',
-            'type' => 'string',
-            'label' => '',
-        ];
-
-        $newArray[] = [
-            'key' => 'StaffLicenses.security_user_id',
-            'field' => 'security_user_id',
-            'type' => 'integer',
-            'label' => 'Licencee',
-        ];
-
-        $newArray[] = [
-            'key' => 'Classifications.name',
-            'field' => 'classification',
-            'type' => 'string',
-            'label' => __('Classification'),
-        ];
-
-        $newArray[] = [
-            'key' => 'StaffLicenses.license_type_id',
-            'field' => 'license_type_id',
-            'type' => 'integer',
-            'label' => '',
-        ];
-
-        $newFields = array_merge($newArray, $fields->getArrayCopy());
-        $fields->exchangeArray($newFields);
-    }
-
-    public function onExcelGetClassification(Event $event, Entity $entity)
-    {
-        if ($entity->has('classifications')) {
-            $classifications = [];
-            foreach ($entity->classifications as $obj) {
-                $classifications[] = $obj->name;
-            }
-            return implode(', ', $classifications);
-        } else {
-            return '';
-        }
-    }
-
-    /**
-     * @param $query
-     */
-    private function addInstitutionJoinToQuery($query)
-    {
-        $InstitutionStaffTable = TableRegistry::get('Institution.InstitutionStaff');
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-        $query
-            ->leftJoin([$InstitutionStaffTable->getAlias() => $InstitutionStaffTable->getTable()], [
-                $InstitutionStaffTable->aliasField('staff_id') => $this->aliasField('security_user_id')
-            ])->leftJoin([$InstitutionsTable->getAlias() => $InstitutionsTable->getTable()], [
-                $InstitutionsTable->aliasField('id') => $InstitutionStaffTable->aliasField('institution_id')
-            ]);
-    }
 
 }

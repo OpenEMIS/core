@@ -42,7 +42,8 @@ class AuditsTable extends AppTable
                                 'Report.AuditUsers',
                                 'Report.AuditSecuritiesRolesPermissions', // POCOR-499
                                 'Report.AuditSecuritiesGroupUserRoles', // POCOR-499
-                                'Report.AuditInstitutionStudents' // POCOR-9370
+                                'Report.AuditInstitutionStudents', // POCOR-9382
+                                'Report.AuditInstitutionStaff' // POCOR-9383
                             ]);         
                         }
                         return true;
@@ -57,8 +58,8 @@ class AuditsTable extends AppTable
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('user_type', ['type' => 'hidden']);
-        $this->ControllerAction->field('report_start_date', ['type' => 'hidden']);
-        $this->ControllerAction->field('report_end_date', ['type' => 'hidden']);
+        $this->ControllerAction->field('report_start_date', ['type' => 'date']); //POCOR-9383
+        $this->ControllerAction->field('report_end_date', ['type' => 'date']);//POCOR-9383
         $this->ControllerAction->field('sort_by', ['type' => 'hidden']);
         $this->ControllerAction->field('format');
     }
@@ -188,7 +189,7 @@ class AuditsTable extends AppTable
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
             // Start POCOR-499
-            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles', 'Report.AuditUsers', 'Report.AuditLogins','Report.AuditLastLogins', 'Report.AuditInstitutions', 'Report.AuditInstitutionStudents'])) {
+            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles', 'Report.AuditUsers', 'Report.AuditLogins','Report.AuditLastLogins', 'Report.AuditInstitutions', 'AuditInstitutionStaff', 'Report.AuditInstitutionStudents'])) {
                 $attr['type'] = 'date';
             }
             return $attr;
@@ -200,7 +201,7 @@ class AuditsTable extends AppTable
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
             // Start POCOR-499
-            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles','Report.AuditUsers', 'Report.AuditLogins','Report.AuditLastLogins', 'Report.AuditInstitutions','Report.AuditInstitutionStudents'])) {
+            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles','Report.AuditUsers', 'Report.AuditLogins','Report.AuditLastLogins', 'Report.AuditInstitutions','Report.AuditInstitutionStudents', 'Report.AuditInstitutionStaff'])) {
                 $attr['type'] = 'date';
                 $attr['value'] = Time::now();
             }
@@ -229,7 +230,7 @@ class AuditsTable extends AppTable
             case 'academic_period_id':
                 return __('Academic Period');
             case 'report_start_date':
-                return '<span style="color:#CC5C5C; margin-right:3px; margin-left:-9px;">*</span>' . __('Start Date'); //POCOR-9382
+                return '<span style="color:#CC5C5C; margin-right:3px; margin-left:-9px;">*</span>' . __('Start Date'); //POCOR-9383
             case 'report_end_date':
                 return __('End Date');
             case 'sort_by':

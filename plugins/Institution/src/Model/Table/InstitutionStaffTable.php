@@ -287,10 +287,10 @@ class InstitutionStaffTable extends AppTable
             $ClassesTable = TableRegistry::get('Institution.InstitutionClasses');
             $ClassesSecondaryStaffTable = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
             //Start:POCOR-6714
-            $EducationGrades = TableRegistry::get('education_grades');
-            $subStaffTable = TableRegistry::get('institution_subject_staff');
-            $InsSubTable = TableRegistry::get('institution_subjects');
-            $AcademicTable = TableRegistry::get('academic_periods');
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $subStaffTable = TableRegistry::get('Institution.InstitutionSubjectStaff');
+            $InsSubTable = TableRegistry::get('Institution.InstitutionSubjects');
+            $AcademicTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 	     
 	        $AcademicData = $AcademicTable->find()->where(['id'=> $entity->academic_period_id])->first();
             $startDateYear = $AcademicData->start_year;

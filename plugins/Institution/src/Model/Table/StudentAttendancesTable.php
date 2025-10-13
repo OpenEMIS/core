@@ -21,6 +21,7 @@ use Cake\Log\Log;
 use Cake\Datasource\ConnectionManager; //POCOR-6658
 use Cake\ORM\Locator\TableLocator;
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\Table; // POCOR-9406
 
 class StudentAttendancesTable extends ControllerActionTable
 {
@@ -290,7 +291,7 @@ class StudentAttendancesTable extends ControllerActionTable
                                     'date' => $entity->date,
                                     'period' => $entity->period,
                                     'comment' => $entity->comment,
-                                    'absence_type_id' => $entity->absence_type_id,
+                                    'absence_type_id' => $entity->absence_type_id ?? 0,
                                     'student_absence_reason_id' => $entity->student_absence_reason_id,
                                     'absence_type_code' => $entity->absence_type->code
                                 ];
@@ -310,7 +311,7 @@ class StudentAttendancesTable extends ControllerActionTable
                                         }
                                     }
                                     $AbsenceTypes = TableRegistry::get('Institution.AbsenceTypes');
-                                    if (isset($entity->absence_type_id)) {
+                                    if (isset($entity->absence_type_id) && $entity->absence_type_id != 0) {
                                         $absenceType = $AbsenceTypes
                                             ->find()
                                             ->select([
@@ -354,7 +355,7 @@ class StudentAttendancesTable extends ControllerActionTable
                                 if (!empty($isMarkedRecords)) {
                                     $data = [
                                         'date' => $findDay,
-                                        'period' => $attendancePeriodId,
+                                        'period' => (int) $attendancePeriodId,
                                         'comment' => null,
                                         'absence_type_id' => $PRESENT,
                                         'student_absence_reason_id' => null,
@@ -363,9 +364,9 @@ class StudentAttendancesTable extends ControllerActionTable
                                 } else {
                                     $data = [
                                         'date' => $findDay,
-                                        'period' => $attendancePeriodId,
+                                        'period' => (int) $attendancePeriodId,
                                         'comment' => null,
-                                        'absence_type_id' => null,
+                                        'absence_type_id' => 0,
                                         'student_absence_reason_id' => null,
                                         'absence_type_code' => null
                                     ];
@@ -606,7 +607,7 @@ class StudentAttendancesTable extends ControllerActionTable
 
                                         //POCOR-7929 start
                                         foreach ($periodList as $Key => $PeriodData) {
-                                            $id = (int)$PeriodData['id'];
+                                            $id = (int) $PeriodData['id'];
                                             if ($value[$id] == "NoScheduledClicked") {
                                                 $value[$id] = "No Scheduled Classes";
                                             }
@@ -1156,57 +1157,247 @@ class StudentAttendancesTable extends ControllerActionTable
         //echo "<pre>";print_r($data);die;
     }
 
-    /*
-     * PCOOR-6658 STARTS
-     * Create function for save attendance for multigrade class also.
-     * author : Anubhav Jain <anubhav.jain@mail.vinove.com>
+    // POCOR-9406
+    /**
+     * Finder: ensures a marker row exists and resets no_scheduled_class for the slice,
+     * then returns the original query filtered by class/grade/period.
      */
-    public function findClassStudentsWithAbsenceSave(Query $query, array $options)
+    public function findEditSavePeriodMarked(Query $query, array $options)
     {
-        $institutionId = $options['institution_id'];
-        $institutionClassId = $options['institution_class_id'];
-        $educationGradeId = $options['education_grade_id'];
-        $academicPeriodId = $options['academic_period_id'];
-        $attendancePeriodId = $options['attendance_period_id'];
-        $day = $options['day_id'];
-        $subjectId = $options['subject_id'];
+        $p       = $this->normalizeAttendanceParams($options);
+        $MarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
 
-        $studentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
-        //POCOR-8383 start
-        $check  = $studentAttendanceMarkedRecords->updateAll(
-            ['no_scheduled_class' => 0], // Fields to update
-            [   // Conditions for which records to update
-                'institution_class_id' => $institutionClassId,
-                'education_grade_id' => $educationGradeId,
-                'institution_id' => $institutionId,
-                'academic_period_id' => $academicPeriodId,
-                'date' => $day,
-                'period' => $attendancePeriodId
-            ]
-        ); //POCOR-8383 end
-        $AttendanceMarkedData = $studentAttendanceMarkedRecords->find()
-            ->where([
-                $studentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
-                $studentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
-                $studentAttendanceMarkedRecords->aliasField('institution_class_id') => $institutionClassId,
-                $studentAttendanceMarkedRecords->aliasField('education_grade_id') => $educationGradeId,
-                $studentAttendanceMarkedRecords->aliasField('period') => $attendancePeriodId,
-                $studentAttendanceMarkedRecords->aliasField('date') => $day,
-                $studentAttendanceMarkedRecords->aliasField('subject_id') => $subjectId
+        // 1) Reset only rows that actually need it (to avoid wide locks)
+        $searchConds = $this->markedDayConditions($p, /*includeSubject*/ true);
+        $this->resetNoScheduledClass($MarkedRecords, $searchConds);
+
+        // 2) Ensure the specific marker row exists (fires AFTER INSERT trigger only once)
+        $keyConds = $this->markedDayConditions($p, /*includeSubject*/ true);
+        if (!$MarkedRecords->find()->where($keyConds)->limit(1)->count()) {
+            $this->insertMarkedDayIfAbsent($p);
+        }
+
+        // 3) Keep finder contract: filter the caller's $query and return it
+        return $this->applyReturnFilter($query, $p);
+    }
+
+    /* =========================
+     * Helpers (single purpose)
+     * ========================= */
+
+    /**
+     * Normalize and type-cast inputs. Subjectless => 0 (per schema default/PK).
+     */
+    private function normalizeAttendanceParams(array $options): array
+    {
+        $subjectRaw = $options['subject_id'] ?? null;
+        $subjectId  = ($subjectRaw === null || $subjectRaw === '' || $subjectRaw === '0' || $subjectRaw === 0 || $subjectRaw === 'undefined')
+            ? 0 : (int)$subjectRaw;
+
+        $p = [
+            'institution_id'       => (int)$options['institution_id'],
+            'institution_class_id' => (int)$options['institution_class_id'],
+            'education_grade_id'   => (int)$options['education_grade_id'],
+            'academic_period_id'   => (int)$options['academic_period_id'],
+            'period'               => (int)$options['attendance_period_id'],
+            'date'                 => (string)$options['day_id'], // expect Y-m-d
+            'subject_id'           => $subjectId,
+        ];
+
+        // Optional: one-line debug you can toggle on/off
+        // Log::debug('EditSavePeriodMarked params: ' . json_encode($p, JSON_UNESCAPED_SLASHES));
+
+        return $p;
+    }
+
+    /**
+     * Build where conditions for the marker slice.
+     * If $includeSubject = false, we DO NOT include subject_id (subject-agnostic slice).
+     */
+    private function markedDayConditions(array $p, bool $includeSubject): array
+    {
+        $conds = [
+            'institution_id'       => $p['institution_id'],
+            'academic_period_id'   => $p['academic_period_id'],
+            'institution_class_id' => $p['institution_class_id'],
+            'education_grade_id'   => $p['education_grade_id'],
+            'date'                 => $p['date'],
+            'period'               => $p['period'],
+        ];
+        if ($includeSubject) {
+            $conds['subject_id'] = $p['subject_id']; // 0 for subjectless
+        }
+        return $conds;
+    }
+
+    /**
+     * Narrow, lock-friendly reset: only update rows where no_scheduled_class != 0, in ID chunks.
+     */
+    /**
+     * Same goal, but groups many PKs into a single UPDATE with OR’ed PK predicates.
+     * Good compromise between A (many queries) and a single wide UPDATE (big locks).
+     */
+    private function resetNoScheduledClass(Table $MarkedRecords, array $searchConds): void
+    {
+        $rows = $MarkedRecords->find()
+            ->select([
+                'institution_id', 'academic_period_id', 'institution_class_id',
+                'education_grade_id', 'date', 'period', 'subject_id'
             ])
-            ->count();
-        if ($AttendanceMarkedData > 0) {
-            return $query->find('list')->where(['institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId, 'institution_class_id' => $institutionClassId, 'education_grade_id' => $educationGradeId]); //POCOR-7028
-            // return true;
-        } else {
-            $connection = ConnectionManager::get('default');
-            $dbConfig = $connection->config();
-            $dbname = $dbConfig['database'];
-            $results = $connection->execute("INSERT INTO `student_attendance_marked_records` (`institution_id`, `academic_period_id`, `institution_class_id`, `education_grade_id`, `date`, `period`, `subject_id`, `no_scheduled_class`) VALUES ('$institutionId', '$academicPeriodId', '$institutionClassId', '$educationGradeId', '$day', '$attendancePeriodId', '$subjectId', '0')");
-            return $query->find('list')->where(['institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId, 'institution_class_id' => $institutionClassId, 'education_grade_id' => $educationGradeId]); //POCOR-7051
-            //return true;
+            ->where($searchConds + ['no_scheduled_class !=' => 0])
+            ->enableHydration(false)
+            ->all()
+            ->toList();
+
+        if (empty($rows)) {
+            return;
+        }
+
+        $conn = ConnectionManager::get('default');
+
+        foreach (array_chunk($rows, 100) as $chunk) {
+            // Build OR of full PK matches, plus the != 0 guard
+            $whereParts = [];
+            $params     = [];
+
+            foreach ($chunk as $i => $pk) {
+                $whereParts[] = sprintf(
+                    '(institution_id = :i%d AND academic_period_id = :ap%d AND institution_class_id = :ic%d AND education_grade_id = :eg%d AND `date` = :d%d AND period = :p%d AND subject_id = :s%d)',
+                    $i,$i,$i,$i,$i,$i,$i
+                );
+                $params += [
+                    "i{$i}"  => (int)$pk['institution_id'],
+                    "ap{$i}" => (int)$pk['academic_period_id'],
+                    "ic{$i}" => (int)$pk['institution_class_id'],
+                    "eg{$i}" => (int)$pk['education_grade_id'],
+                    "d{$i}"  => (string)$pk['date'],
+                    "p{$i}"  => (int)$pk['period'],
+                    "s{$i}"  => (int)$pk['subject_id'],
+                ];
+            }
+
+            $sql = 'UPDATE student_attendance_marked_records
+                SET no_scheduled_class = 0
+                WHERE ('.implode(' OR ', $whereParts).')
+                  AND no_scheduled_class != 0';
+
+            $this->retryOnLock(function () use ($conn, $sql, $params) {
+                $conn->execute($sql, $params);
+            });
         }
     }
+
+    /**
+     * Ensure a single marker row exists via INSERT IGNORE (idempotent; avoids duplicate trigger runs).
+     */
+    private function insertMarkedDayIfAbsent(array $p): void
+    {
+        /** @var Connection $conn */
+        $conn = ConnectionManager::get('default');
+
+        $sql = <<<SQL
+INSERT IGNORE INTO student_attendance_marked_records
+(institution_id, academic_period_id, institution_class_id, education_grade_id, `date`, period, subject_id, no_scheduled_class)
+VALUES (:institution_id, :academic_period_id, :institution_class_id, :education_grade_id, :date, :period, :subject_id, 0)
+SQL;
+
+        $this->retryOnLock(function () use ($conn, $sql, $p) {
+            $conn->execute($sql, [
+                'institution_id'       => $p['institution_id'],
+                'academic_period_id'   => $p['academic_period_id'],
+                'institution_class_id' => $p['institution_class_id'],
+                'education_grade_id'   => $p['education_grade_id'],
+                'date'                 => $p['date'],
+                'period'               => $p['period'],
+                'subject_id'           => $p['subject_id'], // 0 allowed by schema/PK
+            ]);
+        });
+    }
+
+    /**
+     * Apply the original finder’s list filter to the caller’s query and return it.
+     */
+    private function applyReturnFilter(Query $query, array $p): Query
+    {
+        return $query->find('list')->where([
+            'institution_id'       => $p['institution_id'],
+            'academic_period_id'   => $p['academic_period_id'],
+            'institution_class_id' => $p['institution_class_id'],
+            'education_grade_id'   => $p['education_grade_id'],
+        ]);
+    }
+
+    /**
+     * Tiny retry wrapper to survive 1205/1213 transient lock issues.
+     */
+    private function retryOnLock(callable $fn, int $retries = 3, int $backoffMicros = 200_000): void
+    {
+        beginning:
+        try {
+            $fn();
+        } catch (\PDOException $e) {
+            $msg = $e->getMessage();
+            if ($retries > 0 && (strpos($msg, '1205') !== false || strpos($msg, '1213') !== false)) {
+                usleep($backoffMicros); // 200ms
+                $retries--;
+                goto beginning;
+            }
+            throw $e;
+        }
+    }
+
+
+/*
+ * PCOOR-6658 STARTS
+ * Create function for save attendance for multigrade class also.
+ * author : Anubhav Jain <anubhav.jain@mail.vinove.com>
+ */
+//    public function findClassStudentsWithAbsenceSave(Query $query, array $options)
+//    {
+//        $institutionId = $options['institution_id'];
+//        $institutionClassId = $options['institution_class_id'];
+//        $educationGradeId = $options['education_grade_id'];
+//        $academicPeriodId = $options['academic_period_id'];
+//        $attendancePeriodId = $options['attendance_period_id'];
+//        $day = $options['day_id'];
+//        $subjectId = $options['subject_id'];
+//
+//        $studentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
+//        //POCOR-8383 start
+//        $check  = $studentAttendanceMarkedRecords->updateAll(
+//            ['no_scheduled_class' => 0], // Fields to update
+//            [   // Conditions for which records to update
+//                'institution_class_id' => $institutionClassId,
+//                'education_grade_id' => $educationGradeId,
+//                'institution_id' => $institutionId,
+//                'academic_period_id' => $academicPeriodId,
+//                'date' => $day,
+//                'period' => $attendancePeriodId
+//            ]
+//        ); //POCOR-8383 end
+//        $AttendanceMarkedData = $studentAttendanceMarkedRecords->find()
+//            ->where([
+//                $studentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
+//                $studentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
+//                $studentAttendanceMarkedRecords->aliasField('institution_class_id') => $institutionClassId,
+//                $studentAttendanceMarkedRecords->aliasField('education_grade_id') => $educationGradeId,
+//                $studentAttendanceMarkedRecords->aliasField('period') => $attendancePeriodId,
+//                $studentAttendanceMarkedRecords->aliasField('date') => $day,
+//                $studentAttendanceMarkedRecords->aliasField('subject_id') => $subjectId
+//            ])
+//            ->count();
+//        if ($AttendanceMarkedData > 0) {
+//            return $query->find('list')->where(['institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId, 'institution_class_id' => $institutionClassId, 'education_grade_id' => $educationGradeId]); //POCOR-7028
+//            // return true;
+//        } else {
+//            $connection = ConnectionManager::get('default');
+//            $dbConfig = $connection->config();
+//            $dbname = $dbConfig['database'];
+//            $results = $connection->execute("INSERT INTO `student_attendance_marked_records` (`institution_id`, `academic_period_id`, `institution_class_id`, `education_grade_id`, `date`, `period`, `subject_id`, `no_scheduled_class`) VALUES ('$institutionId', '$academicPeriodId', '$institutionClassId', '$educationGradeId', '$day', '$attendancePeriodId', '$subjectId', '0')");
+//            return $query->find('list')->where(['institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId, 'institution_class_id' => $institutionClassId, 'education_grade_id' => $educationGradeId]); //POCOR-7051
+//            //return true;
+//        }
+//    }
 
     /**
      * @param Query $query
