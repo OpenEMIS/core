@@ -30,6 +30,8 @@ use Cake\I18n\Time;
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\FrozenTime;
 use Cake\Datasource\EntityInterface;
+use Cake\Http\Exception\NotFoundException;
+use Cake\Filesystem\File;
 
 //POCOR-5672
 
@@ -10276,6 +10278,46 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureAttachments']);
     }
 
+    /**
+     * POCOR-9407
+     * Download an attached file for an institution custom field value.
+     *
+     * Looks up the file by `institution_id` and ensures both `file` (BLOB)
+     * and `file_name` exist in the record. If found, it streams the file
+     * back to the browser as a downloadable attachment.
+     * @return \Cake\Http\Response The file download response.
+     * @throws \Cake\Http\Exception\NotFoundException If no file or record is found.
+     */
+    public function downloadFile($id = null)
+    {
+        $this->autoRender = false;
+        if (empty($id)) {
+            throw new NotFoundException(__('Invalid file'));
+        }
+
+        // Load your custom field values table
+        $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldValues');
+        $fileRecord = $InstitutionCustomFieldValues->find()
+                        ->where([
+                            'file IS NOT' => null, 
+                            'file_name IS NOT' => null, 
+                            'institution_id' => $this->getInstitutionID(),
+                        ])->first();
+
+        if (empty($fileRecord) || empty($fileRecord->file_name) || empty($fileRecord->file)) {
+            throw new NotFoundException(__('File not found'));
+        }
+
+        $fileName = $fileRecord->file_name;
+        $fileResource = $fileRecord->file;
+        $this->response = $this->response
+            ->withType(mime_content_type($fileResource))
+            ->withHeader('Content-Disposition', 'attachment; filename="' . $fileName . '"')
+            ->withStringBody(stream_get_contents($fileResource));
+
+        return $this->response;
+    }
+    
 }
 
 

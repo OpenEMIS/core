@@ -61,7 +61,7 @@ function InstitutionStudentAttendancesController(
     vm.selectedAcademicPeriod = "";
 
     vm.attendanceByOptions = []; //POCOR-8874
-    vm.selectedAttendanceBy = ""; //POCOR-8874
+    vm.selectedAttendanceBy = "-1"; //POCOR-9422
     vm.isMarkableAttendance = false; //POCOR-8874
 
     vm.weekListOptions = [];
@@ -333,18 +333,19 @@ function InstitutionStudentAttendancesController(
 
 
         vm.attendanceByOptions = [
+            { id: "-1", name: "Select Attendance by" }, //POCOR-9422
             { id: "subject", name: "Subject" },
             { id: "period", name: "Period" },
         ];
         // console.log("already selected",vm.selectedAttendanceBy);
         if (vm.isMarkableAttendance == true) {
             if (vm.isMarkableSubjectAttendance == true) {
-                vm.selectedAttendanceBy = vm.attendanceByOptions[0].id; // Default selection
-            } else {
                 vm.selectedAttendanceBy = vm.attendanceByOptions[1].id; // Default selection
+            } else {
+                vm.selectedAttendanceBy = vm.attendanceByOptions[2].id; // Default selection
             }
         } else {
-            vm.selectedAttendanceBy = vm.attendanceByOptions[1].id; // Default selection
+            vm.selectedAttendanceBy = vm.attendanceByOptions[2].id; // Default selection
         }
         // console.log("selected attendance by",vm.selectedAttendanceBy);
 
