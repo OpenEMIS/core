@@ -1995,4 +1995,9 @@ class InstitutionClassStudentsTable extends AppTable
         return $locator->get($tableFullAlias);
     }
 
+    public function findStudentStatusList() {
+        $statusList = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+        return $statusList->find('list', ['keyField' => 'code', 'valueField' => 'id'])->toArray();
+    }
+
 }

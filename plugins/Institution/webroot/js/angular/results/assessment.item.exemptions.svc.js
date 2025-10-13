@@ -13,10 +13,15 @@ function AssessmentItemExemptionsSvc($http, $q, $filter, KdDataSvc) {
         // getUnexemptStudents: getUnexemptStudents,
         translate: translate,
         saveStudents: saveStudents,
+        getStudentStatus: getStudentStatus,     // add this
+        setStudentStatus: setStudentStatus
+
+
     };
 
     var models = {
         InstitutionClasses: 'Institution.InstitutionClasses',
+        StudentStatuses: 'Student.StudentStatuses',
         InstitutionClassStudents: 'Institution.InstitutionClassStudents',
         AssessmentItemStudentExemptions: 'Institution.AssessmentItemStudentExemptions'
     };
@@ -87,9 +92,34 @@ function AssessmentItemExemptionsSvc($http, $q, $filter, KdDataSvc) {
             .ajax({success: success, defer:true});
     }
 
+    
 
+    function getStudentStatus(options) {
+        if (Array.isArray(options.assessment_period_id)) {
+            options.assessment_period_combo = options.assessment_period_id.join('_');
+            options.assessment_period_id = options.assessment_period_id[0];
+        }
+        var success = function(response, deferred) {
+            if (response.data && response.data.data) {
+                deferred.resolve(response.data.data);
+            } else {
+                deferred.resolve([]);
+            }
+        };
+        return InstitutionClassStudents.find('StudentStatusList', options)
+            .ajax({ success: success, defer: true });
+    }
+
+    function setStudentStatus(options) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+        return StudentStatuses.find('studentStatusSave', options)
+            .ajax({ success: success, defer: true });
+    }
+
+    
     function saveStudents(data) {
-
         // AssessmentItemStudentExemptions.save(data);
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Institution/Institutions/saveAssessmentItemExemptions';
