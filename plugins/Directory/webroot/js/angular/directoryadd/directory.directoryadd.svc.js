@@ -56,6 +56,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         validateUserDetails: validateUserDetails,
         validateConfirmDetails: validateConfirmDetails,
         checkUserAlreadyExistByIdentity: checkUserAlreadyExistByIdentity,
+        checkUserAlreadyExistByIdentityWithoutWarning:checkUserAlreadyExistByIdentityWithoutWarning,
         checkUserExistByIdentity: checkUserExistByIdentity,
         // checkUserDetailValidationBlocksHasError,
         // end user details function
@@ -474,7 +475,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         scope.error = {};
         // POCOR-9427 start
         const userTypeId = scope.selectedUserData.user_type_id;
-        console.log(scope);
+        // console.log(scope);
         const configKey = USER_TYPE_KEYS[userTypeId];
         const config = scope.config[configKey] || {};
         // console.log(scope.selectedUserData)
@@ -910,7 +911,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             });
     }
 
-    function validateConfirmDetails(scope) {
+    async function validateConfirmDetails(scope) {
         // POCOR-9427 start
         scope.error = {};
         let isCustomFieldNotValidated = false;
@@ -926,6 +927,15 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                 scope.error[field] = message;
             }
         };
+        const setError = (field, message) => {
+                scope.error[field] = message;
+        };
+        const user_exists = await checkUserAlreadyExistByIdentity(scope);
+        if(!scope.isInternalSearchSelected && user_exists){
+                setError('identity_type_id', 'User already exist with this nationality');
+                setError('identity_number', 'User already exist with this identity');
+                setError('nationality_id', 'User already exist with this identity type');
+        }
 
         // 🧾 Username / Password check
         if (!scope.isInternalSearchSelected) {
@@ -992,6 +1002,17 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             scope.message = '';
             scope.isIdentityUserExist = false;
         }
+        return result.data.user_exist === 1;
+    }
+    async function checkUserAlreadyExistByIdentityWithoutWarning(scope) {
+        const userData = scope.selectedUserData;
+        // console.log(scope);
+        const result = await checkUserExistByIdentity({
+            'identity_type_id': userData.identity_type_id,
+            'identity_number': userData.identity_number,
+            'nationality_id': userData.nationality_id,
+        });
+
         return result.data.user_exist === 1;
     }
 
