@@ -326,6 +326,7 @@ class ImportInstitutionSurveysTable extends AppTable {
             $questions = $survey->custom_fields;
             // This is to sort the questions by the order
             $surveyFormQuestions = [];
+            // echo "<pre>";print_r($questions);die();
             foreach ($questions as $question) {
                 $order = $question['_joinData']['order'];
                 $surveyFormQuestions[$order] = $question;
@@ -353,7 +354,7 @@ class ImportInstitutionSurveysTable extends AppTable {
                     }
                 }
 
-                $colCount = 0;
+                $colCount = 1;
                 $originalRow = new ArrayObject();
                 $rowInvalidCodeCols = [];
                 $tempRow = [];
@@ -363,14 +364,17 @@ class ImportInstitutionSurveysTable extends AppTable {
                 // die;
                 foreach ($questions as $k => $question) {//POCOR-9349 add $k key
                     $fieldType = $question->field_type;
-                    // if($colCount == 8){
-                    //     echo "<pre>"; print_r($question->name);
-                    //     echo "hi";
-                    //     die;
-                    // }
-                    $k++;//POCOR-9349
-                    $cellValue = $this->getCellValue($sheet, $k, $row);
+                    // Debug: Log the question being processed
+                    if ($row == 3) { // Only debug for first data row
+                        error_log("Processing question " . ($k + 1) . "/" . count($questions) . ": " . $question->name . " (Field Type: " . $fieldType . ", Column: " . $colCount . ")");
+                    }
+                    $cellValue = $this->getCellValue($sheet, $colCount, $row);
                     $columnCode = $question->code;
+                    
+                    // Debug: Log the cell value
+                    if ($row == 3) { // Only debug for first data row
+                        error_log("Cell value for " . $question->name . ": '" . $cellValue . "'");
+                    }
                     
                     if (empty($cellValue) && $question->is_mandatory) {
                         // echo "<pre>"; print_r($question);
@@ -381,7 +385,7 @@ class ImportInstitutionSurveysTable extends AppTable {
                     
                     switch ($fieldType) {
                         case 'DROPDOWN':
-                            $originalRow[$colCount] = $cellValue;
+                            $originalRow[$colCount - 1] = $cellValue;
                             $questionOptions = $question->custom_field_options;
                             $questionOptions = new Collection($questionOptions);
                             $filtered = $questionOptions->filter(function ($record, $key, $iterator) use ($cellValue) {
@@ -401,7 +405,7 @@ class ImportInstitutionSurveysTable extends AppTable {
                             $colCount++;
                             break;
                         case 'CHECKBOX':
-                            $originalRow[$colCount] = $cellValue;
+                            $originalRow[$colCount - 1] = $cellValue;
                             $questionOptions = $question->custom_field_options;
                             $questionOptions = new Collection($questionOptions);
                             $selections = explode(',', $cellValue);
@@ -433,7 +437,7 @@ class ImportInstitutionSurveysTable extends AppTable {
                             break;
 
                         case 'NUMBER':
-                            $originalRow[$colCount] = $cellValue;
+                            $originalRow[$colCount - 1] = $cellValue;
                             if (!empty($cellValue)) {
                                 if (!is_numeric($cellValue)) {
                                     $rowFailed = true;
@@ -444,7 +448,7 @@ class ImportInstitutionSurveysTable extends AppTable {
                             break;
 
                         case 'DATE':
-                            $originalRow[$colCount] = $cellValue;
+                            $originalRow[$colCount - 1] = $cellValue;
                             if (is_numeric($cellValue)) {
                                 //$cellValue = date('Y-m-d', \PHPExcel_Shared_Date::ExcelToPHP($cellValue));
                                 $cellValue = date('Y-m-d', ExcelDate::excelToTimestamp($cellValue));
@@ -453,9 +457,9 @@ class ImportInstitutionSurveysTable extends AppTable {
                                 // so it is best to convert the date here instead of adjusting individual model's date validation format
                                 try {
                                     $cellValue = new Date($cellValue);
-                                    $originalRow[$colCount] = $cellValue->format($systemDateFormat);
+                                    $originalRow[$colCount - 1] = $cellValue->format($systemDateFormat);
                                 } catch (Exception $e) {
-                                    $originalRow[$colCount] = $cellValue;
+                                    $originalRow[$colCount - 1] = $cellValue;
                                 }
                             } else {
                                 $rowFailed = true;
@@ -465,7 +469,7 @@ class ImportInstitutionSurveysTable extends AppTable {
                             break;
 
                         case 'TIME':
-                            $originalRow[$colCount] = $cellValue;
+                            $originalRow[$colCount - 1] = $cellValue;
                             if (is_numeric($cellValue)) {
                                 //$cellValue = date('Y-m-d H:i:s', \PHPExcel_Shared_Date::ExcelToPHP($cellValue));
                                 $cellValue = date('Y-m-d H:i:s', ExcelDate::excelToTimestamp($cellValue));
@@ -474,9 +478,9 @@ class ImportInstitutionSurveysTable extends AppTable {
                                 // so it is best to convert the date here instead of adjusting individual model's date validation format
                                 try {
                                     $cellValue = new Time($cellValue);
-                                    $originalRow[$colCount] = $cellValue->format($systemTimeFormat);
+                                    $originalRow[$colCount - 1] = $cellValue->format($systemTimeFormat);
                                 } catch (Exception $e) {
-                                    $originalRow[$colCount] = $cellValue;
+                                    $originalRow[$colCount - 1] = $cellValue;
                                 }
                             } else {
                                 $rowFailed = true;
@@ -503,14 +507,14 @@ class ImportInstitutionSurveysTable extends AppTable {
                                 for($i = 1; $i < sizeof($columns); $i++) {
                                     $c = $columns[$i];
                                     foreach ($rows as $r) {
-                                        $originalRow[$colCount] = $this->getCellValue($sheet, $colCount, $row);
-                                        if (!empty($originalRow[$colCount])) {
+                                        $originalRow[$colCount - 1] = $this->getCellValue($sheet, $colCount, $row);
+                                        if (!empty($originalRow[$colCount - 1])) {
                                             $obj = [
                                                 'institution_survey_id' => $this->institutionSurvey->id,
                                                 'survey_question_id' => $question->id,
                                                 'survey_table_row_id' => $r->id,
                                                 'survey_table_column_id' => $c->id,
-                                                'text_value' => $originalRow[$colCount++]
+                                                'text_value' => $originalRow[$colCount - 1]
                                             ];
                                             $entityItem = $this->InstitutionSurveyTableCells->newEmptyEntity();
                                             $this->InstitutionSurveyTableCells->patchEntity($entityItem, $obj);
@@ -522,14 +526,14 @@ class ImportInstitutionSurveysTable extends AppTable {
                                                     $rowInvalidCodeCols[$question->name] = __('The answer for this question cannot be empty');
                                                 }
                                             }
-                                            $colCount++;
                                         }
+                                        $colCount++;
                                     }
                                 }
                             }
                             break;
                         case 'COORDINATE'://POCOR-9349 starts Add case for COORDINATE
-                            $originalRow[$colCount] = $cellValue;
+                            $originalRow[$colCount - 1] = $cellValue;
                             if (!empty($cellValue)) {
                                 // Try to decode JSON
                                 $decoded = json_decode($cellValue, true);
@@ -565,7 +569,7 @@ class ImportInstitutionSurveysTable extends AppTable {
                             $colCount++;
                             break; //POCOR-9349 ends   
                         default:
-                            $originalRow[$colCount] = $cellValue;
+                            $originalRow[$colCount - 1] = $cellValue;
                             $colCount++;
                             break;
                     }
@@ -578,7 +582,17 @@ class ImportInstitutionSurveysTable extends AppTable {
                         $tableEntity = $this->InstitutionSurveyAnswers->newEmptyEntity();
                         $this->InstitutionSurveyAnswers->patchEntity($tableEntity, $obj);
                         $tempRow[$columnCode] = $tableEntity;
+                        
+                        // Debug: Log the saving process
+                        if ($row == 3) { // Only debug for first data row
+                            error_log("Saving answer for " . $question->name . ": " . json_encode($obj));
+                        }
                     }
+                }
+                // Debug: Log the final state
+                if ($row == 3) { // Only debug for first data row
+                    error_log("Final colCount: " . $colCount . ", Total questions: " . count($questions));
+                    error_log("TempRow count: " . count($tempRow));
                 }
                 // echo "<pre>"; print_r($originalRow);
                 // die;
@@ -590,7 +604,11 @@ class ImportInstitutionSurveysTable extends AppTable {
 
                     $this->InstitutionSurveyAnswers->deleteAll(['institution_survey_id' => $this->institutionSurvey->id]);
                     foreach ($tempRow as $entity) {
-                        $this->InstitutionSurveyAnswers->save($entity);
+                        $result = $this->InstitutionSurveyAnswers->save($entity);
+                        // Debug: Log the save result
+                        if ($row == 3) { // Only debug for first data row
+                            error_log("Saved entity: " . json_encode($entity->toArray()) . " - Result: " . ($result ? 'SUCCESS' : 'FAILED'));
+                        }
                     }
                     $this->InstitutionSurveyTableCells->deleteAll(['institution_survey_id' => $this->institutionSurvey->id]);
                     foreach ($tempTableRow as $entity) {
