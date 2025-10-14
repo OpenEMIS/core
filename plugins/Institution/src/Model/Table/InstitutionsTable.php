@@ -355,6 +355,7 @@ class InstitutionsTable extends ControllerActionTable
                 // 'message' => 'Code has to be unique'
             ])
             ->allowEmpty('email')
+            ->notEmpty('institution_locality_id') //POCOR-9407
             ->add('email', [
                 'ruleValidEmail' => [
                     'rule' => 'checkEmailFormat',
@@ -1360,7 +1361,7 @@ class InstitutionsTable extends ControllerActionTable
 
             // Webhook institution update --start
             if ($this->webhookAction == 'edit') {
-                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.WebhookEvents');
+                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
                 if ($this->Auth->user()) {
                     $Webhooks->triggerShell('institutions_update', ['username' => ''], $body);
                 }
@@ -1926,6 +1927,7 @@ class InstitutionsTable extends ControllerActionTable
 
         $attr['options'] = $providerOptions;
         $attr['empty'] = true;
+        $attr['onChangeReload'] = true;
         return $attr;
     }
 
@@ -2735,4 +2737,10 @@ class InstitutionsTable extends ControllerActionTable
         }
     }
     //POCOR-7971 ::end
+
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        //echo "<pre>"; print_r($query->toArray); die;
+      //  return $query;
+    }
 }
