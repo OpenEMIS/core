@@ -86,10 +86,38 @@ class AccountsTable extends AppTable {
         $queryParams = $this->request->getParam('pass')[1];
         $url = ['plugin' => 'Security', 'controller' => 'Securities',
                  'action' => 'Accounts',0 => 'view',1 => $this->request->getParam('pass')[1]];
-        return $this->controller->redirect($url);
-
-        
-            
+        return $this->controller->redirect($url);            
         
     }
+
+    public function beforeAction(Event $event) {
+    if ($this->action == 'view') {
+        $this->fields['username']['visible'] = true;
+        $this->fields['last_login']['visible'] = true;
+        $this->fields['new_password']['visible'] = true; 
+        $this->fields['roles']['visible'] = true;
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true) {
+        if ($this->action == 'view') {
+            switch ($field) {
+                case 'new_password':
+                    return __('Password');
+            }
+        }
+        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity) {
+        $this->setupFields($entity);
+    }
+
+    public function setupFields(Entity $entity) {
+        if ($this->action == 'view') {
+            $fieldOrder = ['username', 'last_login', 'new_password', 'roles'];
+            $this->ControllerAction->setFieldOrder($fieldOrder);
+        }
+    }
+
 }

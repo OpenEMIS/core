@@ -284,6 +284,8 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
     private function addInstitutionStudentAbsenceDayRecord($entity, $startDate, $endDate)
     {
+        $startDate = $startDate->setTime(0,0,0); // POCOR-9392
+        $endDate   = $endDate->setTime(0,0,0); // POCOR-9392
         $entityStart = clone $startDate;
         $entityStart->subDay(1);
         $entityEnd = clone $endDate;
@@ -351,22 +353,38 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 $i = 0;
                 $s = clone $startDate;
                 $daysAbsent = 0;
-                do {
-                    if (!in_array($s->format('l'), $days)) {
-                        $daysAbsent++;
-                    }
-                    $s->addDay(1);
-                    if ($i++ == 7) {
-                        break;
-                    }
-                } while ($s->lte($endDate));
+                // POCOR-9392 start
+// safety: if inputs are reversed or null, bail early
+                if (!$startDate || !$endDate || $startDate->gt($endDate)) {
+                    $daysAbsent = 0;
+                } else {
+                    $s = clone $startDate;
+                    $end = clone $endDate;
+
+                    // optional: normalize to midnight to avoid time-of-day off-by-one
+                    // $s = $s->setTime(0,0,0);
+                    // $end = $end->setTime(0,0,0);
+
+                    // optional: hard cap based on range length to prevent accidental infinite loops
+                    $maxSteps = $s->diffInDays($end) + 2; // inclusive range + small buffer
+                    $steps = 0;
+
+                    do {
+                        if (!in_array($s->format('l'), $days, true)) {
+                            $daysAbsent++;
+                        }
+                        $s = $s->addDay(1);   // ← REASSIGN for immutable dates
+                        if (++$steps > $maxSteps) { break; } // safety fuse
+                    } while ($s->lte($end));
+                }
+                // POCOR-9392 end
                 $dayEntity = $InstitutionStudentAbsenceDays->newEntity([
-                    'student_id' => $entity->student_id,
-                    'institution_id' => $entity->institution_id,
+                    'student_id'      => $entity->student_id,
+                    'institution_id'  => $entity->institution_id,
                     'absence_type_id' => $entity->absence_type_id,
-                    'absent_days' => $daysAbsent,
-                    'start_date' => $startDate,
-                    'end_date' => $endDate
+                    'absent_days'     => $daysAbsent,
+                    'start_date'      => $startDate,
+                    'end_date'        => $endDate
                 ]);
 
                 $dayEntity = $InstitutionStudentAbsenceDays->save($dayEntity);
@@ -377,7 +395,9 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 $i = 0;
                 $recordEntity = $consecutiveRecords->first();
                 $recordStartDate = $recordEntity->start_date;
+                $recordStartDate   = $recordStartDate->setTime(0,0,0); // POCOR-9392
                 $recordEndDate = $recordEntity->end_date;
+                $recordEndDate   = $recordEndDate->setTime(0,0,0); // POCOR-9392
 
                 if ($startDate->lt($recordStartDate)) {
                     $recordStartDate = $startDate;
@@ -408,7 +428,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 $InstitutionStudentAbsenceDays->updateAll(['absence_type_id' => $entity->absence_type_id], ['student_id' => $entity->student_id, 'institution_id'=>$entity->institution_id, 'start_date'=>$startDate, 'end_date'=>$endDate]);
 
                 //POCOR-7035[END]
-                $this->updateAll(['institution_student_absence_day_id' => $dayEntity->id], ['id' => $entity->id]);
+                $this->updateAll(['institution_student_absence_day_id' => $recordEntity->id], ['id' => $entity->id]);
                 break;
             // When there is two records found, it means this record happen to fall in between the two record
             case 2:
@@ -442,11 +462,15 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 //     'end_date' => $recordEndDate
                 // ]);
                 // $dayEntity = $InstitutionStudentAbsenceDays->save($dayEntity);
-                $InstitutionStudentAbsenceDays->updateAll(['absence_type_id' => $entity->absence_type_id], ['student_id' => $entity->student_id, 'institution_id'=>$entity->institution_id, 'start_date'=>$startDate, 'end_date'=>$endDate]);
+                $InstitutionStudentAbsenceDays->updateAll(['absence_type_id' => $entity->absence_type_id],
+                    ['student_id' => $entity->student_id,
+                        'institution_id'=>$entity->institution_id,
+                        'start_date'=>$startDate,
+                        'end_date'=>$endDate]);
 
                 //POCOR-7035[END]
-                $this->updateAll(['institution_student_absence_day_id' => $dayEntity->id], ['institution_student_absence_day_id IN ' => $recordsId]);
-                $this->updateAll(['institution_student_absence_day_id' => $dayEntity->id], ['id' => $entity->id]);
+//                $this->updateAll(['institution_student_absence_day_id' => $dayEntity->id], ['institution_student_absence_day_id IN ' => $recordsId]); // POCOR-9392 no day entity
+//                $this->updateAll(['institution_student_absence_day_id' => $dayEntity->id], ['id' => $entity->id]); // POCOR-9392 no day entity
                 break;
         }
     }
@@ -1228,13 +1252,15 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
     {
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $currentAcademicPeriodId = $AcademicPeriods->getCurrent();
-        $currentPeriodStartDate = $AcademicPeriods->get($currentAcademicPeriodId)->start_date;
-        $currentPeriodEndDate = $AcademicPeriods->get($currentAcademicPeriodId)->end_date;
+        $currentPeriod = $AcademicPeriods->get($currentAcademicPeriodId);
 
-        // will do the comparison with threshold when retrieving the absence data
-        $unexcusedAbsenceResults = $this->find()
+        // Fetch raw data grouped by absence record, including the `date`
+        $rawAbsences = $this->find()
             ->select([
-                'total_days' => $this->find()->func()->count('*'),
+                'institution_id',
+                'student_id',
+                'absence_type_id',
+                'date',
                 'Institutions.id',
                 'Institutions.name',
                 'Institutions.code',
@@ -1242,7 +1268,6 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 'Institutions.postal_code',
                 'Institutions.contact_person',
                 'Institutions.telephone',
-               // 'Institutions.fax',
                 'Institutions.email',
                 'Institutions.website',
                 'Users.id',
@@ -1270,14 +1295,49 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 ]);
             })
             ->where([
-                'date' . ' >='  => $currentPeriodStartDate->format('Y-m-d'),
-                'date' . ' <='  => $currentPeriodEndDate->format('Y-m-d'),
+                'date >=' => $currentPeriod->start_date->format('Y-m-d'),
+                'date <=' => $currentPeriod->end_date->format('Y-m-d'),
             ])
-            ->group(['institution_id', 'student_id', 'absence_type_id'])
-            ->having(['total_days >= ' => $threshold])
-            ->disableHydration() // POCOR-8533
-            ;
+            ->disableHydration()
+            ->toArray();
 
-        return $unexcusedAbsenceResults->toArray();
+        // Group the results in PHP
+        $grouped = [];
+
+        foreach ($rawAbsences as $row) {
+            $key = $row['institution_id'] . '_' . $row['student_id'] . '_' . $row['absence_type_id'];
+
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = [
+                    'institution_id' => $row['institution_id'],
+                    'student_id' => $row['student_id'],
+                    'absence_type_id' => $row['absence_type_id'],
+                    'total_times' => 0,
+                    'dates' => [],
+                    'institution' => $row['Institutions'],
+                    'user' => $row['Users'],
+                    'gender' => $row['Genders']['name'] ?? null,
+                    'nationality' => $row['MainNationalities']['name'] ?? null,
+                    'identity_type' => $row['MainIdentityTypes']['name'] ?? null,
+                ];
+            }
+
+            $grouped[$key]['total_times'] += 1;
+            $grouped[$key]['dates'][$row['date']] = true;
+        }
+
+        // Final result: count unique days
+        $finalResults = [];
+
+        foreach ($grouped as $item) {
+            $item['total_days'] = count($item['dates']);
+            unset($item['dates']); // clean up
+
+            if ($item['total_times'] >= $threshold) {
+                $finalResults[] = $item;
+            }
+        }
+
+        return $finalResults;
     }
 }

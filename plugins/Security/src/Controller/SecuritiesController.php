@@ -155,26 +155,65 @@ class SecuritiesController extends AppController
         return $this->redirect(['action' => 'Users']);
     }
 
+    /**
+     * POCOR-9370
+     * Generate the tab elements for the user view.
+     *
+     * Depending on the query parameter "super", this method dynamically builds
+     * the tab navigation. If "super" equals 1, only the **Account** tab is shown. 
+     * Otherwise, both the **Details** and **Account** tabs are included.
+     * The final set of tabs is filtered through the tab permission check before returning.
+     *
+     * @param array $options Optional parameters (may contain 'id').
+     * @return array Tab elements after permission check.
+     */
     public function getUserTabElements($options = [])
     {
         $plugin = $this->getPlugin();
         $name = $this->getName();
-
-        $id = (isset($options['id']))? $options['id']: $this->request->getSession()->read($name.'.id');
-
-        $tabElements = [
-            $this->name => [
-                'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Users', 'view', $this->ControllerAction->paramsEncode(['id' => $id])],
-                'text' => __('Details')
-            ],
-            'Accounts' => [
-                'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $this->ControllerAction->paramsEncode(['id' => $id])],
+        $id = isset($options['id']) ? $options['id'] : $this->request->getSession()->read($name . '.id');
+       
+        $tabElements = [];
+        $currentUser = $this->Auth->user(); 
+        $Users = TableRegistry::getTableLocator()->get('Security.Users');
+        $checkUser = $Users->find()->where(['id' => $id])->first();
+        if ($checkUser && $checkUser->super_admin === 1) { 
+            $tabElements['Accounts'] = [
+                'url' => [
+                    'plugin' => $plugin,
+                    'controller' => $name,
+                    'action' => 'Accounts',
+                    'view',
+                    $this->ControllerAction->paramsEncode(['id' => $id])
+                ],
                 'text' => __('Account')
-            ]
-        ];
+            ];
+        } else {
+            $tabElements[$name] = [
+                'url' => [
+                    'plugin' => $plugin,
+                    'controller' => $name,
+                    'action' => 'Users',
+                    'view',
+                    $this->ControllerAction->paramsEncode(['id' => $id])
+                ],
+                'text' => __('Details')
+            ];
+            $tabElements['Accounts'] = [
+                'url' => [
+                    'plugin' => $plugin,
+                    'controller' => $name,
+                    'action' => 'Accounts',
+                    'view',
+                    $this->ControllerAction->paramsEncode(['id' => $id])
+                ],
+                'text' => __('Account')
+            ];
+        }
 
         return $this->TabPermission->checkTabPermission($tabElements);
     }
+
 
     public function beforeRender(EventInterface $event)
     {

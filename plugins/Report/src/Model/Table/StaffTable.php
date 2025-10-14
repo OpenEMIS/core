@@ -194,7 +194,7 @@ class StaffTable extends AppTable  {
                 'Report.StaffHealthReports',
                 'Report.Staff','Report.StaffPhoto',
                 'Report.StaffIdentities','Report.StaffContacts',
-                'Report.StaffQualifications','Report.StaffLicenses',
+                'Report.StaffQualifications',
                 'Report.StaffEmploymentStatuses',
                 'Report.StaffTrainingReports','Report.StaffPositions','Report.PositionSummary',
                 'Report.InstitutionStaffDetailed','Report.StaffSubjects', 'Report.StaffRequirements','Report.StaffOutOfSchool'])) {   // POCOR-4827
@@ -315,13 +315,12 @@ class StaffTable extends AppTable  {
 
     public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request) {
         if ($action == 'add') {
+            $Workflow = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
             if (isset($this->request->getData($this->getAlias())['feature'])) {
                 $feature = $this->request->getData($this->getAlias())['feature'];
-
                 if (in_array($feature, ['Report.StaffLicenses'])) {
-                    $licenseStatuses = $this->Workflow->getWorkflowStatuses('Staff.Licenses');
+                    $licenseStatuses = $this->getWorkflowStatuses(); //POCOR-9418
                     $licenseStatuses = ['-1' => __('All Statuses')] + $licenseStatuses;
-
                     $attr['type'] = 'select';
                     $attr['select'] = false;
                     $attr['options'] = $licenseStatuses;
@@ -329,6 +328,50 @@ class StaffTable extends AppTable  {
                 }
             }
         }
+    }
+    
+    //POCOR-9418
+    public function getWorkflowStatuses()
+    {
+        $WorkflowModels = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+        $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        $WorkflowFilters = TableRegistry::getTableLocator()->get('Workflow.WorkflowsFilters');
+        $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        //workflow_model_id for Staff.Licenses
+        $workflowModel = $WorkflowModels->find()
+            ->select(['id'])
+            ->where(['model' => 'Staff.Licenses'])
+            ->first();
+
+        if (!$workflowModel) {
+            return [];
+        }
+        //latest workflow for this model
+        $latestWorkflow = $Workflows->find()
+            ->where(['workflow_model_id' => $workflowModel->id, ])
+            ->order(['id' => 'DESC'])
+            ->first();
+        if (!$latestWorkflow) {
+            return [];
+        }
+        $hasFilters = $WorkflowFilters->exists([
+            'workflow_id' => $latestWorkflow->id,
+            'filter_id !=' => 0
+        ]);
+
+        if (!$hasFilters) {
+            return [];
+        }
+        $steps = $WorkflowSteps->find()
+            ->select(['id', 'name'])
+            ->where(['workflow_id' => $latestWorkflow->id])
+            ->order(['id' => 'ASC'])
+            ->toArray();
+        $statuses = [];
+        foreach ($steps as $step) {
+            $statuses[$step->id] = $step->name;
+        }
+        return $statuses;
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
