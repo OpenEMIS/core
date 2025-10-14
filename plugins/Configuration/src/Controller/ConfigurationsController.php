@@ -178,6 +178,10 @@ class ConfigurationsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalDataSource']);
     }
+    public function ExternalDataServiceWebhook()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalDataWebhook']);
+    }
     // End POCOR-7507
     // Start POCOR-8286
     public function ExternalAlertServiceSMS()

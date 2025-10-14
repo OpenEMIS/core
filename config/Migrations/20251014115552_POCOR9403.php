@@ -5,7 +5,7 @@ use Migrations\AbstractMigration;
 use Cake\Auth\DefaultPasswordHasher;
 use Cake\Utility\Text;
 
-class POCOR4403 extends AbstractMigration
+class POCOR9403 extends AbstractMigration
 {
     public function up()
     {
@@ -26,16 +26,16 @@ class POCOR4403 extends AbstractMigration
      */
     public function backupTables()
     {
-        if(!$this->hasTable('z_4403_config_items')){
+        if(!$this->hasTable('z_9403_config_items')){
             $this->execute('SET FOREIGN_KEY_CHECKS=0;');
-            $this->execute('CREATE TABLE `z_4403_config_items` LIKE `config_items`');
-            $this->execute('INSERT INTO `z_4403_config_items` SELECT * FROM `config_items`');
+            $this->execute('CREATE TABLE `z_9403_config_items` LIKE `config_items`');
+            $this->execute('INSERT INTO `z_9403_config_items` SELECT * FROM `config_items`');
             $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
-        if(!$this->hasTable('z_4403_external_data_source_attributes')){
+        if(!$this->hasTable('z_9403_external_data_source_attributes')){
             $this->execute('SET FOREIGN_KEY_CHECKS=0;');
-            $this->execute('CREATE TABLE `z_4403_external_data_source_attributes` LIKE `external_data_source_attributes`');
-            $this->execute('INSERT INTO `z_4403_external_data_source_attributes` SELECT * FROM `external_data_source_attributes`');
+            $this->execute('CREATE TABLE `z_9403_external_data_source_attributes` LIKE `external_data_source_attributes`');
+            $this->execute('INSERT INTO `z_9403_external_data_source_attributes` SELECT * FROM `external_data_source_attributes`');
             $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
     }
@@ -50,16 +50,16 @@ class POCOR4403 extends AbstractMigration
      */
     public function restoreTable()
     {
-        if ($this->hasTable('z_4403_config_items')) {
+        if ($this->hasTable('z_9403_config_items')) {
             $this->execute('SET FOREIGN_KEY_CHECKS=0;');
             $this->execute('DROP TABLE IF EXISTS `config_items`');
-            $this->execute('RENAME TABLE `z_4403_config_items` TO `config_items`');
+            $this->execute('RENAME TABLE `z_9403_config_items` TO `config_items`');
             $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
-        if ($this->hasTable('z_4403_external_data_source_attributes')) {
+        if ($this->hasTable('z_9403_external_data_source_attributes')) {
             $this->execute('SET FOREIGN_KEY_CHECKS=0;');
             $this->execute('DROP TABLE IF EXISTS `external_data_source_attributes`');
-            $this->execute('RENAME TABLE `z_4403_external_data_source_attributes` TO `external_data_source_attributes`');
+            $this->execute('RENAME TABLE `z_9403_external_data_source_attributes` TO `external_data_source_attributes`');
             $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
     }
@@ -91,10 +91,10 @@ class POCOR4403 extends AbstractMigration
         $table = $this->table('config_items');
         $data = [
             $this->generateConfigData(
-                'External Data Source - Webhook',
-                'external_data_source_webhook',
-                'External Data Source - Webhook',
-                'External Data Source - Webhook'),
+                'External Webhook Exams',
+                'external_data_service_webhook_exams',
+                'External Data Service - Webhook',
+                'External Webhook Exams'),
         ];
         $table->insert($data)->save();
     }
@@ -114,7 +114,7 @@ class POCOR4403 extends AbstractMigration
 
         ];
 
-        $data = array_map(fn($attr) => $this->generateExternalDataSourceAttribute('External Data Source - Webhook', ...$attr), $attributes);
+        $data = array_map(fn($attr) => $this->generateExternalDataSourceAttribute('External Webhook Exams', ...$attr), $attributes);
 
         $table->insert($data)->save();
     }

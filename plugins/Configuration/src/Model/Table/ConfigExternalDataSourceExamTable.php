@@ -178,11 +178,11 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         //POCOR-7509 start
         if ($entity->value == 'OpenEMIS Exams' || $entity->value == 'CXC' || $entity->value == 'PacSIMS') { //POCOR-7533
             $newAttributes = [];
-            // $newAttributes['client_id'] = $attributes['client_id'];  //POCOR-7531 
+            // $newAttributes['client_id'] = $attributes['client_id'];  //POCOR-7531
             $newAttributes['url'] = $attributes['url'];
             $newAttributes['username'] = $attributes['username']; //POCOR-7531
             //$newAttributes['password'] = str_repeat('*',strlen($this->decrypt($attributes['password'],Security::salt())));//POCOR-7531
-            // $newAttributes['public_key'] = $attributes['public_key']; //POCOR-7531 
+            // $newAttributes['public_key'] = $attributes['public_key']; //POCOR-7531
             $encryptionKey = $attributes['public_key'];
             //POCOR-7509 start
             if ($attributes['password'] !== null) {
@@ -425,11 +425,11 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         switch ($value) {
             case 'OpenEMIS Exams':
                 $this->field('url');
-                $this->field('username'); //POCOR-7531 
+                $this->field('username'); //POCOR-7531
                 $this->field('password', ['type' => 'password']); //POCOR-7531 start
                 $this->field('token_uri', ['type' => 'hidden']);
                 $this->field('record_uri', ['type' => 'hidden']);
-                // $this->field('client_id'); //POCOR-7531 
+                // $this->field('client_id'); //POCOR-7531
                 $this->field('scope', ['type' => 'hidden']);
                 $this->field('first_name_mapping', ['type' => 'hidden']);
                 $this->field('middle_name_mapping', ['type' => 'hidden']);
@@ -444,9 +444,9 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                 $this->field('address_mapping', ['type' => 'hidden']);
                 $this->field('postal_mapping', ['type' => 'hidden']);
                 $this->field('user_endpoint_uri', ['type' => 'hidden']);
-                $this->field('value_selection', ['type' => 'hidden']); //POCOR-7531 
-                // $this->field('private_key', ['type' => 'text']);//POCOR-7531 
-                // $this->field('public_key', ['type' => 'text']);//POCOR-7531 
+                $this->field('value_selection', ['type' => 'hidden']); //POCOR-7531
+                // $this->field('private_key', ['type' => 'text']);//POCOR-7531
+                // $this->field('public_key', ['type' => 'text']);//POCOR-7531
                 break;
             //POCOR-7533 start
             case 'CXC':
@@ -517,7 +517,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                 $this->field('private_key', ['type' => 'text']);
                 $this->field('public_key', ['type' => 'text']);
                 break;
-            //POCOR-6930 Starts    
+            //POCOR-6930 Starts
             case 'Jordan CSPD':
                 $this->field('url');
                 $this->field('username', ['type' => 'string', 'required' => 'required']);
@@ -565,8 +565,8 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
     /**
      * Retrieves the configuration for OpenEMIS Exams from the external data source.
      *
-     * This method fetches the attributes associated with 'OpenEMIS Exams' from the 
-     * 'ExternalDataSourceAttributes' table, then constructs an array with necessary 
+     * This method fetches the attributes associated with 'OpenEMIS Exams' from the
+     * 'ExternalDataSourceAttributes' table, then constructs an array with necessary
      * configuration details like URL, username, password, and token URI.
      * The password is decrypted using the configured salt.
      *
