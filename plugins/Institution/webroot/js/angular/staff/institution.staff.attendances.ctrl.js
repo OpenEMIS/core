@@ -318,7 +318,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
         vm.allPresentCount = 0;
         vm.totalStaff = 0;
         vm.allAttendances = 0;
-        // vm.allLeaveCount = 0;
+        vm.allLeaveCount = 0;
         // vm.allLateCount = 0;
         vm.count = 0;
         vm.staffList = staffList;

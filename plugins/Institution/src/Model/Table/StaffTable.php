@@ -4004,10 +4004,13 @@ class StaffTable extends ControllerActionTable
         }
 
         $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+
+        $approvedLeaveStatus = $this->getApprovedLeaveStatusId(); // POCOR-9415
         $staffLeavesByWeekStartAndEnd = $StaffLeaveTable
             ->find()
             ->matching('StaffLeaveTypes')
             ->where([
+                $StaffLeaveTable->aliasField("status_id") => $approvedLeaveStatus, // POCOR-9415
                 $StaffLeaveTable->aliasField('institution_id ') => $institutionId,
                 $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
                 $StaffLeaveTable->aliasField('staff_id') => $staffId,
@@ -4317,7 +4320,9 @@ class StaffTable extends ControllerActionTable
      */
     private function getLeaveByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $archive = false)
     {
+
         $whereForLeaveTable = $this->setWhereForLeaveTable($weekStartDate, $weekEndDate, $archive);
+        $approvedLeaveStatus = $this->getApprovedLeaveStatusId(); // POCOR-9415
         if (!$archive) {
             $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
             $allStaffLeaves = $StaffLeaveTable
@@ -4325,6 +4330,7 @@ class StaffTable extends ControllerActionTable
                 ->matching('StaffLeaveTypes')
                 // ->matching('Statuses')
                 ->where([
+                    $StaffLeaveTable->aliasField('status_id ') => $approvedLeaveStatus, // POCOR-9415
                     $StaffLeaveTable->aliasField('institution_id ') => $institutionId,
                     $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
                     $whereForLeaveTable
@@ -4339,6 +4345,8 @@ class StaffTable extends ControllerActionTable
 //                ->matching('StaffLeaveTypes')
 //                // ->matching('Statuses')
                 ->where([
+                    $StaffLeaveTable->aliasField('status_id ') => $approvedLeaveStatus, // POCOR-9415
+
                     $StaffLeaveTable->aliasField('institution_id ') => $institutionId,
                     $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
                     $whereForLeaveTable
@@ -4359,6 +4367,7 @@ class StaffTable extends ControllerActionTable
 
     private function setWhereForLeaveTable($weekStartDate, $weekEndDate, $archive = false)
     {
+
         if (!$archive) {
             $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
         }
@@ -4984,5 +4993,27 @@ class StaffTable extends ControllerActionTable
         return $query;
     }
     //POCOR-8790 End
+
+    /**
+     * @return mixed
+     * POCOR-9415
+     */
+    private function getApprovedLeaveStatusId()
+    {
+        $workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        $workflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        $workflowResults = $workflows->find()
+            ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
+            ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
+                $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
+                $workflowSteps->aliasField('name') => 'Approved'
+            ])
+            ->where([
+                $workflows->aliasField('name') => 'Staff Leave'
+            ])
+            ->first();
+        $approvedLeaveStatus = $workflowResults->workflowSteps_id;
+        return $approvedLeaveStatus;
+    }
 
 }
