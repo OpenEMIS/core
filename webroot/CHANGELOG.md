@@ -1,3 +1,14 @@
+### [4.44.0] - 2025-10-10
+- Implemented: Develop changes to the Staff License Report
+- Implemented: Develop institution staff audit report
+- Bug Fixed: Directory>Import: User is getting 404 when importing
+- Bug Fixed: Instituitons>Survey>Form
+- Bug Fixed: Institution>Staff>Career>Positions Tab>Edit: Error 404 seen on clicking save when mandatory fields is not entered
+- Bug Fixed: Institutions>General>Overview >Edit: File is not showing in interface when uploaded
+- Bug Fixed: Institutions>Attendance>Students: Edit button should not appear when period or subject is not selected
+- Bug Fixed: Institutions > Performance > Report Cards: Principal placeholder is not displaying correctly
+- Bug Fixed: Administration>Survey>Forms: Filter should not include Institution>Staff, Institution>Students and Institutions>Repeaters
+
 ### [4.43.3] - 2025-10-07
 - Bug Fixed: Institutions>Attendance>Students: Attendance not updated correctly
 
