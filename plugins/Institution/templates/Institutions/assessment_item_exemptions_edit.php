@@ -135,11 +135,10 @@ $this->start('panelBody');
     <div class="input select required">
         <label><?= __('Student Status') ?></label>
         <div class="input-select-wrapper">
-             <select name="type" id="student-status"
+             <select name="type" id="studentStatuses"
         ng-options="option.id as option.name for option in $ctrl.studentStatuses"
-        ng-model="$ctrl.student_status_id"
-        ng-change="$ctrl.onStudentStatusChange();$ctrl.checkAndLoadStudents();"
-        ng-disabled="!$ctrl.statusEnabled">
+        ng-model="$ctrl.studentstatus_id"
+        ng-change="$ctrl.onStudentStatusChange($ctrl.studentstatus_id);$ctrl.checkAndLoadStudents();">
         <option value=""><?= __('-- Select --') ?></option>
     </select>
         </div>
