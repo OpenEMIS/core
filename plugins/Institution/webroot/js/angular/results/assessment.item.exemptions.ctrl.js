@@ -43,6 +43,8 @@ function AssessmentItemExemptionsController(
     const CHECKBOX_WIDTH = 50;
     ctrl.dataReady = false;
     // Initialization
+
+    ctrl.studentStatuses = []; //POCOR-9428
     ctrl.assessment_period_id = []; //POCOR-9114
     ctrl.assessment_item_id = null;
     ctrl.assessment_item_ids = null;
@@ -76,6 +78,7 @@ function AssessmentItemExemptionsController(
     ctrl.onSubjectChange = onSubjectChange;
     ctrl.onPeriodChange = onPeriodChange;
     ctrl.onExcemptTypeChange = onExcemptTypeChange;//POCOR-9042
+    ctrl.onStudentStatusChange = onStudentStatusChange;//POCOR-9428
     //POCOR-9042 starts
     ctrl.isAllSelected = function () {
         return ctrl.assessment_item_id && ctrl.assessment_period_id && ctrl.excempttype_id;
@@ -93,12 +96,6 @@ function AssessmentItemExemptionsController(
     function initPage() {
         AssessmentItemExemptionsSvc.init(angular.baseUrl);
         UtilsSvc.isAppendLoader(true);
-        /*if (!ctrl.student_status_id) {
-            console.log('No student status selected. Skipping load.');
-            return;
-        }*/
-
-        loadStudentStatuses(); // POCOR-9428
 
         if (ctrl.institution_class_id &&
             ctrl.assessment_item_id &&
@@ -210,35 +207,6 @@ function AssessmentItemExemptionsController(
         UtilsSvc.isAppendLoader(false);
     }//POCOR-9042 ends
 
-    function onStudentStatusChange() {
-        ctrl.statusEnabled = !!ctrl.assessment_period_id;
-
-        if (ctrl.institution_class_id &&
-            ctrl.assessment_item_id &&
-            ctrl.assessment_period_id &&
-            ctrl.student_status_id) {
-
-            UtilsSvc.isAppendLoader(true);
-            loadClassDetails().finally(function() {
-                UtilsSvc.isAppendLoader(false);
-            });
-        }
-    }
-    ctrl.onStudentStatusChange = onStudentStatusChange;
-
-    // Load the Student Status options once page loads
-    // Load the Student Status options once page loads
-   function loadStudentStatuses() {
-    var options = {};
-    AssessmentItemExemptionsSvc.getStudentStatus(options).then(function(data) {
-        ctrl.studentStatuses = data;
-    });
-}
-
-
-
-
-
     function loadClassDetails() {
         // console.log(options);
         ctrl.message = '';
@@ -259,7 +227,7 @@ function AssessmentItemExemptionsController(
             assessment_period_id: ctrl.assessment_period_id,
             classification: ctrl.classification, //POCOR-9289
             excempttype_id: ctrl.excempttype_id, //POCOR-9289
-            student_status_id: ctrl.student_status_id //POOCR-9428
+            studentstatus_id: ctrl.studentstatus_id //POCOR-9428
         }
         // console.log(options);
         //     .then(loadAdditionalClassData)
@@ -272,7 +240,7 @@ function AssessmentItemExemptionsController(
             options.assessment_item_id = null;
         }
         // console.log(options);
-        if (options.excempttype_id && options.assessment_period_id && options.assessment_item_id) { // POCOR-9289 end
+        if (options.excempttype_id && options.assessment_period_id && options.assessment_item_id && ctrl.studentstatus_id) { // POCOR-9289 end
             ctrl.dataReady = false;
             AssessmentItemExemptionsSvc.getExemptStudents(options)
                 .then(setClassDetails)
@@ -325,14 +293,38 @@ function AssessmentItemExemptionsController(
                     UtilsSvc.isAppendLoader(false);
                 });
         }
+
+        //POCOR-9428 start
+        AssessmentItemExemptionsSvc
+              .getStudentStatus()
+              .then(function (response) {
+                //console.log(response);
+                ctrl.studentStatuses = response.data.data;
+              })
+              .catch(function (error) {
+                console.error('Failed to load week list options:', error);
+            }); 
+        //POCOR-9428 end
     }
-    //POCOR-9289 end
+
     // POCOR-9042 starts
     ctrl.checkAndLoadStudents = function () {
         if (ctrl.isAllSelected()) {
             ctrl.onSubjectChange(); // or a more specific `loadStudents()` function
         }
     };//POCOR-9042 ends
+
+    function onStudentStatusChange(selectedId) {
+    if (selectedId) {
+        ctrl.dataReady = true;
+        UtilsSvc.isAppendLoader(false);
+        loadClassDetails(); // optionally reload grid
+    } else {
+        ctrl.dataReady = false;
+        ctrl.rowTopData = [];
+        ctrl.rowBottomData = [];
+    }
+}
 
     function setClassDetails(studentList) {
         ctrl.exemptStudents = [];
@@ -490,6 +482,7 @@ function AssessmentItemExemptionsController(
             type: ctrl.excempttype_id,//POCOR-9042
             exempt_students: exempt_students,
             unexempt_students: unexempt_students,
+            studentstatus_id: ctrl.studentstatus_id,
         };
         UtilsSvc.isAppendLoader(true);
         AssessmentItemExemptionsSvc.saveStudents(postData)
