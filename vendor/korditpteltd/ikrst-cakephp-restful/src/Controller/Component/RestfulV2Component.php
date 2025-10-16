@@ -389,32 +389,29 @@ class RestfulV2Component extends Component implements RestfulInterface
 
     //curl -H "Content-Type: application/json" -i -X DELETE -d '{"id": 1}' http://localhost/school/api/restful/v2/Users.json
 
-    public function delete($id = null)
+    public function delete($id)
     {
         if (is_null($this->model)) {
             return;
         }
 
-        $requestData = $this->request->getData(); // For JSON POST/DELETE
+        $requestData = $this->request->data;
         $extra = $this->extra;
         $serialize = $this->serialize;
         $table = $this->initTable($this->model);
 
-        // Use all primary keys to locate record
-        $primaryKeyValues = $this->getIdKeys($table, $requestData);
-
-        if ($table->exists($primaryKeyValues)) {
+        $primaryKeyValues = $this->getIdKeys($table, $requestData, false);
+        if ($table->exists([$primaryKeyValues])) {
             $entity = $table->get($primaryKeyValues);
             $message = __('Successful');
-
             if (!$table->delete($entity, $extra->getArrayCopy())) {
                 $message = __('Not Successful');
             }
 
             $serialize->offsetSet('result', $message);
-            $serialize->offsetSet('error', $entity->getErrors());
+            $serialize->offsetSet('error', $entity->errors());
         } else {
-            $this->_outputError('Record does not exist.');
+            $this->_outputError('Record does not exists');
         }
     }
 
