@@ -494,13 +494,35 @@ class StudentWithdrawTable extends ControllerActionTable
      * */
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-       //echo "<pre>"; print_r($url = $_SERVER['REQUEST_URI']);die;
         $url  = $_SERVER['REQUEST_URI'];
-        $stringUrl= 'academic_period_id';
-        if (strpos($url, $stringUrl) == false) {
+        $stringUrl = 'academic_period_id';
+        $stringUrlTwo = 'institution_id'; //POCOR-9414 if user came from Dashboard page
+        if (strpos($url, $stringUrlTwo) !== false && strpos($url, $stringUrl) === false){ //POCOR-9414 start
             $findstudent = TableRegistry::get('Institution.InstitutionStudents');
             $studentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
+            $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+            $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
+            $stepStatusId = $WorkflowStepsTable
+                                ->find()
+                                ->leftJoin([$WorkflowsTable->getAlias() => $WorkflowsTable->getTable()],
+                                    [ $WorkflowsTable->aliasField('id').'='.$WorkflowStepsTable->aliasField('workflow_id') ]
+                                )->where([
+                                    $WorkflowsTable->aliasField('code') =>'STUDENT-WITHDRAW-001',
+                                    $WorkflowStepsTable->aliasField('name') => 'Withdrawn'
+                                ])->first()->id;
 
+            $studentId = $entity->student_id;
+
+            $studentdata = $findstudent->find()->where(['student_status_id'=>1, 'student_id'=>$studentId, 'academic_period_id'=>$entity->academic_period_id])->first();
+
+            $studentdraw = $studentWithdraw->find()->where(['status_id'=>$stepStatusId, 'student_id'=>$studentId, 'academic_period_id'=>$entity->academic_period_id])->first();
+            if(!empty($studentdata) && !empty($studentdraw)){
+                 return true;
+            }    
+            //POCOR-9414 end     
+        }elseif(strpos($url, $stringUrl) == false){
+            $findstudent = TableRegistry::get('Institution.InstitutionStudents');
+            $studentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
             $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
             $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
             $stepStatusId = $WorkflowStepsTable
@@ -522,13 +544,11 @@ class StudentWithdrawTable extends ControllerActionTable
                 $message = __('Student is already enrolled');
                 $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
                 $event->stopPropagation();
-
                 //POCOR-7209 end
                 return false;
             }else{
                 return true;
             }
         }
-
     }
 }

@@ -13,7 +13,7 @@ $this->start('toolbar');
         </button>
     </a>
 </button>
-<?php endif; ?> 
+<?php endif; ?>
 <?php if ($_edit) : ?>
     <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && !$ctrl.schoolClosed && $ctrl.selectedDay != -1" ng-click="$ctrl.onEditClick()">
         <i class="fa kd-edit"></i>
@@ -28,7 +28,7 @@ $this->start('toolbar');
         <i class="fa kd-export" ></i>
     </button>
 <?php endif; ?>
-<?php 
+<?php
 // $session = $this->Session;
 // $superAdmin = $session->read('Auth.User.super_admin');
 // $is_connection_is_online = $session->read('is_connection_stablished');
@@ -42,7 +42,7 @@ $this->start('toolbar');
 </button>
 <?php endif; ?>
 <?php /*************** Start POCOR-5188 */ ?>
-    <?php 
+    <?php
         if(!empty($is_manual_exist)):
     ?>
 
@@ -206,7 +206,7 @@ $institutionId = $paramsQuery['institution_id'];
 
 </style>
 <div class="panel">
-    <div class="panel-body" style="position: relative;">       
+    <div class="panel-body" style="position: relative;">
 		<bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>; $ctrl.excelUrl='<?= $excelUrl;?>'; $ctrl.history=<?= $_history ? $_history : 0 ?>;$ctrl.ownEdit=<?= $_ownEdit ? $_ownEdit : 0 ?>;$ctrl.ownView=<?= $_ownView ? $_ownView : 0 ?>;$ctrl.otherEdit=<?= $_otherEdit ? $_otherEdit : 0 ?>;$ctrl.otherView=<?= $_otherView ? $_otherView : 0 ?>;$ctrl.permissionStaffId=<?= $_permissionStaffId ? $_permissionStaffId : 0 ?>;" float-btn="true">
 
             <bg-pane class="main-content">
@@ -242,12 +242,12 @@ $institutionId = $paramsQuery['institution_id'];
                             <h1 class="data-header">{{$ctrl.allLeaveCount}}</h1>
                         </div>
                     </div>
-                    <div class="data-section">
-                        <div class="data-field">
-                            <h4><?= __('No. of Staff on Late') ?></h4>
-                            <h1 class="data-header">{{$ctrl.allLateCount}}</h1>
-                        </div>
-                    </div>
+<!--                    <div class="data-section">-->
+<!--                        <div class="data-field">-->
+<!--                            <h4>--><?php //= __('No. of Staff on Late') ?><!--</h4>-->
+<!--                            <h1 class="data-header">{{$ctrl.allLateCount}}</h1>-->
+<!--                        </div>-->
+<!--                    </div>-->
                 </div>
                 <h4>{{$ctrl.selectedFormattedDayDate}}</h4>
                 <div id="institution-staff-attendances-table" class="table-wrapper">
@@ -286,9 +286,9 @@ $institutionId = $paramsQuery['institution_id'];
                     </div>
 
                 </div>
-            </bg-pane>          
+            </bg-pane>
         </bg-splitter>
-    </div>  
+    </div>
 </div>
 <?php
 $this->end();

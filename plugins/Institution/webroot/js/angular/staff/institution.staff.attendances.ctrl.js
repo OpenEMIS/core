@@ -5,7 +5,7 @@ InstitutionStaffAttendancesController.$inject = ['$scope','$timeout' ,'$q', '$wi
 
 function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $http, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionStaffAttendancesSvc) {
     var vm = this;
-    
+
     vm.action = 'view';
     vm.excelUrl = '';
     vm.staffId;
@@ -43,8 +43,8 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
     vm.allAttendances = 0;
     vm.allPresentCount = 0;
     vm.allLeaveCount = 0;
-    vm.allLateCount = 0;
-    vm.globalLateCount = 0;
+    // vm.allLateCount = 0;
+    // vm.globalLateCount = 0;
     // gridOptions
     vm.gridReady = false;
     vm.gridOptions = {
@@ -106,8 +106,8 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
         }, vm.error)
         .then(function(shiftListOptions) {
             vm.setShiftListOptions(shiftListOptions);
-            // console.log("---PARAM---");
-            // console.log(vm.getAllStaffAttendancesParams());
+            console.log("---PARAM---");
+            console.log(vm.getAllStaffAttendancesParams());
             return InstitutionStaffAttendancesSvc.getAllStaffAttendances(vm.getAllStaffAttendancesParams());
         }, vm.error)
         .then(function(allStaffAttendances) {
@@ -203,7 +203,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
         vm.initGrid();
         var shiftObj = vm.shiftListOptions.find(obj => obj.id == vm.selectedShift);
         vm.gridOptions.context.date = vm.selectedShift;
-        
+
         InstitutionStaffAttendancesSvc.getAllStaffAttendances(vm.getAllStaffAttendancesParams())
         .then(function(allStaffAttendances) {
             vm.setAllStaffAttendances(allStaffAttendances);
@@ -319,11 +319,11 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
         vm.totalStaff = 0;
         vm.allAttendances = 0;
         vm.allLeaveCount = 0;
-        vm.allLateCount = 0;
+        // vm.allLateCount = 0;
         vm.count = 0;
         vm.staffList = staffList;
         vm.totalStaff = staffList.length;
-        vm.lateCountUpdated = false;
+        // vm.lateCountUpdated = false;
         if (staffList.length > 0) {
             angular.forEach(staffList, function(staff) {
                 // for All Days Dashboard
@@ -335,13 +335,13 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
                     if (attendance.leave.length > 0) {
                         vm.allLeaveCount = vm.allLeaveCount + 1;
                     }
-                    if (attendance.absence_type_id == 3) {
-                        vm.allLateCount++; //POCOR-8118
-                    }
+                    // if (attendance.absence_type_id == 3) {
+                    //     vm.allLateCount++; //POCOR-8118
+                    // }
                 });
                 // $scope.$apply();
             });
-            
+
             //console.log(vm.allPresentCount);
             //console.log(vm.allLateCount);
             if (vm.allPresentCount == 0) {
@@ -353,10 +353,10 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
             if (vm.allLateCount == 0) {
                 vm.allLateCount = '-';
             }
-            vm.globalLateCount = vm.allLateCount; //POCOR-8118
-            $timeout(function() {
-                vm.allLateCount = vm.globalLateCount; // replace 'NEW VALUE' with the update//POCOR-7255
-            })
+            // vm.globalLateCount = vm.allLateCount; //POCOR-8118
+            // $timeout(function() {
+            //     vm.allLateCount = vm.globalLateCount; // replace 'NEW VALUE' with the update//POCOR-7255
+            // })
         }
   }
 
@@ -392,7 +392,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
             vm.action = 'edit';
             vm.gridOptions.context.ownEdit = vm.ownEdit;
             vm.gridOptions.context.otherEdit = vm.otherEdit;
-            vm.gridOptions.context.permissionStaffId = vm.permissionStaffId;  
+            vm.gridOptions.context.permissionStaffId = vm.permissionStaffId;
             vm.gridOptions.context.action = vm.action;
             vm.setColumnDef();
             AlertSvc.info($scope, 'Attendance will be saved automatically.');
@@ -410,12 +410,12 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
         .then(function(allStaffAttendances) {
             vm.setAllStaffAttendances(allStaffAttendances);
             // Update the allLateCount variable with the new data
-            vm.allLateCount = 0;
-            for (var i = 0; i < allStaffAttendances.length; i++) {
-                if (allStaffAttendances[i].lateCount) {
-                vm.allLateCount += parseInt(allStaffAttendances[i].lateCount);
-                }
-            }
+            // vm.allLateCount = 0;
+            // for (var i = 0; i < allStaffAttendances.length; i++) {
+            //     if (allStaffAttendances[i].lateCount) {
+            //     vm.allLateCount += parseInt(allStaffAttendances[i].lateCount);
+            //     }
+            // }
         });
         //console.log('hello')
     };
