@@ -27,7 +27,7 @@ class StaffProfilesTable extends ControllerActionTable
     CONST PUBLISHED = 4;
 
     CONST MAX_PROCESSES = 2;
-	
+
 	public $fileTypes = [
         'jpeg'  => 'image/jpeg',
         'jpg'   => 'image/jpeg',
@@ -59,7 +59,7 @@ class StaffProfilesTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
-		
+
 		$this->StaffTemplates = TableRegistry::get('ProfileTemplate.StaffTemplates');
         $this->StaffReportCards = TableRegistry::get('Institution.StaffReportCards');
         $this->StaffReportCardProcesses = TableRegistry::get('ReportCard.StaffReportCardProcesses');
@@ -106,17 +106,23 @@ class StaffProfilesTable extends ControllerActionTable
         //START:POCOR-6667
         unset($buttons['view']);
         //END:POCOR-6667
-        
+
 		if (!is_null($reportCardId) && $this->StaffTemplates->exists([$this->StaffTemplates->getPrimaryKey() => $reportCardId])) {
 
-            $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+            $indexAttr = ['role' => 'menuitem',
+                'tabindex' => '-1',
+                'escape' => false,
+                'target' => '_blank'];
+            $generateAttr = ['role' => 'menuitem',
+                'tabindex' => '-1',
+                'escape' => false];
             $params = [
                 'staff_profile_template_id' => $reportCardId,
                 'staff_id' => $entity->staff_id,
                 'institution_id' => $institutionId,
                 'academic_period_id' => $academicPeriodId,
             ];
-			
+
             // Download button, status must be generated or published
 			if ($this->AccessControl->check(['ProfileTemplates', 'StaffProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
                 //START:POCOR-6667
@@ -164,53 +170,53 @@ class StaffProfilesTable extends ControllerActionTable
                 if ((!empty($generateStartDate) && !empty($generateEndDate)) && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                             $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => $generateUrl
                             ];
                 } else {
-                    $indexAttr['title'] = $this->getMessage('StaffProfiles.date_closed');
+                    $generateAttr['title'] = $this->getMessage('StaffProfiles.date_closed');
                     $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => 'javascript:void(0)'
                             ];
-                } 
+                }
             }
 
             // Publish button, status must be generated
-            if ($this->AccessControl->check(['ProfileTemplates', 'StaffProfiles', 'publish']) && $entity->has('report_card_status') 
-                    && ( $entity->report_card_status == self::GENERATED 
-                         || $entity->report_card_status == '12' 
+            if ($this->AccessControl->check(['ProfileTemplates', 'StaffProfiles', 'publish']) && $entity->has('report_card_status')
+                    && ( $entity->report_card_status == self::GENERATED
+                         || $entity->report_card_status == '12'
                        )
                 ) {
                 $publishUrl = $this->setQueryString($this->url('publish'), $params);
                 $buttons['publish'] = [
                     'label' => '<i class="fa kd-publish"></i>'.__('Publish'),
-                    'attr' => $indexAttr,
+                    'attr' => $generateAttr,
                     'url' => $publishUrl
                 ];
             }
 
             // Unpublish button, status must be published
-            if ($this->AccessControl->check(['ProfileTemplates', 'StaffProfiles', 'unpublish']) 
-                    && $entity->has('report_card_status') 
-                    && ( $entity->report_card_status == self::PUBLISHED 
+            if ($this->AccessControl->check(['ProfileTemplates', 'StaffProfiles', 'unpublish'])
+                    && $entity->has('report_card_status')
+                    && ( $entity->report_card_status == self::PUBLISHED
                           || $entity->report_card_status == '16'
                         )
                     ) {
                 $unpublishUrl = $this->setQueryString($this->url('unpublish'), $params);
                 $buttons['unpublish'] = [
                     'label' => '<i class="fa kd-unpublish"></i>'.__('Unpublish'),
-                    'attr' => $indexAttr,
+                    'attr' => $generateAttr,
                     'url' => $unpublishUrl
                 ];
             }
 
             // Single email button, status must be published
-            if ($this->AccessControl->check(['ProfileTemplates', 'StaffProfiles', 'email']) 
+            if ($this->AccessControl->check(['ProfileTemplates', 'StaffProfiles', 'email'])
                     && $entity->has('report_card_status')
-                    && ( $entity->report_card_status == self::PUBLISHED 
-                            || $entity->report_card_status == '16' 
+                    && ( $entity->report_card_status == self::PUBLISHED
+                            || $entity->report_card_status == '16'
                         )
                )
                {
@@ -218,7 +224,7 @@ class StaffProfilesTable extends ControllerActionTable
                     $emailUrl = $this->setQueryString($this->url('email'), $params);
                     $buttons['email'] = [
                         'label' => '<i class="fa fa-envelope"></i>'.__('Email'),
-                        'attr' => $indexAttr,
+                        'attr' => $generateAttr,
                         'url' => $emailUrl
                     ];
                 }
@@ -239,7 +245,7 @@ class StaffProfilesTable extends ControllerActionTable
         $this->field('email_status');
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Staff','Profiles');       
+		$is_manual_exist = $this->getManualUrl('Administration','Staff','Profiles');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -258,7 +264,7 @@ class StaffProfilesTable extends ControllerActionTable
 		}
 		// End POCOR-5188
     }
-	
+
 	private function setupTabElements() {
 		$options['type'] = 'StaffTemplates';
 		$tabElements = $this->getStaffTabElements($options);
@@ -275,7 +281,7 @@ class StaffProfilesTable extends ControllerActionTable
             'Profiles' => ['text' => __('Profile')],
             'Templates' => ['text' => __('Templates')]
         ];
-		
+
         $tabElements['Profiles']['url'] = array_merge($tabUrl, ['action' => 'StaffProfiles']);
         $tabElements['Templates']['url'] = array_merge($tabUrl, ['action' => 'Staff']);
 
@@ -306,20 +312,20 @@ class StaffProfilesTable extends ControllerActionTable
             ])
             ->enableHydration(false)
             ->toArray();
-		$this->setupTabElements();	
+		$this->setupTabElements();
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $serverRequest = $this->request;
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-      
+
         // Academic Periods filter
         $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? $serverRequest->getQuery('academic_period_id') : $AcademicPeriod->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        $where[$AcademicPeriod->aliasField('id')] = $selectedAcademicPeriod;        
-		//End 
+        $where[$AcademicPeriod->aliasField('id')] = $selectedAcademicPeriod;
+		//End
 
         // Report Cards filter
         $reportCardOptions = [];
@@ -328,19 +334,19 @@ class StaffProfilesTable extends ControllerActionTable
 				$this->StaffTemplates->aliasField('academic_period_id') => $selectedAcademicPeriod
 			])
 			->toArray();
-       
+
 
         $reportCardOptions = ['-1' => '-- '.__('Select Staff Template').' --'] + $reportCardOptions;
         $selectedReportCard = !is_null($serverRequest->getQuery('staff_profile_template_id')) ? $serverRequest->getQuery('staff_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
-		//End	
-		
+		//End
+
         // Area filter
 		$Areas = TableRegistry::get('Area.Areas');
 
 		$areaOptions = [];
 		$areaOptions = $Areas->find('list')->toArray();
-       
+
         $areaOptions = ['-1' => '-- '.__('Select Area').' --'] + $areaOptions;
         $selectedArea = !is_null($serverRequest->getQuery('area_id')) ? $serverRequest->getQuery('area_id'): -1;
         $this->controller->set(compact('areaOptions', 'selectedArea'));
@@ -354,7 +360,7 @@ class StaffProfilesTable extends ControllerActionTable
             $institutionOptions = $Institutions->find('list')
                             ->order([$Institutions->aliasField('name') =>'ASC']) //POCOR-7641
 							->toArray();
-        }else{ 
+        }else{
             //POCOR-7641
             $areaIds = [];
             $allgetArea = $this->getChildren($selectedArea, $areaIds);
@@ -368,18 +374,18 @@ class StaffProfilesTable extends ControllerActionTable
 							->where([
 								$Institutions->aliasField('area_id in') => $allselectedAreas
 							])
-                            ->order([$Institutions->aliasField('name') =>'ASC']) 
+                            ->order([$Institutions->aliasField('name') =>'ASC'])
 							->toArray();
             //POCOR-7641
         }
-		
-       
+
+
         $institutionOptions = ['-1' => '-- '.__('Select Institution').' --'] + $institutionOptions;
         $selectedInstitution = !is_null($serverRequest->getQuery('institution_id')) ? $this->request->getQuery('institution_id') : -1;
         $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
 		$where[$this->aliasField('institution_id')] = $selectedInstitution;
         //End
-		
+
         $query
             ->select([
                 'staff_profile_template_id' => $this->StaffReportCards->aliasField('staff_profile_template_id'),
@@ -462,7 +468,7 @@ class StaffProfilesTable extends ControllerActionTable
         $result = $Areas->find()
                             ->where([
                                 $Areas->aliasField('parent_id') => $id
-                            ]) 
+                            ])
                              ->toArray();
         foreach ($result as $key => $value) {
             $idArray[] = $value['id'];
@@ -514,7 +520,7 @@ class StaffProfilesTable extends ControllerActionTable
                     'staff_profile_template_id' => $reportCardId,
                     'staff_id' => $this->getQueryString('staff_id')
                 ];
-				
+
 				if ($generatedCount > 0 || $publishedCount > 0) {
                     $downloadButtonPdf['url'] = $this->setQueryString($this->url('downloadAllPdf'), $params);
                     $downloadButtonPdf['type'] = 'button';
@@ -561,10 +567,10 @@ class StaffProfilesTable extends ControllerActionTable
                 $date = Time::now()->format('Y-m-d');
 
                 if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
-                    
+
                     $extra['toolbarButtons']['generateAll'] = $generateButton;
-                    
-                } else { 
+
+                } else {
                     $generateButton['attr']['data-html'] = true;
                     $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('StaffProfiles.date_closed'));
                     $generateButton['url'] = 'javascript:void(0)';
@@ -778,12 +784,12 @@ class StaffProfilesTable extends ControllerActionTable
 
         return $value;
     }
-	
+
 	public function downloadExcel(Event $event, ArrayObject $extra)
     {
 		$model = $this->StaffReportCards;
         $ids = $this->getQueryString();
-		
+
         if ($model->exists($ids)) {
             $data = $model->find()->where($ids)->first();
             $fileName = $data->file_name;
@@ -808,12 +814,12 @@ class StaffProfilesTable extends ControllerActionTable
         }
         exit();
     }
-	
+
 	public function downloadPDF(Event $event, ArrayObject $extra)
     {
 		$model = $this->StaffReportCards;
         $ids = $this->getQueryString();
-		
+
         if ($model->exists($ids)) {
             $data = $model->find()->where($ids)->first();
             $fileName = $data->file_name;
@@ -852,7 +858,7 @@ class StaffProfilesTable extends ControllerActionTable
     {
 		$model = $this->StaffReportCards;
         $ids = $this->getQueryString();
-		
+
         if ($model->exists($ids)) {
             $data = $model->find()->where($ids)->first();
             $fileName = $data->file_name;
@@ -884,7 +890,7 @@ class StaffProfilesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->StaffTemplates->checkIfHasTemplate($params['staff_profile_template_id']);
-        
+
         if ($hasTemplate) {
             $this->addReportCardsToProcesses($params['institution_id'], $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
             $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
@@ -902,7 +908,7 @@ class StaffProfilesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->StaffTemplates->checkIfHasTemplate($params['staff_profile_template_id']);
-        
+
         if ($hasTemplate) {
             $StaffReportCardProcesses = TableRegistry::get('ReportCard.StaffReportCardProcesses');
             $inProgress = $StaffReportCardProcesses->find()
@@ -912,10 +918,10 @@ class StaffProfilesTable extends ControllerActionTable
                     $StaffReportCardProcesses->aliasField('academic_period_id') => $params['academic_period_id'],
                     $StaffReportCardProcesses->aliasField('institution_id') => $params['institution_id'],
                 ])
-                ->count();      
-                        
+                ->count();
 
-            if (!$inProgress) {                   
+
+            if (!$inProgress) {
                 $this->addReportCardsToProcesses($params['institution_id'], $params['academic_period_id'], $params['staff_profile_template_id']);
 				$this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['academic_period_id'], $params['staff_profile_template_id']);
 				$this->Alert->warning('StaffProfiles.generateAll');
@@ -929,7 +935,7 @@ class StaffProfilesTable extends ControllerActionTable
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
-	
+
 	public function downloadAllPdf(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
@@ -948,22 +954,22 @@ class StaffProfilesTable extends ControllerActionTable
                 $this->StaffReportCards->aliasField('file_content IS NOT NULL')
             ])
             ->toArray();
-            
+
         if (!empty($files)) {
             $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
             $zipName = 'StaffReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
             $filepath = $path . $zipName;
-           
+
             $zip = new ZipArchive;
             $zip->open($filepath, ZipArchive::CREATE);
-            
+
             foreach ($files as $file) {
 				$fileName = $file->file_name;
 				$fileNameData = explode(".",$fileName);
 				$fileName = $fileNameData[0].'.pdf';
-                
+
 				$zip->addFromString($fileName,  $this->getFile($file->file_content_pdf));
-             
+
             }
             $zip->close();
 
@@ -985,7 +991,7 @@ class StaffProfilesTable extends ControllerActionTable
             return $this->controller->redirect($this->url('index'));
         }
     }
-	
+
     public function downloadAll(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
@@ -1008,7 +1014,7 @@ class StaffProfilesTable extends ControllerActionTable
             $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
             $zipName = 'StaffReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
             $filepath = $path . $zipName;
-           
+
             $zip = new ZipArchive;
             $zip->open($filepath, ZipArchive::CREATE);
             foreach ($files as $file) {
@@ -1198,7 +1204,7 @@ class StaffProfilesTable extends ControllerActionTable
                     'file_content' => NULL,
                     'staff_id' => $staff->staff_id
                 ];
-				
+
                 $newEntity = $this->StaffReportCards->patchEntity($staffsReportCardEntity, $newData);
 
                 if (!$this->StaffReportCards->save($newEntity)) {
@@ -1261,7 +1267,7 @@ class StaffProfilesTable extends ControllerActionTable
     private function addReportCardsToEmailProcesses($institutionId, $academicPeriodId, $reportCardId, $staffId = null)
     {
         Log::write('debug', 'Initialize Add All Staff Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to email processes ('.Time::now().')');
-		
+
 		$staffTable = TableRegistry::get('institution_staff');
         $where = [];
         $where[$staffTable->aliasField('institution_id')] = $institutionId;

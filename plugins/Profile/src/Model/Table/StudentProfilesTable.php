@@ -119,7 +119,13 @@ class StudentProfilesTable extends ControllerActionTable
 
 		if (!is_null($reportCardId) && $this->StudentTemplates->exists([$this->StudentTemplates->getPrimaryKey() => $reportCardId])) {
 
-            $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+            $indexAttr = ['role' => 'menuitem',
+                'tabindex' => '-1',
+                'escape' => false,
+                'target' => '_blank'];
+            $generateAttr = ['role' => 'menuitem',
+                'tabindex' => '-1',
+                'escape' => false];
             $params = [
                 'student_profile_template_id' => $reportCardId,
                 'student_id' => $entity->student_id,
@@ -175,14 +181,14 @@ class StudentProfilesTable extends ControllerActionTable
                 if ((!empty($generateStartDate) && !empty($generateEndDate)) && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                             $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => $generateUrl
                             ];
                 } else {
-                    $indexAttr['title'] = $this->getMessage('StudentProfiles.date_closed');
+                    $generateAttr['title'] = $this->getMessage('StudentProfiles.date_closed');
                     $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => 'javascript:void(0)'
                             ];
                 }
@@ -764,7 +770,9 @@ class StudentProfilesTable extends ControllerActionTable
 
     public function generateAll(Event $event, ArrayObject $extra)
     {
+
         $params = $this->getQueryString();
+        Log::debug(print_r($params,true));
         $hasTemplate = $this->StudentTemplates->checkIfHasTemplate($params['student_profile_template_id']);
         $userObj = $this->Auth->user();
         $studentId = $userObj['id'];

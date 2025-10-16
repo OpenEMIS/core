@@ -1,4 +1,5 @@
 <?php
+
 namespace Report\Model\Table;
 
 use ArrayObject;
@@ -39,7 +40,7 @@ class InstitutionStaffTable extends AppTable
             'autoFields' => false
         ]);
         $this->addBehavior('Report.InstitutionSecurity');
-        $this->addBehavior('Report.AreaList');//POCOR-7794
+        $this->addBehavior('Report.AreaList'); //POCOR-7794
     }
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
@@ -60,7 +61,7 @@ class InstitutionStaffTable extends AppTable
         $typeId = $requestData->type;
         $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
-        $areaLevelId = $requestData->area_level_id;//POCOR-7794
+        $areaLevelId = $requestData->area_level_id; //POCOR-7794
         $academicPeriodId = $requestData->academic_period_id;
 
         if ($statusId != 0 && $statusId != -1) {
@@ -140,12 +141,12 @@ class InstitutionStaffTable extends AppTable
                         'area_administrative_code' => 'AreaAdministratives.code',
                         'area_administrative_name' => 'AreaAdministratives.name'
                     ]
-                ],//POCOR-5388 starts
+                ], //POCOR-5388 starts
                 'Institutions.Localities' => [
                     'fields' => [
                         'locality_name' => 'Localities.name'
                     ]
-                ],//POCOR-5388 ends
+                ], //POCOR-5388 ends
                 'Users' => [
                     'fields' => [
                         'Users.id', // this field is required for Identities and IdentityTypes to appear
@@ -211,7 +212,7 @@ class InstitutionStaffTable extends AppTable
                 ]
             ]);
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($academicPeriodId) {
-            return $results->map(function ($row) use ($academicPeriodId){
+            return $results->map(function ($row) use ($academicPeriodId) {
                 $row['academic_period_id'] = $academicPeriodId;
 
                 return $row;
@@ -245,7 +246,7 @@ class InstitutionStaffTable extends AppTable
                 if (!empty($entity->user->identities)) {
                     $identities = $entity->user->identities;
                     foreach ($identities as $key => $value) {
-                        if ($value->identity_type->default == 0) {                            
+                        if ($value->identity_type->default == 0) {
                             $return[] = '([' . $value->identity_type->name . ']' . ' - ' . $value->number . ')';
                         }
                     }
@@ -258,8 +259,24 @@ class InstitutionStaffTable extends AppTable
 
     public function onExcelGetFTE(Event $event, Entity $entity)
     {
-        return $entity->FTE*100;
+        return $entity->FTE * 100;
     }
+
+    public function onExcelGetDob(Event $event, Entity $entity)
+    {
+        return isset($entity->user->date_of_birth) ? $entity->user->date_of_birth->format('Y-m-d') : '';
+    }
+    //POCOR-9302 start
+    public function onExcelGetStartDate(Event $event, Entity $entity)
+    {
+        return isset($entity->start_date) ? $entity->start_date->format('Y-m-d') : '';
+    }
+
+    public function onExcelGetEndDate(Event $event, Entity $entity)
+    {
+        return isset($entity->end_date) ? $entity->end_date->format('Y-m-d') : '';
+    }
+    //POCOR-9302 end
 
     public function onExcelRenderAge(Event $event, Entity $entity, $attr)
     {
@@ -275,7 +292,7 @@ class InstitutionStaffTable extends AppTable
         }
         return $age;
     }
-    
+
 
     public function onExcelGetEducationGrades(Event $event, Entity $entity)
     {
@@ -291,24 +308,24 @@ class InstitutionStaffTable extends AppTable
             $subStaffTable = TableRegistry::get('Institution.InstitutionSubjectStaff');
             $InsSubTable = TableRegistry::get('Institution.InstitutionSubjects');
             $AcademicTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-	     
-	        $AcademicData = $AcademicTable->find()->where(['id'=> $entity->academic_period_id])->first();
+
+            $AcademicData = $AcademicTable->find()->where(['id' => $entity->academic_period_id])->first();
             $startDateYear = $AcademicData->start_year;
             $endDateYear = $AcademicData->end_year; // POCOR-7544
             $edGrade = [];
-            if($entity->end_date == null){
-                $subStaffData = $subStaffTable->find()->where(['staff_id'=>$staffId,'institution_id'=>$entity->institution_id,'start_date >' => "$startDateYear-01-01",'start_date <' => "$startDateYear-12-31"])->toArray();
-            }else{
+            if ($entity->end_date == null) {
+                $subStaffData = $subStaffTable->find()->where(['staff_id' => $staffId, 'institution_id' => $entity->institution_id, 'start_date >' => "$startDateYear-01-01", 'start_date <' => "$startDateYear-12-31"])->toArray();
+            } else {
                 $startDateYear = $AcademicData->end_year;
-                $subStaffData = $subStaffTable->find()->where(['staff_id'=>$staffId,'institution_id'=>$entity->institution_id,'start_date >' => "$startDateYear-01-01",'end_date <' => "$endDateYear-12-31"])->toArray();
+                $subStaffData = $subStaffTable->find()->where(['staff_id' => $staffId, 'institution_id' => $entity->institution_id, 'start_date >' => "$startDateYear-01-01", 'end_date <' => "$endDateYear-12-31"])->toArray();
             }
-            foreach ($subStaffData as $key => $value) { 
+            foreach ($subStaffData as $key => $value) {
                 $insSubData = $InsSubTable->find()->where(['id' => $value->institution_subject_id])->first();
-                $EducationGradeData = $EducationGrades->find()->where(['id'=> $insSubData->education_grade_id])->first();
+                $EducationGradeData = $EducationGrades->find()->where(['id' => $insSubData->education_grade_id])->first();
                 $edGrade[$key] = $EducationGradeData->name;
             }
             //END:POCOR-6714
-            
+
             //echo "<pre>"; print_r($value->start_date->format('Y')); 
             //die();
             // $connection = ConnectionManager::get('default');
@@ -371,7 +388,7 @@ class InstitutionStaffTable extends AppTable
     public function onExcelGetPositionTitleTeaching(Event $event, Entity $entity)
     {
         $yesno = $this->getSelectOptions('general.yesno');
-        return (array_key_exists($entity->position_title_teaching, $yesno))? $yesno[$entity->position_title_teaching]: '';
+        return (array_key_exists($entity->position_title_teaching, $yesno)) ? $yesno[$entity->position_title_teaching] : '';
     }
 
     public function onExcelRenderContactOption(Event $event, Entity $entity, array $attr)
@@ -393,7 +410,7 @@ class InstitutionStaffTable extends AppTable
         return implode(', ', $result);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
@@ -535,8 +552,8 @@ class InstitutionStaffTable extends AppTable
         $newFields[] = [
             'key' => 'Users.date_of_birth',
             'field' => 'dob',
-            'type' => 'date',
-            'label' => ''
+            'type' => 'string',
+            'label' => 'Date Of Birth'
         ];
 
         $newFields[] = [
@@ -549,15 +566,15 @@ class InstitutionStaffTable extends AppTable
         $newFields[] = [
             'key' => 'InstitutionStaff.start_date',
             'field' => 'start_date',
-            'type' => 'date',
-            'label' => ''
+            'type' => 'string',
+            'label' => 'Start Date'
         ];
 
-         $newFields[] = [
+        $newFields[] = [
             'key' => 'InstitutionStaff.end_date',
             'field' => 'end_date',
-            'type' => 'date',
-            'label' => ''
+            'type' => 'string',
+            'label' => 'End Date'
         ];
 
         $newFields[] = [
@@ -608,6 +625,12 @@ class InstitutionStaffTable extends AppTable
             'type' => 'string',
             'label' => __('Username')
         ];
+        $newFields[] = [
+            'key' => 'staff_qualifications',
+            'field' => 'staff_qualifications',
+            'type' => 'string',
+            'label' => __('Highest Qualification')
+        ];
 
         $displayContactOptions = ['MOBILE', 'PHONE', 'EMAIL'];
         $ContactOptionsTable = TableRegistry::get('User.ContactOptions');
@@ -634,4 +657,27 @@ class InstitutionStaffTable extends AppTable
 
         $fields->exchangeArray($newFields);
     }
+
+    /**
+     * POCOR-9386
+    * Get staff highest qualification
+    */
+    public function onExcelGetStaffQualifications(Event $event, Entity $entity)
+    {
+        $qualification = TableRegistry::get('Staff.Qualifications');
+
+        $staffQualification = $qualification->find()
+            ->contain([
+                'QualificationTitles' => [
+                    'QualificationLevels'
+                ]
+            ])
+            ->where([$qualification->aliasField('staff_id') => $entity->staff_id])
+            ->order(['QualificationLevels.order' => 'ASC']) // use association alias directly
+            ->limit(1)
+            ->first();
+
+        return $entity->staff_qualification = $staffQualification->qualification_title->name ?? '';
+    }
+
 }

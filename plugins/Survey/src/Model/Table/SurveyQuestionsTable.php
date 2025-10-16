@@ -8,6 +8,7 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
 use Cake\Utility\Text;
+use Cake\ORM\TableRegistry; //POCOR-9359
 
 class SurveyQuestionsTable extends CustomFieldsTable
 {
@@ -83,6 +84,24 @@ class SurveyQuestionsTable extends CustomFieldsTable
             return $attr;
         }
     }
+
+    /**
+     * @usage  Used to update the name of question in survey_forms_questions table when question name is updated in survey_questions table
+     * @author Prajakta
+     * @ticket POCOR-9359
+     */
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if (!$entity->isNew() && $entity->isDirty('name')) {
+            $surveyFormsQuestionsTable = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
+
+            $surveyFormsQuestionsTable->updateAll(
+                ['name' => $entity->name],
+                ['survey_question_id' => $entity->id]
+            );
+        }
+    }
+
 
     /*POCOR-6187 starts*/
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)

@@ -2,9 +2,23 @@
 namespace CustomExcel\Model\Behavior;
 
 use Cake\Log\Log;
-use Mpdf\MpdfException; // POCOR-9153
-use DOMDocument; // POCOR-9153
-use DOMXPath; // POCOR-9153
+use Mpdf\MpdfException;
+
+// POCOR-9153
+use DOMDocument;
+
+// POCOR-9153
+use DOMXPath;
+use DOMElement;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Exception;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use Cake\ORM\TableRegistry;
+
+// POCOR-9153
 
 /*
     This trait is for ExcelReportBehavior.php
@@ -13,6 +27,9 @@ use DOMXPath; // POCOR-9153
 
 trait StudentPdfReportTrait
 {
+    const PRINTER_MPDF = 1;
+    const PRINTER_LIBREOFFICE = 2;
+    const PRINTER_EXTERNAL = 3;
     private $currentWorksheet = null;
     private $currentWorksheetIndex = 0;
 
@@ -74,77 +91,330 @@ trait StudentPdfReportTrait
         $this->excelLastRowValueArr[$this->currentWorksheetIndex] = $targetRowValue;
     }
 
+
     /**
-     * POCOR-9153
-     * @throws MpdfException
+     * Export PDF using either API or mPDF depending on config.
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
-    private function savePDF($objSpreadsheet, $filepath, $student_id)
+    private function savePDF($objSpreadsheet, $baseFilePath, $studentId)
     {
-        Log::write('debug', 'ExcelReportBehavior >>> filepath: ' . $filepath);
-        // Convert spreadsheet object into html
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
+        Log::write('debug', 'ExcelReportBehavior >>> base filepath: ' . $baseFilePath);
 
-        // This is to store to final processedHtml
-        $processedHtml = '';
-        $filePaths = [];
-        $tempFiles = [];
-        $basePath = $filepath;
-        for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
-            $sheet = $objSpreadsheet->getSheet($sheetIndex);
-            $orientation = $sheet->getPageSetup()->getOrientation();
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $printer = $ConfigItems->value('pdf_service');
+        switch ($printer) {
+            case self::PRINTER_MPDF:
+                $pdfContent = $this->printPdfViaMpdf($objSpreadsheet, $baseFilePath, $studentId);
+                break;
+            case self::PRINTER_LIBREOFFICE:
+                $pdfContent = $this->printPdfViaLibreOffice($objSpreadsheet, $baseFilePath, $studentId);
+                break;
+            case self::PRINTER_EXTERNAL:
+                $pdfContent = $this->printPdfViaApi($objSpreadsheet, $baseFilePath . '_sheet' . $studentId);
+                break;
+        }
 
-            if ($orientation === \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE) {
-                $mpdfOrientation = 'L';
-                $mpdfFormat = 'A4-L'; // landscape
-            } else {
-                $mpdfOrientation = 'P';
-                $mpdfFormat = 'A4'; // portrait
+        if (!empty($pdfContent)) {
+            $filename = $this->getConfig('filename') . '_' . (!empty($studentId) ? $studentId : date('Ymd\THis')) . '.txt';
+            $outputPath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $filename;
+            file_put_contents($outputPath, $pdfContent);
+            Log::write('debug', "Saved PDF  to: $outputPath");
+        } else {
+            Log::error("PDF content  is empty");
+        }
+    }
+
+    /**
+     * Sends an XLSX spreadsheet to the PDF printer API and returns the resulting PDF content.
+     *
+     * @param Spreadsheet $objSpreadsheet
+     * @param string $baseFileName Base path without extension
+     * @return string|null PDF binary content or null on failure
+     * @throws GuzzleException
+     * @throws Exception
+     */
+    private function printPdfViaApi(Spreadsheet $objSpreadsheet, string $baseFileName): ?string
+    {
+        Log::write('debug', 'ExcelReportBehavior >>> base filepath: ' . $baseFileName);
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $printer = $ConfigItems->value('pdf_service');
+
+        if ($printer != self::PRINTER_EXTERNAL) {
+            return null;
+        }
+
+        $attributes = TableRegistry::getTableLocator()
+            ->get('Configuration.ExternalDataSourceAttributes')
+            ->find('list', ['keyField' => 'attribute_field', 'valueField' => 'value'])
+            ->where(['external_data_source_type' => 'PDF Service'])
+            ->disableHydration()
+            ->toArray();
+//        Log::debug(print_r($attributes,true));
+        $authUser = $attributes['username'] ?? null;
+        $baseUrl = $attributes['api_url'] ?? null;
+        $authPass = $attributes['password'] ?? null;
+        $apiParams = $attributes['api_params'] ?? null;
+        $deleteOriginal = $attributes['delete_original'] ?? 1;
+        $sheetPath = $baseFileName . '.xlsx';
+        $pdfFile = basename($baseFileName) . '.pdf';
+        $pdfUrl = $baseUrl . '/check-pdf/' . $pdfFile. '?delete=true';
+//        $authUser = 'user';
+//        $authPass = 'password';
+        try {
+            $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+            $objWriter->save($sheetPath);
+
+            $client = new \GuzzleHttp\Client();
+            $multipart = [
+                [
+                    'name' => 'file',
+                    'contents' => fopen($sheetPath, 'r'),
+                    'filename' => basename($sheetPath)
+                ],
+            ];
+            if($apiParams){
+                $apiParams = json_encode(json_decode($apiParams, true)); // ensures valid JSON string
+                if ($apiParams) {
+                    $multipart[] = [
+                        'name' => 'lo_options',
+                        'contents' => $apiParams
+                    ];
+                }
+            }
+            if ($deleteOriginal) {
+                $multipart[] = [
+                    'name'     => 'delete_original',
+                    'contents' => '1'
+                ];
+            }
+//            Log::debug(print_r($multipart,true));
+            $response = $client->post($baseUrl . '/queue-job', [
+                'auth' => [$authUser, $authPass],
+                'multipart' => $multipart
+            ]);
+
+            // Poll until ready
+            sleep(2);
+            $retries = 15;
+            while ($retries-- > 0) {
+                try {
+                    $res = $client->get($pdfUrl, [
+                        'auth' => [$authUser, $authPass]
+                    ]);
+
+                    if ($res->getStatusCode() === 200) {
+                        $finalPdf = $res->getBody()->getContents();
+                        return $finalPdf;
+                    }
+                } catch (\GuzzleHttp\Exception\ClientException $e) {
+                    // Probably 404 — PDF not ready yet
+                    Log::debug("PDF not ready yet: " . $e->getResponse()->getStatusCode());
+                } catch (\Exception $e) {
+                    Log::error("Unexpected error while polling PDF: " . $e->getMessage());
+                    break;
+                }
+
+                sleep(2);
             }
 
+            throw new \Exception("PDF not ready after timeout.");
+        } catch (\Exception $e) {
+            Log::error("PDF conversion API error: " . $e->getMessage());
+
+        } finally {
+            // Cleanup
+            if (file_exists($sheetPath)) {
+                @unlink($sheetPath);
+                Log::write('debug', "Deleted temp XLSX file: $sheetPath");
+            }
+        }
+
+        return null;
+    }
+
+    // POCOR-9303
+    private function printPdfViaLibreOffice(Spreadsheet $objSpreadsheet, string $baseFileName, ?string $studentId = null): ?string
+    {
+
+        $tempDir = TMP; // or "/tmp"
+        $baseFileName = basename($baseFileName, '.xlsx'); // safe name, no path
+//        putenv("HOME=$tempDir"); // Ensures LibreOffice has a writable HOME directory
+//        Log::debug($tempDir);
+        try {
+            // 1. Save XLSX
+            $xlsxPath = $tempDir . $baseFileName . '.xlsx';
+            $pdfExpectedPath = $tempDir . $baseFileName . '.pdf';
+
+            $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+            $objWriter->save($xlsxPath);
+
+            $attributes = TableRegistry::getTableLocator()
+                ->get('Configuration.ExternalDataSourceAttributes')
+                ->find('list', ['keyField' => 'attribute_field', 'valueField' => 'value'])
+                ->where(['external_data_source_type' => 'PDF Service'])
+                ->disableHydration()
+                ->toArray();
+            $apiParams = $attributes['api_params'] ?? null;
+            $convert_pdf = "pdf";
+            $javaAvailable = false;
+            exec("java -XshowSettings:properties -version 2>&1", $javaOutput, $javaCode);
+
+            foreach ($javaOutput as $line) {
+                if (stripos($line, 'java.runtime.name') !== false || stripos($line, 'Java(TM)') !== false) {
+                    $javaAvailable = true;
+                    break;
+                }
+            }
+
+            if ($javaAvailable && $apiParams) {
+                // Ensure proper JSON
+                $apiParams = json_encode(json_decode($apiParams, true));
+
+                if ($apiParams) {
+                    $convert_pdf = 'pdf:calc_pdf_Export:' . $apiParams;
+                }
+            }
+            // 2. Prepare command to run LibreOffice in headless mode
+            $escapeTempDir = escapeshellarg($tempDir);
+            $escapedSheet = escapeshellarg($xlsxPath);
+            $escapedOutputDir = escapeshellarg($tempDir);
+
+            $loCmd = "HOME=$escapeTempDir libreoffice --headless --convert-to $convert_pdf --outdir $escapedOutputDir $escapedSheet";
+
+            // You may parse and apply $apiParams if needed
+            // For example, if you want watermark, you may use unoconv with a custom template
+            Log::debug("Running LibreOffice command: $loCmd");
+
+            exec($loCmd, $output, $returnCode);
+//            Log::debug("LibreOffice output: " . implode("\n", $output));
+            if ($returnCode !== 0 || !file_exists($pdfExpectedPath)) {
+                throw new \Exception("LibreOffice conversion failed with exit code $returnCode");
+            }
+
+            return file_get_contents($pdfExpectedPath);
+
+        } catch (\Exception $e) {
+            Log::error("LibreOffice PDF conversion error: " . $e->getMessage());
+            return null;
+        } finally {
+            // 3. Cleanup
+            if (file_exists($xlsxPath)) {
+                @unlink($xlsxPath);
+                Log::debug("Deleted XLSX: $xlsxPath");
+            }
+
+            if (file_exists($pdfExpectedPath)) {
+                @unlink($pdfExpectedPath);
+                Log::debug("Deleted PDF: $pdfExpectedPath");
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Generate PDF using mPDF from given Spreadsheet
+     * Returns raw merged PDF bytes.
+     *
+     * @param Spreadsheet $objSpreadsheet
+     * @param string $baseFilePath
+     * @param mixed $studentId
+     * @return ?string
+     * @throws \Mpdf\MpdfException
+     */
+    private function printPdfViaMpdf($objSpreadsheet, $baseFilePath, $studentId): ?string
+    {
+        Log::write('debug', 'ExcelReportBehavior >>> base filepath: ' . $baseFilePath);
+        $sheetCount = $objSpreadsheet->getSheetCount();
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
+
+        $tempFiles = [];
+        $pdfPaths = [];
+
+        for ($sheetIndex = 0; $sheetIndex < $sheetCount; $sheetIndex++) {
+            $sheet = $objSpreadsheet->getSheet($sheetIndex);
+            if ($sheet->getSheetState() !== 'visible') {
+                continue;
+            }
+
+            // Track worksheet
+            if ($this->currentWorksheet !== $sheet) {
+                $this->currentWorksheetIndex++;
+                $this->currentWorksheet = $sheet;
+            }
+
+            $orientation = $sheet->getPageSetup()->getOrientation();
+            $isLandscape = $orientation === \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE;
+            $mpdfOrientation = $isLandscape ? 'L' : 'P';
+            $mpdfFormat = $isLandscape ? 'A4-L' : 'A4';
+
+            // Define paths
+            $sheetBasePath = $baseFilePath . '_sheet' . $sheetIndex;
+            $xlsPath = $sheetBasePath . '.xlsx';
+            $htmlRawPath = $sheetBasePath . '_raw.html';
+            $htmlProcessedPath = $sheetBasePath . '_processed.html';
+            $pdfProcessedPath = $sheetBasePath . '.pdf';
+
+            // Save XLSX
+            $writer->setSheetIndex($sheetIndex);
+            $writer->save($xlsPath);
+            $tempFiles[] = $xlsPath;
+
+            // Generate raw HTML (simulated for future compatibility)
+            $rawHtml = file_get_contents($xlsPath, FILE_USE_INCLUDE_PATH);
+            file_put_contents($htmlRawPath, $rawHtml);
+            $tempFiles[] = $htmlRawPath;
+
+            // Process HTML
+            $processedHtml = $this->processHtml($rawHtml);
+            file_put_contents($htmlProcessedPath, $processedHtml);
+            $tempFiles[] = $htmlProcessedPath;
+
+            // Render to PDF
             $mpdf = new \Mpdf\Mpdf([
                 'mode' => 'utf-8',
                 'format' => $mpdfFormat,
+                'margin_left' => 15,
+                'margin_right' => 15,
+                'margin_top' => 15,
+                'margin_bottom' => 15,
             ]);
-
             $mpdf->autoScriptToLang = true;
             $mpdf->autoLangToFont = true;
-
-            // Sheet index, HTML, and PDF generation follows...
-            $filepath = $basePath . '_' . $sheetIndex;
-            $filepathxl = $filepath . '.xls';
-
-            $writer->setSheetIndex($sheetIndex);
-            $writer->save($filepathxl);
-            $tempFiles[] = $filepathxl;
-            $file = file_get_contents($filepathxl, FILE_USE_INCLUDE_PATH);
-            $processedHtml = $this->processHtml($file, $sheetIndex);
+            $mpdf->autoMarginPadding = true;
+            $mpdf->autoPageBreak = true;
 
             $mpdf->AddPage($mpdfOrientation);
             $mpdf->WriteHTML($processedHtml);
-            $mpdf->Output($filepath . '.pdf', 'F');
+            $mpdf->Output($pdfProcessedPath, 'F');
 
-            $filePaths[] = $filepath . '.pdf';
-            $tempFiles[] = $filepath . '.pdf';
+            $pdfPaths[] = $pdfProcessedPath;
+            $tempFiles[] = $pdfProcessedPath;
+
+            Log::write('debug', "Saved XLSX: $xlsPath");
+            Log::write('debug', "Saved RAW HTML: $htmlRawPath");
+            Log::write('debug', "Saved PROCESSED HTML: $htmlProcessedPath");
+            Log::write('debug', "Saved FINAL PDF: $pdfProcessedPath");
         }
-        // Merge all the pdf that belongs to one report
-        if (!empty($student_id)) {
-            $fileName = $this->getConfig('filename') . '_' . $student_id;
-        } else {
-            $fileName = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His');
-        }
 
-        Log::write('debug', '----------------------fileName---------------------: ');
-        Log::write('debug', $fileName);
+        // Merge all sheet-level PDFs
+        $filename = $this->getConfig('filename') . '_' . (!empty($studentId) ? $studentId : date('Ymd\THis'));
+        Log::write('debug', 'Merging PDF files under name: ' . $filename);
 
-        $this->mergePDFFiles($filePaths, $fileName, $fileName);
-        // // Remove the temp file that is converted from excel object and its successfully converted to pdf
+        $mergedPdf = $this->mergePDFFiles($pdfPaths, $filename, $filename);
+
+        // Clean up temp files
         if ($this->getConfig('purge')) {
-            foreach ($tempFiles as $tempFile) {
-                // delete excel file after successfully converted to pdf
-                $this->deleteFile($tempFile);
+            foreach ($tempFiles as $file) {
+                $this->deleteFile($file);
             }
         }
+
+        return $mergedPdf;
     }
+
+
 
     private function processHtml($htmlFile, $sheetIndex = 0)
     {
@@ -407,7 +677,6 @@ trait StudentPdfReportTrait
     public function processHtmlTable(string $html, string $headString): string
     {
 
-        $dom = new DOMDocument();
         libxml_use_internal_errors(true);
         // POCOR-9153 start
         $utf8Wrapper = <<<HTML
@@ -688,88 +957,100 @@ HTML;
         unset($mpdf);
     }*/
 
-    // POCOR-8298
-    // POCOR-9153
-    private function mergePDFFiles(array $filenames, $outFile, $title = '', $author = '', $subject = '')
+    /**
+     * Merge multiple PDF files into one, preserving page sizes and centering each imported page
+     *
+     * @param array $filenames List of input PDF paths
+     * @param string $outFile Base name for the output PDF (without “.pdf”)
+     * @param string $title (optional) PDF document title
+     * @param string $author (optional) PDF document author
+     * @param string $subject (optional) PDF document subject
+     * @return ?string   returns merged raw PDF
+     */
+    private function mergePDFFiles(array $filenames, string $outFile, string $title = '', string $author = '', string $subject = ''): ?string
     {
-        // Create a new Mpdf instance
-        $tmpdf = new \Mpdf\Mpdf(['mode' => 'utf-8']); //POCOR-8961
-        $width = 297;
-        $height = 210;
-        if ($filenames) {
-            if (isset($filenames[0])) {
-                $curFile = $filenames[0];
-                if (file_exists($curFile)) {
-                    $tmpdf->SetSourceFile($curFile);
-                    $tplId = $tmpdf->ImportPage(1);
-                    $wh = $tmpdf->getTemplateSize($tplId);
-                    $orientation = trim($wh['orientation']) ?? 'L';
-                    $width = $wh['width'] ?? 297;
-                    $height = $wh['height'] ?? 210;
-                }
-            }
+        // If no files, nothing to do
+        if (empty($filenames)) {
+            return null;
         }
-        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8',
-            'format' => [$width,$height],
-//            'margin_left' => 40,
-//            'margin_right' => 10,
-//            'margin_top' => 30,
-//            'margin_bottom' => 30,
-        ]); //POCOR-8961
+
+        // Step 1: Probe the first file to get default orientation & size
+        $probe = new \Mpdf\Mpdf(['mode' => 'utf-8']);
+        $firstFile = $filenames[0];
+        if (!file_exists($firstFile)) {
+            throw new \RuntimeException("Cannot find PDF to merge: {$firstFile}");
+        }
+        $probe->SetSourceFile($firstFile);
+        $tplId = $probe->ImportPage(1);
+        $tplSize = $probe->getTemplateSize($tplId);
+        $defaultOrientation = $tplSize['orientation'] ?? 'P';
+        $defaultWidth = $tplSize['width'] ?? 210;
+        $defaultHeight = $tplSize['height'] ?? 297;
+        unset($probe);
+
+        // Step 2: Create main Mpdf with 10-pt margins
+        $mpdf = new \Mpdf\Mpdf([
+            'mode' => 'utf-8',
+            'format' => [$defaultWidth, $defaultHeight],
+            'orientation' => $defaultOrientation,
+            'margin_left' => 10,
+            'margin_right' => 10,
+            'margin_top' => 10,
+            'margin_bottom' => 10,
+        ]);
         $mpdf->SetTitle($title);
         $mpdf->SetAuthor($author);
         $mpdf->SetSubject($subject);
-        $mpdf->autoScriptToLang = true; //POCOR-7264
-        $mpdf->autoLangToFont = true; //POCOR-7264
-        if ($filenames) {
-            $filesTotal = sizeof($filenames);
-            // $mpdf->SetImportUse();
+        $mpdf->autoScriptToLang = true;
+        $mpdf->autoLangToFont = true;
 
-            for ($i = 0; $i<count($filenames);$i++) {
-                $curFile = $filenames[$i];
-                if (file_exists($curFile)){
-                    $pageCount = $mpdf->SetSourceFile($curFile);
-                    for ($p = 1; $p <= $pageCount; $p++) {
-                        $tplId = $mpdf->ImportPage($p);
-                        $tplSize = $mpdf->getTemplateSize($tplId);
-                        $orientation = $tplSize['orientation'];
-                        $tplWidth = $tplSize['width'];
-                        $tplHeight = $tplSize['height'];
+        // Step 3: Loop through each file & import all pages
+        foreach ($filenames as $filePath) {
+            if (!file_exists($filePath)) {
+                continue;
+            }
 
-                        $pageWidth = $mpdf->w;
-                        $pageHeight= $mpdf->h;
+            // Load and import all pages in this file
+            $pageCount = $mpdf->SetSourceFile($filePath);
+            for ($p = 1; $p <= $pageCount; $p++) {
+                $tplId = $mpdf->ImportPage($p);
+                $size = $mpdf->getTemplateSize($tplId);
+                $ori = $size['orientation'];
+                $tplW = $size['width'];
+                $tplH = $size['height'];
 
-// Calculate center offsets
-                        $offsetX = ($pageWidth - $tplWidth) / 2;
-                        $offsetY = ($pageHeight - $tplHeight) / 2;
+                // Add a new page matching the imported page’s size & orientation
+                $mpdf->AddPage(
+                    $ori,
+                    '', '', '', '',   // use default header/footer settings
+                    20, 20, 20, 20,   // left, right, top, bottom margins
+                    0, 0,             // margin_header, margin_footer
+                    [$tplW, $tplH]
+                );
 
-// Add page with exact orientation and size
-                        if (($p == 1)) {
-                            $mpdf->state = 0;
-                        } else {
-                            $mpdf->state = 1;
-                        }
-                        $mpdf->AddPage($orientation, '', '', '', '', '', '', '', '', '', '', [$tplWidth, $tplHeight]);
-                        $mpdf->UseTemplate($tplId);
-                    }
-                }
+                // Compute inner printable area
+                $innerW = $mpdf->w - $mpdf->lMargin - $mpdf->rMargin;
+                $innerH = $mpdf->h - $mpdf->tMargin - $mpdf->bMargin;
+
+                // Center the template within margins
+                $offsetX = $mpdf->lMargin + (($innerW - $tplW) / 2);
+                $offsetY = $mpdf->tMargin + (($innerH - $tplH) / 2);
+
+                // Place the imported page
+                $mpdf->UseTemplate($tplId, null, null, null, null, true); // POCOR-9292
             }
         }
 
-        // Define file paths
-        $file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile . '.pdf';
-        $pdf_file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
+        // Step 4: Write out merged PDF
+        $outputPath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile . '.pdf';
+        $rawPdfContent = $mpdf->Output($outputPath, \Mpdf\Output\Destination::STRING_RETURN);
 
-        // Output the merged PDF to the specified file
-        $content = $mpdf->Output($file_path, "S");
+//        // Also dump raw PDF bytes to .txt for debugging
+//        $txtPath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile . '.txt';
+//        file_put_contents($txtPath, $rawPdfContent);
 
-        // Save the PDF content to a text file
-        $fp = fopen($pdf_file_path . $outFile . ".txt", "wb");
-        fwrite($fp, $content);
-        fclose($fp);
-
-        // Clean up
         unset($mpdf);
+        return $rawPdfContent;
     }
 
 

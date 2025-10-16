@@ -400,19 +400,32 @@ class CustomFieldListBehavior extends Behavior
             } elseif (isset($customFormField['custom_form']['custom_fields'])) {
                 $fields = $customFormField['custom_form']['custom_fields'];
             }
-
-            if (!(is_null($fields))) {
+            // POCOR-9265 start
+            if (!empty($fields)) {
+                // Detect if any field has an ->order property
+                $hasOrder = false;
                 foreach ($fields as $field) {
-                    if ($field->field_type != 'STUDENT_LIST') {
-                        $customFields[$field->id] = $field;
+                    if (isset($field->_joinData->order)) {
+                        $hasOrder = true;
+                        break;
                     }
                 }
-            }
-            if (!empty($customFields)) {
-                ksort($customFields);
+
+                if ($hasOrder) {
+                    // Sort by ->order, push missing ->order to the end
+                    uasort($fields, function($a, $b) {
+                        $oA = isset($a->_joinData->order) ? (int)$a->_joinData->order : PHP_INT_MAX;
+                        $oB = isset($b->_joinData->order) ? (int)$b->_joinData->order : PHP_INT_MAX;
+                        return $oA <=> $oB;
+                    });
+                } else {
+                    // Fallback: sort by key (ID)
+                    ksort($fields);
+                }
+                // POCOR-9265 end
             }
         }
-        return $customFields;
+        return $fields;
     }
 
     // Function to generate the excel content
@@ -542,11 +555,11 @@ class CustomFieldListBehavior extends Behavior
                 ->where([$TableCellTable->aliasField($customFieldsForeignKey) . ' IN ' => $tableCustomFieldIds, $TableCellTable->aliasField($customRecordsForeignKey) => $recordId])
                 ->map(function ($row) use ($tableCellData, $customFieldsForeignKey, $customColumnForeignKey, $customRowForeignKey) {
                     $value = null;
-                    if (isset($row['number_value']) && $row['number_value']) {
+                    if (isset($row['number_value'])) { //POCOR-9272
                         $value = $row['number_value'];
-                    } elseif (isset($row['text_value']) && $row['text_value']) {
+                    } elseif (isset($row['text_value'])) { //POCOR-9272
                         $value = $row['text_value'];
-                    } elseif (isset($row['decimal_value']) && $row['decimal_value']) {
+                    } elseif (isset($row['decimal_value'])) { //POCOR-9272
                         $value = $row['decimal_value'];
                     }
                     $tableCellData[$row[$customFieldsForeignKey]][$row[$customColumnForeignKey]][$row[$customRowForeignKey]] = $value;
@@ -581,7 +594,7 @@ class CustomFieldListBehavior extends Behavior
         return $this->_customFieldOptionsList;
     }
 
-    /**
+    /**bef
      * // POCOR-9116
      *    Function to get the custom values for each field values specified
      *

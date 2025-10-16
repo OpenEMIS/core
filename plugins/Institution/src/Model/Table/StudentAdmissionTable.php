@@ -23,6 +23,7 @@ use Cake\I18n\FrozenTime;
 use App\Controller\DashboardController;
 use Cake\I18n\FrozenDate;
 use Cake\ORM\Table;
+use Cake\Datasource\ConnectionManager; // POCOR-9323
 
 // POCOR-8286 start
 
@@ -497,8 +498,16 @@ class StudentAdmissionTable extends ControllerActionTable
             $incomingStudent['class'] = $entity->institution_class_id;
         }
         $newEntity = $Students->newEntity($incomingStudent);
-        $Students->save($newEntity);
-        return $newEntity;
+        try{
+            $Students->save($newEntity);
+        } catch (\Exception $exception) {
+            Log::error($exception->getMessage()); // POCOR-9323
+        }
+        if(!$newEntity->hasErrors()){
+            return $newEntity;
+        }else{
+            return null;
+        }
     }
 
     //POCOR-8434 Ends
@@ -531,9 +540,10 @@ class StudentAdmissionTable extends ControllerActionTable
         // add student into institution_students_enrolment
         $entity = $this->get($id);
         $this->triggerPendingEnrolmentForStudent($entity);
+
     }
 
-    public function triggerPendingEnrolmentForStudent(Entity $entity)
+    public function triggerPendingEnrolmentForStudent($entity) // POCOR-9323
     {
         $WorkflowsTbl = self::getDynamicTableInstance('Workflow.Workflows');
         $WorkflowStepsTbl = self::getDynamicTableInstance('Workflow.WorkflowSteps');
@@ -555,7 +565,7 @@ class StudentAdmissionTable extends ControllerActionTable
             'end_date' => $entity->end_date,
             'student_id' => $entity->student_id,
             'status_id' => $WorkflowsRes->id,
-            'assignee_id' => $this->Auth->user('id'),
+            'assignee_id' => $entity->assignee_id,//POCOR-9277
             'institution_id' => $entity->institution_id,
             'academic_period_id' => $entity->academic_period_id,
             'education_grade_id' => $entity->education_grade_id,
@@ -569,8 +579,10 @@ class StudentAdmissionTable extends ControllerActionTable
             $enrolmentArr['institution_class_id'] = 'NULL';
         }
 
-        $newEntity = $StudentEnrolments->newEntity($enrolmentArr);
-        $StudentEnrolments->save($newEntity);
+        $newEnrolmentEntity = $StudentEnrolments->newEntity($enrolmentArr);
+        if ($StudentEnrolments->save($newEnrolmentEntity)) { // POCOR-9323
+            $this->handleCandidateNumber($newEnrolmentEntity);
+        }
     }
 
     public function studentsAfterSave(Event $event, $student)
@@ -687,7 +699,7 @@ class StudentAdmissionTable extends ControllerActionTable
         $security_group_id = self::getInstitutionSecurityGroupId($institution_id);
         //check student already exist
         $student_security_groups = self::getStudentSecurityGroups($student_id, $student_role_id);
-        //Log::write('debug', $student_security_groups);
+//        Log::write('debug', $student_security_groups);
         //check that the student is not in other groups
         if (sizeof($student_security_groups) == 0) {
             //Log::write('debug', $student_id);
@@ -725,6 +737,7 @@ class StudentAdmissionTable extends ControllerActionTable
     }
 
     /**
+     * POCOR-9423
      * @param $institution_id
      * @return integer
      * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
@@ -732,35 +745,77 @@ class StudentAdmissionTable extends ControllerActionTable
     private static function getInstitutionSecurityGroupId($institution_id)
     {
         $institutionTbl = self::getDynamicTableInstance('Institution.Institutions');
-        $security_group_id = null;
-        $institutions = $institutionTbl->find()
-            ->where([
-                $institutionTbl->aliasField('id') => $institution_id
-            ])->first();
-        if (!empty($institutions)) {
-            $security_group_id = $institutions->security_group_id;
+        $securityGroupsTbl = self::getDynamicTableInstance('Security.SecurityGroups');
+        $securityGroupInstitutionsTbl = self::getDynamicTableInstance('Security.SecurityGroupInstitutions');
+
+        $institution = $institutionTbl->find()
+            ->where([$institutionTbl->aliasField('id') => $institution_id])
+            ->first();
+
+        if (empty($institution)) {
+            return null;
         }
-        if ($security_group_id != null) {
-            $securityGroupInstitutionsTbl = self::getDynamicTableInstance('Security.SecurityGroupInstitutions');
-            $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
-                ->where([
-                    $securityGroupInstitutionsTbl->aliasField('security_group_id') => $security_group_id,
-                    $securityGroupInstitutionsTbl->aliasField('institution_id') => $institutions->id
-                ])
-                ->first();
-            //save security group for institution
-            if (empty($securityGroupInstitutions)) {
-                $security_group_ins_data = [
-                    'security_group_id' => $security_group_id,
-                    'institution_id' => $institution_id,
-                    'created_user_id' => 1,
-                    'created' => new FrozenTime('NOW')
-                ];
-                $securityGroupInstitutionsEntity = $securityGroupInstitutionsTbl->newEntity($security_group_ins_data);
-                $securityGroupInstitutionsTbl->save($securityGroupInstitutionsEntity);
-            }
+
+        $security_group_id = $institution->security_group_id;
+
+        if ($securityGroupsTbl->exists(['id' => $security_group_id])) {
+            return $security_group_id;
         }
-        return $security_group_id;
+
+        // 1 Find a security group with only this institution
+        $subQuery = $securityGroupInstitutionsTbl->find()
+            ->select(['security_group_id' => $securityGroupInstitutionsTbl->aliasField('security_group_id')])
+            ->group($securityGroupInstitutionsTbl->aliasField('security_group_id'))
+            ->having(['COUNT(*) =' => 1])
+            ->matching('Institutions', function ($q) use ($institution_id) {
+                return $q->where(['Institutions.id' => $institution_id]);
+            })
+            ->first();
+
+        if (!empty($subQuery)) {
+            $new_group_id = $subQuery->security_group_id;
+
+            // Update institution to point to this valid group
+            $connection = ConnectionManager::get('default');
+                $updateQuery = 'UPDATE institutions SET security_group_id = ' . $new_group_id . ' WHERE id = ' . $institution_id;
+            $connection->execute($updateQuery);
+
+            return $new_group_id;
+        }
+
+        // 2 No group found — create new one (auto-incremented ID)
+        $newGroup = $securityGroupsTbl->newEntity([
+            'name' => 'Auto-Recovered Group for Institution ' . $institution_id,
+            'created_user_id' => 1,
+            'created' => new FrozenTime('now')
+        ]);
+
+        if (!$securityGroupsTbl->save($newGroup)) {
+            Log::error('Failed to create new security group: ' . print_r($newGroup->getErrors(), true));
+            return null;
+        }
+
+        $new_group_id = $newGroup->id;
+
+        // 3 Link new group to institution
+        $linkEntity = $securityGroupInstitutionsTbl->newEntity([
+            'security_group_id' => $new_group_id,
+            'institution_id' => $institution_id,
+            'created_user_id' => 1,
+            'created' => new FrozenTime('now')
+        ]);
+
+        if (!$securityGroupInstitutionsTbl->save($linkEntity)) {
+            Log::error('Failed to link institution to new group: ' . print_r($linkEntity->getErrors(), true));
+            return null;
+        }
+
+        // 4 Update institution to use new group ID
+        $connection = ConnectionManager::get('default');
+        $updateQuery = 'UPDATE institutions SET security_group_id = ' . $new_group_id . ' WHERE id = ' . $institution_id;
+        $connection->execute($updateQuery);
+
+        return $new_group_id;
     }
 
     /**
@@ -1128,6 +1183,13 @@ class StudentAdmissionTable extends ControllerActionTable
         $this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
         $this->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
         $this->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
+        $this->field('registration_number', [  // POCOR-9323
+            'type'     => 'readonly',
+            'label'    => __('Candidate Number'),
+            'attr'  => ['entity' => $entity],
+            'entity'  => $entity,
+
+        ]);
         $this->field('institution_class_id', ['entity' => $entity]);
         $this->field('start_date', ['entity' => $entity]);
         $this->field('end_date', ['entity' => $entity]);
@@ -1140,11 +1202,32 @@ class StudentAdmissionTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('openemis_no');//POCOR-7738
-        $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'start_date', 'end_date', 'comment']);
-    }
 
-    public function onGetStudentId(Event $event, Entity $entity)
+        $this->field('openemis_no');//POCOR-7738
+        $this->field('student_name'); // POCOR-9323: start
+        $this->field('student_id', ['type' => 'hidden']);//POCOR-7738
+        $this->field('registration_number', [
+            'type'     => 'readonly',
+            'label'    => __('Candidate Number'),
+            'visible'  => ['view' => true, 'edit' => true, 'add' => false],
+            'entity' => $entity,
+            'attr' => ['entity' => $entity]
+        ]);
+        $this->setFieldOrder(['status_id',
+            'assignee_id',
+            'student_name',
+//            'student_id',
+            'academic_period_id',
+            'education_grade_id',
+            'institution_class_id',
+            'start_date',
+            'end_date',
+            'comment']);
+    }
+    // POCOR-9323: end
+
+    // POCOR-9323: start
+    public function onGetStudentName(Event $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('user')) {
@@ -1176,6 +1259,72 @@ class StudentAdmissionTable extends ControllerActionTable
         return $event->getSubject()->HtmlField->link($value, $url);
     }
 
+    // POCOR-9323: start
+    public function onGetRegistrationNumber(Event $event, Entity $entity)
+    {
+        // Fallback: lazy lookup (in case contain didn't run for some reason)
+
+        $InstitutionStudentProgrammes = TableRegistry::get('Student.InstitutionStudentProgrammes');
+
+
+        // Scope: same student + institution (+ programme if available in the entity)
+        $conditions = [
+            'student_id'     => $entity->student_id,
+            'institution_id' => $entity->institution_id ?? null,
+        ];
+
+        // If education programme id is reachable via grade, use it to be precise
+        $educationProgrammeId = null;
+        if ($entity->has('education_grade') && $entity->education_grade->education_programme_id ?? null) {
+            $educationProgrammeId = (int)$entity->education_grade->education_programme_id;
+        }
+        if ($educationProgrammeId) {
+            $conditions['education_programme_id'] = $educationProgrammeId;
+        }
+//        dd($conditions);
+        $row = $InstitutionStudentProgrammes->find()
+            ->select(['registration_number', 'id'])
+            ->where($conditions)
+            ->orderDesc('id')
+            ->first();
+
+        return $row->registration_number ?? '';
+    }
+
+    public function onUpdateFieldRegistrationNumber(Event $event, array $attr, $action, $request)
+    {
+        // Fallback: lazy lookup (in case contain didn't run for some reason)
+
+//        return $attr;
+        $entity = $attr['attr']['entity'];
+
+        $InstitutionStudentProgrammes = TableRegistry::get('Student.InstitutionStudentProgrammes');
+
+
+        // Scope: same student + institution (+ programme if available in the entity)
+        $conditions = [
+            'student_id'     => $entity->student_id,
+            'institution_id' => $entity->institution_id ?? null,
+        ];
+
+        // If education programme id is reachable via grade, use it to be precise
+        $educationProgrammeId = null;
+        if ($entity->has('education_grade') && $entity->education_grade->education_programme_id ?? null) {
+            $educationProgrammeId = (int)$entity->education_grade->education_programme_id;
+        }
+        if ($educationProgrammeId) {
+            $conditions['education_programme_id'] = $educationProgrammeId;
+        }
+//        dd($conditions);
+        $row = $InstitutionStudentProgrammes->find()
+            ->select(['registration_number', 'id'])
+            ->where($conditions)
+            ->orderDesc('id')
+            ->first();
+        $attr['attr']['value'] = $row->registration_number ?? '';
+       return $attr;
+    }
+    // POCOR-9323: end
 
     //POCOR-6925
 
@@ -1357,78 +1506,88 @@ class StudentAdmissionTable extends ControllerActionTable
         return $data;
     }
 
+    // POCOR-9313 start: made a little safer
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
-        if ($entity->isNew()) {
-            if ($entity->has('action_type') && $entity->action_type == 'imported') { // Import logic
+        if ($entity->isNew() || $entity->isDirty('status_id')) { // POCOR-9323
+            $this->sendStudentAdmissionAlert($entity);
+        }
+        if (!$entity->isNew()) {
+            return; // Only handle new entities
+        }
+
+        if ($entity->has('action_type')) {
+            if ($entity->action_type === 'imported') {
                 $WorkflowActions = TableRegistry::get('Workflow.WorkflowActions');
                 $triggeringStep = $WorkflowActions->getEventTriggeringStep('Institution.StudentAdmission', 'Workflow.onApprove');
 
                 if (!empty($triggeringStep) && $entity->status_id == $triggeringStep) {
-                    if ($this->save($entity)) {
-                        $this->addInstitutionStudent($entity);
-                    }
+                    $this->addInstitutionStudent($entity);
                 }
-            } else if ($entity->has('action_type') && $entity->action_type == 'default') { // AngularJs logic
-                // auto approve admission and add student into the institution
-                $superAdmin = Hash::get($_SESSION['Auth'], 'User.super_admin');
-                $executePermission = isset($_SESSION['Permissions']) && Hash::check($_SESSION['Permissions'], 'Institutions.StudentAdmission.execute');
 
-                // creator must be admin or have 'Student Admission -> Execute' permission
-                if ($superAdmin || $executePermission) {
-                    $workflowEntity = $this->getWorkflow($this->getRegistryAlias());
-
-                    // get the first step in 'APPROVED' workflow statuses
-                    $WorkflowModelsTable = self::getDynamicTableInstance('Workflow.WorkflowModels');
-                    $statuses = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentAdmission', 'APPROVED');
-                    ksort($statuses);
-                    $approvedStatusId = key($statuses);
-                    $approvedStatusEntity = $this->Statuses->get($approvedStatusId);
-
-                    if (!empty($approvedStatusEntity)) {
-                        $prevStepEntity = $this->Statuses->get($entity->status_id);
-
-                        // update status_id and assignee_id of admission record
-                        $entity->status_id = $approvedStatusEntity->id;
-                        $saved = false;
-                        try {
-                            $this->autoAssignAssignee($entity);
-                            $this->save($entity);
-                            $saved = true;
-                        } catch (\Exception $exception) {
-                            try {
-                                $this->save($entity);
-                                $saved = true;
-                            } catch (\Exception $exception) {
-                                $entity->assignee_id = $entity->created_user_id;
-                                $this->save($entity);
-                                $saved = true;
-                            }
-                        }
-                        if ($saved) {
-                            // add workflow transition
-                            $transition = [
-                                'comment' => __('On Auto Approve Student Admission'),
-                                'prev_workflow_step_name' => $prevStepEntity->name,
-                                'workflow_step_name' => $approvedStatusEntity->name,
-                                'workflow_action_name' => 'Administration - Approve Record',
-                                'workflow_model_id' => $workflowEntity->workflow_model_id,
-                                'model_reference' => $entity->id,
-                                'created_user_id' => 1,
-                                'created' => new FrozenTime('NOW')
-                            ];
-
-                            $WorkflowTransitions = self::getDynamicTableInstance('Workflow.WorkflowTransitions');
-                            $transitionEntity = $WorkflowTransitions->newEntity($transition);
-                            $WorkflowTransitions->save($transitionEntity);
-                        }
-                    }
-                }
+            } elseif ($entity->action_type === 'default') {
+                // Defer re-save logic to post-processing service if possible
+                $this->processAutoApproval($entity);
             }
         }
-        $this->sendStudentAdmissionAlert($entity);
+
+        // These are read-only safe and fine to run here
         $this->ensureInstitutionStudentExists($entity);
     }
+
+    protected function processAutoApproval(Entity $entity): void
+    {
+        $superAdmin = Hash::get($_SESSION['Auth'], 'User.super_admin');
+        $executePermission = isset($_SESSION['Permissions']) && Hash::check($_SESSION['Permissions'], 'Institutions.StudentAdmission.execute');
+
+        if (!($superAdmin || $executePermission)) {
+            return;
+        }
+
+        $workflowEntity = $this->getWorkflow($this->getRegistryAlias());
+        $WorkflowModelsTable = self::getDynamicTableInstance('Workflow.WorkflowModels');
+        $statuses = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentAdmission', 'APPROVED');
+        ksort($statuses);
+        $approvedStatusId = key($statuses);
+        $approvedStatusEntity = $this->Statuses->get($approvedStatusId);
+
+        if (empty($approvedStatusEntity)) {
+            return;
+        }
+
+        $prevStepEntity = $this->Statuses->get($entity->status_id);
+
+        // Important: Clone the entity or create a new one if you need to resave
+        $updateFields = [
+            'status_id' => $approvedStatusEntity->id,
+            'assignee_id' => $entity->assignee_id ?: $entity->created_user_id,
+        ];
+
+        $patchEntity = $this->patchEntity($entity, $updateFields);
+
+        try {
+            $this->saveOrFail($patchEntity);
+
+            $transition = [
+                'comment' => __('On Auto Approve Student Admission'),
+                'prev_workflow_step_name' => $prevStepEntity->name,
+                'workflow_step_name' => $approvedStatusEntity->name,
+                'workflow_action_name' => 'Administration - Approve Record',
+                'workflow_model_id' => $workflowEntity->workflow_model_id,
+                'model_reference' => $entity->id,
+                'created_user_id' => 1,
+                'created' => new FrozenTime('NOW')
+            ];
+
+            $WorkflowTransitions = self::getDynamicTableInstance('Workflow.WorkflowTransitions');
+            $transitionEntity = $WorkflowTransitions->newEntity($transition);
+            $WorkflowTransitions->save($transitionEntity);
+        } catch (\Exception $e) {
+            Log::error('Auto-approval failed: ' . $e->getMessage());
+        }
+    }
+    // POCOR-9313 end
+
 
     private function sendStudentAdmissionAlert($entity)
     {
@@ -1449,7 +1608,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 $alertsTable->aliasField('frequency') => 'Once'])
             ->first();
         if (!$alert) {
-            Log::debug('No Alerts for AlertStudentAdmission');
+            Log::error('No Alerts for AlertStudentAdmission'); // POCOR-9323
             return;
         }
         if (!is_array($alert)) {
@@ -1684,4 +1843,199 @@ class StudentAdmissionTable extends ControllerActionTable
         return $caseResults->toArray();
     }
 
+    // POCOR-9323
+    private function handleCandidateNumber($entity): void
+    {
+        if (property_exists($entity, 'modified_user_id') && $entity->modified_user_id) {
+            $userId = $entity->modified_user_id;
+        } else {
+            $userId = $entity->created_user_id;
+        }
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+// Read config
+        $config = $ConfigItemTable->find()
+            ->select(['value', 'value_selection'])
+            ->where([$ConfigItemTable->aliasField('code') => 'auto_generated_candidate_number'])
+            ->first();
+
+        $isEnabled = $config ? (bool)$config->value : false;
+        $template  = $config ? (string)$config->value_selection : '';
+        if (!$isEnabled) {
+            Log::error(print_r([__LINE__, 'bail:not_enabled'], true));
+            return; // not enabled
+        }
+
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionStudentProgrammes = TableRegistry::get('Student.InstitutionStudentProgrammes');
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+
+        // Inputs
+        $institutionId     = (int)($entity->institution_id ?? 0);
+        $educationGradeId  = (int)($entity->education_grade_id ?? 0);
+        $academicPeriodId  = (int)($entity->academic_period_id ?? 0);
+        $userRecordId  = (int)($entity->student_id ?? 0);
+
+        //        Log::debug(print_r([__LINE__, 'inputs', compact('institutionId','educationGradeId','academicPeriodId', 'userRecordId')], true));
+
+        if (!$institutionId || !$educationGradeId || !$academicPeriodId) {
+            Log::error(print_r([__LINE__, 'bail:not_enough_info'], true));
+            return; // not enough info to generate
+        }
+
+        // Fetch core context
+        $institution = $Institutions->find()
+            ->contain(['Areas'])
+            ->where([$Institutions->aliasField('id') => $institutionId])
+            ->first();
+//        Log::debug(print_r([__LINE__, 'institution_found' => (bool)$institution], true));
+
+        $period = $AcademicPeriods->find()
+            ->where([$AcademicPeriods->aliasField('id') => $academicPeriodId])
+            ->first();
+//        Log::debug(print_r([__LINE__, 'period_found' => (bool)$period], true));
+
+        $grade = $EducationGrades->find()
+            ->where([$EducationGrades->aliasField('id') => $educationGradeId])
+            ->first();
+//        Log::debug(print_r([__LINE__, 'grade_found' => (bool)$grade], true));
+
+        if (empty($institution) || empty($period) || empty($grade)) {
+            Log::error(print_r([__LINE__, 'bail:missing_context'], true));
+            return;
+        }
+
+        $areaCode            = $institution->area->code ?? '';
+        $institutionCode     = $institution->code ?? '';
+        $academicPeriodCode  = $period->code ?? '';
+        $educationProgrammeId= (int)($grade->education_programme_id ?? 0);
+
+//        Log::debug(print_r([__LINE__, 'context_vals', compact('areaCode','institutionCode','academicPeriodCode','educationProgrammeId')], true));
+
+        if ($areaCode === '' || $institutionCode === '' || $academicPeriodCode === '' || !$educationProgrammeId) {
+            Log::error(print_r([__LINE__, 'bail:missing_required_values'], true));
+            return;
+        }
+
+        //        Log::debug(print_r([__LINE__, 'config', 'enabled' => $isEnabled, 'template' => $template], true));
+
+        // Decide path: New (template) or Fallback (default)
+        $useTemplate = trim($template) !== '';
+//        Log::debug(print_r([__LINE__, 'path' => $useTemplate ? 'template' : 'fallback'], true));
+
+        if ($useTemplate) {
+            $tokenMap = [
+                // IMPORTANT: Do not coalesce to '' – keep "0"
+                'area_code'            => isset($areaCode) ? (string)$areaCode : '',
+                'institution_code'     => isset($institutionCode) ? (string)$institutionCode : '',
+                'academic_period_code' => isset($academicPeriodCode) ? (string)$academicPeriodCode : '',
+            ];
+
+            [$prefix, $seqWidth, $subs] = $this->compileCandidateTemplate($template, $tokenMap);
+
+            // (Optional) visibility into exactly what changed
+//            Log::debug(print_r([
+//                'template' => $template,
+//                'resolved_prefix' => $prefix,
+//                'seq_width' => $seqWidth,
+//                'subs' => $subs, // e.g. ['area_code' => '0', 'institution_code' => 'SCH01', ...]
+//            ], true));
+
+            $likePrefix = str_replace(['%', '_'], ['\%', '\_'], str_replace('%SEQ%', '', $prefix)) . '%';
+
+            $conn = ConnectionManager::get('default');
+            $nextNumberPadded = $conn->transactional(function () use ($InstitutionStudentProgrammes, $likePrefix, $seqWidth) {
+                $last = $InstitutionStudentProgrammes->find()
+                    ->select(['registration_number', 'id'])
+                    ->where([$InstitutionStudentProgrammes->aliasField('registration_number') . ' LIKE' => $likePrefix])
+                    ->order([$InstitutionStudentProgrammes->aliasField('id') => 'DESC'])
+                    ->first();
+
+                $next = 1;
+                if ($last && !empty($last->registration_number)) {
+                    $parts = preg_split('#[/:]#', $last->registration_number);
+                    $lastSeg = end($parts);
+                    if (ctype_digit($lastSeg)) {
+                        $next = (int)$lastSeg + 1;
+                    }
+                }
+                return str_pad((string)$next, $seqWidth, '0', STR_PAD_LEFT);
+            });
+
+            $finalCandidateNumber = str_replace('%SEQ%', $nextNumberPadded, $prefix);
+
+            $data = [
+                'institution_id'         => $institutionId,
+                'student_id'             => $userRecordId,
+                'education_programme_id' => $educationProgrammeId,
+                'registration_number'    => $finalCandidateNumber,
+                'created_user_id'        => $userId,
+                'modified_user_id'       => $userId,
+                'created'                => FrozenTime::now(),
+                'modified'               => FrozenTime::now(),
+            ];
+
+            try {
+                $entity = $InstitutionStudentProgrammes->newEntity($data);
+                $InstitutionStudentProgrammes->saveOrFail($entity);
+            } catch (\Throwable $e) {
+                Log::error('save(template): ' . $e->getMessage());
+                throw $e;
+            }
+            return;
+        }
+                }
+
+    /**
+     * POCOR-9346
+     * Compile a candidate-number template.
+     * - Named tokens: ${area_code}, ${institution_code}, ${academic_period_code}
+     * - Numeric token: first ${N} becomes %SEQ%, N = padding width. Others removed.
+     * - Unknown ${...} are removed.
+     *
+     * @return array [string $prefixWithSeq, int $seqWidth, array $substitutionLog]
+     */
+    private function compileCandidateTemplate(string $template, array $tokenMap): array
+    {
+        // Replace named tokens (preserve "0")
+        $subs = [];
+        $prefix = preg_replace_callback('/\${\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*}/', function ($m) use ($tokenMap, &$subs) {
+            $key = $m[1];
+            if (array_key_exists($key, $tokenMap)) {
+                $val = (string)$tokenMap[$key]; // "0" stays "0"
+            } else {
+                $val = ''; // unknown named token -> drop
+            }
+            $subs[$key] = $val;
+            return $val;
+        }, $template);
+
+        // Width from first numeric token
+        $seqWidth = 4;
+        if (preg_match('/\${\s*(\d+)\s*}/', $prefix, $m)) {
+            $seqWidth = max(1, (int)$m[1]);
+        }
+
+        // First numeric -> %SEQ%, others removed
+        $seenNumeric = false;
+        $prefix = preg_replace_callback('/\${\s*(\d+)\s*}/', function () use (&$seenNumeric) {
+            if (!$seenNumeric) { $seenNumeric = true; return '%SEQ%'; }
+            return '';
+        }, $prefix);
+
+        // Strip any remaining ${...}
+        $prefix = preg_replace('/\${\s*[^}]+\s*}/', '', $prefix);
+
+        // Normalize repeated separators (// or ::) and trailing separator
+        $prefix = preg_replace('#([/:])\1+#', '$1', $prefix);
+        $prefix = preg_replace('#([/:])$#', '', $prefix);
+
+        // Ensure we have a %SEQ% slot
+        if (strpos($prefix, '%SEQ%') === false) {
+            // If no separator is present, default to '/'
+            $prefix .= (strpbrk($prefix, '/:') ? '' : '/') . '%SEQ%';
+        }
+
+        return [$prefix, $seqWidth, $subs];
+    }
 }

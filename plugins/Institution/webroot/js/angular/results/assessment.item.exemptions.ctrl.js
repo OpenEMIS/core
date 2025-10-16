@@ -62,8 +62,8 @@ function AssessmentItemExemptionsController(
     ctrl.bottomKey = 'id';
     //POCOR-9042 starts
     ctrl.excempttype = [
-        { id: 1, name: 'Exempt Students' },
-        { id: 2, name: 'Unassign Students' }
+        {id: 1, name: 'Exempt Students'},
+        {id: 2, name: 'Unassign Students'}
     ];
     ctrl.excempttype_id = 0;//POCOR-9042 ends
     ctrl.savedUk = false; //POCOR-9197 start
@@ -137,10 +137,13 @@ function AssessmentItemExemptionsController(
 
     function getColumnDefinitions() {
         return [
+            {headerName: 'Assessment Period', field: 'assessment_title'},//POCOR-9289 moved forward to be clear)
             {headerName: 'OpenEMIS ID', field: 'openemis_no'},
             {headerName: 'Name', field: 'name'},
             {headerName: 'Gender', field: 'gender_name'},
             {headerName: 'Student Status', field: 'student_status_name'},
+            // {headerName: 'Subject', field: 'education_subject_id_title'},//POCOR-9289 removed
+
         ];
     }
 
@@ -152,7 +155,7 @@ function AssessmentItemExemptionsController(
             ctrl.assessment_item_id &&
             ctrl.assessment_period_id) {
 
-            // loadClassDetails();//POCOR-9042
+            loadClassDetails();//POCOR-9289
             // console.log('init');
         }
         UtilsSvc.isAppendLoader(false);
@@ -165,7 +168,7 @@ function AssessmentItemExemptionsController(
             ctrl.assessment_item_id &&
             ctrl.assessment_period_id) {
             ctrl.actionEnabled = true; //POCOR-9197
-            // loadClassDetails();//POCOR-9042
+            loadClassDetails();////POCOR-9289
             // console.log(ctrl);
         } else {
             ctrl.actionEnabled = false;
@@ -174,20 +177,21 @@ function AssessmentItemExemptionsController(
         UtilsSvc.isAppendLoader(false);
 
     }
+
     //POCOR-9042 starts
     function onExcemptTypeChange() {
         if (ctrl.assessment_period_id) { //POCOR-9197 start
             ctrl.saveEnabled = true;
-        }else{
+        } else {
             ctrl.saveEnabled = false;
         } //POCOR-9197 end
         UtilsSvc.isAppendLoader(true);
-        if(ctrl.excempttype_id == 1){
-            ctrl.textConfig.topToBottomButton= "Exempt";
-            ctrl.textConfig.bottomToTopButton= "Unexempt";
-        }else{
-            ctrl.textConfig.topToBottomButton= "Unassign";
-            ctrl.textConfig.bottomToTopButton= "Assign";
+        if (ctrl.excempttype_id == 1) {
+            ctrl.textConfig.topToBottomButton = "Exempt";
+            ctrl.textConfig.bottomToTopButton = "Unexempt";
+        } else {
+            ctrl.textConfig.topToBottomButton = "Unassign";
+            ctrl.textConfig.bottomToTopButton = "Assign";
         }
         // console.log(ctrl);
         if (ctrl.institution_class_id &&
@@ -207,12 +211,19 @@ function AssessmentItemExemptionsController(
         if (!Array.isArray(ctrl.assessment_period_id)) {
             ctrl.assessment_period_id = [ctrl.assessment_period_id];  // POCOR-9114 Convert to array if it's a single value
         }
+        if (Array.isArray(ctrl.assessment_period_id) && ctrl.assessment_period_id.length === 0) { //POCOR-9289 start
+            ctrl.assessment_period_id = null;  // POCOR-9114 Convert to array if it's a single value
+        }
+        if (undefined === typeof ctrl.assessment_period_id) {
+            ctrl.assessment_period_id = null;  // POCOR-9114 Convert to array if it's a single value
+        } //POCOR-9289 end
         const options = {
             institution_class_id: ctrl.institution_class_id,
             assessment_item_ids: ctrl.assessment_item_ids,
             assessment_item_id: ctrl.assessment_item_id,
             assessment_period_id: ctrl.assessment_period_id,
-            classification: ctrl.classification
+            classification: ctrl.classification, //POCOR-9289
+            excempttype_id: ctrl.excempttype_id //POCOR-9289
         }
         // console.log(options);
         //     .then(loadAdditionalClassData)
@@ -221,47 +232,78 @@ function AssessmentItemExemptionsController(
             options.assessment_item_id = options.assessment_item_ids[0];
             delete options.assessment_item_ids;
         }
-        ctrl.dataReady = false;
+        if (Array.isArray(options.assessment_item_id) && options.assessment_item_ids.length === 0) { // POCOR-9289 start
+            options.assessment_item_id = null;
+        }
         // console.log(options);
-        AssessmentItemExemptionsSvc.getExemptStudents(options)
-            .then(setClassDetails)
+        if (options.excempttype_id && options.assessment_period_id && options.assessment_item_id) { // POCOR-9289 end
+            ctrl.dataReady = false;
+            AssessmentItemExemptionsSvc.getExemptStudents(options)
+                .then(setClassDetails)
             // .then(translateColumnHeaders)
-            .then(() => {
-                // translatedText.forEach((text, index) => {
-                //     ctrl.colDef[index].headerName = text;
-                // });
-                ctrl.setTop(ctrl.colDef, ctrl.unexemptStudents);
-                //POCOR-9042 starts
-                if(ctrl.excempttype_id == 1){
-                    ctrl.setBottom(ctrl.colDef, ctrl.exemptStudents);
-                } else if(ctrl.excempttype_id == 2){
-                    ctrl.setBottom(ctrl.colDef, ctrl.unassingStudents);
-                }else{
-                    ctrl.setBottom(ctrl.colDef, ctrl.exemptStudents);
-                }
-                //POCOR-9042 ends
-            })
-            .catch(handleError)
-            .finally(() => {
-                // console.log('Finally block executed');
-                ctrl.dataReady = true;
-                UtilsSvc.isAppendLoader(false);
-            });
+                .then(() => {
+                    // translatedText.forEach((text, index) => {
+                    //     ctrl.colDef[index].headerName = text;
+                    // });
+                    ctrl.setTop(ctrl.colDef, ctrl.unexemptStudents);
+                    //POCOR-9042 starts
+                    if (ctrl.excempttype_id == 1) {
+                        ctrl.setBottom(ctrl.colDef, ctrl.exemptStudents);
+                    } else if (ctrl.excempttype_id == 2) {
+                        ctrl.setBottom(ctrl.colDef, ctrl.unassingStudents);
+                    } else {
+                        ctrl.setBottom(ctrl.colDef, ctrl.exemptStudents);
+                    }
+                    //POCOR-9042 ends
+                })
+                .catch(handleError)
+                .finally(() => {
+                    // console.log('Finally block executed');
+                    ctrl.dataReady = true;
+                    UtilsSvc.isAppendLoader(false);
+                });
+        } else {     //POCOR-9289 start
+                ctrl.dataReady = false;
+                UtilsSvc.isAppendLoader(true);
+                setClassDetails([])
+                translateColumnHeaders()
+                .then(() => {
+                    // translatedText.forEach((text, index) => {
+                    //     ctrl.colDef[index].headerName = text;
+                    // });
+                    ctrl.setTop(ctrl.colDef, ctrl.unexemptStudents);
+                    //POCOR-9042 starts
+                    if (ctrl.excempttype_id == 1) {
+                        ctrl.setBottom(ctrl.colDef, ctrl.exemptStudents);
+                    } else if (ctrl.excempttype_id == 2) {
+                        ctrl.setBottom(ctrl.colDef, ctrl.unassingStudents);
+                    } else {
+                        ctrl.setBottom(ctrl.colDef, ctrl.exemptStudents);
+                    }
+                    //POCOR-9042 ends
+                })
+                .catch(handleError)
+                .finally(() => {
+                    // console.log('Finally block executed');
+                    ctrl.dataReady = true;
+                    UtilsSvc.isAppendLoader(false);
+                });
+        }
     }
-    //POCOR-9042 starts
+    //POCOR-9289 end
+    // POCOR-9042 starts
     ctrl.checkAndLoadStudents = function () {
         if (ctrl.isAllSelected()) {
             ctrl.onSubjectChange(); // or a more specific `loadStudents()` function
         }
     };//POCOR-9042 ends
 
-    function setClassDetails(response) {
-
+    function setClassDetails(studentList) {
         ctrl.exemptStudents = [];
         ctrl.unexemptStudents = [];
         ctrl.unassingStudents = [];//POCOR-9042
 
-        response.forEach(student => {
+        studentList.forEach(student => {
             // console.log(student);
             const studentData = {
                 openemis_no: student.openemis_no,
@@ -269,9 +311,12 @@ function AssessmentItemExemptionsController(
                 gender_name: student.gender,
                 student_id: student.student_id,
                 student_status_name: student.student_status_name,
+                assessment_title: student.assessment_period_name, //POCOR-9195
+                education_subject_id_title: student.education_subject_name, //POCOR-9195
                 encodedVar: {
                     s_id: student.student_id,
-                    eg_id: student.education_grade_id
+                    eg_id: student.education_grade_id,
+                    ap_id: student.assessment_period_id //POCOR-9195
                 }
             };
 
@@ -279,7 +324,7 @@ function AssessmentItemExemptionsController(
             //POCOR-9042 starts
             if ((student.type == '1')) {
                 ctrl.exemptStudents.push(studentData);  // Add to exempt students
-            } else if ((student.type == '2')) {
+            } else if (student.type == '2') {
                 ctrl.unassingStudents.push(studentData);  // Add to unassign students
             } else {
                 ctrl.unexemptStudents.push(studentData);  // Add to unexempt students
@@ -301,6 +346,8 @@ function AssessmentItemExemptionsController(
     }
 
     ctrl.setTop = function (header, content, key = 'name') {
+        ctrl.columnTopData = createColumnData(); // POCOR-9289
+
         for (var i = 0; i < header.length; i++) {
             header[i].suppressMenu = SUPPRESS_MENU;
             header[i].filter = 'text';
@@ -326,6 +373,8 @@ function AssessmentItemExemptionsController(
     };
 
     ctrl.setBottom = function (header, content, key = 'name') {
+        ctrl.columnBottomData = createColumnData(); // POCOR-9289
+
         for (var i = 0; i < header.length; i++) {
             header[i].suppressMenu = SUPPRESS_MENU;
             header[i].filter = 'text';
@@ -347,7 +396,7 @@ function AssessmentItemExemptionsController(
         ctrl.gridOptionsBottom.columnDefs = ctrl.columnBottomData;
         ctrl.gridOptionsBottom.rowData = ctrl.rowBottomData;
         ctrl.gridOptionsBottom.primaryKey = ctrl.bottomKey;
-        // console.log(ctrl.gridOptionsBottom);
+
 
     };
 
@@ -397,9 +446,9 @@ function AssessmentItemExemptionsController(
         const unexemptStudents = ctrl.gridOptionsTop.rowData.map(row => row.encodedVar);
         const unexempt_students = UtilsSvc.urlsafeBase64Encode(JSON.stringify(unexemptStudents));
         const postData = {
-            classification:ctrl.classification,
-            assessment_item_id:ctrl.assessment_item_id,
-            assessment_item_ids:ctrl.assessment_item_ids,
+            classification: ctrl.classification,
+            assessment_item_id: ctrl.assessment_item_id,
+            assessment_item_ids: ctrl.assessment_item_ids,
             assessment_period_id: ctrl.assessment_period_id,
             institution_class_id: ctrl.institution_class_id,
             type: ctrl.excempttype_id,//POCOR-9042
@@ -407,25 +456,25 @@ function AssessmentItemExemptionsController(
             unexempt_students: unexempt_students,
         };
         UtilsSvc.isAppendLoader(true);
-            AssessmentItemExemptionsSvc.saveStudents(postData)
-                .then(handlePostSuccess)
-                .catch(handleError)
-                .finally(function(){
-                    UtilsSvc.isAppendLoader(false);
-                    if (ctrl.savedOk) { //POCOR-9197 start
-                        ctrl.alertUrl = ctrl.updateQueryStringParameter(ctrl.alertUrl, 'alertType', 'success');
-                        ctrl.alertUrl = ctrl.updateQueryStringParameter(ctrl.alertUrl, 'message', 'general.edit.success');
-                        var queryString1 = localStorage.getItem('queryString1');
-                        var queryString2 = localStorage.getItem('queryString2');
-                        $http.get(ctrl.alertUrl)
-                            .then(function(response) {
-                                //$window.location.href = Controller.redirectUrl;
-                                console.log(ctrl.alertUrl);
-                                $window.location.href = ctrl.backUrl;
-                            });
+        AssessmentItemExemptionsSvc.saveStudents(postData)
+            .then(handlePostSuccess)
+            .catch(handleError)
+            .finally(function () {
+                UtilsSvc.isAppendLoader(false);
+                if (ctrl.savedOk) { //POCOR-9197 start
+                    ctrl.alertUrl = ctrl.updateQueryStringParameter(ctrl.alertUrl, 'alertType', 'success');
+                    ctrl.alertUrl = ctrl.updateQueryStringParameter(ctrl.alertUrl, 'message', 'general.edit.success');
+                    var queryString1 = localStorage.getItem('queryString1');
+                    var queryString2 = localStorage.getItem('queryString2');
+                    $http.get(ctrl.alertUrl)
+                        .then(function (response) {
+                            //$window.location.href = Controller.redirectUrl;
+                            console.log(ctrl.alertUrl);
+                            $window.location.href = ctrl.backUrl;
+                        });
 
-                    } //POCOR-9197 end
-                });
+                } //POCOR-9197 end
+            });
 
     };
 
@@ -464,7 +513,7 @@ function AssessmentItemExemptionsController(
         }
     }
 
-    $scope.$watch('gridOptionsTop', function(newVal, oldVal) {
+    $scope.$watch('gridOptionsTop', function (newVal, oldVal) {
         if (newVal !== oldVal) {
             // Handle updates to gridOptionsTop
         }

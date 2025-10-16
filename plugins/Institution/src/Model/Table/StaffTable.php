@@ -29,7 +29,7 @@ use Cake\Utility\Text;
 use Cake\ORM\Locator\TableLocator;
 use Cake\I18n\FrozenDate;
 use Cake\I18n\FrozenTime;
-
+use Cake\Collection\CollectionInterface;
 
 
 class StaffTable extends ControllerActionTable
@@ -71,6 +71,7 @@ class StaffTable extends ControllerActionTable
         $this->hasMany('StaffRelease', ['className' => 'Institution.StaffRelease', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         // $this->hasMany('Contacts', ['className' => 'User.Contacts',        'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('SecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'foreignKey' => 'secondary_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('DepartmentStaff', ['className' => 'Institution.DepartmentStaff', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Security.SecurityAccess');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -3005,11 +3006,12 @@ class StaffTable extends ControllerActionTable
 
     public function findSubjectStaffOptions(Query $query, array $options)
     {
-        $institutionId = $options['institution_id'];
-        $academicPeriodId = $options['academic_period_id'];
+        $institutionId     = $options['institution_id'];
+        $academicPeriodId  = $options['academic_period_id'] ?? null;
+        $type  = $options['type'] ?? 1;
 
-        return $query
-            ->find('all')
+        // Base query
+        $query = $query
             ->select([
                 $this->aliasField('id'),
                 'Users.id',
@@ -3020,30 +3022,157 @@ class StaffTable extends ControllerActionTable
                 'Users.last_name',
                 'Users.preferred_name'
             ])
-            ->find('byInstitution', ['Institutions.id' => $institutionId])
-            ->find('byPositions', ['Institutions.id' => $institutionId, 'type' => 1])
-            ->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+            ->find('byInstitution', [
+                'Institutions.id' => $institutionId
+            ])
             ->contain(['Users'])
             ->where([
                 $this->aliasField('institution_position_id'),
-                'OR' => [ //check teacher end date
-                    [$this->aliasField('end_date') . ' > ' => Time::now()],
+                'OR' => [
+                    [$this->aliasField('end_date') . ' >' => Time::now()],
                     [$this->aliasField('end_date') . ' IS NULL']
                 ]
             ])
-            ->order([
-                $this->Users->aliasField('first_name')
-            ])
+            ->order([$this->Users->aliasField('first_name')]);
+
+        // Only apply the AcademicPeriod finder if we actually have a period ID
+        if ($academicPeriodId !== null) {
+            $query = $query->find('AcademicPeriod', [
+                'academic_period_id' => $academicPeriodId
+            ]);
+        }
+
+        if ($type >= 0) {
+            $query = $query->find('byPositions', [
+                'Institutions.id' => $institutionId,
+                'type'            => $type
+            ]);
+        }
+
+        return $query
+            ->find('all') // you can drop this if your custom finder already starts from 'all'
             ->formatResults(function ($results) {
-                $returnArr = [];
-                foreach ($results as $result) {
-                    if ($result->has('user')) {
-                        $returnArr[] = ['id' => $result->user->id, 'name' => $result->user->name_with_id];
+                $return = [];
+                foreach ($results as $entity) {
+                    if ($entity->has('user')) {
+                        $return[] = [
+                            'id'   => $entity->user->id,
+                            'name' => $entity->user->name_with_id
+                        ];
                     }
                 }
-                return $returnArr;
+                return $return;
             });
     }
+
+    /**
+     * Find all staff in an institution who are NOT assigned to a given department or are managers.
+     *
+     * @param \Cake\ORM\Query $query
+     * @param array $options Must contain:
+     * - 'institution_id' (int): ID of the institution
+     * - 'department_id'  (int): ID of the department to exclude
+     * - 'target'  (string): 'unassigned' or 'manager' (default 'unassigned')
+     * @return \Cake\ORM\Query
+     */
+    public function findStaffForDepartment(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $departmentId  = $options['department_id'];
+        $target        = $options['target'] ?? 'unassigned';
+
+        $query = $query
+            ->where([
+                'Staff.institution_id' => $institutionId,
+                'OR' => [
+                    ['Staff.end_date >'   => Time::now()],
+                    ['Staff.end_date IS'  => null],
+                ],
+            ])
+            ->contain([
+                'Users.Genders',
+                'StaffStatuses'
+            ]);
+        switch ($target) {
+            case 'unassigned':
+                $query = $this->_filterUnassignedStaff($query, $departmentId);
+                break;
+            case 'manager':
+                $query = $this->_filterManagerStaff($query, $departmentId); // Assuming you'll implement this
+                break;
+            // Add more cases as needed
+        }
+
+        return $this->_formatStaffResults($query, $departmentId);
+    }
+
+    /**
+     * Applies filters for unassigned staff based on multiple assignment allowance.
+     *
+     * @param \Cake\ORM\Query $query
+     * @param int $departmentId
+     * @return \Cake\ORM\Query
+     */
+    protected function _filterUnassignedStaff(Query $query, int $departmentId): Query
+    {
+        // load the config once
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $allowMultiple = $ConfigItems->value('AssigningStafftoMultipleDepartments');
+        if ($allowMultiple == 'Disable') {
+            // filter out anyone in DepartmentStaff *at all*
+            $query = $query->notMatching('DepartmentStaff');
+        } else {
+            // only filter out those already in *this* department
+            $query = $query->notMatching('DepartmentStaff', function (Query $q) use ($departmentId) {
+                return $q->where([
+                    'DepartmentStaff.institution_department_id' => $departmentId
+                ]);
+            });
+        }
+        return $query;
+    }
+
+    /**
+     * Applies filters for manager staff (placeholder).
+     *
+     * @param \Cake\ORM\Query $query
+     * @param int $departmentId
+     * @return \Cake\ORM\Query
+     */
+    protected function _filterManagerStaff(Query $query, int $departmentId): Query
+    {
+        // Implement manager-specific filtering logic here
+        // For example:
+        // $query->where(['Staff.is_manager' => true]);
+        return $query;
+    }
+
+    /**
+     * Formats the staff query results.
+     *
+     * @param \Cake\ORM\Query $query
+     * @param int $departmentId
+     * @return \Cake\ORM\Query
+     */
+    protected function _formatStaffResults(Query $query, int $departmentId): Query
+    {
+        return $query->formatResults(function (CollectionInterface $results) use ($departmentId) {
+            return $results->map(function ($staff) use ($departmentId) {
+                return [
+                    'openemis_no'        => $staff->user->openemis_no,
+                    'name'               => $staff->user->name,
+                    'staff_status_name'  => $staff->staff_status->name,
+                    'gender_name'        => $staff->user->gender->name,
+                    'security_user_id'   => $staff->user->id,
+                    'encodedVar'         => base64_encode(json_encode([
+                        'institution_staff_id'       => $staff->id,
+                        'institution_department_id'  => $departmentId,
+                    ])),
+                ];
+            })->toList();
+        });
+    }
+
 
     public function findAllCommentsViewPermissions(Query $query, array $options)
     {
@@ -3483,7 +3612,7 @@ class StaffTable extends ControllerActionTable
             $SecurityGroupTbl = TableRegistry::get('Security.UserGroups');
             $SecurityGroupUserTbl = TableRegistry::get('Security.SecurityGroupUsers');
 
-             //POCOR-9212[START] // Here is the logic change: instead of checking institution_id from the table SecurityGroupInstitutions 
+             //POCOR-9212[START] // Here is the logic change: instead of checking institution_id from the table SecurityGroupInstitutions
              // check for the security_group_id
              $groupUserRecords = $SecurityGroupUserTbl->find()
                         ->matching('SecurityGroups')
@@ -3811,7 +3940,7 @@ class StaffTable extends ControllerActionTable
                 'Institutions.postal_code',
                 'Institutions.contact_person',
                 'Institutions.telephone',
-                'Institutions.fax',
+//                'Institutions.fax',
                 'Institutions.email',
                 'Institutions.website',
                 'Users.id',

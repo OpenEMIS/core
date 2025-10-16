@@ -53,11 +53,11 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
                 'rule' => ['validateMobileNumberPattern', 'validate_contact_person_mobile_number'],
                 'provider' => 'table'
             ])
-            ->allowEmpty('fax')
+            /*->allowEmpty('fax')
             ->add('fax', 'ruleCustomFax', [
                 'rule' => ['validateCustomPattern', 'institution_contact_person_fax'],
                 'provider' => 'table'
-            ])
+            ])*/
             ->allowEmpty('email')
             ->add('email', [
                 'ruleValidEmail' => [
@@ -188,8 +188,6 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
                 return __('Telephone');
             case 'mobile_number':
                 return __('Mobile Number');
-            case 'fax':
-                return __('Fax');
             case 'email':
                 return __('Email');
             case 'created':

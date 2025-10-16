@@ -121,35 +121,25 @@ class SystemGroupsListTable extends ControllerActionTable
     //POCOR-7175
     public function findByUserNameRole(Query $query, array $options)
     {
-        if (isset($options['search'])) {
+        if (!empty($options['search'])) {
             $search = $options['search'];
-            $query
-            ->join([
-                [
-                    'table' => 'security_users', 'alias' => 'Users', 'type' => 'LEFT',
-                    'conditions' => ['security_users.id = ' . $this->aliasField('security_user_id')]
-                ],
-                [
-                    'table' => 'security_roles', 'alias' => 'SecurityRoles', 'type' => 'LEFT',
-                    'conditions' => [
-                        'security_roles.id = ' . $this->aliasField('security_role_id')]
-                ],
 
-            ])
-            ->where([
+            $query
+                ->contain(['Users', 'SecurityRoles']) // defined associations POCOR-9242
+                ->where([
                     'OR' => [
-                        ['Users.openemis_no LIKE' => '%' . $search . '%'],
-                        ['Users.first_name LIKE' => '%' . $search . '%'],
-                        ['Users.last_name LIKE' => '%' . $search . '%'],
-                        ['Users.middle_name LIKE' => '%' . $search . '%'],
-                        ['Users.third_name LIKE' => '%' . $search . '%'],
-                        ['SecurityRoles.name LIKE' => '%' . $search . '%']
+                        'Users.openemis_no LIKE' => '%' . $search . '%',
+                        'Users.first_name LIKE' => '%' . $search . '%',
+                        'Users.last_name LIKE' => '%' . $search . '%',
+                        'Users.middle_name LIKE' => '%' . $search . '%',
+                        'Users.third_name LIKE' => '%' . $search . '%',
+                        'SecurityRoles.name LIKE' => '%' . $search . '%'
                     ]
-                ]
-            );
+                ]);
         }
 
         return $query;
     }
+
 
 }

@@ -7,6 +7,7 @@ use Cake\Console\ConsoleIo;
 use Cake\I18n\FrozenDate;
 use Cake\ORM\TableRegistry;
 use Cake\Console\ConsoleOptionParser;
+use Cake\ORM\Query; // POCOR-9320
 
 /**
  * Command to send alerts for staff leave reminders.
@@ -64,13 +65,81 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
 
         ];
 //        $this->logMsg("Where: " . print_r($where, true));
-        return $this->StudentAdmission->find()
-            ->contain(['Users',
-                'Statuses',
-                'AcademicPeriods',
-                'Institutions'])
+        // POCOR-9320 start
+        $query = $this->StudentAdmission->find();
+        $query->contain(['Users',
+            'Statuses',
+            'AcademicPeriods',
+            'Institutions',
+            'EducationGrades'])
             ->where($where)
-            ->toArray();
+//            ->group($this->StudentAdmission->aliasField('student_id'))
+        ;
+        $query = $this->addStudentGuardianFields($query);
+
+        return $query->toArray();
+    }
+
+    private function addStudentGuardianFields(Query $query)
+    {
+        $guardians = TableRegistry::getTableLocator()->get('User.Users');
+        $student_guardians = TableRegistry::getTableLocator()->get('Student.StudentGuardians');
+        $guardian_relations = TableRegistry::getTableLocator()->get('Student.GuardianRelations');
+        $guardian_contacts = TableRegistry::getTableLocator()->get('User.Contacts');
+        $guardians->setAlias('guardians');
+        $student_guardians->setAlias('student_guardians');
+        $guardian_relations->setAlias('guardian_relations');
+        $guardian_contacts->setAlias('guardian_contacts');
+        $query
+            ->leftJoin([$student_guardians->getAlias() => $student_guardians->getTable()], [
+                $student_guardians->aliasField('student_id = ') . $this->StudentAdmission->aliasField('student_id')
+            ])
+            ->leftJoin([$guardians->getAlias() => $guardians->getTable()], [
+                $guardians->aliasField('id = ') . $student_guardians->aliasField('guardian_id')
+            ])
+            ->leftJoin([$guardian_relations->getAlias() => $guardian_relations->getTable()], [
+                $guardian_relations->aliasField('id = ') . $student_guardians->aliasField('guardian_relation_id')
+            ])
+            ->leftJoin([$guardian_contacts->getAlias() => $guardian_contacts->getTable()], [
+                $guardian_contacts->aliasField('security_user_id = ') . $guardians->aliasField('id'),
+            ])
+            ->orderAsc($guardian_relations->aliasField('order'))
+            ->orderDesc($guardian_contacts->aliasField('preferred'));
+        $query = $query->enableAutoFields();
+//        $this->logMsg($query->sql());
+        $query->select([
+            'academic_period_name' => 'AcademicPeriods.name',
+            'status_name' => 'Statuses.name',
+            'start_date' => 'StudentAdmission.start_date',
+            'end_date' => 'StudentAdmission.end_date',
+            'admission_status' => 'Statuses.name',
+            'student_name' => "CONCAT(`Users`.`first_name`, ' ', `Users`.`last_name`)",
+            'student_openemis_no' => 'Users.openemis_no',
+            'student_first_name' => 'Users.first_name',
+            'student_middle_name' => 'Users.middle_name',
+            'student_third_name' => 'Users.third_name',
+            'student_last_name' => 'Users.last_name',
+            'student_preferred_name' => 'Users.preferred_name',
+            'student_email' => 'Users.email',
+            'student_postal_code' => 'Users.postal_code',
+            'student_date_of_birth' => 'Users.date_of_birth',
+            'institution_name' => 'Institutions.name',
+            'institution_code' => 'Institutions.code',
+            'institution_address' => 'Institutions.address',
+            'institution_postal_code' => 'Institutions.postal_code',
+            'institution_contact_person' => 'Institutions.contact_person',
+            'institution_telephone' => 'Institutions.telephone',
+            'institution_email' => 'Institutions.email',
+            'institution_website' => 'Institutions.website',
+            'grade_name' => 'EducationGrades.name',
+            'guardian_name' => "CONCAT(`guardians`.`first_name`, ' ', `guardians`.`last_name`)",
+            'guardian_relation' => $guardian_relations->aliasField('name'),
+            'guardian_contact' => $guardian_contacts->aliasField('value'),
+        ])
+        ;
+
+        return $query;
+        // POCOR-9320 end
     }
 
     public function prepareContext(Arguments $args, ConsoleIo $io): bool
@@ -120,42 +189,37 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
      */
     protected function fillPlaceholders($item): array
     {
-        // Calculate day difference
-        $today = FrozenDate::now();
-        $leaveEndDate = isset($item['date_to']) ? new FrozenDate($item['date_to']) : null;
-        $dayDiff = $leaveEndDate ? $today->diffInDays($leaveEndDate, false) : '';
-
-        // This is assuming your rule is available here
-        $thresholdValue = $this->rule['threshold'] ?? '{}';
-        $threshold = json_decode($thresholdValue, true);
-
+        // POCOR-9320 calculate fields
+//        $this->logMsg(print_r($item, true));
         return [
-            '${academic_period.name}' => $item['academic_period']['name'] ?? '',
+            '${academic_period.name}' => $item['academic_period_name'] ?? '',
             '${start_date}' => $item['start_date'] ?? '',
             '${end_date}' => $item['end_date'] ?? '',
-            '${admission_status}' => $item['status']['name'] ?? '',
+            '${admission_status}' => $item['admission_status'] ?? '',
+            '${student.name}' => $item['student_name'] ?? '',
+            '${student.openemis_no}' => $item['student_openemis_no'] ?? '',
+            '${student.first_name}' => $item['student_first_name'] ?? '',
+            '${student.middle_name}' => $item['student_middle_name'] ?? '',
+            '${student.third_name}' => $item['student_third_name'] ?? '',
+            '${student.last_name}' => $item['student_last_name'] ?? '',
+            '${student.preferred_name}' => $item['student_preferred_name'] ?? '',
+            '${student.email}' => $item['student_email'] ?? '',
+            '${student.address}' => $item['student_address'] ?? '',
+            '${student.postal_code}' => $item['student_postal_code'] ?? '',
+            '${student.date_of_birth}' => $item['student_date_of_birth'] ?? '',
 
-            '${student.name}' => $item['user']['name'] ?? '',
-            '${student.openemis_no}' => $item['user']['openemis_no'] ?? '',
-            '${student.first_name}' => $item['user']['first_name'] ?? '',
-            '${student.middle_name}' => $item['user']['middle_name'] ?? '',
-            '${student.third_name}' => $item['user']['third_name'] ?? '',
-            '${student.last_name}' => $item['user']['last_name'] ?? '',
-            '${student.preferred_name}' => $item['user']['preferred_name'] ?? '',
-            '${student.email}' => $item['user']['email'] ?? '',
-            '${student.address}' => $item['user']['address'] ?? '',
-            '${student.postal_code}' => $item['user']['postal_code'] ?? '',
-            '${student.date_of_birth}' => $item['user']['date_of_birth'] ?? '',
-
-            '${institution.name}' => $item['institution']['name'] ?? '',
-            '${institution.code}' => $item['institution']['code'] ?? '',
-            '${institution.address}' => $item['institution']['address'] ?? '',
-            '${institution.postal_code}' => $item['institution']['postal_code'] ?? '',
-            '${institution.contact_person}' => $item['institution']['contact_person'] ?? '',
-            '${institution.telephone}' => $item['institution']['telephone'] ?? '',
-            '${institution.fax}' => $item['institution']['fax'] ?? '',
-            '${institution.email}' => $item['institution']['email'] ?? '',
-            '${institution.website}' => $item['institution']['website'] ?? '',
+            '${institution.name}' => $item['institution_name'] ?? '',
+            '${institution.code}' => $item['institution_code'] ?? '',
+            '${institution.address}' => $item['institution_address'] ?? '',
+            '${institution.postal_code}' => $item['institution_postal_code'] ?? '',
+            '${institution.contact_person}' => $item['institution_contact_person'] ?? '',
+            '${institution.telephone}' => $item['institution_telephone'] ?? '',
+            '${institution.email}' => $item['institution_email'] ?? '',
+            '${institution.website}' => $item['institution_website'] ?? '',
+            '${grade.name}' => $item['grade_name'] ?? '',
+            '${guardian.name}' => $item['guardian_name'] ?? '',
+            '${guardian.relation}' => $item['guardian_relation'] ?? '',
+            '${guardian.contact}' => $item['guardian_contact'] ?? '', // POCOR-9320 end
         ];
     }
 

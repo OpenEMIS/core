@@ -50,11 +50,18 @@ class RenderTextBehavior extends RenderBehavior {
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
             $options['type'] = 'string';
+            //POCOR-9279[START]
             if (!is_null($savedValue)) {
                 $options['value'] = $savedValue;
             }else { // POCOR-9066
                 $options['value'] = '';
             }
+            // foreach($entity->custom_field_values AS $custom_field_values_data){
+            //     if (!empty($custom_field_values_data->text_value)) {
+            //         $options['value'] = $savedValue;
+            //     }
+            // }
+            //POCOR-9279[END]
             // input mask
             if ($customField->has('params') && !empty($customField->params)) {
                 $params = json_decode($customField->params, true);

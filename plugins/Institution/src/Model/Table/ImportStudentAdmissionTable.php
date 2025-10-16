@@ -64,6 +64,11 @@ class ImportStudentAdmissionTable extends AppTable
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $session = $this->request->getSession();
+        $academic_period_id = $this->request->getData()['ImportStudentAdmission']['academic_period_id'];
+        if(!empty($academic_period_id)){
+           $session->write('period', $academic_period_id);
+        }
         list($periodOptions, $selectedPeriod) = array_values(
             $this->getAcademicPeriod($this->request->getQuery('period'), true)
         );
@@ -78,13 +83,20 @@ class ImportStudentAdmissionTable extends AppTable
     public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
+
         if ($request->is(['post', 'put'])) {
             $thisAlias = $this->getAlias();
             $requestData = $request->getData();
             if (isset($requestData[$thisAlias])) {
                 if (isset($requestData[$thisAlias]['academic_period_id'])) {
-                    $academic_period_id = $requestData[$thisAlias]['academic_period_id'];
-                    $request->getQuery['period'] = $academic_period_id;
+                    //POCOR-9394[START]
+                    //$academic_period_id = $requestData[$thisAlias]['academic_period_id'];
+                    $academic_period_id = $request->getData()['ImportStudentAdmission']['academic_period_id'];
+                    //$this->request->getSession()->write('period', $academic_period_id);
+                    //$request->getQuery['period'] = $academic_period_id;
+
+                    //$requestWithParams = $this->request->withQueryParams($academic_period_id);
+                    //POCOR-9394[END]
                     $this->gradesInInstitution = $this->getCustomInstitudeGradeIds($academic_period_id);
                 }
             }
@@ -137,6 +149,38 @@ class ImportStudentAdmissionTable extends AppTable
             ->toArray();
     }
 
+    // public function beforeAction($event)
+    // {
+    //     $session = $this->request->getSession();
+    //     if ($session->check('Institution.Institutions.id')) {
+    //         $this->institutionId = $session->read('Institution.Institutions.id');
+    //         $academicPeriodId = $this->AcademicPeriods->getCurrent();
+    //         $requestQuery = $this->request->getQuery();
+    //         if (isset($requestQuery['period']) && !empty($requestQuery['period'])) {
+    //             $academicPeriodId = $requestQuery['period'];
+    //         }
+    //         $this->academicPeriodId = $academicPeriodId;
+    //         $this->gradesInInstitution = $this->getCustomInstitudeGradeIds($academicPeriodId);
+    //     } else {
+    //         $this->institutionId = false;
+    //         $academicPeriodId = $this->AcademicPeriods->getCurrent();
+    //         $this->academicPeriodId = $academicPeriodId;
+    //         $this->gradesInInstitution = [];
+    //     }
+    //     //POCOR-8343 Start
+
+    //     if(empty($this->institutionId) && $this->request->getParam('pass')[0] != 'downloadFailed' && $this->request->getParam('pass')[0] != 'downloadPassed' && isset($this->request->getParam('pass')[1])) {
+    //         $queryString = $this->paramsDecode($this->request->getParam('pass')[1]);
+    //         $this->institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : $this->institutionId ;
+    //         if(empty( $this->academicPeriodId )) {
+    //             $academicPeriodId = $this->AcademicPeriods->getCurrent();
+    //             $this->academicPeriodId = $academicPeriodId;
+    //         }
+    //         $this->gradesInInstitution = $this->getCustomInstitudeGradeIds($academicPeriodId);
+    //     }
+    //     //POCOR-8343 End
+    // }
+
     public function beforeAction($event)
     {
         $session = $this->request->getSession();
@@ -155,8 +199,24 @@ class ImportStudentAdmissionTable extends AppTable
             $this->academicPeriodId = $academicPeriodId;
             $this->gradesInInstitution = [];
         }
+        //$academic_period_id = $this->request->getData()['ImportStudentAdmission']['academic_period_id'];
+        $academic_period_id = $session->read('period');
+        if(empty($academic_period_id)){
+            $session->delete('period');
+            $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+            $academic_period_id = array_key_first($academicPeriodOptions);
+            $session->write('period', $academic_period_id);
+        }else{
+            //$academicPeriodOptions = $this->AcademicPeriods->getYearList();
+            //$academic_period_id = array_key_first($academicPeriodOptions);
+            $checkKey = $session->read('period');
+            if(empty($checkKey)){
+            $session->write('period', $academic_period_id);
+            }
+            //$session->write('period', $academic_period_id);
+        }
         //POCOR-8343 Start
-        
+
         if(empty($this->institutionId) && $this->request->getParam('pass')[0] != 'downloadFailed' && $this->request->getParam('pass')[0] != 'downloadPassed' && isset($this->request->getParam('pass')[1])) {
             $queryString = $this->paramsDecode($this->request->getParam('pass')[1]);
             $this->institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : $this->institutionId ;
@@ -218,7 +278,10 @@ class ImportStudentAdmissionTable extends AppTable
     public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $academicPeriodId = $this->AcademicPeriods->getCurrent();
+        //POCOR-9394[START]
+        // $academicPeriodId = $this->AcademicPeriods->getCurrent();
+        $academicPeriodId = $this->request->getSession()->read('period') ?? $this->AcademicPeriods->getCurrent();
+        //POCOR-9394[END]
         $requestQuery = $this->request->getQuery();
         if (isset($requestQuery['period']) && !empty($requestQuery['period'])) {
             $academicPeriodId = $requestQuery['period'];
@@ -246,25 +309,38 @@ class ImportStudentAdmissionTable extends AppTable
 
     public function onImportPopulateEducationGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
+        $session = $this->request->getSession();
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $programmeHeader = $this->getExcelLabel($lookedUpTable, 'education_programme_id');
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 3;
         $data[$columnOrder]['data'][] = [$programmeHeader, $translatedReadableCol, $translatedCol];
+        $academic_period_id = $session->read('period');
         if (!empty($this->gradesInInstitution)) {
+            //POCOR-9394
+            $subquery = $this->InstitutionGrades->find()
+                        ->select(['education_grade_id'])
+                        ->where([
+                            'InstitutionGrades.academic_period_id' => $academic_period_id,
+                            'InstitutionGrades.institution_id' => $this->institutionId
+                        ]);
+            //POCOR-9394
             $modelData = $lookedUpTable->find('all')
                 ->contain(['EducationProgrammes'])
                 ->select(['code', 'name', 'EducationProgrammes.name'])
                 ->where([
-                    $lookedUpTable->aliasField('visible') . ' = 1'
+                    $lookedUpTable->aliasField('visible') . ' = 1',
+                    'EducationGrades.id IN' => $subquery // POCOR-9394
                 ])
                 ->order([
                     $lookupModel . '.order',
                     $lookupModel . '.education_programme_id'
-                ])
-                ->where([
-                    $lookedUpTable->aliasField('id') . ' IN' => $this->gradesInInstitution
                 ]);
+                //POCOR-9394
+                // ->where([
+                //     $lookedUpTable->aliasField('id') . ' IN' => $this->gradesInInstitution
+                // ]);
+                //POCOR-9394
             if (!empty($modelData)) {
                 foreach ($modelData->toArray() as $row) {
                     $data[$columnOrder]['data'][] = [
@@ -325,8 +401,12 @@ class ImportStudentAdmissionTable extends AppTable
 
     private function populateInstitutionClassesData()
     {
-
-        $academicPeriodId = $this->academicPeriodId;
+        //POCOR-9394[START]
+        $academicPeriodId = $this->request->getSession()->read('period') ?? $this->AcademicPeriods->getCurrent();
+        if(empty($academicPeriodId)){
+            $academicPeriodId = $this->academicPeriodId;
+        }
+        //POCOR-9394[END]
         $academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $modelData = [];
@@ -462,7 +542,12 @@ class ImportStudentAdmissionTable extends AppTable
      */
     private function checkEducationGrade(ArrayObject &$tempRow, ArrayObject &$originalRow)
     {
-        $academicPeriodId = $this->academicPeriodId;
+        //POCOR-9394[START]
+        $academicPeriodId = $this->request->getSession()->read('period') ?? $this->AcademicPeriods->getCurrent();
+        if(empty($academicPeriodId)){
+            $academicPeriodId = $this->academicPeriodId;
+        }
+        //POCOR-9394[END]
         $originalEducationGradeCode = '';
         if (isset($originalRow[1])) {
             $originalEducationGradeCode = $originalRow[1];
@@ -476,8 +561,12 @@ class ImportStudentAdmissionTable extends AppTable
 
     private function checkAcademicPeriodId(ArrayObject &$tempRow, ArrayObject &$rowInvalidCodeCols)
     {
-
-        $academicPeriodId = $this->academicPeriodId;
+        //POCOR-9394[START]
+        $academicPeriodId = $this->request->getSession()->read('period') ?? $this->AcademicPeriods->getCurrent();
+        if(empty($academicPeriodId)){
+            $academicPeriodId = $this->academicPeriodId;
+        }
+        //POCOR-9394[END]
         $academicPeriodLevel = $this->getAcademicPeriodLevel($academicPeriodId);
         if (is_array( $academicPeriodLevel) && count($academicPeriodLevel) > 0) {
             if ($academicPeriodLevel[0]['academic_period_level_id'] != 1) { //if the level is not year
@@ -490,7 +579,10 @@ class ImportStudentAdmissionTable extends AppTable
 
     private function checkAcademicPeriod(ArrayObject &$tempRow, ArrayObject &$rowInvalidCodeCols)
     {
-        $academicPeriodId = $this->academicPeriodId;
+        $academicPeriodId = $this->request->getSession()->read('period') ?? $this->AcademicPeriods->getCurrent();
+        if(empty($academicPeriodId)){
+            $academicPeriodId = $this->academicPeriodId;
+        }
         $start_date = $tempRow['start_date'];
         $periods = $this->getAcademicPeriodByStartDate($start_date);
         if (!$periods) {
@@ -565,8 +657,11 @@ class ImportStudentAdmissionTable extends AppTable
         }
         $tempRow['student_name'] = $tempRow['student_id'];
 
-        $timeZone = $this->getTimeZone();
-        $dateTimeZone = new \DateTimeZone($timeZone);
+        try { // POCOR-9313 start
+            $dateTimeZone = new \DateTimeZone($this->getTimeZone());
+        } catch (\Exception $e) {
+            $dateTimeZone = new \DateTimeZone('GMT');
+        } // POCOR-9313 end
         $start_date = $this->checkStartDate($tempRow, $rowInvalidCodeCols, $dateTimeZone);
         if (!$start_date) {
             return false;

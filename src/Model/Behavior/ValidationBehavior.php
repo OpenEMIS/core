@@ -1538,7 +1538,7 @@ class ValidationBehavior extends Behavior
         $todayDate = new Date();
         $todayDate = $todayDate->format('Y-m-d');
 
-        if (empty($endDate)) {
+        /*if (empty($endDate)) {
             // current position has no end date
             $dateCondition['OR'][] = 'end_date IS NULL';
             $dateCondition['OR'][] = [
@@ -1546,7 +1546,7 @@ class ValidationBehavior extends Behavior
                 "end_date >= '" . $startDate . "'",
                 "end_date >= '" . $todayDate . "'" //to exclude staff which assignment has been ended.
             ];
-        } else {
+        }else {
             // current position HAS end date
             $dateCondition['OR'][] = [
                 'end_date IS NULL',
@@ -1558,8 +1558,52 @@ class ValidationBehavior extends Behavior
             $dateCondition['OR']['OR'][] = ['start_date' . ' <= ' => $startDate, 'end_date' . ' >= ' => $endDate];
 
             $dateCondition['AND'] = ['end_date >= ' => $todayDate]; //to exclude staff which assignment has been ended.
-        }
+        }*/
 
+        //POCOR-9421 start
+        if (empty($endDate)) {
+            $dateCondition['OR'][] = ['end_date IS' => null];
+
+            $dateSubCondition = [['end_date IS NOT' => null]];
+
+            if (!empty($startDate)) {
+                $dateSubCondition[] = ['end_date >=' => $startDate];
+            } else {
+                // If startDate is null, use IS NOT NULL instead of invalid comparison
+                $dateSubCondition[] = ['end_date IS NOT' => null];
+            }
+
+            $dateSubCondition[] = ['end_date >=' => $todayDate];
+            $dateCondition['OR'][] = $dateSubCondition;
+        } else {
+            $dateCondition['OR'][] = [
+                ['end_date IS' => null],
+                ['start_date <=' => $endDate]
+            ];
+            $dateCondition['OR']['OR'] = [];
+            
+            // Add comparisons only if date exist
+            if (!empty($startDate) && !empty($endDate)) {
+                $dateCondition['OR']['OR'][] = [
+                    'start_date >=' => $startDate,
+                    'start_date <=' => $endDate
+                ];
+                $dateCondition['OR']['OR'][] = [
+                    'end_date >=' => $startDate,
+                    'end_date <=' => $endDate
+                ];
+                $dateCondition['OR']['OR'][] = [
+                    'start_date <=' => $startDate,
+                    'end_date >=' => $endDate
+                ];
+            } elseif (empty($startDate) && !empty($endDate)) {
+                $dateCondition['OR']['OR'][] = ['end_date <=' => $endDate];
+            } elseif (!empty($startDate) && empty($endDate)) {
+                $dateCondition['OR']['OR'][] = ['start_date >=' => $startDate];
+            }
+
+            $dateCondition['AND'] = ['end_date >=' => $todayDate]; // exclude finished staff
+        } //POCOR-9421 end
         $identicalPositionHolders->where($dateCondition);
 
         $FTEused = 0;
@@ -1569,9 +1613,10 @@ class ValidationBehavior extends Behavior
                 $FTEused += $value->FTE;
             }
         }
-
-        $validationResult = (($FTEused+$globalData['data']['FTE']) <= 1);
-
+        //POCOR-9421 start
+        $FTEused = (float)$FTEused;
+        $globalFTE = (float)$globalData['data']['FTE'];
+        $validationResult = (($FTEused + $globalFTE) <= 1); //POCOR-9421 end
         return $validationResult;
     }
 

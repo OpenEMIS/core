@@ -14,7 +14,7 @@ use InstitutionScope;
     protected $table = 'institution_contact_persons';
 
     // ✅ Allow mass assignment
-    protected $fillable = ['id', 'contact_person', 'designation', 'department', 'telephone', 'mobile_number', 'fax', 'email', 'preferred', 'institution_id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
+    protected $fillable = ['id', 'contact_person', 'designation', 'department', 'telephone', 'mobile_number', 'email', 'preferred', 'institution_id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
 
     // ✅ Disable Laravel's default timestamps
     public $timestamps = false;
@@ -96,7 +96,6 @@ public function _swaggerPath() {}
                           @OA\Property(property="department", type="string", example=null),
                           @OA\Property(property="telephone", type="string", example=null),
                           @OA\Property(property="mobile_number", type="string", example=null),
-                          @OA\Property(property="fax", type="string", example=null),
                           @OA\Property(property="email", type="string", example=null),
                           @OA\Property(property="preferred", type="integer", example=null),
                           @OA\Property(property="institution_id", type="integer", example=null),
@@ -131,7 +130,6 @@ public function _swaggerList() {}
                      @OA\Property(property="department", type="string", example=null),
                      @OA\Property(property="telephone", type="string", example=null),
                      @OA\Property(property="mobile_number", type="string", example=null),
-                     @OA\Property(property="fax", type="string", example=null),
                      @OA\Property(property="email", type="string", example=null),
                      @OA\Property(property="preferred", type="integer", example=null),
                      @OA\Property(property="institution_id", type="integer", example=null),
@@ -204,7 +202,6 @@ public function _swaggerView() {}
                      @OA\Property(property="department", type="string", example=null),
                      @OA\Property(property="telephone", type="string", example=null),
                      @OA\Property(property="mobile_number", type="string", example=null),
-                     @OA\Property(property="fax", type="string", example=null),
                      @OA\Property(property="email", type="string", example=null),
                      @OA\Property(property="preferred", type="integer", example=null),
                      @OA\Property(property="institution_id", type="integer", example=null),

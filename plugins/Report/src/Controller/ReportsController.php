@@ -37,7 +37,8 @@ class ReportsController extends AppController
             'Workflows' => ['className' => 'Report.Workflows', 'actions' => ['index', 'add']],
             'UisStatistics' => ['className' => 'Report.UisStatistics', 'actions' => ['index', 'add']],
             'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']],
-            'Performance' => ['className' => 'Report.Performance', 'actions' => ['index', 'add']]
+            'Performance' => ['className' => 'Report.Performance', 'actions' => ['index', 'add']],
+            'Meals' => ['className' => 'Report.Meals', 'actions' => ['index', 'add']]//POCOR-9267 
         ];
         $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
@@ -218,15 +219,17 @@ class ReportsController extends AppController
                 'Report.EnrollmentOutliers' => __('Enrollment Outliers'),//POCOR-7211
                 'Report.AgeOutliers' => __('Age Outliers'),//POCOR-7211
                 'Report.ValidationReport' => __('Validation Report'),//POCOR-8144
+                'Report.StaffWithMissingQualificationReport' => __('Staff with Missing Qualification Report'),//POCOR-9262
             ];
         } elseif ($module == 'Audits') {
             $options = [
                 'Report.AuditLogins' => __('Logins'),
                 'Report.AuditLastLogins' => __('Last Login'), //POCOR-7970
                 'Report.AuditInstitutions' => __('Institutions'),
-                'Report.AuditUsers' => __('Users')
-                , 'Report.AuditSecuritiesRolesPermissions' => __('Security Roles and Permissions') // POCOR-499
-                , 'Report.AuditSecuritiesGroupUserRoles' => __('Security Group User Roles') // POCOR-499
+                'Report.AuditUsers' => __('Users'),
+                 'Report.AuditSecuritiesRolesPermissions' => __('Security Roles and Permissions'), // POCOR-499
+                 'Report.AuditSecuritiesGroupUserRoles' => __('Security Group User Roles'), // POCOR-499
+                 'Report.AuditInstitutionStaff' => __('Institution Staff') // POCOR-9383
             ];
         } elseif ($module == 'Examinations') {
             $options = [
@@ -258,9 +261,16 @@ class ReportsController extends AppController
         elseif ($module == 'Performance') {
             $options = [
                 'Report.Performance' => __('Assessment Missing Mark Entry'),
-                'Report.Assessments' => __('Assessment')
+                'Report.Assessments' => __('Assessment'),
+                'Report.OutcomesResult' => __('Outcomes')
             ];
         }/*POCOR-6513 ends*/
+        elseif ($module == 'Meals') {//POCOR-9267 Starts
+            $options = [
+                'Report.MealSummary' => __('Meals Summary Report'),
+                'Report.MealDetails' => __('Meals Details Report')//POCOR-9268
+            ];
+        }//POCOR-9267 Ends
         return $options;
     }
 

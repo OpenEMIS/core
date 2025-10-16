@@ -352,6 +352,61 @@ class StudentEnrolmentTable extends ControllerActionTable
         $Students = self::getDynamicTableInstance('Institution.Students');
         $StudentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
+
+        // Pick PENDING if available, otherwise use CURRENT
+        $statusId = $statuses['PENDING'] ?? $statuses['CURRENT'];
+
+        $student = null;
+
+        // Check if student already has a CURRENT enrolment
+        $existingStudent = $Students->find()
+            ->where([
+                'student_status_id' => $statuses['CURRENT'],
+                'student_id' => $entity->student_id,
+                'education_grade_id' => $entity->education_grade_id,
+                'academic_period_id' => $entity->academic_period_id,
+                'institution_id' => $entity->institution_id
+            ])
+            ->first();
+
+        if ($existingStudent) {
+            // If already enrolled, reuse the record
+            $student = $existingStudent;
+        } else {
+            // Create new enrolment (PENDING if available for workflow)
+            $incomingStudent = [
+                'student_status_id' => $statusId,
+                'student_id' => $entity->student_id,
+                'education_grade_id' => $entity->education_grade_id,
+                'academic_period_id' => $entity->academic_period_id,
+                'start_date' => $entity->start_date,
+                'end_date' => $entity->end_date,
+                'institution_id' => $entity->institution_id
+            ];
+
+            if (!empty($entity->institution_class_id)) {
+                $incomingStudent['class'] = $entity->institution_class_id;
+            }
+
+            $newEntity = $Students->newEntity($incomingStudent);
+            $student = $Students->save($newEntity);
+
+            if (!$student) {
+                // Log or debug errors for troubleshooting
+                \Cake\Log\Log::error('Failed to save new InstitutionStudent: ' . json_encode($newEntity->getErrors()));
+                throw new \RuntimeException(
+                    'Could not save InstitutionStudent. Errors: ' . json_encode($newEntity->getErrors())
+                );
+            }
+
+        }
+    }
+
+    public function addInstitutionStudentOld(Entity $entity)
+    {
+        $Students = self::getDynamicTableInstance('Institution.Students');
+        $StudentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
+        $statuses = $StudentStatuses->findCodeList();
         $student = null;
 // Check if student already exists
         $existingStudent = $Students->find()
@@ -693,7 +748,7 @@ class StudentEnrolmentTable extends ControllerActionTable
         ];
         $extraButtons['bulkEnrollment'] = [
             'permission' => ['Institutions', 'Students', 'add'],
-            'action' => 'BulkStudentEnrollment',
+            'action' => 'BulkStudentEnrolment', //POCOR-9277
             'next_action' => 'edit',
             'icon' => '<i class="fa kd-transfer"></i>',
             'title' => __('Bulk Enrollment')
@@ -913,6 +968,7 @@ class StudentEnrolmentTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        $this->sendStudentEnrolmentAlert($entity); // POCOR-9320
         if ($entity->isNew()) {
             if ($entity->has('action_type') && $entity->action_type == 'imported') { // Import logic
                 $WorkflowActions = self::getDynamicTableInstance('Workflow.WorkflowActions');
@@ -974,7 +1030,6 @@ class StudentEnrolmentTable extends ControllerActionTable
             return;
         }
         $this->_alreadyHandled[$entity->id] = true;
-        $this->sendStudentEnrolmentAlert($entity);
     }
 
     public function findWorkbench(Query $query, array $options)

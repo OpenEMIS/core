@@ -355,6 +355,7 @@ class InstitutionsTable extends ControllerActionTable
                 // 'message' => 'Code has to be unique'
             ])
             ->allowEmpty('email')
+            ->notEmpty('institution_locality_id') //POCOR-9407
             ->add('email', [
                 'ruleValidEmail' => [
                     'rule' => 'checkEmailFormat',
@@ -367,12 +368,12 @@ class InstitutionsTable extends ControllerActionTable
                 'provider' => 'table',
                 'last' => true
             ])
-            ->allowEmpty('fax')
+            /*->allowEmpty('fax')
             ->add('fax', 'ruleCustomFax', [
                 'rule' => ['validateCustomPattern', 'institution_fax'],
                 'provider' => 'table',
                 'last' => true
-            ])
+            ])*/
             // ->add('area_id', 'ruleAuthorisedArea', [
             //     'rule' => ['checkAuthorisedArea']
             // ])
@@ -562,12 +563,12 @@ class InstitutionsTable extends ControllerActionTable
                         'type' => 'string',
                         'label' => 'Telephone'
                     ];
-                    $newFields[] = [
+                   /* $newFields[] = [
                         'key' => 'Institutions.fax',
                         'field' => 'fax',
                         'type' => 'string',
                         'label' => 'Fax'
-                    ];
+                    ];*/
                     $newFields[] = [
                         'key' => 'Institutions.email',
                         'field' => 'email',
@@ -618,12 +619,12 @@ class InstitutionsTable extends ControllerActionTable
                         'type' => 'string',
                         'label' => 'Mobile Number'
                     ];
-                    $newFields[] = [
+                    /*$newFields[] = [
                         'key' => 'fax',
                         'field' => 'faxs',
                         'type' => 'string',
                         'label' => 'Fax'
-                    ];
+                    ];*/
                     $newFields[] = [
                         'key' => 'institution_contact_persons.email',
                         'field' => 'contact_email',
@@ -737,7 +738,7 @@ class InstitutionsTable extends ControllerActionTable
                 'department' => $institutionContactPersons->aliasField('department'),
                 'tel' => $institutionContactPersons->aliasField('telephone'),
                 'mobile_no' => $institutionContactPersons->aliasField('mobile_number'),
-                'faxs' => $institutionContactPersons->aliasField('fax'),
+              //  'faxs' => $institutionContactPersons->aliasField('fax'),
                 'contact_email' => $institutionContactPersons->aliasField('email'),
                 'preferred' => $institutionContactPersons->aliasField('preferred'),
             ])
@@ -1039,7 +1040,7 @@ class InstitutionsTable extends ControllerActionTable
             $this->field('contact_section', ['visible' => false]);
             $this->field('contact_person', ['visible' => false]);
             $this->field('telephone', ['visible' => false]);
-            $this->field('fax', ['visible' => false]);
+           // $this->field('fax', ['visible' => false]);
             $this->field('email', ['visible' => false]);
             $this->field('website', ['visible' => false]);
         }
@@ -1289,7 +1290,7 @@ class InstitutionsTable extends ControllerActionTable
                 "institution_area_administrative" => !empty($areaAdministrativeName) ? $areaAdministrativeName : NULL,
                 "institution_contact_person" => $entity->contact_person,
                 "institution_telephone" => $entity->telephone,
-                "institution_mobile" => $entity->fax,
+                //"institution_mobile" => $entity->fax,
                 "institution_email" => $entity->email,
                 "institution_website" => $entity->website,
             ];
@@ -1360,7 +1361,7 @@ class InstitutionsTable extends ControllerActionTable
 
             // Webhook institution update --start
             if ($this->webhookAction == 'edit') {
-                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.WebhookEvents');
+                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
                 if ($this->Auth->user()) {
                     $Webhooks->triggerShell('institutions_update', ['username' => ''], $body);
                 }
@@ -1775,7 +1776,7 @@ class InstitutionsTable extends ControllerActionTable
             'area_administrative_id',
 
             'contact_section',
-            'contact_person', 'telephone', 'fax', 'email', 'website',
+            'contact_person', 'telephone', 'email', 'website',
 
             'map_section',
             'map',
@@ -1892,7 +1893,7 @@ class InstitutionsTable extends ControllerActionTable
             'area_administrative_id',
 
             'contact_section',
-            'contact_person', 'telephone', 'fax', 'email', 'website',
+            'contact_person', 'telephone', 'email', 'website',
         ]);
     }
 
@@ -1926,6 +1927,7 @@ class InstitutionsTable extends ControllerActionTable
 
         $attr['options'] = $providerOptions;
         $attr['empty'] = true;
+        $attr['onChangeReload'] = true;
         return $attr;
     }
 
@@ -2663,7 +2665,7 @@ class InstitutionsTable extends ControllerActionTable
                 "institution_area_administrative" => !empty($areaAdministrativeName) ? $areaAdministrativeName : NULL,
                 "institution_contact_person" => $entity->contact_person,
                 "institution_telephone" => $entity->telephone,
-                "institution_mobile" => $entity->fax,
+                //"institution_mobile" => $entity->fax,
                 "institution_email" => $entity->email,
                 "institution_website" => $entity->website,
             ];
@@ -2735,4 +2737,10 @@ class InstitutionsTable extends ControllerActionTable
         }
     }
     //POCOR-7971 ::end
+
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        //echo "<pre>"; print_r($query->toArray); die;
+      //  return $query;
+    }
 }

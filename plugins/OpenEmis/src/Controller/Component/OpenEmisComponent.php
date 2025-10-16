@@ -19,6 +19,7 @@ class OpenEmisComponent extends Component
     protected $_defaultConfig = [
         'theme' => 'auto',
         'homeUrl' => ['controller' => '/'],
+        'SystemNotices' =>  ['controller' => '/'],
         'headerMenu' => [
             'About' => [
                 'url' => ['plugin' => false, 'controller' => 'About', 'action' => 'index'],
@@ -63,6 +64,9 @@ class OpenEmisComponent extends Component
 
         $theme = $this->getTheme();
         $controller->set('theme', $theme);
+        if (file_exists(CONFIG . 'app_local.php')) { //POCOR-9203
+            $controller->set('SystemNotices', $this->SystemNotices());
+        }
         $controller->set('homeUrl', $this->getConfig('homeUrl'));
         $controller->set('headerMenu', $this->getHeaderMenu());
         $controller->set('SystemVersion', $this->getCodeVersion());
@@ -184,7 +188,112 @@ class OpenEmisComponent extends Component
 
     }
 
+    public function getLoggedInUserRoles($userId = null)
+    {
+        $roles = [];
+        $usersGroup = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $userRoles = $usersGroup
+                    ->find()
+                    ->where([$usersGroup->aliasField('security_user_id') => $userId ])
+                    ->toArray();
+        if (!empty($userRoles)) {
+            foreach ($userRoles as $role) {
+                $roles[] = $role->security_role_id;
+            }
+        }
+        return (!empty($roles))? $roles: null;
+    }
 
+    //POCOR-7210
+    private function SystemNotices($userId = null)
+    {
+        $sessionId =  $this->getController()->getRequest()->getData('session_id');
+        $username =  $this->getController()->getRequest()->getData('username');
+        $url =  $this->getController()->getRequest()->getData('url');
+        if (!empty($url) && !empty($sessionId) && !empty($username)) {
+            $userId  = $this->controller->Auth->user('id');
+            $isAdmin = $this->controller->AccessControl->isAdmin();
+
+            if(!$isAdmin && $userId != null){
+                $usersGroup   = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                $userNotices  = TableRegistry::getTableLocator()->get('Alert.SecurityUserNotices');
+
+                // 1. Get user role IDs
+                $userRoleIdsQuery = $usersGroup->find()
+                    ->select(['security_role_id'])
+                    ->where(['security_user_id' => $userId])
+                    ->enableHydration(false);
+                $userRoleIds = array_column($userRoleIdsQuery->toArray(), 'security_role_id');
+
+                // 2. Check permission to view notices
+                $havePermissionToView = TableRegistry::getTableLocator()
+                    ->get('Security.SecurityRoleFunctions')
+                    ->find()
+                    ->leftJoin(
+                        ['SecurityFunctions' => 'security_functions'],
+                        ['SecurityFunctions.id = SecurityRoleFunctions.security_function_id']
+                    )
+                    ->where([
+                        'SecurityFunctions.controller' => 'Systems',
+                        'SecurityFunctions.name' => 'Notice Message',
+                        'SecurityRoleFunctions.security_role_id IN' => $userRoleIds,
+                        'SecurityRoleFunctions._view' => 1
+                    ])
+                    ->toArray();
+
+                if (empty($havePermissionToView)) {
+                    // User has no permission to view notices → no red dot
+                    return true;
+                }
+
+                // 3. Get notice IDs assigned to user's roles
+                $assignedNoticeIdsQuery = $usersGroup->find()
+                    ->select(['notice_id' => 'NoticeRoles.notice_id'])
+                    ->innerJoin(
+                        ['NoticeRoles' => 'notice_roles'],
+                        ['SecurityGroupUsers.security_role_id = NoticeRoles.security_role_id']
+                    )
+                    ->innerJoin(
+                        ['Notices' => 'notices'],
+                        ['Notices.id = NoticeRoles.notice_id']
+                    )
+                    ->where([
+                        'SecurityGroupUsers.security_user_id IS' => $userId,
+                        'Notices.status' => 1
+                    ])
+                    ->enableHydration(false);
+
+                $assignedNoticeIds = array_column($assignedNoticeIdsQuery->toArray(), 'notice_id');
+
+                // 4. Admins always return true (no red dot)
+                if ($isAdmin) {
+                    return true;
+                }
+
+                // 5. If no assigned notices, return true (no red dot)
+                if (empty($assignedNoticeIds)) {
+                    return true;
+                }
+
+                // 6. Get seen notices
+                $seenNoticesQuery = $userNotices->find()
+                    ->select(['notice_id'])
+                    ->where([
+                        'SecurityUserNotices.security_user_id IS' => $userId,
+                        'SecurityUserNotices.notice_id IN' => $assignedNoticeIds
+                    ])
+                    ->enableHydration(false);
+
+                $seenNoticeIds = array_column($seenNoticesQuery->toArray(), 'notice_id');
+
+                // 7. Return true if all assigned notices are seen (no red dot), false if any unseen
+                $unseen = array_diff($assignedNoticeIds, $seenNoticeIds);
+                return empty($unseen);
+            }else{
+                return true;
+            }
+        }
+    }
 }
 
 ?>

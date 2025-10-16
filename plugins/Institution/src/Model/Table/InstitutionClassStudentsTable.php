@@ -1458,8 +1458,375 @@ class InstitutionClassStudentsTable extends AppTable
         return $query;
     }
 
+    //POCOR-9195 -- Updated function to include logic to display only selected subjects and students with no marks
+    // POCOR-9289 stashed
+    public function findExemptStudentsNoMarks(Query $query, array $options): Query
+    {
 
+        // Extract the parameters from the options array
+        $assessment_item_id = preg_replace("/[^a-fA-F0-9\-]/", "", $options['assessment_item_id']);  // Still using assessment_item_id for reference
+        $assessment_period_id = intval($options['assessment_period_id']);
+        $institution_class_id = intval($options['institution_class_id']);
+
+        // Prepare period IDs & names
+        $assessment_period_names_string = null;
+        $assessment_period_ids = [];
+        $selectedSubject = null;
+        $selectedSubjectId = null;
+
+        if (!empty($assessment_item_id)) {
+            $AssessmentItemsTable = self::getDynamicTableInstance('Assessment.AssessmentItems');
+            $result = $AssessmentItemsTable->find()
+                ->select([
+                    'education_subject_id' => 'AssessmentItems.education_subject_id',
+                    'education_subject_name' => 'education_subjects.name'
+                ])
+                ->leftJoin(
+                    ['education_subjects' => 'education_subjects'],
+                    ['education_subjects.id = AssessmentItems.education_subject_id']
+                )
+                ->where(['AssessmentItems.id' => $assessment_item_id])
+                ->first();
+            if ($result) {
+                $nameParts = explode('-', $result->education_subject_name);
+                $selectedSubject = isset($nameParts[1]) ? trim($nameParts[1]) : trim($nameParts[0]);
+                $selectedSubjectId = $result->education_subject_id;
+            }
+        }
+
+
+        //POCOR-9114 -- START Check if the assessment_period_ids are multiple
+        if (!empty($options['assessment_period_combo'])) {
+            $assessment_period_ids = array_filter(
+                array_map('intval', explode('_', $options['assessment_period_combo']))
+            );
+        }
+        //POCOR-9114 -- END
+
+//        Log::debug(print_r([$assessment_item_id, $assessment_period_id, $institution_class_id], true));
+        $where = [
+            'institution_classes.id = ' . $institution_class_id,
+            'student_statuses.code NOT IN ("TRANSFERRED", "WITHDRAWN", "GRADUATED", "PROMOTED", "REPEATED")',
+        ];
+
+        if (!empty($assessment_period_ids)) {
+            $AssessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults');
+
+            $markedStudentsRaw = $AssessmentItemResults->find()
+                ->select(['student_id'])
+                ->where([
+                    'education_subject_id' => $selectedSubjectId,
+                    'assessment_period_id IN' => $assessment_period_ids,
+                    'student_id IS NOT' => null
+                ])
+                ->disableHydration()
+                ->toArray();
+            $markedStudentIds = array_unique(array_column($markedStudentsRaw, 'student_id'));
+        }
+
+        // Building the query
+        $query = $query->find('all')
+            ->enableAutoFields()
+            ->leftJoin(
+                ['assessment_item_student_exemptions' => 'assessment_item_student_exemptions'],
+                [
+                    $this->aliasField('student_id') . ' = assessment_item_student_exemptions.student_id',
+                    $this->aliasField('institution_class_id') . ' = assessment_item_student_exemptions.institution_class_id',
+                    $this->aliasField('education_grade_id') . ' = assessment_item_student_exemptions.education_grade_id',
+                    //'assessment_item_student_exemptions.assessment_period_id = ' . $assessment_period_id
+                    'assessment_item_student_exemptions.assessment_period_id IN (' . implode(',', $assessment_period_ids) . ')' //POCOR-9114
+                ]
+            )
+            ->leftJoin(
+                ['assessment_items' => 'assessment_items'],
+                [
+                    //'assessment_items.id = "' . $assessment_item_id . '"',
+                    'assessment_items.id' => $assessment_item_id,
+                    'assessment_item_student_exemptions.assessment_id = assessment_items.assessment_id',
+                    'assessment_item_student_exemptions.education_subject_id = assessment_items.education_subject_id'
+                ]
+            )
+            ->leftJoin(['assessment_periods' => 'assessment_periods'], ['assessment_periods.id = assessment_item_student_exemptions.assessment_period_id'])
+            ->leftJoin(['education_subjects' => 'education_subjects'], ['education_subjects.id = assessment_item_student_exemptions.education_subject_id'])
+            ->innerJoin(
+                ['security_users' => 'security_users'],
+                [$this->aliasField('student_id') . ' = security_users.id']
+            )
+            ->innerJoin(
+                ['institution_classes' => 'institution_classes'],
+                [$this->aliasField('institution_class_id') . ' = institution_classes.id']
+            )
+            ->innerJoin(
+                ['genders' => 'genders'],
+                ['genders.id = security_users.gender_id']
+            )
+            ->innerJoin(
+                ['student_statuses' => 'student_statuses'],
+                [$this->aliasField('student_status_id') . ' = student_statuses.id']
+            )
+            ->where($where)
+            ->andWhere(function ($exp, $q) use ($selectedSubjectId) {
+                return $exp->or_([
+                    'assessment_item_student_exemptions.education_subject_id IS' => null,
+                    'assessment_item_student_exemptions.education_subject_id' => '',
+                    'assessment_item_student_exemptions.education_subject_id' => $selectedSubjectId
+                ]);
+            });
+        // echo "<pre>";print_r($query->sql());die;
+        // echo "<pre>";print_r($markedStudentIds);exit;
+        if (!empty($markedStudentIds)) {
+            $query->andWhere(function ($exp, $q) use ($markedStudentIds) {
+                return $exp->notIn($this->aliasField('student_id'), $markedStudentIds);
+            });
+        }
+        $query->select([
+            'student_id' => $this->aliasField('student_id'),
+            'openemis_no' => 'security_users.openemis_no',
+            'first_name' => 'security_users.first_name',
+            'middle_name' => 'security_users.middle_name',
+            'third_name' => 'security_users.third_name',
+            'last_name' => 'security_users.last_name',
+            'institution_class_id' => $this->aliasField('institution_class_id'),
+            'institution_id' => $this->aliasField('institution_id'),
+            'assessment_id' => 'assessment_item_student_exemptions.assessment_id',
+            'education_subject_id' => 'assessment_item_student_exemptions.education_subject_id',
+            'education_subject_name' => 'education_subjects.name',
+            'assessment_period_id' => 'assessment_item_student_exemptions.assessment_period_id',
+            'assessment_period_name' => 'assessment_periods.name',
+            'institution_class_student_id' => $this->aliasField('id'),
+            'education_grade_id' => $this->aliasField('education_grade_id'),
+            'gender' => 'genders.name',
+            'gender_id' => 'genders.id',
+            'student_status_name' => 'student_statuses.name',
+            'assessment_items.assessment_id',
+            'assessment_items.education_subject_id',
+            'assessment_items.classification',
+            'type' => 'assessment_item_student_exemptions.type',//POCOR-9042
+        ])
+            ->disableHydration();
+//        Log::debug($query->sql());
+        // Format the results
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) // POCOR-9289
+        use ($selectedSubject, $assessment_period_names_string) { // POCOR-9289
+            return $results->map(function ($row) use ($selectedSubject, $assessment_period_names_string) { // POCOR-9289
+                $fullName = [];
+                ($row['first_name']) ? $fullName[] = $row['first_name'] : '';
+                ($row['middle_name']) ? $fullName[] = $row['middle_name'] : '';
+                ($row['third_name']) ? $fullName[] = $row['third_name'] : '';
+                ($row['last_name']) ? $fullName[] = $row['last_name'] : '';
+                $row['is_exempt'] = ($row['assessment_id'] && $row['type'] == 1) ? true : false;//POCOR-9042
+                $row['is_unassign'] = ($row['assessment_id'] && $row['type'] == 2) ? true : false;//POCOR-9042
+                $row['is_unassign'] = $row['type'];//POCOR-9042
+
+                $name = implode(' ', $fullName);
+
+                return [
+                    'openemis_no' => $row['openemis_no'],
+                    'name' => $name,
+                    'gender' => __($row['gender']),
+                    'gender_id' => intval($row['gender_id']),
+                    'student_id' => $row['student_id'],
+                    'education_grade_id' => $row['education_grade_id'],
+                    'institution_class_id' => $row['institution_class_id'],
+                    'institution_class_student_id' => $row['institution_class_student_id'],
+                    'assessment_period_id' => $row['assessment_period_id'],
+                    'assessment_item_id' => $row['assessment_id'],  // Use assessment_id now
+                    'is_exempt' => $row['is_exempt'],
+                    'is_unassign' => $row['is_unassign'],//POCOR-9042
+                    'type' => $row['type'],//POCOR-9042
+                    'education_subject_id' => $row['education_subject_id'],
+                    'education_subject_name' => $row['education_subject_name'] ?: $selectedSubject,
+                    'assessment_period_name' => $row['assessment_period_name'] ?: $assessment_period_names_string,
+                    'student_status_name' => __($row['student_status_name'])
+                ];
+            });
+        });
+
+        return $query;
+    }
+
+    //POCOR-9289 -- Updated function to include logic to display only selected subject (one) regardless of marks
     public function findExemptStudents(Query $query, array $options): Query
+    {
+        // Extract the parameters from the options array
+        $assessment_item_id = preg_replace("/[^a-fA-F0-9\-]/", "", $options['assessment_item_id']);  // Still using assessment_item_id for reference
+        $assessment_period_id = intval($options['assessment_period_id']);
+        $institution_class_id = intval($options['institution_class_id']);
+
+        // Prepare period IDs & names
+        $assessment_period_names_string = null;
+        $assessment_period_ids = [];
+        $selectedSubject = null;
+        $selectedSubjectId = null;
+
+        if (!empty($assessment_item_id)) {
+            $AssessmentItemsTable = self::getDynamicTableInstance('Assessment.AssessmentItems');
+            $result = $AssessmentItemsTable->find()
+                ->select([
+                    'education_subject_id' => 'AssessmentItems.education_subject_id',
+                    'education_subject_name' => 'education_subjects.name'
+                ])
+                ->leftJoin(
+                    ['education_subjects' => 'education_subjects'],
+                    ['education_subjects.id = AssessmentItems.education_subject_id']
+                )
+                ->where(['AssessmentItems.id' => $assessment_item_id])
+                ->first();
+            if ($result) {
+                $nameParts = explode('-', $result->education_subject_name);
+                $selectedSubject = isset($nameParts[1]) ? trim($nameParts[1]) : trim($nameParts[0]);
+                $selectedSubjectId = $result->education_subject_id;
+            }
+        }
+
+
+        //POCOR-9114 -- START Check if the assessment_period_ids are multiple
+        if (!empty($options['assessment_period_combo'])) {
+            $assessment_period_ids = array_filter(
+                array_map('intval', explode('_', $options['assessment_period_combo']))
+            );
+        }
+        //POCOR-9114 -- END
+
+//        Log::debug(print_r([$assessment_item_id, $assessment_period_id, $institution_class_id], true));
+        $where = [
+            'institution_classes.id = ' . $institution_class_id,
+            'student_statuses.code NOT IN ("TRANSFERRED", "WITHDRAWN", "GRADUATED", "PROMOTED", "REPEATED")',
+        ];
+
+        // Building the query
+        $query = $query->find('all')
+            ->enableAutoFields()
+            ->leftJoin(
+                ['assessment_item_student_exemptions' => 'assessment_item_student_exemptions'],
+                [
+                    $this->aliasField('student_id') . ' = assessment_item_student_exemptions.student_id',
+                    $this->aliasField('institution_class_id') . ' = assessment_item_student_exemptions.institution_class_id',
+                    $this->aliasField('education_grade_id') . ' = assessment_item_student_exemptions.education_grade_id',
+                    'assessment_item_student_exemptions.education_subject_id = ' . $selectedSubjectId,
+                    'assessment_item_student_exemptions.assessment_period_id IN (' . implode(',', $assessment_period_ids) . ')' //POCOR-9114
+                ]
+            )
+            ->leftJoin(
+                ['assessment_items' => 'assessment_items'],
+                [
+                    'assessment_items.id = "' . $assessment_item_id . '"', // for debugging
+                    'assessment_item_student_exemptions.assessment_id = assessment_items.assessment_id',
+                    'assessment_item_student_exemptions.education_subject_id = assessment_items.education_subject_id'
+                ]
+            )
+            ->leftJoin(['assessment_periods' => 'assessment_periods'], ['assessment_periods.id = assessment_item_student_exemptions.assessment_period_id'])
+            ->leftJoin(['education_subjects' => 'education_subjects'], ['education_subjects.id = assessment_item_student_exemptions.education_subject_id'])
+            ->innerJoin(
+                ['security_users' => 'security_users'],
+                [$this->aliasField('student_id') . ' = security_users.id']
+            )
+            ->innerJoin(
+                ['institution_subject_students' => 'institution_subject_students'],
+                [
+                    $this->aliasField('student_id') . ' = institution_subject_students.student_id',
+                    $this->aliasField('institution_class_id') . ' = institution_subject_students.institution_class_id',
+                    $this->aliasField('academic_period_id') . ' = institution_subject_students.academic_period_id',
+                    'institution_subject_students.education_subject_id' . ' = ' . $selectedSubjectId, // include only selected subject
+                    $this->aliasField('education_grade_id') . ' = institution_subject_students.education_grade_id',
+                    $this->aliasField('student_status_id') . ' = institution_subject_students.student_status_id',
+                    ]
+            )
+            ->innerJoin(
+                ['institution_classes' => 'institution_classes'],
+                [$this->aliasField('institution_class_id') . ' = institution_classes.id']
+            )
+            ->innerJoin(
+                ['genders' => 'genders'],
+                ['genders.id = security_users.gender_id']
+            )
+            ->innerJoin(
+                ['student_statuses' => 'student_statuses'],
+                [$this->aliasField('student_status_id') . ' = student_statuses.id']
+            )
+            ->where($where)
+            ->andWhere(function ($exp, $q) use ($selectedSubjectId, $assessment_period_ids) {
+                return $exp->or_([
+                    'assessment_item_student_exemptions.education_subject_id = ""',
+                    'assessment_item_student_exemptions.education_subject_id IS NULL',
+                    ['assessment_item_student_exemptions.education_subject_id = ' . $selectedSubjectId,
+                        'assessment_item_student_exemptions.assessment_period_id IN (' . implode(',', $assessment_period_ids) . ')' ]
+                ]);
+            })
+        ;
+//        Log::debug(print_r([
+//            $where,
+//            $assessment_period_ids,
+//            $query->sql()
+//        ], true));
+            $query->select([
+                'student_id' => $this->aliasField('student_id'),
+                'openemis_no' => 'security_users.openemis_no',
+                'first_name' => 'security_users.first_name',
+                'middle_name' => 'security_users.middle_name',
+                'third_name' => 'security_users.third_name',
+                'last_name' => 'security_users.last_name',
+                'institution_class_id' => $this->aliasField('institution_class_id'),
+                'institution_id' => $this->aliasField('institution_id'),
+                'assessment_id' => 'assessment_item_student_exemptions.assessment_id',
+                'education_subject_id' => 'assessment_item_student_exemptions.education_subject_id',
+                'education_subject_name' => 'education_subjects.name',
+                'assessment_period_id' => 'assessment_item_student_exemptions.assessment_period_id',
+                'assessment_period_name' => 'assessment_periods.name',
+                'institution_class_student_id' => $this->aliasField('id'),
+                'education_grade_id' => $this->aliasField('education_grade_id'),
+                'gender' => 'genders.name',
+                'gender_id' => 'genders.id',
+                'student_status_name' => 'student_statuses.name',
+                'assessment_items.assessment_id',
+                'assessment_items.education_subject_id',
+                'assessment_items.classification',
+                'type' => 'assessment_item_student_exemptions.type',//POCOR-9042
+            ])
+            ->disableHydration();
+//        Log::debug($query->sql());
+        // Format the results
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($selectedSubject, $assessment_period_names_string) {
+            return $results->map(function ($row) use ($selectedSubject, $assessment_period_names_string) {
+                $fullName = [];
+                ($row['first_name']) ? $fullName[] = $row['first_name'] : '';
+                ($row['middle_name']) ? $fullName[] = $row['middle_name'] : '';
+                ($row['third_name']) ? $fullName[] = $row['third_name'] : '';
+                ($row['last_name']) ? $fullName[] = $row['last_name'] : '';
+                $row['is_exempt'] = ($row['assessment_id'] && $row['type'] == 1) ? true : false;//POCOR-9042
+                $row['is_unassign'] = ($row['assessment_id'] && $row['type'] == 2) ? true : false;//POCOR-9042
+
+
+                $name = implode(' ', $fullName);
+
+                return [
+                    'openemis_no' => $row['openemis_no'],
+                    'name' => $name,
+                    'gender' => __($row['gender']),
+                    'gender_id' => intval($row['gender_id']),
+                    'student_id' => $row['student_id'],
+                    'education_grade_id' => $row['education_grade_id'],
+                    'institution_class_id' => $row['institution_class_id'],
+                    'institution_class_student_id' => $row['institution_class_student_id'],
+                    'assessment_period_id' => $row['assessment_period_id'],
+                    'assessment_item_id' => $row['assessment_id'],  // Use assessment_id now
+                    'is_exempt' => $row['is_exempt'],
+                    'is_unassign' => $row['is_unassign'],//POCOR-9042
+                    'type' => $row['type'],//POCOR-9042
+                    'education_subject_id' => $row['education_subject_id'],
+                    'education_subject_name' => $row['education_subject_name'] ?: $selectedSubject,
+                    'assessment_period_name' => $row['assessment_period_name'] ?: $assessment_period_names_string,
+                    'student_status_name' => __($row['student_status_name'])
+                ];
+            });
+        });
+
+        return $query;
+    }
+    // POCOR-9289 end
+
+
+    public function findExemptStudentsOrg(Query $query, array $options): Query
     {
 
         // Extract the parameters from the options array
