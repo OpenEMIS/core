@@ -574,6 +574,7 @@ function InstitutionStudentAttendancesSvc(
     function saveAbsences(data, context) {
         const isSubjectBased = context.attendance_by === "subject";
 
+        const defaultReasonId = context.studentAbsenceReasons[0]['id'];
         const studentAbsenceData = {
             student_id: Number(data.student_id),
             institution_id: Number(data.institution_id),
@@ -582,7 +583,7 @@ function InstitutionStudentAttendancesSvc(
             absence_type_id: Number(data.institution_student_absences.absence_type_id),
             student_absence_reason_id: data.institution_student_absences.student_absence_reason_id != null
                 ? Number(data.institution_student_absences.student_absence_reason_id)
-                : 0,
+                : defaultReasonId,
             comment: data.institution_student_absences.comment,
             period: isSubjectBased ? 0 : Number(context.period),
             date: context.date,
@@ -1107,17 +1108,15 @@ function InstitutionStudentAttendancesSvc(
                     AlertSvc.error(scope, "There was an error when saving the record");
                 })
                 .finally(function () {
-                    const refreshParams = {
-                        columns: [
-                            "institution_student_absences.student_absence_reason_id",
-                            "institution_student_absences.absence_type_id",
-                        ],
-                        force: true,
-                    };
-
+                    // const refreshParams = {
+                    //     columns: [
+                    //         "institution_student_absences.student_absence_reason_id",
+                    //         "institution_student_absences.absence_type_id",
+                    //     ],
+                    //     force: true,
+                    // };
                     setTimeout(() => setRowDatas(context, data), 200);
-
-                    context?.api?.refreshCells(refreshParams);
+                    // context?.api?.refreshCells(refreshParams);
                     UtilsSvc.isAppendSpinner(false, "institution-student-attendances-table");
                 });
         });
@@ -1150,7 +1149,11 @@ function InstitutionStudentAttendancesSvc(
             }
         });
 
+        // Set data
         context.scope.$ctrl.gridOptions.api.setRowData(studentList);
+
+        // Force row height recalculation
+        context.scope.$ctrl.gridOptions.api.resetRowHeights();
 
         // Restore scroll position
         if (gridBody && previousScrollTop !== undefined) {
