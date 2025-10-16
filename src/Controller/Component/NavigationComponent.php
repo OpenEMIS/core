@@ -906,6 +906,11 @@ class NavigationComponent extends Component
                     'Institutions.ImportInstitutionPositions'
                 ],
             ],
+            'Institutions.Departments.index' => [ //POCOR-8030
+                'title' => 'Departments',
+                'parent' => 'Institutions.Appointment',
+                'selected' => ['Institutions.Departments'],
+            ],
             'Institutions.StaffDuties.index' => [
                 'title' => 'Duties',
                 'parent' => 'Institutions.Appointment',
@@ -978,6 +983,19 @@ class NavigationComponent extends Component
                     'Institutions.InstitutionRooms'
                 ]
             ],
+            //POCOR-5208 Start
+             'Institutions.InfrastructureAttachments.index' => [
+                'title' => 'Attachments',
+                'parent' => 'Infrastructures',
+                'selected' => [
+                    'Institutions.InfrastructureAttachments.index',
+                    'Institutions.InfrastructureAttachments.view',
+                    'Institutions.InfrastructureAttachments.add',
+                    'Institutions.InfrastructureAttachments.edit',
+                    'Institutions.InfrastructureAttachments.delete'
+                ]
+            ],
+            //POCOR-5208 End
 
             // POCOR-6150 start
             'Institutions.InfrastructureNeeds.index' => [
@@ -1442,7 +1460,7 @@ class NavigationComponent extends Component
                     'Students.SpecialNeedsDiagnostics'
                 ]
             ],
-            
+
             // POCOR-9059[START]
             // 'Student.Students.StudentVisitRequests.index' => [
             //     'title' => 'Visits',
@@ -1972,6 +1990,7 @@ class NavigationComponent extends Component
                     'Directories.StaffClasses',
                     'Directories.StaffSubjects',
                     'Directories.StaffLeave',
+                    'Directories.StaffEntitlement', // POCOR-9287
                     'Directories.ArchivedStaffLeave',
                     'Directories.HistoricalStaffLeave',
                     'Directories.StaffAttendances',
@@ -2631,7 +2650,12 @@ class NavigationComponent extends Component
                 'title' => 'Custom',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
-            ]
+            ],//POCOR-9267 Starts
+            'Reports.Meals' => [
+                'title' => 'Meals',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ]//POCOR-9267 Ends
         ];
         return $navigation;
     }
@@ -2839,9 +2863,9 @@ class NavigationComponent extends Component
                         'Configurations.Theme' => [
                             'title' => 'Themes',
                             'parent' => 'Themes',
-                            'selected' => ['Notices.Notices']
+                           // 'selected' => ['Notices.Notices']
                         ]
-                    ]
+                    ],
                 ],
                 // Start POCOR-5188
                 'Manuals.Institutions' => [
@@ -2858,12 +2882,12 @@ class NavigationComponent extends Component
                     ]
                 ],
                 // End POCOR-5188
-
+/*
                 'Notices.index' => [
                     'title' => 'Notices',
                     'parent' => 'SystemSetup',
                     'selected' => ['Notices.Notices']
-                ],
+                ],*/
                 'Risks.Risks' => [
                     'title' => 'Risks',
                     'parent' => 'SystemSetup',
@@ -3718,6 +3742,12 @@ class NavigationComponent extends Component
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.Logs']
                     ],
+                    'Alerts.Notices' => [
+                        'title' => 'Notices',
+                        'parent' => 'Administration.Communications',
+                        'params' => ['plugin' => 'Alert'],
+                        'selected' => ['Alerts.Notices']
+                    ],
                 ];
             }
         } else {
@@ -3747,6 +3777,12 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Alert'],
                     'selected' => ['Alerts.Logs']
                 ],
+                'Alerts.Notices' => [
+                        'title' => 'Notices',
+                        'parent' => 'Administration.Communications',
+                        'params' => ['plugin' => 'Alert'],
+                        'selected' => ['Alerts.Notices']
+                    ],
             ];
         }
         return $navfour;
@@ -5108,6 +5144,7 @@ class NavigationComponent extends Component
             'StaffClasses',
             'StaffSubjects',
             'StaffLeave',
+            'StaffEntitlement', // POCOR-9287
             'StaffAttendances',
             'StaffBehaviours',
             'StaffAppraisals',

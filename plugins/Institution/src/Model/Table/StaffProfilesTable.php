@@ -113,7 +113,13 @@ class StaffProfilesTable extends ControllerActionTable
 
         if (!is_null($reportCardId) && $this->StaffTemplates->exists([$this->StaffTemplates->getPrimaryKey() => $reportCardId])) {
 
-            $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+            $indexAttr = ['role' => 'menuitem',
+                'tabindex' => '-1',
+                'escape' => false,
+                'target' => '_blank'];
+            $generateAttr = ['role' => 'menuitem',
+                'tabindex' => '-1',
+                'escape' => false];
             $params = [
                 'staff_profile_template_id' => $reportCardId,
                 'staff_id' => $entity->staff_id,
@@ -168,14 +174,14 @@ class StaffProfilesTable extends ControllerActionTable
                 if ((!empty($generateStartDate) && !empty($generateEndDate)) && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                             $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => $generateUrl
                             ];
                 } else {
-                    $indexAttr['title'] = $this->getMessage('StaffProfiles.date_closed');
+                    $generateAttr['title'] = $this->getMessage('StaffProfiles.date_closed');
                     $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => 'javascript:void(0)'
                             ];
                 }
@@ -190,7 +196,7 @@ class StaffProfilesTable extends ControllerActionTable
                 $publishUrl = $this->setQueryString($this->url('publish'), $params);
                 $buttons['publish'] = [
                     'label' => '<i class="fa kd-publish"></i>'.__('Publish'),
-                    'attr' => $indexAttr,
+                    'attr' => $generateAttr,
                     'url' => $publishUrl
                 ];
             }
@@ -205,7 +211,7 @@ class StaffProfilesTable extends ControllerActionTable
                 $unpublishUrl = $this->setQueryString($this->url('unpublish'), $params);
                 $buttons['unpublish'] = [
                     'label' => '<i class="fa kd-unpublish"></i>'.__('Unpublish'),
-                    'attr' => $indexAttr,
+                    'attr' => $generateAttr,
                     'url' => $unpublishUrl
                 ];
             }
@@ -222,7 +228,7 @@ class StaffProfilesTable extends ControllerActionTable
                     $emailUrl = $this->setQueryString($this->url('email'), $params);
                     $buttons['email'] = [
                         'label' => '<i class="fa fa-envelope"></i>'.__('Email'),
-                        'attr' => $indexAttr,
+                        'attr' => $generateAttr,
                         'url' => $emailUrl
                     ];
                 }

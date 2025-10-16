@@ -566,11 +566,11 @@ class InstitutionSurveysTable extends ControllerActionTable
                     $supportQuestionOptions = json_decode($options);
                     // POCOR-9147 start
                     if (!empty($supportQuestionOptions)) {
-                    // POCOR-9129 start
-                    if(!is_array($supportQuestionOptions)) {
-                        $supportQuestionOptions = [];
-                    }
-                    // POCOR-9129 end
+                        // POCOR-9129 start
+                        if (!is_array($supportQuestionOptions)) {
+                            $supportQuestionOptions = [];
+                        }
+                        // POCOR-9129 end
                         if (isset($newData[$supportFieldKey])) {
                             $userSelectedOption = $newData[$supportFieldKey]['number_value'];
 
@@ -774,7 +774,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         if (empty($errors) && empty($fileErrors)) {
             // redirect only when no errors
             $event->stopPropagation();
-            return $this->controller->redirect($this->url('edit'));
+            return $this->controller->redirect($this->url('view'));//POCOR-9281
         }
     }
 
@@ -1880,12 +1880,78 @@ class InstitutionSurveysTable extends ControllerActionTable
                 ['SurveyQuestions.id = ' . $SurveyFormQuestions->aliasField('survey_question_id')]
             )
             ->where(['survey_form_id' => $institutionServery->survey_form_id, 'SurveyQuestions.is_mandatory' => self::IS_MANDATORY])
-            ->count();
-        //echo "<pre>";print_r($SurveyFormsQuestionDatas);die();
-        if ($SurveyFormsQuestionDatas < 0) {
-            $errors = true;
-            $this->Alert->error('InstitutionSurveys.mandatoryFieldFill', ['reset' => true]);
+            // ->count();
+            ->toArray(); // POCOR-9334
+        //POCOR-9334[START]
+        // if ($SurveyFormsQuestionDatas < 0) {
+        //     $errors = true;
+        //     $this->Alert->error('InstitutionSurveys.mandatoryFieldFill', ['reset' => true]);
+        // }
+        $actionName = $this->request->getData()['WorkflowTransitions']['workflow_action_name'];
+        if(!empty($actionName) && str_contains($actionName, 'Approv')){
+                $ismandatory = 1;
+                foreach($SurveyFormsQuestionDatas AS $SurveyFormsQuestionDatasData){
+                    $InstitutionSurveyAnswers = TableRegistry::getTableLocator()->get('Institution.InstitutionSurveyAnswers');
+                    $InstitutionSurveyAnswersData = $InstitutionSurveyAnswers->find()
+                                                ->where(['survey_question_id' => $SurveyFormsQuestionDatasData->survey_question_id, 'institution_survey_id' => $institutionServery->id])
+                                                ->first();
+                    // if(empty($InstitutionSurveyAnswersData)){
+                    //     $ismandatory = 1;
+                    // }
+                    if(!empty($InstitutionSurveyAnswersData)){
+                        $ismandatory = 0;
+                    }else{
+                        $SurveyRulesTable = TableRegistry::getTableLocator()->get('Survey.SurveyRules');
+                        $SurveyRulesTableData = $SurveyRulesTable->find()
+                                                ->where(['survey_question_id' => $SurveyFormsQuestionDatasData->survey_question_id, 'survey_form_id' => $institutionServery->survey_form_id])
+                                                ->first();
+                        if(!empty($SurveyRulesTableData)){
+                            $dependent_question_id1 = $SurveyRulesTableData->dependent_question_id;
+                            $SurveyRulesTableData1 = $SurveyRulesTable->find()
+                                                ->where(['survey_question_id' => $dependent_question_id1, 'survey_form_id' => $institutionServery->survey_form_id])
+                                                ->first();
+                            if(!empty($SurveyRulesTableData1)){
+                                $InstitutionSurveyAnswersData = $InstitutionSurveyAnswers->find()
+                                                ->where(['survey_question_id' => $SurveyRulesTableData1->dependent_question_id, 'institution_survey_id' => $institutionServery->id])
+                                                ->first();
+                                if(!empty($InstitutionSurveyAnswersData)){
+                                    $ismandatory = 0;
+                                }else{
+                                    $dependent_question_id2 = $SurveyRulesTableData1->dependent_question_id;
+                                    $SurveyRulesTableData2 = $SurveyRulesTable->find()
+                                                ->where(['survey_question_id' => $dependent_question_id2, 'survey_form_id' => $institutionServery->survey_form_id])
+                                                ->first();
+                                    if(!empty($SurveyRulesTableData2)){
+                                        $InstitutionSurveyAnswersData2 = $InstitutionSurveyAnswers->find()
+                                                ->where(['survey_question_id' => $SurveyRulesTableData1->dependent_question_id, 'institution_survey_id' => $institutionServery->id])
+                                                ->first();
+                                            if(!empty($InstitutionSurveyAnswersData2)){
+                                                $ismandatory = 0;
+                                            }
+                                    }
+                                }
+                            }
+                        }else{
+                            $ismandatory = 1;
+                        }
+                        // if(empty($SurveyRulesTableData)){
+                        //     $ismandatory = 1;
+                        // }else{
+                        //     $ismandatory = 0;
+                        // }
+                        // echo "<pre>";print_r($ismandatory);die;
+                    }
+                    if($ismandatory == 1){
+                        $errors = true;
+                        $this->Alert->error('InstitutionSurveys.mandatoryFieldFill', ['reset' => true]);
+                    }
+                }
+                // if($ismandatory == 1){
+                //     $errors = true;
+                //     $this->Alert->error('InstitutionSurveys.mandatoryFieldFill', ['reset' => true]);
+                // }
         }
+        //POCOR-9334[END]
 
         if ($errors) {
             $event->stopPropagation();
@@ -1893,6 +1959,7 @@ class InstitutionSurveysTable extends ControllerActionTable
             return $this->controller->redirect($url);
         }
     }
+
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
 

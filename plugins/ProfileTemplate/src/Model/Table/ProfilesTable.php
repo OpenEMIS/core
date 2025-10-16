@@ -86,7 +86,7 @@ class ProfilesTable extends ControllerActionTable
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    { 
+    {
         $serverRequest = $this->request;
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -96,16 +96,22 @@ class ProfilesTable extends ControllerActionTable
         //START:POCOR-6667
         unset($buttons['view']);
         //END:POCOR-6667
-		
+
         if (!is_null($reportCardId) && $this->ReportCards->exists([$this->ReportCards->getPrimaryKey() => $reportCardId])) {
 
-            $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+            $indexAttr = ['role' => 'menuitem',
+                'tabindex' => '-1',
+                'escape' => false,
+                'target' => '_blank'];
+            $generateAttr = ['role' => 'menuitem',
+                'tabindex' => '-1',
+                'escape' => false];
             $params = [
                 'report_card_id' => $reportCardId,
 				'institution_id' => $entity->id,
 				'academic_period_id' => $academicPeriodId,
             ];
-		
+
             // Download button, status must be generated or published
             if ($this->AccessControl->check(['ProfileTemplates', 'InstitutionProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
                 //START:POCOR-6667
@@ -153,44 +159,44 @@ class ProfilesTable extends ControllerActionTable
                 if ((!empty($generateStartDate) && !empty($generateEndDate)) && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                     $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => $generateUrl
                             ];
-                } else {   
-                    $indexAttr['title'] = $this->getMessage('Profiles.date_closed');
+                } else {
+                    $generateAttr['title'] = $this->getMessage('Profiles.date_closed');
                     $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => 'javascript:void(0)'
                             ];
-                } 
+                }
             }
 
             // Publish button, status must be generated
-            if ($this->AccessControl->check(['ProfileTemplates', 'InstitutionProfiles', 'publish']) && $entity->has('report_card_status') 
-                    && ( $entity->report_card_status == self::GENERATED 
-                         || $entity->report_card_status == '12' 
+            if ($this->AccessControl->check(['ProfileTemplates', 'InstitutionProfiles', 'publish']) && $entity->has('report_card_status')
+                    && ( $entity->report_card_status == self::GENERATED
+                         || $entity->report_card_status == '12'
                        )
                 ) {
                 $publishUrl = $this->setQueryString($this->url('publish'), $params);
                 $buttons['publish'] = [
                     'label' => '<i class="fa kd-publish"></i>'.__('Publish'),
-                    'attr' => $indexAttr,
+                    'attr' => $generateAttr,
                     'url' => $publishUrl
                 ];
             }
 
             // Unpublish button, status must be published
-            if ($this->AccessControl->check(['ProfileTemplates', 'InstitutionProfiles', 'unpublish']) 
-                    && $entity->has('report_card_status') 
-                    && ( $entity->report_card_status == self::PUBLISHED 
+            if ($this->AccessControl->check(['ProfileTemplates', 'InstitutionProfiles', 'unpublish'])
+                    && $entity->has('report_card_status')
+                    && ( $entity->report_card_status == self::PUBLISHED
                           || $entity->report_card_status == '16'
                         )
                     ) {
                 $unpublishUrl = $this->setQueryString($this->url('unpublish'), $params);
                 $buttons['unpublish'] = [
                     'label' => '<i class="fa kd-unpublish"></i>'.__('Unpublish'),
-                    'attr' => $indexAttr,
+                    'attr' => $generateAttr,
                     'url' => $unpublishUrl
                 ];
             }
@@ -210,7 +216,7 @@ class ProfilesTable extends ControllerActionTable
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Institutions','Profiles');       
+		$is_manual_exist = $this->getManualUrl('Administration','Institutions','Profiles');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -229,7 +235,7 @@ class ProfilesTable extends ControllerActionTable
 		}
 		// End POCOR-5188
     }
-	
+
 	private function setupTabElements() {
 		$options['type'] = 'StaffTemplates';
 		$tabElements = $this->getStaffTabElements($options);
@@ -246,7 +252,7 @@ class ProfilesTable extends ControllerActionTable
             'Profiles' => ['text' => __('Profile')],
             'Templates' => ['text' => __('Templates')]
         ];
-		
+
         $tabElements['Profiles']['url'] = array_merge($tabUrl, ['action' => 'InstitutionProfiles']);
         $tabElements['Templates']['url'] = array_merge($tabUrl, ['action' => 'Institutions']);
 
@@ -276,13 +282,13 @@ class ProfilesTable extends ControllerActionTable
             ->enableHydration(false)
             ->toArray();
             // echo "<pre>";print_r($this->reportProcessList);die;
-		$this->setupTabElements();	
+		$this->setupTabElements();
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {		
+    {
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-      
+
         // Academic Periods filter
         $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
         $serverRequest = $this->request;
@@ -303,7 +309,7 @@ class ProfilesTable extends ControllerActionTable
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
 		//$where[$this->InstitutionReportCards->aliasField('report_card_id')] = $selectedReportCard;
         //End
-	
+
         $query
             ->select([
                 'institution_name' => $this->aliasField('name'),
@@ -348,7 +354,7 @@ class ProfilesTable extends ControllerActionTable
             if ($existingReportCard) {
                 $generatedCount = 0;
                 $publishedCount = 0;
-				
+
                 // count statuses to determine which buttons are shown
                 foreach($data as $student) {
                     if ($student->has('report_card_status')) {
@@ -419,10 +425,10 @@ class ProfilesTable extends ControllerActionTable
                 $date = Time::now()->format('Y-m-d');
 
                 if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
-                    
+
                     $extra['toolbarButtons']['generateAll'] = $generateButton;
-                    
-                } else { 
+
+                } else {
                     $generateButton['attr']['data-html'] = true;
                     $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('ReportCardStatuses.date_closed'));
                     $generateButton['url'] = 'javascript:void(0)';
@@ -467,7 +473,7 @@ class ProfilesTable extends ControllerActionTable
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $params = $this->request->getQuery();
-		
+
 		if(!empty($params['report_card_id'])) {
 
 			$query
@@ -539,7 +545,7 @@ class ProfilesTable extends ControllerActionTable
         } else if (!is_null($serverRequest->getQuery('report_card_id'))) {
             $reportCardId = $serverRequest->getQuery('report_card_id');
         }
-		
+
 		$academicPeriodId = $serverRequest->getQuery('academic_period_id');
 
         $search = [
@@ -580,7 +586,7 @@ class ProfilesTable extends ControllerActionTable
     {
 		$model = $this->InstitutionReportCards;
         $ids = $this->getQueryString();
-		
+
         if ($model->exists($ids)) {
             $data = $model->get($ids);
             $fileName = $data->file_name;
@@ -605,12 +611,12 @@ class ProfilesTable extends ControllerActionTable
         }
         exit();
     }
-	
+
 	public function downloadPDF(Event $event, ArrayObject $extra)
     {
 		$model = $this->InstitutionReportCards;
-        $ids = $this->getQueryString(); 
-		
+        $ids = $this->getQueryString();
+
         if ($model->exists($ids)) {
             $data = $model->get($ids);
             $fileName = $data->file_name;
@@ -649,7 +655,7 @@ class ProfilesTable extends ControllerActionTable
     {
 		$model = $this->InstitutionReportCards;
         $ids = $this->getQueryString();
-		
+
         if ($model->exists($ids)) {
             $data = $model->get($ids);
             $fileName = $data->file_name;
@@ -676,7 +682,7 @@ class ProfilesTable extends ControllerActionTable
         }
         exit();
     }
-	
+
     public function generate(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
@@ -706,10 +712,10 @@ class ProfilesTable extends ControllerActionTable
                     // $InstitutionReportCardProcesses->aliasField('institution_id') => $params['institution_id'],
                     $InstitutionReportCardProcesses->aliasField('academic_period_id') => $params['academic_period_id']
                 ])
-                ->count();      
-                        
-			
-			if (!$inProgress) {                   
+                ->count();
+
+
+			if (!$inProgress) {
                 $this->addReportCardsToProcesses($params['academic_period_id'], $params['report_card_id']);
 				$this->triggerGenerateAllReportCardsShell($params['academic_period_id'], $params['report_card_id']);
 				$this->Alert->warning('ReportCardStatuses.generateAll');
@@ -723,7 +729,7 @@ class ProfilesTable extends ControllerActionTable
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
-	
+
 	public function downloadAllPdf(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
@@ -740,22 +746,22 @@ class ProfilesTable extends ControllerActionTable
                 $this->InstitutionReportCards->aliasField('file_name IS NOT NULL'),
                 $this->InstitutionReportCards->aliasField('file_content IS NOT NULL')
             ])
-            ->toArray();      
+            ->toArray();
         if (!empty($files)) {
             $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
             $zipName = 'InstitutionReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
             $filepath = $path . $zipName;
-           
+
             $zip = new ZipArchive;
             $zip->open($filepath, ZipArchive::CREATE);
-            
+
             foreach ($files as $file) {
 				$fileName = $file->file_name;
 				$fileNameData = explode(".",$fileName);
 				$fileName = $fileNameData[0].'.pdf';
-                
+
 				$zip->addFromString($fileName,  $this->getFile($file->file_content_pdf));
-             
+
             }
             $zip->close();
 
@@ -781,7 +787,7 @@ class ProfilesTable extends ControllerActionTable
     public function downloadAll(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-		
+
         // only download report cards with generated or published status
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
@@ -883,11 +889,11 @@ class ProfilesTable extends ControllerActionTable
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
-	
+
 	private function addReportCardsToProcesses($academicPeriodId, $reportCardId, $institutionId = null)
     {
         Log::write('debug', 'Initialize Add All Institution Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.Time::now().')');
-		
+
         $InstitutionReportCardProcesses = TableRegistry::get('ReportCard.InstitutionReportCardProcesses');
         $InstitutionTable = TableRegistry::get('Institution.Institutions');
         $where = [];
@@ -900,7 +906,7 @@ class ProfilesTable extends ControllerActionTable
 			])
 			->where($where)
 			->toArray();
-	
+
         foreach ($institutionData as $institution) {
             // Report card processes
             $idKeys = [
@@ -928,7 +934,7 @@ class ProfilesTable extends ControllerActionTable
                 $institutionsReportCardEntity = $this->InstitutionReportCards->find()
                     ->where($recordIdKeys)
                     ->first();
-				
+
                 $newData = [
                     'status' => $this->InstitutionReportCards::NEW_REPORT,
                     'started_on' => NULL,
@@ -937,7 +943,7 @@ class ProfilesTable extends ControllerActionTable
                     'file_content' => NULL,
                     'institution_id' => $institution->id
                 ];
-				
+
                 $newEntity = $this->InstitutionReportCards->patchEntity($institutionsReportCardEntity, $newData);
 
                 if (!$this->InstitutionReportCards->save($newEntity)) {
@@ -977,7 +983,7 @@ class ProfilesTable extends ControllerActionTable
                 'institution_id' => $institutionId,
                 'report_card_id' => $reportCardId
             ];
-            
+
             $params = json_encode($passArray);
 
             $args = $processModel . " " . $params;

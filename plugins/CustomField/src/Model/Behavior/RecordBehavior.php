@@ -198,8 +198,6 @@ class RecordBehavior extends Behavior
 
     public function viewEditBeforeQuery(Event $event, Query $query)
     {
-
-
         // do not contain CustomFieldValues
         if (!is_null($this->getConfig('tableCellClass'))) {
             $query->contain(['CustomTableCells']);
@@ -441,6 +439,7 @@ class RecordBehavior extends Behavior
                     }
                     $data[$alias]['custom_field_values'] = $settings['fieldValues'];
 
+
                     $conn = ConnectionManager::get('default');
                     $conn->begin();
 
@@ -607,7 +606,6 @@ class RecordBehavior extends Behavior
                             }
                         }
                     }
-
                     $result = $model->save($entity);
                     if ($result && $repeaterSuccess) {
                         $conn->commit();
@@ -656,11 +654,6 @@ class RecordBehavior extends Behavior
                             }
                         }
                     }
-
-//                    Log::write('debug', 'entity Errors:');
-//                    Log::write('debug', $entity->errors());
-//                    Log::write('debug', 'file Errors:');
-//                    Log::write('debug', $fileErrors);
 
                     return false;
                 }
@@ -1092,7 +1085,6 @@ class RecordBehavior extends Behavior
                             $fieldData = ['id' => $obj->id];
 
                             if ($model->request->is(['get'])) {
-                                // onGet
                                 $fieldData['text_value'] = $obj->text_value;
                                 $fieldData['number_value'] = $obj->number_value;
                                 $fieldData['decimal_value'] = $obj->decimal_value;
@@ -1100,6 +1092,7 @@ class RecordBehavior extends Behavior
                                 $fieldData['date_value'] = $obj->date_value;
                                 $fieldData['time_value'] = $obj->time_value;
                                 $fieldData['file'] = $obj->file;
+                                $fieldData['file_name'] = $obj->file_name; //POCOR-9407
 
                                 // logic for Initialize
                                 $fieldType = Inflector::camelize(strtolower($obj->custom_field->field_type));
@@ -1125,6 +1118,7 @@ class RecordBehavior extends Behavior
                                 $fieldData['date_value'] = $obj->date_value;
                                 $fieldData['time_value'] = $obj->time_value;
                                 $fieldData['file'] = $obj->file;
+                                $fieldData['file_name'] = $obj->file_name; //POCOR-9407
 
                                 // logic for Initialize
                                 $fieldType = Inflector::camelize(strtolower($obj->custom_field->field_type));
@@ -1183,8 +1177,6 @@ class RecordBehavior extends Behavior
                                 $fieldOrder[++$order] = $fieldName;
                                // echo "<pre>";print_r($customFields);die;
                             }
-
-
                             foreach($customFields as $we => $cfld){
                                 if($cfld->section == $sectionName[$key]){
                                     $customField = $cfld->custom_field;
@@ -1265,6 +1257,7 @@ class RecordBehavior extends Behavior
             //POCOR-8538 end
             $ControllerAction->setFieldOrder($fieldOrder);
         }
+
     }
 
     private function deleteUploadSessions()

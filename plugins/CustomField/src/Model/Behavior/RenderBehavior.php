@@ -150,4 +150,87 @@ class RenderBehavior extends Behavior {
 
         return null;
     }
+
+    // POCOR-9332 start
+    protected function getMinFromParams(array $params = [])
+    {
+        $min = null;
+
+        // direct min_value
+        if (isset($params['min_value']) && is_numeric($params['min_value'])) {
+            $min = +$params['min_value'];
+        }
+
+        // range.lower overrides
+        if (isset($params['range']) && is_array($params['range']) &&
+            isset($params['range']['lower']) && is_numeric($params['range']['lower'])) {
+            $min = +$params['range']['lower'];
+        }
+
+        return $min;
+    }
+    // POCOR-9332 start
+    protected function getMaxFromParams(array $params = [])
+    {
+        $max = null;
+
+        // direct max_value
+        if (isset($params['max_value']) && is_numeric($params['max_value'])) {
+            $max = +$params['max_value'];
+        }
+
+        // range.upper overrides
+        if (isset($params['range']) && is_array($params['range']) &&
+            isset($params['range']['upper']) && is_numeric($params['range']['upper'])) {
+            $max = +$params['range']['upper'];
+        }
+
+        return $max;
+    }
+    
+    //POCOR-9407
+    protected function processValuesFile(Entity $entity, ArrayObject $data, ArrayObject $settings) 
+    {
+        $fieldKey   = $settings['fieldKey'];
+        $valueKey   = $settings['valueKey'];
+
+        $customValue = $settings['customValue'];
+        $fieldValues = $settings['fieldValues'];
+
+        $fieldId   = $customValue[$fieldKey] ?? null;
+        $fileName  = $customValue[$valueKey] ?? null;
+
+        $existingFileName = null;
+        $existingFile     = null;
+
+        // Check if entity already has file + file_name
+        if (!empty($entity->custom_field_values)) {
+            foreach ($entity->custom_field_values as $cf) {
+                if ($cf[$fieldKey] == $fieldId) {
+                    $existingFileName = $cf->file_name ?? null;
+                    $existingFile     = $cf->file ?? null;
+                    break;
+                }
+            }
+        }
+
+        if (empty($fileName) && empty($existingFileName)) {
+            // No new file AND no old file → delete
+            if (!empty($entity->id)) {
+                $settings['deleteFieldIds'][] = $fieldId;
+            }
+        } else {
+            // Preserve old values if no new file uploaded
+            if (empty(!$fileName) && !empty($existingFileName)) {
+                $customValue[$valueKey] = $existingFileName;
+            }
+            if (empty($customValue['file']) && !empty($existingFile)) {
+                $customValue['file'] = $existingFile;
+            }
+
+            $fieldValues[] = $customValue;
+        }
+
+        $settings['fieldValues'] = $fieldValues;
+    }
 }

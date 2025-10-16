@@ -375,6 +375,7 @@ class AlertsTable extends ControllerActionTable
         $entity = $attr['entity'];
         $oneTimeProcesses = [
             'AlertAttendance',
+            'AlertStudentAbsence', // POCOR-9391
             'AlertStudentAdmission',
             'AlertStudentEnrolment'
         ];

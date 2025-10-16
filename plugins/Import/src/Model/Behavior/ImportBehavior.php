@@ -36,6 +36,8 @@ use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing; // POCOR-8683
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use function PHPUnit\Framework\isEmpty;
+use PhpOffice\PhpSpreadsheet\Style\Alignment; // POCOR-9364
+use PhpOffice\PhpSpreadsheet\Cell\DataType; // POCOR-9364
 
 /**
  * ImportBehavior is to be used with import_mapping table.
@@ -386,7 +388,7 @@ class ImportBehavior extends Behavior
             $errors = $entity->getErrors();
             if (!empty($errors)) {
                 // set error message for php file upload errors
-                $fileError = Hash::get($entity->invalid(), 'select_file.error');
+                $fileError = Hash::get($entity->getInvalid(), 'select_file.error');
                 if (!empty($fileError)) {
                     $errorMessage = $model->getMessage("fileUpload.$fileError");
                     if ($errorMessage != '[Message Not Found]') {
@@ -507,6 +509,26 @@ class ImportBehavior extends Behavior
                 }
 
                 if ($extra['entityValidate'] == true) {
+                    //POCOR-9394[START]
+                    //POCOR-9417[START]
+                    $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                    $academic_period_id = $AcademicPeriods->getCurrent();
+                    if (isset($tempRow['academic_period_id'])) { //POCOR-9417
+                        $academic_period_id = $tempRow['academic_period_id'];
+                    } else {
+                        $tempRow['academic_period_id'] = $academic_period_id;
+                    }
+
+                    if($academic_period_id)
+                    {
+                        $AcademicPeriodsData = $AcademicPeriods
+                            ->find('all')
+                            ->select([$AcademicPeriods->aliasField('end_date')])
+                            ->where([$AcademicPeriods->aliasField('id') => $academic_period_id])
+                            ->first();
+                        $tempRow['end_date'] = $AcademicPeriodsData->end_date->format('d/m/Y');
+                    } //POCOR-9417[END]
+                    //POCOR-9394[END]
                     // added for POCOR-4577 import staff leave for workflow related record to save the transition record
                     $tempRow['action_type'] = 'imported';
                     $tempRow['student_id'] = (int) $tempRow['student_id'];
@@ -523,6 +545,26 @@ class ImportBehavior extends Behavior
                 if ($extra['entityValidate'] == true) {
                     // POCOR-4258 - shifted saving model before updating errors to implement try-catch to catch database errors
                     try {
+                        //POCOR-9294[START]
+                        // $checkRequest = $this->_table->request->getData()['ImportStudentAdmission']['feature'];
+                        // if($checkRequest == 'Institution.Institutions.ImportStudentAdmission'){
+                        //     $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                        //     $AcademicPeriodsData = $AcademicPeriods
+                        //             ->find('all')
+                        //             ->select([$AcademicPeriods->aliasField('start_year'), $AcademicPeriods->aliasField('end_year')])
+                        //             ->where([$AcademicPeriods->aliasField('id') => $tableEntity['academic_period_id']])
+                        //             ->first();
+
+                        //     $tableEntity['student_status_id'] = 1;
+                        //     $tableEntity['start_year'] = $AcademicPeriodsData->start_year;
+                        //     $tableEntity['end_year'] = $AcademicPeriodsData->end_year;
+                        //     $activeModel = TableRegistry::get('Institution.InstitutionStudents');
+                        //     $supprtiveModel = TableRegistry::get('Institution.InstitutionClassStudents');
+                        //     $newEntity = $activeModel->save($tableEntity);
+                        // }else{
+                        //     $newEntity = $activeModel->save($tableEntity); // Initial code
+                        // }
+                        //POCOR-9294[END]
                         $newEntity = $activeModel->save($tableEntity);
                     } catch (Exception $e) {
                         $newEntity = false;
@@ -561,6 +603,10 @@ class ImportBehavior extends Behavior
                             } else {
                                 if (in_array($field, ['student_name', 'staff_name'])) {
                                     $rowCodeError .= '<li>' . $arr[key($arr)] . '</li>';
+                                    $rowCodeErrorForExcel[] = $arr[key($arr)];
+                                }
+                                else{
+                                    $rowCodeError .= '<li>' . $field . '</li>';
                                     $rowCodeErrorForExcel[] = $arr[key($arr)];
                                 }
                                 $model->log('@ImportBehavior line ' . __LINE__ . ': ' . $activeModel->getRegistryAlias() . ' -> ' . $field . ' => ' . $arr[key($arr)], 'info');
@@ -1112,12 +1158,30 @@ class ImportBehavior extends Behavior
                 } else {
                     $values = $record['data'];
                 }
+                $rowNumber = $index + $rowData;  // POCOR-9364
                 $activeSheet->getRowDimension(($index + $rowData))->setRowHeight(15);
                 foreach ($values as $key => $value) {
-                    $alpha = $this->getExcelColumnAlpha((string)((int)$key + 1)); // PhpSpreadsheet, rows and columns are typically start 1-indexed not 0 index
-                    $activeSheet->setCellValue($alpha . ($index + $rowData), $value);
+                    // POCOR-9364 start
+                    $alpha = $this->getExcelColumnAlpha((string)((int)$key + 1));
+                    $cell  = $alpha . $rowNumber;
+
+                    // Write explicitly as string to keep "\n" literal
+                    $activeSheet->setCellValueExplicit($cell, (string)$value, DataType::TYPE_STRING);
                     $activeSheet->getColumnDimension($alpha)->setAutoSize(true);
 
+                    // If this cell contains a newline, enable wrap and bump row height
+                    if (is_string($value) && strpos($value, "\n") !== false) {
+                        $activeSheet->getStyle($cell)->getAlignment()
+                            ->setWrapText(true)
+                            ->setVertical(Alignment::VERTICAL_TOP)
+                            ->setHorizontal(Alignment::HORIZONTAL_LEFT);
+
+                        // Simple height heuristic: 15px per line (tweak as needed)
+                        $lines = substr_count($value, "\n") + 1;
+                        $activeSheet->getRowDimension($rowNumber)
+                            ->setRowHeight(max(15, 15 * $lines));
+                        // POCOR-9364 end
+                    }
                     if ($key == (count($values) - 1) && $type == 'failed') {
                         $suggestedRowHeight = $this->suggestRowHeight(strlen($value), 15);
                         $activeSheet->getRowDimension(($index + $rowData))->setRowHeight($suggestedRowHeight);
@@ -1359,7 +1423,6 @@ class ImportBehavior extends Behavior
             ])
             ->order($model->aliasField('order'))
             ->toArray();
-
         $data = new ArrayObject;
         foreach ($mapping as $row) {
             $foreignKey = $row->foreign_key;

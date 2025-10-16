@@ -49,11 +49,11 @@ const COLUMN_MEAL_RECEIVED: any = {
             let mode = params.context.mode;
             let data = params.data;
             // console.log(mode,"mode mode");
-            
+
             if (mode == 'view') {
                 return getViewMealElement(data, mealTypes, isMarked, isSchoolClosed);
             } else if (mode == 'edit') {
-                let api = params.api                
+                let api = params.api
                 return getEditMealElement(data, mealTypes, api, context);
             }
         }
@@ -74,28 +74,40 @@ const COLUMN_MEAL_BENEFIT: any = {
             let data = params.data;
             let mealBenefitTypeOptions = context.mealBenefitTypeOptions;
             // console.log(mealBenefitTypeOptions,"mealBenefitTypeOptions");
-
             if (params.data.hasOwnProperty('meal_benefit_name')) {
                 let studentMealTypeId = (params.data.meal_received_id == null) ? null : params.data.meal_received_id;
                 let mealTypeObj = mealTypes.find(obj => obj.id == studentMealTypeId);
-
                 if (mode == 'view') {
-                    if (studentMealTypeId == 3 || studentMealTypeId == 2 || studentMealTypeId == null) {
-                        return '<i style="color: #999999;" class="fa fa-minus"></i>';
-                    } else if (studentMealTypeId == 1 && params.data.meal_benefit_name == null) {
-                        let idName = params.context.mealBenefitTypeOptions.findIndex((data: any) => {
-                            if(params?.data?.meal_benefit_id){
-                                if(data.id == params.data.meal_benefit_id){
-                                    return data.id
+                    if (studentMealTypeId == 1) {
+                        if (params.data.meal_benefit_id) {
+                            let idName = params.context.mealBenefitTypeOptions.findIndex((data: any) => {
+                                if (params?.data?.meal_benefit_id) {
+                                    if (data.id == params.data.meal_benefit_id) {
+                                        return data.id
+                                    }
+                                } else {
+                                    return 1
                                 }
-                            } else {
-                                return 1
-                            }
-                        })
-                        return `<span>${params.context.mealBenefitTypeOptions[idName].name}</span>`
-                    } else {
-                        return '<i style="color: #999999;" class="fa fa-minus"></i>';
-                    }
+                            })
+                            return `<span>${params.context.mealBenefitTypeOptions[idName].name}</span>`
+                        } 
+                    } else
+                        if (studentMealTypeId == 2 || studentMealTypeId == 3 || studentMealTypeId == null) {
+                            return '<i style="color: #999999;" class="fa fa-minus"></i>';
+                        } else if (studentMealTypeId == 1 && params.data.meal_benefit_name == null) {
+                            let idName = params.context.mealBenefitTypeOptions.findIndex((data: any) => {
+                                if (params?.data?.meal_benefit_id) {
+                                    if (data.id == params.data.meal_benefit_id) {
+                                        return data.id
+                                    }
+                                } else {
+                                    return 1
+                                }
+                            })
+                            return `<span>${params.context.mealBenefitTypeOptions[idName].name}</span>`
+                        } else {
+                            return '<i style="color: #999999;" class="fa fa-minus"></i>';
+                        }
                 } else if (mode == 'edit') {
                     let api = params.api;
                     if (mealTypeObj != undefined) {
@@ -191,7 +203,7 @@ function getEditMealElement(data, mealTypes, api, context) {
         eOption.innerHTML = labelText;
         eSelect.appendChild(eOption);
     })
-    
+
     eSelect.value = data[dataKey];
     eSelect.addEventListener('change', () => {
         let oldValue = data[dataKey];

@@ -15,6 +15,7 @@ class PermissionService
 {
     protected $user;
     protected $roleIds = [];
+    protected $groupIds = []; // POCOR-9352
     protected $institutionIds = [];
     protected $allowAllInstitutions = 0;
 
@@ -43,6 +44,10 @@ class PermissionService
             ->pluck('security_role_id')
             ->unique()
             ->toArray();
+        $this->groupIds = SecurityGroupUsers::where('security_user_id', $userId) // POCOR-9352
+            ->pluck('security_group_id')
+            ->unique()
+            ->toArray();
 
         $securityGroupUsers = SecurityGroupUsers::join('security_groups', 'security_groups.id', '=', 'security_group_users.security_group_id')
             ->join('security_group_institutions', 'security_group_institutions.security_group_id', '=', 'security_groups.id')
@@ -61,7 +66,7 @@ class PermissionService
         $this->institutionIds = array_unique($this->institutionIds);
 
         // Fetch additional institution permissions
-        $groupAreaInstitutions = $this->getGroupAreaInstitutions($this->roleIds);
+        $groupAreaInstitutions = $this->getGroupAreaInstitutions($this->groupIds); // POCOR-9352
         $this->allowAllInstitutions = $groupAreaInstitutions['allowAllInstitutions'] ?? 0;
         $this->institutionIds = array_unique(array_merge($this->institutionIds, $groupAreaInstitutions['institutionIds'] ?? []));
 
@@ -201,6 +206,7 @@ class PermissionService
     function getGroupAreaInstitutions(array $groupIds): array
     {
         try {
+//            Log::debug(print_r([$groupIds],true));
             if (empty($groupIds)) return ['allowAllInstitutions' => 0, 'institutionIds' => []];
 
             $groupAreas = DB::table('security_group_areas')
@@ -218,27 +224,41 @@ class PermissionService
                 ->whereIn('area_id', $areaIds)
                 ->pluck('id')
                 ->toArray();
-
+//            Log::debug(print_r([$groupIds, $groupAreas, $areaIds, $institutionIds],true));
             return ['allowAllInstitutions' => 0, 'institutionIds' => $institutionIds];
         } catch (\Exception $e) {
             Log::error("Error in getGroupAreaInstitutions: " . $e->getMessage());
             return ['allowAllInstitutions' => 0, 'institutionIds' => []];
         }
     }
+
+    // POCOR-9352
     function getChildrenIdFromDb(array $parentAreaIds): array
     {
-        $areaIds = $parentAreaIds;
+        $seen = array_values(array_unique($parentAreaIds));
+        $frontier = $seen;
 
-        do {
-            $newAreas = DB::table('areas')
-                ->whereIn('parent_id', $areaIds)
+        while (!empty($frontier)) {
+            $children = DB::table('areas')
+                ->whereIn('parent_id', $frontier)
                 ->pluck('id')
                 ->toArray();
 
-            $newCount = count($newAreas);
-            $areaIds = array_merge($areaIds, $newAreas);
-        } while ($newCount > 0);
+            if (empty($children)) {
+                break;
+            }
 
-        return array_unique($areaIds);
+            $children = array_values(array_unique($children));
+            $new = array_values(array_diff($children, $seen));
+
+            if (empty($new)) {
+                break; // больше нечего расширять — выходим
+            }
+
+            $seen = array_merge($seen, $new);
+            $frontier = $new;
+        }
+
+        return array_values(array_unique($seen));
     }
 }

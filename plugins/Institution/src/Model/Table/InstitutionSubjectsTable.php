@@ -18,6 +18,7 @@ use Cake\Log\Log;
 use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
+use Cake\Collection\CollectionInterface; // POCOR-9243
 
 class InstitutionSubjectsTable extends ControllerActionTable
 {
@@ -392,23 +393,24 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function findTranslateItem(Query $query, array $options)
     {
-        return $query
-            ->formatResults(function ($results) {
-                $arrResults = $results->toArray();
-
-                foreach ($arrResults as &$value) {
-                    if (isset($value['subject_students']) && is_array($value['subject_students'])) {
-                        $i = 0;
-                        foreach ($value['subject_students'] as $student) {
-                            //POCOR-6463- in edit page we'll only display those students who are "Enrolled"
-                            if ($student->student_status_id != 1) {
-                                unset($arrResults[0]['subject_students'][$i]);
+        return $query // POCOR-9243 start
+            ->formatResults(function (CollectionInterface $results) {
+                return $results->map(function ( $row) {
+                    if (!empty($row['subject_students']) && is_array($row['subject_students'])) {
+                        // Keep only "Enrolled" students (status_id == 1)
+                        $row['subject_students'] = array_values(array_filter(
+                            $row['subject_students'],
+                            function ($student) {
+                                if ($student->student_status_id != 1) {
+//                                    Log::debug('Skipping student: ' . print_r($student, true));
+                                    return false;
+                                }
+                                return true;
                             }
-                            $i++;
-                        }
+                        ));
                     }
-                }
-                return $arrResults;
+                    return $row;
+                }); // POCOR-9243 end
             });
     }
     //6198 starts
@@ -2373,16 +2375,16 @@ class InstitutionSubjectsTable extends ControllerActionTable
     }
     /**
      * Attach field names to the provided data entity by fetching associated details.
-     * 
-     * This function queries the database to fetch related data for a given entity ID 
-     * and populates the `fieldNames` array with information like academic period name, 
+     *
+     * This function queries the database to fetch related data for a given entity ID
+     * and populates the `fieldNames` array with information like academic period name,
      * institution code, education grade details, class name, and subject code.
-     * 
+     *
      * @param \Cake\ORM\Entity $data The entity data to which field names will be attached.
      * @return \Cake\ORM\Entity The modified entity with the `fieldNames` attribute populated.
-     * 
+     *
      * @throws \Cake\Datasource\Exception\RecordNotFoundException If no record is found for the given ID.
-     * 
+     *
      * @author [Megha Gupta <barkha@madvit.com>]
      * @since 2024-12-30
      * @task POCOR-8706
@@ -2412,7 +2414,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 'subject_code' => $subjectData->education_subject_code ?? null,
             ];
         }
-        
+
         $data['fieldNames'] = $fieldNames;
         return $data;
     }

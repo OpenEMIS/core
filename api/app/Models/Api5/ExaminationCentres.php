@@ -16,7 +16,7 @@ use InstitutionScope;
     // ✅ Allow mass assignment
     // POCOR-8919 removed academic period
     protected $fillable = ['id', 'name', 'code', 'address', 'postal_code',
-        'contact_person', 'telephone', 'fax', 'email', 'website',
+        'contact_person', 'telephone', 'email', 'website',
         'institution_id', 'area_id',
         'modified_user_id', 'modified', 'created_user_id', 'created'];
 
@@ -101,7 +101,6 @@ public function _swaggerPath() {}
                           @OA\Property(property="postal_code", type="string", example=null),
                           @OA\Property(property="contact_person", type="string", example=null),
                           @OA\Property(property="telephone", type="string", example=null),
-                          @OA\Property(property="fax", type="string", example=null),
                           @OA\Property(property="email", type="string", example=null),
                           @OA\Property(property="website", type="string", example=null),
                           @OA\Property(property="institution_id", type="integer", example=null),
@@ -138,7 +137,6 @@ public function _swaggerList() {}
                      @OA\Property(property="postal_code", type="string", example=null),
                      @OA\Property(property="contact_person", type="string", example=null),
                      @OA\Property(property="telephone", type="string", example=null),
-                     @OA\Property(property="fax", type="string", example=null),
                      @OA\Property(property="email", type="string", example=null),
                      @OA\Property(property="website", type="string", example=null),
                      @OA\Property(property="institution_id", type="integer", example=null),
@@ -213,7 +211,6 @@ public function _swaggerView() {}
                      @OA\Property(property="postal_code", type="string", example=null),
                      @OA\Property(property="contact_person", type="string", example=null),
                      @OA\Property(property="telephone", type="string", example=null),
-                     @OA\Property(property="fax", type="string", example=null),
                      @OA\Property(property="email", type="string", example=null),
                      @OA\Property(property="website", type="string", example=null),
                      @OA\Property(property="institution_id", type="integer", example=null),

@@ -290,9 +290,9 @@ class NotRegisteredStudentsBehavior extends Behavior {
         return $entity->institution->telephone;
     }
 
-    public function onGetFax(Event $event, Entity $entity) {
+   /* public function onGetFax(Event $event, Entity $entity) {
         return $entity->institution->fax;
-    }
+    }*/
 
     public function onGetEmail(Event $event, Entity $entity) {
         return $entity->institution->email;
@@ -329,7 +329,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
         $model->field('gender_id', ['entity' => $entity]);
         $model->field('contact_person');
         $model->field('telephone');
-        $model->field('fax');
+        //$model->field('fax');
         $model->field('email');
         $model->field('special_needs', ['type' => 'string', 'entity' => $entity]);
 
@@ -343,7 +343,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
             'data' => $entity->user->nationalities
         ]);
 
-        $model->setFieldOrder(['openemis_no', 'academic_period_id', 'examination_id', 'student_id', 'date_of_birth', 'nationalities', 'identity_number', 'gender_id', 'institution_id', 'repeated', 'contact_person', 'telephone', 'fax', 'email', 'special_needs']);
+        $model->setFieldOrder(['openemis_no', 'academic_period_id', 'examination_id', 'student_id', 'date_of_birth', 'nationalities', 'identity_number', 'gender_id', 'institution_id', 'repeated', 'contact_person', 'telephone', 'email', 'special_needs']);
     }
 
     public function extractSpecialNeeds(Entity $entity) {

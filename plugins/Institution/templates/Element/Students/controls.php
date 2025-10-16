@@ -39,6 +39,7 @@
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $statusOptions,
+						'default' => $defaultStatusKey, //POCOR-9369 
 						'url' => $baseUrl,
 						'data-named-key' => 'status_id',
 						'data-named-group' => 'academic_period_id,education_grade_id'

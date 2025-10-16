@@ -12,8 +12,4 @@ class SecurityUserCode extends Model
     public $timestamps = false;
     protected $table = "security_user_codes";
 
-    public function securityUser()
-    {
-        return $this->belongsTo(SecurityUsers::class, 'security_user_id', 'id');
-    }
 }

@@ -163,7 +163,7 @@ class RemoveBehavior extends Behavior
             }
         }
 
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $model->getPrimaryKey();
         $result = true;
         $entity = null;
 

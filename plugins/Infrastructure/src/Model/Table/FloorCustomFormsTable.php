@@ -10,13 +10,14 @@ class FloorCustomFormsTable extends CustomFormsTable
 {
     public function initialize(array $config): void
     {
-        /*$config['extra'] = [
+        // POCOR-9344 restored
+        $config['extra'] = [
             'fieldClass' => [
                 'className' => 'Infrastructure.FloorCustomFields',
                 'joinTable' => 'infrastructure_custom_forms_fields',
                 'foreignKey' => 'infrastructure_custom_form_id',
                 'targetForeignKey' => 'infrastructure_custom_field_id',
-                'through' => 'Infrastructure.InfrastructureCustomFormsFields',
+                'through' => 'Infrastructure.FloorCustomFormsFields',
                 'dependent' => true
             ],
             'filterClass' => [
@@ -27,7 +28,7 @@ class FloorCustomFormsTable extends CustomFormsTable
                 'through' => 'Infrastructure.FloorCustomFormsFilters',
                 'dependent' => true
             ]
-        ];*/
+        ];
 
         $this->belongsToMany('FloorCustomFields', [
             'className' => 'Infrastructure.FloorCustomFields',

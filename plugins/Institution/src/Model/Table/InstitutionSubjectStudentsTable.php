@@ -712,9 +712,15 @@ class InstitutionSubjectStudentsTable extends AppTable
                 'table' => 'institution_subject_students',
                 'type' => 'LEFT',
                 'conditions' => 'institution_subject_students.institution_subject_id = InstitutionSubjects.id'
-            ]])->where(['institution_subject_students.academic_period_id' => $entity->academic_period_id, 'institution_subject_students.education_grade_id' => $entity->education_grade_id, 'institution_subject_students.education_subject_id' => $entity->education_subject_id, 'institution_subject_students.institution_class_id' => $entity->institution_class_id])->group('institution_subject_students.institution_subject_id')->first();
-
-        $oldCount = $this->InstitutionSubjects->find()->select(['total_male_students', 'total_female_students'])->where(['id' => $res['id']])->first();
+            ]])->where(['institution_subject_students.academic_period_id' => $entity->academic_period_id, 'institution_subject_students.education_grade_id' => $entity->education_grade_id, 'institution_subject_students.education_subject_id' => $entity->education_subject_id, 'institution_subject_students.institution_class_id' => $entity->institution_class_id])
+            ->group('institution_subject_students.institution_subject_id')
+            ->first();
+        if(empty($res)){
+            return;
+        }
+        $oldCount = $this->InstitutionSubjects->find()->select(['total_male_students', 'total_female_students'])
+            ->where(['id' => $res['id']])
+            ->first();
         $id = $entity->institution_subject_id;
         $prevCount = $this->InstitutionSubjects->find()->select(['total_male_students', 'total_female_students'])->where(['id' => $id])->first();
         $id = $entity->institution_subject_id;

@@ -89,8 +89,8 @@ class SubjectsBookListsTable extends AppTable
                 'date_of_birth' => 'Users.date_of_birth',
                 'institution_class_name' => 'InstitutionClasses.name',
                 'education_subject_name' => 'EducationSubjects.name',
-                'textbook_code' => 'Textbooks.code',
-                'textbook_name' => 'Textbooks.title',
+                //'textbook_code' => 'Textbooks.code', // POCOR-9361
+               //'textbook_name' => 'Textbooks.title', // POCOR-9361
                 'start_date' => 'InstitutionStudents.start_date',//POCOR-5740
             ])
            ->InnerJoin(['Users' => 'security_users'], [
@@ -115,21 +115,28 @@ class SubjectsBookListsTable extends AppTable
             ->innerJoin(['EducationSubjects' => 'education_subjects'], [ // POCOR-8993  instead of left join, to remove deleted records
                     'EducationSubjects.id = ' . 'SubjectsBookLists.education_subject_id'
                      ])
-            ->innerJoin(['Textbooks' => 'textbooks'], [ // POCOR-8993  instead of left join, to remove deleted records
-                    'Textbooks.education_subject_id = ' . 'SubjectsBookLists.education_subject_id'
-                    ])
+            // POCOR-9361
+            // ->innerJoin(['Textbooks' => 'textbooks'], [ // POCOR-8993  instead of left join, to remove deleted records
+            //         'Textbooks.education_subject_id = ' . 'SubjectsBookLists.education_subject_id'
+            //         ])
+            // POCOR-9361
             ->where($conditions)
-            ->group(['Users.id', // POCOR-8993  to remove dublicates
-                'Textbooks.code', // POCOR-8993 to remove dublicates
-                'Textbooks.title', // POCOR-8993  to remove dublicates
+            //POCOR-9361[START]
+            // ->group(['Users.id', // POCOR-8993  to remove dublicates
+            //     'Textbooks.code', // POCOR-8993 to remove dublicates
+            //     'Textbooks.title', // POCOR-8993  to remove dublicates
+            // ], true)
+            ->group(['Users.id',
+                'SubjectsBookLists.institution_subject_id',
             ], true)
             //POCOR-5740 starts
+            //POCOR-9361[END]
             ->order([
                 // POCOR-8993 added order to make list more clear
                 'Users.first_name' => 'ASC',
                 'Users.last_name' => 'ASC',
-                'InstitutionStudents.start_date' => 'DESC',
-                'Textbooks.title' => 'ASC',
+                // 'InstitutionStudents.start_date' => 'DESC', //POCOR-9361
+                // 'Textbooks.title' => 'ASC', // POCOR-9361
             ], true);
             //POCOR-5740 ends
         }
