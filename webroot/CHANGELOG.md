@@ -1,3 +1,11 @@
+### [4.45.0] - 2025-10-16
+- Implemented: Develop institution students audit report
+- Bug Fixed: Institutions>Students>Withdraw: Unable to withdraw student.
+- Bug Fixed: Institutions > Classes > List Page: System does not show the Homeroom Teacher assigned to the class
+- Bug Fixed: Institutions>Attendance>Staff: Staff is not showing attendance marked
+- Bug Fixed: Security Users API V5: Users should be able to post images
+- Bug Fixed: Directory>Students>Add: Nationalities and identity number are mandatory but not shown as mandatory
+
 ### [4.44.0] - 2025-10-10
 - Implemented: Develop changes to the Staff License Report
 - Implemented: Develop institution staff audit report
