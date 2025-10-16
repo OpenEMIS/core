@@ -835,7 +835,7 @@ class ClassExcelBehavior extends Behavior
                 }
             }
         }
-
+        //POCOR-9182 STARTS
         if (is_string($value)) {
             $specialCharacters = ['=', '@'];
             $firstCharacter = substr($value, 0, 1);
@@ -845,7 +845,7 @@ class ClassExcelBehavior extends Behavior
             }
             return ['rowData' => __($value), 'style' => $style];
         }
-        return ['rowData' => $value, 'style' => $style];
+        return ['rowData' => $value, 'style' => $style];//POCOR-9182 ENDS
     }
 
     private function isForeignKey($table, $field)

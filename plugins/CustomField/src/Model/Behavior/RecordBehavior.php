@@ -1010,6 +1010,7 @@ class RecordBehavior extends Behavior
                     }
                 }
             }
+            //POCOR-9182 STARTS
             if (!empty($tabElements)) {
                 // 1) Grab the query param
                 $queryTab = $model->request->getQuery('tab_section');
@@ -1037,7 +1038,7 @@ class RecordBehavior extends Behavior
                         => $tabElements[$selectedAction]['section']
                     ]);
                 }
-            }
+            }//POCOR-9182 ENDS
         }
         // End
 
@@ -1289,6 +1290,7 @@ class RecordBehavior extends Behavior
     // Model.excel.onExcelUpdateFields
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
+        //POCOR-9182 STARTS
         $registryAlias = $this->_table->getRegistryAlias();
         if($registryAlias == "Institution.InstitutionSurveys"){
             $entity = $this->getSurveyEntityForExcelFields($settings);
@@ -1297,9 +1299,8 @@ class RecordBehavior extends Behavior
         }
         if(!$entity){
             return $fields;
-        }
-        // POCOR-9067 end
-
+        }//POCOR-9182 ENDS
+        
         $tableCustomFieldIds = [];
         $customFieldQuery = $this->getCustomFieldQuery($entity);
         $customFields = [];
@@ -1369,11 +1370,11 @@ class RecordBehavior extends Behavior
         // POCOR-9067 end
         $this->_fieldValues = $fieldValues;
     }
-
+    //POCOR-9182 STARTS
     private function getEntityForExcelFields($settings){
         $recordId = $settings['id'];
-//        Log::debug(print_r($settings, true));
-//        Log::debug(print_r($this->_table->request->getAttribute('params'), true));
+        // Log::debug(print_r($settings, true));
+        // Log::debug(print_r($this->_table->request->getAttribute('params'), true));
         // POCOR-9067 start: problem for class or institution
         if(!isset($recordId)) {
             $checkEncodedClassId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8324
@@ -1398,7 +1399,7 @@ class RecordBehavior extends Behavior
                 $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                 $entity = $institutions->get($recordId);
             }
-//            $entity = $this->_table->get($recordId);
+            // $entity = $this->_table->get($recordId);
             return $entity;
             // POCOR-9090 end
         } catch (\Exception $e) {
@@ -1419,7 +1420,8 @@ class RecordBehavior extends Behavior
             return null;
         }
         return $entity;
-    }
+    }//POCOR-9182 ENDS
+
     private function getTableCellValues($tableCustomFieldIds, $recordId)
     {
         if (!empty($tableCustomFieldIds)) {
@@ -1470,9 +1472,10 @@ class RecordBehavior extends Behavior
             $type = strtolower($attr['customField']['field_type']);
             if (method_exists($this, $type)) {
                 $request = $this->_table->request; //POCOR-8409
-                if($request->getParam('controller') == 'Institutions' && $request->getParam('action') == 'Surveys') {
+                //POCOR-9182 STARTS Only use getCustomField for TABLE type fields in Surveys
+                if($request->getParam('controller') == 'Institutions' && $request->getParam('action') == 'Surveys' && $type == 'table') {
                     $type = 'getCustomField';
-                }
+                }//POCOR-9182 ENDS
                 $ans = $this->$type($field_values, $attr['customField'], $this->_customFieldOptions);
                 if (!(is_null($ans))) {
                     $answer = $ans;
@@ -1491,6 +1494,11 @@ class RecordBehavior extends Behavior
      */
     public function getFieldValue($recordId)
     {
+        //POCOR-9182 START
+        // Set group_concat_max_len to handle longer text values at the beginning
+        $conn = ConnectionManager::get('default');
+        $conn->execute('SET SESSION group_concat_max_len = 1048576'); // 1MB limit
+        //POCOR-9182 END
         $customFieldValueTable = $this->CustomFieldValues;
         $customFieldsForeignKey = $customFieldValueTable->CustomFields->getForeignKey();
         $customRecordsForeignKey = $customFieldValueTable->CustomRecords->getForeignKey();
@@ -1745,10 +1753,9 @@ class RecordBehavior extends Behavior
     //POCOR-2135 end
     //POCOR-8538 start
     public function setUpFieldOrderForClasses($fieldOrder){
-
         $position = array_search('institution_shift_id', $fieldOrder);
-        $customFields = array_values(array_filter($fieldOrder, fn($field) => strpos($field, 'custom') === 0));
-        $fieldOrder = array_values(array_filter($fieldOrder, fn($field) => strpos($field, 'custom') !== 0));
+        $customFields = array_values(array_filter($fieldOrder, function($field) { return strpos($field, 'custom') === 0; }));//POCOR-9182
+        $fieldOrder = array_values(array_filter($fieldOrder, function($field) { return strpos($field, 'custom') !== 0; }));//POCOR-9182
         array_splice($fieldOrder, $position + 1, 0, $customFields);
         return $fieldOrder;
     }
