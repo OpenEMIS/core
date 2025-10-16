@@ -135,13 +135,11 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
             ])
             ->orderAsc('attribute_field')
             ->toArray();
-
-        $visibleAttributes = ['api_url'];
+        $visibleAttributes = [];
         switch ($source) {
             case 'External Webhook Exams':
-                $visibleAttributes[] = 'username';
-                $visibleAttributes[] = 'password';
-                $visibleAttributes[] = 'api_key';
+                $visibleAttributes = ['api_url',
+                    'username', 'password', 'api_key'];
                 break;
 
             default:
@@ -240,31 +238,34 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
         $source = $entity->name;
         $this->field('value', ['visible' => true, 'entity' => $entity]);
         $this->field('value_selection', ['visible' => false]);
-        $this->field('api_url', ['type' => 'string', 'required' => 'required']);
 
 
+        $this->field('first_name_mapping', ['type' => 'hidden']);
+        $this->field('middle_name_mapping', ['type' => 'hidden']);
+        $this->field('third_name_mapping', ['type' => 'hidden']);
+        $this->field('last_name_mapping', ['type' => 'hidden']);
+        $this->field('date_of_birth_mapping', ['type' => 'hidden']);
+        $this->field('external_reference_mapping', ['type' => 'hidden']);
+        $this->field('gender_mapping', ['type' => 'hidden']);
+        $this->field('identity_type_mapping', ['type' => 'hidden']);
+        $this->field('identity_number_mapping', ['type' => 'hidden']);
+        $this->field('nationality_mapping', ['type' => 'hidden']);
+        $this->field('address_mapping', ['type' => 'hidden']);
+        $this->field('postal_mapping', ['type' => 'hidden']);
+        $this->field('user_endpoint_uri', ['type' => 'hidden']);
         switch ($source) {
             case 'External Webhook Exams':
+                $this->field('api_url', ['type' => 'string', 'required' => 'required']);
                 $this->field('username', ['type' => 'string', 'required' => 'required']);
                 $this->field('password', ['type' => 'string', 'required' => 'required']);
                 $this->field('api_key', ['type' => 'string', 'required' => 'required']);
-                $this->field('first_name_mapping', ['type' => 'hidden']);
-                $this->field('middle_name_mapping', ['type' => 'hidden']);
-                $this->field('third_name_mapping', ['type' => 'hidden']);
-                $this->field('last_name_mapping', ['type' => 'hidden']);
-                $this->field('date_of_birth_mapping', ['type' => 'hidden']);
-                $this->field('external_reference_mapping', ['type' => 'hidden']);
-                $this->field('gender_mapping', ['type' => 'hidden']);
-                $this->field('identity_type_mapping', ['type' => 'hidden']);
-                $this->field('identity_number_mapping', ['type' => 'hidden']);
-                $this->field('nationality_mapping', ['type' => 'hidden']);
-                $this->field('address_mapping', ['type' => 'hidden']);
-                $this->field('postal_mapping', ['type' => 'hidden']);
-                $this->field('user_endpoint_uri', ['type' => 'hidden']);
-
                 break;
 
             default:
+                $this->field('api_url', ['type' => 'hidden']);
+                $this->field('username', ['type' => 'hidden']);
+                $this->field('password', ['type' => 'hidden']);
+                $this->field('api_key', ['type' => 'hidden']);
                 break;
         }
     }
