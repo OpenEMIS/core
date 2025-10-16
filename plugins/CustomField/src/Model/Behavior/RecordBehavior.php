@@ -1206,8 +1206,8 @@ class RecordBehavior extends Behavior
                                                     }
                                                 }
                                             }
-                                            //$renderField = $forRender;//POEXM-9349
-                                            $renderField = true;//POEXM-9349
+                                            //$renderField = $forRender;//POCOR-9349
+                                            $renderField = true;//POCOR-9349
                                         }
                                     }
 

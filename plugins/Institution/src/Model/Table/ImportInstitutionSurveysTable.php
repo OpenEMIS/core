@@ -326,7 +326,6 @@ class ImportInstitutionSurveysTable extends AppTable {
             $questions = $survey->custom_fields;
             // This is to sort the questions by the order
             $surveyFormQuestions = [];
-            // echo "<pre>";print_r($questions);die();
             foreach ($questions as $question) {
                 $order = $question['_joinData']['order'];
                 $surveyFormQuestions[$order] = $question;
