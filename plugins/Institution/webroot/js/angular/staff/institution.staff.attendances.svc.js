@@ -644,36 +644,58 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
     }
 
     function convert24Timeformat(hours, minutes, seconds, meridian) {
-        if (meridian == "PM" && hours < 12) hours = hours + 12;
-        if (meridian == "AM" && hours == 12) hours = hours - 12;
-        var sHours = hours.toString();
-        var sMinutes = minutes.toString();
-        var sSeconds = seconds.toString();
-        if (hours < 10) sHours = "0" + sHours;
-        if (minutes < 10) sMinutes = "0" + sMinutes;
-        if (seconds < 10) sSeconds = "0" + sSeconds;
-        return sHours + ":" + sMinutes + ":" + sSeconds;
+        try {
+            hours = parseInt(hours, 10);
+            minutes = parseInt(minutes, 10);
+            seconds = parseInt(seconds, 10);
+            meridian = (meridian || '').toUpperCase();
+
+            if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
+                throw new Error('Invalid time values');
+            }
+
+            if (meridian === "PM" && hours < 12) hours += 12;
+            if (meridian === "AM" && hours === 12) hours = 0;
+
+            const sHours = hours < 10 ? "0" + hours : hours.toString();
+            const sMinutes = minutes < 10 ? "0" + minutes : minutes.toString();
+            const sSeconds = seconds < 10 ? "0" + seconds : seconds.toString();
+
+            return sHours + ":" + sMinutes + ":" + sSeconds;
+        } catch (error) {
+            console.error("convert24Timeformat - Invalid input:", error.message);
+            return "--:--:--";
+        }
     }
 
     function convert12Timeformat(time) {
-        var timeSplit = time.split(":");
-        hours = timeSplit[0];
-        minutes = timeSplit[1];
-        seconds = timeSplit[2];
-        if (hours >= 12){
-            meridian = "PM";
-        } else {
-            meridian = "AM";
+        try {
+            if (!time || typeof time !== "string") {
+                throw new Error("Input is not a string");
+            }
+
+            const timeSplit = time.split(":");
+            if (timeSplit.length !== 3) {
+                throw new Error("Time string is not in HH:MM:SS format");
+            }
+
+            let [hours, minutes, seconds] = timeSplit.map(part => parseInt(part, 10));
+
+            if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
+                throw new Error("Time parts must be valid numbers");
+            }
+
+            const meridian = hours >= 12 ? "PM" : "AM";
+            hours = (hours % 12) || 12;
+
+            const sHours = hours < 10 ? "0" + hours : hours.toString();
+            const sMinutes = minutes < 10 ? "0" + minutes : minutes.toString();
+
+            return sHours + ":" + sMinutes + " " + meridian;
+        } catch (error) {
+            console.error("convert12Timeformat - Invalid input:", error.message);
+            return "--:-- --";
         }
-        //00 does not exists in 12-hour time format hence need to convert 00 back to 12,
-        //else timepicker will display wrong timing when error when user selects 12AM
-        hours = (hours % 12) || 12;
-        var sHours = hours.toString();
-        if (sHours.length == 1) {
-            sHours = "0" + sHours;
-        }
-        var sMinutes = minutes.toString();
-        return sHours + ":" + sMinutes + " " + meridian;
     }
 
     function saveStaffAttendance(params, dataKey, dataValue, academicPeriodId) {

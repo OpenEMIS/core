@@ -166,8 +166,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                     Controller.unitOptions = promises[4];
                     Controller.courseOptions = promises[5];
 
-                    Controller.teacherOptions = Controller.changeStaff(Controller.selectedSecondaryTeacher);
-                    Controller.secondaryTeacherOptions = Controller.changeStaff(Controller.selectedTeacher);
+                    Controller.teacherOptions = Controller.changeStaff([Controller.selectedSecondaryTeacher]); // POCOR-9531
+                    Controller.secondaryTeacherOptions = Controller.changeStaff([Controller.selectedTeacher]); // POCOR-9531
 
                     var toTranslate = [];
                     angular.forEach(Controller.colDef, function(value, key) {
@@ -213,22 +213,23 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         // console.log('createCustomFieldsArray CTRL')
         return InstitutionClassStudentsSvc.createCustomFieldsArray(Controller);
     }
-    function changeStaff(key) {
-        // console.log("Controller.mainTeacherOptions");
-        // console.log(Controller.mainTeacherOptions);
-        var newOptions = [];
-        for (var i = 0; i < Controller.mainTeacherOptions.length; i++) {
-            if (key instanceof Array) {
-                if (!key.includes(Controller.mainTeacherOptions[i].id)) {
-                    newOptions.push(Controller.mainTeacherOptions[i]);
-                }
-            } else {
-                if (Controller.mainTeacherOptions[i].id != key) {
-                    newOptions.push(Controller.mainTeacherOptions[i]);
-                }
-            }
 
+    // POCOR-9531 refactured
+    function changeStaff(excludeKeys) {
+        var newOptions = [];
+
+        // Normalize to array
+        if (!Array.isArray(excludeKeys)) {
+            excludeKeys = [excludeKeys];
         }
+
+        for (var i = 0; i < Controller.mainTeacherOptions.length; i++) {
+            var teacher = Controller.mainTeacherOptions[i];
+            if (!excludeKeys.includes(teacher.id)) {
+                newOptions.push(teacher);
+            }
+        }
+
         return newOptions;
     }
 
@@ -308,10 +309,12 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         // postData.secondary_staff_id = Controller.selectedSecondaryTeacher;
         postData.classes_secondary_staff = [];
         angular.forEach(Controller.selectedSecondaryTeacher, function(value, key) {
-            this.push({
-                secondary_staff_id: value,
-                institution_class_id: Controller.classId
-            });
+            if (value !== Controller.selectedTeacher) { // POCOR-9431
+                postData.classes_secondary_staff.push({
+                    secondary_staff_id: value,
+                    institution_class_id: Controller.classId
+                });
+            }
         }, postData.classes_secondary_staff);
         Controller.customFieldsArray.forEach((customField) => {
             customField.data.forEach((field) => {
@@ -438,4 +441,18 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
             return uri + separator + key + "=" + value;
         }
     }
+    // POCOR-9531 to restrict selected secondary from main
+    $scope.$watchGroup([
+        'Controller.selectedTeacher',
+        'Controller.selectedSecondaryTeacher'
+    ], function([mainTeacherId, secondaryTeacherId]) {
+        // Auto-remove from secondary if same
+        if (mainTeacherId && secondaryTeacherId && mainTeacherId === secondaryTeacherId) {
+            Controller.selectedSecondaryTeacher = null;
+        }
+
+        // Refresh both lists excluding the other
+        Controller.teacherOptions = Controller.changeStaff([Controller.selectedSecondaryTeacher]);
+        Controller.secondaryTeacherOptions = Controller.changeStaff([Controller.selectedTeacher]);
+    });
 }
