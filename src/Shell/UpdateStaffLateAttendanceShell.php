@@ -18,12 +18,12 @@ class UpdateStaffLateAttendanceShell extends Shell
 
     public function initialize(): void
     {
-        
+
         parent::initialize();
         $this->loadModel('Institution.InstitutionStaffShifts');
         $this->loadModel('Institution.InstitutionShifts');
         $this->loadModel('Institution.InstitutionPositions');//POCOR-7225
-       
+
     }
 
     //POCOR-7225 add institutionId, academicPeriodId , shiftOptionId in shell command, use in where condition
@@ -39,10 +39,10 @@ class UpdateStaffLateAttendanceShell extends Shell
                     AND isf.academic_period_id = :academic_period_id
                     AND isf.shift_option_id = :shift_option_id
                     AND isa.date = :date
-                SET isa.absence_type_id = 
-                    CASE 
+                SET isa.absence_type_id =
+                    CASE
                         WHEN TIME(isa.time_in) <= isf.start_time THEN 1  -- Early or On Time
-                        WHEN TIME(isa.time_in) > isf.start_time THEN 3   -- Late
+                        -- WHEN TIME(isa.time_in) > isf.start_time THEN 3   -- Late
                         ELSE isa.absence_type_id                         -- Keep as is
                     END
                 WHERE isa.staff_id = :staff_id
@@ -59,7 +59,7 @@ class UpdateStaffLateAttendanceShell extends Shell
 
         } catch (Exception $e) {
             Log::write('error', 'Update Attendance Error: ' . $e->getMessage());
-            pr($e->getMessage()); 
+            pr($e->getMessage());
 
         }
     }
