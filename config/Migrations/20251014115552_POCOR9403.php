@@ -95,6 +95,11 @@ class POCOR9403 extends AbstractMigration
                 'external_data_service_webhook_exams',
                 'External Data Service - Webhook',
                 'External Webhook Exams'),
+            $this->generateConfigData(
+                'External Webhook Custom',
+                'external_data_service_webhook_custom',
+                'External Data Service - Webhook',
+                'External Webhook Custom'),
         ];
         $table->insert($data)->save();
     }
