@@ -1211,6 +1211,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         userCtrl.unsetAllErrors();
         let hasError = false;
         const userData = userCtrl.selectedUserData;
+        // POCOR-9427 start
+        const setError = (field, message) => {
+            userCtrl.error[field] = message;
+            hasError = true;
+        };
+        const user_exists = await checkUserAlreadyExistByIdentity();
+        if(!userCtrl.isInternalSearchSelected && user_exists){
+            // setError('identity_type_id', 'User already exist with this identity type');
+            setError('identity_number', 'User already exist with this identity');
+            // setError('nationality_id', 'User already exist with this nationality');
+        }
+        // POCOR-9427 end
         if (!userCtrl.nationalitySkipped &&
             userCtrl.nationalitiesRequired === 'required' &&
             !userData.nationality_id) {
@@ -2294,7 +2306,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             userCtrl.message = '';
             userCtrl.isIdentityUserExist = false;
         }
-        /*  return result.data.user_exist === 1; */
+        return result.data.user_exist === 1;
     }
 
 
