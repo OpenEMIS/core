@@ -862,6 +862,8 @@ class CrudApiController extends Controller
         if (is_string($model)) {
             $model = new $model;
         }
+        $this->decodeBlobFields($data); // Decode base64 to binary before update
+
         if (in_array('modified_user_id', $model->getFillable()) && in_array('modified', $model->getFillable())) {
             if (!isset($data['modified_user_id'])) {
                 $data['modified_user_id'] = $current_user_id;
@@ -1370,6 +1372,7 @@ class CrudApiController extends Controller
             }
             $records = [];
             foreach ($data as $recordData) {
+                $this->decodeBlobFields($recordData); //  Decode base64 to binary
                 if (in_array('created_user_id', $model->getFillable()) && in_array('created', $model->getFillable())) {
                     if (!isset($recordData['created_user_id'])) {
                         $recordData['created_user_id'] = $current_user_id;
@@ -1403,6 +1406,8 @@ class CrudApiController extends Controller
         if (is_string($model)) {
             $model = new $model;
         }
+        $this->decodeBlobFields($data); //  Decode base64 to binary
+
         if (in_array('created_user_id', $model->getFillable()) && in_array('created', $model->getFillable())) {
             if (!isset($data['created_user_id'])) {
                 $data['created_user_id'] = $current_user_id;
@@ -1563,5 +1568,27 @@ class CrudApiController extends Controller
             return true;
         }
         return false;
+    }
+
+    private function decodeBlobFields(array &$data)
+    {
+
+        foreach ($data as $key => $value) {
+            // Detect *_content fields (e.g. document_content, photo_content)
+            if (is_string($key) && str_ends_with($key, '_content') && is_string($value)) {
+                $value = preg_replace('/^data:[^;]+;base64,/', '', $value);
+                if (strlen($value) > 40 && base64_decode($value, true) !== false) {
+                    if (preg_match('/^[A-Za-z0-9+\/=]+$/', $value) && strlen($value) % 4 === 0) {
+                        $decoded = base64_decode($value, true);
+                        if ($decoded !== false) {
+                            $data[$key] = $decoded;
+                        }
+                    }
+                }
+//                if (strlen($value) > 40 && base64_decode($value, true) === false) {
+//                    $data[$key] = "";
+//                }
+            }
+        }
     }
 }
