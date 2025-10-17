@@ -5,10 +5,26 @@ angular
 DirectoryaddSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc','AggridLocaleSvc', 'AlertSvc', 'UtilsSvc', '$window'];
 
 function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc, UtilsSvc, $window) {
+    // POCOR-9427 start
+    const USER_TYPES = {
+        STUDENT: 1,
+        STAFF: 2,
+        GUARDIAN: 3,
+        OTHER: 4
+    };
+
+    const USER_TYPE_KEYS = {
+        [USER_TYPES.STUDENT]: 'student',
+        [USER_TYPES.STAFF]: 'staff',
+        [USER_TYPES.GUARDIAN]: 'guardian',
+        [USER_TYPES.OTHER]: 'other'
+    };
+    // POCOR-9427 end
 
     var models = {
         Genders: 'User.Genders',
-        Nationalities: 'FieldOption.Nationalities'
+        Nationalities: 'FieldOption.Nationalities', // POCOR-9427
+        ConfigItems: 'Configuration.ConfigItems' // POCOR-9427
     };
     var service = {
         init: init,
@@ -40,6 +56,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         validateUserDetails: validateUserDetails,
         validateConfirmDetails: validateConfirmDetails,
         checkUserAlreadyExistByIdentity: checkUserAlreadyExistByIdentity,
+        checkUserAlreadyExistByIdentityWithoutWarning:checkUserAlreadyExistByIdentityWithoutWarning,
         checkUserExistByIdentity: checkUserExistByIdentity,
         // checkUserDetailValidationBlocksHasError,
         // end user details function
@@ -66,6 +83,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         getCspdData: getCspdData,
         getRedirectToGuardian: getRedirectToGuardian,
         isNextButtonShouldDisable: isNextButtonShouldDisable,
+        getConfigItemValue: getConfigItemValue, // POCOR-9427
     };
     return service;
 
@@ -455,26 +473,43 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
 
     async function validateUserDetails(scope) {
         scope.error = {};
+        // POCOR-9427 start
+        const userTypeId = scope.selectedUserData.user_type_id;
+        // console.log(scope);
+        const configKey = USER_TYPE_KEYS[userTypeId];
+        const config = scope.config[configKey] || {};
+        // console.log(scope.selectedUserData)
+        // console.log(configKey)
+        // console.log(scope.config)
+        // console.log(config)
         const checkAndSetError = (field, message) => {
-            if (!scope.selectedUserData[field]) {
+            const value = scope.selectedUserData[field];
+            if (value === '' || value === undefined || value === null) {
                 scope.error[field] = message;
             }
         };
+
+        // Validate user type and relation type if options exist
         if (scope.userTypeOptions) {
             checkAndSetError('user_type_id', 'This field cannot be left empty');
         }
         if (scope.relationTypeOptions) {
             checkAndSetError('relation_type_id', 'This field cannot be left empty');
         }
+
         if (Object.keys(scope.error).length > 0) return;
 
         if (scope.step === 'user_details') {
             const [blockName, hasError] = await checkUserDetailValidationBlocksHasError(scope);
 
             if (blockName === 'Identity' && hasError) {
-                checkAndSetError('nationality_id', 'This field cannot be left empty');
-                checkAndSetError('identity_type_id', 'This field cannot be left empty');
-                checkAndSetError('identity_number', 'This field cannot be left empty');
+                // if (!config.nationalitySkipped && config.nationalitiesRequired === 'required') {
+                    checkAndSetError('nationality_id', 'This field cannot be left empty');
+                // }
+                // if (!config.identitySkipped && config.identitiesRequired === 'required') {
+                    checkAndSetError('identity_type_id', 'This field cannot be left empty');
+                    checkAndSetError('identity_number', 'This field cannot be left empty');
+                // }
             } else if (blockName === 'General_Info' && hasError) {
                 checkAndSetError('first_name', 'This field cannot be left empty');
                 checkAndSetError('last_name', 'This field cannot be left empty');
@@ -485,13 +520,22 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                     scope.selectedUserData.date_of_birth = $filter('date')(scope.selectedUserData.date_of_birth, 'yyyy-MM-dd');
                 }
             }
-            if (Object.keys(scope.error).length > 0) return;
 
+            if (Object.keys(scope.error).length > 0) return;
+            if (scope.selectedUserData.identity_number) {
+                scope.canSkipIdentity = true;
+            }
+            if (scope.selectedUserData.nationality_id) {
+                scope.canSkipNationality = true;
+            }
+            // Move to next step
             scope.step = 'internal_search';
             scope.internalGridOptions = null;
             scope.goToInternalSearch();
         }
+        // POCOR-9427 end
     }
+
 
     function goToExternalSearch(scope) {
         UtilsSvc.isAppendLoader(true);
@@ -867,26 +911,64 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             });
     }
 
-    function validateConfirmDetails(scope) {
+    async function validateConfirmDetails(scope) {
+        // POCOR-9427 start
+        scope.error = {};
         let isCustomFieldNotValidated = false;
 
+        const selectedUserData = scope.selectedUserData;
+        const userTypeId = selectedUserData.user_type_id;
+        const configKey = USER_TYPE_KEYS[userTypeId]; // from USER_TYPES mapping
+        const config = scope.config[configKey] || {};
+
         const checkAndSetError = (field, message) => {
-            if (!scope.selectedUserData[field]) {
+            const value = selectedUserData[field];
+            if (value === '' || value === undefined || value === null) {
                 scope.error[field] = message;
             }
         };
-        if(!scope.isInternalSearchSelected){
-        checkAndSetError('username', 'This field cannot be left empty');
-        checkAndSetError('password', 'This field cannot be left empty');
+        const setError = (field, message) => {
+                scope.error[field] = message;
+        };
+        const user_exists = await checkUserAlreadyExistByIdentity(scope);
+        if(!scope.isInternalSearchSelected && user_exists){
+                setError('identity_type_id', 'User already exist with this nationality');
+                setError('identity_number', 'User already exist with this identity');
+                setError('nationality_id', 'User already exist with this identity type');
         }
+
+        // 🧾 Username / Password check
+        if (!scope.isInternalSearchSelected) {
+            checkAndSetError('username', 'This field cannot be left empty');
+            checkAndSetError('password', 'This field cannot be left empty');
+        }
+
+        // 🧾 Email and Mobile Number (from config)
+        if (!config.email_skipped && config.email_required === 'required') {
+            checkAndSetError('email', 'This field cannot be left empty');
+        }
+        if (!config.mobile_number_skipped && config.mobile_number_required === 'required') {
+            checkAndSetError('mobile_number', 'This field cannot be left empty');
+        }
+
+        // 🧾 Identity + Nationality (re-validation based on config)
+        if (!config.identitySkipped && config.identitiesRequired === 'required') {
+            checkAndSetError('identity_type_id', 'This field cannot be left empty');
+            checkAndSetError('identity_number', 'This field cannot be left empty');
+        }
+        if (!config.nationalitySkipped && config.nationalitiesRequired === 'required') {
+            checkAndSetError('nationality_id', 'This field cannot be left empty');
+        }
+
+        // 🧾 Custom Fields
         if (scope.customFieldsArray) {
             scope.customFieldsArray.forEach((customField) => {
                 customField.data.forEach((field) => {
                     if (field.is_mandatory === 1) {
                         const needsAnswer = ['TEXT', 'TEXTAREA', 'NOTE', 'DROPDOWN', 'NUMBER', 'DECIMAL', 'DATE', 'TIME'].includes(field.field_type);
                         const needsNonEmptyArray = field.field_type === 'CHECKBOX';
-                        if ((needsAnswer && !field.answer) || (needsNonEmptyArray && field.answer.length === 0)) {
-                            scope.error[field.name] = 'This field is required.'
+                        if ((needsAnswer && !field.answer) || (needsNonEmptyArray && (!Array.isArray(field.answer) || field.answer.length === 0))) {
+                            scope.error[field.name] = 'This field is required.';
                             field.errorMessage = 'This field is required.';
                             isCustomFieldNotValidated = true;
                         }
@@ -895,8 +977,10 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             });
         }
 
-        if (isCustomFieldNotValidated || Object.keys(scope.error).length > 0) return;
-
+        if (isCustomFieldNotValidated || Object.keys(scope.error).length > 0) {
+            return;
+        }
+        // POCOR-9427 end
         scope.saveDetails();
     }
 
@@ -918,6 +1002,17 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             scope.message = '';
             scope.isIdentityUserExist = false;
         }
+        return result.data.user_exist === 1;
+    }
+    async function checkUserAlreadyExistByIdentityWithoutWarning(scope) {
+        const userData = scope.selectedUserData;
+        // console.log(scope);
+        const result = await checkUserExistByIdentity({
+            'identity_type_id': userData.identity_type_id,
+            'identity_number': userData.identity_number,
+            'nationality_id': userData.nationality_id,
+        });
+
         return result.data.user_exist === 1;
     }
 
@@ -951,13 +1046,13 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         }
 
         if (isIdentityHasError) {
-                return ['Identity', true];
+            return ['Identity', true];
         }
 
         if (isSkipableForIdentity) {
             if (user_exists === true) {
                 return ['Identity', false];
-            }
+        }
             if (externalSearchSourceName === 'OpenEMIS Core') {
                 return ['Identity', false];
             }
@@ -969,6 +1064,8 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
 
         return ["", false];
     }
+
+
 
 
     function getInternalSearchData(params) {
@@ -1463,6 +1560,28 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
 
     function unsetAllErrors(scope) {
         scope.error = {};
+    }
+
+    // POCOR-9427
+    function getConfigItemValue(code) {
+        var success = function(response, deferred) {
+            var results = response.data.data;
+            if (angular.isObject(results) && results.length > 0) {
+                var configItemValue = (results[0].value.length > 0) ? results[0].value : results[0].default_value;
+                deferred.resolve(configItemValue);
+            } else {
+                deferred.reject('There is no ' + code + ' configured');
+            }
+        };
+
+        return ConfigItems
+            .where({
+                code: code
+            })
+            .ajax({
+                success: success,
+                defer: true
+            });
     }
 
     function isNextButtonShouldDisable(scope) {
