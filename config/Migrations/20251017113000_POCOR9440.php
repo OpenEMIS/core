@@ -9,9 +9,9 @@ class POCOR9440 extends AbstractMigration
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
 
         // Drop triggers
-        $this->execute("DROP TRIGGER IF EXISTS `trigger_institution_student_absence_details_insert`;");
-        $this->execute("DROP TRIGGER IF EXISTS `trigger_institution_student_absence_details_update`;");
-        $this->execute("DROP TRIGGER IF EXISTS `trigger_institution_student_absence_details_delete`;");
+//        $this->execute("DROP TRIGGER IF EXISTS `trigger_institution_student_absence_details_insert`;");
+//        $this->execute("DROP TRIGGER IF EXISTS `trigger_institution_student_absence_details_update`;");
+//        $this->execute("DROP TRIGGER IF EXISTS `trigger_institution_student_absence_details_delete`;");
 
         // Backup original table
         $this->execute('DROP TABLE IF EXISTS `z_9440_institution_student_absence_details`');
@@ -46,7 +46,6 @@ class POCOR9440 extends AbstractMigration
             $this->execute('RENAME TABLE `z_9440_institution_student_absence_details` TO `institution_student_absence_details`;');
 
             // Recreate all triggers (no schema prefix)
-
 
             $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
