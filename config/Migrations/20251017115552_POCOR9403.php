@@ -9,6 +9,8 @@ use Cake\Utility\Text;
 class POCOR9403 extends AbstractMigration
 {
     const OPEN_EMIS_EXAMS = 'OpenEMIS Exams';
+    const string EXTERNAL_DATA_SERVICE_WEBHOOK = 'External Data Service - Webhook';
+
     public function up()
     {
 
@@ -95,12 +97,12 @@ class POCOR9403 extends AbstractMigration
             $this->generateConfigData(
                 self::OPEN_EMIS_EXAMS,
                 'external_data_service_webhook_exams',
-                'External Data Service - Webhook',
+                self::EXTERNAL_DATA_SERVICE_WEBHOOK,
                 self::OPEN_EMIS_EXAMS),
             $this->generateConfigData(
                 'Custom',
                 'external_data_service_webhook_custom',
-                'External Data Service - Webhook',
+                self::EXTERNAL_DATA_SERVICE_WEBHOOK,
                 'Custom'),
         ];
         $table->insert($data)->save();

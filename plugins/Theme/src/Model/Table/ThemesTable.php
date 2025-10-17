@@ -171,8 +171,7 @@ class ThemesTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         Cache::delete('themes');
-        $configItems = TableRegistry::get('Configuration.ConfigItems');
-        $themeConfigItemRecord = $configItems->findByCode('themes')->first();
+find
         $themeConfigItemRecord->value = Time::now()->toUnixString();
         $configItems->save($themeConfigItemRecord);
     }
