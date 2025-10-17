@@ -10,6 +10,9 @@ use Cake\ORM\Query;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use App\Model\Traits\OptionsTrait;
+use Cake\ORM\Table;
+use Cake\Log\Log;
+use Cake\Utility\Inflector;
 
 class ConfigWebhooksTable extends ControllerActionTable
 {
@@ -40,7 +43,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         'security_user_delete' => 'Delete Security User',
         'academic_period_create' => 'Academic Period Create',
         'academic_period_update' => 'Academic Period Update',
-        'academic_period_delete' => 'Academic Period Delete', 
+        'academic_period_delete' => 'Academic Period Delete',
         'education_cycle_create' => 'Education Structure Cycle Create',
         'education_cycle_update' => 'Education Structure Cycle Update',
         'education_cycle_delete' => 'Education Structure Cycle Delete',
@@ -113,7 +116,7 @@ class ConfigWebhooksTable extends ControllerActionTable
             ->contain(['WebhookEvents']);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Webhooks','System Configurations');       
+		$is_manual_exist = $this->getManualUrl('Administration','Webhooks','System Configurations');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -152,10 +155,76 @@ class ConfigWebhooksTable extends ControllerActionTable
         $this->fields['description']['visible']['index'] = false;
         $this->field('name');
         $this->field('url', ['type' => 'string']);
+        $this->field('external_data_service_id', ['options' => $this->getTypeOptions()]);
         $this->field('status', ['options' => $this->getSelectOptions('general.active')]);
         $this->field('method', ['options' => $supportedMethod]);
     }
 
+    private function getTypeOptions()
+    {
+        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems'); // POCOR-8286
+        $options = $ConfigItems->find('list', [
+            'keyField' => 'id', // or whatever field you want as key
+            'valueField' => 'name' // or whatever field you want as value
+        ])->where([
+            'type' => 'External Data Service - Webhook'
+        ])->toArray();
+        return $options;
+    }
+
+    /**
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName . POCOR-8231
+     * @return \Cake\ORM\Table
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+
+        try {
+            // Try to get the table instance directly
+            return $locator->get($tableName);
+        } catch (\Exception $e) {
+//            Log::debug('Error: ' . $e->getMessage());
+        }
+
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('triggered_event', [
@@ -205,8 +274,8 @@ class ConfigWebhooksTable extends ControllerActionTable
 
     /**
      * POCOR-8994
-     *  
-     * It retrieves the associated WebhookEvents for the current webhook record 
+     *
+     * It retrieves the associated WebhookEvents for the current webhook record
      using the `id` from the query string
      * The event keys are then used to pre-select options in the triggered_event chosenSelect dropdown
      * */
@@ -217,7 +286,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         $webhookEvents = TableRegistry::get('Configuration.WebhookEvents');
         $record = $webhookEvents->find()
             ->where([$webhookEvents->aliasField('webhook_id') => $recordId])
-            ->all(); 
+            ->all();
 
         $storeEvent = [];
         foreach ($record as $val) {
@@ -228,7 +297,7 @@ class ConfigWebhooksTable extends ControllerActionTable
                 'options' => $this->eventKeyOptions,
                 'before' => 'description',
                 'attr' => ['required' => true,'value' =>  $storeEvent],
-               
+
             ]);
     }
 }

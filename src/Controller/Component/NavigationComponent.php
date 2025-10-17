@@ -2860,6 +2860,11 @@ class NavigationComponent extends Component
                         'Configurations.AuthSystemAuthentications',
                         'Configurations.CustomValidation',
                         'Configurations.AdministrativeBoundaries',
+                        'Configurations.ExternalAlertServiceSMS',
+                        'Configurations.ExternalDataServiceWebhook',
+                        'Configurations.ExternalDataSourceExams',
+                        'Configurations.ExternalDataSourceIdentity',
+                        'Configurations.ExternalDataSourceLMS',
                         'Configurations.Theme' => [
                             'title' => 'Themes',
                             'parent' => 'Themes',
