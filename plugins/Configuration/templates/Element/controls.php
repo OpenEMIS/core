@@ -1,4 +1,4 @@
-<?php 
+<?php
 // POCOR-9225[START]
 $this->Html->css('ControllerAction.../plugins/chosen/css/chosen.min.css', ['block' => true]);
 $this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min.js', ['block' => true]);
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
     background-color: #ffffff; /* white */
     font-weight: 390;     /* optional: rounded corners */
 	border-radius: 4px !important;
-	font-size: 12px !important; 
+	font-size: 12px !important;
 	display: flex;
 	line-height: 1.4;
 	align-items: center;
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
             'class' => 'form-control chosenSelect', //POCOR-9225
             'label' => false,
             'type' => 'select',
-            'options' => ['0' => __('-- Select Type --')] + $typeOptions,
+            'options' => ['-1' => __('-- Select Type --')] + $typeOptions, // POCOR-9427
 			'url' => $baseUrl,
             'data-named-key' => 'type',
         ]);
