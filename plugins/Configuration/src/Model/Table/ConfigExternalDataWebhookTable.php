@@ -18,6 +18,7 @@ use Cake\Log\Log;
 
 class ConfigExternalDataWebhookTable extends ControllerActionTable
 {
+    const string OPEN_EMIS_EXAMS = 'OpenEMIS Exams';
     public $id;
     public $authenticationType;
 
@@ -38,14 +39,16 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
         $alias = $this->getAlias();
         $data = $requestData[$alias];
         $source = $data['label'];
-        if ($source == 'Twilio') {
+        if ($source == self::OPEN_EMIS_EXAMS) {
             return $validator
-                ->requirePresence('sms_account_sid')
-                ->requirePresence('sms_auth_token')
-                ->requirePresence('sms_number')
-                ->notEmptyString('sms_account_sid', __('Please enter the Account SID'))
-                ->notEmptyString('sms_auth_token', __('Please enter the Auth Token'))
-                ->notEmptyString('sms_number', __('Please enter the SMS Number'));
+                ->requirePresence('api_url')
+                ->requirePresence('api_key')
+                ->requirePresence('username')
+                ->requirePresence('password')
+                ->notEmptyString('api_url', __('Please enter the API URL'))
+                ->notEmptyString('api_key', __('Please enter the API Key'))
+                ->notEmptyString('username', __('Please enter the Username'))
+                ->notEmptyString('password', __('Please enter the Password'));
         }
         return $validator;
 
@@ -113,8 +116,15 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('value', ['visible' => true]);
+        $source = $entity->name;
+        switch ($source) {
+            case self::OPEN_EMIS_EXAMS:
+                $this->field('attributes', ['type' => 'custom_external_source']);
+                break;
 
-        $this->field('attributes', ['type' => 'custom_external_source']);
+            default:
+                break;
+        }
     }
 
     public function onGetCustomExternalSourceElement(Event $event, $action, Entity $entity, $attr, $options = [])
@@ -123,7 +133,6 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
         $tableCells = [];
         $ExternalDataSourceAttributes = self::getDynamicTableInstance('Configuration.ExternalDataSourceAttributes');
         $source = $entity->name;
-
 
         $attributes = $ExternalDataSourceAttributes
             ->find('list', [
@@ -137,7 +146,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
             ->toArray();
         $visibleAttributes = [];
         switch ($source) {
-            case 'External Webhook Exams':
+            case self::OPEN_EMIS_EXAMS:
                 $visibleAttributes = ['api_url',
                     'username', 'password', 'api_key'];
                 break;
@@ -224,7 +233,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
             $error_prefix = __CLASS__ . ':' . __FILE__ . __FUNCTION__ . __LINE__;
             $this->log($error_prefix);
             $this->log($errorMessage);
-            $this->log($errors);
+            $this->log(print_r($errors, true));
             //POCOR-7981:ends
             $this->Alert->error('general.externalSourceDataErr', ['reset' => true]);
         } else {//POCOR-6930 Ends
@@ -254,7 +263,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
         $this->field('postal_mapping', ['type' => 'hidden']);
         $this->field('user_endpoint_uri', ['type' => 'hidden']);
         switch ($source) {
-            case 'External Webhook Exams':
+            case self::OPEN_EMIS_EXAMS:
                 $this->field('api_url', ['type' => 'string', 'required' => 'required']);
                 $this->field('username', ['type' => 'string', 'required' => 'required']);
                 $this->field('password', ['type' => 'string', 'required' => 'required']);

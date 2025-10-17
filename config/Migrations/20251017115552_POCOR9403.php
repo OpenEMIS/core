@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 use Migrations\AbstractMigration;
@@ -7,6 +8,7 @@ use Cake\Utility\Text;
 
 class POCOR9403 extends AbstractMigration
 {
+    const OPEN_EMIS_EXAMS = 'OpenEMIS Exams';
     public function up()
     {
 
@@ -91,10 +93,10 @@ class POCOR9403 extends AbstractMigration
         $table = $this->table('config_items');
         $data = [
             $this->generateConfigData(
-                'Openemis Exams',
+                self::OPEN_EMIS_EXAMS,
                 'external_data_service_webhook_exams',
                 'External Data Service - Webhook',
-                'External Webhook Exams'),
+                self::OPEN_EMIS_EXAMS),
             $this->generateConfigData(
                 'Custom',
                 'external_data_service_webhook_custom',
@@ -119,7 +121,7 @@ class POCOR9403 extends AbstractMigration
 
         ];
 
-        $data = array_map(fn($attr) => $this->generateExternalDataSourceAttribute('External Webhook Exams', ...$attr), $attributes);
+        $data = array_map(fn($attr) => $this->generateExternalDataSourceAttribute(self::OPEN_EMIS_EXAMS, ...$attr), $attributes);
 
         $table->insert($data)->save();
     }
