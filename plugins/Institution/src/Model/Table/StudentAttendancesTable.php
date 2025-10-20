@@ -1169,7 +1169,7 @@ class StudentAttendancesTable extends ControllerActionTable
     {
         $p       = $this->normalizeAttendanceParams($options);
         $MarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
-        Log::debug(print_r(['p' => $p], true));
+//        Log::debug(print_r(['p' => $p], true));
         // 1) Reset only rows that actually need it (to avoid wide locks)
         $searchConds = $this->markedDayConditions($p, /*includeSubject*/ true);
 //        Log::debug(print_r(['searchConds' => $searchConds], true));
