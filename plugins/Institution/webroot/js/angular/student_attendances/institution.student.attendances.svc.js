@@ -723,20 +723,31 @@ function InstitutionStudentAttendancesSvc(
      * author : Anubhav Jain <anubhav.jain@mail.vinove.com>
      */
     function editSavePeriodMarked(params) {
-        //POCOR-8874 start
+        // Force day_id into ISO format YYYY-MM-DD
+        if (params.day_id instanceof Date) {
+            params.day_id = params.day_id.toISOString().slice(0, 10);
+        } else if (typeof params.day_id === 'string') {
+            var parsedDate = new Date(params.day_id);
+            if (!isNaN(parsedDate.getTime())) {
+                params.day_id = parsedDate.toISOString().slice(0, 10);
+            }
+        }
+
+        // POCOR-8874 start
         if (params.attendance_by == "subject") {
             params.attendance_period_id = 1;
         } else {
             params.subject_id = 0;
         }
-        //POCOR-8874 ends
+        // POCOR-8874 ends
+
         var extra = {
             institution_id: params.institution_id,
             institution_class_id: params.institution_class_id,
             education_grade_id: params.education_grade_id,
             academic_period_id: params.academic_period_id,
             attendance_period_id: params.attendance_period_id,
-            day_id: params.day_id,
+            day_id: params.day_id, // always in ISO format now
             week_id: params.week_id,
             week_start_day: params.week_start_day,
             week_end_day: params.week_end_day,
@@ -744,8 +755,6 @@ function InstitutionStudentAttendancesSvc(
         };
 
         var success = function (response, deferred) {
-            // console.log('getsavePeriodMarked');
-            // console.log(response);
             var classStudents = response;
             if (angular.isObject(classStudents)) {
                 deferred.resolve(classStudents);
@@ -754,10 +763,8 @@ function InstitutionStudentAttendancesSvc(
             }
         };
 
-        return StudentAttendances.find(
-            "editSavePeriodMarked",
-            extra
-        ).ajax({success: success, defer: true});
+        return StudentAttendances.find("editSavePeriodMarked", extra)
+            .ajax({ success: success, defer: true });
     }
 
     // column definitions
