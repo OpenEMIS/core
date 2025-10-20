@@ -279,7 +279,7 @@ class AppTable extends Table
 
             $value = $date->format($format);
         } catch (\Exception $e) {
-            Log::error('formatDateTime error: ' . $e->getMessage());
+            Log::error('formatDateTime error: ' . $e->getMessage() . print_r($dateInput, true));
             $value = ''; // fallback empty value
         }
 
