@@ -36,7 +36,6 @@ class AssessmentItemStudentExemptionsTable extends AppTable
 
     public static function saveExemptions($params): void
     {
-        // Log::debug($params);
         $exempt_students_base64 = $params['exempt_students'] ?? null;
         $assessment_item_id = $params['assessment_item_id'] ?? null;
         $assessment_period_id = $params['assessment_period_id'] ?? null;
