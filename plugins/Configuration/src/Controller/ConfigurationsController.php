@@ -178,7 +178,8 @@ class ConfigurationsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalDataSource']);
     }
-    public function ExternalDataServiceWebhook()
+
+    public function ExternalDataSourceWebhook()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalDataWebhook']);
     }

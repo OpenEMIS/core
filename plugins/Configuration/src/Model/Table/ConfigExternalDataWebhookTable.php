@@ -19,6 +19,7 @@ use Cake\Log\Log;
 class ConfigExternalDataWebhookTable extends ControllerActionTable
 {
     const string OPEN_EMIS_EXAMS = 'OpenEMIS Exams';
+    const string EXTERNAL_DATA_WEBHOOK_TYPE = 'External Data Source - Webhook';
     public $id;
     public $authenticationType;
 
@@ -295,7 +296,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
                     $this->aliasField('label'),
                     $this->aliasField('value')]
             )->where([
-                $this->aliasField('type') => 'External Data Service - Webhook'
+                $this->aliasField('type') => self::EXTERNAL_DATA_WEBHOOK_TYPE
             ]);
     }
 
