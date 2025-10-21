@@ -174,9 +174,9 @@ class POCOR9403 extends AbstractMigration
 
     public function addNewWebhookFields()
     {
-        $this->execute('ALTER TABLE `webhooks` ADD `event_key` VARCHAR(45) DEFAULT NULL');
-        $this->execute('ALTER TABLE `webhooks` ADD  `query_template` VARCHAR(255) DEFAULT NULL');
-        $this->execute('ALTER TABLE `webhooks` ADD  `body_template` TEXT DEFAULT NULL');
+        $this->execute('ALTER TABLE `webhooks` ADD `event_key` VARCHAR(45) DEFAULT NULL AFTER `method`');
+        $this->execute('ALTER TABLE `webhooks` ADD  `query_template` VARCHAR(255) DEFAULT NULL AFTER `event_key`');
+        $this->execute('ALTER TABLE `webhooks` ADD  `body_template` TEXT DEFAULT NULL AFTER `query_template`');
         $locator = TableRegistry::getTableLocator();
         $WebhookEvents = $locator->get('Webhook.WebhookEvents');
         $Webhooks = $locator->get('Webhook.Webhooks');
