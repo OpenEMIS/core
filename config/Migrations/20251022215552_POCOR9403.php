@@ -174,24 +174,44 @@ class POCOR9403 extends AbstractMigration
 
     public function addNewWebhookFields()
     {
+        // Step 1: Add columns
+        $this->execute('SET FOREIGN_KEY_CHECKS=0;');
         $this->execute('ALTER TABLE `webhooks` ADD `event_key` VARCHAR(45) DEFAULT NULL AFTER `method`');
-        $this->execute('ALTER TABLE `webhooks` ADD  `query_template` VARCHAR(255) DEFAULT NULL AFTER `event_key`');
-        $this->execute('ALTER TABLE `webhooks` ADD  `body_template` TEXT DEFAULT NULL AFTER `query_template`');
+        $this->execute('ALTER TABLE `webhooks` ADD `query_template` VARCHAR(255) DEFAULT NULL AFTER `event_key`');
+        $this->execute('ALTER TABLE `webhooks` ADD `body_template` TEXT DEFAULT NULL AFTER `query_template`');
+
+        // Step 2: Load tables
         $locator = TableRegistry::getTableLocator();
         $WebhookEvents = $locator->get('Webhook.WebhookEvents');
         $Webhooks = $locator->get('Webhook.Webhooks');
+
+        // Step 3: Duplicate old webhooks per event_key
         $allLinks = $WebhookEvents->find()->all();
+        $i = 1;
         foreach ($allLinks as $link) {
             $webhook = $Webhooks->get($link->webhook_id);
             $new = $Webhooks->newEntity($webhook->toArray());
             $new->id = null;
             $new->event_key = $link->event_key;
-            $Webhooks->save($new);
+            $new->name = $new->name . '-' . str_pad((string)$i, 4, '0', STR_PAD_LEFT);
+            $i++;
+            $Webhooks->saveOrFail($new);
         }
+
+        // Step 4: Clean up
         $this->execute('TRUNCATE TABLE `webhook_events`');
         $Webhooks->deleteAll(['event_key IS' => null]);
+
+        // Step 5: Final schema lock-in
         $this->execute('ALTER TABLE `webhooks` MODIFY `event_key` VARCHAR(45) NOT NULL');
+
+        // Step 6: Add indexes
+        $this->execute('ALTER TABLE webhooks ADD CONSTRAINT webhooks_name UNIQUE (name);');
+        $this->execute('CREATE INDEX `webhooks_idx_event_key` ON `webhooks` (`event_key`)');
+        $this->execute('CREATE INDEX `webhooks_idx_event_status` ON `webhooks` (`event_key`, `status`)');
+        $this->execute('SET FOREIGN_KEY_CHECKS=1;');
     }
+
 
 
 

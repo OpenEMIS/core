@@ -86,7 +86,6 @@ class ConfigWebhooksTable extends ControllerActionTable
         $this->setTable('webhooks');
         parent::initialize($config);
         $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'webhook_id', 'joinType' => 'INNER']);
-        $this->hasMany('ExternalDataSources', ['className' => 'Configuration.ConfigItems', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'external_data_source_id', 'joinType' => 'INNER']);
         $this->addBehavior('Configuration.ConfigItems');
         $this->addBehavior('OpenEmis.Section');
 
@@ -105,16 +104,9 @@ class ConfigWebhooksTable extends ControllerActionTable
                 'provider' => 'table'
             ])
             ->requirePresence('url')
-            ->add('triggered_event', 'ruleNotEmpty', [
-                'rule' => function ($value, $context) {
-                    if (empty($value)) {
-                        return false;
-                    } elseif (isset($value['_ids']) && empty($value['_ids'])) {
-                        return false;
-                    }
-                    return true;
-                }
-            ])
+            ->notEmptyString('url', __('This field cannot be left empty'))
+            ->notEmptyString('event_key', __('This field cannot be left empty'))
+            ->notEmptyString('name', __('This field cannot be left empty'))
             ;
         return $validator;
     }
@@ -150,13 +142,13 @@ class ConfigWebhooksTable extends ControllerActionTable
         $query->contain(['WebhookEvents']);
     }
 
-    public function editOnInitialize(Event $event, Entity $entity)
-    {
-        $this->request->getData($this->getAlias())['triggered_event']['_ids'] = [];
-        foreach ($entity->webhook_events as $event) {
-            $this->request->getData($this->getAlias())['triggered_event']['_ids'][] = $event->event_key;
-        }
-    }
+//    public function editOnInitialize(Event $event, Entity $entity)
+//    {
+//        $this->request->getData($this->getAlias())['triggered_event']['_ids'] = [];
+//        foreach ($entity->webhook_events as $event) {
+//            $this->request->getData($this->getAlias())['triggered_event']['_ids'][] = $event->event_key;
+//        }
+//    }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
@@ -173,29 +165,53 @@ class ConfigWebhooksTable extends ControllerActionTable
         $this->field('method', ['options' => $supportedMethod]);
     }
 
-    public function onGetTemplatePlaceholdersElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetTemplatePlaceholdersElement(Event $event, $action, $entity, $attr, $options = [])
     {
-        if ($action == 'edit' || $action == 'add') {
-            $tableHeaders =[__('Attribute'), __('Placeholder')];
-            $tableCells = [];
-            $fieldKey = '';
+        if (!in_array($action, ['edit', 'add'])) {
+            return;
+        }
 
-            $placeholders = ['first_name' => '${first_name}'];
-            if (!empty($placeholders)) {
-                foreach ($placeholders as $attribute => $placeholder) {
-                    $rowData = [];
-                    $rowData[] = __($attribute);
-                    $rowData[] = __($placeholder);
+        $eventKey = $entity->event_key ?? null;
+        $placeholders = [];
 
-                    $tableCells[] = $rowData;
+        if ($eventKey) {
+            $eventDef = self::getEvents()[$eventKey] ?? [];
+
+            // Step 1: Use explicit placeholders if available
+            $placeholders = $eventDef['placeholders'] ?? [];
+
+            // Step 2: Fallback to model schema if no placeholders
+            if (empty($placeholders) && !empty($eventDef['model'])) {
+                try {
+                    $table = TableRegistry::getTableLocator()->get($eventDef['model']);
+                    $columns = $table->getSchema()->columns();
+                    $excluded = $eventDef['excluded'] ?? ['id', 'created', 'modified'];
+
+                    foreach ($columns as $column) {
+                        if (!in_array($column, $excluded, true)) {
+                            $placeholders[$column] = '${' . $column . '}';
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Optional: log warning here if needed
                 }
             }
-
-            $attr['tableHeaders'] = $tableHeaders;
-            $attr['tableCells'] = $tableCells;
-            return $event->getSubject()->renderElement('Webhooks/template_placeholders', ['attr' => $attr]);
         }
+
+        // Step 3: Build table output
+        $tableHeaders = [__('Attribute'), __('Placeholder')];
+        $tableCells = [];
+
+        foreach ($placeholders as $attribute => $placeholder) {
+            $tableCells[] = [__($attribute), __($placeholder)];
+        }
+
+        $attr['tableHeaders'] = $tableHeaders;
+        $attr['tableCells'] = $tableCells;
+
+        return $event->getSubject()->renderElement('Webhooks/template_placeholders', ['attr' => $attr]);
     }
+
 
     public function onGetExternalDataSource(Event $event, Entity $entity)
     {
@@ -331,47 +347,69 @@ class ConfigWebhooksTable extends ControllerActionTable
         // Return the table instance
         return $locator->get($tableFullAlias);
     }
-    public function addBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->field('triggered_event', [
-            'type' => 'chosenSelect',
-            'options' => $this->eventKeyOptions,
-            'before' => 'description',
-            'attr' => ['required' => true]
-        ]);
-    }
+//    public function addBeforeAction(Event $event, ArrayObject $extra)
+//    {
+//        $this->field('triggered_event', [
+//            'type' => 'chosenSelect',
+//            'options' => $this->eventKeyOptions,
+//            'before' => 'description',
+//            'attr' => ['required' => true]
+//        ]);
+//    }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-           $this->field('url', ['type' => 'string']);
+//    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+//    {
+//           $this->field('url', ['type' => 'string']);
+//
+//        $this->field('triggered_event', [
+//            'before' => 'description'
+//        ]);
+//    }
 
-        $this->field('triggered_event', [
-            'before' => 'description'
-        ]);
-    }
+//    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+//    {
+//        $data['webhook_events'] = [];
+//        if (is_array($data['triggered_event']['_ids'])) {
+//            foreach ($data['triggered_event']['_ids'] as $event) {
+//                $data['webhook_events'][] = ['event_key' => $event];
+//            }
+//        }
+//        $options['associated'] = [
+//            'WebhookEvents' => [
+//                'validate' => false
+//            ]
+//        ];
+//    }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function onUpdateFieldEventKey(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $data['webhook_events'] = [];
-        if (is_array($data['triggered_event']['_ids'])) {
-            foreach ($data['triggered_event']['_ids'] as $event) {
-                $data['webhook_events'][] = ['event_key' => $event];
-            }
+        if (in_array($action, ['add', 'edit'])) {
+            $attr['type'] = 'select';
+            $attr['options'] = self::getEventSelectOptions();
+            $attr['onChangeReload'] = true;
         }
-        $options['associated'] = [
-            'WebhookEvents' => [
-                'validate' => false
-            ]
-        ];
+
+        return $attr;
+    }
+
+    public function onGetEventKey(Event $event, Entity $entity)
+    {
+        $eventKey = $entity->event_key ?? null;
+        if ($eventKey) {
+            return self::getEventLabel($eventKey);
+        }
+
+        return '';
     }
 
     public function setupFields( Entity $entity)
     {
         $this->field('url', ['entity' => $entity]);
+        $this->field('event_key', ['type' => 'select', 'after' => 'url']);
         $this->field('webhook_content', ['type' => 'section', 'after' => 'description']);
-        $this->field('query_string', ['type' => 'string', 'after' => 'webhook_content']);
-        $this->field('webhook_body', ['type' => 'text', 'after' => 'query_string']);
-        $this->field('placeholders', ['type' => 'section', 'after' => 'webhook_body']);
+        $this->field('query_template', ['type' => 'string', 'after' => 'webhook_content']);
+        $this->field('body_template', ['type' => 'text', 'after' => 'query_template']);
+        $this->field('placeholders', ['type' => 'section', 'after' => 'body_template']);
         $this->field('template_placeholders', [
             'after' => 'placeholders',
             'type' => 'template_placeholders',
@@ -386,54 +424,64 @@ class ConfigWebhooksTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('triggered_event');
+        $this->field('body_template', ['type' => 'hidden']);
+        $this->field('query_template', ['type' => 'hidden']);
         $this->field('url', ['type' => 'string']);
+        $this->field('status', ['type' => 'select', 'options' => $this->getSelectOptions('general.active')]);
 
-        $this->setFieldOrder(['triggered_event', 'name', 'external_data_source_id', 'url', 'status', 'method']);
+        $this->setFieldOrder([
+            'event_key',
+            'name',
+            'external_data_source_id',
+            'url',
+            'status',
+            'method']);
     }
 
-    public function onGetTriggeredEvent(Event $event, Entity $entity)
-    {
-        $returnString = '';
-        foreach ($entity->webhook_events as $event) {
-            $returnString = $returnString . ', ' . __($this->eventKeyOptions[$event->event_key]);
-        }
-        return ltrim($returnString, ', ');
-    }
+//    public function onGetTriggeredEvent(Event $event, Entity $entity)
+//    {
+//        $returnString = '';
+//        foreach ($entity->webhook_events as $event) {
+//            $returnString = $returnString . ', ' . __($this->eventKeyOptions[$event->event_key]);
+//        }
+//        return ltrim($returnString, ', ');
+//    }
 
-    /**
-     * POCOR-8994
-     *
-     * It retrieves the associated WebhookEvents for the current webhook record
-     using the `id` from the query string
-     * The event keys are then used to pre-select options in the triggered_event chosenSelect dropdown
-     * */
-    public function editBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $queryString = $this->getQueryString();
-        $recordId = $queryString['id'];
-        $webhookEvents = TableRegistry::get('Configuration.WebhookEvents');
-        $record = $webhookEvents->find()
-            ->where([$webhookEvents->aliasField('webhook_id') => $recordId])
-            ->all();
-
-        $storeEvent = [];
-        foreach ($record as $val) {
-            $storeEvent[] = $val['event_key'];
-        }
-        $this->field('triggered_event', [
-                'type' => 'chosenSelect',
-                'options' => $this->eventKeyOptions,
-                'before' => 'description',
-                'attr' => ['required' => true,'value' =>  $storeEvent],
-
-            ]);
-    }
+//    /**
+//     * POCOR-8994
+//     *
+//     * It retrieves the associated WebhookEvents for the current webhook record
+//     using the `id` from the query string
+//     * The event keys are then used to pre-select options in the triggered_event chosenSelect dropdown
+//     * */
+//    public function editBeforeAction(Event $event, ArrayObject $extra)
+//    {
+//        $queryString = $this->getQueryString();
+//        $recordId = $queryString['id'];
+//        $webhookEvents = TableRegistry::get('Configuration.WebhookEvents');
+//        $record = $webhookEvents->find()
+//            ->where([$webhookEvents->aliasField('webhook_id') => $recordId])
+//            ->all();
+//
+//        $storeEvent = [];
+//        foreach ($record as $val) {
+//            $storeEvent[] = $val['event_key'];
+//        }
+//        $this->field('triggered_event', [
+//                'type' => 'chosenSelect',
+//                'options' => $this->eventKeyOptions,
+//                'before' => 'description',
+//                'attr' => ['required' => true,'value' =>  $storeEvent],
+//
+//            ]);
+//    }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'external_data_source_id') {
             return __('External Server');
+        } elseif ($field == 'event_key') {
+            return __('Triggered Event');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -441,5 +489,383 @@ class ConfigWebhooksTable extends ControllerActionTable
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
+    }
+
+    public static function getEvents(): array
+    {
+        return [
+            'logout' => [
+                'code' => 'logout',
+                'label' => 'Logout',
+                'model' => null,
+                'excluded' => [],
+                'placeholders' => [
+                    'openemis_no' => '${openemis_no}',
+                    'logout_time' => '${logout_time}'
+                ]
+            ],
+            'academic_period_create' => [
+                'code' => 'academic_period_create',
+                'label' => 'Academic Period Create',
+                'model' => 'AcademicPeriod.AcademicPeriods',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'academic_period_delete' => [
+                'code' => 'academic_period_delete',
+                'label' => 'Academic Period Delete',
+                'model' => 'AcademicPeriod.AcademicPeriods',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'academic_period_update' => [
+                'code' => 'academic_period_update',
+                'label' => 'Academic Period Update',
+                'model' => 'AcademicPeriod.AcademicPeriods',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'area_education_create' => [
+                'code' => 'area_education_create',
+                'label' => 'Area Education Create',
+                'model' => 'Area.Areas',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'area_education_delete' => [
+                'code' => 'area_education_delete',
+                'label' => 'Area Education Delete',
+                'model' => 'Area.Areas',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'area_education_update' => [
+                'code' => 'area_education_update',
+                'label' => 'Area Education Update',
+                'model' => 'Area.Areas',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'attendance_update' => [
+                'code' => 'attendance_update',
+                'label' => 'Student Attendance Update',
+                'model' => 'Institution.StudentAbsencesPeriodDetails',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'class_create' => [
+                'code' => 'class_create',
+                'label' => 'Class Create',
+                'model' => 'Institution.InstitutionClasses',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'class_delete' => [
+                'code' => 'class_delete',
+                'label' => 'Class Delete',
+                'model' => 'Institution.InstitutionClasses',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'class_update' => [
+                'code' => 'class_update',
+                'label' => 'Class Update',
+                'model' => 'Institution.InstitutionClasses',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_cycle_create' => [
+                'code' => 'education_cycle_create',
+                'label' => 'Education Structure Cycle Create',
+                'model' => 'Education.EducationCycles',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_cycle_delete' => [
+                'code' => 'education_cycle_delete',
+                'label' => 'Education Structure Cycle Delete',
+                'model' => 'Education.EducationCycles',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_cycle_update' => [
+                'code' => 'education_cycle_update',
+                'label' => 'Education Structure Cycle Update',
+                'model' => 'Education.EducationCycles',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_grade_create' => [
+                'code' => 'education_grade_create',
+                'label' => 'Education Grade Create',
+                'model' => 'Education.EducationGrades',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_grade_delete' => [
+                'code' => 'education_grade_delete',
+                'label' => 'Education Grade Delete',
+                'model' => 'Education.EducationGrades',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_grade_update' => [
+                'code' => 'education_grade_update',
+                'label' => 'Education Grade Update',
+                'model' => 'EducationGrades',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_grade_subject_create' => [
+                'code' => 'education_grade_subject_create',
+                'label' => 'Education Grade Subject Create',
+                'model' => 'Education.EducationGradesSubjects',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_grade_subject_delete' => [
+                'code' => 'education_grade_subject_delete',
+                'label' => 'Education Grade Subject Delete',
+                'model' => 'Education.EducationGradesSubjects',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_grade_subject_update' => [
+                'code' => 'education_grade_subject_update',
+                'label' => 'Education Grade Subject Update',
+                'model' => 'Education.EducationGradesSubjects',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_level_create' => [
+                'code' => 'education_level_create',
+                'label' => 'Education Structure Level Create',
+                'model' => 'Education.EducationLevels',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_level_delete' => [
+                'code' => 'education_level_delete',
+                'label' => 'Education Structure Level Delete',
+                'model' => 'Education.EducationLevels',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_level_update' => [
+                'code' => 'education_level_update',
+                'label' => 'Education Structure Level Update',
+                'model' => 'Education.EducationLevels',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_programme_create' => [
+                'code' => 'education_programme_create',
+                'label' => 'Education Programme Create',
+                'model' => 'Education.EducationProgrammes',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_programme_delete' => [
+                'code' => 'education_programme_delete',
+                'label' => 'Education Programme Delete',
+                'model' => 'Education.EducationProgrammes',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_programme_update' => [
+                'code' => 'education_programme_update',
+                'label' => 'Education Programme Update',
+                'model' => 'Education.EducationSystems',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_structure_system_delete' => [
+                'code' => 'education_structure_system_delete',
+                'label' => 'Education Structure System Delete',
+                'model' => 'Education.EducationSystems',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_structure_system_update' => [
+                'code' => 'education_structure_system_update',
+                'label' => 'Education Structure System Update',
+                'model' => 'Education.EducationSystems',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_subject_create' => [
+                'code' => 'education_subject_create',
+                'label' => 'Education Subject Create',
+                'model' => 'Education.EducationSubjects',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_subject_delete' => [
+                'code' => 'education_subject_delete',
+                'label' => 'Education Subject Delete',
+                'model' => 'Education.EducationSubjects',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'education_subject_update' => [
+                'code' => 'education_subject_update',
+                'label' => 'Education Subject Update',
+                'model' => 'Education.EducationSubjects',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'institutions_create' => [
+                'code' => 'institutions_create',
+                'label' => 'Institution Create',
+                'model' => 'Institution.Institutions',
+                'excluded' => ['id', 'created', 'modified', 'security_group_id'],
+                'placeholders' => []
+            ],
+            'institutions_delete' => [
+                'code' => 'institutions_delete',
+                'label' => 'Institution Delete',
+                'model' => 'Institution.Institutions',
+                'excluded' => ['id', 'created', 'modified', 'security_group_id'],
+                'placeholders' => []
+            ],
+            'institutions_update' => [
+                'code' => 'institutions_update',
+                'label' => 'Institution Update',
+                'model' => 'Institution.Institutions',
+                'excluded' => ['id', 'created', 'modified', 'security_group_id'],
+                'placeholders' => []
+            ],
+            'programme_create' => [
+                'code' => 'programme_create',
+                'label' => 'Programme Create',
+                'model' => 'Education.EducationProgrammes',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'programme_delete' => [
+                'code' => 'programme_delete',
+                'label' => 'Programme Delete',
+                'model' => 'Education.EducationProgrammes',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'programme_update' => [
+                'code' => 'programme_update',
+                'label' => 'Programme Update',
+                'model' => 'Education.EducationProgrammes',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'role_create' => [
+                'code' => 'role_create',
+                'label' => 'Role Create',
+                'model' => 'Security.SecurityRoles',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'role_delete' => [
+                'code' => 'role_delete',
+                'label' => 'Role Delete',
+                'model' => 'Security.SecurityRoles',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'role_update' => [
+                'code' => 'role_update',
+                'label' => 'Role Update',
+                'model' => 'Security.SecurityRoles',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'security_user_delete' => [
+                'code' => 'security_user_delete',
+                'label' => 'Delete Security User',
+                'model' => 'User.Users',
+                'excluded' => ['id', 'password', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'staff_create' => [
+                'code' => 'staff_create',
+                'label' => 'Staff Create',
+                'model' => 'Institution.Staff',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'staff_delete' => [
+                'code' => 'staff_delete',
+                'label' => 'Staff Delete',
+                'model' => 'Institution.Staff',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'staff_update' => [
+                'code' => 'staff_update',
+                'label' => 'Staff Update',
+                'model' => 'Institution.Staff',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'student_create' => [
+                'code' => 'student_create',
+                'label' => 'Student Create',
+                'model' => 'Institution.Students',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'student_delete' => [
+                'code' => 'student_delete',
+                'label' => 'Student Delete',
+                'model' => 'Institution.Students',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'student_update' => [
+                'code' => 'student_update',
+                'label' => 'Student Update',
+                'model' => 'Institution.Students',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'subject_create' => [
+                'code' => 'subject_create',
+                'label' => 'Subject Create',
+                'model' => 'Institution.InstitutionSubjects',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'subject_delete' => [
+                'code' => 'subject_delete',
+                'label' => 'Subject Delete',
+                'model' => 'Institution.InstitutionSubjects',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ],
+            'subject_update' => [
+                'code' => 'subject_update',
+                'label' => 'Subject Update',
+                'model' => 'Institution.InstitutionSubjects',
+                'excluded' => ['id', 'created', 'modified'],
+                'placeholders' => []
+            ]
+        ];
+
+    }
+
+    public static function getEventLabel(string $eventKey): string
+    {
+        $events = self::getEvents();
+        return $events[$eventKey]['label'] ?? $eventKey;
+    }
+
+    public static function getEventSelectOptions(): array
+    {
+        return collection(self::getEvents())
+            ->map(fn($event) => $event['label'])
+            ->toArray();
+    }
+
+    public static function getPlaceholders(string $eventKey): array
+    {
+        return self::getEvents()[$eventKey]['placeholders'] ?? [];
     }
 }
