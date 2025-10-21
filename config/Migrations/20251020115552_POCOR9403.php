@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Migrations\AbstractMigration;
 use Cake\Auth\DefaultPasswordHasher;
 use Cake\Utility\Text;
+use Cake\ORM\TableRegistry;
 
 class POCOR9403 extends AbstractMigration
 {
@@ -15,6 +16,7 @@ class POCOR9403 extends AbstractMigration
 
     public function up()
     {
+//        return;
 
         $this->backupTables();
 //
@@ -23,6 +25,8 @@ class POCOR9403 extends AbstractMigration
         $this->insertNewConfigItems();
 
         $this->addNewExternalDataSource();
+
+        $this->addNewWebhookFields();
 
     }
 
@@ -51,6 +55,12 @@ class POCOR9403 extends AbstractMigration
             $this->execute('INSERT INTO `z_9403_webhooks` SELECT * FROM `webhooks`');
             $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
+        if(!$this->hasTable('z_9403_webhook_events')){
+            $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+            $this->execute('CREATE TABLE `z_9403_webhook_events` LIKE `webhook_events`');
+            $this->execute('INSERT INTO `z_9403_webhook_events` SELECT * FROM `webhook_events`');
+            $this->execute('SET FOREIGN_KEY_CHECKS=1;');
+        }
     }
 
     public function down()
@@ -63,10 +73,10 @@ class POCOR9403 extends AbstractMigration
      */
     public function restoreTable()
     {
-        if ($this->hasTable('z_9403_webhooks')) {
+        if ($this->hasTable('z_9403_config_items')) {
             $this->execute('SET FOREIGN_KEY_CHECKS=0;');
-            $this->execute('DROP TABLE IF EXISTS `webhooks`');
-            $this->execute('RENAME TABLE `z_9403_webhooks` TO `webhooks`');
+            $this->execute('DROP TABLE IF EXISTS `config_items`');
+            $this->execute('RENAME TABLE `z_9403_config_items` TO `config_items`');
             $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
         if ($this->hasTable('z_9403_external_data_source_attributes')) {
@@ -75,10 +85,16 @@ class POCOR9403 extends AbstractMigration
             $this->execute('RENAME TABLE `z_9403_external_data_source_attributes` TO `external_data_source_attributes`');
             $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
-        if ($this->hasTable('z_9403_config_items')) {
+        if ($this->hasTable('z_9403_webhooks')) {
             $this->execute('SET FOREIGN_KEY_CHECKS=0;');
-            $this->execute('DROP TABLE IF EXISTS `config_items`');
-            $this->execute('RENAME TABLE `z_9403_config_items` TO `config_items`');
+            $this->execute('DROP TABLE IF EXISTS `webhooks`');
+            $this->execute('RENAME TABLE `z_9403_webhooks` TO `webhooks`');
+            $this->execute('SET FOREIGN_KEY_CHECKS=1;');
+        }
+        if ($this->hasTable('z_9403_webhook_events')) {
+            $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+            $this->execute('DROP TABLE IF EXISTS `webhook_events`');
+            $this->execute('RENAME TABLE `z_9403_webhook_events` TO `webhook_events`');
             $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
     }
@@ -155,6 +171,29 @@ class POCOR9403 extends AbstractMigration
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
 
     }
+
+    public function addNewWebhookFields()
+    {
+        $this->execute('ALTER TABLE `webhooks` ADD `event_key` VARCHAR(45) DEFAULT NULL');
+        $this->execute('ALTER TABLE `webhooks` ADD  `query_template` VARCHAR(255) DEFAULT NULL');
+        $this->execute('ALTER TABLE `webhooks` ADD  `body_template` TEXT DEFAULT NULL');
+        $locator = TableRegistry::getTableLocator();
+        $WebhookEvents = $locator->get('Webhook.WebhookEvents');
+        $Webhooks = $locator->get('Webhook.Webhooks');
+        $allLinks = $WebhookEvents->find()->all();
+        foreach ($allLinks as $link) {
+            $webhook = $Webhooks->get($link->webhook_id);
+            $new = $Webhooks->newEntity($webhook->toArray());
+            $new->id = null;
+            $new->event_key = $link->event_key;
+            $Webhooks->save($new);
+        }
+        $this->execute('TRUNCATE TABLE `webhook_events`');
+        $Webhooks->deleteAll(['event_key IS' => null]);
+        $this->execute('ALTER TABLE `webhooks` MODIFY `event_key` VARCHAR(45) NOT NULL');
+    }
+
+
 
     private function generateExternalDataSourceAttribute($type, $field, $name, $value)
     {
