@@ -17,7 +17,16 @@ use Cake\Utility\Inflector;
 class ConfigWebhooksTable extends ControllerActionTable
 {
     use OptionsTrait;
+    const ACTIVE = 1;
+    const INACTIVE = 0;
 
+    const SUPPORTED_METHOD = [
+        'GET' => 'GET',
+        'POST' => 'POST',
+        'PUT' => 'PUT',
+        'PATCH' => 'PATCH',
+        'DELETE' => 'DELETE'
+    ];
     private $eventKeyOptions = [
         'logout' => 'Logout',
         'institutions_create' => 'Institution Create',
@@ -35,9 +44,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         'programme_update'    => 'Programme Update',
         'programme_delete'    => 'Programme Delete',
         'class_delete'        => 'Class Delete',
-        'programme_delete'    => 'Programme Delete',
         'subject_delete'      => 'Subject Delete',
-        'programme_delete'    => 'Programme Delete',
         'student_delete'      => 'Student Delete',
         'staff_delete'        => 'Staff Delete',
         'security_user_delete' => 'Delete Security User',
@@ -79,7 +86,9 @@ class ConfigWebhooksTable extends ControllerActionTable
         $this->setTable('webhooks');
         parent::initialize($config);
         $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'webhook_id', 'joinType' => 'INNER']);
+        $this->hasMany('ExternalDataSources', ['className' => 'Configuration.ConfigItems', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'external_data_source_id', 'joinType' => 'INNER']);
         $this->addBehavior('Configuration.ConfigItems');
+        $this->addBehavior('OpenEmis.Section');
 
         foreach ($this->eventKeyOptions as $key => $value) {
             $this->eventKeyOptions[$key] = __($value);
@@ -151,27 +160,124 @@ class ConfigWebhooksTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $supportedMethod = TableRegistry::get('Webhook.Webhooks')->supportedMethod;
+        $supportedMethod = self::SUPPORTED_METHOD;
         $this->fields['description']['visible']['index'] = false;
         $this->field('name');
-        $this->field('url', ['type' => 'string']);
-        $this->field('external_data_service_id', ['options' => $this->getTypeOptions()]);
+//        $this->field('url', ['type' => 'string']);
+        $this->field('external_data_source_id', ['type' => 'hidden', 'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true]]);
+        $this->field('external_data_source', ['visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]]);
+
+
+        $this->field('external_data_source', ['visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]]);
         $this->field('status', ['options' => $this->getSelectOptions('general.active')]);
         $this->field('method', ['options' => $supportedMethod]);
     }
 
-    private function getTypeOptions()
+    public function onGetTemplatePlaceholdersElement(Event $event, $action, $entity, $attr, $options=[])
     {
-        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems'); // POCOR-8286
-        $options = $ConfigItems->find('list', [
-            'keyField' => 'id', // or whatever field you want as key
-            'valueField' => 'name' // or whatever field you want as value
-        ])->where([
-            'type' => 'External Data Service - Webhook'
-        ])->toArray();
-        return $options;
+        if ($action == 'edit' || $action == 'add') {
+            $tableHeaders =[__('Attribute'), __('Placeholder')];
+            $tableCells = [];
+            $fieldKey = '';
+
+            $placeholders = ['first_name' => '${first_name}'];
+            if (!empty($placeholders)) {
+                foreach ($placeholders as $attribute => $placeholder) {
+                    $rowData = [];
+                    $rowData[] = __($attribute);
+                    $rowData[] = __($placeholder);
+
+                    $tableCells[] = $rowData;
+                }
+            }
+
+            $attr['tableHeaders'] = $tableHeaders;
+            $attr['tableCells'] = $tableCells;
+            return $event->getSubject()->renderElement('Webhooks/template_placeholders', ['attr' => $attr]);
+        }
     }
 
+    public function onGetExternalDataSource(Event $event, Entity $entity)
+    {
+//        dd($event);
+        $external_data_source_id = $entity->external_data_source_id;
+        if(isset($external_data_source_id) && $external_data_source_id > 0)
+        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
+        $externalDataOptions = $ConfigItems->find('list')
+            ->where(['id' => $external_data_source_id
+            ])
+            ->toArray();
+        return __($externalDataOptions[$external_data_source_id]);
+    }
+    public function onUpdateFieldExternalDataSourceId(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
+            $externalDataOptions = $ConfigItems->find('list')
+                ->where(['type' => 'External Data Source - Webhook',
+                    'visible' => 1
+                ])
+                ->toArray();
+            $attr['type'] = 'select';
+            $attr['onChangeReload'] = true;
+            $attr['options'] = $externalDataOptions;
+
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldUrl(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        $entity = $attr['entity'];
+        if ($action == 'add' || $action == 'edit') {
+//            dd($entity);
+            $external_data_source_id = $entity->external_data_source_id;
+            if ($external_data_source_id) {
+                $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
+                $externalDataExam = $ConfigItems->find('All')
+                    ->where(['id' => $external_data_source_id,
+                        'code' => 'external_data_source_webhooks_exams'
+                    ])
+                    ->first();
+                if ($externalDataExam) {
+                    $ExternalDataSourceAttributes = self::getDynamicTableInstance('Configuration.ExternalDataSourceAttributes');
+                    $attributes = $ExternalDataSourceAttributes
+                        ->find('list', [
+                            'keyField' => 'attribute_field',
+                            'valueField' => 'value'
+                        ])
+                        ->where([
+                            $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $externalDataExam->name
+                        ])
+                        ->orderAsc('attribute_field')
+                        ->toArray();
+                    $api_url = $attributes['api_url'];
+                    if (!empty($attributes) && isset($api_url)) {
+                        $attr['value'] = $api_url;
+                        $attr['attr']['value'] = $api_url;
+                        $attr['default_value'] = $api_url;
+                        $attr['attr']['default_value'] = $api_url;
+                        $attr['type'] = 'readonly';
+//                        return
+                    }
+
+                } else {
+                    if ($entity->isDirty('url')) {
+                        $url = $entity->getOriginal('url');
+                        $attr['value'] = $url;
+                        $attr['attr']['value'] = $url;
+                        $attr['default_value'] = $url;
+                        $attr['attr']['default_value'] = $url;
+                    }
+                }
+
+            };
+
+        }
+//        dd($attr);
+        return $attr;
+    }
     /**
      * Get a dynamic table instance with all associations.
      *
@@ -237,6 +343,8 @@ class ConfigWebhooksTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+           $this->field('url', ['type' => 'string']);
+
         $this->field('triggered_event', [
             'before' => 'description'
         ]);
@@ -257,10 +365,31 @@ class ConfigWebhooksTable extends ControllerActionTable
         ];
     }
 
+    public function setupFields( Entity $entity)
+    {
+        $this->field('url', ['entity' => $entity]);
+        $this->field('webhook_content', ['type' => 'section', 'after' => 'description']);
+        $this->field('query_string', ['type' => 'string', 'after' => 'webhook_content']);
+        $this->field('webhook_body', ['type' => 'text', 'after' => 'query_string']);
+        $this->field('placeholders', ['type' => 'section', 'after' => 'webhook_body']);
+        $this->field('template_placeholders', [
+            'after' => 'placeholders',
+            'type' => 'template_placeholders',
+            'visible' => [
+                'view' => false,
+                'edit' => true
+            ],
+            'valueClass' => 'table-full-width'
+        ]);
+
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('triggered_event');
-        $this->setFieldOrder(['triggered_event', 'name', 'url', 'status', 'method']);
+        $this->field('url', ['type' => 'string']);
+
+        $this->setFieldOrder(['triggered_event', 'name', 'external_data_source_id', 'url', 'status', 'method']);
     }
 
     public function onGetTriggeredEvent(Event $event, Entity $entity)
@@ -299,5 +428,18 @@ class ConfigWebhooksTable extends ControllerActionTable
                 'attr' => ['required' => true,'value' =>  $storeEvent],
 
             ]);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'external_data_source_id') {
+            return __('External Server');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($entity);
     }
 }
