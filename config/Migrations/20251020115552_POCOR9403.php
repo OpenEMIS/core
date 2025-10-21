@@ -9,17 +9,20 @@ use Cake\Utility\Text;
 class POCOR9403 extends AbstractMigration
 {
     const OPEN_EMIS_EXAMS = 'OpenEMIS Exams';
-    const string EXTERNAL_DATA_SERVICE_WEBHOOK = 'External Data Service - Webhook';
+    const EXTERNAL_DATA_SOURCE_WEBHOOK = 'External Data Source - Webhook';
+    const EXTERNAL_DATA_SOURCE_WEBHOOKS_CUSTOM = 'external_data_source_webhooks_custom';
+    const EXTERNAL_DATA_SOURCE_WEBHOOKS_EXAMS = 'external_data_source_webhooks_exams';
 
     public function up()
     {
-
 
         $this->backupTables();
 //
         $this->insertNewExternalDataSourceAttributes();
 //
         $this->insertNewConfigItems();
+
+        $this->addNewExternalDataSource();
 
     }
 
@@ -42,6 +45,12 @@ class POCOR9403 extends AbstractMigration
             $this->execute('INSERT INTO `z_9403_external_data_source_attributes` SELECT * FROM `external_data_source_attributes`');
             $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
+        if(!$this->hasTable('z_9403_webhooks')){
+            $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+            $this->execute('CREATE TABLE `z_9403_webhooks` LIKE `webhooks`');
+            $this->execute('INSERT INTO `z_9403_webhooks` SELECT * FROM `webhooks`');
+            $this->execute('SET FOREIGN_KEY_CHECKS=1;');
+        }
     }
 
     public function down()
@@ -54,16 +63,22 @@ class POCOR9403 extends AbstractMigration
      */
     public function restoreTable()
     {
-        if ($this->hasTable('z_9403_config_items')) {
+        if ($this->hasTable('z_9403_webhooks')) {
             $this->execute('SET FOREIGN_KEY_CHECKS=0;');
-            $this->execute('DROP TABLE IF EXISTS `config_items`');
-            $this->execute('RENAME TABLE `z_9403_config_items` TO `config_items`');
+            $this->execute('DROP TABLE IF EXISTS `webhooks`');
+            $this->execute('RENAME TABLE `z_9403_webhooks` TO `webhooks`');
             $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
         if ($this->hasTable('z_9403_external_data_source_attributes')) {
             $this->execute('SET FOREIGN_KEY_CHECKS=0;');
             $this->execute('DROP TABLE IF EXISTS `external_data_source_attributes`');
             $this->execute('RENAME TABLE `z_9403_external_data_source_attributes` TO `external_data_source_attributes`');
+            $this->execute('SET FOREIGN_KEY_CHECKS=1;');
+        }
+        if ($this->hasTable('z_9403_config_items')) {
+            $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+            $this->execute('DROP TABLE IF EXISTS `config_items`');
+            $this->execute('RENAME TABLE `z_9403_config_items` TO `config_items`');
             $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
     }
@@ -96,13 +111,13 @@ class POCOR9403 extends AbstractMigration
         $data = [
             $this->generateConfigData(
                 self::OPEN_EMIS_EXAMS,
-                'external_data_service_webhook_exams',
-                self::EXTERNAL_DATA_SERVICE_WEBHOOK,
+                self::EXTERNAL_DATA_SOURCE_WEBHOOKS_EXAMS,
+                self::EXTERNAL_DATA_SOURCE_WEBHOOK,
                 self::OPEN_EMIS_EXAMS),
             $this->generateConfigData(
                 'Custom',
-                'external_data_service_webhook_custom',
-                self::EXTERNAL_DATA_SERVICE_WEBHOOK,
+                self::EXTERNAL_DATA_SOURCE_WEBHOOKS_CUSTOM,
+                self::EXTERNAL_DATA_SOURCE_WEBHOOK,
                 'Custom'),
         ];
         $table->insert($data)->save();
@@ -126,6 +141,19 @@ class POCOR9403 extends AbstractMigration
         $data = array_map(fn($attr) => $this->generateExternalDataSourceAttribute(self::OPEN_EMIS_EXAMS, ...$attr), $attributes);
 
         $table->insert($data)->save();
+    }
+
+    public function addNewExternalDataSource()
+    {
+        $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+        $this->execute('ALTER TABLE `webhooks` ADD COLUMN external_data_source_id INT(11) NOT NULL after `status`');
+        $configItemEntity = $this->fetchRow("SELECT `id` FROM `config_items` WHERE `code` = '" . self::EXTERNAL_DATA_SOURCE_WEBHOOKS_CUSTOM . "'");
+        $configItemId = $configItemEntity['id'];
+
+        $this->execute("UPDATE `webhooks` set `external_data_source_id` = {$configItemId}");
+        $this->execute('ALTER TABLE `webhooks` ADD FOREIGN KEY (`external_data_source_id`) REFERENCES `config_items` (`id`)');
+        $this->execute('SET FOREIGN_KEY_CHECKS=1;');
+
     }
 
     private function generateExternalDataSourceAttribute($type, $field, $name, $value)
