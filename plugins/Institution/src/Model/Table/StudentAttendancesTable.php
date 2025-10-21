@@ -21,7 +21,10 @@ use Cake\Log\Log;
 use Cake\Datasource\ConnectionManager; //POCOR-6658
 use Cake\ORM\Locator\TableLocator;
 use App\Model\Table\ControllerActionTable;
-use Cake\ORM\Table; // POCOR-9406
+use Cake\ORM\Table;
+use Cake\Chronos\Chronos;
+
+// POCOR-9406
 
 class StudentAttendancesTable extends ControllerActionTable
 {
@@ -1166,9 +1169,10 @@ class StudentAttendancesTable extends ControllerActionTable
     {
         $p       = $this->normalizeAttendanceParams($options);
         $MarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
-
+//        Log::debug(print_r(['p' => $p], true));
         // 1) Reset only rows that actually need it (to avoid wide locks)
         $searchConds = $this->markedDayConditions($p, /*includeSubject*/ true);
+//        Log::debug(print_r(['searchConds' => $searchConds], true));
         $this->resetNoScheduledClass($MarkedRecords, $searchConds);
 
         // 2) Ensure the specific marker row exists (fires AFTER INSERT trigger only once)
@@ -1194,18 +1198,34 @@ class StudentAttendancesTable extends ControllerActionTable
         $subjectId  = ($subjectRaw === null || $subjectRaw === '' || $subjectRaw === '0' || $subjectRaw === 0 || $subjectRaw === 'undefined')
             ? 0 : (int)$subjectRaw;
 
+        // Normalize the date
+        $rawDate = $options['day_id'] ?? null;
+        $normalizedDate = null;
+
+        if (!empty($rawDate)) {
+            try {
+//                $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+//                $systemDateFormat = $ConfigItems->value('date_format') ?: 'Y-m-d';
+
+                // Convert to Chronos (safe DateTime subclass)
+                $date = Chronos::createFromFormat('Y-m-d', $rawDate);
+//                $date = Chronos::createFromFormat($systemDateFormat, $rawDate);
+                $normalizedDate = $date->format('Y-m-d');
+            } catch (\Exception $e) {
+                Log::warning("Invalid date format in Attendance params: '$rawDate' using format '$systemDateFormat'");
+                $normalizedDate = $rawDate; // fallback — still use raw string, but might fail later
+            }
+        }
+
         $p = [
             'institution_id'       => (int)$options['institution_id'],
             'institution_class_id' => (int)$options['institution_class_id'],
             'education_grade_id'   => (int)$options['education_grade_id'],
             'academic_period_id'   => (int)$options['academic_period_id'],
             'period'               => (int)$options['attendance_period_id'],
-            'date'                 => (string)$options['day_id'], // expect Y-m-d
+            'date'                 => $normalizedDate, // now normalized
             'subject_id'           => $subjectId,
         ];
-
-        // Optional: one-line debug you can toggle on/off
-        // Log::debug('EditSavePeriodMarked params: ' . json_encode($p, JSON_UNESCAPED_SLASHES));
 
         return $p;
     }
@@ -1256,34 +1276,44 @@ class StudentAttendancesTable extends ControllerActionTable
         $conn = ConnectionManager::get('default');
 
         foreach (array_chunk($rows, 100) as $chunk) {
-            // Build OR of full PK matches, plus the != 0 guard
             $whereParts = [];
             $params     = [];
 
             foreach ($chunk as $i => $pk) {
                 $whereParts[] = sprintf(
                     '(institution_id = :i%d AND academic_period_id = :ap%d AND institution_class_id = :ic%d AND education_grade_id = :eg%d AND `date` = :d%d AND period = :p%d AND subject_id = :s%d)',
-                    $i,$i,$i,$i,$i,$i,$i
+                    $i, $i, $i, $i, $i, $i, $i
                 );
-                $params += [
-                    "i{$i}"  => (int)$pk['institution_id'],
-                    "ap{$i}" => (int)$pk['academic_period_id'],
-                    "ic{$i}" => (int)$pk['institution_class_id'],
-                    "eg{$i}" => (int)$pk['education_grade_id'],
-                    "d{$i}"  => (string)$pk['date'],
-                    "p{$i}"  => (int)$pk['period'],
-                    "s{$i}"  => (int)$pk['subject_id'],
-                ];
+
+                // Make sure date is valid format before adding it to query
+                $params["i{$i}"]  = (int)$pk['institution_id'];
+                $params["ap{$i}"] = (int)$pk['academic_period_id'];
+                $params["ic{$i}"] = (int)$pk['institution_class_id'];
+                $params["eg{$i}"] = (int)$pk['education_grade_id'];
+                $params["d{$i}"]  = (string)$pk['date'];
+                $params["p{$i}"]  = (int)$pk['period'];
+                $params["s{$i}"]  = (int)$pk['subject_id'];
             }
 
             $sql = 'UPDATE student_attendance_marked_records
                 SET no_scheduled_class = 0
-                WHERE ('.implode(' OR ', $whereParts).')
+                WHERE (' . implode(' OR ', $whereParts) . ')
                   AND no_scheduled_class != 0';
 
-            $this->retryOnLock(function () use ($conn, $sql, $params) {
-                $conn->execute($sql, $params);
-            });
+            try {
+                $this->retryOnLock(function () use ($conn, $sql, $params) {
+                    $conn->execute($sql, $params);
+                });
+            } catch (\PDOException $e) {
+                // Skip known data errors, such as invalid date format
+                if (stripos($e->getMessage(), 'Incorrect DATE value') !== false) {
+                    Log::warning('Skipped chunk due to invalid date: ' . $e->getMessage());
+                    continue; // Skip this chunk
+                }
+
+                // Re-throw other unexpected errors
+                throw $e;
+            }
         }
     }
 
