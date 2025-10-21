@@ -1,3 +1,7 @@
+### [4.46.0] - 2025-10-21
+- Implemented: Develop a status field in Exempt/Unassign page
+- Bug Fixed: Institution > Attendances > Students : SQLSTATE[40001]: Serialization failure: 1213 Deadlock found when trying to get lock; try restarting transaction
+
 ### [4.45.0] - 2025-10-16
 - Implemented: Develop institution students audit report
 - Bug Fixed: Institutions>Students>Withdraw: Unable to withdraw student.

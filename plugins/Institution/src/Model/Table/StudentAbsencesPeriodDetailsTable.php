@@ -40,24 +40,40 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         ]);
     }
 
-    public function validationDefault(Validator $validator): Validator
-    {
-        $validator = parent::validationDefault($validator);
-        $absencesList = $this->AbsenceTypes->getCodeList();
-        $validator
-            ->allowEmpty('student_absence_reason_id', function ($context) use ($absencesList) {
-                if (isset($context['data']['absence_type_id']) && $context['data']['absence_type_id'] != 0) {
-                    $absenceTypeId = $context['data']['absence_type_id'];
-                    $code = $absencesList[$absenceTypeId];
-                    return ($code != 'EXCUSED');
-                }
-                return true;
-            });
+//    public function validationDefault(Validator $validator): Validator
+//    {
+//        $validator = parent::validationDefault($validator);
+//        $absencesList = $this->AbsenceTypes->getCodeList();
+//        $validator
+//            ->allowEmpty('student_absence_reason_id', function ($context) use ($absencesList) {
+//                if (isset($context['data']['absence_type_id']) && $context['data']['absence_type_id'] != 0) {
+//                    $absenceTypeId = $context['data']['absence_type_id'];
+//                    $code = $absencesList[$absenceTypeId];
+//                    return ($code != 'EXCUSED');
+//                }
+//                return true;
+//            });
+//
+//        return $validator;
+//    }
 
-        return $validator;
-    }
+//    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+//    {
+//        $absenceTypeId = $data['absence_type_id'] ?? null;
+//
+//        if ($absenceTypeId && empty($data['student_absence_reason_id'])) {
+//            $absenceTypes = $this->AbsenceTypes->getCodeList();
+//            $code = $absenceTypes[$absenceTypeId] ?? null;
+////
+//            if ($code === 'EXCUSED') {
+//                Log::debug(print_r(['EXUSED' => $data], true));
+//                $data['comment'] = $data['comment'] ?? __('Reason not shown');
+//                $data['student_absence_reason_id'] = 2; // or some fallback
+//            }
+//        }
+//    }
 
-    public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options): Entity
     {
 
         //For Import StudentAbsenceExcel only. Insert into student_attendace_mark_records once import sucessfully as attendance is counted as marked
@@ -141,10 +157,10 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         return $query->where($conditions)->limit(1);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    public function afterSave(Event $event, Entity $entity, ArrayObject $requestData): Entity
     {
 
-        $this->sendStudentAbsenceAlert($entity); // POCOR-9392 commented out alerts for absence
+//        $this->sendStudentAbsenceAlert($entity); // POCOR-9392 commented out alerts for absence
         return $entity;
     }
 
@@ -266,7 +282,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
             // Try to get the table instance directly
             return $locator->get($tableName);
         } catch (\Exception $e) {
-            Log::debug('Error: ' . $e->getMessage());
+//            Log::debug('Error: ' . $e->getMessage());
         }
 
         $parts = explode('.', $tableName);
