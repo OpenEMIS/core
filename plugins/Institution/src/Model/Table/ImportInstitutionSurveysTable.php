@@ -470,20 +470,31 @@ class ImportInstitutionSurveysTable extends AppTable {
                         case 'TIME':
                             $originalRow[$colCount - 1] = $cellValue;
                             if (is_numeric($cellValue)) {
-                                //$cellValue = date('Y-m-d H:i:s', \PHPExcel_Shared_Date::ExcelToPHP($cellValue));
-                                $cellValue = date('Y-m-d H:i:s', ExcelDate::excelToTimestamp($cellValue));
-                                // converts val to Time object so that this field will pass 'validDate' check since
-                                // different model has different date format checking. Example; user->date_of_birth is using dmY while others using Y-m-d,
-                                // so it is best to convert the date here instead of adjusting individual model's date validation format
+                                // Excel stores time as fraction of a day, so convert manually
+                                $secondsInDay = 24 * 60 * 60;
+                                $timestamp = (int) round($cellValue * $secondsInDay);
+
+                                // Convert to time string
+                                $formattedTime = gmdate('H:i:s', $timestamp); // 24-hour format
+                                // or use 12-hour with AM/PM
+                                // $formattedTime = gmdate('h:i:s A', $timestamp);
+
                                 try {
-                                    $cellValue = new Time($cellValue);
+                                    $cellValue = new Time($formattedTime);
                                     $originalRow[$colCount - 1] = $cellValue->format($systemTimeFormat);
                                 } catch (Exception $e) {
-                                    $originalRow[$colCount - 1] = $cellValue;
+                                    $originalRow[$colCount - 1] = $formattedTime;
                                 }
                             } else {
-                                $rowFailed = true;
-                                $rowInvalidCodeCols[$question->name] = __('Wrong date format. It should be DD/MM/YYYY');
+                                // Handle string inputs like "02:11 PM" gracefully
+                                $cellValue = trim($cellValue);
+                                if (strtotime($cellValue) !== false) {
+                                    $time = new Time($cellValue);
+                                    $originalRow[$colCount - 1] = $time->format($systemTimeFormat);
+                                } else {
+                                    $rowFailed = true;
+                                    $rowInvalidCodeCols[$question->name] = __('Wrong time format. It should be HH:MM:SS or HH:MM AM/PM');
+                                }
                             }
                             $colCount++;
                             break;
