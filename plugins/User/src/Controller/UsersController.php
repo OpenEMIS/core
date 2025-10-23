@@ -853,20 +853,20 @@ class UsersController extends AppController
     public function logout($username = null)
     {
         if ($this->request->is('get')) {
-            $username = empty($username) ? $this->Auth->user()['username'] : $username;
-            //POCOR-6953 start
-            $body = array();
-            $body = [
-                "username" => $username,
-            ];
-            //POCOR-6953 end
+            $authUser = $this->Auth->user();
+            $username = $authUser['username'] ?? $username ?? null;
+
             $SecurityUserSessions = TableRegistry::getTableLocator()->get('SSO.SecurityUserSessions');
             $SecurityUserSessions->deleteEntries($username);
-            $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
+            $body = [
+                'username'     => $username,
+                'openemis_no'  => $authUser['openemis_no'] ?? null,
+                'ip'           => $this->request->clientIp(),
+                'logout_time'  => date('Y-m-d H:i:s'),
+            ];
 
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('logout', ['username' => $username], $body);
-            }
+            $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+            $Webhooks->triggerCommand('logout', $body);
 
             return $this->redirect($this->Auth->logout());
         } else {
