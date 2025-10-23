@@ -190,7 +190,8 @@ class ConfigWebhooksTable extends ControllerActionTable
 
                     foreach ($columns as $column) {
                         if (!in_array($column, $excluded, true)) {
-                            $placeholders[$column] = '${' . $column . '}';
+                            $placeholderName = Inflector::humanize(Inflector::underscore($column));
+                            $placeholders[$placeholderName] = '${' . $column . '}';
                         }
                     }
                 } catch (\Exception $e) {
