@@ -27,6 +27,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         'PATCH' => 'PATCH',
         'DELETE' => 'DELETE'
     ];
+    const string OPEN_EMIS_EXAMS = 'OpenEMIS Exams';
     private $eventKeyOptions = [
         'logout' => 'Logout',
         'institutions_create' => 'Institution Create',
@@ -719,7 +720,31 @@ class ConfigWebhooksTable extends ControllerActionTable
                 'label' => 'Institution Create',
                 'model' => 'Institution.Institutions',
                 'excluded' => ['id', 'created', 'modified', 'security_group_id'],
-                'placeholders' => []
+                'placeholders' => [
+                    __('Institution ID') => '${id}',
+                    __('Institution Name') => '${name}',
+                    __('Alternative Name') => '${alternative_name}',
+                    __('Institution Code') => '${code}',
+                    __('Classification') => '${classification}',
+                    __('Institution Sector') => '${institution_sector}',
+                    __('Institution Type') => '${institution_type}',
+                    __('Gender') => '${gender}',
+                    __('Date Opened') => '${date_opened}',
+                    __('Address') => '${address}',
+                    __('Postal Code') => '${postal_code}',
+                    __('Locality') => '${locality}',
+                    __('Latitude') => '${latitude}',
+                    __('Longitude') => '${longitude}',
+                    __('Area Education ID') => '${area_education_id}',
+                    __('Area Education') => '${area_education}',
+                    __('Area Administrative ID') => '${area_administrative_id}',
+                    __('Area Administrative') => '${area_administrative}',
+                    __('Contact Person') => '${contact_person}',
+                    __('Telephone') => '${telephone}',
+                    __('Email') => '${email}',
+                    __('Website') => '${website}',
+                    __('Custom Fields') => '${custom_fields}'
+                ]
             ],
             'institutions_delete' => [
                 'code' => 'institutions_delete',
@@ -733,7 +758,31 @@ class ConfigWebhooksTable extends ControllerActionTable
                 'label' => 'Institution Update',
                 'model' => 'Institution.Institutions',
                 'excluded' => ['id', 'created', 'modified', 'security_group_id'],
-                'placeholders' => []
+                'placeholders' => [
+                    __('Institution ID') => '${id}',
+                    __('Institution Name') => '${name}',
+                    __('Alternative Name') => '${alternative_name}',
+                    __('Institution Code') => '${code}',
+                    __('Classification') => '${classification}',
+                    __('Institution Sector') => '${institution_sector}',
+                    __('Institution Type') => '${institution_type}',
+                    __('Gender') => '${gender}',
+                    __('Date Opened') => '${date_opened}',
+                    __('Address') => '${address}',
+                    __('Postal Code') => '${postal_code}',
+                    __('Locality') => '${locality}',
+                    __('Latitude') => '${latitude}',
+                    __('Longitude') => '${longitude}',
+                    __('Area Education ID') => '${area_education_id}',
+                    __('Area Education') => '${area_education}',
+                    __('Area Administrative ID') => '${area_administrative_id}',
+                    __('Area Administrative') => '${area_administrative}',
+                    __('Contact Person') => '${contact_person}',
+                    __('Telephone') => '${telephone}',
+                    __('Email') => '${email}',
+                    __('Website') => '${website}',
+                    __('Custom Fields') => '${custom_fields}'
+                ]
             ],
             'programme_create' => [
                 'code' => 'programme_create',
@@ -868,4 +917,113 @@ class ConfigWebhooksTable extends ControllerActionTable
     {
         return self::getEvents()[$eventKey]['placeholders'] ?? [];
     }
+
+    public function triggerCommand($eventKey, $body = [])
+    {
+        $configItems = self::getDynamicTableInstance('Configuration.ConfigItems');
+
+        $webhookConfig = $this->find()
+            ->select([
+                'url' => $this->aliasField('url'),
+                'query_template' => $this->aliasField('query_template'),
+                'body_template' => $this->aliasField('body_template'),
+                'method' => $this->aliasField('method'),
+                'event_key' => $this->aliasField('event_key'),
+                'external_data_webhook_name' => $configItems->aliasField('name')
+            ])
+            ->innerJoin(
+                [$configItems->getAlias() => $configItems->getTable()],
+                [$this->aliasField('external_data_source_id') . ' = ' . $configItems->aliasField('id')]
+            )
+            ->where([
+                $this->aliasField('event_key') => trim($eventKey),
+                $this->aliasField('status') => self::ACTIVE,
+                $configItems->aliasField('value') => self::ACTIVE,
+            ])
+            ->first();
+
+        if (empty($webhookConfig)) {
+            return; // No active webhook config found
+        }
+
+        $url = trim($webhookConfig->url);
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            Log::write('warning', "Invalid URL for webhook [$eventKey]: $url");
+            return;
+        }
+
+        $queryTemplate = $webhookConfig->query_template;
+        $bodyTemplate = $webhookConfig->body_template;
+
+        // 🧩 Fill placeholders in query template
+        $queryParams = '';
+        if (!empty($queryTemplate)) {
+            // Substitute placeholders in queryTemplate
+            foreach ($body as $key => $value) {
+                $queryTemplate = str_replace('${' . $key . '}', urlencode((string)$value), $queryTemplate);
+            }
+
+            // If template starts with '?', treat it as query params
+            if (strpos($queryTemplate, '?') === 0) {
+                $queryParams = ltrim($queryTemplate, '?');
+                $url .= (strpos($url, '?') === false ? '?' : '&') . $queryParams;
+            } else {
+                // Otherwise treat it as a REST-style path (may start with / or not)
+                $url = rtrim($url, '/') . '/' . ltrim($queryTemplate, '/');
+            }
+        }
+
+        // 🧩 Fill placeholders in body template or use raw body
+        if (!empty($bodyTemplate)) {
+            foreach ($body as $key => $value) {
+                $bodyTemplate = str_replace('${' . $key . '}', (string)$value, $bodyTemplate);
+            }
+            $finalBody = json_decode($bodyTemplate, true);
+            if (!is_array($finalBody)) {
+                $finalBody = ['payload' => $bodyTemplate]; // fallback
+            }
+        } else {
+            $finalBody = $body;
+        }
+
+        $escapedBody = escapeshellarg(json_encode($finalBody)); // escape for shell
+        $cmd = ROOT . DS . 'bin' . DS . 'cake webhook ' . escapeshellarg($url) . ' ' .
+            escapeshellarg($webhookConfig->method ?? 'post') . ' ' . $escapedBody;
+
+        // 🔐 Check if we need to include server params (for OpenEMIS Exams)
+        if ($webhookConfig->external_data_webhook_name === self::OPEN_EMIS_EXAMS) {
+            $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+            $attributes = $ExternalAttributes
+                ->find('list', [
+                    'keyField' => 'attribute_field',
+                    'valueField' => 'value'
+                ])
+                ->where([$ExternalAttributes->aliasField('external_data_source_type') => self::OPEN_EMIS_EXAMS])
+                ->toArray();
+
+            if (!empty($attributes['username']) && !empty($attributes['password']) && !empty($attributes['api_key'])) {
+                $serverParams = [
+                    'username' => $attributes['username'],
+                    'password' => $attributes['password'],
+                    'api_key' => $attributes['api_key'],
+                    'api_url' => $attributes['api_url'] // or use fixed API base if needed
+                ];
+
+                $escapedParams = escapeshellarg(json_encode($serverParams));
+                $cmd .= ' ' . $escapedParams;
+            }
+        }
+
+        // 📝 Log and run the command
+        $logs = ROOT . DS . 'logs' . DS . 'webhook.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+
+        try {
+            $pid = exec($shellCmd); // fire-and-forget
+            Log::write('debug', "Webhook triggered [PID: $pid] CMD: $shellCmd");
+        } catch (Exception $ex) {
+            Log::write('error', __METHOD__ . ' exception when triggering: ' . $ex->getMessage());
+        }
+    }
+
 }
