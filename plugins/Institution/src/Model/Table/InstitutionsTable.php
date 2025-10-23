@@ -1252,7 +1252,7 @@ class InstitutionsTable extends ControllerActionTable
             ]);
             foreach ($bodyData as $key => $value) {
                 $sectorName = $value->sector->name;
-                $typeName = $value->sector->name;
+                $typeName = $value->type->name;
                 $genderName = $value->gender->name;
                 $localitiesName = $value->locality->name;
                 $areaEducationId = $value->area->id;
@@ -1270,29 +1270,29 @@ class InstitutionsTable extends ControllerActionTable
 
             $bodys = array();
             $bodys = [
-                "institution_id" => $entity->id,
-                "institution_name" => $entity->name,
-                "institution_alternative_name" => $entity->alternative_name,
-                "institution_code" => $entity->code,
+                "id" => $entity->id,
+                "name" => $entity->name,
+                "alternative_name" => $entity->alternative_name,
+                "code" => $entity->code,
                 "institution_classification" => $clss,
                 "institution_sector" => !empty($sectorName) ? $sectorName : NULL,
                 "institution_type" => !empty($typeName) ? $typeName : NULL,
-                "institution_gender" => !empty($genderName) ? $genderName : NULL,
-                "institution_date_opene" => date("d-m-Y", strtotime($entity->date_opened)),
-                "institution_address" => $entity->address,
-                "institution_postal_code" => $entity->postal_code,
-                "institution_locality" => !empty($localitiesName) ? $localitiesName : NULL,
-                "institution_latitude" => $entity->latitude,
-                "institution_longitude" => $entity->longitude,
-                "institution_area_education_id" => !empty($areaEducationId) ? $areaEducationId : NULL,
-                "institution_area_education" => !empty($areaEducationName) ? $areaEducationName : NULL,
-                "institution_area_administrative_id" => !empty($areaAdministrativeId) ? $areaAdministrativeId : NULL,
-                "institution_area_administrative" => !empty($areaAdministrativeName) ? $areaAdministrativeName : NULL,
-                "institution_contact_person" => $entity->contact_person,
-                "institution_telephone" => $entity->telephone,
+                "gender" => !empty($genderName) ? $genderName : NULL,
+                "date_opened" => date("d-m-Y", strtotime($entity->date_opened)),
+                "address" => $entity->address,
+                "postal_code" => $entity->postal_code,
+                "locality" => !empty($localitiesName) ? $localitiesName : NULL,
+                "latitude" => $entity->latitude,
+                "longitude" => $entity->longitude,
+                "area_education_id" => !empty($areaEducationId) ? $areaEducationId : NULL,
+                "area_education" => !empty($areaEducationName) ? $areaEducationName : NULL,
+                "area_administrative_id" => !empty($areaAdministrativeId) ? $areaAdministrativeId : NULL,
+                "area_administrative" => !empty($areaAdministrativeName) ? $areaAdministrativeName : NULL,
+                "contact_person" => $entity->contact_person,
+                "telephone" => $entity->telephone,
                 //"institution_mobile" => $entity->fax,
-                "institution_email" => $entity->email,
-                "institution_website" => $entity->website,
+                "email" => $entity->email,
+                "website" => $entity->website,
             ];
             //POCOR-6805 start
             $InstitutionCustomFields = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFields');
@@ -1351,20 +1351,20 @@ class InstitutionsTable extends ControllerActionTable
                 $count++;
             }
             $body = array_merge($bodys, $custom_field); //POCOR-6805 end
-            if ($this->webhookAction == 'add' && empty($event->getData()['entity']->security_group_id)) {
+            $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+
+            if ($this->webhookAction == 'add') {
                 $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-                if ($this->Auth->user()) {
-                    $Webhooks->triggerShell('institutions_create', ['username' => ''], $body);
-                }
+                    $Webhooks->triggerCommand('institutions_create', $body);
+
             }
             // Webhook institution create -- end
 
             // Webhook institution update --start
             if ($this->webhookAction == 'edit') {
-                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-                if ($this->Auth->user()) {
-                    $Webhooks->triggerShell('institutions_update', ['username' => ''], $body);
-                }
+//                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
+
+                    $Webhooks->triggerCommand('institutions_update', $body);
             }
             // webhook institution update --end
         }
