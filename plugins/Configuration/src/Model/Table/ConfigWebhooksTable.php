@@ -964,25 +964,41 @@ class ConfigWebhooksTable extends ControllerActionTable
                 $url = rtrim($url, '/') . '/' . ltrim($queryTemplate, '/');
             }
         }
+        $isJsonLikeTemplate = (
+            str_starts_with(trim($bodyTemplate), '{') &&
+            str_ends_with(trim($bodyTemplate), '}')
+        );
 
-        // 🧩 Fill placeholders in body template or use raw body
+        // Fill placeholders in body template or use raw body
         if (!empty($bodyTemplate)) {
-            foreach ($body as $key => $value) {
-                $bodyTemplate = str_replace('${' . $key . '}', (string)$value, $bodyTemplate);
-            }
-            $finalBody = json_decode($bodyTemplate, true);
-            if (!is_array($finalBody)) {
-                $finalBody = ['payload' => $bodyTemplate]; // fallback
+            try {
+                $finalBody = $this->interpolateJsonTemplate($bodyTemplate, $body);
+            } catch (\Throwable $e) {
+                Log::error("Invalid bodyTemplate: " . $e->getMessage());
+                $finalBody = $body; // fallback
             }
         } else {
             $finalBody = $body;
         }
+        if (is_array($finalBody)) {
+            // normal array → save to temp .json file
+            $temp = TMP . 'webhook_' . uniqid() . '.json';
+            file_put_contents($temp, json_encode($finalBody));
+            $bodyArg = $temp; // file path
+        } elseif (is_string($finalBody) && str_ends_with($finalBody, '.json') && file_exists($finalBody)) {
+            // already a JSON file path
+            $bodyArg = $finalBody;
+        } else {
+            // fallback: small JSON string
+            $bodyArg = json_encode($finalBody);
+        }
 
-        $escapedBody = escapeshellarg(json_encode($finalBody)); // escape for shell
+        // Build the shell command safely
+        $escapedBody = escapeshellarg($bodyArg); // ✅ no json_encode() here
         $cmd = ROOT . DS . 'bin' . DS . 'cake webhook ' . escapeshellarg($url) . ' ' .
             escapeshellarg($webhookConfig->method ?? 'post') . ' ' . $escapedBody;
 
-        // 🔐 Check if we need to include server params (for OpenEMIS Exams)
+        // Check if we need to include server params (for OpenEMIS Exams)
         if ($webhookConfig->external_data_webhook_name === self::OPEN_EMIS_EXAMS) {
             $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
             $attributes = $ExternalAttributes
@@ -1017,6 +1033,36 @@ class ConfigWebhooksTable extends ControllerActionTable
             Log::write('error', __METHOD__ . ' exception when triggering: ' . $ex->getMessage());
         }
     }
+
+    /**
+     * Safely replaces ${placeholders} inside JSON templates.
+     */
+    private function interpolateJsonTemplate(string $template, array $values): array
+    {
+        $decoded = json_decode($template, true);
+        if (!is_array($decoded)) {
+            throw new \RuntimeException('Invalid JSON template');
+        }
+
+        $replacePlaceholders = function (&$item) use (&$replacePlaceholders, $values) {
+            if (is_array($item)) {
+                foreach ($item as &$child) {
+                    $replacePlaceholders($child);
+                }
+            } elseif (is_string($item)) {
+                foreach ($values as $key => $val) {
+                    $safe = is_scalar($val)
+                        ? (string)$val
+                        : json_encode($val, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                    $item = str_replace('${' . $key . '}', $safe, $item);
+                }
+            }
+        };
+
+        $replacePlaceholders($decoded);
+        return $decoded;
+    }
+
     public function triggerCommandDelete(string $commandName, ?string $openemisNo, $entity): bool
     {
         // --- Validation guards ---

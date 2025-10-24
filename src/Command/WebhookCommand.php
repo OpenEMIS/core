@@ -17,10 +17,14 @@ class WebhookCommand extends Command
         try {
             $url = $args->getArgument('url');
             $method = strtolower($args->getArgument('method') ?? 'post');
-            $bodyJson = $args->getArgument('body');
-            $serverParamsJson = $args->getArgument('server_params');
 
-            $body = json_decode($bodyJson, true) ?? [];
+            $serverParamsJson = $args->getArgument('server_params');
+            $bodyJson = $args->getArgument('body');
+            if (is_string($bodyJson) && str_ends_with($bodyJson, '.json') && file_exists($bodyJson)) {
+                $body = json_decode(file_get_contents($bodyJson), true) ?? [];
+            } else {
+                $body = json_decode($bodyJson, true) ?? [];
+            }
             $serverParams = json_decode($serverParamsJson, true) ?? [];
 
             $headers = [
@@ -66,9 +70,19 @@ class WebhookCommand extends Command
                 'type' => 'json'
             ]);
 
-            $io->out("Response Code: " . $response->getStatusCode());
+            $status = $response->getStatusCode();
+
+            $io->out("Response Code: " .$status);
             $io->out(print_r($response->getJson(), true));
 
+            if (in_array($status, [200, 201, 202, 204])) {
+                // the third CLI arg is usually the body param
+                $bodyJson = $args->getArgument('body');
+                if (is_string($bodyJson) && str_ends_with($bodyJson, '.json') && file_exists($bodyJson)) {
+                    unlink($bodyJson);
+                    $io->out("Temp file deleted: $bodyJson");
+                }
+            }
             $io->out('End Processing Webhook Command ('.FrozenTime::now().')...');
 
         } catch (\Exception $e) {
