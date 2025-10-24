@@ -278,6 +278,34 @@ class InstitutionsTable extends ControllerActionTable
         }
         $validator
             ->setProvider('custom', $this)
+            // POCOR-7935:start
+            ->add('logo_content', 'hople',
+                ['rule' => ['imageSize',
+                    ['width' => ['<=', self::logoMaxWidth], 'height' => ['<=', self::logoMaxHeight]]],
+                    'message' => 'The image dimensions should not exceed ' . self::logoMaxWidth . 'x' . self::logoMaxHeight . ' pixels.'
+                ])
+            // POCOR-7935:end
+            ->allowEmptyFile('logo_content')
+            ->requirePresence('name')->notEmptyString('name')
+            ->add('code', 'ruleCustomCode', [
+                'rule' => ['validateCustomPattern', 'institution_code'],
+                'provider' => 'table',
+                'last' => true
+            ])
+            ->add('code', 'ruleUnique', [
+                'rule' => 'validateUnique',
+                'provider' => 'table',
+                // 'message' => 'Code has to be unique'
+            ])
+            ->add('classification', [
+                'validClassification' => [
+                    'rule' => ['range', 1, 2],
+                ]
+            ])
+            ->requirePresence('institution_sector_id')->notEmptyString('institution_sector_id')
+            ->requirePresence('institution_type_id')->notEmptyString('institution_type_id')
+            ->requirePresence('institution_ownership_id')->notEmptyString('institution_ownership_id')
+            ->requirePresence('institution_gender_id')->notEmptyString('institution_gender_id')
             ->add('date_opened', [
                 'ruleCompare' => [
                     // 'rule' => ['comparison', 'notequal', '0000-00-00'],
@@ -296,7 +324,6 @@ class InstitutionsTable extends ControllerActionTable
                     'message' => __('You have entered an invalid date')
                 ]
             ])
-            ->allowEmpty('date_closed')
             ->add('date_opened', 'ruleLessThanToday', [
                 'rule' => ['lessThanToday', true],
                 'message' => __('Date should not be later than today'),
@@ -305,6 +332,7 @@ class InstitutionsTable extends ControllerActionTable
                     return true;
                 }
             ])
+            ->allowEmptyDate('date_closed')
             ->add('date_closed', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'date_opened', true],
                 'message' => __('Date Closed should not be earlier than Date Opened'),
@@ -317,88 +345,43 @@ class InstitutionsTable extends ControllerActionTable
                 'rule' => 'checkPendingWorkbench',
                 'last' => true
             ])
-            ->add('classification', [
-                'validClassification' => [
-                    'rule' => ['range', 1, 2],
-                ]
-            ])
-            ->notEmpty('address')
-            ->add('address', 'ruleMaximum255', [
-                 'rule' => ['maxLength', 255],
-                 'message' => 'Maximum allowable character is 255',
-                 'last' => true
-             ])
-             /*->add('address', [
-                'custom' => [
-                    'rule' => function ($value, $context) {
-                        // Regular expression to allow letters, numbers, spaces, commas, periods, hyphens, and apostrophes
-                        return (bool)preg_match('/^[a-zA-Z0-9\s,.\'-]+$/', $value);
-                    },
-                    'message' => __('The institution address cannot contain special characters.'),
-                ]
-            ])*/
-            ->add('address', 'rulecheckIfStringGotNoSpecialChar', [
-            'rule' => [$this, 'checkIfStringGotNoSpecialChar'], // POCOR-8597
-            'message' => 'The institution address cannot contain special characters.'
-            ])
-            ->add('code', 'ruleCustomCode', [
-                'rule' => ['validateCustomPattern', 'institution_code'],
-                'provider' => 'table',
-                'last' => true
-            ])
-            ->allowEmpty('postal_code')
+            ->allowEmptyString('postal_code')
             ->add('postal_code', 'ruleCustomPostalCode', [
                 'rule' => ['validateCustomPattern', 'postal_code'],
                 'provider' => 'table',
                 'last' => true
             ])
-            ->add('code', 'ruleUnique', [
-                'rule' => 'validateUnique',
-                'provider' => 'table',
-                // 'message' => 'Code has to be unique'
-            ])
-            ->allowEmpty('email')
-            ->notEmpty('institution_locality_id') //POCOR-9407
+
+            ->allowEmptyString('email')
+            ->notEmptyString('institution_locality_id') //POCOR-9407
             ->add('email', [
                 'ruleValidEmail' => [
                     'rule' => 'checkEmailFormat',
                     'message' => 'Invalid email address'
                 ]
             ])
-            ->allowEmpty('telephone')
+            ->allowEmptyString('telephone')
             ->add('telephone', 'ruleCustomTelephone', [
                 'rule' => ['validateCustomPattern', 'institution_telephone'],
                 'provider' => 'table',
                 'last' => true
             ])
-            /*->allowEmpty('fax')
-            ->add('fax', 'ruleCustomFax', [
-                'rule' => ['validateCustomPattern', 'institution_fax'],
-                'provider' => 'table',
-                'last' => true
-            ])*/
-            // ->add('area_id', 'ruleAuthorisedArea', [
-            //     'rule' => ['checkAuthorisedArea']
-            // ])
-            // ->add('area_id', 'ruleConfiguredArea', [
-            //     'rule' => ['checkConfiguredArea']
-            // ])
-            // ->allowEmpty('area_administrative_id')
-            // ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
-            //     'rule' => ['checkConfiguredArea']
-            // ])
+
             ->add('institution_provider_id', 'ruleLinkedSector', [
                 'rule' => 'checkLinkedSector',
                 'provider' => 'table'
             ])
-            // POCOR-7935:start
-            ->add('logo_content', 'hople',
-                ['rule' => ['imageSize',
-                    ['width' => ['<=', self::logoMaxWidth], 'height' => ['<=', self::logoMaxHeight]]],
-                    'message' => 'The image dimensions should not exceed ' . self::logoMaxWidth . 'x' . self::logoMaxHeight . ' pixels.'
-                ])
-            // POCOR-7935:end
-            ->allowEmpty('logo_content');
+
+            ->notEmptyString('address')
+            ->add('address', 'ruleMaximum255', [
+                'rule' => ['maxLength', 255],
+                'message' => 'Maximum allowable character is 255',
+                'last' => true
+            ])
+            ->add('address', 'rulecheckIfStringGotNoSpecialChar', [
+                'rule' => [$this, 'checkIfStringGotNoSpecialChar'], // POCOR-8597
+                'message' => 'The institution address cannot contain special characters.'
+            ]);
         return $validator;
     }
 
@@ -1246,12 +1229,13 @@ class InstitutionsTable extends ControllerActionTable
             $SecurityGroup->delete($groupEntity);
         }
         $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
-
+        $openemisNo = 'system';
         if ($this->Auth->user()) {
             $user = $this->Auth->user();
             $openemisNo = $user['openemis_no']; // POCOR-8919
-            $Webhooks->triggerCommandDelete('institutions_delete', $openemisNo, $entity);
         }
+        $Webhooks->triggerCommandDelete('institutions_delete', $openemisNo, $entity);
+
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
