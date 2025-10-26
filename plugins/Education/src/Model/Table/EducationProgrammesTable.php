@@ -79,7 +79,7 @@ class EducationProgrammesTable extends ControllerActionTable {
         $this->fields['education_certification_id']['sort'] = ['field' => 'EducationCertifications.name'];
         $this->field('same_grade_promotion',['visible'=>'hidden']);//POCOR-4746
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Education Programmes','Education');       
+		$is_manual_exist = $this->getManualUrl('Administration','Education Programmes','Education');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -99,59 +99,67 @@ class EducationProgrammesTable extends ControllerActionTable {
 		// End POCOR-5188
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
-        // Webhook Education programme create -- start
-
-        if($entity->isNew()){
-            $body = array();
-            $body = [
-                'education_cycle_id' =>$entity->education_cycle_id,
-                'programme_name' =>$entity->name,
-                'programme_id' =>$entity->id,
-            ];
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('education_programme_create', ['username' => $username], $body);
-            }*/
-        }
-        // Webhook Education programme create -- end
-
-        // Webhook Education programme update -- start
-
-        if(!$entity->isNew()){
-            $body = array();
-            $body = [
-                'education_cycle_id' => $entity->education_cycle_id,
-                'programme_name' => $entity->name,
-                'programme_id' => $entity->id
-            ];
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('education_programme_update', ['username' => $username], $body);
-            }*/
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    {
+        // Skip if triggered internally or no authenticated user
+        if (!empty($options['skip_callbacks']) || empty($this->Auth) || empty($this->Auth->user())) {
+            return;
         }
 
-        // Webhook Education programme update -- end
+        $eventKey = $entity->isNew()
+            ? 'education_programme_create'
+            : 'education_programme_update';
+
+        $this->triggerWebhookCommand($entity, $eventKey);
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-        $id = $entity->id;
-        $EducationProgrammesNextProgrammesTable = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
-        $EducationProgrammesNextProgrammesTable->deleteAll([
-            $EducationProgrammesNextProgrammesTable->aliasField('next_programme_id') => $id
-        ]);
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
+    {
+        // Always perform related child cleanup
+        $this->deleteChildProgrammes($entity);
 
-        // Webhook Education Programme Delete -- Start
+        // Skip webhook if no authenticated user
+        if (empty($this->Auth) || empty($this->Auth->user())) {
+            return;
+        }
 
-        $body = array();
+        $this->triggerWebhookCommand($entity, 'education_programme_delete');
+    }
+
+    /**
+     * 🔁 Shared webhook trigger for Education Programme events.
+     */
+    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
+    {
         $body = [
-            'programme_id' => $entity->id
+            'programme_id'        => $entity->id,
+            'programme_name'      => $entity->name ?? null,
+            'education_cycle_id'  => $entity->education_cycle_id ?? null,
         ];
-        /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
-        if($this->Auth->user()){
-            $Webhooks->triggerShell('education_programme_delete', ['username' => $username], $body);
-        }*/
-        // Webhook Education Programme Delete -- End
+
+        // Add metadata for delete tracking if applicable
+        if ($eventKey === 'education_programme_delete') {
+            $body['deleted_at'] = date('Y-m-d H:i:s');
+            $body['deleted_by'] = $this->Auth->user()['openemis_no']
+                ?? $this->Auth->user()['username']
+                ?? 'system';
+        }
+
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+        $Webhooks->triggerCommand($eventKey, $body);
+    }
+
+    /**
+     * 🧹 Delete child entries from EducationProgrammesNextProgrammes when a programme is removed.
+     */
+    private function deleteChildProgrammes(Entity $entity): void
+    {
+        $EducationProgrammesNextProgrammes = TableRegistry::getTableLocator()
+            ->get('Education.EducationProgrammesNextProgrammes');
+
+        $EducationProgrammesNextProgrammes->deleteAll([
+            $EducationProgrammesNextProgrammes->aliasField('next_programme_id') => $entity->id,
+        ]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
@@ -274,10 +282,10 @@ class EducationProgrammesTable extends ControllerActionTable {
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
         $levelOptions = $this->EducationCycles->EducationLevels->getLevelOptions($selectedAcademicPeriod);
-    
+
         // POCOR-5973 starts
         $selectedLevel = !is_null($this->request->getQuery('level')) ? (array)$this->request->getQuery('level') : array_keys($levelOptions);
-    
+
         // POCOR-8735 -- Check Conditions for where
         if (!empty($selectedLevel)) {
             $cycleOptions = $this->EducationCycles
@@ -290,9 +298,9 @@ class EducationProgrammesTable extends ControllerActionTable {
             $cycleOptions = [];
         }
         // POCOR-5973 ends
-    
+
         $selectedCycle = !is_null($this->request->getQuery('cycle')) ? $this->request->getQuery('cycle') : key($cycleOptions);
-    
+
         return compact('academicPeriodOptions', 'selectedAcademicPeriod', 'levelOptions', 'selectedLevel', 'cycleOptions', 'selectedCycle');
     }
 
@@ -597,7 +605,7 @@ class EducationProgrammesTable extends ControllerActionTable {
                 ksort($nextProgrammeOptions);
                 $attr['options'] = $nextProgrammeOptions;
             }
-        } 
+        }
 
         return $event->getSubject()->renderElement('Education.next_programmes', ['attr' => $attr]);
     }
@@ -681,7 +689,7 @@ class EducationProgrammesTable extends ControllerActionTable {
         }elseif ($field == 'duration') {
             return __('Duration');
         }elseif ($field == 'visible') {
-            return __('Visible');    
+            return __('Visible');
         }elseif ($field == 'education_cycle_id') {
             return __('Education Cycle');
         }elseif ($field == 'education_certification_id') {
@@ -701,6 +709,6 @@ class EducationProgrammesTable extends ControllerActionTable {
             $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
             $event->stopPropagation();
             return $this->controller->redirect($this->url('remove'));
-        } 
+        }
     }
 }
