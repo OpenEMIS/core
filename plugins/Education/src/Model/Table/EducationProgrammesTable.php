@@ -18,7 +18,7 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     private $_contain = ['EducationNextProgrammes._joinData'];
     private $_fieldOrder = ['code', 'name', 'duration', 'visible', 'education_field_of_study_id','education_cycle_id', 'education_certification_id' ,'same_grade_promotion'];//POCOR-4746
-
+    private  $arrayNextProgrammes = [];
     public function initialize(array $config): void {
         parent::initialize($config);
         $this->belongsTo('EducationCycles', ['className' => 'Education.EducationCycles']);
@@ -131,11 +131,14 @@ class EducationProgrammesTable extends ControllerActionTable {
      */
     private function triggerWebhookCommand(Entity $entity, string $eventKey): void
     {
-        $body = [
-            'programme_id'        => $entity->id,
-            'programme_name'      => $entity->name ?? null,
-            'education_cycle_id'  => $entity->education_cycle_id ?? null,
-        ];
+        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
+
+        $programme = $EducationProgrammes->find()
+            ->where([$EducationProgrammes->aliasField('id') => $entity->id])
+            ->contain(['EducationNextProgrammes']) // the belongsToMany association
+            ->first();
+
+        $body = $programme->toArray();
 
         // Add metadata for delete tracking if applicable
         if ($eventKey === 'education_programme_delete') {
@@ -667,20 +670,26 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     private function buildEditAddTable(Event $event, $entity, array $attr): array
     {
+        $requestData = $this->request->getData()[$this->getAlias()] ?? [];
         $form = $event->getSubject()->Form;
-        $cycleId = $this->request->getData('EducationProgrammes.education_cycle_id');
+        $cycleId = $requestData['education_cycle_id'];
+        if (empty($cycleId)) {
+            $cycleId = $entity->education_cycle_id;
+        }
         if (empty($cycleId)) {
             return $attr;
         }
 
         [$academicPeriodId, $cycleInfo] = $this->getCycleAndLevelInfo($cycleId);
         if (empty($cycleInfo)) {
+
             return $attr;
         }
 
         $nextProgrammeOptions = $this->getNextProgrammeOptions($cycleInfo, $academicPeriodId);
-        $arrayNextProgrammes = $this->collectSelectedNextProgrammes($entity);
 
+        $arrayNextProgrammes = $this->collectSelectedNextProgrammes($entity);
+//        dd($nextProgrammeOptions);
         // Build table rows
         [$headers, $cells] = $this->buildProgrammeTableRows($form, $attr['model'], $arrayNextProgrammes, $nextProgrammeOptions);
 
@@ -693,6 +702,98 @@ class EducationProgrammesTable extends ControllerActionTable {
         $attr['options'] = $nextProgrammeOptions;
 
         return $attr;
+    }
+
+    /**
+     * Collects selected next programmes from the entity or request data.
+     * Supports cumulative additions across reloads.
+     */
+    /**
+     * Collects selected next programmes from the entity or request data.
+     * Supports cumulative additions and caches within request.
+     */
+    private function collectSelectedNextProgrammes($entity): array
+    {
+        // Initialize persistent cache per request
+        if (!property_exists($this, 'arrayNextProgrammes')) {
+            $this->arrayNextProgrammes = [];
+        }
+
+        $arrayNextProgrammes = $this->arrayNextProgrammes;
+
+        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
+        $EducationProgrammesNext = TableRegistry::getTableLocator()->get('Education.EducationProgrammesNextProgrammes');
+
+        // 1️⃣ Load existing ones from DB (for edit mode or first GET)
+        if (empty($arrayNextProgrammes) && !empty($entity->id)) {
+            $existingNextIds = $EducationProgrammesNext
+                ->find('list', [
+                    'keyField'   => 'id',
+                    'valueField' => 'next_programme_id',
+                ])
+                ->where([
+                    $EducationProgrammesNext->aliasField('education_programme_id') => $entity->id,
+                ])
+                ->toArray();
+
+            if ($existingNextIds) {
+                $existingProgrammes = $EducationProgrammes->find()
+                    ->where([$EducationProgrammes->aliasField('id IN') => array_values($existingNextIds)])
+                    ->contain(['EducationCycles'])
+                    ->all();
+
+                foreach ($existingProgrammes as $programme) {
+                    $arrayNextProgrammes[$programme->id] = [
+                        'id'                     => $programme->id,
+                        'education_programme_id' => $entity->id,
+                        'next_programme_id'      => $programme->id,
+                        'name'                   => $programme->cycle_programme_name,
+                    ];
+                }
+            }
+            $this->arrayNextProgrammes = $arrayNextProgrammes;
+        }
+
+        // 2️⃣ If POST / PUT — merge what's in the current form (hidden fields)
+        if ($this->request->is(['post', 'put'])) {
+            $requestData = (array)$this->request->getData();
+
+            // Existing ones already shown in the table
+            $posted = $requestData[$this->getAlias()]['education_next_programmes'] ?? [];
+//            dd($requestData[$this->getAlias()]);
+            foreach ($posted as $obj) {
+                if (!empty($obj['_joinData'])) {
+                    $joinData = $obj['_joinData'];
+                    $id = $joinData['next_programme_id'] ?? null;
+                    if ($id && !isset($arrayNextProgrammes[$id])) {
+                        $arrayNextProgrammes[$id] = $joinData;
+                    }
+                }
+            }
+
+            // 3️⃣ Add the new selection (dropdown)
+            $nextProgrammeId = $requestData[$this->getAlias()]['next_programme_id'] ?? null;
+            if (!empty($nextProgrammeId) && !isset($arrayNextProgrammes[$nextProgrammeId])) {
+                $programmeObj = $EducationProgrammes->find()
+                    ->where([$EducationProgrammes->aliasField('id') => $nextProgrammeId])
+                    ->contain(['EducationCycles'])
+                    ->first();
+
+                if ($programmeObj) {
+                    $arrayNextProgrammes[$programmeObj->id] = [
+                        'education_programme_id' => $entity->id,
+                        'next_programme_id'      => $programmeObj->id,
+                        'name'                   => $programmeObj->cycle_programme_name,
+                    ];
+                }
+            }
+        }
+
+        // Cache for next use within same request
+        $this->arrayNextProgrammes = $arrayNextProgrammes;
+
+        // Return flat array for table rendering
+        return array_values($arrayNextProgrammes);
     }
 
     private function getCycleAndLevelInfo($cycleId): array
@@ -737,27 +838,33 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     private function getNextProgrammeOptions($cycleInfo, $academicPeriodId): array
     {
-        $EducationSystems   = TableRegistry::getTableLocator()->get('Education.EducationSystems');
-        $EducationLevels    = TableRegistry::getTableLocator()->get('Education.EducationLevels');
-        $EducationCycles    = TableRegistry::getTableLocator()->get('Education.EducationCycles');
-        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
-        $EducationProgrammes->setAlias('EducationProgrammesClone');
+        // 1) Build excluded IDs as a simple array [1,2,3]
+        $EducationSystems     = TableRegistry::getTableLocator()->get('Education.EducationSystems');
+        $EducationLevels      = TableRegistry::getTableLocator()->get('Education.EducationLevels');
+        $EducationCycles      = TableRegistry::getTableLocator()->get('Education.EducationCycles');
+        $EducationProgrammes  = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
 
-        // Build the excluded subquery
-        $excluded = $EducationProgrammes->find()
+// If you previously aliased the table as "EducationProgrammesClone", keep it consistent
+//        $EducationProgrammes->setAlias('EducationProgrammesClone');
+
+        $excludedIds = $EducationProgrammes->find()
             ->innerJoin(
                 [$EducationCycles->getAlias() => $EducationCycles->getTable()],
                 [
                     $EducationCycles->aliasField('id =') . $EducationProgrammes->aliasField('education_cycle_id'),
                 ]
             )
-            ->select([$EducationProgrammes->aliasField('id')])
+            ->select(['id' => $EducationProgrammes->aliasField('id')]) // alias to plain "id" for easy extract()
             ->where([
-                $EducationCycles->aliasField('order <=')        => $cycleInfo->cycle_order,
-                $EducationCycles->aliasField('education_level_id') => $cycleInfo->level_id,
-            ]);
+                $EducationCycles->aliasField('order <=')          => $cycleInfo['cycle_order'],
+                $EducationCycles->aliasField('education_level_id') => $cycleInfo['level_id'],
+            ])
+            ->enableHydration(false)
+            ->all()
+            ->extract('id')
+            ->toList(); // -> e.g. [1,2,3]
 
-        // Main query building next-programme options
+// 2) Main query using NOT IN (only if list is non-empty)
         $query = $EducationSystems->find('list', [
             'keyField'   => 'programme_id',
             'valueField' => 'cycle_programme_name',
@@ -786,32 +893,35 @@ class EducationProgrammesTable extends ControllerActionTable {
             )
             ->select([
                 'programme_id' => $EducationProgrammes->aliasField('id'),
-                'cycle_programme_name' => $EducationSystems->find()->func()->concat([
-                    $EducationSystems->aliasField('name'),
-                    ' - ',
-                    $EducationCycles->aliasField('name'),
-                    ' - (',
-                    $EducationProgrammes->aliasField('name'),
-                    ')',
-                ]),
+                'cycle_programme_name' => $EducationSystems->query()->newExpr()->add([
+                    'CONCAT(' .
+                    $EducationSystems->aliasField('name') . ', " - ", ' .
+                    $EducationCycles->aliasField('name') . ', " - (", ' .
+                    $EducationProgrammes->aliasField('name') . ', ")"' .
+                    ')'
+                ])
             ])
             ->where([
                 $EducationSystems->aliasField('academic_period_id') => $academicPeriodId,
-                $EducationLevels->aliasField('order >=')            => $cycleInfo->level_order,
-                'NOT EXISTS (' . $excluded->where([
-                    $EducationProgrammes->aliasField('id') . ' = ' . $EducationProgrammes->aliasField('id'),
-                ]) . ')',
+                $EducationLevels->aliasField('order >=')            => $cycleInfo['level_order'],
             ])
             ->order([
                 $EducationSystems->aliasField('order')    => 'ASC',
                 $EducationLevels->aliasField('order')     => 'ASC',
                 $EducationCycles->aliasField('order')     => 'ASC',
                 $EducationProgrammes->aliasField('order') => 'ASC',
-            ])
-            ->enableHydration(false)
-            ->toArray();
+            ]);
 
-        return $query;
+// Add NOT IN only when needed (avoid empty IN () SQL)
+        if (!empty($excludedIds)) {
+            $query->andWhere([
+                $EducationProgrammes->aliasField('id NOT IN') => $excludedIds,
+            ]);
+        }
+
+        $result = $query->enableHydration(false)->toArray();
+
+        return $result;
     }
 
     private function buildProgrammeTableRows($form, string $model, array $programmes, array &$options): array
