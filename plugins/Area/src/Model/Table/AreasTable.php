@@ -218,69 +218,54 @@ class AreasTable extends ControllerActionTable
         $this->setfieldOrder($this->fieldsOrder);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
-        // Webhook Education Area create -- start
-        if ($this->associations()->has('usergroups') != '1') {
-            if($entity->isNew()){
-                $body = array();
-                $body = [
-                    'area_id' =>$entity->id,
-                    'area_name' =>$entity->name,
-                    'area_code' =>$entity->code,
-                    'area_parent_id' =>$entity->parent_id,
-                    'area_level_id' =>$entity->area_level_id
-                ];
-                $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                //POCOR-8308 start
-                if (isset($options['skip_callbacks']) && $options['skip_callbacks']) {}
-                else{
-                if ($this->Auth->user()) {
-                    $username = $this->Auth->user()['username']; // POCOR-9351
-                    $Webhooks->triggerShell('area_education_create', ['username' => $username], $body);
-                }
-                }
-                //POCOR-8308 end
-            }
-            // Webhook Education Area create -- end
-
-            //webhook Education Area update -- start
-            if(!$entity->isNew()){
-                $body = array();
-                $body = [
-                    'area_id' =>$entity->id,
-                    'area_name' =>$entity->name,
-                    'area_code' =>$entity->code,
-                    'area_parent_id' =>$entity->parent_id,
-                    'area_level_id' =>$entity->area_level_id
-                ];
-                $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                //POCOR-8308 start
-                if (isset($options['skip_callbacks']) && $options['skip_callbacks']) {}
-                else{
-                if ($this->Auth->user()) {
-                    $Webhooks->triggerShell('area_education_update', ['username' => $username], $body);
-                }
-                }
-                //POCOR-8308 end
-            }
-            //webhook Education Area update -- end
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    {
+        // Skip if triggered internally
+        if (!empty($options['skip_callbacks'])) {
+            return;
         }
 
+        // Skip for unrelated associations (like usergroups)
+//        if ($this->associations()->has('usergroups')) {
+//            return;
+//        }
+
+        $eventKey = $entity->isNew() ? 'area_education_create' : 'area_education_update';
+        $this->triggerAreaWebhook($entity, $eventKey);
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options){
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
+    {
+        if (!empty($this->Auth) && $this->Auth->user()) {
 
-        // Webhook Education Grade Subject Delete -- Start
-        $body = array();
-        $body = [
-            'area_id' => $entity->id
-        ];
-        $Webhooks = TableRegistry::get('Webhook.Webhooks');
-        if($this->Auth->user()){
-            $username = $this->Auth->user()['username']; // POCOR-9351
-            $Webhooks->triggerShell('area_education_delete', ['username' => $username], $body);
+                $this->triggerAreaWebhook($entity, 'area_education_delete');
+
         }
-        // Webhook Education Grade Subject Delete -- End
+    }
+
+    private function triggerAreaWebhook(Entity $entity, string $eventKey): void
+    {
+
+        $body = [
+            'area_id' => $entity->id,
+            'area_name' => $entity->name,
+            'area_code' => $entity->code,
+            'parent_id' => $entity->parent_id,
+            'area_level_id' => $entity->area_level_id,
+        ];
+
+        // Add metadata for delete tracking if applicable
+
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+
+        // Add metadata for delete tracking if applicable
+        if ($eventKey === 'area_education_delete') {
+            $body['deleted_at'] = date('Y-m-d H:i:s');
+            $body['deleted_by'] = $this->Auth->user()['openemis_no'] ?? $this->Auth->user()['username'] ?? 'system';
+        }
+        $Webhooks->triggerCommand($eventKey, $body);
+
+
     }
 
     public function onGetConvertOptions(Event $event, Entity $entity, Query $query)
