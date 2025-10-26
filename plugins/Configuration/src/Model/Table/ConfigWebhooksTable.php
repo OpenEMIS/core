@@ -588,46 +588,46 @@ class ConfigWebhooksTable extends ControllerActionTable
             ],
             'education_cycle_create' => [
                 'code' => 'education_cycle_create',
-                'label' => 'Education Structure Cycle Create',
+                'label' => 'Education Cycle Create',
                 'model' => 'Education.EducationCycles',
                 'excluded' => self::EXCLUDED_FIELDS,
                 'placeholders' => []
             ],
             'education_cycle_delete' => [
                 'code' => 'education_cycle_delete',
-                'label' => 'Education Structure Cycle Delete',
+                'label' => 'Education Cycle Delete',
                 'model' => 'Education.EducationCycles',
                 'excluded' => self::EXCLUDED_FIELDS,
                 'placeholders' => []
             ],
             'education_cycle_update' => [
                 'code' => 'education_cycle_update',
-                'label' => 'Education Structure Cycle Update',
+                'label' => 'Education Cycle Update',
                 'model' => 'Education.EducationCycles',
                 'excluded' => self::EXCLUDED_FIELDS,
                 'placeholders' => []
             ],
-//            'education_grade_create' => [
-//                'code' => 'education_grade_create',
-//                'label' => 'Education Grade Create',
-//                'model' => 'Education.EducationGrades',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'education_grade_delete' => [
-//                'code' => 'education_grade_delete',
-//                'label' => 'Education Grade Delete',
-//                'model' => 'Education.EducationGrades',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'education_grade_update' => [
-//                'code' => 'education_grade_update',
-//                'label' => 'Education Grade Update',
-//                'model' => 'EducationGrades',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
+            'education_grade_create' => [
+                'code' => 'education_grade_create',
+                'label' => 'Education Grade Create',
+                'model' => 'Education.EducationGrades',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'education_grade_delete' => [
+                'code' => 'education_grade_delete',
+                'label' => 'Education Grade Delete',
+                'model' => 'Education.EducationGrades',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'education_grade_update' => [
+                'code' => 'education_grade_update',
+                'label' => 'Education Grade Update',
+                'model' => 'EducationGrades',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
 //            'education_grade_subject_create' => [
 //                'code' => 'education_grade_subject_create',
 //                'label' => 'Education Grade Subject Create',
@@ -988,7 +988,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         }
         if (is_array($finalBody)) {
             // normal array → save to temp .json file
-            $temp = TMP . 'webhook_' . uniqid() . '.json';
+            $temp = TMP . 'webhook_' . uniqid('w', true) . '.json';
             file_put_contents($temp, json_encode($finalBody));
             $bodyArg = $temp; // file path
         } elseif (is_string($finalBody) && str_ends_with($finalBody, '.json') && file_exists($finalBody)) {
