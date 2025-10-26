@@ -1074,10 +1074,10 @@ class InstitutionsTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if($entity->isNew()){
-            $this->triggerInstitutionWebhook($entity,'institutions_create'); //POCOR-7971
+            $this->triggerInstitutionWebhook($entity,'institution_create'); //POCOR-7971
             return;
         } else {
-            $this->triggerInstitutionWebhook($entity, 'institutions_update');
+            $this->triggerInstitutionWebhook($entity, 'institution_update');
         }
         //Start POCOR-7697
         $hasSecurityGroupInstitution = $this->checkSecurityGroupInstitution($entity);
@@ -1234,7 +1234,7 @@ class InstitutionsTable extends ControllerActionTable
             $user = $this->Auth->user();
             $openemisNo = $user['openemis_no']; // POCOR-8919
         }
-        $Webhooks->triggerCommandDelete('institutions_delete', $openemisNo, $entity);
+        $Webhooks->triggerCommandDelete('institution_delete', $openemisNo, $entity);
 
     }
 
