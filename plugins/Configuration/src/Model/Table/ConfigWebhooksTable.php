@@ -649,48 +649,48 @@ class ConfigWebhooksTable extends ControllerActionTable
                 'excluded' => self::EXCLUDED_FIELDS,
                 'placeholders' => []
             ],
-//            'education_level_create' => [
-//                'code' => 'education_level_create',
-//                'label' => 'Education Structure Level Create',
-//                'model' => 'Education.EducationLevels',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'education_level_delete' => [
-//                'code' => 'education_level_delete',
-//                'label' => 'Education Structure Level Delete',
-//                'model' => 'Education.EducationLevels',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'education_level_update' => [
-//                'code' => 'education_level_update',
-//                'label' => 'Education Structure Level Update',
-//                'model' => 'Education.EducationLevels',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'education_programme_create' => [
-//                'code' => 'education_programme_create',
-//                'label' => 'Education Programme Create',
-//                'model' => 'Education.EducationProgrammes',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'education_programme_delete' => [
-//                'code' => 'education_programme_delete',
-//                'label' => 'Education Programme Delete',
-//                'model' => 'Education.EducationProgrammes',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'education_programme_update' => [
-//                'code' => 'education_programme_update',
-//                'label' => 'Education Programme Update',
-//                'model' => 'Education.EducationSystems',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
+            'education_level_create' => [
+                'code' => 'education_level_create',
+                'label' => 'Education Level Create',
+                'model' => 'Education.EducationLevels',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'education_level_delete' => [
+                'code' => 'education_level_delete',
+                'label' => 'Education Level Delete',
+                'model' => 'Education.EducationLevels',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'education_level_update' => [
+                'code' => 'education_level_update',
+                'label' => 'Education Level Update',
+                'model' => 'Education.EducationLevels',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'education_programme_create' => [
+                'code' => 'education_programme_create',
+                'label' => 'Education Programme Create',
+                'model' => 'Education.EducationProgrammes',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'education_programme_delete' => [
+                'code' => 'education_programme_delete',
+                'label' => 'Education Programme Delete',
+                'model' => 'Education.EducationProgrammes',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'education_programme_update' => [
+                'code' => 'education_programme_update',
+                'label' => 'Education Programme Update',
+                'model' => 'Education.EducationSystems',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
 //            'education_structure_system_delete' => [
 //                'code' => 'education_structure_system_delete',
 //                'label' => 'Education Structure System Delete',

@@ -39,7 +39,7 @@ class EducationLevelsTable extends ControllerActionTable
 		$this->fields['education_system_id']['sort'] = ['field' => 'EducationSystems.name'];
 
 		// Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Education Levels','Education');       
+		$is_manual_exist = $this->getManualUrl('Administration','Education Levels','Education');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -59,54 +59,47 @@ class EducationLevelsTable extends ControllerActionTable
 		// End POCOR-5188
 	}
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
-
-        // Webhook Education Level create -- start
-        if($entity->isNew()){
-            $body = array();
-            $body = [
-                'education_system_id' =>$entity->education_system_id,
-                'education_level_id' =>$entity->id,
-                'education_level_name' =>$entity->name,
-                'education_level_isced' =>$entity->education_level_isced_id,
-            ];
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('education_level_create', ['username' => $username], $body);
-            }*/
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    {
+        // Skip if triggered internally or no authenticated user
+        if (!empty($options['skip_callbacks']) || empty($this->Auth) || empty($this->Auth->user())) {
+            return;
         }
-        // Webhook Education Level create -- end
 
-        // Webhook Education Level update -- start
-        if(!$entity->isNew()){
-            $body = array();
-            $body = [
-                    'education_system_id' =>$entity->education_system_id,
-                    'education_level_id' =>$entity->id,
-                    'education_level_name' =>$entity->name,
-                    'education_level_isced' =>$entity->education_level_isced_id,
-            ];
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('education_level_update', ['username' => $username], $body);
-            }*/
-        }
-        // Webhook Education Level update -- end
+        $eventKey = $entity->isNew()
+            ? 'education_level_create'
+            : 'education_level_update';
+
+        $this->triggerWebhookCommand($entity, $eventKey);
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
     {
-        // Webhook Education Level Delete -- Start
+        // Skip if no authenticated user
+        if (empty($this->Auth) || empty($this->Auth->user())) {
+            return;
+        }
 
-        $body = array();
-        $body = [
-            'education_level_id' =>$entity->id,
-        ];
-        /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
-        if($this->Auth->user()){
-            $Webhooks->triggerShell('education_level_delete', ['username' => $username], $body);
-        }*/
-        // Webhook Education Level Delete -- End
+        $this->triggerWebhookCommand($entity, 'education_level_delete');
+    }
+
+    /**
+     * Shared webhook trigger for education level events.
+     */
+    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
+    {
+        $body = $entity->toArray();
+
+        // Add metadata for delete tracking if applicable
+        if ($eventKey === 'education_level_delete') {
+            $body['deleted_at'] = date('Y-m-d H:i:s');
+            $body['deleted_by'] = $this->Auth->user()['openemis_no']
+                ?? $this->Auth->user()['username']
+                ?? 'system';
+        }
+
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+        $Webhooks->triggerCommand($eventKey, $body);
     }
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
