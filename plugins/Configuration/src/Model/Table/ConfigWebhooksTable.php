@@ -628,27 +628,27 @@ class ConfigWebhooksTable extends ControllerActionTable
                 'excluded' => self::EXCLUDED_FIELDS,
                 'placeholders' => []
             ],
-//            'education_grade_subject_create' => [
-//                'code' => 'education_grade_subject_create',
-//                'label' => 'Education Grade Subject Create',
-//                'model' => 'Education.EducationGradesSubjects',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'education_grade_subject_delete' => [
-//                'code' => 'education_grade_subject_delete',
-//                'label' => 'Education Grade Subject Delete',
-//                'model' => 'Education.EducationGradesSubjects',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'education_grade_subject_update' => [
-//                'code' => 'education_grade_subject_update',
-//                'label' => 'Education Grade Subject Update',
-//                'model' => 'Education.EducationGradesSubjects',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
+            'education_grade_subject_create' => [
+                'code' => 'education_grade_subject_create',
+                'label' => 'Education Grade Subject Create',
+                'model' => 'Education.EducationGradesSubjects',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'education_grade_subject_delete' => [
+                'code' => 'education_grade_subject_delete',
+                'label' => 'Education Grade Subject Delete',
+                'model' => 'Education.EducationGradesSubjects',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'education_grade_subject_update' => [
+                'code' => 'education_grade_subject_update',
+                'label' => 'Education Grade Subject Update',
+                'model' => 'Education.EducationGradesSubjects',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
 //            'education_level_create' => [
 //                'code' => 'education_level_create',
 //                'label' => 'Education Structure Level Create',
