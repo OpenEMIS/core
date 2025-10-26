@@ -76,52 +76,47 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'education_subject_id', 'education_grade_id', 'education_programme_id', 'education_level_id', 'hours_required']);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
-        // Webhook Education Subject create -- start
-        if($entity->isNew()){
-            $body = array();
-            $body = [
-                'grade_subject_id' =>$entity->id,
-                'education_subject_id' =>$entity->education_subject_id,
-                'education_grade_id' =>$entity->education_grade_id,
-            ];
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('education_grade_subject_create', ['username' => $username], $body);
-            }*/
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    {
+        // Skip if triggered internally or no authenticated user
+        if (!empty($options['skip_callbacks']) || empty($this->Auth) || empty($this->Auth->user())) {
+            return;
         }
-        // Webhook Education Subject` create -- end
 
-        // Webhook Education Subject grade subject -- start
-        if(!$entity->isNew()){
-            $body = array();
-            $body = [
-                'grade_subject_id' =>$entity->id,
-                'education_subject_id' =>$entity->education_subject_id,
-                'education_grade_id' =>$entity->education_grade_id,
-            ];
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('education_grade_subject_update', ['username' => $username], $body);
-            }*/
-        }
-        // Webhook Education grade subject -- end
+        $eventKey = $entity->isNew()
+            ? 'education_grade_subject_create'
+            : 'education_grade_subject_update';
+
+        $this->triggerWebhookCommand($entity, $eventKey);
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options){
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
+    {
+        // Skip if no authenticated user
+        if (empty($this->Auth) || empty($this->Auth->user())) {
+            return;
+        }
 
-        // Webhook Education Grade Subject Delete -- Start
-        $body = array();
-        $body = [
-            'grade_subject_id' => $entity->id
-        ];
-        /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
+        $this->triggerWebhookCommand($entity, 'education_grade_subject_delete');
+    }
 
+    /**
+     * Shared webhook trigger for education grade subjects.
+     */
+    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
+    {
+        $body = $entity->toArray();
 
-        if(isset($_SESSION['Auth']['User'])){ //POCOR-7308
-            $Webhooks->triggerShell('education_grade_subject_delete', ['username' => $username], $body);
-        }*/
-        // Webhook Education Grade Subject Delete -- End
+        // Add metadata for delete tracking if applicable
+        if ($eventKey === 'education_grade_subject_delete') {
+            $body['deleted_at'] = date('Y-m-d H:i:s');
+            $body['deleted_by'] = $this->Auth->user()['openemis_no']
+                ?? $this->Auth->user()['username']
+                ?? 'system';
+        }
+
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+        $Webhooks->triggerCommand($eventKey, $body);
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -144,7 +139,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'education_subject_id', 'hours_required', 'auto_allocation']);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Education Grade Subjects','Education');       
+		$is_manual_exist = $this->getManualUrl('Administration','Education Grade Subjects','Education');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -623,21 +618,21 @@ class EducationGradesSubjectsTable extends ControllerActionTable
     //POCOR-8435 start
      /**
      * Handles the configuration of the "requirement" field for user interaction.
-     * 
-     * This method is triggered by an event and sets up the "requirement" field 
-     * as a dropdown (select) input. The options available in the dropdown are 
+     *
+     * This method is triggered by an event and sets up the "requirement" field
+     * as a dropdown (select) input. The options available in the dropdown are
      * defined as "Compulsory" and "Elective".
-     * 
+     *
      * @param Event $event The event object that triggered this method.
      * @param array $attr An array containing the attributes of the field being modified.
      * @param string $action The action being performed (e.g., add, edit).
      * @param ServerRequest $request The HTTP request object containing context for the action.
-     * 
+     *
      * @return array The modified attributes array with dropdown type and options for the "requirement" field.
      */
     public function onUpdateFieldRequirement(Event $event, array $attr, $action, ServerRequest $request){
-       
-        $options = ['Compulsory','Elective']; 
+
+        $options = ['Compulsory','Elective'];
         $optionsAssoc = array_combine($options, $options);
         $attr['type'] = 'select';
         $attr['options'] =  $optionsAssoc;
@@ -647,21 +642,21 @@ class EducationGradesSubjectsTable extends ControllerActionTable
 
     /**
      * Handles the configuration of the "result type" field for user interaction.
-     * 
-     * This method is triggered by an event and sets up the "result type" field 
-     * as a dropdown (select) input. The options available in the dropdown are 
+     *
+     * This method is triggered by an event and sets up the "result type" field
+     * as a dropdown (select) input. The options available in the dropdown are
      * defined as "Assessments" and "Outcomes".
-     * 
+     *
      * @param Event $event The event object that triggered this method.
      * @param array $attr An array containing the attributes of the field being modified.
      * @param string $action The action being performed (e.g., add, edit).
      * @param ServerRequest $request The HTTP request object containing context for the action.
-     * 
+     *
      * @return array The modified attributes array with dropdown type and options for the "result type" field.
      */
     public function onUpdateFieldResultType(Event $event, array $attr, $action, ServerRequest $request){
 
-        $options = ['Assessments','Outcomes']; 
+        $options = ['Assessments','Outcomes'];
         $optionsAssoc = array_combine($options, $options);
         $attr['type'] = 'select';
         $attr['options'] = $optionsAssoc;
