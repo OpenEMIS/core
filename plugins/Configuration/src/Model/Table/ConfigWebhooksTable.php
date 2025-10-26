@@ -544,27 +544,6 @@ class ConfigWebhooksTable extends ControllerActionTable
                     'logout_time' => '${logout_time}'
                 ]
             ],
-            'institutions_create' => [
-                'code' => 'institutions_create',
-                'label' => 'Institution Create',
-                'model' => 'Institution.Institutions',
-                'excluded' => self::EXCLUDED_FIELDS,
-                'placeholders' => $institution_fields
-            ],
-            'institutions_delete' => [
-                'code' => 'institutions_delete',
-                'label' => 'Institution Delete',
-                'model' => 'Institution.Institutions',
-                'excluded' => self::EXCLUDED_FIELDS,
-                'placeholders' => $deleted_fields
-            ],
-            'institutions_update' => [
-                'code' => 'institutions_update',
-                'label' => 'Institution Update',
-                'model' => 'Institution.Institutions',
-                'excluded' => self::EXCLUDED_FIELDS,
-                'placeholders' => $institution_fields
-            ],
             'academic_period_create' => [
                 'code' => 'academic_period_create',
                 'label' => 'Academic Period Create',
@@ -586,55 +565,27 @@ class ConfigWebhooksTable extends ControllerActionTable
                 'excluded' => self::EXCLUDED_FIELDS,
                 'placeholders' => []
             ],
-//            'area_education_create' => [
-//                'code' => 'area_education_create',
-//                'label' => 'Area Education Create',
-//                'model' => 'Area.Areas',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'area_education_delete' => [
-//                'code' => 'area_education_delete',
-//                'label' => 'Area Education Delete',
-//                'model' => 'Area.Areas',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'area_education_update' => [
-//                'code' => 'area_education_update',
-//                'label' => 'Area Education Update',
-//                'model' => 'Area.Areas',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'attendance_update' => [
-//                'code' => 'attendance_update',
-//                'label' => 'Student Attendance Update',
-//                'model' => 'Institution.StudentAbsencesPeriodDetails',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'class_create' => [
-//                'code' => 'class_create',
-//                'label' => 'Class Create',
-//                'model' => 'Institution.InstitutionClasses',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'class_delete' => [
-//                'code' => 'class_delete',
-//                'label' => 'Class Delete',
-//                'model' => 'Institution.InstitutionClasses',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'class_update' => [
-//                'code' => 'class_update',
-//                'label' => 'Class Update',
-//                'model' => 'Institution.InstitutionClasses',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
+            'area_education_create' => [
+                'code' => 'area_education_create',
+                'label' => 'Area Education Create',
+                'model' => 'Area.Areas',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'area_education_delete' => [
+                'code' => 'area_education_delete',
+                'label' => 'Area Education Delete',
+                'model' => 'Area.Areas',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'area_education_update' => [
+                'code' => 'area_education_update',
+                'label' => 'Area Education Update',
+                'model' => 'Area.Areas',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
 //            'education_cycle_create' => [
 //                'code' => 'education_cycle_create',
 //                'label' => 'Education Structure Cycle Create',
@@ -775,7 +726,27 @@ class ConfigWebhooksTable extends ControllerActionTable
 //                'excluded' => self::EXCLUDED_FIELDS,
 //                'placeholders' => []
 //            ],
-//
+//            'institution_class_create' => [
+//                'code' => 'institution_class_create',
+//                'label' => 'Class Create',
+//                'model' => 'Institution.InstitutionClasses',
+//                'excluded' => self::EXCLUDED_FIELDS,
+//                'placeholders' => []
+//            ],
+//            'institution_class_delete' => [
+//                'code' => 'institution_class_delete',
+//                'label' => 'Class Delete',
+//                'model' => 'Institution.InstitutionClasses',
+//                'excluded' => self::EXCLUDED_FIELDS,
+//                'placeholders' => []
+//            ],
+//            'institution_class_update' => [
+//                'code' => 'institution_class_update',
+//                'label' => 'Class Update',
+//                'model' => 'Institution.InstitutionClasses',
+//                'excluded' => self::EXCLUDED_FIELDS,
+//                'placeholders' => []
+//            ],
 //            'programme_create' => [
 //                'code' => 'programme_create',
 //                'label' => 'Programme Create',
@@ -825,6 +796,27 @@ class ConfigWebhooksTable extends ControllerActionTable
 //                'excluded' => ['id', 'password', 'created', 'modified'],
 //                'placeholders' => []
 //            ],
+            'institution_create' => [
+                'code' => 'institution_create',
+                'label' => 'Institution Create',
+                'model' => 'Institution.Institutions',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => $institution_fields
+            ],
+            'institution_delete' => [
+                'code' => 'institution_delete',
+                'label' => 'Institution Delete',
+                'model' => 'Institution.Institutions',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => $deleted_fields
+            ],
+            'institution_update' => [
+                'code' => 'institution_update',
+                'label' => 'Institution Update',
+                'model' => 'Institution.Institutions',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => $institution_fields
+            ],
 //            'staff_create' => [
 //                'code' => 'staff_create',
 //                'label' => 'Staff Create',
@@ -843,6 +835,20 @@ class ConfigWebhooksTable extends ControllerActionTable
 //                'code' => 'staff_update',
 //                'label' => 'Staff Update',
 //                'model' => 'Institution.Staff',
+//                'excluded' => self::EXCLUDED_FIELDS,
+//                'placeholders' => []
+//            ],
+//            'staff_attendance_update' => [
+//                'code' => 'staff_attendance_update',
+//                'label' => 'Staff Attendance Update',
+//                'model' => 'Institution.StudentAbsencesPeriodDetails',
+//                'excluded' => self::EXCLUDED_FIELDS,
+//                'placeholders' => []
+//            ],
+//            'student_attendance_update' => [
+//                'code' => 'student_attendance_update',
+//                'label' => 'Staff Attendance Update',
+//                'model' => 'Institution.StudentAbsencesPeriodDetails',
 //                'excluded' => self::EXCLUDED_FIELDS,
 //                'placeholders' => []
 //            ],
