@@ -586,27 +586,27 @@ class ConfigWebhooksTable extends ControllerActionTable
                 'excluded' => self::EXCLUDED_FIELDS,
                 'placeholders' => []
             ],
-//            'education_cycle_create' => [
-//                'code' => 'education_cycle_create',
-//                'label' => 'Education Structure Cycle Create',
-//                'model' => 'Education.EducationCycles',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'education_cycle_delete' => [
-//                'code' => 'education_cycle_delete',
-//                'label' => 'Education Structure Cycle Delete',
-//                'model' => 'Education.EducationCycles',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'education_cycle_update' => [
-//                'code' => 'education_cycle_update',
-//                'label' => 'Education Structure Cycle Update',
-//                'model' => 'Education.EducationCycles',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
+            'education_cycle_create' => [
+                'code' => 'education_cycle_create',
+                'label' => 'Education Structure Cycle Create',
+                'model' => 'Education.EducationCycles',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'education_cycle_delete' => [
+                'code' => 'education_cycle_delete',
+                'label' => 'Education Structure Cycle Delete',
+                'model' => 'Education.EducationCycles',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'education_cycle_update' => [
+                'code' => 'education_cycle_update',
+                'label' => 'Education Structure Cycle Update',
+                'model' => 'Education.EducationCycles',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
 //            'education_grade_create' => [
 //                'code' => 'education_grade_create',
 //                'label' => 'Education Grade Create',

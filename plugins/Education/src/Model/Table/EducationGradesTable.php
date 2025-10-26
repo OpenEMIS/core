@@ -111,38 +111,21 @@ class EducationGradesTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
-        $connection = $this->getConnection();
-        $connection->getDriver()->enableAutoQuoting();
-         // Webhook Education Grade create -- start
-         if($entity->isNew()){
-            $body = array();
-            $body = [
-                'education_programme_id' =>$entity->education_programme_id,
-                'grade_name' =>$entity->name,
-                'grade_id' =>$entity->id,
-            ];
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('education_grade_create', ['username' => $username], $body);
-            }*/
-        }
-        // Webhook Education Grade create -- end
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    {
+        // Ensure auto-quoting for DB safety (kept from your original)
+        $this->getConnection()->getDriver()->enableAutoQuoting();
 
-        //webhook Education Grade update -- start
-        if(!$entity->isNew()){
-            $body = array();
-            $body = [
-                'education_programme_id' =>$entity->education_programme_id,
-                'grade_name' =>$entity->name,
-                'grade_id' =>$entity->id,
-            ];
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('education_grade_update', ['username' => $username], $body);
-            }*/
+        // Skip if triggered internally or no authenticated user
+        if (!empty($options['skip_callbacks']) || empty($this->Auth) || empty($this->Auth->user())) {
+            return;
         }
-        //webhook Education Grade update -- start
+
+        $eventKey = $entity->isNew()
+            ? 'education_grade_create'
+            : 'education_grade_update';
+
+        $this->triggerWebhookCommand($entity, $eventKey);
     }
     //POCOR 7308 starts
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
@@ -240,25 +223,39 @@ class EducationGradesTable extends ControllerActionTable
     }
    //POCOR 7308 ends
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
     {
-
+        // Preserve existing logic
         $this->updateAdmissionAgeAfterDelete($entity);
 
-        // Webhook Education Grade Delete -- Start
+        // Skip if no authenticated user
+        if (empty($this->Auth) || empty($this->Auth->user())) {
+            return;
+        }
 
-        $body = array();
-        $body = [
-            'grade_id' => $entity->id
-        ];
-        /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
-        if($this->Auth->user()){
-            $Webhooks->triggerShell('education_grade_delete', ['username' => $username], $body);
-        }*/
-        // Webhook Education Grade Delete -- End
+        $this->triggerWebhookCommand($entity, 'education_grade_delete');
     }
 
-     /**
+    /**
+     * Shared webhook trigger for education grades.
+     */
+    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
+    {
+        $body = $entity->toArray();
+
+        // Add metadata for delete tracking
+        if ($eventKey === 'education_grade_delete') {
+            $body['deleted_at'] = date('Y-m-d H:i:s');
+            $body['deleted_by'] = $this->Auth->user()['openemis_no']
+                ?? $this->Auth->user()['username']
+                ?? 'system';
+        }
+
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+        $Webhooks->triggerCommand($eventKey, $body);
+    }
+
+    /**
      * Method to get the education system id for the particular grade given
      *
      * @param integer $gradeId The grade id to check for
