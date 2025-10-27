@@ -28,7 +28,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         'DELETE' => 'DELETE'
     ];
     const string OPEN_EMIS_EXAMS = 'OpenEMIS Exams';
-    const array EXCLUDED_FIELDS = ['password', 'security_group_id'];
+    const array EXCLUDED_FIELDS = ['password', 'security_group_id', 'super_admin'];
     private $eventKeyOptions = [
         'logout' => 'Logout',
         'institutions_create' => 'Institution Create',
@@ -733,27 +733,27 @@ class ConfigWebhooksTable extends ControllerActionTable
                 'excluded' => self::EXCLUDED_FIELDS,
                 'placeholders' => []
             ],
-//            'institution_class_create' => [
-//                'code' => 'institution_class_create',
-//                'label' => 'Class Create',
-//                'model' => 'Institution.InstitutionClasses',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'institution_class_delete' => [
-//                'code' => 'institution_class_delete',
-//                'label' => 'Class Delete',
-//                'model' => 'Institution.InstitutionClasses',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'institution_class_update' => [
-//                'code' => 'institution_class_update',
-//                'label' => 'Class Update',
-//                'model' => 'Institution.InstitutionClasses',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
+            'institution_class_create' => [
+                'code' => 'institution_class_create',
+                'label' => 'Institution Class Create',
+                'model' => 'Institution.InstitutionClasses',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'institution_class_delete' => [
+                'code' => 'institution_class_delete',
+                'label' => 'Institution Class Delete',
+                'model' => 'Institution.InstitutionClasses',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'institution_class_update' => [
+                'code' => 'institution_class_update',
+                'label' => 'Institution Class Update',
+                'model' => 'Institution.InstitutionClasses',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
 //            'role_create' => [
 //                'code' => 'role_create',
 //                'label' => 'Role Create',
@@ -974,6 +974,8 @@ class ConfigWebhooksTable extends ControllerActionTable
         }
         if (is_array($finalBody)) {
             // normal array → save to temp .json file
+            $finalBody = $this->sanitizeWebhookBody($finalBody);
+
             $temp = TMP . 'webhook_' . uniqid('w', true) . '.json';
             file_put_contents($temp, json_encode($finalBody));
             $bodyArg = $temp; // file path
@@ -1026,6 +1028,40 @@ class ConfigWebhooksTable extends ControllerActionTable
         }
     }
 
+    /**
+     * Recursively remove sensitive or excluded fields from the webhook body.
+     */
+    private function sanitizeWebhookBody(array $data, array $excluded = self::EXCLUDED_FIELDS): array
+    {
+        $clean = [];
+
+        foreach ($data as $key => $value) {
+            // Normalize to lowercase for safety
+            $lowerKey = strtolower((string)$key);
+
+            // If key contains any excluded term (e.g. 'password', 'security_group_id'), skip
+            $isExcluded = false;
+            foreach ($excluded as $term) {
+                if (strpos($lowerKey, strtolower($term)) !== false) {
+                    $isExcluded = true;
+                    break;
+                }
+            }
+
+            if ($isExcluded) {
+                continue;
+            }
+
+            // Recurse into nested arrays
+            if (is_array($value)) {
+                $clean[$key] = $this->sanitizeWebhookBody($value, $excluded);
+            } else {
+                $clean[$key] = $value;
+            }
+        }
+
+        return $clean;
+    }
     /**
      * Safely replaces ${placeholders} inside JSON templates.
      */
