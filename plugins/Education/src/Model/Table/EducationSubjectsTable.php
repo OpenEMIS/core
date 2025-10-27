@@ -133,51 +133,72 @@ class EducationSubjectsTable extends ControllerActionTable
         $this->field('field_of_studies', ['after' => 'visible', 'entity' => $entity, 'type' => 'custom_field_of_studies']);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
-
-        // Webhook Education Subject create -- start
-        if($entity->isNew()){
-            $body = array();
-            $body = [
-                'subject_id' =>$entity->id,
-                'subject_name' =>$entity->name,
-                'subject_code' =>$entity->code,
-            ];
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if (!empty($entity->created_user_id)) {
-                $Webhooks->triggerShell('education_subject_create', ['username' => $username], $body);
-            }
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    {
+        // Skip if triggered internally or without authentication
+        if (!empty($options['skip_callbacks']) || empty($this->Auth) || empty($this->Auth->user())) {
+            return;
         }
-        // Webhook Education Subject` create -- end
 
-         // Webhook Education Subject update -- start
-         if(!$entity->isNew()){
-            $body = array();
-            $body = [
-                'subject_id' =>$entity->id,
-                'subject_name' =>$entity->name,
-                'subject_code' =>$entity->code,
-            ];
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if (!empty($entity->modified_user_id)) {
-                $Webhooks->triggerShell('education_subject_update', ['username' => $username], $body);
-            }
-        }
-        // Webhook Education Subject` update -- end
+        $eventKey = $entity->isNew()
+            ? 'education_subject_create'
+            : 'education_subject_update';
+
+        $this->triggerEducationSubjectWebhook($entity, $eventKey);
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options){
-
-        // Webhook Education Subject Delete -- Start
-        $body = array();
-        $body = [
-            'subject_id' => $entity->id
-        ];
-        $Webhooks = TableRegistry::get('Webhook.Webhooks');
-        if($this->Auth->user()){
-            $Webhooks->triggerShell('education_subject_delete', ['username' => $username], $body);
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
+    {
+        // Skip webhook if no authenticated user
+        if (empty($this->Auth) || empty($this->Auth->user())) {
+            return;
         }
-        // Webhook Education Subject Delete -- End
+
+        $this->triggerEducationSubjectWebhook($entity, 'education_subject_delete');
+    }
+
+    /**
+     * Prepares the webhook body for any model, with optional child associations.
+     */
+    private function prepareWebhookBody(Entity $entity, array $contain = []): array
+    {
+
+        $Table = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
+
+        // Fetch full entity with child models if available
+        $record = $Table->find()
+            ->where([$Table->aliasField('id') => $entity->id])
+            ->contain($contain)
+            ->first();
+
+        // Fallback if hard-deleted or not found
+        if (!$record) {
+            $record = $entity;
+        }
+
+        // Convert to array safely
+        $body = $record->toArray();
+
+        return $body;
+    }
+    /**
+     * Shared webhook trigger for Education Subject events.
+     */
+    private function triggerEducationSubjectWebhook(Entity $entity, string $eventKey): void
+    {
+        $contain = ['FieldOfStudies']; // Add any associations here
+        $body = $this->prepareWebhookBody($entity, $contain);
+
+        // Add metadata for delete tracking if applicable
+        if ($eventKey === 'education_subject_delete') {
+            $body['deleted_at'] = date('Y-m-d H:i:s');
+            $body['deleted_by'] = $this->Auth->user()['openemis_no']
+                ?? $this->Auth->user()['username']
+                ?? 'system';
+        }
+
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+        $Webhooks->triggerCommand($eventKey, $body);
     }
 
     public function getFieldOfStudiesOptions()

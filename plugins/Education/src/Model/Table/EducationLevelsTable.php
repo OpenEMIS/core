@@ -253,9 +253,9 @@ class EducationLevelsTable extends ControllerActionTable
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         list(,,  $systemOptions, $selectedSystem) = array_values($this->getSelectOptions());
-        $attr['options'] = $cycleOptions;
+        $attr['options'] = $systemOptions;
         if ($action == 'add') {
-            $attr['default'] = $selectedCycle;
+            $attr['default'] = $selectedSystem;
         }
 
         return $attr;
