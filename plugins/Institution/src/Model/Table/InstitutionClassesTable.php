@@ -21,7 +21,7 @@ use Cake\Routing\Router;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Datasource\ConnectionManager; 
+use Cake\Datasource\ConnectionManager;
 
 
 class InstitutionClassesTable extends ControllerActionTable
@@ -153,9 +153,9 @@ class InstitutionClassesTable extends ControllerActionTable
         $validator
             // ->allowEmpty('staff_id')
             ->requirePresence('name')
-            ->requirePresence('academic_period_id') //POCOR-8904 
-            ->requirePresence('institution_shift_id')//POCOR-8904 
-            ->add('capacity', 'positive', [//POCOR-8904 
+            ->requirePresence('academic_period_id') //POCOR-8904
+            ->requirePresence('institution_shift_id')//POCOR-8904
+            ->add('capacity', 'positive', [//POCOR-8904
                 'rule' => ['comparison', '>', 0],
                 'message' => 'Please provide valid capacity'
             ])
@@ -527,291 +527,192 @@ class InstitutionClassesTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
-        try {
-
-            //            Log::debug(print_r(['beforeSave' => $entity], true));
-            //            Log::debug(print_r(['beforeSave' => $options], true));
-
-            // POCOR-8538 start
-            if ($entity->has('custom') && !empty($entity->custom)) {
-                $createdUserId = $entity->created_user_id;
-                $classId = $entity->id;
-                if (!empty($entity->modified_user_id)) {
-                    $createdUserId = $entity->modified_user_id;
-                }
-                $customFields = $entity->custom;
-
-                $cv = self::saveCustomFields($customFields, $classId, $createdUserId);
-            }
-        } catch (\Exception $exception) {
-            Log::debug(print_r(['Error Saving Class Custom Fields:' => $exception->getMessage()], true));
-        }
-        // POCOR-8538 end
+        $this->handleClassCustomFields($entity);
+        Log::debug(__FUNCTION__ . '1');
+        $this->syncClassStudents($entity, $options);
+        Log::debug(__FUNCTION__ . '2');
 
         if ($entity->isNew()) {
-
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
+            Log::debug(__FUNCTION__ . '3');
 
-            if (!empty($this->controllerAction) && ($this->controllerAction == 'Classes')) {
-                // POCOR-5435 ->Webhook Feature class (create)
+            $this->triggerClassWebhook($entity, 'institution_class_create');
+            Log::debug(__FUNCTION__ . '4');
 
-                $bodyData = $this->find(
-                    'all',
-                    [
-                        'contain' => [
-                            'Institutions',
-                            'EducationGrades',
-                            'Staff',
-                            'AcademicPeriods',
-                            'InstitutionShifts',
-                            'InstitutionUnits',
-                            'InstitutionCourses',
-                            'InstitutionShifts.ShiftOptions',
-                            'ClassesSecondaryStaff.SecondaryStaff',
-                            'Students'
-                        ],
-                    ]
-                )->where([
-                    $this->aliasField('id') => $entity->id
-                ]);
-
-                $grades = $gradeId = $secondaryTeachers = $students = [];
-
-                if (!empty($bodyData)) {
-                    foreach ($bodyData as $key => $value) {
-                        $capacity = $value->capacity;
-                        $shift = $value->institution_shift->shift_option->name;
-                        $academicPeriod = $value->academic_period->name;
-                        $homeRoomteacher = $value->staff->openemis_no;
-                        $institutionId = $value->institution->id;
-                        $institutionName = $value->institution->name;
-                        $institutionCode = $value->institution->code;
-
-                        if (!empty($value->education_grades)) {
-                            foreach ($value->education_grades as $key => $gradeOptions) {
-                                $grades[] = $gradeOptions->name;
-                                $gradeId[] = $gradeOptions->id;
-                            }
-                        }
-
-                        if (!empty($value->classes_secondary_staff)) {
-                            foreach ($value->classes_secondary_staff as $key => $secondaryStaffs) {
-                                $secondaryTeachers[] = $secondaryStaffs->secondary_staff->openemis_no;
-                            }
-                        }
-
-                        $maleStudents = 0;
-                        $femaleStudents = 0;
-                        if (!empty($value->students)) {
-                            foreach ($value->students as $key => $studentsData) {
-                                $students[] = $studentsData->openemis_no;
-                                if ($studentsData->gender->code == 'M') {
-                                    $maleStudents = $maleStudents + 1;
-                                }
-                                if ($studentsData->gender->code == 'F') {
-                                    $femaleStudents = $femaleStudents + 1;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                $body = array();
-
-                $body = [
-                    'institutions_id' => !empty($institutionId) ? $institutionId : NULL,
-                    'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
-                    'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
-                    'institutions_classes_id' => $entity->id,
-                    'institutions_classes_name' => $entity->name,
-                    'academic_periods_name' => !empty($academicPeriod) ? $academicPeriod : NULL,
-                    'shift_options_name' => !empty($shift) ? $shift : NULL,
-                    'institutions_classes_capacity' => !empty($capacity) ? $capacity : NULL,
-                    'education_grades_id' => !empty($gradeId) ? $gradeId : NULL,
-                    'education_grades_name' => !empty($grades) ? $grades : NULL,
-                    'institution_classes_total_male_students' => !empty($maleStudents) ? $maleStudents : 0,
-                    'institution_classes_total_female_studentss' => !empty($femaleStudents) ? $femaleStudents : 0,
-                    'total_students' => !empty($students) ? count($students) : 0,
-                    'institution_classes_staff_openemis_no' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
-                    'institution_classes_secondary_staff_openemis_no' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
-                    'institution_class_students_openemis_no' => !empty($students) ? $students : NULL
-                ];
-
-                if ($this->action == 'add') {
-
-                    $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                    $user = $this->Auth->user(); // POCOR-9024
-                    if ($user) {
-                        $Webhooks->triggerShell('class_create', ['username' => $user->username], $body);
-                    }
-                }
-                // POCOR-5435 ->Webhook Feature class (create) -- end
-            }
         } else {
-            $editAction  = json_decode(json_encode($options), true);
-            $webhook_action = $editAction['extra']['action'];
+            Log::debug(__FUNCTION__ . '5');
 
-            //empty class student is handled by beforeMarshal
-            //in another case, it will be save manually to avoid unecessary queries during save by association
-            if ($entity->has('classStudents') && !empty($entity->classStudents)) {
-                $newStudents = [];
-                //decode string sent through form
-                foreach ($entity->classStudents as $item) {
-                    $student = json_decode($this->urlsafeB64Decode($item), true);
-                    $newStudents[$student['student_id']] = $student;
-                }
-                $institutionClassId = $entity->id;
-                $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents'); //POCOR-6768
-                $existingStudents = $this->ClassStudents
-                    ->find('all')
-                    ->select([
-                        'id',
-                        'student_id',
-                        'institution_class_id',
-                        'education_grade_id',
-                        'academic_period_id',
-                        'institution_id',
-                        'student_status_id'
-                    ])
-                    ->matching('StudentStatuses', function ($q) {
-                        return $q->where(['StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN']]);
-                    })
-                    ->where([
-                        $this->ClassStudents->aliasField('institution_class_id') => $institutionClassId
-                    ])
-                    ->toArray();
+            $this->triggerClassWebhook($entity, 'institution_class_update');
+            Log::debug(__FUNCTION__ . '6');
 
-                foreach ($existingStudents as $key => $classStudentEntity) {
-                    if (!array_key_exists($classStudentEntity->student_id, $newStudents)) { // if current student does not exists in the new list of students
-                        $this->ClassStudents->delete($classStudentEntity);
-                        /** POCOR-6768 starts - removing student from institution_subject_students which is unassigned from class*/
-                        $SubjectStudents->deleteAll([
-                            $SubjectStudents->aliasField('institution_class_id') => $institutionClassId,
-                            $SubjectStudents->aliasField('student_id') => $classStudentEntity->student_id,
-                        ]);
-                        /**POCOR-6768 ends*/
-                    } else { // if student exists, then remove from the array to get the new student records to be added
-                        unset($newStudents[$classStudentEntity->student_id]);
-                    }
-                }
-
-                foreach ($newStudents as $key => $student) {
-                    // POCOR-9024 start
-                    if (!isset($student['id'])) {
-                        $student['id'] = Text::uuid();
-                    }
-                    // POCOR-9024 end
-                    $newClassStudentEntity = $this->ClassStudents->newEntity($student);
-                    $store = $this->ClassStudents->save($newClassStudentEntity);
-                    if ($store) {
-                        /** POCOR-6768 starts- updating student's class in institution_subject_students table which is reassigning into a class*/
-                        $SubjectStudents->updateAll(['institution_class_id' => $newClassStudentEntity->institution_class_id], ['id' => $newClassStudentEntity->id]);
-                        /**POCOR-6768 ends*/
-                    }
-                }
-            }
-            /**POCOR-6940 starts - modified condition when bulk student unassigned*/
-            else {
-                $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-                $SubjectStudents->deleteAll([
-                    $SubjectStudents->aliasField('institution_class_id') => $entity->id
-                ]);
-            }
-            /**POCOR-6940 ends*/
-            // POCOR-5436 ->Webhook Feature class (update) -- start
-            $bodyData = $this->find(
-                'all',
-                [
-                    'contain' => [
-                        'Institutions',
-                        'EducationGrades',
-                        'Staff',
-                        'AcademicPeriods',
-                        'InstitutionShifts',
-                        'InstitutionShifts.ShiftOptions',
-                        'InstitutionUnits',
-                        'InstitutionCourses',
-                        'ClassesSecondaryStaff.SecondaryStaff',
-                        'Students',
-                        'Students.Genders'
-                    ],
-                ]
-            )->where([
-                $this->aliasField('id') => $entity->id
-            ]);
-
-            $grades = $gradeId = $secondaryTeachers = $students = [];
-
-            if (!empty($bodyData)) {
-                foreach ($bodyData as $key => $value) {
-                    $capacity = $value->capacity;
-                    $shift = $value->institution_shift->shift_option->name;
-                    $academicPeriod = $value->academic_period->name;
-                    $homeRoomteacher = $value->staff->openemis_no;
-                    $institutionId = $value->institution->id;
-                    $institutionName = $value->institution->name;
-                    $institutionCode = $value->institution->code;
-
-                    if (!empty($value->education_grades)) {
-                        foreach ($value->education_grades as $key => $gradeOptions) {
-                            $grades[] = $gradeOptions->name;
-                            $gradeId[] = $gradeOptions->id;
-                        }
-                    }
-
-                    if (!empty($value->classes_secondary_staff)) {
-                        foreach ($value->classes_secondary_staff as $key => $secondaryStaffs) {
-                            $secondaryTeachers[] = $secondaryStaffs->secondary_staff->openemis_no;
-                        }
-                    }
-
-                    $maleStudents = 0;
-                    $femaleStudents = 0;
-                    if (!empty($value->students)) {
-                        foreach ($value->students as $key => $studentsData) {
-                            $students[] = $studentsData->openemis_no;
-                            if ($studentsData->gender->code == 'M') {
-                                $maleStudents = $maleStudents + 1;
-                            }
-                            if ($studentsData->gender->code == 'F') {
-                                $femaleStudents = $femaleStudents + 1;
-                            }
-                        }
-                    }
-                }
-            }
-
-            $body = array();
-
-            $body = [
-                'institutions_id' => !empty($institutionId) ? $institutionId : NULL,
-                'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
-                'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
-                'institutions_classes_id' => $entity->id,
-                'institutions_classes_name' => $entity->name,
-                'academic_periods_name' => !empty($academicPeriod) ? $academicPeriod : NULL,
-                'shift_options_name' => !empty($shift) ? $shift : NULL,
-                'institutions_classes_capacity' => !empty($capacity) ? $capacity : NULL,
-                'education_grades_id' => !empty($gradeId) ? $gradeId : NULL,
-                'education_grades_name' => !empty($grades) ? $grades : NULL,
-                'institution_classes_total_male_students' => !empty($maleStudents) ? $maleStudents : 0,
-                'institution_classes_total_female_studentss' => !empty($femaleStudents) ? $femaleStudents : 0,
-                'total_students' => !empty($students) ? count($students) : 0,
-                'institution_classes_staff_openemis_no' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
-                'institution_classes_secondary_staff_openemis_no' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
-                'institution_class_students_openemis_no' => !empty($students) ? $students : NULL
-            ];
-
-            if ($webhook_action == 'edit') {
-                $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                if (!empty($entity->modified_user_id)) {
-                    $Webhooks->triggerShell('class_update', ['username' => ''], $body);
-                }
-            }
-            // POCOR-5436 ->Webhook Feature class (update) -- end
         }
+    }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
+    {
+
+        $this->triggerClassWebhook($entity, 'institution_class_delete');
+    }
+
+    /**
+     * Safely resolve current user for audit / webhook.
+     */
+    private function resolveCurrentUser(): ?array
+    {
+        try {
+            // 1️⃣ Try the Auth component first
+            if (!empty($this->Auth) && $this->Auth->user()) {
+                return $this->Auth->user();
+            }
+
+            // 2️⃣ Fallback to session if Auth is unavailable
+            $session = $this->getTableLocator()
+                ->get('Configuration.ConfigItems') // any loaded table with session context
+                ->getConnection()
+                ->getDriver()
+                ->getConnection()
+                ->session ?? null;
+
+            if (method_exists($this, 'getRequest') && $this->getRequest()->getSession()) {
+                $session = $this->getRequest()->getSession();
+            }
+
+            if ($session && $session->check('Auth.User.id')) {
+                $userId = $session->read('Auth.User.id');
+                $Users = TableRegistry::getTableLocator()->get('User.Users');
+                $user = $Users->find('all')
+                    ->where([
+                    $Users->aliasField('id')
+                => $userId])->first();
+
+                return $user ? $user->toArray() : null;
+            }
+        } catch (\Throwable $e) {
+            Log::warning('User resolution failed: ' . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    private function handleClassCustomFields(Entity $entity): void
+    {
+        try {
+            if ($entity->has('custom') && !empty($entity->custom)) {
+                $userId = $entity->modified_user_id ?? $entity->created_user_id;
+                self::saveCustomFields($entity->custom, $entity->id, $userId);
+            }
+        } catch (\Exception $e) {
+            Log::debug(print_r(['Error Saving Class Custom Fields:' => $e->getMessage()], true));
+        }
+    }
+
+    private function syncClassStudents(Entity $entity, ArrayObject $options): void
+    {
+        if (empty($entity->classStudents)) {
+            // Handle bulk unassignment
+            $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+            $SubjectStudents->deleteAll([$SubjectStudents->aliasField('institution_class_id') => $entity->id]);
+            return;
+        }
+
+        $ClassStudents = $this->ClassStudents;
+        $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $newStudents = [];
+
+        foreach ($entity->classStudents as $encoded) {
+            $student = json_decode($this->urlsafeB64Decode($encoded), true);
+            $newStudents[$student['student_id']] = $student;
+        }
+
+        $existing = $ClassStudents->find()
+            ->select(['id', 'student_id', 'institution_class_id', 'education_grade_id'])
+            ->matching('StudentStatuses', fn($q) =>
+            $q->where(['StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN']])
+            )
+            ->where([$ClassStudents->aliasField('institution_class_id') => $entity->id])
+            ->toArray();
+
+        foreach ($existing as $record) {
+            if (!isset($newStudents[$record->student_id])) {
+                $ClassStudents->delete($record);
+                $SubjectStudents->deleteAll([
+                    $SubjectStudents->aliasField('institution_class_id') => $entity->id,
+                    $SubjectStudents->aliasField('student_id') => $record->student_id,
+                ]);
+            } else {
+                unset($newStudents[$record->student_id]);
+            }
+        }
+
+        foreach ($newStudents as $student) {
+            $student['id'] ??= Text::uuid();
+            $newEntity = $ClassStudents->newEntity($student);
+            if ($ClassStudents->save($newEntity)) {
+                $SubjectStudents->updateAll(
+                    ['institution_class_id' => $newEntity->institution_class_id],
+                    ['id' => $newEntity->id]
+                );
+            }
+        }
+    }
+
+    private function triggerClassWebhook(Entity $entity, string $eventKey): void
+    {
+        Log::debug(__FUNCTION__ . '1');
+        $user = $this->resolveCurrentUser();
+        Log::debug(__FUNCTION__ . '2');
+
+        $contain = [
+            'Institutions',
+            'EducationGrades',
+            'Staff',
+            'AcademicPeriods',
+            'InstitutionShifts.ShiftOptions',
+            'InstitutionUnits',
+            'InstitutionCourses',
+            'ClassesSecondaryStaff.SecondaryStaff',
+//            'Students.Genders',
+        ];
+        Log::debug(__FUNCTION__ . '3');
+
+        $body = $this->prepareWebhookBody($entity, $contain);
+        Log::debug(__FUNCTION__ . '4');
+        if ($eventKey === 'institution_class_delete') {
+            $body['deleted_at'] = date('Y-m-d H:i:s');
+            $body['deleted_by'] = $user['openemis_no']
+                ?? $user['username']
+                ?? 'system';
+        }
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+        $Webhooks->triggerCommand($eventKey, $body);
+        Log::debug(__FUNCTION__ . '5');
+
+    }
+
+    /**
+     * Prepares the webhook body for any model, with optional child associations.
+     */
+    private function prepareWebhookBody(Entity $entity, array $contain = []): array
+    {
+        $Table = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+
+        // Fetch full entity with child models if available
+        $record = $Table->find()
+            ->where([$Table->aliasField('id') => $entity->id])
+            ->contain($contain)
+            ->first();
+
+        // Fallback if hard-deleted or not found
+        if (!$record) {
+            $record = $entity;
+        }
+
+        // Convert to array safely
+        $body = $record->toArray();
+
+        return $body;
     }
 
     // POCOR-8538 start
@@ -909,23 +810,7 @@ class InstitutionClassesTable extends ControllerActionTable
         if (isset($extra['errorMessage']) && $extra['errorMessage'] == $errorMessage) {
             $this->Alert->warning($errorMessage, ['reset' => true]);
         }
-        if (!empty($this->controllerAction) && ($this->controllerAction == 'Classes')) {
-            $bodyData = $this->find()->where([
-                $this->aliasField('id') => $entity->id
-            ]);
-            $body = [];
 
-            $body = [
-                'institutions_class_id' => $entity->id,
-            ];
-            if ($this->action == 'remove') {
-                $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                if ($this->Auth->user()) {
-                    $username = $this->Auth->user()['username'];
-                    $Webhooks->triggerShell('class_delete', ['username' => $username], $body);
-                }
-            }
-        }
     }
 
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
