@@ -712,27 +712,27 @@ class ConfigWebhooksTable extends ControllerActionTable
                 'excluded' => self::EXCLUDED_FIELDS,
                 'placeholders' => []
             ],
-//            'education_subject_create' => [
-//                'code' => 'education_subject_create',
-//                'label' => 'Education Subject Create',
-//                'model' => 'Education.EducationSubjects',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'education_subject_delete' => [
-//                'code' => 'education_subject_delete',
-//                'label' => 'Education Subject Delete',
-//                'model' => 'Education.EducationSubjects',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'education_subject_update' => [
-//                'code' => 'education_subject_update',
-//                'label' => 'Education Subject Update',
-//                'model' => 'Education.EducationSubjects',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
+            'education_subject_create' => [
+                'code' => 'education_subject_create',
+                'label' => 'Education Subject Create',
+                'model' => 'Education.EducationSubjects',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'education_subject_delete' => [
+                'code' => 'education_subject_delete',
+                'label' => 'Education Subject Delete',
+                'model' => 'Education.EducationSubjects',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'education_subject_update' => [
+                'code' => 'education_subject_update',
+                'label' => 'Education Subject Update',
+                'model' => 'Education.EducationSubjects',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
 //            'institution_class_create' => [
 //                'code' => 'institution_class_create',
 //                'label' => 'Class Create',
@@ -751,27 +751,6 @@ class ConfigWebhooksTable extends ControllerActionTable
 //                'code' => 'institution_class_update',
 //                'label' => 'Class Update',
 //                'model' => 'Institution.InstitutionClasses',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'programme_create' => [
-//                'code' => 'programme_create',
-//                'label' => 'Programme Create',
-//                'model' => 'Education.EducationProgrammes',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'programme_delete' => [
-//                'code' => 'programme_delete',
-//                'label' => 'Programme Delete',
-//                'model' => 'Education.EducationProgrammes',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'programme_update' => [
-//                'code' => 'programme_update',
-//                'label' => 'Programme Update',
-//                'model' => 'Education.EducationProgrammes',
 //                'excluded' => self::EXCLUDED_FIELDS,
 //                'placeholders' => []
 //            ],

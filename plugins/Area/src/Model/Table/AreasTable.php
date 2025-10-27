@@ -246,13 +246,7 @@ class AreasTable extends ControllerActionTable
     private function triggerAreaWebhook(Entity $entity, string $eventKey): void
     {
 
-        $body = [
-            'area_id' => $entity->id,
-            'area_name' => $entity->name,
-            'area_code' => $entity->code,
-            'parent_id' => $entity->parent_id,
-            'area_level_id' => $entity->area_level_id,
-        ];
+        $body = $entity->toArray();
 
         // Add metadata for delete tracking if applicable
 
