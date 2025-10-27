@@ -691,20 +691,27 @@ class ConfigWebhooksTable extends ControllerActionTable
                 'excluded' => self::EXCLUDED_FIELDS,
                 'placeholders' => []
             ],
-//            'education_structure_system_delete' => [
-//                'code' => 'education_structure_system_delete',
-//                'label' => 'Education Structure System Delete',
-//                'model' => 'Education.EducationSystems',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'education_structure_system_update' => [
-//                'code' => 'education_structure_system_update',
-//                'label' => 'Education Structure System Update',
-//                'model' => 'Education.EducationSystems',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
+            'education_system_add' => [
+                'code' => 'education_system_add',
+                'label' => 'Education System Add',
+                'model' => 'Education.EducationSystems',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'education_system_delete' => [
+                'code' => 'education_system_delete',
+                'label' => 'Education System Delete',
+                'model' => 'Education.EducationSystems',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'education_system_update' => [
+                'code' => 'education_system_update',
+                'label' => 'Education System Update',
+                'model' => 'Education.EducationSystems',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
 //            'education_subject_create' => [
 //                'code' => 'education_subject_create',
 //                'label' => 'Education Subject Create',

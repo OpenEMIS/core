@@ -496,63 +496,49 @@ class EducationSystemsTable extends ControllerActionTable
                 }
             }
         }
-        /*POCOR-6544 ends*/
-		// Webhook Education Structure System create starts
-		//POCOR-6085 starts
-		if($entity->isNew()) {
 
-			$educationStructure = [
-				'education_system_id' =>$entity->id,
-				'education_system_name' =>$entity->name,
-				'academic_period_id' =>$entity->academic_period_id
-			];
-
-			/*$Webhooks = TableRegistry::get('Webhook.Webhooks');
-			if ($this->Auth->user()) {
-				$Webhooks->triggerShell('education_structure_system_create', [], $educationStructure);
-			}*/
-		}
-
-		//POCOR-6085 ends
-		// Webhook Education Structure System create ends
-
-		// POCOR-6086 starts
-		 //webhook education structure system update starts
-		 if(!$entity->isNew()) {
-            $body = array();
-            $educationUpdateArray = [
-				'education_system_id' =>$entity->id,
-				'education_system_name' =>$entity->name,
-				'visible' =>$entity->visible,
-				'academic_period_id' =>$entity->academic_period_id
-            ];
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('education_structure_system_update', [], $educationUpdateArray);
-            }*/
+		// Webhook Education System
+        // Skip if triggered internally or if no authenticated user
+        if (!empty($options['skip_callbacks']) || empty($this->Auth) || empty($this->Auth->user())) {
+            return;
         }
-		// POCOR-6086 ends
 
-        // webhook education structure system update ends
+        $eventKey = $entity->isNew()
+            ? 'education_system_create'
+            : 'education_system_update';
+
+        $this->triggerEducationSystemWebhook($entity, $eventKey);
     }
 
-    //POCOR-5696 ends
-
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
     {
-        // Webhook Education Structure System Delete -- Starts
-       //POCOR-6087 starts
-        $body = array();
-        $deleteBodyArray = [
-            'education_system_id' => $entity->id
-        ];
+        // Skip webhook if no authenticated user
+        if (empty($this->Auth) || empty($this->Auth->user())) {
+            return;
+        }
 
-        /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
-        if($this->Auth->user()){
-            $Webhooks->triggerShell('education_structure_system_delete', [], $deleteBodyArray);
-        }*/
-		//POCOR-6087 ends
-        // Webhook Education Structure System Delete  -- Ends
+        $this->triggerEducationSystemWebhook($entity, 'education_system_delete');
+    }
+
+    /**
+     * Shared webhook trigger for Education System events.
+     * Includes academic period and visibility info.
+     */
+    private function triggerEducationSystemWebhook(Entity $entity, string $eventKey): void
+    {
+        $body = $entity->toArray();
+
+        // Add metadata for delete tracking if applicable
+        if ($eventKey === 'education_system_delete') {
+            $body['deleted_at'] = date('Y-m-d H:i:s');
+            $body['deleted_by'] = $this->Auth->user()['openemis_no']
+                ?? $this->Auth->user()['username']
+                ?? 'system';
+        }
+
+        // Send webhook
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+        $Webhooks->triggerCommand($eventKey, $body);
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
