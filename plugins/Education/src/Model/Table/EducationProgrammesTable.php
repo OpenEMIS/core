@@ -133,11 +133,18 @@ class EducationProgrammesTable extends ControllerActionTable {
     {
         $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
 
+        // Always load with associations (so updates/deletes get same structure)
         $programme = $EducationProgrammes->find()
             ->where([$EducationProgrammes->aliasField('id') => $entity->id])
-            ->contain(['EducationNextProgrammes']) // the belongsToMany association
+            ->contain(['EducationNextProgrammes']) // belongsToMany association
             ->first();
 
+        // Fallback if deleted entity no longer found (e.g. hard delete)
+        if (!$programme) {
+            $programme = $entity;
+        }
+
+        // Convert to array (avoids serialization issues)
         $body = $programme->toArray();
 
         // Add metadata for delete tracking if applicable
