@@ -4036,7 +4036,7 @@ class StaffTable extends ControllerActionTable
         if (!empty($approvedLeaveStatuses)) {
             $conditions[$StaffLeaveTable->aliasField('status_id IN')] = $approvedLeaveStatuses;
         }
-        Log::write(print_r($conditions, true));
+//        Log::write(print_r($conditions, true));
         $staffLeavesByWeekStartAndEnd = $StaffLeaveTable
             ->find()
             ->matching('StaffLeaveTypes')
@@ -4329,7 +4329,7 @@ class StaffTable extends ControllerActionTable
 
         $whereForLeaveTable = $this->setWhereForLeaveTable($weekStartDate, $weekEndDate, $archive);
         $approvedLeaveStatuses = $this->getApprovedLeaveStatusIds(); // POCOR-9415
-        Log::debug(print_r($approvedLeaveStatuses,true));
+//        Log::debug(print_r($approvedLeaveStatuses,true));
         if (!$archive) {
             $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
         }else{
@@ -4343,10 +4343,10 @@ class StaffTable extends ControllerActionTable
         ];
 
 // Add status_id only if it's valid
-        if (!empty($approvedLeaveStatus)) {
+        if (!empty($approvedLeaveStatuses)) {
             $commonConditions[$StaffLeaveTable->aliasField('status_id IN')] = $approvedLeaveStatuses;
         }
-        Log::debug(print_r($commonConditions, true));
+//        Log::debug(print_r($commonConditions, true));
         if (!$archive) {
             $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
             $allStaffLeaves = $StaffLeaveTable
