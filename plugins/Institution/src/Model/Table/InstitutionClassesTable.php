@@ -530,22 +530,16 @@ class InstitutionClassesTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
         $this->handleClassCustomFields($entity);
-        Log::debug(__FUNCTION__ . '1');
         $this->syncClassStudents($entity, $options);
-        Log::debug(__FUNCTION__ . '2');
 
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
-            Log::debug(__FUNCTION__ . '3');
 
             $this->triggerClassWebhook($entity, 'institution_class_create');
-            Log::debug(__FUNCTION__ . '4');
 
         } else {
-            Log::debug(__FUNCTION__ . '5');
 
             $this->triggerClassWebhook($entity, 'institution_class_update');
-            Log::debug(__FUNCTION__ . '6');
 
         }
     }
@@ -562,13 +556,13 @@ class InstitutionClassesTable extends ControllerActionTable
     private function resolveCurrentUser(): ?array
     {
         try {
-            // 1️⃣ Try the Auth component first
+            // Try the Auth component first
             if (!empty($this->Auth) && $this->Auth->user()) {
                 return $this->Auth->user();
             }
 
-            // 2️⃣ Fallback to session if Auth is unavailable
-            $session = $this->getTableLocator()
+            // Fallback to session if Auth is unavailable
+            $session = TableRegistry::getTableLocator()
                 ->get('Configuration.ConfigItems') // any loaded table with session context
                 ->getConnection()
                 ->getDriver()
@@ -660,9 +654,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
     private function triggerClassWebhook(Entity $entity, string $eventKey): void
     {
-        Log::debug(__FUNCTION__ . '1');
         $user = $this->resolveCurrentUser();
-        Log::debug(__FUNCTION__ . '2');
 
         $contain = [
             'Institutions',
@@ -673,12 +665,9 @@ class InstitutionClassesTable extends ControllerActionTable
             'InstitutionUnits',
             'InstitutionCourses',
             'ClassesSecondaryStaff.SecondaryStaff',
-//            'Students.Genders',
         ];
-        Log::debug(__FUNCTION__ . '3');
 
         $body = $this->prepareWebhookBody($entity, $contain);
-        Log::debug(__FUNCTION__ . '4');
         if ($eventKey === 'institution_class_delete') {
             $body['deleted_at'] = date('Y-m-d H:i:s');
             $body['deleted_by'] = $user['openemis_no']
@@ -687,7 +676,6 @@ class InstitutionClassesTable extends ControllerActionTable
         }
         $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
         $Webhooks->triggerCommand($eventKey, $body);
-        Log::debug(__FUNCTION__ . '5');
 
     }
 
