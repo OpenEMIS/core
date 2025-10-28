@@ -21,15 +21,59 @@ class UserCascadeBehavior extends Behavior {
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
 		$userId = $entity->id;
 		$this->cleanUserRecords($userId);
+        $body = $entity->toArray();
+        // Resolve current user safely (since behavior has no Auth)
+        $user = $this->resolveCurrentUser($options);
 
-        $body = [];
-        $body = [
-        	'security_user_id' => $userId
-        ];
+        if ($user) {
+            $body['deleted_by'] = $user['openemis_no']
+                ?? $user['username']
+                ?? 'system';
+        } else {
+            $body['deleted_by'] = 'system';
+        }
 
-		$Webhooks = TableRegistry::get('Webhook.Webhooks');
-		$Webhooks->triggerShell('security_user_delete', ['username' => ''], $body);
-	}
+        $body['deleted_at'] = date('Y-m-d H:i:s');
+
+        // Trigger webhook safely
+        try {
+            $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+            $Webhooks->triggerCommand('security_user_delete', $body);
+        } catch (\Throwable $e) {
+            Log::warning("Webhook trigger failed in UserCascadeBehavior: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Safely resolve user in a behavior (no Auth available).
+     */
+    private function resolveCurrentUser(ArrayObject $options): ?array
+    {
+        // 1️⃣ If the parent table passed user info through $options
+        if (!empty($options['user'])) {
+            return $options['user'];
+        }
+
+        // 2️⃣ Fallback to session (if available)
+        try {
+            if (method_exists($this->_table, 'getRequest') && $this->_table->getRequest()->getSession()) {
+                $session = $this->_table->getRequest()->getSession();
+                if ($session->check('Auth.User.id')) {
+                    $userId = $session->read('Auth.User.id');
+                    $Users = TableRegistry::getTableLocator()->get('User.Users');
+                    $user = $Users->find()
+                        ->where([$Users->aliasField('id') => $userId])
+                        ->first();
+
+                    return $user ? $user->toArray() : null;
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::debug('UserCascadeBehavior: unable to resolve user from session - ' . $e->getMessage());
+        }
+
+        return null;
+    }
 
 	// this function is to delete all records from user's related tables
 	// (tables that contains security_user_id, student_id, staff_id, guardian_id)

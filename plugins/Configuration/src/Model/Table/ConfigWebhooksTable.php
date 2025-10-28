@@ -754,34 +754,34 @@ class ConfigWebhooksTable extends ControllerActionTable
                 'excluded' => self::EXCLUDED_FIELDS,
                 'placeholders' => []
             ],
-//            'role_create' => [
-//                'code' => 'role_create',
-//                'label' => 'Role Create',
-//                'model' => 'Security.SecurityRoles',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'role_delete' => [
-//                'code' => 'role_delete',
-//                'label' => 'Role Delete',
-//                'model' => 'Security.SecurityRoles',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'role_update' => [
-//                'code' => 'role_update',
-//                'label' => 'Role Update',
-//                'model' => 'Security.SecurityRoles',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'security_user_delete' => [
-//                'code' => 'security_user_delete',
-//                'label' => 'Delete Security User',
-//                'model' => 'User.Users',
-//                'excluded' => ['id', 'password', 'created', 'modified'],
-//                'placeholders' => []
-//            ],
+            'security_role_create' => [
+                'code' => 'security_role_delete',
+                'label' => 'Security Role Create',
+                'model' => 'Security.SecurityRoles',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'security_role_delete' => [
+                'code' => 'security_role_delete',
+                'label' => 'Security Role Delete',
+                'model' => 'Security.SecurityRoles',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'role_update' => [
+                'code' => 'security_role_delete',
+                'label' => 'Security Role Update',
+                'model' => 'Security.SecurityRoles',
+                'excluded' => self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'security_user_delete' => [
+                'code' => 'security_user_delete',
+                'label' => 'Security User Delete',
+                'model' => 'User.Users',
+                'excluded' => ['id', 'password', 'created', 'modified'],
+                'placeholders' => []
+            ],
             'institution_create' => [
                 'code' => 'institution_create',
                 'label' => 'Institution Create',
@@ -803,22 +803,44 @@ class ConfigWebhooksTable extends ControllerActionTable
                 'excluded' => self::EXCLUDED_FIELDS,
                 'placeholders' => $institution_fields
             ],
-//            'staff_create' => [
-//                'code' => 'staff_create',
+
+//            'institution_subject_create' => [
+//                'code' => 'institution_subject_create',
+//                'label' => 'Subject Create',
+//                'model' => 'Institution.InstitutionSubjects',
+//                'excluded' => self::EXCLUDED_FIELDS,
+//                'placeholders' => []
+//            ],
+//            'institution_subject_delete' => [
+//                'code' => 'sinstitution_ubject_delete',
+//                'label' => 'Subject Delete',
+//                'model' => 'Institution.InstitutionSubjects',
+//                'excluded' => self::EXCLUDED_FIELDS,
+//                'placeholders' => []
+//            ],
+//            'institution_subject_update' => [
+//                'code' => 'institution_subject_update',
+//                'label' => 'Subject Update',
+//                'model' => 'Institution.InstitutionSubjects',
+//                'excluded' => self::EXCLUDED_FIELDS,
+//                'placeholders' => []
+//            ]
+//            'institution_staff_create' => [
+//                'code' => 'institution_staff_create',
 //                'label' => 'Staff Create',
 //                'model' => 'Institution.Staff',
 //                'excluded' => self::EXCLUDED_FIELDS,
 //                'placeholders' => []
 //            ],
-//            'staff_delete' => [
-//                'code' => 'staff_delete',
+//            'institution_sstaff_delete' => [
+//                'code' => 'institution_staff_delete',
 //                'label' => 'Staff Delete',
 //                'model' => 'Institution.Staff',
 //                'excluded' => self::EXCLUDED_FIELDS,
 //                'placeholders' => []
 //            ],
-//            'staff_update' => [
-//                'code' => 'staff_update',
+//            'institution_staff_update' => [
+//                'code' => 'institution_staff_update',
 //                'label' => 'Staff Update',
 //                'model' => 'Institution.Staff',
 //                'excluded' => self::EXCLUDED_FIELDS,
@@ -838,48 +860,27 @@ class ConfigWebhooksTable extends ControllerActionTable
 //                'excluded' => self::EXCLUDED_FIELDS,
 //                'placeholders' => []
 //            ],
-//            'student_create' => [
-//                'code' => 'student_create',
+//            'institution_student_create' => [
+//                'code' => 'institution_student_create',
 //                'label' => 'Student Create',
 //                'model' => 'Institution.Students',
 //                'excluded' => self::EXCLUDED_FIELDS,
 //                'placeholders' => []
 //            ],
-//            'student_delete' => [
-//                'code' => 'student_delete',
+//            'institution_student_delete' => [
+//                'code' => 'institution_student_delete',
 //                'label' => 'Student Delete',
 //                'model' => 'Institution.Students',
 //                'excluded' => self::EXCLUDED_FIELDS,
 //                'placeholders' => []
 //            ],
-//            'student_update' => [
-//                'code' => 'student_update',
+//            'institution_student_update' => [
+//                'code' => 'institution_student_update',
 //                'label' => 'Student Update',
 //                'model' => 'Institution.Students',
 //                'excluded' => self::EXCLUDED_FIELDS,
 //                'placeholders' => []
 //            ],
-//            'subject_create' => [
-//                'code' => 'subject_create',
-//                'label' => 'Subject Create',
-//                'model' => 'Institution.InstitutionSubjects',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'subject_delete' => [
-//                'code' => 'subject_delete',
-//                'label' => 'Subject Delete',
-//                'model' => 'Institution.InstitutionSubjects',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ],
-//            'subject_update' => [
-//                'code' => 'subject_update',
-//                'label' => 'Subject Update',
-//                'model' => 'Institution.InstitutionSubjects',
-//                'excluded' => self::EXCLUDED_FIELDS,
-//                'placeholders' => []
-//            ]
         ];
 
     }

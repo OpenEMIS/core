@@ -75,83 +75,92 @@ class SecurityRolesTable extends ControllerActionTable
         ]);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
-        //POCOR-8464 start
-        $securityFunctionData = $entity['security_functions'];
-        $securityRoleId = $entity['id'];
-        $securityRoleFunctionsTable = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
-        $values = [];
-        
-        foreach ($securityFunctionData as $function) {
-            $data = [
-                'security_role_id' => $securityRoleId,
-                'security_function_id' => $function['id'],
-                '_view' => $function['_joinData']['_view'],
-                '_add' => $function['_joinData']['_add'],
-                '_edit' => $function['_joinData']['_edit'],
-                '_delete' =>$function['_joinData']['_delete'],
-                '_execute' => $function['_joinData']['_execute'],
-            ];
-        
-            // Create a new entity and add it to the list
-            $newEntity = $securityRoleFunctionsTable->newEntity($data);
-            $entitiesToSave[] = $newEntity;
-        }
+        $this->saveRelatedSecurityFunctions($entity);
 
-        // Save all new entities at once
-        if (!empty($entitiesToSave)) {
-            $securityRoleFunctionsTable->saveMany($entitiesToSave);
-        }
-        //POCOR-8464 end
-        // webhook create role starts
-         if($entity->isNew()) {
+        // 🔹 Trigger webhook event
+        $eventKey = $entity->isNew()
+            ? 'security_role_create'
+            : 'security_role_update';
 
-            $body = array();
-            $createRole = [
-                'role_id' =>$entity->id,
-                'role_name' =>$entity->name,
-
-            ];
-
-            /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-            //if ($this->Auth->user()) { // creating issue while adding new permission //POCOR-6878
-                $Webhooks->triggerShell('role_create', [], $createRole);
-            //}*/
-        }
-
-        // webhook create role ends
-
-        // webhook update role starts
-         if(!$entity->isNew()) {
-            $updateRole = [
-                'role_id' =>$entity->id,
-                'role_name' =>$entity->name,
-
-            ];
-
-            //$Webhooks = TableRegistry::get('Webhook.Webhooks');
-            //$Webhooks->triggerShell('role_update', [], $updateRole);
-            /*if ($this->Auth->user()) {
-                //$Webhooks->triggerShell('role_update', [], $updateRole);
-            }*/
-        }
-
-        // webhook update role ends
+        $this->triggerSecurityRoleWebhook($entity, $eventKey);
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
     {
-        // Webhook role delete -- Start
+        // 🔹 Webhook: role delete
+        $this->triggerSecurityRoleWebhook($entity, 'security_role_delete');
+    }
 
-        $deleteBody = [
-            'role_id' => $entity->id
-        ];
-        $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-        if($this->Auth->user()){
-            $Webhooks->triggerShell('role_delete', [], $deleteBody);
+    /**
+     * 🔸 Common webhook trigger for role events
+     */
+    private function triggerSecurityRoleWebhook(Entity $entity, string $eventKey): void
+    {
+        $user = $this->resolveCurrentUser();
+
+        $body = $this->prepareWebhookBody($entity);
+
+        if ($eventKey === 'security_role_delete') {
+            $body['deleted_at']  = date('Y-m-d H:i:s');
+            $body['deleted_by']  = $user['openemis_no']
+                ?? $user['username']
+                ?? 'system';
         }
-        // Webhook role delete -- Ends
+
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+        $Webhooks->triggerCommand($eventKey, $body);
+    }
+
+    /**
+     * Prepares the webhook body for any model, with optional child associations.
+     */
+    private function prepareWebhookBody(Entity $entity, array $contain = []): array
+    {
+        $Table = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+
+        // Fetch full entity with associations (for update/delete)
+        $record = $Table->find()
+            ->where([$Table->aliasField('id') => $entity->id])
+            ->contain($contain)
+            ->first();
+
+        // Fallback if deleted or missing
+        if (!$record) {
+            $record = $entity;
+        }
+
+        return $record->toArray();
+    }
+    /**
+     * 🔸 Resolve current user safely for audit / webhook
+     */
+    private function resolveCurrentUser(): ?array
+    {
+        try {
+            if (!empty($this->Auth) && $this->Auth->user()) {
+                return $this->Auth->user();
+            }
+
+            if (method_exists($this, 'getRequest') && $this->getRequest()->getSession()) {
+                $session = $this->getRequest()->getSession();
+            }
+
+            if (!empty($session) && $session->check('Auth.User.id')) {
+                $userId = $session->read('Auth.User.id');
+                $Users = TableRegistry::getTableLocator()->get('User.Users');
+                $user = $Users->find()
+                    ->where([$Users->aliasField('id') => $userId])
+                    ->first();
+
+                return $user ? $user->toArray() : null;
+            }
+        } catch (\Throwable $e) {
+            Log::warning('User resolution failed: ' . $e->getMessage());
+        }
+
+        return null;
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -191,7 +200,7 @@ class SecurityRolesTable extends ControllerActionTable
             }
         }
     }
-    
+
 
     public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra)
     {
@@ -904,6 +913,37 @@ class SecurityRolesTable extends ControllerActionTable
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
+    }
+
+    /**
+     * @param Entity $entity
+     * @return void
+     * @throws \Exception
+     */
+    private function saveRelatedSecurityFunctions(Entity $entity): void
+    {
+// 🔹 Save linked security functions (POCOR-8464)
+        $securityFunctions = $entity['security_functions'] ?? [];
+        $securityRoleId = $entity['id'] ?? null;
+        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+
+        $entitiesToSave = [];
+        foreach ($securityFunctions as $function) {
+            $join = $function['_joinData'] ?? [];
+            $entitiesToSave[] = $SecurityRoleFunctions->newEntity([
+                'security_role_id' => $securityRoleId,
+                'security_function_id' => $function['id'] ?? null,
+                '_view' => $join['_view'] ?? 0,
+                '_add' => $join['_add'] ?? 0,
+                '_edit' => $join['_edit'] ?? 0,
+                '_delete' => $join['_delete'] ?? 0,
+                '_execute' => $join['_execute'] ?? 0,
+            ]);
+        }
+
+        if (!empty($entitiesToSave)) {
+            $SecurityRoleFunctions->saveMany($entitiesToSave);
+        }
     }
 
 }
