@@ -29,6 +29,8 @@ webroot/css/themes/layout.min.css
 /tags
 *.mo
 *.po
+frontend/src/environments/environment.prod.ts
+frontend/src/environments/environment.ts 
 
 
 # IDE and editor specific files #

@@ -169,7 +169,7 @@ $institutionId = $paramsQuery['institution_id'];
 
 </style>
 <div class="panel">
-    <div class="panel-body" style="position: relative;">       
+    <div class="panel-body" style="position: relative;">
 		<bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>; $ctrl.excelUrl='<?= $excelUrl;?>'; $ctrl.history=<?= $_history ? $_history : 0 ?>;$ctrl.ownEdit=<?= $_ownEdit ? $_ownEdit : 0 ?>;$ctrl.ownView=<?= $_ownView ? $_ownView : 0 ?>;$ctrl.otherEdit=<?= $_otherEdit ? $_otherEdit : 0 ?>;$ctrl.otherView=<?= $_otherView ? $_otherView : 0 ?>;$ctrl.permissionStaffId=<?= $_permissionStaffId ? $_permissionStaffId : 0 ?>;" float-btn="false">
 
             <bg-pane class="main-content">
@@ -205,12 +205,12 @@ $institutionId = $paramsQuery['institution_id'];
                             <h1 class="data-header">{{$ctrl.allLeaveCount}}</h1>
                         </div>
                     </div>
-                    <div class="data-section">
-                        <div class="data-field">
-                            <h4><?= __('No. of Staff on Late') ?></h4>
-                            <h1 class="data-header">{{$ctrl.allLateCount}}</h1>
-                        </div>
-                    </div>
+<!--                    <div class="data-section">-->
+<!--                        <div class="data-field">-->
+<!--                            <h4>--><?php //= __('No. of Staff on Late') ?><!--</h4>-->
+<!--                            <h1 class="data-header">{{$ctrl.allLateCount}}</h1>-->
+<!--                        </div>-->
+<!--                    </div>-->
                 </div>
                 <h4>{{$ctrl.selectedFormattedDayDate}}</h4>
                 <div id="institution-staff-attendances-table" class="table-wrapper">

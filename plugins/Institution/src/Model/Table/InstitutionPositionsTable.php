@@ -94,7 +94,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 'rule' => 'checkNoSpaces',
                 'provider' => 'custom'
             ])
-           // ->requirePresence('shift_id')
+            ->requirePresence('staff_position_title_id') // POCOR-9415
             /*POCOR-5069 Starts
             ->add('staff_position_grade_id', 'custom', [
                 'rule' => function ($value, $context) {
@@ -562,7 +562,9 @@ class InstitutionPositionsTable extends ControllerActionTable
         //$this->fields['staff_position_grade_id']['sort'] = ['field' => 'StaffPositionGrades.order'];//PCOOR-5069
         $this->fields['assignee_id']['sort'] = ['field' => 'Assignees.first_name'];
         $this->setFieldOrder([
-            'position_no', 'staff_position_title_id',
+            'position_no',
+            'shift_id',
+            'staff_position_title_id',
             //'staff_position_grade_id'//PCOOR-5069
         ]);
 
@@ -831,11 +833,15 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
         $this->fields['current_staff_list']['visible'] = false;
         $this->fields['past_staff_list']['visible'] = false;
         $this->fields['institution_id']['visible'] = false;
+        $this->fields['staff_position_title_id']['required'] = true;
+        $this->fields['staff_position_title_id']['attr']['required'] = true;
 //        dd($this->fields);
         $this->setFieldOrder([
-            'position_no', 'staff_position_title_id',
-            //'staff_position_grade_id',POCOR-5069
+            'position_no',
             'shift_id',
+            'staff_position_title_id',
+            //'staff_position_grade_id',POCOR-5069
+
         ]);
     }
 
@@ -880,13 +886,14 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
         $this->setFieldOrder([
             //'staff_position_grade_id',POCOR-5069
             'position_no',
+            'shift_id', // POCOR-9415
             'staff_position_title_id',
             'staff_position_title_type',//POCOR-7758
             'staff_position_title_category',//POCOR-7758
             'grade',//POCOR-7758
             'staff_position_title_description',//POCOR-7758
             'modified_user_id', 'modified', 'created_user_id', 'created',
-            'current_staff_list', 'past_staff_list', 'shift_id'
+            'current_staff_list', 'past_staff_list',
         ]);
 
         $session = $this->Session;

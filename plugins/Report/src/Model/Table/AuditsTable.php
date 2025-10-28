@@ -13,7 +13,6 @@ use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Cake\Validation\Validator;
-
 use Directory\Model\Table\DirectoriesTable as UserTypeOption;
 
 class AuditsTable extends AppTable
@@ -43,15 +42,15 @@ class AuditsTable extends AppTable
                                 'Report.AuditUsers',
                                 'Report.AuditSecuritiesRolesPermissions', // POCOR-499
                                 'Report.AuditSecuritiesGroupUserRoles', // POCOR-499
-                                'Report.AuditDeletedRecords' //POCOR-9381
+                                'Report.AuditDeletedRecords',//POCOR-9381
+                                'Report.AuditInstitutionStudents', // POCOR-9382
+                                'Report.AuditInstitutionStaff' // POCOR-9383
                             ]);         
                         }
                         return true;
                     }
                 ],
-            ])->notEmptyString('report_start_date', 'Start Date is required')
-            ->notEmptyString('reference_table', 'Field is required');
-
+            ])->notEmptyString('report_start_date', 'Start Date is required');
         return $validator;
     }
 
@@ -106,7 +105,7 @@ class AuditsTable extends AppTable
                 case 'Report.AuditSecuritiesGroupUserRoles': 
                     // $fieldsOrder[] = 'user_type';
                     $fieldsOrder[] = 'report_start_date';
-                    $fieldsOrder[] = 'report_end_date';
+                    $fieldsOrder[] = 'report_end_date';  
                     $fieldsOrder[] = 'format';
                     break; //END POCOR-499
                 case 'Report.AuditDeletedRecords':  //POCOR-9381
@@ -161,8 +160,6 @@ class AuditsTable extends AppTable
                     UserTypeOption::STAFF => __('Staff'),
                     UserTypeOption::GUARDIAN => __('Guardian')
                 ];
-        
-
                 $attr['options'] = $userTypeOptions;
                 $attr['type'] = 'select';
                 $attr['select'] = false;
@@ -199,7 +196,7 @@ class AuditsTable extends AppTable
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
             // Start POCOR-499
-            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles', 'Report.AuditUsers', 'Report.AuditLogins','Report.AuditLastLogins', 'Report.AuditInstitutions', 'AuditDeletedRecords'])) {
+            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles', 'Report.AuditUsers', 'Report.AuditLogins','Report.AuditLastLogins', 'Report.AuditInstitutions', 'AuditInstitutionStaff', 'Report.AuditInstitutionStudents, Report.AuditDeletedRecords'])) {
                 $attr['type'] = 'date';
             }
             return $attr;
@@ -211,7 +208,7 @@ class AuditsTable extends AppTable
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
             // Start POCOR-499
-            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles','Report.AuditUsers', 'Report.AuditLogins','Report.AuditLastLogins', 'Report.AuditInstitutions', 'AuditDeletedRecords'])) {
+            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles','Report.AuditUsers', 'Report.AuditLogins','Report.AuditLastLogins', 'Report.AuditInstitutions','Report.AuditInstitutionStudents', 'Report.AuditInstitutionStaff, Report.AuditDeletedRecords'])) {
                 $attr['type'] = 'date';
                 $attr['value'] = Time::now();
             }

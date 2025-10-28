@@ -36,7 +36,7 @@ class ExaminationService
         $data['postal_code'] = $result->ExaminationCentre->postal_code;
         $data['contact_person'] = $result->ExaminationCentre->contact_person;
         $data['telephone'] = $result->ExaminationCentre->telephone;
-        $data['fax'] = $result->ExaminationCentre->fax;
+       // $data['fax'] = $result->ExaminationCentre->fax;
         $data['email'] = $result->ExaminationCentre->email;
         $data['website'] = $result->ExaminationCentre->website;
         $data['institution_id'] = $result->ExaminationCentre->institution_id;
