@@ -4005,7 +4005,7 @@ class StaffTable extends ControllerActionTable
 
         $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
 
-        $approvedLeaveStatuses = $this->getApprovedLeaveStatusIds(); // POCOR-9415
+        $approvedLeaveStatuses = $this->getApprovedLeaveStatusIds(); // POCOR-9415 start
 
         $conditions = [
             $StaffLeaveTable->aliasField('institution_id') => $institutionId,
@@ -4043,7 +4043,7 @@ class StaffTable extends ControllerActionTable
             ->where($conditions)
             ->enableHydration(false)
             ->toArray();
-
+// POCOR-9415 end
 
         $query = $query
             ->select([
@@ -4363,7 +4363,7 @@ class StaffTable extends ControllerActionTable
                 ->enableHydration(false)
                 ->toArray();
         }
-
+// POCOR-9415 end
         $leaveByStaffIdRecords = Hash::combine($allStaffLeaves, '{n}.id', '{n}', '{n}.staff_id');
         return $leaveByStaffIdRecords;
     }
@@ -5006,7 +5006,7 @@ class StaffTable extends ControllerActionTable
 
     /**
      * @return mixed
-     * POCOR-9415
+     * POCOR-9415 refactured
      */
     private function getApprovedLeaveStatusIds(): array
     {
