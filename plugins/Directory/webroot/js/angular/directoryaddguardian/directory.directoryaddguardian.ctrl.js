@@ -8,7 +8,14 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     var userCtrl = $scope;
     userCtrl.studentOpenEmisId = undefined;
     const directorySvc = DirectoryaddSvc;
-
+// POCOR-9427 start
+    const USER_TYPES = {
+        STUDENT: 1,
+        STAFF: 2,
+        GUARDIAN: 3,
+        OTHER: 4
+    };
+    // POCOR-9427 end
     userCtrl.step = 'user_details';
     userCtrl.selectedUserData = {};
     userCtrl.internalGridOptions = null;
@@ -117,6 +124,96 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             return directorySvc.setContactTypes(userCtrl);
         }
 
+        // POCOR-9427
+        function handleConfigItem(configCode, configValue) {
+            // Init main config container
+            userCtrl.config = userCtrl.config || {};
+            userCtrl.selectedUserData.user_type_id = USER_TYPES['GUARDIAN'];
+            // Match config keys to user types and fields
+            const configMap = {
+                // student_email:       { type: 'student', field: 'email' },
+                // student_mobile:      { type: 'student', field: 'mobile_number' },
+                // StudentIdentities:   { type: 'student', field: 'identity' },
+                // StudentNationalities:{ type: 'student', field: 'nationality' },
+                //
+                // staff_email:         { type: 'staff', field: 'email' },
+                // staff_mobile:        { type: 'staff', field: 'mobile_number' },
+                // StaffIdentities:     { type: 'staff', field: 'identity' },
+                // StaffNationalities:  { type: 'staff', field: 'nationality' },
+
+                // guardian_email:       { type: 'guardian', field: 'email' },
+                // guardian_mobile:      { type: 'guardian', field: 'mobile' },
+                GuardianIdentities:   { type: 'guardian', field: 'identity' },
+                GuardianNationalities:{ type: 'guardian', field: 'nationality' },
+
+                // other_email:       { type: 'other', field: 'email' },
+                // other_mobile:      { type: 'other', field: 'mobile' },
+                // OtherIdentities:   { type: 'other', field: 'identity' },
+                // OtherNationalities:{ type: 'other', field: 'nationality' }
+            };
+
+            const configItem = configMap[configCode];
+
+            if (!configItem) {
+                console.warn(`Unhandled config code: ${configCode}`);
+                return;
+            }
+
+            const { type, field } = configItem;
+            userCtrl.config[type] = userCtrl.config[type] || {};
+
+            switch (field) {
+                case 'email':
+                case 'mobile_number':
+                    userCtrl.config[type][`${field}_skipped`] = configValue === 2;
+                    userCtrl.config[type][`${field}_required`] = configValue === 1 ? 'required' : '';
+                    break;
+
+                case 'identity':
+                    userCtrl.config[type].identitySkipped = configValue === 2;
+                    userCtrl.config[type].identitiesRequired = configValue === 1 ? 'required' : '';
+                    break;
+
+                case 'nationality':
+                    // Ensure dependency on identitySkipped is handled
+                    const identitySkipped = userCtrl.config[type].identitySkipped;
+                    if (configValue === 2 && identitySkipped) {
+                        userCtrl.config[type].nationalitySkipped = true;
+                        userCtrl.config[type].nationalitiesRequired = '';
+                    } else {
+                        userCtrl.config[type].nationalitySkipped = configValue === 2;
+                        userCtrl.config[type].nationalitiesRequired = configValue === 1 ? 'required' : '';
+                    }
+                    break;
+            }
+        }
+
+        // POCOR-9427
+        function getAddNewUserConfig() {
+            const configCodes = [
+                // Student
+                // "student_email", "student_mobile", "StudentIdentities", "StudentNationalities",
+                // // Staff
+                // "staff_email", "staff_mobile", "StaffIdentities", "StaffNationalities",
+                // Guardian
+                // "guardian_email", "guardian_mobile",
+                "GuardianIdentities", "GuardianNationalities",
+                // Other
+                // "other_email", "other_mobile",
+                // "OtherIdentities", "OtherNationalities"
+            ];
+
+            return Promise.all(configCodes.map(code => directorySvc.getConfigItemValue(code)))
+                .then(configValues => {
+                    configValues.forEach((value, index) => {
+                        handleConfigItem(configCodes[index], parseInt(value));
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching user config values:', error);
+                });
+        }
+
         function getRelationType() {
             return directorySvc.getRelationType()
                 .then(resp => {
@@ -130,6 +227,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 .then(getNationalities)
                 .then(getIdentityTypes)
                 .then(getContactTypes)
+                .then(getAddNewUserConfig) // POCOR-9427
                 .then(() => {
                     UtilsSvc.isAppendLoader(false);
                 })
