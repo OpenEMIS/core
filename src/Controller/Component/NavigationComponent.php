@@ -984,7 +984,7 @@ class NavigationComponent extends Component
                 ]
             ],
             //POCOR-5208 Start
-             'Institutions.InfrastructureAttachments.index' => [
+            'Institutions.InfrastructureAttachments.index' => [
                 'title' => 'Attachments',
                 'parent' => 'Infrastructures',
                 'selected' => [
@@ -1160,7 +1160,7 @@ class NavigationComponent extends Component
             ],
 
             'Institutions.Survey' => [
-                'title' => $label,//POCOR-9033
+                'title' => $label, //POCOR-9033
                 'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
@@ -1185,8 +1185,10 @@ class NavigationComponent extends Component
             'Institutions.VisitRequests.index' => [
                 'title' => 'Visits',
                 'parent' => 'Institutions.Institutions.index',
-                'selected' => ['Institutions.VisitRequests',
-                    'Institutions.Visits']
+                'selected' => [
+                    'Institutions.VisitRequests',
+                    'Institutions.Visits'
+                ]
             ],
             // POCOR-9059[END]
             'Institutions.Transport' => [
@@ -1776,7 +1778,7 @@ class NavigationComponent extends Component
     {
         $session = $this->getController()->getRequest()->getSession();
         $institutionId = $this->getInstitutionID(); // POCOR-9081
-//        $institutionId = $session->read('Institution.Institutions.id');
+        //        $institutionId = $session->read('Institution.Institutions.id');
 
         if (!empty($institutionId)) {
             //$Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
@@ -2650,12 +2652,12 @@ class NavigationComponent extends Component
                 'title' => 'Custom',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
-            ],//POCOR-9267 Starts
+            ], //POCOR-9267 Starts
             'Reports.Meals' => [
                 'title' => 'Meals',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
-            ]//POCOR-9267 Ends
+            ] //POCOR-9267 Ends
         ];
         return $navigation;
     }
@@ -2863,7 +2865,7 @@ class NavigationComponent extends Component
                         'Configurations.Theme' => [
                             'title' => 'Themes',
                             'parent' => 'Themes',
-                           // 'selected' => ['Notices.Notices']
+                            // 'selected' => ['Notices.Notices']
                         ]
                     ],
                 ],
@@ -2882,7 +2884,7 @@ class NavigationComponent extends Component
                     ]
                 ],
                 // End POCOR-5188
-/*
+                /*
                 'Notices.index' => [
                     'title' => 'Notices',
                     'parent' => 'SystemSetup',
@@ -3057,14 +3059,11 @@ class NavigationComponent extends Component
                             'parent' => 'SystemSetup',
                             'link' => false
                         ],
-                        'Credentials.index' => [
+                        'Credentials.Credentials.index' => [ //POCOR-9256
                             'title' => 'Credentials',
                             'parent' => 'API',
                             'selected' => [
-                                'Credentials.view',
-                                'Credentials.add',
-                                'Credentials.edit',
-                                'Credentials.delete'
+                                'Credentials.Credentials'
                             ]
                         ],
                     ];
@@ -3159,16 +3158,13 @@ class NavigationComponent extends Component
                     //     'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
                     // ],
                     //POCOR-7312[END]
-                    'Credentials.index' => [
+                    'Credentials.Credentials.index' => [ //POCOR-9256
                         'title' => 'Credentials',
                         'parent' => 'API',
                         'selected' => [
-                            'Credentials.view',
-                            'Credentials.add',
-                            'Credentials.edit',
-                            'Credentials.delete'
-                        ]
-                    ],
+                            'Credentials.Credentials'
+                        ],
+                    ]
                 ];
             }
         } else {
@@ -3256,14 +3252,11 @@ class NavigationComponent extends Component
                     //     'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
                     // ],
                     //POCOR-7312[END]
-                    'Credentials.Credentials' => [
+                    'Credentials.Credentials.index' => [ //POCOR-9256
                         'title' => 'Credentials',
                         'parent' => 'API',
                         'selected' => [
-                            'Credentials.view',
-                            'Credentials.add',
-                            'Credentials.edit',
-                            'Credentials.delete'
+                            'Credentials.Credentials'
                         ]
                     ],
                 ];
@@ -3778,11 +3771,11 @@ class NavigationComponent extends Component
                     'selected' => ['Alerts.Logs']
                 ],
                 'Alerts.Notices' => [
-                        'title' => 'Notices',
-                        'parent' => 'Administration.Communications',
-                        'params' => ['plugin' => 'Alert'],
-                        'selected' => ['Alerts.Notices']
-                    ],
+                    'title' => 'Notices',
+                    'parent' => 'Administration.Communications',
+                    'params' => ['plugin' => 'Alert'],
+                    'selected' => ['Alerts.Notices']
+                ],
             ];
         }
         return $navfour;
@@ -4795,8 +4788,18 @@ class NavigationComponent extends Component
                 if (!is_array($url) || !isset($url['controller'], $url['action'], $url['plugin'])) {
                     // Log or handle the case where $url is not as expected
                     // Example: Log error and continue or skip this navigation item
-                    unset($navigations[$key]);
-                    continue;
+                    //POCOR-9256 start
+                    $allowedRoutes = [
+                        ['Labels', 'Labels'],
+                        ['Credentials', 'Credentials'],
+                    ];
+
+                    if (!in_array([$url['controller'], $url['action']], $allowedRoutes)) {
+                        unset($navigations[$key]);
+                        continue;
+                    }
+                    //POCOR-9256 end
+
                 }
 
                 // Check if $restrictedTo is an array
