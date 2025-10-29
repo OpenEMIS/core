@@ -4005,39 +4005,45 @@ class StaffTable extends ControllerActionTable
 
         $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
 
-        $approvedLeaveStatus = $this->getApprovedLeaveStatusId(); // POCOR-9415
+        $approvedLeaveStatuses = $this->getApprovedLeaveStatusIds(); // POCOR-9415 start
+
+        $conditions = [
+            $StaffLeaveTable->aliasField('institution_id') => $institutionId,
+            $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
+            $StaffLeaveTable->aliasField('staff_id') => $staffId,
+            $StaffLeaveTable->aliasField('full_day') => 1,
+            'OR' => [
+                [
+                    $StaffLeaveTable->aliasField('date_to <=') => $weekEndDate,
+                    $StaffLeaveTable->aliasField('date_from >=') => $weekStartDate,
+                ],
+                [
+                    $StaffLeaveTable->aliasField('date_to <=') => $weekEndDate,
+                    $StaffLeaveTable->aliasField('date_to >=') => $weekStartDate,
+                ],
+                [
+                    $StaffLeaveTable->aliasField('date_from <=') => $weekEndDate,
+                    $StaffLeaveTable->aliasField('date_from >=') => $weekStartDate,
+                ],
+                [
+                    $StaffLeaveTable->aliasField('date_from <=') => $weekStartDate,
+                    $StaffLeaveTable->aliasField('date_to >=') => $weekEndDate,
+                ]
+            ]
+        ];
+
+// Only add status_id if it's a valid integer
+        if (!empty($approvedLeaveStatuses)) {
+            $conditions[$StaffLeaveTable->aliasField('status_id IN')] = $approvedLeaveStatuses;
+        }
+//        Log::write(print_r($conditions, true));
         $staffLeavesByWeekStartAndEnd = $StaffLeaveTable
             ->find()
             ->matching('StaffLeaveTypes')
-            ->where([
-                $StaffLeaveTable->aliasField("status_id") => $approvedLeaveStatus, // POCOR-9415
-                $StaffLeaveTable->aliasField('institution_id ') => $institutionId,
-                $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
-                $StaffLeaveTable->aliasField('staff_id') => $staffId,
-                $StaffLeaveTable->aliasField('full_day') => 1,
-                [
-                    'OR' => [
-                        [
-                            $StaffLeaveTable->aliasField("date_to <= '") . $weekEndDate . "'",
-                            $StaffLeaveTable->aliasField("date_from >= '") . $weekStartDate . "'"
-                        ],
-                        [
-                            $StaffLeaveTable->aliasField("date_to <= '") . $weekEndDate . "'",
-                            $StaffLeaveTable->aliasField("date_to >= '") . $weekStartDate . "'"
-                        ],
-                        [
-                            $StaffLeaveTable->aliasField("date_from <= '") . $weekEndDate . "'",
-                            $StaffLeaveTable->aliasField("date_from >= '") . $weekStartDate . "'"
-                        ],
-                        [
-                            $StaffLeaveTable->aliasField("date_from <= '") . $weekStartDate . "'",
-                            $StaffLeaveTable->aliasField("date_to >= '") . $weekEndDate . "'"
-                        ]
-                    ]
-                ]
-            ])
+            ->where($conditions)
             ->enableHydration(false)
             ->toArray();
+// POCOR-9415 end
 
         $query = $query
             ->select([
@@ -4322,38 +4328,42 @@ class StaffTable extends ControllerActionTable
     {
 
         $whereForLeaveTable = $this->setWhereForLeaveTable($weekStartDate, $weekEndDate, $archive);
-        $approvedLeaveStatus = $this->getApprovedLeaveStatusId(); // POCOR-9415
+        $approvedLeaveStatuses = $this->getApprovedLeaveStatusIds(); // POCOR-9415
+//        Log::debug(print_r($approvedLeaveStatuses,true));
+        if (!$archive) {
+            $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+        }else{
+            $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
+        }
+
+        $commonConditions = [
+            $StaffLeaveTable->aliasField('institution_id') => $institutionId,
+            $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
+            $whereForLeaveTable
+        ];
+
+// Add status_id only if it's valid
+        if (!empty($approvedLeaveStatuses)) {
+            $commonConditions[$StaffLeaveTable->aliasField('status_id IN')] = $approvedLeaveStatuses;
+        }
+//        Log::debug(print_r($commonConditions, true));
         if (!$archive) {
             $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
             $allStaffLeaves = $StaffLeaveTable
                 ->find()
                 ->matching('StaffLeaveTypes')
-                // ->matching('Statuses')
-                ->where([
-                    $StaffLeaveTable->aliasField('status_id ') => $approvedLeaveStatus, // POCOR-9415
-                    $StaffLeaveTable->aliasField('institution_id ') => $institutionId,
-                    $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
-                    $whereForLeaveTable
-                ])
+                ->where($commonConditions)
                 ->enableHydration(false)
                 ->toArray();
-        }
-        if ($archive) {
+        } else {
             $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
             $allStaffLeaves = $StaffLeaveTable
                 ->find()
-//                ->matching('StaffLeaveTypes')
-//                // ->matching('Statuses')
-                ->where([
-                    $StaffLeaveTable->aliasField('status_id ') => $approvedLeaveStatus, // POCOR-9415
-
-                    $StaffLeaveTable->aliasField('institution_id ') => $institutionId,
-                    $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
-                    $whereForLeaveTable
-                ])
+                ->where($commonConditions)
                 ->enableHydration(false)
                 ->toArray();
         }
+// POCOR-9415 end
         $leaveByStaffIdRecords = Hash::combine($allStaffLeaves, '{n}.id', '{n}', '{n}.staff_id');
         return $leaveByStaffIdRecords;
     }
@@ -4996,24 +5006,41 @@ class StaffTable extends ControllerActionTable
 
     /**
      * @return mixed
-     * POCOR-9415
+     * POCOR-9415 refactured
      */
-    private function getApprovedLeaveStatusId()
+    private function getApprovedLeaveStatusIds(): array
     {
-        $workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
         $workflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
-        $workflowResults = $workflows->find()
-            ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
-            ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
-                $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
-                $workflowSteps->aliasField('name') => 'Approved'
-            ])
-            ->where([
-                $workflows->aliasField('name') => 'Staff Leave'
-            ])
-            ->first();
-        $approvedLeaveStatus = $workflowResults->workflowSteps_id;
-        return $approvedLeaveStatus;
+        $workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+
+        $workflowAlias = $workflows->getAlias();
+        $workflowStepsAlias = $workflowSteps->getAlias();
+
+        $query = $workflowSteps->find()
+            ->select(["{$workflowStepsAlias}.id"])
+            ->innerJoin(
+                [$workflowAlias => $workflows->getTable()],
+                ["{$workflowAlias}.id = {$workflowStepsAlias}.workflow_id"]
+            )
+            ->where(
+                ["LOWER({$workflowAlias}.name) LIKE '%leave%'",
+                    "{$workflowStepsAlias}.category = 3",
+                    'OR' => [
+                        "LOWER({$workflowStepsAlias}.name) = 'approved'",
+                        "LOWER({$workflowStepsAlias}.name) = 'leave cancellation rejected'",
+                        "LOWER({$workflowStepsAlias}.name) != 'rejected'"
+                    ]
+                ])
+            ->enableHydration(false);
+
+        // Optional: log the generated SQL
+        // Log::debug('Approved status query: ' . $query->sql($query->getValueBinder()));
+
+        return $query->extract('id')->toList() ?: [0];
     }
+
+
+
+
 
 }
