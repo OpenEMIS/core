@@ -1,3 +1,10 @@
+### [4.47.0] - 2025-10-29
+- Implemented: Develop changes to rename Institution Curriculars to Curriculars
+- Bug Fixed: Institution>Attendance>Staff: Assigned Staff not showing up against Attendance>Staff
+- Bug Fixed: Institutions>Students>Withdraw: Creates a migration script for student withdraw and adds delete
+- Bug Fixed: Adminstration>Security>Users: Users who have permissions cannot access the credentials
+- Bug Fixed: Institutions>Academic>Programmes: Adds Start date to the page
+
 ### [4.46.0] - 2025-10-21
 - Implemented: Develop a status field in Exempt/Unassign page
 - Bug Fixed: Institution > Attendances > Students : SQLSTATE[40001]: Serialization failure: 1213 Deadlock found when trying to get lock; try restarting transaction

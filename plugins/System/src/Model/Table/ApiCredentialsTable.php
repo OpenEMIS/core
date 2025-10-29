@@ -65,6 +65,13 @@ class ApiCredentialsTable extends ControllerActionTable
 
     }
 
+    //POCOR-9256 start
+    public function onUpdateActionButtons(Event $event, $entity, array $buttons)
+    {
+        return $buttons;
+    }
+    //POCOR-9256 end
+
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
