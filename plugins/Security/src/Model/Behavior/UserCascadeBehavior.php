@@ -18,61 +18,119 @@ class UserCascadeBehavior extends Behavior {
 		// $this->showSQL();
 	}
 
-	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-		$userId = $entity->id;
-		$this->cleanUserRecords($userId);
-        $body = $entity->toArray();
-        // Resolve current user safely (since behavior has no Auth)
-        $user = $this->resolveCurrentUser($options);
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
+    {
+        $userId = $entity->id;
+        $this->cleanUserRecords($userId);
 
-        if ($user) {
-            $body['deleted_by'] = $user['openemis_no']
-                ?? $user['username']
-                ?? 'system';
-        } else {
-            $body['deleted_by'] = 'system';
+        $user = $this->resolveCurrentUser($options) ?? [];
+
+        $eventKey = 'security_user_delete';
+        $this->triggerSecurityUserWebhook($entity, $eventKey, $user);
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    {
+        if (!empty($options['skip_callbacks'])) {
+            return;
         }
 
-        $body['deleted_at'] = date('Y-m-d H:i:s');
+        $user = $this->resolveCurrentUser($options);
+        if (empty($user)) {
+            $user = [];
+        }
 
-        // Trigger webhook safely
+        $eventKey = $entity->isNew()
+            ? 'security_user_create'
+            : 'security_user_update';
+
+        $this->triggerSecurityUserWebhook($entity, $eventKey, $user);
+
+
+    }
+
+    /**
+     * Try to resolve the current user via options or session.
+     */
+    private function resolveCurrentUser(ArrayObject $options = null): ?array
+    {
+        if(!$options){
+            $options = [];
+        }
+        if (!empty($options['user'])) {
+            return $options['user'];
+        }
+        try {
+            if (method_exists($this->_table, 'getRequest')) {
+                $session = $this->_table->getRequest()->getSession();
+                if ($session->check('Auth.User.id')) {
+                    $userId = $session->read('Auth.User.id');
+                }
+            } else {
+                if (property_exists($this->_table->Auth)) {
+                    $userId = $this->_table->Auth->user('id');
+                }
+                if (property_exists($this->_table->Session)) {
+                    $session = $this->_table->Session;
+                    if ($session->check('Auth.User.id')) {
+                        $userId = $session->read('Auth.User.id');
+                    }
+                }
+            }
+            if($userId){
+                $Users = TableRegistry::getTableLocator()->get('User.Users');
+                $user = $Users->find()
+                    ->where([$Users->aliasField('id') => $userId])
+                    ->first();
+            }
+            return $user ? $user->toArray() : null;
+        } catch (\Throwable $e) {
+            Log::error('UserCascadeBehavior: unable to resolve user - ' . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Triggers a webhook for user-related changes.
+     */
+    private function triggerSecurityUserWebhook(Entity $entity, string $eventKey, array $user = []): void
+    {
+        if(empty($user)){
+            $user = $this->resolveCurrentUser() ?? [];
+        }
+        $body = $this->prepareWebhookBody($entity);
+
+        if ($eventKey === 'security_user_delete') {
+            $body['deleted_at'] = date('Y-m-d H:i:s');
+            $body['deleted_by'] = $user['openemis_no'] ?? $user['username'] ?? 'system';
+        }
+
         try {
             $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
-            $Webhooks->triggerCommand('security_user_delete', $body);
+            $Webhooks->triggerCommand($eventKey, $body);
         } catch (\Throwable $e) {
-            Log::warning("Webhook trigger failed in UserCascadeBehavior: " . $e->getMessage());
+            Log::warning("Webhook trigger failed in afterSave: " . $e->getMessage());
         }
     }
 
     /**
-     * Safely resolve user in a behavior (no Auth available).
+     * Fetches and prepares the full entity for webhook body.
      */
-    private function resolveCurrentUser(ArrayObject $options): ?array
+    private function prepareWebhookBody(Entity $entity, array $contain = []): array
     {
-        // 1️⃣ If the parent table passed user info through $options
-        if (!empty($options['user'])) {
-            return $options['user'];
+        $Table = $this->_table;
+
+        $record = $Table->find()
+            ->where([$Table->aliasField('id') => $entity->id])
+            ->contain($contain)
+            ->first();
+
+        if (!$record) {
+            $record = $entity;
         }
 
-        // 2️⃣ Fallback to session (if available)
-        try {
-            if (method_exists($this->_table, 'getRequest') && $this->_table->getRequest()->getSession()) {
-                $session = $this->_table->getRequest()->getSession();
-                if ($session->check('Auth.User.id')) {
-                    $userId = $session->read('Auth.User.id');
-                    $Users = TableRegistry::getTableLocator()->get('User.Users');
-                    $user = $Users->find()
-                        ->where([$Users->aliasField('id') => $userId])
-                        ->first();
-
-                    return $user ? $user->toArray() : null;
-                }
-            }
-        } catch (\Throwable $e) {
-            Log::debug('UserCascadeBehavior: unable to resolve user from session - ' . $e->getMessage());
-        }
-
-        return null;
+        return $record->toArray();
     }
 
 	// this function is to delete all records from user's related tables
@@ -86,6 +144,7 @@ class UserCascadeBehavior extends Behavior {
 		$fields = ['security_user_id', 'student_id', 'staff_id', 'guardian_id', 'trainee_id'];
 
 		foreach ($tables as $key => $table) {
+            $table = Inflector::underscore($table);
 			if ($this->_table->startsWith($table, 'z_')) { // to exclude all z_ prefix tables
 				continue;
 			}
@@ -98,10 +157,16 @@ class UserCascadeBehavior extends Behavior {
 			try {
 				if (!in_array($table, $excludes)) {
                     $tableObj = self::getDynamicTableInstance($table); // POCOR-8683
+                    $table = Inflector::underscore($table);
+
 					foreach ($fields as $field) {
                         $column = $tableObj->getSchema()->getColumn($field); // POCOR-8683
                         if ($column) {
-							$tableObj->deleteAll([$field => $userId]);
+                            $connection = $tableObj->getConnection();
+                            $quotedTable = $connection->quoteIdentifier($table);
+                            $quotedField = $connection->quoteIdentifier($field);
+                            $sql = "DELETE FROM {$quotedTable} WHERE {$quotedField} = :userId";
+                            $connection->execute($sql, ['userId' => $userId]);
                         }
 					}
 				}
@@ -147,43 +212,59 @@ class UserCascadeBehavior extends Behavior {
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {
-        // Parse plugin and table names if dot notation is used
         $locator = TableRegistry::getTableLocator();
-        try {
-            return $locator->get($tableName);
-        } catch (\Exception $exception) {
 
+        // First check for exact alias
+        if ($locator->exists($tableName)) {
+            return $locator->get($tableName);
         }
+
+        // Parse plugin and table
         $parts = explode('.', $tableName);
         $plugin = count($parts) > 1 ? $parts[0] : null;
         $table = count($parts) > 1 ? $parts[1] : $parts[0];
 
-        // Convert the table name to camel case as expected by CakePHP conventions
-        $tableFullAlias = Inflector::camelize($tableName);
-        $tableAlias = Inflector::camelize($table);
+        // Try fallback to underscored DB table name
+        $fallbackTable = Inflector::underscore($table);
+        $fallbackAlias = Inflector::camelize($fallbackTable);
 
-        // Create the fully qualified class name if a plugin is specified
         if ($plugin) {
-            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+            $className = $plugin . '\\Model\\Table\\' . $fallbackAlias . 'Table';
         } else {
-            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+            $className = 'App\\Model\\Table\\' . $fallbackAlias . 'Table';
         }
-        // Check if the table instance already exists
-        if (!$locator->exists($tableFullAlias)) {
-            // Check if the specific table class exists
-            if (!class_exists($className)) {
-                $className = Table::class; // Fallback to generic Table class
-            }
 
-            // Configure a new table instance
-            $locator->setConfig($tableAlias, [
+        if (!class_exists($className)) {
+            $className = Table::class; // fallback to base table class
+        }
+
+        if ($locator->exists($fallbackAlias)) {
+            $existingConfig = $locator->getConfig($fallbackAlias);
+
+            // Only override if the existing table config is incorrect
+            if (
+                empty($existingConfig['table']) ||
+                $existingConfig['table'] !== $fallbackTable
+            ) {
+                // Remove and reset only if the config is wrong
+                $locator->remove($fallbackAlias);
+
+                $locator->setConfig($fallbackAlias, [
+                    'className' => $className,
+                    'table' => $fallbackTable,
+                    'alias' => $fallbackAlias,
+                ]);
+            }
+        } else {
+            // Table not registered yet, safe to register
+            $locator->setConfig($fallbackAlias, [
                 'className' => $className,
-                'table' => $table,
-                'alias' => $tableAlias,
+                'table' => $fallbackTable,
+                'alias' => $fallbackAlias,
             ]);
         }
 
-        // Return the table instance
-        return $locator->get($tableFullAlias);
+        return $locator->get($fallbackAlias);
     }
+
 }

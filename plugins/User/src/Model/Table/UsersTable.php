@@ -1142,72 +1142,155 @@ class UsersTable extends AppTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
-//        Log::debug(__FUNCTION__);
-        // This logic is meant for Import
-        //comment for ticket POCOR-6512
-        /*if ($entity->has('customColumns')) {
-            foreach ($entity->customColumns as $column => $value) {
-                switch ($column) {
-                    case 'Identity':*/
-        //comment for ticket POCOR-6512
-        //                        $userIdentitiesTable = TableRegistry::getTableLocator()->get('User.Identities');
-        //
-        //                        $defaultValue = $userIdentitiesTable->IdentityTypes->getDefaultValue();
-        //
-        //                      //  if ($defaultValue) {
-        //                            $userIdentityData = $userIdentitiesTable->newEntity([
-        //                                'identity_type_id' => $entity->identity_type_id,
-        //                                'number' => $entity->identity_number,
-        //                                'security_user_id' => $entity->id,
-        //                                'nationality_id' =>$entity->nationality_id
-        //                            ]);
-        //                            $userIdentitiesTable->save($userIdentityData);
-        // }
-        //comment for ticket POCOR-6512
-        /*  break;
-  }
-}
-}
-*/      //comment for ticket POCOR-6512
-        // This is for import contact from Import User excel
-        // POCOR-8683 start
-        $security_user_id = $entity->id;
-        if ($entity->has('action_type') && $entity->action_type == 'imported') {
-            if ($entity->has('contact_entity')) {
-                $contact_entities = $entity->contact_entity;
-                if(!is_array($contact_entities)){
-                    $contact_entities = [$contact_entities];
-                }
-                foreach ($contact_entities as $contact_entity) {
-                    if (!$contact_entity->has('security_user_id')) {
-                        $contact_entity->security_user_id = $security_user_id;
-                        $contact_entity->preferred = 1;
-                    }
-                    $ContactsTable = TableRegistry::getTableLocator()->get('User.Contacts');
-                    $contact_entity = $ContactsTable->save($contact_entity);
-//                    Log::debug(print_r(['$contact_entity' => $contact_entity], true));
-                }
-            }
-            $identity_type_id = $entity->identity_type_id;
-            $nationality_id = $entity->nationality_id;
-            if ($nationality_id) {
-                $listeners = [
-                    TableRegistry::getTableLocator()->get('User.UserNationalities'),
-                ];
-                if ($identity_type_id) {
-                    $listeners = [
-                        TableRegistry::getTableLocator()->get('User.UserNationalities'),
-                        TableRegistry::getTableLocator()->get('User.Identities'),
-                    ];
-                }
-            }
-            $this->dispatchEventToModels('Model.Users.afterSave', [$entity], $this, $listeners);
 
+
+        $this->handleImportedUserData($entity);
+        if (!empty($options['skip_callbacks'])) {
+            return;
         }
-//        Log::debug(__FUNCTION__); // POCOR-9101
-    // POCOR-8683 end
+
+        $eventKey = $entity->isNew()
+            ? 'security_user_create'
+            : 'security_user_update';
+
+        $this->triggerSecurityUserWebhook($entity, $eventKey, []);
+    }
+
+    /**
+     * Safely resolve current user for audit / webhook.
+     */
+    private function resolveCurrentUser(): ?array
+    {
+        try {
+            // Try the Auth component first
+            if (!empty($this->Auth) && $this->Auth->user()) {
+                return $this->Auth->user();
+            }
+
+            // Fallback to session if Auth is unavailable
+            $session = TableRegistry::getTableLocator()
+                ->get('Configuration.ConfigItems') // any loaded table with session context
+                ->getConnection()
+                ->getDriver()
+                ->getConnection()
+                ->session ?? null;
+
+            if (method_exists($this, 'getRequest') && $this->getRequest()->getSession()) {
+                $session = $this->getRequest()->getSession();
+            }
+
+            if ($session && $session->check('Auth.User.id')) {
+                $userId = $session->read('Auth.User.id');
+                $Users = TableRegistry::getTableLocator()->get('User.Users');
+                $user = $Users->find('all')
+                    ->where([
+                        $Users->aliasField('id')
+                        => $userId])->first();
+
+                return $user ? $user->toArray() : null;
+            }
+        } catch (\Throwable $e) {
+            Log::warning('User resolution failed: ' . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    private function triggerSecurityUserWebhook(Entity $entity, string $eventKey): void
+    {
+        $user = $this->resolveCurrentUser();
+
+        $contain = [];
+
+        $body = $this->prepareWebhookBody($entity, $contain);
+        if ($eventKey === 'security_user_delete') {
+            $body['deleted_at'] = date('Y-m-d H:i:s');
+            $body['deleted_by'] = $user['openemis_no']
+                ?? $user['username']
+                ?? 'system';
+        }
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+        $Webhooks->triggerCommand($eventKey, $body);
 
     }
+
+    /**
+     * Prepares the webhook body for any model, with optional child associations.
+     */
+    private function prepareWebhookBody(Entity $entity, array $contain = []): array
+    {
+        $Table = TableRegistry::getTableLocator()->get('User.Users');
+
+        // Fetch full entity with child models if available
+        $record = $Table->find()
+            ->where([$Table->aliasField('id') => $entity->id])
+            ->contain($contain)
+            ->first();
+
+        // Fallback if hard-deleted or not found
+        if (!$record) {
+            $record = $entity;
+        }
+
+        // Convert to array safely
+        $body = $record->toArray();
+
+        return $body;
+    }
+    private function handleImportedUserData(Entity $entity): void
+    {
+        if (!($entity->has('action_type') && $entity->action_type === 'imported')) {
+            return;
+        }
+
+        $this->linkImportedContacts($entity);
+        $this->dispatchImportListeners($entity);
+    }
+
+    private function linkImportedContacts(Entity $entity): void
+    {
+        if (!$entity->has('contact_entity')) {
+            return;
+        }
+
+        $securityUserId = $entity->id;
+        $contactEntities = $entity->contact_entity;
+
+        if (!is_array($contactEntities)) {
+            $contactEntities = [$contactEntities];
+        }
+
+        $ContactsTable = TableRegistry::getTableLocator()->get('User.Contacts');
+
+        foreach ($contactEntities as $contactEntity) {
+            if (!$contactEntity->has('security_user_id')) {
+                $contactEntity->security_user_id = $securityUserId;
+                $contactEntity->preferred = 1;
+            }
+
+            $ContactsTable->save($contactEntity);
+        }
+    }
+    private function dispatchImportListeners(Entity $entity): void
+    {
+        $nationalityId = $entity->nationality_id ?? null;
+        $identityTypeId = $entity->identity_type_id ?? null;
+
+        if (!$nationalityId) {
+            return;
+        }
+
+        $listeners = [
+            TableRegistry::getTableLocator()->get('User.UserNationalities')
+        ];
+
+        if ($identityTypeId) {
+            $listeners[] = TableRegistry::getTableLocator()->get('User.Identities');
+        }
+
+        $this->dispatchEventToModels('Model.Users.afterSave', [$entity], $this, $listeners);
+    }
+
 
     public function onChangeUserNationalities(Event $event, Entity $entity)
     {

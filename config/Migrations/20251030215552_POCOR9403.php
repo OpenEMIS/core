@@ -241,6 +241,8 @@ class POCOR9403 extends AbstractMigration
             ['event_key' => 'security_role_update', 'method' => 'PATCH', 'url' => self::WEBHOOK_URL_EXAMS, 'query_template' => '/security-roles/${id}', 'body_template' => '', 'external_data_source_id' => $examDataSourceId, 'status' => self::WEBHOOK_STATUS],
             ['event_key' => 'security_role_delete', 'method' => 'DELETE', 'url' => self::WEBHOOK_URL_CUSTOM, 'query_template' => '/security-roles', 'body_template' => '', 'external_data_source_id' => $customDataSourceId, 'status' => self::WEBHOOK_STATUS],
 
+            ['event_key' => 'security_user_create', 'method' => 'POST', 'url' => self::WEBHOOK_URL_CUSTOM, 'query_template' => '/security-users', 'body_template' => '', 'external_data_source_id' => $customDataSourceId, 'status' => self::WEBHOOK_STATUS],
+            ['event_key' => 'security_user_update', 'method' => 'PATCH', 'url' => self::WEBHOOK_URL_EXAMS, 'query_template' => '/security-users/${id}', 'body_template' => '', 'external_data_source_id' => $examDataSourceId, 'status' => self::WEBHOOK_STATUS],
             ['event_key' => 'security_user_delete', 'method' => 'DELETE', 'url' => self::WEBHOOK_URL_CUSTOM, 'query_template' => '/security-users', 'body_template' => '', 'external_data_source_id' => $customDataSourceId, 'status' => self::WEBHOOK_STATUS],
 
             ['event_key' => 'security_role_create', 'method' => 'POST', 'url' => self::WEBHOOK_URL_CUSTOM, 'query_template' => '/security-roles', 'body_template' => '', 'external_data_source_id' => $customDataSourceId, 'status' => self::WEBHOOK_STATUS],

@@ -775,11 +775,25 @@ class ConfigWebhooksTable extends ControllerActionTable
                 'excluded' => self::EXCLUDED_FIELDS,
                 'placeholders' => []
             ],
+            'security_user_create' => [
+                'code' => 'security_user_create',
+                'label' => 'Security User Create',
+                'model' => 'User.Users',
+                'excluded' =>  self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
             'security_user_delete' => [
                 'code' => 'security_user_delete',
                 'label' => 'Security User Delete',
                 'model' => 'User.Users',
-                'excluded' => ['id', 'password', 'created', 'modified'],
+                'excluded' =>  self::EXCLUDED_FIELDS,
+                'placeholders' => []
+            ],
+            'security_user_update' => [
+                'code' => 'security_user_update',
+                'label' => 'Security User Update',
+                'model' => 'User.Users',
+                'excluded' =>  self::EXCLUDED_FIELDS,
                 'placeholders' => []
             ],
             'institution_create' => [
