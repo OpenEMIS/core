@@ -483,7 +483,7 @@ class StudentAdmissionTable extends ControllerActionTable
     {
         $Students = self::getDynamicTableInstance('Institution.Students');
         $StudentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
-        $Identities = TableRegistry::getTableLocator()->get('User.Identities');
+        $Identities = TableRegistry::getTableLocator()->get('User.Identities'); //POCOR-9404
         $statuses = $StudentStatuses->findCodeList();
 
         $incomingStudent = [
@@ -505,20 +505,23 @@ class StudentAdmissionTable extends ControllerActionTable
             Log::error($exception->getMessage()); // POCOR-9323
         }
         if(!$newEntity->hasErrors()){
-            $incomingStudentIdentities = [
-                'identity_type_id' =>  $entity->identity_type_id,
-                'security_user_id' => $entity->student_id,
-                'number' => $entity->identity_number,
-                'nationality_id IS' => null,
-                'created_user_id' => $entity->created_user_id,
-                'created' => FrozenTime::now(),  
-            ];
-            $newStduentIdentities = $Identities->newEntity($incomingStudentIdentities);
-            try{
-                $Identities->save($newStduentIdentities);
-            } catch (\Exception $exception) {
-                Log::error($exception->getMessage());
-            }         
+            if(!empty($entity->identity_type_id)){
+                //POCOR-9404 start
+                $incomingStudentIdentities = [
+                    'identity_type_id' =>  $entity->identity_type_id,
+                    'security_user_id' => $entity->student_id,
+                    'number' => isset($entity->identity_number) ? $entity->identity_number : NULL,
+                    'nationality_id IS' => null,
+                    'created_user_id' => $entity->created_user_id,
+                    'created' => FrozenTime::now(),  
+                ];
+                $newStduentIdentities = $Identities->newEntity($incomingStudentIdentities);
+                try{
+                    $Identities->save($newStduentIdentities);
+                } catch (\Exception $exception) {
+                    Log::error($exception->getMessage());
+                }  //POCOR-9404 end    
+            }   
             return $newEntity;
         }else{
             return null;
