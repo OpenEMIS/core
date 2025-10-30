@@ -360,7 +360,6 @@ class ImportStudentAdmissionTable extends AppTable
 
     public function onImportPopulateInstitutionClassesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-       // dd([$lookupPlugin, $lookupModel]);
         try {
             $institution = $this->Institutions->get($this->institutionId);
             $modelData = $this->populateInstitutionClassesData();
