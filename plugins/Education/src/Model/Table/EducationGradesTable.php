@@ -117,7 +117,7 @@ class EducationGradesTable extends ControllerActionTable
         $this->getConnection()->getDriver()->enableAutoQuoting();
 
         // Skip if triggered internally or no authenticated user
-        if (!empty($options['skip_callbacks']) || empty($this->Auth) || empty($this->Auth->user())) {
+        if (!empty($options['skip_callbacks'])) {
             return;
         }
 
@@ -228,32 +228,34 @@ class EducationGradesTable extends ControllerActionTable
         // Preserve existing logic
         $this->updateAdmissionAgeAfterDelete($entity);
 
-        // Skip if no authenticated user
-        if (empty($this->Auth) || empty($this->Auth->user())) {
+        if (!empty($options['skip_callbacks'])) {
             return;
         }
-
         $this->triggerWebhookCommand($entity, 'education_grade_delete');
     }
 
-    /**
-     * Shared webhook trigger for education grades.
-     */
+
+
+    // POCOR-9403
     private function triggerWebhookCommand(Entity $entity, string $eventKey): void
     {
-        $body = $entity->toArray();
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
 
-        // Add metadata for delete tracking
+        $user = $Webhooks->resolveCurrentUser();
+
+        $contain = [];
+        $tableAlias = 'Education.EducationGrades';
+        $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
         if ($eventKey === 'education_grade_delete') {
             $body['deleted_at'] = date('Y-m-d H:i:s');
-            $body['deleted_by'] = $this->Auth->user()['openemis_no']
-                ?? $this->Auth->user()['username']
+            $body['deleted_by'] = $user['openemis_no']
+                ?? $user['username']
                 ?? 'system';
         }
-
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
         $Webhooks->triggerCommand($eventKey, $body);
+
     }
+
 
     /**
      * Method to get the education system id for the particular grade given

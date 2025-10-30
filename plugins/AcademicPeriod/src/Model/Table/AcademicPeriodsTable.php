@@ -347,7 +347,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         $contain = ['Parents', 'Levels'];
         $tableAlias = 'AcademicPeriod.AcademicPeriods';
         $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
-        if ($eventKey === 'security_user_delete') {
+        if ($eventKey === 'academic_period_delete') {
             $body['deleted_at'] = date('Y-m-d H:i:s');
             $body['deleted_by'] = $user['openemis_no']
                 ?? $user['username']
