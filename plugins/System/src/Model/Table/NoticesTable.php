@@ -94,7 +94,7 @@ class NoticesTable extends ControllerActionTable
             $userRoleIds = array_column($userRoleIdsQuery->toArray(), 'security_role_id');
             //This check is added to restrict users which don't have any roles assigned.(POCOR-9429)
             if (empty($userRoleIds)) {
-                return $this->controller->redirect('/dashboard');
+               return $query->where(['1 = 0']);
             }
 
                 $havePermissionToView = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
