@@ -505,12 +505,12 @@ class StudentAdmissionTable extends ControllerActionTable
             Log::error($exception->getMessage()); // POCOR-9323
         }
         if(!$newEntity->hasErrors()){
-            if(!empty($entity->identity_type_id)){
+            if(!empty($entity->identity_type_id) && !empty($entity->identity_number)){
                 //POCOR-9404 start
                 $incomingStudentIdentities = [
                     'identity_type_id' =>  $entity->identity_type_id,
                     'security_user_id' => $entity->student_id,
-                    'number' => isset($entity->identity_number) ? $entity->identity_number : NULL,
+                    'number' => $entity->identity_number ?? null,
                     'nationality_id IS' => null,
                     'created_user_id' => $entity->created_user_id,
                     'created' => FrozenTime::now(),  
