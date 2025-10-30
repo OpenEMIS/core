@@ -46,8 +46,8 @@ class AcademicPeriodsTable extends ControllerActionTable
         $this->hasMany('CompetencyPeriods', ['className' => 'Competency.CompetencyPeriods', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('CompetencyTemplates', ['className' => 'Competency.CompetencyTemplates', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('EducationSystems', ['className' => 'Education.EducationSystems', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-//        $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
-//        $this->hasMany('ExaminationCentresExaminations', ['className' => 'Examination.ExaminationCentresExaminations', 'dependent' => true, 'cascadeCallbacks' => true]);
+//        $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]); // POCOR-9403
+//        $this->hasMany('ExaminationCentresExaminations', ['className' => 'Examination.ExaminationCentresExaminations', 'dependent' => true, 'cascadeCallbacks' => true]); // POCOR-9403
         $this->hasMany('ExaminationCentresExaminationsStudents', ['className' => 'Examination.ExaminationCentresExaminationsStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationStudentSubjectResults', ['className' => 'Examination.ExaminationStudentSubjectResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Examinations', ['className' => 'Examination.Examinations', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -64,7 +64,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         $this->hasMany('InstitutionAssociationStudent', ['className' => 'Student.InstitutionAssociationStudent', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionAssociations', ['className' => 'Institution.InstitutionAssociations', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionBudgets', ['className' => 'Institution.InstitutionBudgets', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-//        $this->hasMany('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings', 'dependent' => true]);
+//        $this->hasMany('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings', 'dependent' => true]); // POCOR-9403
         $this->hasMany('InstitutionClassAttendanceRecords', ['className' => 'Institution.ClassAttendanceRecords', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -74,10 +74,10 @@ class AcademicPeriodsTable extends ControllerActionTable
         $this->hasMany('InstitutionCompetencyResults', ['className' => 'Institution.InstitutionCompetencyResults', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionExpenditures', ['className' => 'Institution.InstitutionExpenditures', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionFees', ['className' => 'Institution.InstitutionFees', 'dependent' => true, 'cascadeCallbacks' => true]);
-//        $this->hasMany('InstitutionFloors', ['className' => 'Institution.InstitutionFloors', 'dependent' => true]);
+//        $this->hasMany('InstitutionFloors', ['className' => 'Institution.InstitutionFloors', 'dependent' => true]); // POCOR-9403
         $this->hasMany('InstitutionIncomes', ['className' => 'Institution.InstitutionIncomes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionInstitutionSubjects', ['className' => 'Institution.InstitutionSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
-//        $this->hasMany('InstitutionLands', ['className' => 'Institution.InstitutionLands', 'dependent' => true]);
+//        $this->hasMany('InstitutionLands', ['className' => 'Institution.InstitutionLands', 'dependent' => true]); // POCOR-9403
         $this->hasMany('InstitutionMealProgrammes', ['className' => 'Institution.InstitutionDistributions', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionMealStudents', ['className' => 'Institution.InstitutionMealStudents', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionOutcomeResults', ['className' => 'Institution.InstitutionOutcomeResults', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -87,7 +87,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         $this->hasMany('InstitutionRepeaterSurveys', ['className' => 'InstitutionRepeater.RepeaterSurveys', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionReportCardProcesses', ['className' => 'ReportCard.InstitutionReportCardProcesses', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionReportCards', ['className' => 'Institution.InstitutionReportCards', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-//        $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true]);
+//        $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true]); // POCOR-9403
         $this->hasMany('InstitutionRubrics', ['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionScheduleIntervals', ['className' => 'Schedule.ScheduleIntervals', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionScheduleTerms', ['className' => 'Schedule.ScheduleTerms', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -311,16 +311,11 @@ class AcademicPeriodsTable extends ControllerActionTable
         return $buttons;
     }
 
-
+    // POCOR-9403
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
         // Skip if triggered internally
         if (!empty($options['skip_callbacks'])) {
-            return;
-        }
-
-        // Skip if no authenticated user
-        if (empty($this->Auth) || empty($this->Auth->user())) {
             return;
         }
 
@@ -331,35 +326,35 @@ class AcademicPeriodsTable extends ControllerActionTable
         $this->triggerWebhookCommand($entity, $eventKey);
     }
 
+    // POCOR-9403
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
     {
-        // Skip if no authenticated user
-        if (empty($this->Auth) || empty($this->Auth->user())) {
+        if (!empty($options['skip_callbacks'])) {
             return;
         }
-
         $this->triggerWebhookCommand($entity, 'academic_period_delete');
     }
 
-    /**
-     * Centralized reusable webhook trigger
-     * Can be used by any table class with minor variations
-     */
+
+
+    // POCOR-9403
     private function triggerWebhookCommand(Entity $entity, string $eventKey): void
     {
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
 
-        $body = $entity->toArray();
+        $user = $Webhooks->resolveCurrentUser();
 
-        // Add metadata for delete tracking if applicable
-        if ($eventKey === 'academic_period_delete') {
+        $contain = ['Parents', 'Levels'];
+        $tableAlias = 'AcademicPeriod.AcademicPeriods';
+        $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
+        if ($eventKey === 'security_user_delete') {
             $body['deleted_at'] = date('Y-m-d H:i:s');
-            $body['deleted_by'] = $this->Auth->user()['openemis_no']
-                ?? $this->Auth->user()['username']
+            $body['deleted_by'] = $user['openemis_no']
+                ?? $user['username']
                 ?? 'system';
         }
-
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
         $Webhooks->triggerCommand($eventKey, $body);
+
     }
 
 

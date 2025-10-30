@@ -218,6 +218,7 @@ class AreasTable extends ControllerActionTable
         $this->setfieldOrder($this->fieldsOrder);
     }
 
+    // POCOR-9403
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
         // Skip if triggered internally
@@ -225,40 +226,41 @@ class AreasTable extends ControllerActionTable
             return;
         }
 
-        // Skip for unrelated associations (like usergroups)
-//        if ($this->associations()->has('usergroups')) {
-//            return;
-//        }
+        $eventKey = $entity->isNew()
+            ? 'academic_period_create'
+            : 'academic_period_update';
 
-        $eventKey = $entity->isNew() ? 'area_education_create' : 'area_education_update';
-        $this->triggerAreaWebhook($entity, $eventKey);
+        $this->triggerWebhookCommand($entity, $eventKey);
     }
 
+    // POCOR-9403
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
     {
-        if (!empty($this->Auth) && $this->Auth->user()) {
-
-                $this->triggerAreaWebhook($entity, 'area_education_delete');
-
+        if (!empty($options['skip_callbacks'])) {
+            return;
         }
+        $this->triggerWebhookCommand($entity, 'academic_period_delete');
     }
 
-    private function triggerAreaWebhook(Entity $entity, string $eventKey): void
+
+
+    // POCOR-9403
+    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
     {
-
-        $body = $entity->toArray();
-
-        // Add metadata for delete tracking if applicable
-
         $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
 
-        // Add metadata for delete tracking if applicable
-        if ($eventKey === 'area_education_delete') {
+        $user = $Webhooks->resolveCurrentUser();
+
+        $contain = ['AreaParents', 'AreaLevels'];
+        $tableAlias = 'Area.Areas';
+        $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
+        if ($eventKey === 'security_user_delete') {
             $body['deleted_at'] = date('Y-m-d H:i:s');
-            $body['deleted_by'] = $this->Auth->user()['openemis_no'] ?? $this->Auth->user()['username'] ?? 'system';
+            $body['deleted_by'] = $user['openemis_no']
+                ?? $user['username']
+                ?? 'system';
         }
         $Webhooks->triggerCommand($eventKey, $body);
-
 
     }
 
