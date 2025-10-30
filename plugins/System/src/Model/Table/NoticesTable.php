@@ -90,8 +90,12 @@ class NoticesTable extends ControllerActionTable
             $userRoleIdsQuery = $usersGroup->find()
                 ->select(['security_role_id'])
                 ->where(['security_user_id' => $userId])
-                ->enableHydration(false);
+                ->enableHydration(false);    
             $userRoleIds = array_column($userRoleIdsQuery->toArray(), 'security_role_id');
+            //This check is added to restrict users which don't have any roles assigned.(POCOR-9429)
+            if (empty($userRoleIds)) {
+                return $this->controller->redirect('/dashboard');
+            }
 
                 $havePermissionToView = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
                         ->leftJoin(['SecurityFunctions' => 'security_functions'], [
