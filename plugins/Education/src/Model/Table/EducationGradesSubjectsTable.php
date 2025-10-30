@@ -79,7 +79,9 @@ class EducationGradesSubjectsTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
         // Skip if triggered internally or no authenticated user
-        if (!empty($options['skip_callbacks']) || empty($this->Auth) || empty($this->Auth->user())) {
+       // 'education_grade_subject_create'
+        // Skip if triggered internally
+        if (!empty($options['skip_callbacks'])) {
             return;
         }
 
@@ -90,33 +92,35 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $this->triggerWebhookCommand($entity, $eventKey);
     }
 
+    // POCOR-9403
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
     {
-        // Skip if no authenticated user
-        if (empty($this->Auth) || empty($this->Auth->user())) {
+        if (!empty($options['skip_callbacks'])) {
             return;
         }
-
         $this->triggerWebhookCommand($entity, 'education_grade_subject_delete');
     }
 
-    /**
-     * Shared webhook trigger for education grade subjects.
-     */
+
+
+    // POCOR-9403
     private function triggerWebhookCommand(Entity $entity, string $eventKey): void
     {
-        $body = $entity->toArray();
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
 
-        // Add metadata for delete tracking if applicable
+        $user = $Webhooks->resolveCurrentUser();
+
+        $contain = [];
+        $tableAlias = 'Education.EducationGradeSubjects';
+        $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
         if ($eventKey === 'education_grade_subject_delete') {
             $body['deleted_at'] = date('Y-m-d H:i:s');
-            $body['deleted_by'] = $this->Auth->user()['openemis_no']
-                ?? $this->Auth->user()['username']
+            $body['deleted_by'] = $user['openemis_no']
+                ?? $user['username']
                 ?? 'system';
         }
-
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
         $Webhooks->triggerCommand($eventKey, $body);
+
     }
 
     public function afterAction(Event $event, ArrayObject $extra)

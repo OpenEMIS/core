@@ -227,8 +227,8 @@ class AreasTable extends ControllerActionTable
         }
 
         $eventKey = $entity->isNew()
-            ? 'academic_period_create'
-            : 'academic_period_update';
+            ? 'area_education_create'
+            : 'area_education_update';
 
         $this->triggerWebhookCommand($entity, $eventKey);
     }
@@ -239,7 +239,7 @@ class AreasTable extends ControllerActionTable
         if (!empty($options['skip_callbacks'])) {
             return;
         }
-        $this->triggerWebhookCommand($entity, 'academic_period_delete');
+        $this->triggerWebhookCommand($entity, 'area_education_delete');
     }
 
 
@@ -254,7 +254,7 @@ class AreasTable extends ControllerActionTable
         $contain = ['AreaParents', 'AreaLevels'];
         $tableAlias = 'Area.Areas';
         $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
-        if ($eventKey === 'security_user_delete') {
+        if ($eventKey === 'area_education_delete') {
             $body['deleted_at'] = date('Y-m-d H:i:s');
             $body['deleted_by'] = $user['openemis_no']
                 ?? $user['username']

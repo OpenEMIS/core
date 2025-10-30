@@ -137,6 +137,7 @@ class ConfigItemsBehavior extends Behavior
         if($typeValue == 'ExternalDataSource-Identity'){
             $typeValue = 'ExternalDataSourceIdentity';
         }
+        // POCOR-9403
         if($typeValue == 'ExternalDataSource-Webhook'){
             $typeValue = 'ExternalDataSourceWebhook';
         }
