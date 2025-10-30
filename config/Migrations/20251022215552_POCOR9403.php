@@ -13,6 +13,9 @@ class POCOR9403 extends AbstractMigration
     const EXTERNAL_DATA_SOURCE_WEBHOOK = 'External Data Source - Webhook';
     const EXTERNAL_DATA_SOURCE_WEBHOOKS_CUSTOM = 'external_data_source_webhooks_custom';
     const EXTERNAL_DATA_SOURCE_WEBHOOKS_EXAMS = 'external_data_source_webhooks_exams';
+    const WEBHOOK_URL_CUSTOM = 'http://flask-webhooks:5000/webhook/custom';
+    const WEBHOOK_URL_EXAMS = 'http://flask-webhooks:5000/webhook/openemis_exam';
+    const WEBHOOK_STATUS = 1;
 
     public function up()
     {
@@ -210,6 +213,18 @@ class POCOR9403 extends AbstractMigration
         $this->execute('CREATE INDEX `webhooks_idx_event_key` ON `webhooks` (`event_key`)');
         $this->execute('CREATE INDEX `webhooks_idx_event_status` ON `webhooks` (`event_key`, `status`)');
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
+        $table = $this->table('webhooks');
+
+        foreach ($webhooks as $webhook) {
+            $exists = $table->find()
+                ->where(['event_key' => $webhook['event_key']])
+                ->count();
+
+            if ($exists == 0) {
+                $table->insert($webhook)->save();
+            }
+        }
+
     }
 
 
