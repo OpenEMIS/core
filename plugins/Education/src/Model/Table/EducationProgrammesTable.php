@@ -18,7 +18,7 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     private $_contain = ['EducationNextProgrammes._joinData'];
     private $_fieldOrder = ['code', 'name', 'duration', 'visible', 'education_field_of_study_id','education_cycle_id', 'education_certification_id' ,'same_grade_promotion'];//POCOR-4746
-    private  $arrayNextProgrammes = [];
+    private  $arrayNextProgrammes = []; // POCOR-9403
     public function initialize(array $config): void {
         parent::initialize($config);
         $this->belongsTo('EducationCycles', ['className' => 'Education.EducationCycles']);
@@ -102,7 +102,7 @@ class EducationProgrammesTable extends ControllerActionTable {
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
         // Skip if triggered internally or no authenticated user
-        if (!empty($options['skip_callbacks']) || empty($this->Auth) || empty($this->Auth->user())) {
+        if (!empty($options['skip_callbacks'])) {
             return;
         }
 
@@ -119,7 +119,7 @@ class EducationProgrammesTable extends ControllerActionTable {
         $this->deleteChildProgrammes($entity);
 
         // Skip webhook if no authenticated user
-        if (empty($this->Auth) || empty($this->Auth->user())) {
+        if (!empty($options['skip_callbacks'])) {
             return;
         }
 
@@ -131,34 +131,25 @@ class EducationProgrammesTable extends ControllerActionTable {
      */
     private function triggerWebhookCommand(Entity $entity, string $eventKey): void
     {
-        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
-
-        // Always load with associations (so updates/deletes get same structure)
-        $programme = $EducationProgrammes->find()
-            ->where([$EducationProgrammes->aliasField('id') => $entity->id])
-            ->contain(['EducationNextProgrammes']) // belongsToMany association
-            ->first();
-
-        // Fallback if deleted entity no longer found (e.g. hard delete)
-        if (!$programme) {
-            $programme = $entity;
-        }
-
-        // Convert to array (avoids serialization issues)
-        $body = $programme->toArray();
-
-        // Add metadata for delete tracking if applicable
-        if ($eventKey === 'education_programme_delete') {
-            $body['deleted_at'] = date('Y-m-d H:i:s');
-            $body['deleted_by'] = $this->Auth->user()['openemis_no']
-                ?? $this->Auth->user()['username']
-                ?? 'system';
-        }
 
         $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+
+        $user = $Webhooks->resolveCurrentUser();
+
+        $contain = ['EducationNextProgrammes'];
+        $tableAlias = 'Education.EducationProgrammes';
+        $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
+        if ($eventKey === 'education_programme_delete') {
+            $body['deleted_at'] = date('Y-m-d H:i:s');
+            $body['deleted_by'] = $user['openemis_no']
+                ?? $user['username']
+                ?? 'system';
+        }
         $Webhooks->triggerCommand($eventKey, $body);
+
     }
 
+    //
     /**
      * Delete child entries from EducationProgrammesNextProgrammes when a programme is removed.
      */

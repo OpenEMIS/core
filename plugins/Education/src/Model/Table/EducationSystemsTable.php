@@ -499,7 +499,7 @@ class EducationSystemsTable extends ControllerActionTable
 
 		// Webhook Education System
         // Skip if triggered internally or if no authenticated user
-        if (!empty($options['skip_callbacks']) || empty($this->Auth) || empty($this->Auth->user())) {
+        if (!empty($options['skip_callbacks'])) {
             return;
         }
 
@@ -507,38 +507,41 @@ class EducationSystemsTable extends ControllerActionTable
             ? 'education_system_create'
             : 'education_system_update';
 
-        $this->triggerEducationSystemWebhook($entity, $eventKey);
+        $this->triggerWebhookCommand($entity, $eventKey);
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
     {
         // Skip webhook if no authenticated user
-        if (empty($this->Auth) || empty($this->Auth->user())) {
+        if (!empty($options['skip_callbacks'])) {
             return;
         }
 
-        $this->triggerEducationSystemWebhook($entity, 'education_system_delete');
+        $this->triggerWebhookCommand($entity, 'education_system_delete');
     }
 
     /**
      * Shared webhook trigger for Education System events.
      * Includes academic period and visibility info.
      */
-    private function triggerEducationSystemWebhook(Entity $entity, string $eventKey): void
+    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
     {
-        $body = $entity->toArray();
 
-        // Add metadata for delete tracking if applicable
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+
+        $user = $Webhooks->resolveCurrentUser();
+
+        $contain = [];
+        $tableAlias = 'Education.EducationSystems';
+        $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
         if ($eventKey === 'education_system_delete') {
             $body['deleted_at'] = date('Y-m-d H:i:s');
-            $body['deleted_by'] = $this->Auth->user()['openemis_no']
-                ?? $this->Auth->user()['username']
+            $body['deleted_by'] = $user['openemis_no']
+                ?? $user['username']
                 ?? 'system';
         }
-
-        // Send webhook
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
         $Webhooks->triggerCommand($eventKey, $body);
+
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
