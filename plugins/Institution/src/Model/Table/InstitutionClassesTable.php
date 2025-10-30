@@ -535,11 +535,11 @@ class InstitutionClassesTable extends ControllerActionTable
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
 
-            $this->triggerClassWebhook($entity, 'institution_class_create');
+            $this->triggerWebhookCommand($entity, 'institution_class_create');
 
         } else {
 
-            $this->triggerClassWebhook($entity, 'institution_class_update');
+            $this->triggerWebhookCommand($entity, 'institution_class_update');
 
         }
     }
@@ -547,47 +547,7 @@ class InstitutionClassesTable extends ControllerActionTable
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
     {
 
-        $this->triggerClassWebhook($entity, 'institution_class_delete');
-    }
-
-    /**
-     * Safely resolve current user for audit / webhook.
-     */
-    private function resolveCurrentUser(): ?array
-    {
-        try {
-            // Try the Auth component first
-            if (!empty($this->Auth) && $this->Auth->user()) {
-                return $this->Auth->user();
-            }
-
-            // Fallback to session if Auth is unavailable
-            $session = TableRegistry::getTableLocator()
-                ->get('Configuration.ConfigItems') // any loaded table with session context
-                ->getConnection()
-                ->getDriver()
-                ->getConnection()
-                ->session ?? null;
-
-            if (method_exists($this, 'getRequest') && $this->getRequest()->getSession()) {
-                $session = $this->getRequest()->getSession();
-            }
-
-            if ($session && $session->check('Auth.User.id')) {
-                $userId = $session->read('Auth.User.id');
-                $Users = TableRegistry::getTableLocator()->get('User.Users');
-                $user = $Users->find('all')
-                    ->where([
-                    $Users->aliasField('id')
-                => $userId])->first();
-
-                return $user ? $user->toArray() : null;
-            }
-        } catch (\Throwable $e) {
-            Log::warning('User resolution failed: ' . $e->getMessage());
-        }
-
-        return null;
+        $this->triggerWebhookCommand($entity, 'institution_class_delete');
     }
 
     private function handleClassCustomFields(Entity $entity): void
@@ -652,9 +612,11 @@ class InstitutionClassesTable extends ControllerActionTable
         }
     }
 
-    private function triggerClassWebhook(Entity $entity, string $eventKey): void
+    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
     {
-        $user = $this->resolveCurrentUser();
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+
+        $user = $Webhooks->resolveCurrentUser();
 
         $contain = [
             'Institutions',
@@ -667,41 +629,18 @@ class InstitutionClassesTable extends ControllerActionTable
             'ClassesSecondaryStaff.SecondaryStaff',
         ];
 
-        $body = $this->prepareWebhookBody($entity, $contain);
+        $tableAlias = 'Institution.InstitutionClasses';
+        $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
         if ($eventKey === 'institution_class_delete') {
             $body['deleted_at'] = date('Y-m-d H:i:s');
             $body['deleted_by'] = $user['openemis_no']
                 ?? $user['username']
                 ?? 'system';
         }
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
         $Webhooks->triggerCommand($eventKey, $body);
 
     }
 
-    /**
-     * Prepares the webhook body for any model, with optional child associations.
-     */
-    private function prepareWebhookBody(Entity $entity, array $contain = []): array
-    {
-        $Table = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
-
-        // Fetch full entity with child models if available
-        $record = $Table->find()
-            ->where([$Table->aliasField('id') => $entity->id])
-            ->contain($contain)
-            ->first();
-
-        // Fallback if hard-deleted or not found
-        if (!$record) {
-            $record = $entity;
-        }
-
-        // Convert to array safely
-        $body = $record->toArray();
-
-        return $body;
-    }
 
     // POCOR-8538 start
     private static function saveCustomFields($customFields, $classId, $createdUserId): array
