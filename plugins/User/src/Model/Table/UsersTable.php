@@ -1143,7 +1143,6 @@ class UsersTable extends AppTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
 
-
         $this->handleImportedUserData($entity);
         if (!empty($options['skip_callbacks'])) {
             return;
@@ -1153,7 +1152,7 @@ class UsersTable extends AppTable
             ? 'security_user_create'
             : 'security_user_update';
 
-        $this->triggerSecurityUserWebhook($entity, $eventKey, []);
+        $this->triggerWebhookCommand($entity, $eventKey, []);
     }
 
     /**
@@ -1196,7 +1195,7 @@ class UsersTable extends AppTable
         return null;
     }
 
-    private function triggerSecurityUserWebhook(Entity $entity, string $eventKey): void
+    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
     {
         $user = $this->resolveCurrentUser();
 

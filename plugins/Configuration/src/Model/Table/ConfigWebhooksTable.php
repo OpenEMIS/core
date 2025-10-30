@@ -1134,4 +1134,69 @@ class ConfigWebhooksTable extends ControllerActionTable
             return false;
         }
     }
+
+    /**
+     * Safely resolve current user for audit / webhook.
+     * // POCOR-9403
+     */
+    public function resolveCurrentUser(): ?array
+    {
+        try {
+            // Try the Auth component first
+            if (!empty($this->Auth) && $this->Auth->user()) {
+                return $this->Auth->user();
+            }
+
+            // Fallback to session if Auth is unavailable
+            $session = TableRegistry::getTableLocator()
+                ->get('Configuration.ConfigItems') // any loaded table with session context
+                ->getConnection()
+                ->getDriver()
+                ->getConnection()
+                ->session ?? null;
+
+            if (method_exists($this, 'getRequest') && $this->getRequest()->getSession()) {
+                $session = $this->getRequest()->getSession();
+            }
+
+            if ($session && $session->check('Auth.User.id')) {
+                $userId = $session->read('Auth.User.id');
+                $Users = TableRegistry::getTableLocator()->get('User.Users');
+                $user = $Users->find('all')
+                    ->where([
+                        $Users->aliasField('id')
+                        => $userId])->first();
+
+                return $user ? $user->toArray() : null;
+            }
+        } catch (\Throwable $e) {
+            Log::warning('User resolution failed: ' . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Prepares the webhook body for any model, with optional child associations.
+     */
+    public function prepareWebhookBody($tableAlias, Entity $entity, array $contain = []): array
+    {
+        $Table = TableRegistry::getTableLocator()->get($tableAlias);
+
+        // Fetch full entity with child models if available
+        $record = $Table->find()
+            ->where([$Table->aliasField('id') => $entity->id])
+            ->contain($contain)
+            ->first();
+
+        // Fallback if hard-deleted or not found
+        if (!$record) {
+            $record = $entity;
+        }
+
+        // Convert to array safely
+        $body = $record->toArray();
+
+        return $body;
+    }
 }
