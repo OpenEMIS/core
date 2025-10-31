@@ -1155,87 +1155,26 @@ class UsersTable extends AppTable
         $this->triggerWebhookCommand($entity, $eventKey, []);
     }
 
-    /**
-     * Safely resolve current user for audit / webhook.
-     */
-    private function resolveCurrentUser(): ?array
-    {
-        try {
-            // Try the Auth component first
-            if (!empty($this->Auth) && $this->Auth->user()) {
-                return $this->Auth->user();
-            }
-
-            // Fallback to session if Auth is unavailable
-            $session = TableRegistry::getTableLocator()
-                ->get('Configuration.ConfigItems') // any loaded table with session context
-                ->getConnection()
-                ->getDriver()
-                ->getConnection()
-                ->session ?? null;
-
-            if (method_exists($this, 'getRequest') && $this->getRequest()->getSession()) {
-                $session = $this->getRequest()->getSession();
-            }
-
-            if ($session && $session->check('Auth.User.id')) {
-                $userId = $session->read('Auth.User.id');
-                $Users = TableRegistry::getTableLocator()->get('User.Users');
-                $user = $Users->find('all')
-                    ->where([
-                        $Users->aliasField('id')
-                        => $userId])->first();
-
-                return $user ? $user->toArray() : null;
-            }
-        } catch (\Throwable $e) {
-            Log::warning('User resolution failed: ' . $e->getMessage());
-        }
-
-        return null;
-    }
 
     private function triggerWebhookCommand(Entity $entity, string $eventKey): void
     {
-        $user = $this->resolveCurrentUser();
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+
+        $user = $Webhooks->resolveCurrentUser();
 
         $contain = [];
 
-        $body = $this->prepareWebhookBody($entity, $contain);
+        $body = $Webhooks->prepareWebhookBody($entity, $contain);
         if ($eventKey === 'security_user_delete') {
             $body['deleted_at'] = date('Y-m-d H:i:s');
             $body['deleted_by'] = $user['openemis_no']
                 ?? $user['username']
                 ?? 'system';
         }
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
         $Webhooks->triggerCommand($eventKey, $body);
 
     }
 
-    /**
-     * Prepares the webhook body for any model, with optional child associations.
-     */
-    private function prepareWebhookBody(Entity $entity, array $contain = []): array
-    {
-        $Table = TableRegistry::getTableLocator()->get('User.Users');
-
-        // Fetch full entity with child models if available
-        $record = $Table->find()
-            ->where([$Table->aliasField('id') => $entity->id])
-            ->contain($contain)
-            ->first();
-
-        // Fallback if hard-deleted or not found
-        if (!$record) {
-            $record = $entity;
-        }
-
-        // Convert to array safely
-        $body = $record->toArray();
-
-        return $body;
-    }
     private function handleImportedUserData(Entity $entity): void
     {
         if (!($entity->has('action_type') && $entity->action_type === 'imported')) {
