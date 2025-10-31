@@ -195,7 +195,7 @@ class POCOR9403 extends AbstractMigration
 
             ['event_key' => 'institution_create', 'method' => 'POST', 'url' => self::WEBHOOK_URL_CUSTOM, 'query_template' => '/institutions', 'body_template' => '', 'external_data_source_id' => $customDataSourceId, 'status' => self::WEBHOOK_STATUS],
             ['event_key' => 'institution_delete', 'method' => 'DELETE', 'url' => self::WEBHOOK_URL_CUSTOM, 'query_template' => '/institutions', 'body_template' => '', 'external_data_source_id' => $customDataSourceId, 'status' => self::WEBHOOK_STATUS],
-            ['event_key' => 'institution_update', 'method' => 'PATCH', 'url' => self::WEBHOOK_URL_EXAMS, 'query_template' => '/institutions/${id}', 'body_template' => '', 'external_data_source_id' => $customDataSourceId, 'status' => self::WEBHOOK_STATUS],
+            ['event_key' => 'institution_update', 'method' => 'PATCH', 'url' => self::WEBHOOK_URL_EXAMS, 'query_template' => '/institutions/${id}', 'body_template' => '', 'external_data_source_id' => $examDataSourceId, 'status' => self::WEBHOOK_STATUS],
 
             ['event_key' => 'academic_period_create', 'method' => 'POST', 'url' => self::WEBHOOK_URL_CUSTOM, 'query_template' => '/academic-periods', 'body_template' => '', 'external_data_source_id' => $customDataSourceId, 'status' => self::WEBHOOK_STATUS],
             ['event_key' => 'academic_period_update', 'method' => 'PATCH', 'url' => self::WEBHOOK_URL_EXAMS, 'query_template' => '/academic-periods/${id}', 'body_template' => '', 'external_data_source_id' => $examDataSourceId, 'status' => self::WEBHOOK_STATUS],
