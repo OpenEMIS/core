@@ -273,6 +273,24 @@ class StudentAdmissionTable extends ControllerActionTable
                 ]
             ])
             ->allowEmpty('institution_class_id')
+            ->allowEmptyString('identity_type_id')
+            ->allowEmptyString('identity_number')
+            // POCOR-9404 Check the rule
+            ->add('identity_type_id', 'checkIdentityPair', [
+                'rule' => function ($value, $context) {
+                    $data = $context['data'];
+                    $identityType = $data['identity_type_id'] ?? null;
+                    $identityNumber = $data['identity_number'] ?? null;
+
+                    // if one is filled and the other is empty, fail validation
+                    if ((!empty($identityType) && empty($identityNumber)) ||
+                        (empty($identityType) && !empty($identityNumber))) {
+                        return false;
+                    }
+                    return true;
+                },
+                'message' => __('Both Identity Type and Identity Number must be provided together or left empty.')
+            ])
             ->add('institution_class_id', [
                 'ruleCheckValidClassId' => [
                     'rule' => ['checkValidClassId'],
