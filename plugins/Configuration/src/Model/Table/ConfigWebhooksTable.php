@@ -28,7 +28,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         'DELETE' => 'DELETE'
     ];
     const string OPEN_EMIS_EXAMS = 'OpenEMIS Exams';
-    const array EXCLUDED_FIELDS = ['password', 'security_group_id', 'super_admin'];
+    const array EXCLUDED_FIELDS = ['password', 'security_group_id', 'super_admin', '_condent'];
     private $eventKeyOptions = [
         'logout' => 'Logout',
         'institutions_create' => 'Institution Create',
@@ -920,7 +920,7 @@ class ConfigWebhooksTable extends ControllerActionTable
     public function triggerCommand($eventKey, $body = [])
     {
         $configItems = self::getDynamicTableInstance('Configuration.ConfigItems');
-
+        Log::debug(print_r(['startBody' => $body], true));
         $webhookConfig = $this->find()
             ->select([
                 'url' => $this->aliasField('url'),
@@ -989,10 +989,14 @@ class ConfigWebhooksTable extends ControllerActionTable
         }
         if (is_array($finalBody)) {
             // normal array → save to temp .json file
+            Log::debug(print_r(['preSan' => $finalBody], true));
             $finalBody = $this->sanitizeWebhookBody($finalBody);
+            Log::debug(print_r(['postSan' => $finalBody], true));
 
             $temp = TMP . 'webhook_' . uniqid('w', true) . '.json';
-            file_put_contents($temp, json_encode($finalBody));
+            $jsonBody = $this->safeJsonEncode($finalBody);
+            Log::debug(print_r(['jsonBody' => $jsonBody], true));
+            file_put_contents($temp, $jsonBody);
             $bodyArg = $temp; // file path
         } elseif (is_string($finalBody) && str_ends_with($finalBody, '.json') && file_exists($finalBody)) {
             // already a JSON file path
@@ -1041,6 +1045,42 @@ class ConfigWebhooksTable extends ControllerActionTable
         } catch (Exception $ex) {
             Log::write('error', __METHOD__ . ' exception when triggering: ' . $ex->getMessage());
         }
+    }
+
+    private function safeJsonEncode($data): string
+    {
+        $clean = $this->sanitizeJson($data);
+        $json = json_encode($clean, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
+        if ($json === false) {
+            Log::error('safeJsonEncode failed: ' . json_last_error_msg());
+            return '{}';
+        }
+
+        return $json;
+    }
+
+    private function sanitizeJson($data)
+    {
+        if (is_array($data)) {
+            foreach ($data as $key => $value) {
+                $data[$key] = $this->sanitizeJson($value);
+            }
+            return $data;
+        }
+
+        if (is_object($data)) {
+            if ($data instanceof \DateTimeInterface) {
+                return $data->format('Y-m-d H:i:s');
+            }
+            return (array)$data; // fallback: convert object to array
+        }
+
+        if (is_resource($data)) {
+            return '[resource]';
+        }
+
+        return $data;
     }
 
     /**

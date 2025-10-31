@@ -23,10 +23,7 @@ class UserCascadeBehavior extends Behavior {
         $userId = $entity->id;
         $this->cleanUserRecords($userId);
 
-        $user = $this->resolveCurrentUser($options) ?? [];
-
-        $eventKey = 'security_user_delete';
-        $this->triggerSecurityUserWebhook($entity, $eventKey, $user);
+        $this->triggerSecurityUserWebhook($entity, 'security_user_delete');
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
@@ -35,16 +32,11 @@ class UserCascadeBehavior extends Behavior {
             return;
         }
 
-        $user = $this->resolveCurrentUser($options);
-        if (empty($user)) {
-            $user = [];
-        }
-
         $eventKey = $entity->isNew()
             ? 'security_user_create'
             : 'security_user_update';
 
-        $this->triggerSecurityUserWebhook($entity, $eventKey, $user);
+        $this->triggerSecurityUserWebhook($entity, $eventKey);
 
 
     }
@@ -67,10 +59,10 @@ class UserCascadeBehavior extends Behavior {
                     $userId = $session->read('Auth.User.id');
                 }
             } else {
-                if (property_exists($this->_table->Auth)) {
+                if (property_exists($this->_table, 'Auth')) {
                     $userId = $this->_table->Auth->user('id');
                 }
-                if (property_exists($this->_table->Session)) {
+                if (property_exists($this->_table, 'Auth')) {
                     $session = $this->_table->Session;
                     if ($session->check('Auth.User.id')) {
                         $userId = $session->read('Auth.User.id');
@@ -94,12 +86,16 @@ class UserCascadeBehavior extends Behavior {
     /**
      * Triggers a webhook for user-related changes.
      */
-    private function triggerSecurityUserWebhook(Entity $entity, string $eventKey, array $user = []): void
+    private function triggerSecurityUserWebhook(Entity $entity, string $eventKey): void
     {
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+
         if(empty($user)){
-            $user = $this->resolveCurrentUser() ?? [];
+            $user = $Webhooks->resolveCurrentUser();
         }
-        $body = $this->prepareWebhookBody($entity);
+//        Log::debug(print_r($entity, true));
+        $body = $Webhooks->prepareWebhookBody('User.Users', $entity, []);
+        Log::debug(print_r(['body' => $body], true));
 
         if ($eventKey === 'security_user_delete') {
             $body['deleted_at'] = date('Y-m-d H:i:s');
@@ -107,7 +103,6 @@ class UserCascadeBehavior extends Behavior {
         }
 
         try {
-            $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
             $Webhooks->triggerCommand($eventKey, $body);
         } catch (\Throwable $e) {
             Log::warning("Webhook trigger failed in afterSave: " . $e->getMessage());

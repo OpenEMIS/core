@@ -30,7 +30,7 @@ class WebhookCommand extends Command
             $headers = [
                 'Content-Type' => 'application/json'
             ];
-            $io->out(print_r($serverParams, true));
+//            $io->out(print_r($serverParams, true));
             $http = new Client();
 
             // Check for username/password/api_key in serverParams
@@ -63,7 +63,7 @@ class WebhookCommand extends Command
             }
 
             // Perform final request
-            $io->out("Sending $method request to $url");
+//            $io->out("Sending $method request to $url");
             $response = $http->$method($url, $body, [
                 'headers' => $headers,
                 'timeout' => 60,
@@ -73,13 +73,13 @@ class WebhookCommand extends Command
             $status = $response->getStatusCode();
 
             $io->out("Response Code: " .$status);
-            $io->out(print_r($response->getJson(), true));
+//            $io->out(print_r($response->getJson(), true));
 
             if (in_array($status, [200, 201, 202, 204])) {
                 // the third CLI arg is usually the body param
                 $bodyJson = $args->getArgument('body');
                 if (is_string($bodyJson) && str_ends_with($bodyJson, '.json') && file_exists($bodyJson)) {
-                    unlink($bodyJson);
+//                    unlink($bodyJson);
                     $io->out("Temp file deleted: $bodyJson");
                 }
             }
