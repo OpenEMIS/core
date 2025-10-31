@@ -1074,10 +1074,10 @@ class InstitutionsTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if($entity->isNew()){
-            $this->triggerInstitutionWebhook($entity,'institution_create'); //POCOR-7971
+            $this->triggerWebhookCommand($entity,'institution_create'); //POCOR-7971
             return;
         } else {
-            $this->triggerInstitutionWebhook($entity, 'institution_update');
+            $this->triggerWebhookCommand($entity, 'institution_update');
         }
         //Start POCOR-7697
         $hasSecurityGroupInstitution = $this->checkSecurityGroupInstitution($entity);
@@ -1228,14 +1228,12 @@ class InstitutionsTable extends ControllerActionTable
         if(!empty($groupEntity)) {
             $SecurityGroup->delete($groupEntity);
         }
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
-        $openemisNo = 'system';
-        if ($this->Auth->user()) {
-            $user = $this->Auth->user();
-            $openemisNo = $user['openemis_no']; // POCOR-8919
+        // Skip webhook if no authenticated user
+        if (!empty($options['skip_callbacks'])) {
+            return;
         }
-        $Webhooks->triggerCommandDelete('institution_delete', $openemisNo, $entity);
 
+        $this->triggerWebhookCommand($entity, 'institution_delete');
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -2451,42 +2449,22 @@ class InstitutionsTable extends ControllerActionTable
 
     //POCOR-7971 Start
 
-    public function triggerInstitutionWebhook(Entity $entity, string $eventName): void
+    public function triggerWebhookCommand(Entity $entity, string $eventKey): void
     {
         // Only run when triggered from Institution controller
         if (empty($this->controllerAction) || $this->controllerAction !== 'Institutions') {
             return;
         }
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
 
-        // --- 1. Collect related info ---
-        $bodyData = $this->find()
-            ->contain(['Sectors', 'Types', 'Areas', 'AreaAdministratives', 'Localities', 'Genders'])
-            ->where([$this->aliasField('id') => $entity->id])
-            ->first();
-
-        if (!$bodyData) {
-            return;
-        }
-
-
-        $body = $entity->toArray();
+        $user = $Webhooks->resolveCurrentUser();
+        $contain = ['Sectors', 'Types', 'Areas', 'AreaAdministratives', 'Localities', 'Genders'];
+        $tableAlias = 'Institution.Institutions';
+        $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
         $body['classification_name']       = ($entity->classification == 1)
             ? __('Academic Institution')
             : __('Non-academic Institution');
 
-        $body['sector_name']               = $bodyData->sector->name ?? null;
-        $body['type_name']                 = $bodyData->type->name ?? null;
-        $body['gender_name']               = $bodyData->gender->name ?? null;
-        $body['locality_name']             = $bodyData->locality->name ?? null;
-
-        $body['area_education_id']         = $bodyData->area->id ?? null;
-        $body['area_education_name']       = $bodyData->area->name ?? null;
-        $body['area_administrative_id']    = $bodyData->area_administrative->id ?? null;
-        $body['area_administrative_name']  = $bodyData->area_administrative->name ?? null;
-
-        $body['date_opened']               = !empty($entity->date_opened)
-            ? date('Y-m-d', strtotime($entity->date_opened))
-            : null;
 
         // --- 2. Append custom fields ---
         $customFieldValues = TableRegistry::getTableLocator()
@@ -2564,10 +2542,14 @@ class InstitutionsTable extends ControllerActionTable
         }
 
         $body = array_merge($body, $customFieldsArr);
-
+        if ($eventKey === 'institution_delete') {
+            $body['deleted_at'] = date('Y-m-d H:i:s');
+            $body['deleted_by'] = $user['openemis_no']
+                ?? $user['username']
+                ?? 'system';
+        }
         // --- 3. Trigger webhook ---
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
-        $Webhooks->triggerCommand($eventName, $body);
+        $Webhooks->triggerCommand($eventKey, $body);
 
     }
 
