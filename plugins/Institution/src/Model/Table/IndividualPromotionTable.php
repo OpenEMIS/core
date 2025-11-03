@@ -198,7 +198,7 @@ class IndividualPromotionTable extends ControllerActionTable
     }
 
     public function onUpdateFieldStudentId(Event $event, array $attr, $action, ServerRequest $request)
-    { 
+    {
         $studentId = $attr['entity']->student_id;
 
         $attr['type'] = 'readonly';
@@ -469,7 +469,7 @@ class IndividualPromotionTable extends ControllerActionTable
                                         $this->EducationGrades->aliasField('education_programme_id') => $programeId,
                                         $InstitutionGrades->aliasField('institution_id') => $institutionId
                                     ]);
-                        }   
+                        }
                         $listOfGrades = $query->toArray();
                         $options = ['' => '-- Select --'] + $listOfGrades;
                         $attr['type'] = 'select';
@@ -653,8 +653,8 @@ class IndividualPromotionTable extends ControllerActionTable
                     //     foreach($EducationGradesData AS $EducationGradesDataVal){
                     //         $educationGradeName1 = $this->EducationGrades->get($EducationGradesDataVal)->code;
                     //         // echo "<pre>";print_r($EducationGradesDataVal);die;
-                            
-                            
+
+
                     //         // if($educationGradeName == $educationGradeName1){
                     //             $students =  $institutionStudents->find()->where(
                     //             [
@@ -761,12 +761,12 @@ class IndividualPromotionTable extends ControllerActionTable
         $todayDate = Date::now();
         $todayDate = $todayDate->format('Y-m-d');
         $promoteEffectiveDate = $effectiveDate->format('Y-m-d');
-        
+
         if($promoteEffectiveDate > $todayDate)
         {
             $studentStatusId = $statusToUpdate;
         }
-        
+
         // InstitutionStudents: Insert new record
         $studentObj = [];
         $studentObj['student_status_id'] = 1;
@@ -777,7 +777,7 @@ class IndividualPromotionTable extends ControllerActionTable
         $studentObj['end_year']= $toPeriodData->end_year;
         $studentObj['institution_id'] = $entity->institution_id;
         $studentObj['previous_institution_student_id'] = $id;
-        
+
         // StudentStatusUpdates: Insert new record
         $studentStatusUpdatesObj = $studentStatusUpdates->newEntity([]);
         $studentStatusUpdatesObj->model = 'StudentStatusUpdates';
@@ -787,8 +787,8 @@ class IndividualPromotionTable extends ControllerActionTable
         $studentStatusUpdatesObj->security_user_id = $entity->student_id;
         $studentStatusUpdatesObj->institution_id = $entity->institution_id;
         $studentStatusUpdatesObj->academic_period_id = $entity->academic_period_id;
-        $studentStatusUpdatesObj->education_grade_id = $entity->education_grade_id;        
-        $studentStatusUpdatesObj->status_id = $statusToUpdate; 
+        $studentStatusUpdatesObj->education_grade_id = $entity->education_grade_id;
+        $studentStatusUpdatesObj->status_id = $statusToUpdate;
 
         if ($toAcademicPeriodId == $fromAcademicPeriodId)
         {
@@ -854,9 +854,9 @@ class IndividualPromotionTable extends ControllerActionTable
             $existingClassStudent->student_status_id = $statusToUpdate;
         }
         // End
-        $this->log($existingInstitutionStudent, 'debug');
-        $this->log($newInstitutionStudent, 'debug');
-        
+//        $this->log($existingInstitutionStudent, 'debug');
+//        $this->log($newInstitutionStudent, 'debug');
+
         if ($this->save($existingInstitutionStudent)) {
             if ($this->save($newInstitutionStudent)) {
                 // update old class if exists
@@ -868,16 +868,16 @@ class IndividualPromotionTable extends ControllerActionTable
                     $InstitutionClassStudents->autoInsertClassStudent($newClassStudent);
 
                     //POCOR-7170
-                    $classId = $entity->institution_class_id;
-                    $studentClassData = $this->institutionClassStudentData($classId);
+//                    $classId = $entity->institution_class_id;
+//                    $studentClassData = $this->institutionClassStudentData($classId);
                 }
-                
-                $this->log($studentStatusUpdatesObj, 'debug');
-                
+
+//                $this->log($studentStatusUpdatesObj, 'debug');
+
 
                 // Save record in the studentStatusUpdates
                 $studentStatusUpdates->save($studentStatusUpdatesObj);
-                
+
                 return true;
             } else {
                 $this->log($newInstitutionStudent->errors, 'debug');
@@ -899,100 +899,102 @@ class IndividualPromotionTable extends ControllerActionTable
         $this->dispatchEventToModels('Model.Students.afterSave', [$entity], $this, $listeners);
     }
 
-    /**
-      *POCOR-7170 Start 
-      *show webhook response
-    */
-    public function institutionClassStudentData($classId)
-    {
-        $institutionClass =  TableRegistry::get('Institution.InstitutionClasses');
-        if($classId != -1){
-            $bodyData = $institutionClass->find('all',
-                            [ 'contain' => [
-                                'Institutions',
-                                'EducationGrades',
-                                'Staff',
-                                'AcademicPeriods',
-                                'InstitutionShifts',
-                                'InstitutionShifts.ShiftOptions',
-                                'ClassesSecondaryStaff.SecondaryStaff',
-                                'Students'
-                            ],
-                    ])->where([
-                        $institutionClass->aliasField('id') => $classId
-                    ]);
-
-            $grades = $gradeId = $secondaryTeachers = $students = [];
-
-                if (!empty($bodyData)) {
-                    foreach ($bodyData as $key => $value) {
-                        $capacity = $value->capacity;
-                        $shift = $value->institution_shift->shift_option->name;
-                        $academicPeriod = $value->academic_period->name;
-                        $homeRoomteacher = $value->staff->openemis_no;
-                        $institutionId = $value->institution->id;
-                        $institutionName = $value->institution->name;
-                        $institutionCode = $value->institution->code;
-                        $institutionClassId = $value->id;
-                        $institutionClassName = $value->name;
-
-                        if(!empty($value->education_grades)) {
-                            foreach ($value->education_grades as $key => $gradeOptions) {
-                                $grades[] = $gradeOptions->name;
-                                $gradeId[] = $gradeOptions->id;
-                            }
-                        }
-
-                        if(!empty($value->classes_secondary_staff)) {
-                            foreach ($value->classes_secondary_staff as $key => $secondaryStaffs) {
-                                $secondaryTeachers[] = $secondaryStaffs->secondary_staff->openemis_no;
-                            }
-                        }
-
-                        $maleStudents = 0;
-                        $femaleStudents = 0;
-                        if(!empty($value->students)) {
-                            foreach ($value->students as $key => $studentsData) {
-                                $students[] = $studentsData->openemis_no;
-                                if($studentsData->gender->code == 'M') {
-                                    $maleStudents = $maleStudents + 1;
-                                }
-                                if($studentsData->gender->code == 'F') {
-                                    $femaleStudents = $femaleStudents + 1;
-                                }
-                            }
-                        }
-
-                    }
-                }
-
-                $body = array();
-
-                $body = [
-                    'institutions_id' => !empty($institutionId) ? $institutionId : NULL,
-                    'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
-                    'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
-                    'institutions_classes_id' => $institutionClassId,
-                    'institutions_classes_name' => $institutionClassName,
-                    'academic_periods_name' => !empty($academicPeriod) ? $academicPeriod : NULL,
-                    'shift_options_name' => !empty($shift) ? $shift : NULL,
-                    'institutions_classes_capacity' => !empty($capacity) ? $capacity : NULL,
-                    'education_grades_id' => !empty($gradeId) ? $gradeId :NULL,
-                    'education_grades_name' => !empty($grades) ? $grades : NULL,
-                    'institution_classes_total_male_students' => !empty($maleStudents) ? $maleStudents : 0,
-                    'institution_classes_total_female_studentss' => !empty($femaleStudents) ? $femaleStudents : 0,
-                    'total_students' => !empty($students) ? count($students) : 0,
-                    'institution_classes_staff_openemis_no' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
-                    'institution_classes_secondary_staff_openemis_no' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
-                    'institution_class_students_openemis_no' => !empty($students) ? $students : NULL
-                ];
-                    $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                    if ($this->Auth->user()) {
-                        $Webhooks->triggerShell('class_update', ['username' => $username], $body);
-                    }
-        }
-
-    }
+// POCOR-9403 webhook call moved to institutionclass
+    //    /**
+//      *POCOR-7170 Start
+//      *show webhook response
+//     *
+//    */
+//    public function institutionClassStudentData($classId)
+//    {
+//        $institutionClass =  TableRegistry::get('Institution.InstitutionClasses');
+//        if($classId != -1){
+//            $bodyData = $institutionClass->find('all',
+//                            [ 'contain' => [
+//                                'Institutions',
+//                                'EducationGrades',
+//                                'Staff',
+//                                'AcademicPeriods',
+//                                'InstitutionShifts',
+//                                'InstitutionShifts.ShiftOptions',
+//                                'ClassesSecondaryStaff.SecondaryStaff',
+//                                'Students'
+//                            ],
+//                    ])->where([
+//                        $institutionClass->aliasField('id') => $classId
+//                    ]);
+//
+//            $grades = $gradeId = $secondaryTeachers = $students = [];
+//
+//                if (!empty($bodyData)) {
+//                    foreach ($bodyData as $key => $value) {
+//                        $capacity = $value->capacity;
+//                        $shift = $value->institution_shift->shift_option->name;
+//                        $academicPeriod = $value->academic_period->name;
+//                        $homeRoomteacher = $value->staff->openemis_no;
+//                        $institutionId = $value->institution->id;
+//                        $institutionName = $value->institution->name;
+//                        $institutionCode = $value->institution->code;
+//                        $institutionClassId = $value->id;
+//                        $institutionClassName = $value->name;
+//
+//                        if(!empty($value->education_grades)) {
+//                            foreach ($value->education_grades as $key => $gradeOptions) {
+//                                $grades[] = $gradeOptions->name;
+//                                $gradeId[] = $gradeOptions->id;
+//                            }
+//                        }
+//
+//                        if(!empty($value->classes_secondary_staff)) {
+//                            foreach ($value->classes_secondary_staff as $key => $secondaryStaffs) {
+//                                $secondaryTeachers[] = $secondaryStaffs->secondary_staff->openemis_no;
+//                            }
+//                        }
+//
+//                        $maleStudents = 0;
+//                        $femaleStudents = 0;
+//                        if(!empty($value->students)) {
+//                            foreach ($value->students as $key => $studentsData) {
+//                                $students[] = $studentsData->openemis_no;
+//                                if($studentsData->gender->code == 'M') {
+//                                    $maleStudents = $maleStudents + 1;
+//                                }
+//                                if($studentsData->gender->code == 'F') {
+//                                    $femaleStudents = $femaleStudents + 1;
+//                                }
+//                            }
+//                        }
+//
+//                    }
+//                }
+//
+//                $body = array();
+//
+//                $body = [
+//                    'institutions_id' => !empty($institutionId) ? $institutionId : NULL,
+//                    'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
+//                    'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
+//                    'institutions_classes_id' => $institutionClassId,
+//                    'institutions_classes_name' => $institutionClassName,
+//                    'academic_periods_name' => !empty($academicPeriod) ? $academicPeriod : NULL,
+//                    'shift_options_name' => !empty($shift) ? $shift : NULL,
+//                    'institutions_classes_capacity' => !empty($capacity) ? $capacity : NULL,
+//                    'education_grades_id' => !empty($gradeId) ? $gradeId :NULL,
+//                    'education_grades_name' => !empty($grades) ? $grades : NULL,
+//                    'institution_classes_total_male_students' => !empty($maleStudents) ? $maleStudents : 0,
+//                    'institution_classes_total_female_studentss' => !empty($femaleStudents) ? $femaleStudents : 0,
+//                    'total_students' => !empty($students) ? count($students) : 0,
+//                    'institution_classes_staff_openemis_no' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
+//                    'institution_classes_secondary_staff_openemis_no' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
+//                    'institution_class_students_openemis_no' => !empty($students) ? $students : NULL
+//                ];
+//                    $Webhooks = TableRegistry::get('Webhook.Webhooks');
+//                    if ($this->Auth->user()) {
+//                        $Webhooks->triggerShell('class_update', ['username' => $username], $body);
+//                    }
+//        }
+//
+//    }
 
     /**
      * POCOR-7330
