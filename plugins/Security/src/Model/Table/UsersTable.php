@@ -76,6 +76,7 @@ class UsersTable extends ControllerActionTable
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
+        $this->addBehavior('Security.UserWebhook'); // for webhook
         $this->addBehavior('User.MoodleCreateUser');
         $this->addBehavior('OpenEmis.Section');
         //POCOR-6922 starts
@@ -625,9 +626,9 @@ class UsersTable extends ControllerActionTable
     }
 
      /**
-      * POCOR-6380 starts : overwrite view button as 
+      * POCOR-6380 starts : overwrite view button as
       * it was taking null id after selecting specific columns in indexing*
-      * add change password button 
+      * add change password button
       * POCOR-9370
      **/
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -637,7 +638,7 @@ class UsersTable extends ControllerActionTable
         if (isset($buttons['view'])) {
             $buttons['view']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
         }
-         $currentUser = $this->Auth->user();   
+         $currentUser = $this->Auth->user();
        if (!empty($currentUser['super_admin']) && $currentUser['super_admin'] == 1 && $entity->super_admin) {
             $params = ['id' => $entity->id];
             $manageUsersBtn = ['manage_users' => $buttons['edit']];
@@ -940,7 +941,7 @@ class UsersTable extends ControllerActionTable
                 }
             }
         } // POCOR-8446
-   
+
 
         return $options;
     }
@@ -966,7 +967,7 @@ class UsersTable extends ControllerActionTable
         $buttons = array_merge($manageUsersBtn, $buttons);
         return $buttons;
 
-        
+
     }
 
 }

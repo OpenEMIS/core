@@ -28,9 +28,10 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
         $this->hasMany('SpecialNeeds', ['className' => 'SpecialNeeds.SpecialNeedsAssessments', 'foreignKey' => 'security_user_id']);
-        
+
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
+        $this->addBehavior('Security.UserWebhook');
 
         $this->toggle('edit', false);
         $this->toggle('remove', false);

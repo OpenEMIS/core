@@ -79,10 +79,11 @@ class StudentUserTable extends ControllerActionTable
         $this->toggle('index', false);
         $this->toggle('remove', false);
         $this->addBehavior('Institution.InstitutionTab');
-        
+
         $studentID = $this->getStudentID();
         //$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
+        $this->addBehavior('Security.UserWebhook');
     }
 
     public static function handleAssociations($model)
@@ -644,7 +645,7 @@ class StudentUserTable extends ControllerActionTable
             'entity' => $entity,
             'options' => $options
         ]));
-        
+
     }
 
     //POCOR-9393
@@ -1696,7 +1697,7 @@ class StudentUserTable extends ControllerActionTable
                         $institutionStudents->aliasField('student_id') => $requestData['id']
                     ])
                     ->enableHydration(false)->first();
-           
+
             //Log::error($bodyData->sql());
 
 
@@ -1748,14 +1749,14 @@ class StudentUserTable extends ControllerActionTable
     }
 
     /**
-     * Prepares the webhook body. 
+     * Prepares the webhook body.
      * POCOR-9393
      * @param array $student
      * @return array
      */
     private function prepareWebhookBody($student, array $studentCustomData = [])
     {
-        
+
         $body = [
             'student_id'    => $student['student_id'] ?? null,
             'username'      => $student['username'] ?? null,
@@ -1764,7 +1765,7 @@ class StudentUserTable extends ControllerActionTable
             'middle_name'   => $student['middle_name'] ?? null,
             'third_name'    => $student['third_name'] ?? null,
             'last_name'     => $student['last_name'] ?? null,
-           'date_of_birth' => !empty($student['date_of_birth']) 
+           'date_of_birth' => !empty($student['date_of_birth'])
                                ? $student['date_of_birth']->format('Y-m-d') : null,
             'email'         => $student['email'] ?? null,
             'address'       => $student['address'] ?? null,

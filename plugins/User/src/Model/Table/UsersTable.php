@@ -74,7 +74,7 @@ class UsersTable extends AppTable
             'ClassStudents' => ['index'],
             'OpenEMIS_Classroom' => ['view', 'edit']
         ]);
-
+        $this->addBehavior('Security.UserWebhook'); // for webhook
         $this->getDisplayField('first_name');
     }
 
@@ -1140,40 +1140,40 @@ class UsersTable extends AppTable
         return true;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
-    {
+//    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+//    {
+//
+//        $this->handleImportedUserData($entity);
+//        if (!empty($options['skip_callbacks'])) {
+//            return;
+//        }
+//
+//        $eventKey = $entity->isNew()
+//            ? 'security_user_create'
+//            : 'security_user_update';
+//
+//        $this->triggerWebhookCommand($entity, $eventKey, []);
+//    }
 
-        $this->handleImportedUserData($entity);
-        if (!empty($options['skip_callbacks'])) {
-            return;
-        }
 
-        $eventKey = $entity->isNew()
-            ? 'security_user_create'
-            : 'security_user_update';
-
-        $this->triggerWebhookCommand($entity, $eventKey, []);
-    }
-
-
-    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
-    {
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
-
-        $user = $Webhooks->resolveCurrentUser();
-
-        $contain = [];
-
-        $body = $Webhooks->prepareWebhookBody($entity, $contain);
-        if ($eventKey === 'security_user_delete') {
-            $body['deleted_at'] = date('Y-m-d H:i:s');
-            $body['deleted_by'] = $user['openemis_no']
-                ?? $user['username']
-                ?? 'system';
-        }
-        $Webhooks->triggerCommand($eventKey, $body);
-
-    }
+//    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
+//    {
+//        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+//
+//        $user = $Webhooks->resolveCurrentUser();
+//
+//        $contain = [];
+//
+//        $body = $Webhooks->prepareWebhookBody($entity, $contain);
+//        if ($eventKey === 'security_user_delete') {
+//            $body['deleted_at'] = date('Y-m-d H:i:s');
+//            $body['deleted_by'] = $user['openemis_no']
+//                ?? $user['username']
+//                ?? 'system';
+//        }
+//        $Webhooks->triggerCommand($eventKey, $body);
+//
+//    }
 
     private function handleImportedUserData(Entity $entity): void
     {

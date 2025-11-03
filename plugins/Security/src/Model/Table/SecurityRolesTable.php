@@ -176,7 +176,9 @@ class SecurityRolesTable extends ControllerActionTable
                 'rule' => 'validateUnique',
                 'provider' => 'table',
                 'message' => __('Code must be unique')
-            ]); //POCOR-7236 code must ne unique
+            ])->requirePresence('security_group_id')
+            ->notEmptyString('security_group_id');
+        ; //POCOR-7236 code must ne unique
 
         return $validator;
     }
