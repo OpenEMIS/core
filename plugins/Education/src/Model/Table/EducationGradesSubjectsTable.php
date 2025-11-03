@@ -27,7 +27,15 @@ class EducationGradesSubjectsTable extends ControllerActionTable
 		$this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
 
         $this->addBehavior('CompositeKey');
-
+        $this->addBehavior('Configuration.CallWebhook',
+            [
+                'entity_create' => 'education_grade_subject_create',
+                'entity_delete' => 'education_grade_subject_delete',
+                'entity_update' => 'education_grade_subject_update',
+                'table_alias' => 'Education.EducationGradesSubjects',
+                'contain' => []
+            ]
+        ); // for webhook
         $this->autoAllocationOptions = $this->getSelectOptions('general.yesno');
 
         $this->setDeleteStrategy('restrict');
@@ -74,53 +82,6 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $this->field('requirement');//POCOR-8435
         $this->field('result_type');//POCOR-8435
         $this->setFieldOrder(['code', 'education_subject_id', 'education_grade_id', 'education_programme_id', 'education_level_id', 'hours_required']);
-    }
-
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
-    {
-        // Skip if triggered internally or no authenticated user
-       // 'education_grade_subject_create'
-        // Skip if triggered internally
-        if (!empty($options['skip_callbacks'])) {
-            return;
-        }
-
-        $eventKey = $entity->isNew()
-            ? 'education_grade_subject_create'
-            : 'education_grade_subject_update';
-
-        $this->triggerWebhookCommand($entity, $eventKey);
-    }
-
-    // POCOR-9403
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
-    {
-        if (!empty($options['skip_callbacks'])) {
-            return;
-        }
-        $this->triggerWebhookCommand($entity, 'education_grade_subject_delete');
-    }
-
-
-
-    // POCOR-9403
-    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
-    {
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
-
-        $user = $Webhooks->resolveCurrentUser();
-
-        $contain = [];
-        $tableAlias = 'Education.EducationGradesSubjects';
-        $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
-        if ($eventKey === 'education_grade_subject_delete') {
-            $body['deleted_at'] = date('Y-m-d H:i:s');
-            $body['deleted_by'] = $user['openemis_no']
-                ?? $user['username']
-                ?? 'system';
-        }
-        $Webhooks->triggerCommand($eventKey, $body);
-
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
