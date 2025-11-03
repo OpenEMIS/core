@@ -27,7 +27,15 @@ class EducationCyclesTable extends ControllerActionTable
             $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
             $controllerActionBehavior->setConfig(['actions' => ['reorder' => false]]);
         }
-
+        $this->addBehavior('Configuration.CallWebhook',
+            [
+                'entity_create' => 'education_cycle_create',
+                'entity_delete' => 'education_cycle_delete',
+                'entity_update' => 'education_cycle_update',
+                'table_alias' => 'Education.EducationCycles',
+                'contain' => []
+            ]
+        ); // for webhook
 		$this->setDeleteStrategy('restrict');
 	}
 
@@ -127,45 +135,6 @@ class EducationCyclesTable extends ControllerActionTable
         if (!$entity->isNew()) {
             $this->updateAdmissionAgeCascade($entity);
         }
-
-        // Skip if triggered internally
-        if (!empty($options['skip_callbacks'])) {
-            return;
-        }
-
-        $eventKey = $entity->isNew()
-            ? 'education_cycle_create'
-            : 'education_cycle_update';
-
-        $this->triggerWebhookCommand($entity, $eventKey);
-    }
-
-        // POCOR-9403
-        public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
-    {
-        if (!empty($options['skip_callbacks'])) {
-            return;
-        }
-        $this->triggerWebhookCommand($entity, 'education_cycle_delete');
-    }
-
-        // POCOR-9403
-        private function triggerWebhookCommand(Entity $entity, string $eventKey): void
-    {
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
-
-        $user = $Webhooks->resolveCurrentUser();
-
-        $contain = [];
-        $tableAlias = 'Education.EducationCycles';
-        $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
-        if ($eventKey === 'education_cycle_delete') {
-            $body['deleted_at'] = date('Y-m-d H:i:s');
-            $body['deleted_by'] = $user['openemis_no']
-                ?? $user['username']
-                ?? 'system';
-        }
-        $Webhooks->triggerCommand($eventKey, $body);
 
     }
 

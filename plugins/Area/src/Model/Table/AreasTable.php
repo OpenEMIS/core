@@ -50,6 +50,16 @@ class AreasTable extends ControllerActionTable
             'StaffRoom' => ['index'],
             'SgTree' => ['index']
         ]);
+        $this->addBehavior('Configuration.CallWebhook',
+            [
+                'entity_create' => 'area_education_create',
+                'entity_delete' => 'area_education_delete',
+                'entity_update' => 'area_education_update',
+                'table_alias' => 'Area.Areas',
+                'contain' => ['AreaParents', 'AreaLevels']
+            ]
+        ); // for webhook
+
 
         $this->setDeleteStrategy('restrict');
     }

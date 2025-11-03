@@ -68,6 +68,15 @@ class EducationGradesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'OpenEMIS_Classroom' => ['index']
         ]);
+        $this->addBehavior('Configuration.CallWebhook',
+            [
+                'entity_create' => 'education_grade_create',
+                'entity_delete' => 'education_grade_delete',
+                'entity_update' => 'education_grade_update',
+                'table_alias' => 'Education.EducationGrades',
+                'contain' => []
+            ]
+        ); // for webhook
         $this->setDeleteStrategy('restrict');
     }
 
@@ -116,16 +125,6 @@ class EducationGradesTable extends ControllerActionTable
         // Ensure auto-quoting for DB safety (kept from your original)
         $this->getConnection()->getDriver()->enableAutoQuoting();
 
-        // Skip if triggered internally or no authenticated user
-        if (!empty($options['skip_callbacks'])) {
-            return;
-        }
-
-        $eventKey = $entity->isNew()
-            ? 'education_grade_create'
-            : 'education_grade_update';
-
-        $this->triggerWebhookCommand($entity, $eventKey);
     }
     //POCOR 7308 starts
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
@@ -228,33 +227,9 @@ class EducationGradesTable extends ControllerActionTable
         // Preserve existing logic
         $this->updateAdmissionAgeAfterDelete($entity);
 
-        if (!empty($options['skip_callbacks'])) {
-            return;
-        }
-        $this->triggerWebhookCommand($entity, 'education_grade_delete');
     }
 
 
-
-    // POCOR-9403
-    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
-    {
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
-
-        $user = $Webhooks->resolveCurrentUser();
-
-        $contain = [];
-        $tableAlias = 'Education.EducationGrades';
-        $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
-        if ($eventKey === 'education_grade_delete') {
-            $body['deleted_at'] = date('Y-m-d H:i:s');
-            $body['deleted_by'] = $user['openemis_no']
-                ?? $user['username']
-                ?? 'system';
-        }
-        $Webhooks->triggerCommand($eventKey, $body);
-
-    }
 
 
     /**
