@@ -184,6 +184,15 @@ class AcademicPeriodsTable extends ControllerActionTable
 
         $this->addBehavior('Institution.Calendar');
         $this->setDeleteStrategy('restrict');
+        $this->addBehavior('Configuration.CallWebhook',
+            [
+                'entity_create' => 'academic_period_create',
+                'entity_delete' => 'academic_period_delete',
+                'entity_update' => 'academic_period_update',
+                'table_alias' => 'AcademicPeriod.AcademicPeriods',
+                'contain' => ['Parents', 'Levels']
+            ]
+        ); // for webhook
         //$this->getSchema()->setColumn('order', ['accessible' => true]);
 
     }
@@ -310,53 +319,6 @@ class AcademicPeriodsTable extends ControllerActionTable
         }
         return $buttons;
     }
-
-    // POCOR-9403
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
-    {
-        // Skip if triggered internally
-        if (!empty($options['skip_callbacks'])) {
-            return;
-        }
-
-        $eventKey = $entity->isNew()
-            ? 'academic_period_create'
-            : 'academic_period_update';
-
-        $this->triggerWebhookCommand($entity, $eventKey);
-    }
-
-    // POCOR-9403
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
-    {
-        if (!empty($options['skip_callbacks'])) {
-            return;
-        }
-        $this->triggerWebhookCommand($entity, 'academic_period_delete');
-    }
-
-
-
-    // POCOR-9403
-    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
-    {
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
-
-        $user = $Webhooks->resolveCurrentUser();
-
-        $contain = ['Parents', 'Levels'];
-        $tableAlias = 'AcademicPeriod.AcademicPeriods';
-        $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
-        if ($eventKey === 'academic_period_delete') {
-            $body['deleted_at'] = date('Y-m-d H:i:s');
-            $body['deleted_by'] = $user['openemis_no']
-                ?? $user['username']
-                ?? 'system';
-        }
-        $Webhooks->triggerCommand($eventKey, $body);
-
-    }
-
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {

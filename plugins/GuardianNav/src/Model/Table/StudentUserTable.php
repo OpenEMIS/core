@@ -62,8 +62,14 @@ class StudentUserTable extends ControllerActionTable
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
         }
-        $this->addBehavior('Security.UserWebhook');
-
+        $this->addBehavior('Configuration.CallWebhook',
+            [
+                'entity_create' => 'security_user_create',
+                'entity_delete' => 'security_user_delete',
+                'entity_update' => 'security_user_update',
+                'table_alias' => 'User.Users'
+            ]
+        ); // for webhook
         $this->toggle('index', false);
         $this->toggle('remove', false);
     }

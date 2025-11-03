@@ -83,7 +83,14 @@ class StudentUserTable extends ControllerActionTable
         $studentID = $this->getStudentID();
         //$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
-        $this->addBehavior('Security.UserWebhook');
+        $this->addBehavior('Configuration.CallWebhook',
+            [
+                'entity_create' => 'security_user_create',
+                'entity_delete' => 'security_user_delete',
+                'entity_update' => 'security_user_update',
+                'table_alias' => 'User.Users'
+            ]
+        ); // for webhook
     }
 
     public static function handleAssociations($model)
@@ -640,7 +647,7 @@ class StudentUserTable extends ControllerActionTable
     //POCOR-9393
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $this->triggerWebhooks($entity->id, $entity);
+
         $this->getEventManager()->dispatch(new Event('Model.Students.afterSaveCustom', $this, [
             'entity' => $entity,
             'options' => $options
