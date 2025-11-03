@@ -334,94 +334,95 @@ class InstitutionGradesTable extends ControllerActionTable
                                                                 ] //condition
                                                             );
                                         //POCOR-7298 end
+                                    // POCOR-9403 webhook call moved to institutionclass
 
                                     /*POCOR-6368 ends*/
-                                    if(!empty($this->controllerAction) && ($this->controllerAction == 'Programmes')) {
-                                        $educationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
-
-                                        $bodyData = $educationGrades->find('all',
-                                                [ 'contain' => [
-                                                    'EducationProgrammes',
-                                                    'EducationProgrammes.EducationCycles.EducationLevels',
-                                                    'EducationProgrammes.EducationCycles',
-                                                    'EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'
-
-                                                ],
-                                                ])->where([
-                                                    $educationGrades->aliasField('education_programme_id') => $entity->programme
-                                                ]);
-
-                                        $institution = $this->find('all',
-                                                    [ 'contain' => [
-                                                        'Institutions',
-                                                        'Institutions.InstitutionClasses',
-                                                    ],
-                                                    ])->where([
-                                                        $this->aliasField('institution_id') => $entity->institution_id
-                                                    ]);
-
-                                        $institutionProgramGradeSubject = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
-                                        $sub = $institutionProgramGradeSubject->find()
-                                                ->where([
-                                                    'id IN' => $data['grades']['education_grade_subject_id']
-                                                ]);
-
-                                        $subject = [];
-                                        if (!empty($sub)) {
-                                            foreach ($sub as $key => $value) {
-                                                $subject[] = $value['code'] . " - " . $value['name'];
-                                            }
-                                        }
-
-                                        if (!empty($bodyData)) {
-                                            foreach ($bodyData as $key => $value) {
-                                                $education_system_name = $value->education_programme->education_cycle->education_level->education_system->name;
-                                                $education_level_name = $value->education_programme->education_cycle->education_level->name;
-                                                $education_cycle_name = $value->education_programme->education_cycle->name;
-                                                $education_programme_code = $value->education_programme->code;
-                                                $education_programme_name = $value->education_programme->name;
-                                                $education_programme_name = $value->education_programme->name;
-                                                $start_date = $start_date;
-                                                //POCOR-6184
-                                                $education_system_id = $value->education_programme->education_cycle->education_level->education_system->id;
-                                                $education_level_id = $value->education_programme->education_cycle->education_level->id;
-                                                $education_cycle_id = $value->education_programme->education_cycle->id;
-                                                $education_programme_id = $value->education_programme->id;
-                                            }
-                                        }
-
-                                        if (!empty($institution)) {
-                                            foreach ($institution as $key => $value) {
-                                                $institution_name = $value->institution->name;
-                                                $institution_code = $value->institution->code;
-                                                $institution_classes = [];
-                                            }
-                                        }
-
-                                        $body = [
-                                            'education_system_id' => !empty($education_system_id) ? $education_system_id : NULL,
-                                            'education_system_name' => !empty($education_system_name) ? $education_system_name : NULL,
-                                            'education_level_id' => !empty($education_level_id) ? $education_level_id : NULL,
-                                            'education_level_name' => !empty($education_level_name) ? $education_level_name : NULL,
-                                            'education_cycle_id' => !empty($education_cycle_id) ? $education_cycle_id : NULL,
-                                            'education_cycle_name' => !empty($education_cycle_name) ? $education_cycle_name : NULL,
-                                            'education_programme_id' => !empty($education_programme_id) ? $education_programme_id : NULL,
-                                            'education_programme_code' => !empty($education_programme_code) ? $education_programme_code : NULL,
-                                            'education_programme_name' => !empty($education_programme_name) ? $education_programme_name : NULL,
-                                            'institution_id' => !empty($entity->institution_id) ? $entity->institution_id : NULL,
-                                            'institution_name' => !empty($institution_name) ? $institution_name : NULL,
-                                            'institution_code' => !empty($institution_code) ? $institution_code : NULL,
-                                            'institution_grade_id' => !empty($lastInsertId) ? $lastInsertId : NULL,
-                                            'institution_programme_grade_subjects_id' => !empty($institutionProgramGradeSubjectID) ? $institutionProgramGradeSubjectID : NULL,
-                                            'institution_subject_name' => !empty($subject) ? $subject : NULL,
-                                            'start_date' => !empty($start_date) ? date("d-m-Y", strtotime($start_date)) : NULL
-                                        ];
-
-                                        $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-                                        if ($this->Auth->user()) {
-                                            $Webhooks->triggerShell('programme_create', ['username' => $username],$body);
-                                        }
-                                    }
+//                                    if(!empty($this->controllerAction) && ($this->controllerAction == 'Programmes')) {
+//                                        $educationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+//
+//                                        $bodyData = $educationGrades->find('all',
+//                                                [ 'contain' => [
+//                                                    'EducationProgrammes',
+//                                                    'EducationProgrammes.EducationCycles.EducationLevels',
+//                                                    'EducationProgrammes.EducationCycles',
+//                                                    'EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'
+//
+//                                                ],
+//                                                ])->where([
+//                                                    $educationGrades->aliasField('education_programme_id') => $entity->programme
+//                                                ]);
+//
+//                                        $institution = $this->find('all',
+//                                                    [ 'contain' => [
+//                                                        'Institutions',
+//                                                        'Institutions.InstitutionClasses',
+//                                                    ],
+//                                                    ])->where([
+//                                                        $this->aliasField('institution_id') => $entity->institution_id
+//                                                    ]);
+//
+//                                        $institutionProgramGradeSubject = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
+//                                        $sub = $institutionProgramGradeSubject->find()
+//                                                ->where([
+//                                                    'id IN' => $data['grades']['education_grade_subject_id']
+//                                                ]);
+//
+//                                        $subject = [];
+//                                        if (!empty($sub)) {
+//                                            foreach ($sub as $key => $value) {
+//                                                $subject[] = $value['code'] . " - " . $value['name'];
+//                                            }
+//                                        }
+//
+//                                        if (!empty($bodyData)) {
+//                                            foreach ($bodyData as $key => $value) {
+//                                                $education_system_name = $value->education_programme->education_cycle->education_level->education_system->name;
+//                                                $education_level_name = $value->education_programme->education_cycle->education_level->name;
+//                                                $education_cycle_name = $value->education_programme->education_cycle->name;
+//                                                $education_programme_code = $value->education_programme->code;
+//                                                $education_programme_name = $value->education_programme->name;
+//                                                $education_programme_name = $value->education_programme->name;
+//                                                $start_date = $start_date;
+//                                                //POCOR-6184
+//                                                $education_system_id = $value->education_programme->education_cycle->education_level->education_system->id;
+//                                                $education_level_id = $value->education_programme->education_cycle->education_level->id;
+//                                                $education_cycle_id = $value->education_programme->education_cycle->id;
+//                                                $education_programme_id = $value->education_programme->id;
+//                                            }
+//                                        }
+//
+//                                        if (!empty($institution)) {
+//                                            foreach ($institution as $key => $value) {
+//                                                $institution_name = $value->institution->name;
+//                                                $institution_code = $value->institution->code;
+//                                                $institution_classes = [];
+//                                            }
+//                                        }
+//
+//                                        $body = [
+//                                            'education_system_id' => !empty($education_system_id) ? $education_system_id : NULL,
+//                                            'education_system_name' => !empty($education_system_name) ? $education_system_name : NULL,
+//                                            'education_level_id' => !empty($education_level_id) ? $education_level_id : NULL,
+//                                            'education_level_name' => !empty($education_level_name) ? $education_level_name : NULL,
+//                                            'education_cycle_id' => !empty($education_cycle_id) ? $education_cycle_id : NULL,
+//                                            'education_cycle_name' => !empty($education_cycle_name) ? $education_cycle_name : NULL,
+//                                            'education_programme_id' => !empty($education_programme_id) ? $education_programme_id : NULL,
+//                                            'education_programme_code' => !empty($education_programme_code) ? $education_programme_code : NULL,
+//                                            'education_programme_name' => !empty($education_programme_name) ? $education_programme_name : NULL,
+//                                            'institution_id' => !empty($entity->institution_id) ? $entity->institution_id : NULL,
+//                                            'institution_name' => !empty($institution_name) ? $institution_name : NULL,
+//                                            'institution_code' => !empty($institution_code) ? $institution_code : NULL,
+//                                            'institution_grade_id' => !empty($lastInsertId) ? $lastInsertId : NULL,
+//                                            'institution_programme_grade_subjects_id' => !empty($institutionProgramGradeSubjectID) ? $institutionProgramGradeSubjectID : NULL,
+//                                            'institution_subject_name' => !empty($subject) ? $subject : NULL,
+//                                            'start_date' => !empty($start_date) ? date("d-m-Y", strtotime($start_date)) : NULL
+//                                        ];
+//
+//                                        $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
+//                                        if ($this->Auth->user()) {
+//                                            $Webhooks->triggerShell('programme_create', ['username' => $username],$body);
+//                                        }
+//                                    }
                                 }
                             }
                             return true;
@@ -570,7 +571,7 @@ class InstitutionGradesTable extends ControllerActionTable
     )
     {
             // POCOR 5001
-    //POCOR-9438 -- If condition updated    
+    //POCOR-9438 -- If condition updated
     if (!empty($data['grades']['education_grade_subject_id']) && is_array($data['grades']['education_grade_subject_id'])) {
         $gradeSubjectEntities = $data['grades']['education_grade_subject_id'];
         $createdUserId = $this->Session->read('Auth.User.id');
@@ -1113,7 +1114,7 @@ class InstitutionGradesTable extends ControllerActionTable
             if (!empty($academicPeriodId)) {
                 $condition = ['EducationSystems.academic_period_id' => $academicPeriodId];
                 $EducationLevels = TableRegistry::getTableLocator()->get('Education.EducationLevels');
-                
+
                 // Check if there are matching records for EducationSystems
                 $educationSystemsCount = $EducationLevels->EducationSystems->find()
                     ->where($condition)
@@ -1281,13 +1282,13 @@ class InstitutionGradesTable extends ControllerActionTable
                     $educationGradeId = 0; // Reset
                 }elseif(!empty($previousprogrammeId) && $previousprogrammeId != $programmeId){
                     $educationGradeId = 0;
-                
+
                 } else {
                     $educationGradeId = $request->getData($this->aliasField('grades.education_grade_id'));
                 }
                 $session->write('checkpreviousLevelId', $checklevelId);
                 $session->write('previousprogrammeId', $programmeId);
-                
+
                 $subjectOptions = [];
                 if (!empty($educationGradeId)) {
 
@@ -1313,7 +1314,7 @@ class InstitutionGradesTable extends ControllerActionTable
                         $subjectOptions = $subjectQuery->toArray();
                     }
 
-                
+
                 }
 
                 $attr['data'] = $subjectOptions;

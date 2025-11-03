@@ -2452,9 +2452,6 @@ class InstitutionsTable extends ControllerActionTable
     public function triggerWebhookCommand(Entity $entity, string $eventKey): void
     {
         // Only run when triggered from Institution controller
-        if (empty($this->controllerAction) || $this->controllerAction !== 'Institutions') {
-            return;
-        }
         $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
 
         $user = $Webhooks->resolveCurrentUser();
