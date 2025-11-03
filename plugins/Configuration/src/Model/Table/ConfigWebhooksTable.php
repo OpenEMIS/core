@@ -13,6 +13,7 @@ use App\Model\Traits\OptionsTrait;
 use Cake\ORM\Table;
 use Cake\Log\Log;
 use Cake\Utility\Inflector;
+use Cake\Http\Session;
 
 class ConfigWebhooksTable extends ControllerActionTable
 {
@@ -668,9 +669,9 @@ class ConfigWebhooksTable extends ControllerActionTable
                 'excluded' => self::EXCLUDED_FIELDS,
                 'placeholders' => []
             ],
-            'education_system_add' => [
-                'code' => 'education_system_add',
-                'label' => 'Education System Add',
+            'education_system_create' => [
+                'code' => 'education_system_create',
+                'label' => 'Education System Create',
                 'model' => 'Education.EducationSystems',
                 'excluded' => self::EXCLUDED_FIELDS,
                 'placeholders' => []
@@ -948,7 +949,7 @@ class ConfigWebhooksTable extends ControllerActionTable
     public function triggerCommand($eventKey, $body = [])
     {
         $configItems = self::getDynamicTableInstance('Configuration.ConfigItems');
-        Log::debug(print_r(['startBody' => $body], true));
+//        Log::debug(print_r(['startBody' => $body], true));
         $webhookConfig = $this->find()
             ->select([
                 'url' => $this->aliasField('url'),
@@ -1017,13 +1018,13 @@ class ConfigWebhooksTable extends ControllerActionTable
         }
         if (is_array($finalBody)) {
             // normal array → save to temp .json file
-            Log::debug(print_r(['preSan' => $finalBody], true));
+//            Log::debug(print_r(['preSan' => $finalBody], true));
             $finalBody = $this->sanitizeWebhookBody($finalBody);
-            Log::debug(print_r(['postSan' => $finalBody], true));
+//            Log::debug(print_r(['postSan' => $finalBody], true));
 
             $temp = TMP . 'webhook_' . uniqid('w', true) . '.json';
             $jsonBody = $this->safeJsonEncode($finalBody);
-            Log::debug(print_r(['jsonBody' => $jsonBody], true));
+//            Log::debug(print_r(['jsonBody' => $jsonBody], true));
             file_put_contents($temp, $jsonBody);
             $bodyArg = $temp; // file path
         } elseif (is_string($finalBody) && str_ends_with($finalBody, '.json') && file_exists($finalBody)) {
@@ -1212,33 +1213,27 @@ class ConfigWebhooksTable extends ControllerActionTable
         try {
             // Try the Auth component first
             if (!empty($this->Auth) && $this->Auth->user()) {
+                Log::debug(print_r(['simpleUser' => $this->Auth->user()], true));
                 return $this->Auth->user();
             }
-
-            // Fallback to session if Auth is unavailable
-            $session = TableRegistry::getTableLocator()
-                ->get('Configuration.ConfigItems') // any loaded table with session context
-                ->getConnection()
-                ->getDriver()
-                ->getConnection()
-                ->session ?? null;
-
-            if (method_exists($this, 'getRequest') && $this->getRequest()->getSession()) {
-                $session = $this->getRequest()->getSession();
-            }
-
+            $request = new ServerRequest();
+            $session = $request->getSession();
             if ($session && $session->check('Auth.User.id')) {
                 $userId = $session->read('Auth.User.id');
+                Log::debug(print_r(['$userId' => $userId],true));
+
                 $Users = TableRegistry::getTableLocator()->get('User.Users');
                 $user = $Users->find('all')
                     ->where([
                         $Users->aliasField('id')
                         => $userId])->first();
+                Log::debug(print_r(['$user' => $user->toArray()],true));
 
                 return $user ? $user->toArray() : null;
             }
         } catch (\Throwable $e) {
             Log::warning('User resolution failed: ' . $e->getMessage());
+
         }
 
         return null;

@@ -67,7 +67,7 @@ class WebhookCommand extends Command
             $response = $http->$method($url, $body, [
                 'headers' => $headers,
                 'timeout' => 60,
-//                'type' => 'json'
+                'type' => 'json'
             ]);
 
             $status = $response->getStatusCode();

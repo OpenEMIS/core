@@ -111,7 +111,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $user = $Webhooks->resolveCurrentUser();
 
         $contain = [];
-        $tableAlias = 'Education.EducationGradeSubjects';
+        $tableAlias = 'Education.EducationGradesSubjects';
         $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
         if ($eventKey === 'education_grade_subject_delete') {
             $body['deleted_at'] = date('Y-m-d H:i:s');
