@@ -76,7 +76,14 @@ class UsersTable extends ControllerActionTable
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
-        $this->addBehavior('Security.UserWebhook'); // for webhook
+        $this->addBehavior('Configuration.CallWebhook',
+            [
+                'entity_create' => 'security_user_create',
+                'entity_delete' => 'security_user_delete',
+                'entity_update' => 'security_user_update',
+                'table_alias' => 'User.Users'
+            ]
+        ); // for webhook
         $this->addBehavior('User.MoodleCreateUser');
         $this->addBehavior('OpenEmis.Section');
         //POCOR-6922 starts
