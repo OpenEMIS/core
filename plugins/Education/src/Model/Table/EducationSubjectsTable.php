@@ -53,7 +53,7 @@ class EducationSubjectsTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
-        $this->addBehavior('Configuration.CallWebhook',
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
             [
                 'entity_create' => 'education_subject_create',
                 'entity_delete' => 'education_subject_delete',

@@ -50,7 +50,7 @@ class PositionsTable extends ControllerActionTable {
         $this->toggle('remove', false);
         $this->addBehavior('Institution.InstitutionTab');
         $this->addBehavior('Staff.StaffTab');
-        $this->addBehavior('Configuration.CallWebhook',
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
             [
                 'entity_create' => 'staff_create',
                 'entity_delete' => 'staff_delete',

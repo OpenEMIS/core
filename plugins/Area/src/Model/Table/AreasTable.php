@@ -50,7 +50,7 @@ class AreasTable extends ControllerActionTable
             'StaffRoom' => ['index'],
             'SgTree' => ['index']
         ]);
-        $this->addBehavior('Configuration.CallWebhook',
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
             [
                 'entity_create' => 'area_education_create',
                 'entity_delete' => 'area_education_delete',
@@ -226,52 +226,6 @@ class AreasTable extends ControllerActionTable
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->setfieldOrder($this->fieldsOrder);
-    }
-
-    // POCOR-9403
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
-    {
-        // Skip if triggered internally
-        if (!empty($options['skip_callbacks'])) {
-            return;
-        }
-
-        $eventKey = $entity->isNew()
-            ? 'area_education_create'
-            : 'area_education_update';
-
-        $this->triggerWebhookCommand($entity, $eventKey);
-    }
-
-    // POCOR-9403
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
-    {
-        if (!empty($options['skip_callbacks'])) {
-            return;
-        }
-        $this->triggerWebhookCommand($entity, 'area_education_delete');
-    }
-
-
-
-    // POCOR-9403
-    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
-    {
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
-
-        $user = $Webhooks->resolveCurrentUser();
-
-        $contain = ['AreaParents', 'AreaLevels'];
-        $tableAlias = 'Area.Areas';
-        $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
-        if ($eventKey === 'area_education_delete') {
-            $body['deleted_at'] = date('Y-m-d H:i:s');
-            $body['deleted_by'] = $user['openemis_no']
-                ?? $user['username']
-                ?? 'system';
-        }
-        $Webhooks->triggerCommand($eventKey, $body);
-
     }
 
     public function onGetConvertOptions(Event $event, Entity $entity, Query $query)

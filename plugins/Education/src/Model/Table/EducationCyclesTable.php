@@ -27,7 +27,7 @@ class EducationCyclesTable extends ControllerActionTable
             $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
             $controllerActionBehavior->setConfig(['actions' => ['reorder' => false]]);
         }
-        $this->addBehavior('Configuration.CallWebhook',
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
             [
                 'entity_create' => 'education_cycle_create',
                 'entity_delete' => 'education_cycle_delete',
@@ -133,13 +133,13 @@ class EducationCyclesTable extends ControllerActionTable
     {
         // --- andle admission age cascade update ---
         if (!$entity->isNew()) {
-            $this->updateAdmissionAgeCascade($entity);
+            $this->updateAdmissionAgeCascade($entity); // POCOR-9403 cleancoded
         }
 
     }
 
     /**
-     * 🔁 Propagate admission age changes to related grades
+     * Propagate admission age changes to related grades
      */
     private function updateAdmissionAgeCascade(Entity $entity): void
     {

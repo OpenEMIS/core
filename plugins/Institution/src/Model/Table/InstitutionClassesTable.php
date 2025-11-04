@@ -142,7 +142,7 @@ class InstitutionClassesTable extends ControllerActionTable
             ],
         ]);
         //POCOR-8538 end
-        $this->addBehavior('Configuration.CallWebhook',
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
             [
                 'entity_create' => 'institution_class_create',
                 'entity_delete' => 'institution_class_delete',
@@ -538,6 +538,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
+        // POCOR-9403 cleancoded
         $this->handleClassCustomFields($entity);
         $this->syncClassStudents($entity, $options);
         $this->getEventManager()->dispatch(

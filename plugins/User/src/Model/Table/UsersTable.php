@@ -74,7 +74,7 @@ class UsersTable extends AppTable
             'ClassStudents' => ['index'],
             'OpenEMIS_Classroom' => ['view', 'edit']
         ]);
-        $this->addBehavior('Configuration.CallWebhook',
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
             [
                 'entity_create' => 'security_user_create',
                 'entity_delete' => 'security_user_delete',
@@ -1148,40 +1148,14 @@ class UsersTable extends AppTable
         return true;
     }
 
-//    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
-//    {
-//
-//        $this->handleImportedUserData($entity);
-//        if (!empty($options['skip_callbacks'])) {
-//            return;
-//        }
-//
-//        $eventKey = $entity->isNew()
-//            ? 'security_user_create'
-//            : 'security_user_update';
-//
-//        $this->triggerWebhookCommand($entity, $eventKey, []);
-//    }
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    {
+
+        $this->handleImportedUserData($entity);
+    }
 
 
-//    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
-//    {
-//        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
-//
-//        $user = $Webhooks->resolveCurrentUser();
-//
-//        $contain = [];
-//
-//        $body = $Webhooks->prepareWebhookBody($entity, $contain);
-//        if ($eventKey === 'security_user_delete') {
-//            $body['deleted_at'] = date('Y-m-d H:i:s');
-//            $body['deleted_by'] = $user['openemis_no']
-//                ?? $user['username']
-//                ?? 'system';
-//        }
-//        $Webhooks->triggerCommand($eventKey, $body);
-//
-//    }
+
 
     private function handleImportedUserData(Entity $entity): void
     {

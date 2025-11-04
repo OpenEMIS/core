@@ -43,7 +43,7 @@ class InstitutionGradesTable extends ControllerActionTable
             'appliedAction' => ['Programmes' =>['id']
             ]
         ]);
-        $this->addBehavior('Configuration.CallWebhook',
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
             [
                 'entity_create' => 'institution_grade_create',
                 'entity_delete' => 'institution_grade_delete',

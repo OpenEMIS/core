@@ -102,7 +102,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'appliedAction' => ['Subjects' =>['institution_subject_id','institution_id']
             ]
         ]);
-        $this->addBehavior('Configuration.CallWebhook',
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
             [
                 'entity_create' => 'institution_subject_create',
                 'entity_delete' => 'institution_subject_delete',

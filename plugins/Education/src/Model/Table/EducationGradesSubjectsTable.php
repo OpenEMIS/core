@@ -27,7 +27,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
 		$this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
 
         $this->addBehavior('CompositeKey');
-        $this->addBehavior('Configuration.CallWebhook',
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
             [
                 'entity_create' => 'education_grade_subject_create',
                 'entity_delete' => 'education_grade_subject_delete',

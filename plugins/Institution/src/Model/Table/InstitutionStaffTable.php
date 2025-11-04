@@ -40,7 +40,7 @@ class InstitutionStaffTable extends AppTable
         ]);
         $this->addBehavior('Report.InstitutionSecurity');
         $this->addBehavior('Report.AreaList');//POCOR-7794
-        $this->addBehavior('Configuration.CallWebhook',
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
             [
                 'entity_create' => 'staff_create',
                 'entity_delete' => 'staff_delete',
