@@ -216,7 +216,7 @@ class StudentsTable extends ControllerActionTable
         );
 
         $this->setDeleteStrategy('restrict'); //POCOR-8333
-        $this->addBehavior('Configuration.CallWebhook',
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
             [
                 'entity_create' => 'student_create',
                 'entity_delete' => 'student_delete',
@@ -952,36 +952,8 @@ class StudentsTable extends ControllerActionTable
     public function beforeDelete(Event $event, Entity $entity)
     {
         $student_id = !empty($entity->student_id) ? $entity->student_id : NULL;
-        $institution_id = !empty($entity->institution_id) ? $entity->institution_id : 0;
-        $result = $this->checkStudentRecords($entity);
-        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        //POCOR-9393 start
-        $StudentClass = $InstitutionClassStudents->find()
-            ->where([
-                $InstitutionClassStudents->aliasField('academic_period_id') => $entity->academic_period_id,
-                $InstitutionClassStudents->aliasField('student_id') => $entity->student_id,
-                $InstitutionClassStudents->aliasField('institution_id') => $entity->institution_id,
-            ])
-            ->first();
-
-        $StudentClassId = $StudentClass ? $StudentClass->institution_class_id : null; //POCOR-9393 end
-
-        $body = array();
         $institution_student_id = !empty($entity->id) ? $entity->id : NULL;
-        $body = [
-            'institution_student_id' => $student_id,
-            'institution_id' => $institution_id,
-            'institution_class_id' => $StudentClassId, //POCOR-9393
-        ];
-        $affected = $this->removeIndividualChildRecords($student_id, $institution_student_id);
-        // $this->log("removed $affected security records", 'debug');
-        if (!empty($this->action) && $this->action == 'remove') {
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $username = $this->Auth->user()['username'];
-                $Webhooks->triggerShell('student_delete', ['username' => $username], $body);
-            }
-        }
+        $this->removeIndividualChildRecords($student_id);
 
     }
 
@@ -1085,7 +1057,7 @@ class StudentsTable extends ControllerActionTable
     //     }
     // }
 
-    private function removeIndividualChildRecords($student_id, $institution_student_id)
+    private function removeIndividualChildRecords($student_id)
     {
         $affected = 0;
         if ($student_id) {

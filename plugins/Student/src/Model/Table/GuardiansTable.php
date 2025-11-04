@@ -37,7 +37,7 @@ class GuardiansTable extends ControllerActionTable
             $this->addBehavior('Risk.Risks');
         }
         $this->addBehavior('ControllerAction.Image');
-        $this->addBehavior('Configuration.CallWebhook',
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
             [
                 'entity_create' => 'student_guardian_create',
                 'entity_delete' => 'student_guardian_delete',

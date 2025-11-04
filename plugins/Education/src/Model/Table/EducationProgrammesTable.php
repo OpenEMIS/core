@@ -43,7 +43,7 @@ class EducationProgrammesTable extends ControllerActionTable {
             $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
             $controllerActionBehavior->setConfig(['actions' => ['reorder' => false]]);
         }
-        $this->addBehavior('Configuration.CallWebhook',
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
             [
                 'entity_create' => 'education_programme_create',
                 'entity_delete' => 'education_programme_delete',
@@ -113,7 +113,7 @@ class EducationProgrammesTable extends ControllerActionTable {
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
     {
         // Always perform related child cleanup
-        $this->deleteChildProgrammes($entity);
+        $this->deleteChildProgrammes($entity); // POCOR-9403 cleancoded
 
     }
 
@@ -273,311 +273,7 @@ class EducationProgrammesTable extends ControllerActionTable {
         return compact('academicPeriodOptions', 'selectedAcademicPeriod', 'levelOptions', 'selectedLevel', 'cycleOptions', 'selectedCycle');
     }
 
-//    public function onGetCustomNextProgrammeElement(Event $event, $action, $entity, $attr, $options = []) {
-//        $EducationProgrammesNextProgrammes = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
-//        if ($action == 'index') {
-//            $value = $EducationProgrammesNextProgrammes
-//                    ->find()
-//                    ->where([$EducationProgrammesNextProgrammes->aliasField('education_programme_id') => $entity->id])
-//                    ->count();
-//            $attr['value'] = $value;
-//        } else if ($action == 'view') {
-//            $tableHeaders = [__('Cycle - (Programme)')];
-//            $tableCells = [];
-//
-//            $educationNextProgrammes = $entity->extractOriginal(['education_next_programmes']);
-//            foreach ($educationNextProgrammes['education_next_programmes'] as $key => $obj) {
-//                if (!is_null($obj->_joinData)) {
-//                    $programe = $this->find()->where([$this->aliasField('id') => $obj->_joinData->next_programme_id])->contain(['EducationCycles'])->first();
-//                    $rowData = [];
-//                    $rowData[] = $programe->cycle_programme_name;
-//                    $tableCells[] = $rowData;
-//                }
-//            }
-//
-//            $attr['tableHeaders'] = $tableHeaders;
-//            $attr['tableCells'] = $tableCells;
-//        }else if($this->request->getParam('pass')[0] == 'add') //POCOR-8644  start
-//        {
-//            $cycleId = $this->request->getData()['EducationProgrammes']['education_cycle_id'];
-//            if (!empty($cycleId)) {
-//                $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-//                $academic_period_id = $AcademicPeriod->AcademicPeriods->getCurrent();
-//                $form = $event->getSubject()->Form;
-//                $nextProgrammeOptions = [];
-//                $EducationSystems = TableRegistry::get('Education.EducationSystems');
-//                $educationCycles = TableRegistry::get('Education.EducationCycles');
-//                $cycleRecord = $educationCycles->find()
-//                    ->select([
-//                        'education_level_id' => 'EducationCycles.education_level_id',
-//                        'cycle_order' => $educationCycles->aliasField('order'), // Escaping the 'order' column
-//                        'level_order' => $educationCycles->aliasField('EducationLevels.order'), // Escaping the 'order' column
-//                        'level_id' => 'EducationLevels.id'
-//                    ])
-//                    ->contain(['EducationLevels.EducationSystems'])
-//                    ->where(['EducationCycles.id IS' => $cycleId])
-//                    ->first();
-//
-//                if ($cycleRecord) {
-//                    $currentCycleOrder = $cycleRecord->cycle_order;
-//                    $currentLevelId = $cycleRecord->level_id;
-//                    $currentLevelOrder = $cycleRecord->level_order;
-//                } else {
-//                    $currentCycleOrder = null;
-//                    $currentLevelId = null;
-//                    $currentLevelOrder = null;
-//                }
-//
-//
-//            $EducationSystems = TableRegistry::get('Education.EducationSystems');
-//            $educationProgrammesTable = clone $this;
-//            $educationProgrammesTable->setAlias('EducationProgrammesClone');
-//
-//            $excludedProgrammes = $educationProgrammesTable->find()
-//                    ->innerJoin(['EducationCycles' => 'education_cycles'], [
-//                        'EducationCycles.id = ' . $educationProgrammesTable->aliasField('education_cycle_id')
-//                    ])
-//                    ->select(1)
-//                    ->where([
-//                'EducationCycles.order <= ' . $currentCycleOrder,
-//                'EducationCycles.education_level_id = ' . $currentLevelId
-//            ]);
-//
-//            $nextProgrammeOptions = $EducationSystems
-//                    ->find('list', [
-//                        'keyField' => 'programme_id',
-//                        'valueField' => 'cycle_programme_name'
-//                    ])
-//                    ->matching('EducationLevels.EducationCycles.EducationProgrammes')
-//                    ->select(['cycle_programme_name' => $EducationSystems->find()->func()->concat([
-//                            'EducationSystems.name' => 'literal',
-//                            ' - ',
-//                            'EducationCycles.name' => 'literal',
-//                            ' - (',
-//                            'EducationProgrammes.name' => 'literal',
-//                            ')'
-//                        ]), 'programme_id' => 'EducationProgrammes.id'])
-//                    ->where([
-//                        $EducationSystems->aliasField('academic_period_id') => $academic_period_id,
-//                        'EducationLevels.order >= ' => $currentLevelOrder,
-//                        'NOT EXISTS(' . $excludedProgrammes->where([$educationProgrammesTable->aliasField('id') . ' = ' . 'EducationProgrammes.id']) . ')'
-//                    ])
-//                    ->orderAsc('EducationSystems.order')
-//                    ->orderAsc('EducationLevels.order')
-//                    ->orderAsc('EducationCycles.order')
-//                   ->orderAsc('EducationProgrammes.order')
-//                    ->toArray();
-//
-//            $tableHeaders = [__('Cycle - (Programme)'), '', ''];
-//            $tableCells = [];
-//            $cellCount = 0;
-//
-//            $arrayNextProgrammes = [];
-//            if ($this->request->is(['get'])) {
-//                $educationProgramme = TableRegistry::get('Education.EducationProgrammes');
-//                foreach ($nextProgrammeslist as $next_programme_id) {
-//                    $programme = $educationProgramme->find()->where([$educationProgramme->aliasField('id') => $next_programme_id])->contain(['EducationCycles'])->first();
-//                    $arrayNextProgrammes[] = [
-//                        'id' => $programme->id,
-//                        'education_programme_id' => $programme->education_programme_id,
-//                        'next_programme_id' => $next_programme_id,
-//                        'name' => $programme->cycle_programme_name
-//                    ];
-//                }
-//            } else if ($this->request->is(['post', 'put'])) {
-//                $requestData = $this->request->getData();
-//                if (array_key_exists('education_next_programmes', $requestData[$this->getAlias()])) {
-//                    foreach ($requestData[$this->getAlias()]['education_next_programmes'] as $key => $obj) {
-//                        $arrayNextProgrammes[] = $obj['_joinData'];
-//                    }
-//                }
-//                if (array_key_exists('next_programme_id', $requestData[$this->getAlias()])) {
-//                    $nextProgrammeId = $requestData[$this->getAlias()]['next_programme_id'];
-//                    $programmeObj = $this
-//                            ->find()
-//                            ->where([$this->aliasField('id') => $nextProgrammeId])
-//                            ->first();
-//
-//                    // POCOR-4002 adding the checking to prevent adding empty next programme
-//                    if (!empty($programmeObj)) {
-//                        $arrayNextProgrammes[] = [
-//                           // 'education_programme_id' => $entity->id,
-//                            'next_programme_id' => $programmeObj->id,
-//                            'name' => $programmeObj->cycle_programme_name,
-//                        ];
-//                    }
-//                    // end POCOR-4002
-//                }
-//            }
-//            $form->unlockField($attr['model'] . '.education_next_programmes');
-//            foreach ($arrayNextProgrammes as $key => $obj) {
-//                $fieldPrefix = $attr['model'] . '.education_next_programmes.' . $cellCount++;
-//                $joinDataPrefix = $fieldPrefix . '._joinData';
-//
-//                $educationProgrammeId = $obj['next_programme_id'];
-//                $nextProgrammeName = $obj['name'];
-//
-//                $cellData = "";
-//                $cellData .= $form->hidden($fieldPrefix . ".id", ['value' => $educationProgrammeId]);
-//                $cellData .= $form->hidden($joinDataPrefix . ".name", ['value' => $nextProgrammeName]);
-//                $cellData .= $form->hidden($joinDataPrefix . ".education_programme_id", ['value' => $obj['education_programme_id']]);
-//                $cellData .= $form->hidden($joinDataPrefix . ".next_programme_id", ['value' => $obj['next_programme_id']]);
-//                if (isset($obj['id'])) {
-//                    $cellData .= $form->hidden($joinDataPrefix . ".id", ['value' => $obj['id']]);
-//                }
-//
-//                $rowData = [];
-//                $rowData[] = $nextProgrammeName;
-//                $rowData[] = $cellData;
-//                $rowData[] = $this->getDeleteButton();
-//
-//                $tableCells[] = $rowData;
-//                unset($nextProgrammeOptions[$obj['next_programme_id']]);
-//            }
-//
-//            $attr['tableHeaders'] = $tableHeaders;
-//            $attr['tableCells'] = $tableCells;
-//
-//            $nextProgrammeOptions[0] = "-- " . __('Add Next Programme') . " --";
-//            ksort($nextProgrammeOptions);
-//            $attr['options'] = $nextProgrammeOptions;
-//            }
-//            //POCOR-8644 end
-//        } else if ($action == 'edit') {
-//            if (isset($entity->id)) {
-//                $nextProgrammeslist = $EducationProgrammesNextProgrammes
-//                        ->find('list', ['keyField' => 'id', 'valueField' => 'next_programme_id'])
-//                        ->where([$EducationProgrammesNextProgrammes->aliasField('education_programme_id') => $entity->id])
-//                        ->toArray();
-//                $form = $event->getSubject()->Form;
-//                $nextProgrammeOptions = [];
-//
-//                $currentProgrammSystem = $this->find()->contain(['EducationCycles.EducationLevels.EducationSystems'])->where([$this->aliasField('id') => $entity->id])->first();
-//                $academic_period_id = $currentProgrammSystem->education_cycle->education_level->education_system->academic_period_id;
-//                //$systemId = id;
-//                $currentCycleOrder = $currentProgrammSystem->education_cycle->order;
-//                $currentLevelOrder = $currentProgrammSystem->education_cycle->education_level->order;
-//                $currentLevelId = $currentProgrammSystem->education_cycle->education_level->id;
-//
-//                $EducationSystems = TableRegistry::get('Education.EducationSystems');
-//
-//
-//                $educationProgrammesTable = clone $this;
-//                $educationProgrammesTable->setAlias('EducationProgrammesClone');
-//
-//                $excludedProgrammes = $educationProgrammesTable->find()
-//                        ->innerJoin(['EducationCycles' => 'education_cycles'], [
-//                            'EducationCycles.id = ' . $educationProgrammesTable->aliasField('education_cycle_id')
-//                        ])
-//                        ->select(1)
-//                        ->where([
-//                    'EducationCycles.order <= ' . $currentCycleOrder,
-//                    'EducationCycles.education_level_id = ' . $currentLevelId
-//                ]);
-//
-//                $nextProgrammeOptions = $EducationSystems
-//                        ->find('list', [
-//                            'keyField' => 'programme_id',
-//                            'valueField' => 'cycle_programme_name'
-//                        ])
-//                        ->matching('EducationLevels.EducationCycles.EducationProgrammes')
-//                        ->select(['cycle_programme_name' => $EducationSystems->find()->func()->concat([
-//                                'EducationSystems.name' => 'literal',
-//                                ' - ',
-//                                'EducationCycles.name' => 'literal',
-//                                ' - (',
-//                                'EducationProgrammes.name' => 'literal',
-//                                ')'
-//                            ]), 'programme_id' => 'EducationProgrammes.id'])
-//                        ->where([
-//                            $EducationSystems->aliasField('academic_period_id') => $academic_period_id,
-//                            'EducationLevels.order >= ' => $currentLevelOrder,
-//                            'NOT EXISTS(' . $excludedProgrammes->where([$educationProgrammesTable->aliasField('id') . ' = ' . 'EducationProgrammes.id']) . ')'
-//                        ])
-//                        ->orderAsc('EducationSystems.order')
-//                        ->orderAsc('EducationLevels.order')
-//                        ->orderAsc('EducationCycles.order')
-//                        ->orderAsc('EducationProgrammes.order')
-//                        ->toArray();
-//
-//                $tableHeaders = [__('Cycle - (Programme)'), '', ''];
-//                $tableCells = [];
-//                $cellCount = 0;
-//
-//                $arrayNextProgrammes = [];
-//                if ($this->request->is(['get'])) {
-//                    $educationProgramme = TableRegistry::get('Education.EducationProgrammes');
-//                    foreach ($nextProgrammeslist as $next_programme_id) {
-//                        $programme = $educationProgramme->find()->where([$educationProgramme->aliasField('id') => $next_programme_id])->contain(['EducationCycles'])->first();
-//                        $arrayNextProgrammes[] = [
-//                            'id' => $programme->id,
-//                            'education_programme_id' => $programme->education_programme_id,
-//                            'next_programme_id' => $next_programme_id,
-//                            'name' => $programme->cycle_programme_name
-//                        ];
-//                    }
-//                } else if ($this->request->is(['post', 'put'])) {
-//                    $requestData = $this->request->getData();
-//                    if (array_key_exists('education_next_programmes', $requestData[$this->getAlias()])) {
-//                        foreach ($requestData[$this->getAlias()]['education_next_programmes'] as $key => $obj) {
-//                            $arrayNextProgrammes[] = $obj['_joinData'];
-//                        }
-//                    }
-//                    if (array_key_exists('next_programme_id', $requestData[$this->getAlias()])) {
-//                        $nextProgrammeId = $requestData[$this->getAlias()]['next_programme_id'];
-//                        $programmeObj = $this
-//                                ->find()
-//                                ->where([$this->aliasField('id') => $nextProgrammeId])
-//                                ->first();
-//
-//                        // POCOR-4002 adding the checking to prevent adding empty next programme
-//                        if (!empty($programmeObj)) {
-//                            $arrayNextProgrammes[] = [
-//                                'education_programme_id' => $entity->id,
-//                                'next_programme_id' => $programmeObj->id,
-//                                'name' => $programmeObj->cycle_programme_name,
-//                            ];
-//                        }
-//                        // end POCOR-4002
-//                    }
-//                }
-//                $form->unlockField($attr['model'] . '.education_next_programmes');
-//                foreach ($arrayNextProgrammes as $key => $obj) {
-//                    $fieldPrefix = $attr['model'] . '.education_next_programmes.' . $cellCount++;
-//                    $joinDataPrefix = $fieldPrefix . '._joinData';
-//
-//                    $educationProgrammeId = $obj['next_programme_id'];
-//                    $nextProgrammeName = $obj['name'];
-//
-//                    $cellData = "";
-//                    $cellData .= $form->hidden($fieldPrefix . ".id", ['value' => $educationProgrammeId]);
-//                    $cellData .= $form->hidden($joinDataPrefix . ".name", ['value' => $nextProgrammeName]);
-//                    $cellData .= $form->hidden($joinDataPrefix . ".education_programme_id", ['value' => $obj['education_programme_id']]);
-//                    $cellData .= $form->hidden($joinDataPrefix . ".next_programme_id", ['value' => $obj['next_programme_id']]);
-//                    if (isset($obj['id'])) {
-//                        $cellData .= $form->hidden($joinDataPrefix . ".id", ['value' => $obj['id']]);
-//                    }
-//
-//                    $rowData = [];
-//                    $rowData[] = $nextProgrammeName;
-//                    $rowData[] = $cellData;
-//                    $rowData[] = $this->getDeleteButton();
-//
-//                    $tableCells[] = $rowData;
-//                    unset($nextProgrammeOptions[$obj['next_programme_id']]);
-//                }
-//
-//                $attr['tableHeaders'] = $tableHeaders;
-//                $attr['tableCells'] = $tableCells;
-//
-//                $nextProgrammeOptions[0] = "-- " . __('Add Next Programme') . " --";
-//                ksort($nextProgrammeOptions);
-//                $attr['options'] = $nextProgrammeOptions;
-//            }
-//        }
-//
-//        return $event->getSubject()->renderElement('Education.next_programmes', ['attr' => $attr]);
-//    }
+    // POCOR-9403 cleancoded
 
     public function onGetCustomNextProgrammeElement(Event $event, $action, $entity, $attr, $options = [])
     {
@@ -690,7 +386,7 @@ class EducationProgrammesTable extends ControllerActionTable {
         $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
         $EducationProgrammesNext = TableRegistry::getTableLocator()->get('Education.EducationProgrammesNextProgrammes');
 
-        // 1️⃣ Load existing ones from DB (for edit mode or first GET)
+        // Load existing ones from DB (for edit mode or first GET)
         if (empty($arrayNextProgrammes) && !empty($entity->id)) {
             $existingNextIds = $EducationProgrammesNext
                 ->find('list', [
@@ -720,7 +416,7 @@ class EducationProgrammesTable extends ControllerActionTable {
             $this->arrayNextProgrammes = $arrayNextProgrammes;
         }
 
-        // 2️⃣ If POST / PUT — merge what's in the current form (hidden fields)
+        // If POST / PUT — merge what's in the current form (hidden fields)
         if ($this->request->is(['post', 'put'])) {
             $requestData = (array)$this->request->getData();
 
@@ -737,7 +433,7 @@ class EducationProgrammesTable extends ControllerActionTable {
                 }
             }
 
-            // 3️⃣ Add the new selection (dropdown)
+            // Add the new selection (dropdown)
             $nextProgrammeId = $requestData[$this->getAlias()]['next_programme_id'] ?? null;
             if (!empty($nextProgrammeId) && !isset($arrayNextProgrammes[$nextProgrammeId])) {
                 $programmeObj = $EducationProgrammes->find()

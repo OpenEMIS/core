@@ -62,7 +62,7 @@ class StudentUserTable extends ControllerActionTable
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
         }
-        $this->addBehavior('Configuration.CallWebhook',
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
             [
                 'entity_create' => 'security_user_create',
                 'entity_delete' => 'security_user_delete',

@@ -37,6 +37,15 @@ class StudentPromotionTable extends AppTable
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         $this->addBehavior('Institution.ClassStudents');
         $this->addBehavior('ControllerAction.QueryString');
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'student_create',
+                'entity_delete' => 'student_delete',
+                'entity_update' => 'student_update',
+                'table_alias' => 'Institution.InstitutionStudents',
+                'contain' => []
+            ]
+        ); // for webhook
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -1268,7 +1277,7 @@ class StudentPromotionTable extends AppTable
                             }else{
                                $classId = $existingClassesId;
                             }
-                            $studentData = $this->institutionClassStudentData($classId);
+
                            //POCOR-7170 end
 
                             if ($this->save($existingStudentEntity)) {
@@ -1531,96 +1540,6 @@ class StudentPromotionTable extends AppTable
             }
         }
         return false;
-    }
-
-    /**
-      *POCOR-7170 Start
-      *show webhook response
-    */
-    public function institutionClassStudentData($classId)
-    {
-           $institutionClass =  TableRegistry::get('Institution.InstitutionClasses');
-            $bodyData = $institutionClass->find('all',
-                            [ 'contain' => [
-                                'Institutions',
-                                'EducationGrades',
-                                'Staff',
-                                'AcademicPeriods',
-                                'InstitutionShifts',
-                                'InstitutionShifts.ShiftOptions',
-                                'ClassesSecondaryStaff.SecondaryStaff',
-                                'Students'
-                            ],
-                    ])->where([
-                        $institutionClass->aliasField('id') => $classId
-                    ]);
-
-            $grades = $gradeId = $secondaryTeachers = $students = [];
-
-                if (!empty($bodyData)) {
-                    foreach ($bodyData as $key => $value) {
-                        $capacity = $value->capacity;
-                        $shift = $value->institution_shift->shift_option->name;
-                        $academicPeriod = $value->academic_period->name;
-                        $homeRoomteacher = $value->staff->openemis_no;
-                        $institutionId = $value->institution->id;
-                        $institutionName = $value->institution->name;
-                        $institutionCode = $value->institution->code;
-                        $institutionClassId = $value->id;
-                        $institutionClassName = $value->name;
-
-                        if(!empty($value->education_grades)) {
-                            foreach ($value->education_grades as $key => $gradeOptions) {
-                                $grades[] = $gradeOptions->name;
-                                $gradeId[] = $gradeOptions->id;
-                            }
-                        }
-
-                        if(!empty($value->classes_secondary_staff)) {
-                            foreach ($value->classes_secondary_staff as $key => $secondaryStaffs) {
-                                $secondaryTeachers[] = $secondaryStaffs->secondary_staff->openemis_no;
-                            }
-                        }
-
-                        $maleStudents = 0;
-                        $femaleStudents = 0;
-                        if(!empty($value->students)) {
-                            foreach ($value->students as $key => $studentsData) {
-                                $students[] = $studentsData->openemis_no;
-                                if($studentsData->gender->code == 'M') {
-                                    $maleStudents = $maleStudents + 1;
-                                }
-                                if($studentsData->gender->code == 'F') {
-                                    $femaleStudents = $femaleStudents + 1;
-                                }
-                            }
-                        }
-
-                    }
-                }
-
-                $body = array();
-
-                $body = [
-                    'institutions_id' => !empty($institutionId) ? $institutionId : NULL,
-                    'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
-                    'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
-                    'institutions_classes_id' => $institutionClassId,
-                    'institutions_classes_name' => $institutionClassName,
-                    'academic_periods_name' => !empty($academicPeriod) ? $academicPeriod : NULL,
-                    'shift_options_name' => !empty($shift) ? $shift : NULL,
-                    'institutions_classes_capacity' => !empty($capacity) ? $capacity : NULL,
-                    'education_grades_id' => !empty($gradeId) ? $gradeId :NULL,
-                    'education_grades_name' => !empty($grades) ? $grades : NULL,
-                   // 'institution_classes_total_male_students' => !empty($maleStudents) ? $maleStudents : 0,
-                    //'institution_classes_total_female_studentss' => !empty($femaleStudents) ? $femaleStudents : 0,
-                    'total_students' => !empty($students) ? count($students) : 0,
-                    'institution_classes_staff_openemis_no' => !empty($homeRoomteacher) ? $homeRoomteacher : NULL,
-                    'institution_classes_secondary_staff_openemis_no' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
-                    'institution_class_students_openemis_no' => !empty($students) ? $students : NULL
-                ];
-                    $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                    $Webhooks->triggerShell('class_update', ['username' => $username], $body);
     }
 
 

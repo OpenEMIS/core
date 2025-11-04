@@ -184,7 +184,7 @@ class AcademicPeriodsTable extends ControllerActionTable
 
         $this->addBehavior('Institution.Calendar');
         $this->setDeleteStrategy('restrict');
-        $this->addBehavior('Configuration.CallWebhook',
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
             [
                 'entity_create' => 'academic_period_create',
                 'entity_delete' => 'academic_period_delete',

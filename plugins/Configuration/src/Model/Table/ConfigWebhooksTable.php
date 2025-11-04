@@ -88,7 +88,7 @@ class ConfigWebhooksTable extends ControllerActionTable
     {
         $this->setTable('webhooks');
         parent::initialize($config);
-        $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'webhook_id', 'joinType' => 'INNER']);
+//        $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'webhook_id', 'joinType' => 'INNER']);
         $this->addBehavior('Configuration.ConfigItems');
         $this->addBehavior('OpenEmis.Section');
 

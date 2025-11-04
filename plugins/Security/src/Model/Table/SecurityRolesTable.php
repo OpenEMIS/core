@@ -73,7 +73,7 @@ class SecurityRolesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Permissions' => ['view', 'edit']
         ]);
-        $this->addBehavior('Configuration.CallWebhook',
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
             [
                 'entity_create' => 'security_role_create',
                 'entity_delete' => 'security_role_delete',

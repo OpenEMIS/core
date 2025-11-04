@@ -25,7 +25,7 @@ class EducationSystemsTable extends ControllerActionTable
             $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
             $controllerActionBehavior->setConfig(['actions' => ['reorder' => false]]);
         }
-        $this->addBehavior('Configuration.CallWebhook',
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
             [
                 'entity_create' => 'education_system_create',
                 'entity_delete' => 'education_system_delete',

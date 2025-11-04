@@ -77,7 +77,6 @@ class StaffProfilesTable extends ControllerActionTable
             self::GENERATED => __('Generated'),
             self::PUBLISHED => __('Published')
         ];
-
     }
 
     public function implementedEvents(): array

@@ -83,7 +83,7 @@ class InstitutionClassStudentsTable extends AppTable
             'StudentOutcomes' => ['index'],
             'AssessmentItemStudentExemptions' => ['index', 'edit'], // POCOR-8224
         ]);
-        $this->addBehavior('Configuration.CallWebhook',
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
             [
                 'entity_create' => 'class_student_create',
                 'entity_delete' => 'class_student_delete',
