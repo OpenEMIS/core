@@ -36,6 +36,15 @@ class StudentsTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Configuration.CallWebhook',
+            [
+                'entity_create' => 'student_guardian_create',
+                'entity_delete' => 'student_guardian_delete',
+                'entity_update' => 'student_guardian_update',
+                'table_alias' => 'Student.StudentGuardians',
+                'contain' => []
+            ]
+        ); // for webhook
     }
 
     private function setupTabElements($entity = null)

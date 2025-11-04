@@ -73,94 +73,21 @@ class SecurityRolesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Permissions' => ['view', 'edit']
         ]);
+        $this->addBehavior('Configuration.CallWebhook',
+            [
+                'entity_create' => 'security_role_create',
+                'entity_delete' => 'security_role_delete',
+                'entity_update' => 'security_role_update',
+                'table_alias' => 'Security.SecurityRoles',
+                'contain' => []
+            ]
+        ); // for webhook
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
         $this->saveRelatedSecurityFunctions($entity);
 
-        // 🔹 Trigger webhook event
-        $eventKey = $entity->isNew()
-            ? 'security_role_create'
-            : 'security_role_update';
-
-        $this->triggerSecurityRoleWebhook($entity, $eventKey);
-    }
-
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
-    {
-        // 🔹 Webhook: role delete
-        $this->triggerSecurityRoleWebhook($entity, 'security_role_delete');
-    }
-
-    /**
-     * 🔸 Common webhook trigger for role events
-     */
-    private function triggerSecurityRoleWebhook(Entity $entity, string $eventKey): void
-    {
-        $user = $this->resolveCurrentUser();
-
-        $body = $this->prepareWebhookBody($entity);
-
-        if ($eventKey === 'security_role_delete') {
-            $body['deleted_at']  = date('Y-m-d H:i:s');
-            $body['deleted_by']  = $user['openemis_no']
-                ?? $user['username']
-                ?? 'system';
-        }
-
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
-        $Webhooks->triggerCommand($eventKey, $body);
-    }
-
-    /**
-     * Prepares the webhook body for any model, with optional child associations.
-     */
-    private function prepareWebhookBody(Entity $entity, array $contain = []): array
-    {
-        $Table = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
-
-        // Fetch full entity with associations (for update/delete)
-        $record = $Table->find()
-            ->where([$Table->aliasField('id') => $entity->id])
-            ->contain($contain)
-            ->first();
-
-        // Fallback if deleted or missing
-        if (!$record) {
-            $record = $entity;
-        }
-
-        return $record->toArray();
-    }
-    /**
-     * 🔸 Resolve current user safely for audit / webhook
-     */
-    private function resolveCurrentUser(): ?array
-    {
-        try {
-            if (!empty($this->Auth) && $this->Auth->user()) {
-                return $this->Auth->user();
-            }
-
-            if (method_exists($this, 'getRequest') && $this->getRequest()->getSession()) {
-                $session = $this->getRequest()->getSession();
-            }
-
-            if (!empty($session) && $session->check('Auth.User.id')) {
-                $userId = $session->read('Auth.User.id');
-                $Users = TableRegistry::getTableLocator()->get('User.Users');
-                $user = $Users->find()
-                    ->where([$Users->aliasField('id') => $userId])
-                    ->first();
-
-                return $user ? $user->toArray() : null;
-            }
-        } catch (\Throwable $e) {
-            Log::warning('User resolution failed: ' . $e->getMessage());
-        }
-
-        return null;
     }
 
     public function validationDefault(Validator $validator): Validator
