@@ -22,7 +22,7 @@ class CallWebhookBehavior extends Behavior
 
     public function initialize(array $config): void
     {
-
+        $this->_table->getEventManager()->on('Model.afterFullSave', [$this, 'afterFullSave']);
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
@@ -42,7 +42,11 @@ class CallWebhookBehavior extends Behavior
             $user = $Webhooks->resolveCurrentUser();
         }
 //        Log::debug(print_r($entity, true));
-        $body = $Webhooks->prepareWebhookBody($this->getConfig('table_alias'), $entity, $this->getConfig('contain'));
+        $contain = $this->getConfig('contain');
+        if(!is_array($contain)){
+            $contain = [];
+        }
+        $body = $Webhooks->prepareWebhookBody($this->getConfig('table_alias'), $entity, $contain);
 //        Log::debug(print_r(['body' => $body], true));
 
         if ($eventKey === $this->getConfig('entity_delete')) {
@@ -58,6 +62,22 @@ class CallWebhookBehavior extends Behavior
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    {
+        if($this->_table->getAlias() == 'InstitutionClasses'){
+            return;
+        }
+        if (!empty($options['skip_callbacks'])) {
+            return;
+        }
+
+        $eventKey = $entity->isNew()
+            ? $this->getConfig('entity_create') // 'security_user_...
+            : $this->getConfig('entity_update');
+
+        $this->triggerMyWebhook($entity, $eventKey);
+
+    }
+    public function afterFullSave(Event $event, Entity $entity, ArrayObject $options): void
     {
         if (!empty($options['skip_callbacks'])) {
             return;

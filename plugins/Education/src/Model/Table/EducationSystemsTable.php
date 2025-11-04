@@ -25,6 +25,15 @@ class EducationSystemsTable extends ControllerActionTable
             $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
             $controllerActionBehavior->setConfig(['actions' => ['reorder' => false]]);
         }
+        $this->addBehavior('Configuration.CallWebhook',
+            [
+                'entity_create' => 'education_system_create',
+                'entity_delete' => 'education_system_delete',
+                'entity_update' => 'education_system_update',
+                'table_alias' => 'Education.EducationSystems',
+                'contain' => ['FieldOfStudies']
+            ]
+        ); // for webhook
     }
     //POCOR-5696 start
     public function setupFields(Entity $entity)
@@ -496,51 +505,6 @@ class EducationSystemsTable extends ControllerActionTable
                 }
             }
         }
-
-		// Webhook Education System
-        // Skip if triggered internally or if no authenticated user
-        if (!empty($options['skip_callbacks'])) {
-            return;
-        }
-
-        $eventKey = $entity->isNew()
-            ? 'education_system_create'
-            : 'education_system_update';
-
-        $this->triggerWebhookCommand($entity, $eventKey);
-    }
-
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
-    {
-        // Skip webhook if no authenticated user
-        if (!empty($options['skip_callbacks'])) {
-            return;
-        }
-
-        $this->triggerWebhookCommand($entity, 'education_system_delete');
-    }
-
-    /**
-     * Shared webhook trigger for Education System events.
-     * Includes academic period and visibility info.
-     */
-    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
-    {
-
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
-
-        $user = $Webhooks->resolveCurrentUser();
-
-        $contain = [];
-        $tableAlias = 'Education.EducationSystems';
-        $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
-        if ($eventKey === 'education_system_delete') {
-            $body['deleted_at'] = date('Y-m-d H:i:s');
-            $body['deleted_by'] = $user['openemis_no']
-                ?? $user['username']
-                ?? 'system';
-        }
-        $Webhooks->triggerCommand($eventKey, $body);
 
     }
 

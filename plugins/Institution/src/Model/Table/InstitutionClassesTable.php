@@ -142,6 +142,15 @@ class InstitutionClassesTable extends ControllerActionTable
             ],
         ]);
         //POCOR-8538 end
+        $this->addBehavior('Configuration.CallWebhook',
+            [
+                'entity_create' => 'institution_class_create',
+                'entity_delete' => 'institution_class_delete',
+                'entity_update' => 'institution_class_update',
+                'table_alias' => 'Institution.InstitutionClasses',
+                'contain' => []
+            ]
+        ); // for webhook
         // POCOR-8391 remove annoing log
         //        Log::write('debug', 'Here it us beforeFilter initialize End');
     }
@@ -531,23 +540,12 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         $this->handleClassCustomFields($entity);
         $this->syncClassStudents($entity, $options);
-
+        $this->getEventManager()->dispatch(
+            new Event('Model.afterFullSave', $this, compact('entity', 'options'))
+        );
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
-
-            $this->triggerWebhookCommand($entity, 'institution_class_create');
-
-        } else {
-
-            $this->triggerWebhookCommand($entity, 'institution_class_update');
-
         }
-    }
-
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
-    {
-
-        $this->triggerWebhookCommand($entity, 'institution_class_delete');
     }
 
     private function handleClassCustomFields(Entity $entity): void
@@ -612,34 +610,6 @@ class InstitutionClassesTable extends ControllerActionTable
         }
     }
 
-    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
-    {
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
-
-        $user = $Webhooks->resolveCurrentUser();
-
-        $contain = [
-            'Institutions',
-            'EducationGrades',
-            'Staff',
-            'AcademicPeriods',
-            'InstitutionShifts.ShiftOptions',
-            'InstitutionUnits',
-            'InstitutionCourses',
-            'ClassesSecondaryStaff.SecondaryStaff',
-        ];
-
-        $tableAlias = 'Institution.InstitutionClasses';
-        $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
-        if ($eventKey === 'institution_class_delete') {
-            $body['deleted_at'] = date('Y-m-d H:i:s');
-            $body['deleted_by'] = $user['openemis_no']
-                ?? $user['username']
-                ?? 'system';
-        }
-        $Webhooks->triggerCommand($eventKey, $body);
-
-    }
 
 
     // POCOR-8538 start
