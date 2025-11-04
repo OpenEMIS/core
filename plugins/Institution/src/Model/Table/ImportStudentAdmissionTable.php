@@ -910,15 +910,6 @@ class ImportStudentAdmissionTable extends AppTable
             }
 
             // POCOR-9403 webhook call moved to institutionclass
-//            $body = array();
-//            $body = [
-//                'institutions_classes' => !empty($dataVal) ? $dataVal : NULL,
-//            ];
-//
-//            //print_r($body);die;
-//            $Webhooks = TableRegistry::get('Webhook.Webhooks');
-//            $Webhooks->triggerShell('class_update', ['username' => ''], $body);
-//            // end POCOR-6995
         }
 
         $flipped = array_flip($columns);

@@ -37,6 +37,15 @@ class GuardiansTable extends ControllerActionTable
             $this->addBehavior('Risk.Risks');
         }
         $this->addBehavior('ControllerAction.Image');
+        $this->addBehavior('Configuration.CallWebhook',
+            [
+                'entity_create' => 'student_guardian_create',
+                'entity_delete' => 'student_guardian_delete',
+                'entity_update' => 'student_guardian_update',
+                'table_alias' => 'Student.StudentGuardians',
+                'contain' => []
+            ]
+        ); // for webhook
     }
 
     public function validationDefault(Validator $validator): Validator

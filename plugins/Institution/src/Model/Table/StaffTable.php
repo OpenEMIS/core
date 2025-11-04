@@ -220,6 +220,15 @@ class StaffTable extends ControllerActionTable
         );
 
         $this->addBehavior('Staff.StaffTab');
+        $this->addBehavior('Configuration.CallWebhook',
+            [
+                'entity_create' => 'staff_create',
+                'entity_delete' => 'staff_delete',
+                'entity_update' => 'staff_update',
+                'table_alias' => 'Institution.InstitutionStaff',
+                'contain' => []
+            ]
+        ); // for webhook
     }
 
     public function implementedEvents(): array

@@ -66,6 +66,9 @@ class CallWebhookBehavior extends Behavior
         if($this->_table->getAlias() == 'InstitutionClasses'){
             return;
         }
+        if($this->_table->getAlias() == 'InstitutionSubjects'){
+            return;
+        }
         if (!empty($options['skip_callbacks'])) {
             return;
         }

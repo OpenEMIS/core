@@ -155,6 +155,15 @@ class StaffSalariesTable extends ControllerActionTable
         $this->addBehavior('ControllerAction.Image');
 
         $this->setDeleteStrategy('restrict');
+        $this->addBehavior('Configuration.CallWebhook',
+            [
+                'entity_create' => 'staff_create',
+                'entity_delete' => 'staff_delete',
+                'entity_update' => 'staff_update',
+                'table_alias' => 'Institution.InstitutionStaff',
+                'contain' => []
+            ]
+        ); // for webhook
     }
 
     public function implementedEvents(): array
@@ -1242,20 +1251,6 @@ class StaffSalariesTable extends ControllerActionTable
         }
 
         // POCOR-9403 webhook call moved to institutionstaff
-//        $body = array();
-//
-//        $body = [
-//            'institution_staff_id' => !empty($entity->staff_id) ? $entity->staff_id : NULL,
-//             'institution_id' => !empty($entity->institution_id) ? $entity->institution_id : NULL,
-//        ];
-//
-//        if($this->action == 'remove') {
-//            $Webhooks = TableRegistry::get('Webhook.Webhooks');
-//            if ($this->Auth->user()) {
-//                $username = $this->Auth->user()['username'];
-//                $Webhooks->triggerShell('staff_delete', ['username' => $username], $body);
-//            }
-//        }
     }
 
     // Function used by the Mini-Dashboard (Institution Staff)
