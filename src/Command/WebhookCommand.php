@@ -72,15 +72,15 @@ class WebhookCommand extends Command
 
             $status = $response->getStatusCode();
 
-            $io->out("Response Code: " .$status);
+//            $io->out("Response Code: " .$status);
 //            $io->out(print_r($response->getJson(), true));
 
             if (in_array($status, [200, 201, 202, 204])) {
                 // the third CLI arg is usually the body param
                 $bodyJson = $args->getArgument('body');
                 if (is_string($bodyJson) && str_ends_with($bodyJson, '.json') && file_exists($bodyJson)) {
-//                    unlink($bodyJson);
-                    $io->out("Temp file deleted: $bodyJson");
+                    unlink($bodyJson);
+//                    $io->out("Temp file deleted: $bodyJson");
                 }
             }
             $io->out('End Processing Webhook Command ('.FrozenTime::now().')...');
