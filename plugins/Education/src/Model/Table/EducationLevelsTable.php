@@ -29,7 +29,15 @@ class EducationLevelsTable extends ControllerActionTable
 			// 	'filter' => 'education_system_id',
 			// ]);
 		}
-
+        $this->addBehavior('Configuration.CallWebhook',
+            [
+                'entity_create' => 'education_level_create',
+                'entity_delete' => 'education_level_delete',
+                'entity_update' => 'education_level_update',
+                'table_alias' => 'Education.EducationLevels',
+                'contain' => []
+            ]
+        ); // for webhook
 		$this->setDeleteStrategy('restrict');
 	}
 
@@ -58,53 +66,6 @@ class EducationLevelsTable extends ControllerActionTable
 		}
 		// End POCOR-5188
 	}
-
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
-    {
-        // Skip if triggered internally or no authenticated user
-        if (!empty($options['skip_callbacks'])) {
-            return;
-        }
-
-        $eventKey = $entity->isNew()
-            ? 'education_level_create'
-            : 'education_level_update';
-
-        $this->triggerWebhookCommand($entity, $eventKey);
-    }
-
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
-    {
-        // Skip if no authenticated user
-        if (!empty($options['skip_callbacks'])) {
-            return;
-        }
-
-        $this->triggerWebhookCommand($entity, 'education_level_delete');
-    }
-
-    /**
-     * Shared webhook trigger for education level events.
-     */
-    // POCOR-9403
-    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
-    {
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
-
-        $user = $Webhooks->resolveCurrentUser();
-
-        $contain = [];
-        $tableAlias = 'Education.EducationLevels';
-        $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
-        if ($eventKey === 'education_level_delete') {
-            $body['deleted_at'] = date('Y-m-d H:i:s');
-            $body['deleted_by'] = $user['openemis_no']
-                ?? $user['username']
-                ?? 'system';
-        }
-        $Webhooks->triggerCommand($eventKey, $body);
-
-    }
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
 	{

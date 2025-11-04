@@ -53,6 +53,15 @@ class EducationSubjectsTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
+        $this->addBehavior('Configuration.CallWebhook',
+            [
+                'entity_create' => 'education_subject_create',
+                'entity_delete' => 'education_subject_delete',
+                'entity_update' => 'education_subject_update',
+                'table_alias' => 'Education.EducationSubjects',
+                'contain' => ['FieldOfStudies']
+            ]
+        ); // for webhook
         $this->setDeleteStrategy('restrict');
     }
 
@@ -118,6 +127,12 @@ class EducationSubjectsTable extends ControllerActionTable
         $options->exchangeArray($arrayOptions);
     }
 
+
+
+
+
+
+
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['FieldOfStudies']);
@@ -131,53 +146,6 @@ class EducationSubjectsTable extends ControllerActionTable
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('field_of_studies', ['after' => 'visible', 'entity' => $entity, 'type' => 'custom_field_of_studies']);
-    }
-
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
-    {
-        // Skip if triggered internally or without authentication
-        if (!empty($options['skip_callbacks'])) {
-            return;
-        }
-
-        $eventKey = $entity->isNew()
-            ? 'education_subject_create'
-            : 'education_subject_update';
-
-        $this->triggerWebhookCommand($entity, $eventKey);
-    }
-
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
-    {
-        // Skip webhook if no authenticated user
-        if (!empty($options['skip_callbacks'])) {
-            return;
-        }
-
-        $this->triggerWebhookCommand($entity, 'education_subject_delete');
-    }
-
-    /**
-     * Shared webhook trigger for Education Programme events.
-     */
-    private function triggerWebhookCommand(Entity $entity, string $eventKey): void
-    {
-
-        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
-
-        $user = $Webhooks->resolveCurrentUser();
-
-        $contain = ['FieldOfStudies'];
-        $tableAlias = 'Education.EducationSubjects';
-        $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
-        if ($eventKey === 'education_subject_delete') {
-            $body['deleted_at'] = date('Y-m-d H:i:s');
-            $body['deleted_by'] = $user['openemis_no']
-                ?? $user['username']
-                ?? 'system';
-        }
-        $Webhooks->triggerCommand($eventKey, $body);
-
     }
 
 

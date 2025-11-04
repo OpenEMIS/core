@@ -83,6 +83,15 @@ class InstitutionClassStudentsTable extends AppTable
             'StudentOutcomes' => ['index'],
             'AssessmentItemStudentExemptions' => ['index', 'edit'], // POCOR-8224
         ]);
+        $this->addBehavior('Configuration.CallWebhook',
+            [
+                'entity_create' => 'class_student_create',
+                'entity_delete' => 'class_student_delete',
+                'entity_update' => 'class_student_update',
+                'table_alias' => 'Institution.InstitutionClassStudents',
+                'contain' => []
+            ]
+        ); // for webhook
     }
 
     public function implementedEvents(): array
@@ -502,10 +511,10 @@ class InstitutionClassStudentsTable extends AppTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if($entity->isNew() || $entity->getDirty('student_status_id')) {
-            $id = $entity->institution_class_id;
-            $countMale = $this->getMaleCountByClass($id);
-            $countFemale = $this->getFemaleCountByClass($id);
-            $this->InstitutionClasses->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
+            $institution_class_id = $entity->institution_class_id;
+            $countMale = $this->getMaleCountByClass($institution_class_id);
+            $countFemale = $this->getFemaleCountByClass($institution_class_id);
+            $this->InstitutionClasses->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $institution_class_id]);
         }
 
         $listeners = [
@@ -731,10 +740,10 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
-        $id = $entity->institution_class_id;
-        $countMale = $this->getMaleCountByClass($id);
-        $countFemale = $this->getFemaleCountByClass($id);
-        $this->InstitutionClasses->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
+        $institution_class_id = $entity->institution_class_id;
+        $countMale = $this->getMaleCountByClass($institution_class_id);
+        $countFemale = $this->getFemaleCountByClass($institution_class_id);
+        $this->InstitutionClasses->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $institution_class_id]);
 
         $listeners = [
             self::getDynamicTableInstance('Institution.InstitutionCompetencyResults'),
@@ -1648,7 +1657,7 @@ class InstitutionClassStudentsTable extends AppTable
     //POCOR-9289 -- Updated function to include logic to display only selected subject (one) regardless of marks
     public function findExemptStudents(Query $query, array $options): Query
     {
-        
+
         // Extract the parameters from the options array
         $assessment_item_id = preg_replace("/[^a-fA-F0-9\-]/", "", $options['assessment_item_id']);  // Still using assessment_item_id for reference
         $assessment_period_id = intval($options['assessment_period_id']);
