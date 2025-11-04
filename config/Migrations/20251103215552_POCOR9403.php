@@ -259,19 +259,19 @@ class POCOR9403 extends AbstractMigration
 
 
             ['event_key' => 'institution_class_create', 'method' => 'POST', 'url' => self::WEBHOOK_URL_CUSTOM, 'query_template' => '/institution-classes', 'body_template' => '', 'external_data_source_id' => $customDataSourceId, 'status' => self::WEBHOOK_STATUS],
-            ['event_key' => 'institution_class_update', 'method' => 'PATCH', 'url' => self::WEBHOOK_URL_EXAMS, 'query_template' => '/institution-classes/institutions/${id}', 'body_template' => '', 'external_data_source_id' => $examDataSourceId, 'status' => self::WEBHOOK_STATUS],
+            ['event_key' => 'institution_class_update', 'method' => 'PATCH', 'url' => self::WEBHOOK_URL_EXAMS, 'query_template' => '/institution-classes/${id}', 'body_template' => '', 'external_data_source_id' => $examDataSourceId, 'status' => self::WEBHOOK_STATUS],
             ['event_key' => 'institution_class_delete', 'method' => 'DELETE', 'url' => self::WEBHOOK_URL_CUSTOM, 'query_template' => '/institution-classes', 'body_template' => '', 'external_data_source_id' => $customDataSourceId, 'status' => self::WEBHOOK_STATUS],
 
             ['event_key' => 'institution_grade_create', 'method' => 'POST', 'url' => self::WEBHOOK_URL_CUSTOM, 'query_template' => '/institution-grades', 'body_template' => '', 'external_data_source_id' => $customDataSourceId, 'status' => self::WEBHOOK_STATUS],
-            ['event_key' => 'institution_grade_update', 'method' => 'PATCH', 'url' => self::WEBHOOK_URL_EXAMS, 'query_template' => '/institution-grades/institutions/${id}', 'body_template' => '', 'external_data_source_id' => $examDataSourceId, 'status' => self::WEBHOOK_STATUS],
+            ['event_key' => 'institution_grade_update', 'method' => 'PATCH', 'url' => self::WEBHOOK_URL_EXAMS, 'query_template' => '/institution-grades/${id}', 'body_template' => '', 'external_data_source_id' => $examDataSourceId, 'status' => self::WEBHOOK_STATUS],
             ['event_key' => 'institution_grade_delete', 'method' => 'DELETE', 'url' => self::WEBHOOK_URL_CUSTOM, 'query_template' => '/institution-grades', 'body_template' => '', 'external_data_source_id' => $customDataSourceId, 'status' => self::WEBHOOK_STATUS],
 
             ['event_key' => 'institution_subject_create', 'method' => 'POST', 'url' => self::WEBHOOK_URL_CUSTOM, 'query_template' => '/institution-subjects', 'body_template' => '', 'external_data_source_id' => $customDataSourceId, 'status' => self::WEBHOOK_STATUS],
-            ['event_key' => 'institution_subject_update', 'method' => 'PATCH', 'url' => self::WEBHOOK_URL_EXAMS, 'query_template' => '/institution-subjects/institutions/${id}', 'body_template' => '', 'external_data_source_id' => $examDataSourceId, 'status' => self::WEBHOOK_STATUS],
+            ['event_key' => 'institution_subject_update', 'method' => 'PATCH', 'url' => self::WEBHOOK_URL_EXAMS, 'query_template' => '/institution-subjects/${id}', 'body_template' => '', 'external_data_source_id' => $examDataSourceId, 'status' => self::WEBHOOK_STATUS],
             ['event_key' => 'institution_subject_delete', 'method' => 'DELETE', 'url' => self::WEBHOOK_URL_CUSTOM, 'query_template' => '/institution-subjects', 'body_template' => '', 'external_data_source_id' => $customDataSourceId, 'status' => self::WEBHOOK_STATUS],
 
             ['event_key' => 'student_guardian_create', 'method' => 'POST', 'url' => self::WEBHOOK_URL_CUSTOM, 'query_template' => '/student-guardians', 'body_template' => '', 'external_data_source_id' => $customDataSourceId, 'status' => self::WEBHOOK_STATUS],
-            ['event_key' => 'student_guardian_update', 'method' => 'PATCH', 'url' => self::WEBHOOK_URL_EXAMS, 'query_template' => '/student-guardians/institutions/${id}', 'body_template' => '', 'external_data_source_id' => $examDataSourceId, 'status' => self::WEBHOOK_STATUS],
+            ['event_key' => 'student_guardian_update', 'method' => 'PATCH', 'url' => self::WEBHOOK_URL_EXAMS, 'query_template' => '/student-guardians/${id}', 'body_template' => '', 'external_data_source_id' => $examDataSourceId, 'status' => self::WEBHOOK_STATUS],
             ['event_key' => 'student_guardian_delete', 'method' => 'DELETE', 'url' => self::WEBHOOK_URL_CUSTOM, 'query_template' => '/student-guardians', 'body_template' => '', 'external_data_source_id' => $customDataSourceId, 'status' => self::WEBHOOK_STATUS],
 
         ];
