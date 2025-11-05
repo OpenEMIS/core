@@ -349,6 +349,7 @@ class PerformanceTable extends AppTable
                 $conditions[$gradeTable->aliasField('institution_id IN')] = $institutionIds;
             }
         }
+        //The grade displayed here, how many grades are assigned in the institution_grade table
         $gradeOptions = $this->EducationGrades
                         ->find('list', [
                             'keyField' => 'id',
