@@ -29,6 +29,10 @@ class RenderNoteBehavior extends RenderBehavior
             if (isset($fieldValues[$fieldId]['id'])) {
                 $savedId = $fieldValues[$fieldId]['id'];
             }
+            //POCOR-9349 STARTS
+            if (isset($fieldValues[$fieldId]['textarea_value'])) {
+                $savedValue = $fieldValues[$fieldId]['textarea_value'];
+            }//POCOR-9349 ENDS
         }
         if ($customField->has('description')) {
             $displayValue = $customField->description;
@@ -36,9 +40,14 @@ class RenderNoteBehavior extends RenderBehavior
         // End
 
         if ($action == 'view') {
-            if (!is_null($displayValue)) {
+            //POCOR-9349 STARTS
+            if (!empty($displayValue)) {
                 $value = nl2br($displayValue);
-            }
+            } elseif (!empty($savedValue)) {
+                $value = nl2br($savedValue);
+            } else {
+                $value = '';
+            }//POCOR-9349 ENDS
         } else if ($action == 'edit') {
             $form = $event->getSubject()->Form;
             $unlockFields = [];
