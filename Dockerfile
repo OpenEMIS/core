@@ -26,10 +26,10 @@ COPY ./frontend/ ./
 # Replace the baseUrl
 RUN cp ./src/environments/environment.ts_default ./src/environments/environment.ts &&\
     cp ./src/environments/environment.prod.ts_default ./src/environments/environment.prod.ts &&\
-    sed -i "s|apiV4BaseUrl:.*|apiV4BaseUrl: 'http://localhost:80/core/api/v4'|" ./src/environments/environment.ts &&\
-    sed -i "s|apiV5BaseUrl:.*|apiV5BaseUrl: 'http://localhost:80/core/api/v5'|" ./src/environments/environment.ts &&\
-    sed -i "s|apiV4BaseUrl:.*|apiV4BaseUrl: 'http://localhost:80/core/api/v4'|" ./src/environments/environment.prod.ts &&\
-    sed -i "s|apiV5BaseUrl:.*|apiV5BaseUrl: 'http://localhost:80/core/api/v5'|" ./src/environments/environment.prod.ts
+    sed -i "s|apiV4BaseUrl:.*|apiV4BaseUrl: 'http://localhost:80/core/api/v4',|" ./src/environments/environment.ts &&\
+    sed -i "s|apiV5BaseUrl:.*|apiV5BaseUrl: 'http://localhost:80/core/api/v5',|" ./src/environments/environment.ts &&\
+    sed -i "s|apiV4BaseUrl:.*|apiV4BaseUrl: 'http://localhost:80/core/api/v4',|" ./src/environments/environment.prod.ts &&\
+    sed -i "s|apiV5BaseUrl:.*|apiV5BaseUrl: 'http://localhost:80/core/api/v5',|" ./src/environments/environment.prod.ts
 
 # Install Dependencies
 RUN npm install && \
@@ -64,7 +64,7 @@ COPY . .
 
 # Sets the working directory and update the composer dependencies and autoloads the class file
 WORKDIR /var/www/html/core/api
-RUN composer update && composer dump-autoload
+RUN composer config --global process-timeout 1200 && rm composer.lock && composer install --prefer-source --no-progress --no-interaction && composer dump-autoload
 
 # Sets the Working Direcory
 WORKDIR /var/www/html/core
