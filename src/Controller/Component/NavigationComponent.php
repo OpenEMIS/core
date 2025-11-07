@@ -2861,6 +2861,8 @@ class NavigationComponent extends Component
                         'Configurations.Authentication',
                         'Configurations.AuthSystemAuthentications',
                         'Configurations.CustomValidation',
+                        'Configurations.StaffReleases',//POCOR-9455
+                        'Configurations.StaffTransfers',//POCOR-9455
                         'Configurations.AdministrativeBoundaries',
                         'Configurations.Theme' => [
                             'title' => 'Themes',
