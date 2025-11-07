@@ -1776,7 +1776,6 @@ class InstitutionsTable extends AppTable
                         }
                         /*POCOR-6304 Ends*/
                     }
-
                     $attr['type'] = 'chosenSelect';
                     $attr['onChangeReload'] = true;
                     $attr['attr']['multiple'] = false;
