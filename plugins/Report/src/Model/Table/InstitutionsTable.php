@@ -2202,30 +2202,43 @@ class InstitutionsTable extends AppTable
                     $attr['options'] = ['0' => __('All Periods')] + $periods;
 
                     return $attr;
-                }
+                }   
             }
         }
     }
 
-    public
-    function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+   public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-
         $requestData = json_decode($settings['process']['params']);
         $filter = $requestData->institution_filter;
         $areaId = $requestData->area_education_id;
         $superAdmin = $requestData->super_admin;
         $userId = $requestData->user_id;
-        $where = [];
-        if ($areaId != -1) {
-            $where[$this->aliasField('area_id')] = $areaId;
-        }
+
+        //POCOR-9449 Start
         $query
             ->contain(['Areas', 'AreaAdministratives', 'Statuses'])
-            ->select(['area_code' => 'Areas.code', 'area_administrative_code' => 'AreaAdministratives.code', 'institution_status' => 'Statuses.name'])
-            ->where([$where]);
+            ->select([
+                'area_code' => 'Areas.code',
+                'area_administrative_code' => 'AreaAdministratives.code',
+                'institution_status' => 'Statuses.name'
+            ]);
+
+        // --- Area / Island Filter (No orWhere) ---
+        if ($areaId != -1) {
+            $query->matching('Areas', function ($q) use ($areaId) {
+                return $q->where([
+                    'OR' => [
+                        ['Areas.id' => $areaId],  
+                        ['Areas.parent_id' => $areaId],
+                    ]
+                ]);
+            });
+        }
+        //POCOR-9449 end
+
         switch ($filter) {
-            case self::NO_STUDENT: //POCOR-8794
+            case self::NO_STUDENT: // POCOR-8794
                 $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
                 $academicPeriodId = $requestData->academic_period_id;
 
@@ -2256,8 +2269,12 @@ class InstitutionsTable extends AppTable
             case self::NO_FILTER:
                 break;
         }
+
         if (!$superAdmin) {
-            $query->find('byAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('id')]);
+            $query->find('byAccess', [
+                'user_id' => $userId,
+                'institution_field_alias' => $this->aliasField('id')
+            ]);
         }
     }
 
