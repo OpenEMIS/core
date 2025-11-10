@@ -15,6 +15,8 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
 use Cake\Controller\Component;
+use Cake\Datasource\ConnectionManager; // POCOR-9457
+use Cake\I18n\FrozenTime; // POCOR-9457
 
 
 class StudentTransferOutTable extends InstitutionStudentTransfersTable
@@ -111,7 +113,147 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
             // close other pending SENDING transfer applications (in same education system) if the student is successfully transferred in one school
             $this->rejectPendingTransferRequests($this->getRegistryAlias(), $student);
         }
+        // POCOR-9457 start
+        $statuses = self::getDynamicTableInstance('Student.StudentStatuses')
+            ->findCodeList();
+
+        if (
+            $student->get('student_status_id') == $statuses['TRANSFERRED'] &&
+            $student->isDirty('student_status_id')
+        ) {
+            $this->removeFromOldSecurityGroup(
+                $student->get('student_id'),
+                $student->get('institution_id') // old institution
+            );
+        }
     }
+
+    /**
+     * POCOR-9457
+     * @param $studentId
+     * @param $oldInstitutionId
+     * @return void
+     */
+    protected function removeFromOldSecurityGroup($studentId, $oldInstitutionId)
+    {
+        if (empty($studentId) || empty($oldInstitutionId)) {
+            Log::warning("Missing student ID or previous institution student ID.");
+            return;
+        }
+
+        // Get role and group for old institution
+        $studentRoleId = self::getStudentSecurityRoleId();
+        $oldGroupId = self::getInstitutionSecurityGroupId($oldInstitutionId);
+
+        $securityGroupUsersTbl = self::getDynamicTableInstance('security_group_users');
+
+        $deleted = $securityGroupUsersTbl->deleteAll([
+            'security_user_id' => $studentId,
+            'security_group_id' => $oldGroupId,
+            'security_role_id' => $studentRoleId
+        ]);
+
+        Log::info("Removed $deleted old security group record(s) for student $studentId in institution $oldInstitutionId.");
+    }
+
+    /**
+     * POCOR-9457
+     * @return int
+     */
+    private
+    static function getStudentSecurityRoleId(): int
+    {
+        $securityRolesTbl = self::getDynamicTableInstance('security_roles');
+        $securityRoles = $securityRolesTbl->find()
+            ->where([
+                $securityRolesTbl->aliasField('code') => 'STUDENT',
+            ])->first();
+        $student_role_id = $securityRoles->id;
+        return $student_role_id;
+    }
+
+    /**
+     * POCOR-9457
+     * @param $institution_id
+     * @return integer
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getInstitutionSecurityGroupId($institution_id)
+    {
+        $institutionTbl = self::getDynamicTableInstance('Institution.Institutions');
+        $securityGroupsTbl = self::getDynamicTableInstance('Security.SecurityGroups');
+        $securityGroupInstitutionsTbl = self::getDynamicTableInstance('Security.SecurityGroupInstitutions');
+
+        $institution = $institutionTbl->find()
+            ->where([$institutionTbl->aliasField('id') => $institution_id])
+            ->first();
+
+        if (empty($institution)) {
+            return null;
+        }
+
+        $security_group_id = $institution->security_group_id;
+
+        if ($securityGroupsTbl->exists(['id' => $security_group_id])) {
+            return $security_group_id;
+        }
+
+        // 1 Find a security group with only this institution
+        $subQuery = $securityGroupInstitutionsTbl->find()
+            ->select(['security_group_id' => $securityGroupInstitutionsTbl->aliasField('security_group_id')])
+            ->group($securityGroupInstitutionsTbl->aliasField('security_group_id'))
+            ->having(['COUNT(*) =' => 1])
+            ->matching('Institutions', function ($q) use ($institution_id) {
+                return $q->where(['Institutions.id' => $institution_id]);
+            })
+            ->first();
+
+        if (!empty($subQuery)) {
+            $new_group_id = $subQuery->security_group_id;
+
+            // Update institution to point to this valid group
+            $connection = ConnectionManager::get('default');
+            $updateQuery = 'UPDATE institutions SET security_group_id = ' . $new_group_id . ' WHERE id = ' . $institution_id;
+            $connection->execute($updateQuery);
+
+            return $new_group_id;
+        }
+
+        // 2 No group found — create new one (auto-incremented ID)
+        $newGroup = $securityGroupsTbl->newEntity([
+            'name' => 'Auto-Recovered Group for Institution ' . $institution_id,
+            'created_user_id' => 1,
+            'created' => new FrozenTime('now')
+        ]);
+
+        if (!$securityGroupsTbl->save($newGroup)) {
+            Log::error('Failed to create new security group: ' . print_r($newGroup->getErrors(), true));
+            return null;
+        }
+
+        $new_group_id = $newGroup->id;
+
+        // 3 Link new group to institution
+        $linkEntity = $securityGroupInstitutionsTbl->newEntity([
+            'security_group_id' => $new_group_id,
+            'institution_id' => $institution_id,
+            'created_user_id' => 1,
+            'created' => new FrozenTime('now')
+        ]);
+
+        if (!$securityGroupInstitutionsTbl->save($linkEntity)) {
+            Log::error('Failed to link institution to new group: ' . print_r($linkEntity->getErrors(), true));
+            return null;
+        }
+
+        // 4 Update institution to use new group ID
+        $connection = ConnectionManager::get('default');
+        $updateQuery = 'UPDATE institutions SET security_group_id = ' . $new_group_id . ' WHERE id = ' . $institution_id;
+        $connection->execute($updateQuery);
+
+        return $new_group_id;
+    }
+    // POCOR-9457 end
 
     // POCOR-3649
     public function associated(Event $event, ArrayObject $extra)
