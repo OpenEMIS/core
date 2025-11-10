@@ -980,6 +980,10 @@ class ConfigWebhooksTable extends ControllerActionTable
         }
 
         $url = trim($webhookConfig->url);
+        if (empty($url)) {
+            Log::write('warning', "Invalid URL for webhook [$eventKey]: $url");
+            return;
+        }
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
             Log::write('warning', "Invalid URL for webhook [$eventKey]: $url");
             return;
