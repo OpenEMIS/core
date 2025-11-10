@@ -14,8 +14,8 @@ class POCOR9403 extends AbstractMigration
     const EXTERNAL_DATA_SOURCE_WEBHOOK = 'External Data Source - Webhook';
     const EXTERNAL_DATA_SOURCE_WEBHOOKS_CUSTOM = 'external_data_source_webhooks_custom';
     const EXTERNAL_DATA_SOURCE_WEBHOOKS_EXAMS = 'external_data_source_webhooks_exams';
-    const WEBHOOK_URL_CUSTOM = 'http://flask-webhooks:5000/webhook/custom';
-    const WEBHOOK_URL_EXAMS = 'http://flask-webhooks:5000/webhook/openemis_exam';
+    const WEBHOOK_URL_CUSTOM = '';
+    const WEBHOOK_URL_EXAMS = '';
     const WEBHOOK_STATUS = 0;
 
     public function up()

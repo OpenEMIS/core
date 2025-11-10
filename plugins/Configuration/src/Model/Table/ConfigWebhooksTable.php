@@ -117,7 +117,8 @@ class ConfigWebhooksTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
-            ->contain(['WebhookEvents']);
+//            ->contain(['WebhookEvents'])
+        ;
 
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Administration','Webhooks','System Configurations');
@@ -142,7 +143,9 @@ class ConfigWebhooksTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['WebhookEvents']);
+        $query
+//            ->contain(['WebhookEvents'])
+        ;
     }
 
 //    public function editOnInitialize(Event $event, Entity $entity)
@@ -280,15 +283,17 @@ class ConfigWebhooksTable extends ControllerActionTable
                         ])
                         ->orderAsc('attribute_field')
                         ->toArray();
-                    $api_url = $attributes['api_url'];
-                    if (!empty($attributes) && isset($api_url)) {
-                        $attr['value'] = $api_url;
-                        $attr['attr']['value'] = $api_url;
-                        $attr['default_value'] = $api_url;
-                        $attr['attr']['default_value'] = $api_url;
-                        $attr['type'] = 'readonly';
-//                        return
-                    }
+//                    $api_url = $attributes['api_url'];
+//                    if (!empty($attributes) && isset($api_url)) {
+//                        if(!empty($api_url)){
+//                        $attr['value'] = $api_url;
+//                        $attr['attr']['value'] = $api_url;
+//                        $attr['default_value'] = $api_url;
+//                        $attr['attr']['default_value'] = $api_url;
+//                        $attr['type'] = 'readonly';
+//                        }
+////                        return
+//                    }
 
                 } else {
                     if ($entity->isDirty('url')) {
