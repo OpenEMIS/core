@@ -284,4 +284,50 @@ public function _swaggerDelete() {}
     {
         return $this->hasMany(InstitutionSubjectStudents::class, 'institution_class_id', 'id');
     }
+
+    public function updateStudentCountsIfNeeded(): void
+    {
+        $maleCount = $this->getMaleStudentCount();
+        $femaleCount = $this->getFemaleStudentCount();
+
+        $hasChanged = false;
+
+        if ($this->total_male_students !== $maleCount) {
+            $this->total_male_students = $maleCount;
+            $hasChanged = true;
+        }
+
+        if ($this->total_female_students !== $femaleCount) {
+            $this->total_female_students = $femaleCount;
+            $hasChanged = true;
+        }
+
+        if ($hasChanged) {
+            $this->save();
+        }
+    }
+
+    public function getMaleStudentCount(): int
+    {
+        return $this->students()
+            ->whereHas('securityUser', fn($q) => $q->where('gender_id', 1))
+            ->whereHas('status', fn($q) => $q->whereNotIn('code', ['TRANSFERRED', 'WITHDRAWN']))
+            ->count();
+    }
+
+    public function getFemaleStudentCount(): int
+    {
+        return $this->students()
+            ->whereHas('securityUser', fn($q) => $q->where('gender_id', 2))
+            ->whereHas('status', fn($q) => $q->whereNotIn('code', ['TRANSFERRED', 'WITHDRAWN']))
+            ->count();
+    }
+
+    public static function afterFetchResults($collection)
+    {
+        return $collection->map(function ($class) {
+            $class->updateStudentCountsIfNeeded();
+            return $class;
+        });
+    }
 }
