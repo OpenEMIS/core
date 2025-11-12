@@ -19,6 +19,7 @@ use Cake\Log\Log;
 class ConfigExternalDataWebhookTable extends ControllerActionTable
 {
     const string OPEN_EMIS_EXAMS = 'OpenEMIS Exams';
+    const string OPEN_EMIS_CORE = 'OpenEMIS Core';
     const string EXTERNAL_DATA_WEBHOOK_TYPE = 'External Data Source - Webhook';
     public $id;
     public $authenticationType;
@@ -41,6 +42,17 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
         $data = $requestData[$alias];
         $source = $data['label'];
         if ($source == self::OPEN_EMIS_EXAMS) {
+            return $validator
+                ->requirePresence('api_url')
+//                ->requirePresence('api_key')
+                ->requirePresence('username')
+                ->requirePresence('password')
+                ->notEmptyString('api_url', __('Please enter the API URL'))
+//                ->notEmptyString('api_key', __('Please enter the API Key'))
+                ->notEmptyString('username', __('Please enter the Username'))
+                ->notEmptyString('password', __('Please enter the Password'));
+        }
+        if ($source == self::OPEN_EMIS_CORE) {
             return $validator
                 ->requirePresence('api_url')
                 ->requirePresence('api_key')
@@ -123,6 +135,10 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
                 $this->field('attributes', ['type' => 'custom_external_source']);
                 break;
 
+            case self::OPEN_EMIS_CORE:
+                $this->field('attributes', ['type' => 'custom_external_source']);
+                break;
+
             default:
                 break;
         }
@@ -148,6 +164,10 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
         $visibleAttributes = [];
         switch ($source) {
             case self::OPEN_EMIS_EXAMS:
+                $visibleAttributes = ['api_url',
+                    'username', 'password'];
+                break;
+            case self::OPEN_EMIS_CORE:
                 $visibleAttributes = ['api_url',
                     'username', 'password', 'api_key'];
                 break;
@@ -265,6 +285,13 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
         $this->field('user_endpoint_uri', ['type' => 'hidden']);
         switch ($source) {
             case self::OPEN_EMIS_EXAMS:
+                $this->field('api_url', ['type' => 'string', 'required' => 'required']);
+                $this->field('username', ['type' => 'string', 'required' => 'required']);
+                $this->field('password', ['type' => 'string', 'required' => 'required']);
+//                $this->field('api_key', ['type' => 'string', 'required' => 'required']);
+                break;
+
+            case self::OPEN_EMIS_CORE:
                 $this->field('api_url', ['type' => 'string', 'required' => 'required']);
                 $this->field('username', ['type' => 'string', 'required' => 'required']);
                 $this->field('password', ['type' => 'string', 'required' => 'required']);

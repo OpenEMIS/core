@@ -10,6 +10,9 @@ use Cake\I18n\FrozenTime;
 
 class WebhookCommand extends Command
 {
+    const string OPEN_EMIS_EXAMS = 'OpenEMIS Exams';
+    const string OPEN_EMIS_CORE = 'OpenEMIS CORE';
+
     public function execute(Arguments $args, ConsoleIo $io)
     {
         $io->out('Initialize Webhook Command ('.FrozenTime::now().')...');
@@ -34,25 +37,55 @@ class WebhookCommand extends Command
             $http = new Client();
 
             // Check for username/password/api_key in serverParams
-            if (!empty($serverParams['username']) &&
+            $api_url = $serverParams['api_url'];
+            if (!empty($serverParams['external'])  &&
+                !empty($serverParams['username']) &&
                 !empty($serverParams['password']) &&
-                !empty($serverParams['api_key']) &&
-                !empty($serverParams['api_url'])) {
+                !empty($api_url)) {
 
-                $tokenUri = rtrim($serverParams['api_url'], '/') . "/login";
+                $tokenUri = rtrim($api_url, '/') . "/login";
 
+                $api_key = $serverParams['api_key'];
                 $tokenRequestBody = [
                     'username' => $serverParams['username'],
                     'password' => $serverParams['password'],
-                    'api_key' => $serverParams['api_key']
+                    'api_key' => $api_key ?? ''
                 ];
+                $username = $serverParams['username'];
+                $password = $serverParams['password'];
+                $options = [
+                    'headers' => $headers,
+                    // other options like 'redirect' => true, 'timeout' => 30 etc
+                ];
+                $host = parse_url($tokenUri, PHP_URL_HOST);
+                $tokenUri = $tokenUri . "?username=$username&password=$password";
+                if(isset($api_key) && !empty($api_key)){
+                    $tokenUri = $tokenUri . "&api_key=$api_key";
+                }
+                $insecureHosts = ['127.0.0.1', '::1', 'localhost'];
+                if (in_array($host, $insecureHosts, true)) {
+                    // Disable SSL verification for local dev only
+                    $options['ssl_verify_peer']      = false;
+                    $options['ssl_verify_peer_name'] = false;
+                    // optionally allow self signed certs (some clients respect this)
+                    $options['ssl_allow_self_signed'] = true;
+                }
 
-                $tokenResponse = $http->post($tokenUri, json_encode($tokenRequestBody), [
-                    'headers' => $headers
-                ]);
+//                $io->out(print_r([$host => $tokenUri, $options], true));
+
+//                $tokenResponse = $http->post($tokenUri, $tokenRequestBody, $options);
+//                $decodedResponse = $tokenResponse->getJson();
+//                $io->out("Response Code: " . $tokenResponse->getStatusCode());
+                $tokenResponse = $http->post($tokenUri,
+//                    json_encode($tokenRequestBody),
+                    $tokenRequestBody,
+                    $options);
+//                $io->out(print_r($tokenResponse, true));
 
                 $decodedResponse = $tokenResponse->getJson();
 
+//                $io->out("Response Code: " .$tokenResponse->getStatusCode());
+//                $io->out(print_r($tokenResponse->getJson(), true));
                 if ($tokenResponse->isOk() && isset($decodedResponse['data']['token'])) {
                     $token = $decodedResponse['data']['token'];
                     $headers['Authorization'] = 'Bearer ' . $token;
@@ -63,16 +96,29 @@ class WebhookCommand extends Command
             }
 
             // Perform final request
-//            $io->out("Sending $method request to $url");
-            $response = $http->$method($url, $body, [
-                'headers' => $headers,
-                'timeout' => 60,
-                'type' => 'json'
-            ]);
+            $io->out("Sending $method request to $url");
+            $options = [
+                    'headers' => $headers,
+                    'timeout' => 60,
+                    'type' => 'json'
+                ];
+            $host = parse_url($url, PHP_URL_HOST);
+            $insecureHosts = ['127.0.0.1', '::1', 'localhost'];
+            if (in_array($host, $insecureHosts, true)) {
+                // Disable SSL verification for local dev only
+                $options['ssl_verify_peer']      = false;
+                $options['ssl_verify_peer_name'] = false;
+                // optionally allow self signed certs (some clients respect this)
+                $options['ssl_allow_self_signed'] = true;
+            }
+            $response = $http->$method($url, $body, $options);
+//            $io->out(print_r([$host => $url, $body, $options], true));
+
+//            $io->out(print_r($response, true));
 
             $status = $response->getStatusCode();
 
-//            $io->out("Response Code: " .$status);
+            $io->out("Response Code: " .$status);
 //            $io->out(print_r($response->getJson(), true));
 
             if (in_array($status, [200, 201, 202, 204])) {
