@@ -29,6 +29,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         'DELETE' => 'DELETE'
     ];
     const string OPEN_EMIS_EXAMS = 'OpenEMIS Exams';
+    const string OPEN_EMIS_CORE = 'OpenEMIS Core';
     const array EXCLUDED_FIELDS = ['password', 'security_group_id', 'super_admin', '_condent'];
     private $eventKeyOptions = [
         'logout' => 'Logout',
@@ -951,11 +952,12 @@ class ConfigWebhooksTable extends ControllerActionTable
         return self::getEvents()[$eventKey]['placeholders'] ?? [];
     }
 
-    public function triggerCommand($eventKey, $body = [])
+    public function triggerCommand(string $eventKey, array $body = []): void
     {
         $configItems = self::getDynamicTableInstance('Configuration.ConfigItems');
-//        Log::debug(print_r(['startBody' => $body], true));
-        $webhookConfig = $this->find()
+
+        // 🔍 Fetch ALL active webhook configurations for this event key
+        $webhooks = $this->find()
             ->select([
                 'url' => $this->aliasField('url'),
                 'query_template' => $this->aliasField('query_template'),
@@ -973,117 +975,144 @@ class ConfigWebhooksTable extends ControllerActionTable
                 $this->aliasField('status') => self::ACTIVE,
                 $configItems->aliasField('value') => self::ACTIVE,
             ])
-            ->first();
+            ->all();
 
-        if (empty($webhookConfig)) {
-            return; // No active webhook config found
-        }
-
-        $url = trim($webhookConfig->url);
-        if (empty($url)) {
-            Log::write('warning', "Invalid URL for webhook [$eventKey]: $url");
-            return;
-        }
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            Log::write('warning', "Invalid URL for webhook [$eventKey]: $url");
+        if ($webhooks->isEmpty()) {
+            Log::write('debug', "No active webhooks found for [$eventKey]");
             return;
         }
 
-        $queryTemplate = $webhookConfig->query_template;
-        $bodyTemplate = $webhookConfig->body_template;
-
-        // 🧩 Fill placeholders in query template
-        $queryParams = '';
-        if (!empty($queryTemplate)) {
-            // Substitute placeholders in queryTemplate
-            foreach ($body as $key => $value) {
-                $queryTemplate = str_replace('${' . $key . '}', urlencode((string)$value), $queryTemplate);
+        foreach ($webhooks as $webhookConfig) {
+            $url = trim($webhookConfig->url);
+            if (empty($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
+                Log::warning("Invalid URL for webhook [$eventKey]: $url");
+                continue;
             }
 
-            // If template starts with '?', treat it as query params
-            if (strpos($queryTemplate, '?') === 0) {
-                $queryParams = ltrim($queryTemplate, '?');
-                $url .= (strpos($url, '?') === false ? '?' : '&') . $queryParams;
-            } else {
-                // Otherwise treat it as a REST-style path (may start with / or not)
-                $url = rtrim($url, '/') . '/' . ltrim($queryTemplate, '/');
-            }
-        }
-        $isJsonLikeTemplate = (
-            str_starts_with(trim($bodyTemplate), '{') &&
-            str_ends_with(trim($bodyTemplate), '}')
-        );
+            $queryTemplate = $webhookConfig->query_template ?? '';
+            $bodyTemplate  = $webhookConfig->body_template ?? '';
 
-        // Fill placeholders in body template or use raw body
-        if (!empty($bodyTemplate)) {
+            // 🧩 Build final URL
+            $url = $this->buildWebhookUrl($url, $queryTemplate, $body);
+
+            // 🧱 Build body (JSON / template)
+            $finalBody = $this->prepareFinalWebhookBody($bodyTemplate, $body);
+
+            // 📦 Save JSON body to temp file (if needed)
+            $bodyArg = $this->prepareBodyArgument($finalBody);
+
+            // 🧰 Build shell command
+            $cmd = $this->buildWebhookCommand($webhookConfig, $url, $bodyArg);
+
+            // 🚀 Execute asynchronously
+            $logs = ROOT . DS . 'logs' . DS . 'webhook.log & echo $!';
+            $shellCmd = $cmd . ' >> ' . $logs;
+
             try {
-                $finalBody = $this->interpolateJsonTemplate($bodyTemplate, $body);
-            } catch (\Throwable $e) {
-                Log::error("Invalid bodyTemplate: " . $e->getMessage());
-                $finalBody = $body; // fallback
+                $pid = exec($shellCmd);
+                Log::debug("Webhook triggered [PID: $pid] URL: $url CMD: $shellCmd");
+            } catch (\Throwable $ex) {
+                Log::error("Exception triggering webhook [$eventKey]: " . $ex->getMessage());
             }
-        } else {
-            $finalBody = $body;
-        }
-        if (is_array($finalBody)) {
-            // normal array → save to temp .json file
-//            Log::debug(print_r(['preSan' => $finalBody], true));
-            $finalBody = $this->sanitizeWebhookBody($finalBody);
-//            Log::debug(print_r(['postSan' => $finalBody], true));
-
-            $temp = TMP . 'webhook_' . uniqid('w', true) . '.json';
-            $jsonBody = $this->safeJsonEncode($finalBody);
-//            Log::debug(print_r(['jsonBody' => $jsonBody], true));
-            file_put_contents($temp, $jsonBody);
-            $bodyArg = $temp; // file path
-        } elseif (is_string($finalBody) && str_ends_with($finalBody, '.json') && file_exists($finalBody)) {
-            // already a JSON file path
-            $bodyArg = $finalBody;
-        } else {
-            // fallback: small JSON string
-            $bodyArg = json_encode($finalBody);
-        }
-
-        // Build the shell command safely
-        $escapedBody = escapeshellarg($bodyArg); // ✅ no json_encode() here
-        $cmd = ROOT . DS . 'bin' . DS . 'cake webhook ' . escapeshellarg($url) . ' ' .
-            escapeshellarg($webhookConfig->method ?? 'post') . ' ' . $escapedBody;
-
-        // Check if we need to include server params (for OpenEMIS Exams)
-        if ($webhookConfig->external_data_webhook_name === self::OPEN_EMIS_EXAMS) {
-            $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
-            $attributes = $ExternalAttributes
-                ->find('list', [
-                    'keyField' => 'attribute_field',
-                    'valueField' => 'value'
-                ])
-                ->where([$ExternalAttributes->aliasField('external_data_source_type') => self::OPEN_EMIS_EXAMS])
-                ->toArray();
-
-            if (!empty($attributes['username']) && !empty($attributes['password']) && !empty($attributes['api_key'])) {
-                $serverParams = [
-                    'username' => $attributes['username'],
-                    'password' => $attributes['password'],
-                    'api_key' => $attributes['api_key'],
-                    'api_url' => $attributes['api_url'] // or use fixed API base if needed
-                ];
-
-                $escapedParams = escapeshellarg(json_encode($serverParams));
-                $cmd .= ' ' . $escapedParams;
-            }
-        }
-
-        // 📝 Log and run the command
-        $logs = ROOT . DS . 'logs' . DS . 'webhook.log & echo $!';
-        $shellCmd = $cmd . ' >> ' . $logs;
-
-        try {
-            $pid = exec($shellCmd); // fire-and-forget
-            Log::write('debug', "Webhook triggered [PID: $pid] CMD: $shellCmd");
-        } catch (Exception $ex) {
-            Log::write('error', __METHOD__ . ' exception when triggering: ' . $ex->getMessage());
         }
     }
+
+    /**
+     * Helper to fill placeholders and build URL
+     */
+    protected function buildWebhookUrl(string $baseUrl, ?string $queryTemplate, array $body): string
+    {
+        if (empty($queryTemplate)) {
+            return $baseUrl;
+        }
+
+        foreach ($body as $key => $value) {
+            $queryTemplate = str_replace('${' . $key . '}', urlencode((string)$value), $queryTemplate);
+        }
+
+        if (strpos($queryTemplate, '?') === 0) {
+            $queryParams = ltrim($queryTemplate, '?');
+            $baseUrl .= (strpos($baseUrl, '?') === false ? '?' : '&') . $queryParams;
+        } else {
+            $baseUrl = rtrim($baseUrl, '/') . '/' . ltrim($queryTemplate, '/');
+        }
+
+        return $baseUrl;
+    }
+
+    /**
+     * Helper to build the request body
+     */
+    protected function prepareFinalWebhookBody(?string $template, array $body)
+    {
+        if (empty($template)) {
+            return $body;
+        }
+
+        try {
+            return $this->interpolateJsonTemplate($template, $body);
+        } catch (\Throwable $e) {
+            Log::error("Invalid bodyTemplate: " . $e->getMessage());
+            return $body;
+        }
+    }
+
+    /**
+     * Helper to determine how to pass the body (file or JSON)
+     */
+    protected function prepareBodyArgument($finalBody)
+    {
+        if (is_array($finalBody)) {
+            $finalBody = $this->sanitizeWebhookBody($finalBody);
+            $temp = TMP . 'webhook_' . uniqid('w', true) . '.json';
+            file_put_contents($temp, $this->safeJsonEncode($finalBody));
+            return $temp;
+        }
+
+        if (is_string($finalBody) && str_ends_with($finalBody, '.json') && file_exists($finalBody)) {
+            return $finalBody;
+        }
+
+        return json_encode($finalBody);
+    }
+
+    /**
+     * Helper to assemble the shell command with optional credentials
+     */
+    protected function buildWebhookCommand($webhookConfig, string $url, string $bodyArg): string
+    {
+        $escapedBody = escapeshellarg($bodyArg);
+        $cmd = ROOT . DS . 'bin' . DS . 'cake webhook ' .
+            escapeshellarg($url) . ' ' .
+            escapeshellarg($webhookConfig->method ?? 'post') . ' ' .
+            $escapedBody;
+        // Include credentials if needed
+        if (in_array($webhookConfig->external_data_webhook_name, [self::OPEN_EMIS_EXAMS, self::OPEN_EMIS_CORE], true)) {
+            $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+            $attributes = $ExternalAttributes->find('list', [
+                'keyField' => 'attribute_field',
+                'valueField' => 'value'
+            ])
+                ->where([$ExternalAttributes->aliasField('external_data_source_type') => $webhookConfig->external_data_webhook_name])
+                ->toArray();
+
+            if (!empty($attributes['username'])
+                && !empty($attributes['password'])
+                ) {
+                $serverParams = [
+                    'external' => $webhookConfig->external_data_webhook_name,
+                    'username' => $attributes['username'],
+                    'password' => $attributes['password'],
+                    'api_key'  => $attributes['api_key'] ?? '',
+                    'api_url'  => $attributes['api_url'] ?? ''
+                ];
+                $cmd .= ' ' . escapeshellarg(json_encode($serverParams));
+            }
+        }
+
+        return $cmd;
+    }
+
 
     private function safeJsonEncode($data): string
     {
