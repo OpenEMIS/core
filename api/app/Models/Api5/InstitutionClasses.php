@@ -285,6 +285,10 @@ public function _swaggerDelete() {}
         return $this->hasMany(InstitutionSubjectStudents::class, 'institution_class_id', 'id');
     }
 
+    /**
+     * POCOR-9461 start
+     * @return void
+     */
     public function updateStudentCountsIfNeeded(): void
     {
         $maleCount = $this->getMaleStudentCount();
@@ -330,4 +334,5 @@ public function _swaggerDelete() {}
             return $class;
         });
     }
+    // POCOR-9461 end
 }

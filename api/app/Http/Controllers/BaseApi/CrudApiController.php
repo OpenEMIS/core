@@ -1322,7 +1322,7 @@ class CrudApiController extends Controller
                 return $this->errorResponse('Record not found', 404);
             }
 
-            // 👇 Apply afterFetchResults to single record if available
+            // POCOR-9461: Apply afterFetchResults to single record if available
             if (method_exists($model, 'afterFetchResults')) {
                 $record = $model::afterFetchResults(collect([$record]))->first();
             }
@@ -1334,7 +1334,7 @@ class CrudApiController extends Controller
         try {
             $results = $query->paginate($limit, ['*'], 'page', $page);
 
-            // 👇 Apply afterFetchResults to the collection inside paginator
+            // POCOR-9461: Apply afterFetchResults to the collection inside paginator
             if (method_exists($model, 'afterFetchResults')) {
                 $updated = $model::afterFetchResults($results->getCollection());
                 $results->setCollection($updated);
