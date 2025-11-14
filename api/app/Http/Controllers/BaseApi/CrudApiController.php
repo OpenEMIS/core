@@ -1314,34 +1314,39 @@ class CrudApiController extends Controller
         return $query;
     }
 
-    /**
-     * Paginate the results of the query.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param int $limit
-     * @param int $page
-     * @return \Illuminate\Http\JsonResponse
-     */
     private function paginateResults($query, $limit, $page, $model, $segments)
     {
-
         if (count($segments) === 1 && $this->isValidIdentifier($segments[0])) {
             $record = $this->findRecord($model, $segments);
             if (!$record) {
                 return $this->errorResponse('Record not found', 404);
             }
+
+            // POCOR-9461: Apply afterFetchResults to single record if available
+            if (method_exists($model, 'afterFetchResults')) {
+                $record = $model::afterFetchResults(collect([$record]))->first();
+            }
+
             return $this->successResponse('Record retrieved successfully.', $record);
         }
 
         // Proceed with pagination if no single valid identifier is found
         try {
             $results = $query->paginate($limit, ['*'], 'page', $page);
+
+            // POCOR-9461: Apply afterFetchResults to the collection inside paginator
+            if (method_exists($model, 'afterFetchResults')) {
+                $updated = $model::afterFetchResults($results->getCollection());
+                $results->setCollection($updated);
+            }
+
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 404);
         }
 
         return $this->successResponse('Data retrieved successfully.', $results);
     }
+
 
 
     /**
