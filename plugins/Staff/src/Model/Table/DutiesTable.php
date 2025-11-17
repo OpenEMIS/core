@@ -2,7 +2,7 @@
 namespace Staff\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
@@ -39,7 +39,7 @@ class DutiesTable extends ControllerActionTable
         return $events;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'academic_period_id') {
             return __('Academic Period');
@@ -54,7 +54,7 @@ class DutiesTable extends ControllerActionTable
         }
     }
     
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder(['academic_period_id','institution_id', 'staff_duties_id',  'comment']);
         $this->field('staff_id', ['type' => 'hidden']);
@@ -79,7 +79,7 @@ class DutiesTable extends ControllerActionTable
 		// End POCOR-5188
     }
   
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options = ['type' => 'staff'];
         $tabElements = $this->getCareerTabElements($options);

@@ -3,7 +3,7 @@ namespace ControllerAction\View\Helper;
 
 use ArrayObject;
 use Cake\View\UrlHelper;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\View\Helper;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -103,7 +103,7 @@ class HtmlFieldHelper extends Helper
         $html = '';
 
         if (is_null($this->table)) {
-            $this->table = TableRegistry::get($attr['className']);
+            $this->table = TableRegistry::getTableLocator()->get($attr['className']);
         }
 
         // trigger event for custom field types
@@ -629,7 +629,7 @@ class HtmlFieldHelper extends Helper
 
         if ($action == 'index' || $action == 'view') {
             if (!is_null($value)) {
-                $table = TableRegistry::get($attr['className']);
+                $table = TableRegistry::getTableLocator()->get($attr['className']);
                 $event = new Event('ControllerAction.Model.onFormatDateTime', $this, compact('value'));
                 $event = $table->getEventManager()->dispatch($event);
                 if (strlen($event->getResult()) > 0) {
@@ -654,7 +654,7 @@ class HtmlFieldHelper extends Helper
         $defaultDate = true;
 
         if (isset($attr['className'])) {
-            $table = TableRegistry::get($attr['className']);
+            $table = TableRegistry::getTableLocator()->get($attr['className']);
             $schema = $table->getSchema();
             $columnAttr = $schema->getColumn($field);
             if ($columnAttr['null'] == true) {
@@ -757,7 +757,7 @@ class HtmlFieldHelper extends Helper
 
         if ($action == 'index' || $action == 'view') {
             if (!is_null($value)) {
-                $table = TableRegistry::get($attr['className']);
+                $table = TableRegistry::getTableLocator()->get($attr['className']);
                 $event = new Event('ControllerAction.Model.onFormatTime', $this, compact('value'));
                 $event = $table->getEventManager()->dispatch($event);
                 if (strlen($event->getResult()) > 0) {
@@ -835,7 +835,7 @@ class HtmlFieldHelper extends Helper
             'type' => 'select'
         ];
 
-        $Locales = TableRegistry::get('Locales');
+        $Locales = TableRegistry::getTableLocator()->get('Locales');
         $langDir = $Locales->getLangDir(I18n::locale());
 
         if ($langDir == 'rtl') {
@@ -877,7 +877,7 @@ class HtmlFieldHelper extends Helper
     public function binary($action, Entity $data, $attr, $options = [])
     {
         $value = '';
-        $table = TableRegistry::get($attr['className']);
+        $table = TableRegistry::getTableLocator()->get($attr['className']);
         $fileUpload = $table->behaviors()->get('FileUpload');
         $name = '&nbsp;';
         if (!empty($fileUpload)) {

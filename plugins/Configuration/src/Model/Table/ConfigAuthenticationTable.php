@@ -2,7 +2,7 @@
 namespace Configuration\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
@@ -27,7 +27,7 @@ class ConfigAuthenticationTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('search', false);
 
-        $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
+        $optionTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItemOptions');
 
         $this->options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
             ->where([
@@ -47,7 +47,7 @@ class ConfigAuthenticationTable extends ControllerActionTable
                 ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $extra['elements']['controls'] = $this->buildSystemConfigFilters($this->action);
         $extra['config']['selectedLink'] = ['controller' => 'Configurations', 'action' => 'index'];
@@ -93,13 +93,13 @@ class ConfigAuthenticationTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldValue(EventInterface $event, array $attr, $action, ServerRequest $request)
     {   //POCOR-7156 starts
         if (in_array($action, ['edit', 'add'])) {
             $id= $this->paramsDecode($request->getParam('pass')[1]); //POCOR-8680
             if (!empty($id)) {
                 $entity = $this->get($id);
-                $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
+                $optionTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItemOptions');
                 if ($entity->field_type == 'Dropdown' && $entity->option_type == 'yes_no') {
                     $this->options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
                         ->where([
@@ -124,30 +124,30 @@ class ConfigAuthenticationTable extends ControllerActionTable
         return $attr;
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->fields['type']['attr']['value'] = __($entity->type);
         $this->fields['label']['attr']['value'] = __($entity->label);
     }
 
-    public function onGetType(Event $event, Entity $entity)
+    public function onGetType(EventInterface $event, Entity $entity)
     {
         return __($entity->type);
     }
 
-    public function onGetLabel(Event $event, Entity $entity)
+    public function onGetLabel(EventInterface $event, Entity $entity)
     {
         return __($entity->label);
     }
     //POCOR-7156 starts
-    public function onGetName(Event $event, Entity $entity)
+    public function onGetName(EventInterface $event, Entity $entity)
     {
         if($entity->code == 'enable_local_login'){
             return __('Authentication Provider');
         }
     }//POCOR-7156 ends
 
-    public function onGetValue(Event $event, Entity $entity)
+    public function onGetValue(EventInterface $event, Entity $entity)
     {   //POCOR-7156 starts
         if($entity->code == 'enable_local_login'){
             return __('Local');
@@ -162,7 +162,7 @@ class ConfigAuthenticationTable extends ControllerActionTable
         }
     }
 
-    public function onGetDefaultValue(Event $event, Entity $entity)
+    public function onGetDefaultValue(EventInterface $event, Entity $entity)
     {
         if($entity->code == 'enable_local_login'){
             return __($this->options[$entity->default_value]);
@@ -175,7 +175,7 @@ class ConfigAuthenticationTable extends ControllerActionTable
         }
     }
     //POCOR-7156 starts
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->find('visible')

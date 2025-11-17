@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
 
@@ -38,7 +38,7 @@ class CommitteeAttachmentsTable extends ControllerActionTable
 
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => true]);
         $this->field('file_content', ['type' => 'binary', 'visible' => false]);
@@ -85,7 +85,7 @@ class CommitteeAttachmentsTable extends ControllerActionTable
 ** index action logics
 **
 ******************************************************************************************************************/
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         
         $this->field('file_content', ['visible' => false]);
@@ -95,7 +95,7 @@ class CommitteeAttachmentsTable extends ControllerActionTable
         ]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         
         $queryString = $this->paramsDecode($this->request->getQuery('queryString'));
@@ -104,7 +104,7 @@ class CommitteeAttachmentsTable extends ControllerActionTable
       
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('file_content', ['type' => 'binary', 'visible' => true]);
         $this->field('file_name', ['visible' => false]);
@@ -115,7 +115,7 @@ class CommitteeAttachmentsTable extends ControllerActionTable
         $this->field('institution_committee_id',['type'=>'hidden','value'=>$institutionCommitteeId]);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_content', ['type' => 'binary', 'visible' => true]);
         $this->field('file_name', ['visible' => false]);
@@ -137,7 +137,7 @@ class CommitteeAttachmentsTable extends ControllerActionTable
 ** adding download button to index page
 **
 ******************************************************************************************************************/
-    // public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    // public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     // {
     //     $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
     //     ///echo '<pre>';print_r($entity->id);die;

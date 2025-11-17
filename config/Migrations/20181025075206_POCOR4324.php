@@ -171,7 +171,7 @@ class POCOR4324 extends AbstractMigration
 
         $dateData = [];
         $institutionClassesList = []; // class_id - institution_id pair
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
 
         for ($j = 1; $j < $recordLoop; ++$j) {
             $dateData = [];
@@ -240,7 +240,7 @@ class POCOR4324 extends AbstractMigration
         /* old migration patch - memory exhaust
             $institutionClassesList = []; // class_id - institution_id pair
             $dateData = [];
-            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
             $records = $this->fetchAll('SELECT * FROM `institution_class_attendance_records`');
             if (count($records) > 0) {
                 foreach ($records as $value) {
@@ -478,9 +478,9 @@ class POCOR4324 extends AbstractMigration
         // ];
 
         // flatten to single day and insert 
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
 
         $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
         $daysPerWeek = $ConfigItems->value('days_per_week');

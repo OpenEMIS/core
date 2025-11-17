@@ -20,12 +20,12 @@ class EmailAllExcelReportCardsShell extends Shell
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('SystemProcesses');
-        $this->loadModel('ReportCard.ReportCardEmailProcesses');
-        $this->loadModel('Institution.InstitutionStudentsReportCards');
-        $this->loadModel('Email.EmailProcesses');
-        $this->loadModel('Email.EmailProcessAttachments');
-        $this->loadModel('Email.EmailTemplates');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
+        $this->ReportCardEmailProcesses = $this->fetchTable('ReportCard.ReportCardEmailProcesses');
+        $this->InstitutionStudentsReportCards = $this->fetchTable('Institution.InstitutionStudentsReportCards');
+        $this->EmailProcesses = $this->fetchTable('Email.EmailProcesses');
+        $this->EmailProcessAttachments = $this->fetchTable('Email.EmailProcessAttachments');
+        $this->EmailTemplates = $this->fetchTable('Email.EmailTemplates');
     }
 
     public function main()
@@ -224,7 +224,7 @@ class EmailAllExcelReportCardsShell extends Shell
     {
         $subject = '';
 
-        $ReportCardEmailTable = TableRegistry::get('ReportCard.ReportCardEmail');
+        $ReportCardEmailTable = TableRegistry::getTableLocator()->get('ReportCard.ReportCardEmail');
         $modelAlias = $ReportCardEmailTable->registryAlias();
         $availablePlaceholders = $ReportCardEmailTable->getPlaceholders();
         //print_r($availablePlaceholders); die;
@@ -242,7 +242,7 @@ class EmailAllExcelReportCardsShell extends Shell
     {
         $message = '';
 
-        $ReportCardEmailTable = TableRegistry::get('ReportCard.ReportCardEmail');
+        $ReportCardEmailTable = TableRegistry::getTableLocator()->get('ReportCard.ReportCardEmail');
         $modelAlias = $ReportCardEmailTable->registryAlias();
         $availablePlaceholders = $ReportCardEmailTable->getPlaceholders();
         $reportCardId = $studentsReportCardEntity->report_card_id;

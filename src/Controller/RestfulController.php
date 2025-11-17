@@ -3,7 +3,7 @@ namespace App\Controller;
 
 use Exception;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -15,7 +15,6 @@ use Cake\Core\Configure;
 use Firebase\JWT\JWT;
 use Restful\Controller\RestfulController as BaseController;
 use Page\Traits\EncodingTrait;
-use Cake\Event\EventInterface;
 
 class RestfulController extends BaseController
 {

@@ -2,7 +2,7 @@
 namespace Configuration\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
@@ -21,7 +21,7 @@ class ConfigCustomValidationTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('visible', ['visible' => false]);
         $this->field('editable', ['visible' => false]);
@@ -40,17 +40,17 @@ class ConfigCustomValidationTable extends ControllerActionTable
     }
 
     // to trim white space "    aaaaa   " to "aaaaa"
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $entity->value = trim($entity->value);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('type') => 'Custom Validation']);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'value') {
             return __('Validation Pattern');

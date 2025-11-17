@@ -4,7 +4,7 @@ namespace Education\Controller;
 
 use ArrayObject;
 use App\Controller\AppController;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Table;
 
 class EducationsController extends AppController {
@@ -63,7 +63,7 @@ class EducationsController extends AppController {
         }
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra) {
         $header = __('Education');
         //POCOR-5696 start
         if($this->request->getParam('action') == 'CopySystems'){

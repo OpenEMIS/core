@@ -16,6 +16,22 @@
  */
 $versionFile = file(dirname(__DIR__) . '/VERSION.txt');
 
+// Handle case where VERSION.txt doesn't exist (shouldn't happen, but prevent fatal errors)
+if ($versionFile === false || !is_array($versionFile) || empty($versionFile)) {
+    // Fallback: try to get version from composer.json
+    $composerPath = dirname(__DIR__) . '/composer.json';
+    $version = '5.2.0'; // Default fallback
+    if (file_exists($composerPath)) {
+        $composer = json_decode(file_get_contents($composerPath), true);
+        if (isset($composer['version'])) {
+            $version = $composer['version'];
+        }
+    }
+    return [
+        'Cake.version' => $version,
+    ];
+}
+
 return [
     'Cake.version' => trim(array_pop($versionFile)),
 ];

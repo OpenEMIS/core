@@ -1,7 +1,7 @@
 <?php
 namespace Institution\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Page\Model\Entity\PageElement;
 
@@ -17,7 +17,7 @@ class InstitutionContactPersonsController extends PageController
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('Institution.InstitutionContactPersons');
+        $this->InstitutionContactPersons = $this->fetchTable('Institution.InstitutionContactPersons');
 
         $this->preferredOptions = $this->getSelectOptions('general.yesno');
     }
@@ -92,7 +92,7 @@ class InstitutionContactPersonsController extends PageController
             ->setOptions($this->preferredOptions);
     }
 
-    public function onRenderPreferred(Event $event, Entity $entity, PageElement $element)
+    public function onRenderPreferred(EventInterface $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
         if ($page->is(['index', 'view', 'delete'])) {

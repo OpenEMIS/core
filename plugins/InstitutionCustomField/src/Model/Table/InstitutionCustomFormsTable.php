@@ -3,7 +3,7 @@ namespace InstitutionCustomField\Model\Table;
 
 use ArrayObject;
 use CustomField\Model\Table\CustomFormsTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;//POCOR-8538 
@@ -32,7 +32,7 @@ class InstitutionCustomFormsTable extends CustomFormsTable {
 		parent::initialize($config);
 	}
 
-	public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, ServerRequest $request) {
+	public function onUpdateFieldCustomModuleId(EventInterface $event, array $attr, $action, ServerRequest $request) {
 		$selectedModuleId = $this->request->getQuery('module');
 		$plugin_name = $this->request->getAttribute('params')['plugin'];
 		if($plugin_name == 'InstitutionCustomField'){
@@ -60,7 +60,7 @@ class InstitutionCustomFormsTable extends CustomFormsTable {
 		return $query->where([$this->CustomModules->aliasField('code'). ' IN' => ['Institution', 'Institution > Classes']]);//POCOR-8538
 	}
 
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+	public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'custom_module_id') {
             return __('Custom Module');
@@ -87,13 +87,13 @@ class InstitutionCustomFormsTable extends CustomFormsTable {
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 	//POCOR-8538 start
-	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+	public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
 		if($this->request->getQuery('module')){
 			$module = $this->CustomModules

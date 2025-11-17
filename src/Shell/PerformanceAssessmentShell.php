@@ -31,7 +31,7 @@ class PerformanceAssessmentShell extends Shell
     {
         $canCopy = false;
 
-        $AssessmentTable = TableRegistry::get('Assessment.Assessments');
+        $AssessmentTable = TableRegistry::getTableLocator()->get('Assessment.Assessments');
         $count = $AssessmentTable->find()->where([$AssessmentTable->aliasField('academic_period_id') => $copyTo])->count();
         // can copy if no assessment created in current acedemic period before
         if ($count == 0) {
@@ -48,11 +48,11 @@ class PerformanceAssessmentShell extends Shell
     private function copyProcess($copyFrom, $copyTo)
     {
         try {
-            $AssessmentTable = TableRegistry::get('Assessment.Assessments');
-            $AssessmentItemsTable = TableRegistry::get('assessment_items');
-            $AssessmentPeriodsTable = TableRegistry::get('Assessment.AssessmentPeriods');
-            $AssessmentItemGradingTypesTable = TableRegistry::get('assessment_items_grading_types');
-            $ExcludedSecurityRolesTable = TableRegistry::get('assessment_period_excluded_security_roles');
+            $AssessmentTable = TableRegistry::getTableLocator()->get('Assessment.Assessments');
+            $AssessmentItemsTable = TableRegistry::getTableLocator()->get('assessment_items');
+            $AssessmentPeriodsTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentPeriods');
+            $AssessmentItemGradingTypesTable = TableRegistry::getTableLocator()->get('assessment_items_grading_types');
+            $ExcludedSecurityRolesTable = TableRegistry::getTableLocator()->get('assessment_period_excluded_security_roles');
             $connection = ConnectionManager::get('default');
             //POCOR-7723 start
             $assessment_res = $AssessmentTable->find()->where([$AssessmentTable->aliasField('academic_period_id') => $copyFrom])->toArray();

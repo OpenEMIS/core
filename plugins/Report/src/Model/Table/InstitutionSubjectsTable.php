@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\ORM\Table; // POCOR-8157
@@ -28,14 +28,14 @@ class InstitutionSubjectsTable extends AppTable  {
         $this->addBehavior('Report.AreaList');//POCOR-7794
     }
 
-    public function beforeAction(Event $event) {
+    public function beforeAction(EventInterface $event) {
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
     }
 
     //POCOR-8999 changes in logic for count.
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -185,7 +185,7 @@ class InstitutionSubjectsTable extends AppTable  {
 
 
     //POCOR-8157 refactored
-    public function onExcelBeforeQueryOld(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQueryOld(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -431,13 +431,13 @@ class InstitutionSubjectsTable extends AppTable  {
         ];
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, $request)
     {
             $attr['options'] = $this->controller->getFeatureOptions('Institutions');
             return $attr;
     }
 
-    public function onExcelGetStaffName(Event $event, Entity $entity)
+    public function onExcelGetStaffName(EventInterface $event, Entity $entity)
     {
         $InstitutionSubjects = self::getDynamicTableInstance('Report.InstitutionSubjects');
         $InstitutionClassSubjects = self::getDynamicTableInstance('Institution.InstitutionClassSubjects');
@@ -487,7 +487,7 @@ class InstitutionSubjectsTable extends AppTable  {
         return implode(',', $staffName);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         foreach ($fields as $key => $value) {
             if ($value['field'] == 'education_subject_id') {

@@ -3,7 +3,7 @@ namespace Import\Model\Behavior;
 
 use ArrayObject;
 use PHPExcel_Worksheet;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
@@ -33,16 +33,16 @@ class ImportUserBehavior extends Behavior {
 		$model = $this->config('model');
 
 		$prefix_key = strtolower(Inflector::singularize($model)).'_prefix';
-		$prefix = TableRegistry::get('Configuration.ConfigItems')->value($prefix_key);
+		$prefix = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value($prefix_key);
 		$prefix = explode(",", $prefix);
 		$prefix = (isset($prefix[1]) && $prefix[1]>0) ? $prefix[0] : '';
 		$this->config('prefix', $prefix);
 
 	    // register the Users table once
-		$this->Users = TableRegistry::get('User.Users');
+		$this->Users = TableRegistry::getTableLocator()->get('User.Users');
 	}
 
-	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
+	public function onImportUpdateUniqueKeys(EventInterface $event, ArrayObject $importedUniqueCodes, Entity $entity) {
 		$importedUniqueCodes[] = $entity->openemis_no;
 	}
 
@@ -59,12 +59,12 @@ class ImportUserBehavior extends Behavior {
 		return $val;
 	}
 
-	public function onImportPopulateAreaAdministrativesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+	public function onImportPopulateAreaAdministrativesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
 		if (!empty($data[$sheetName])) {
 			return true;
 		}
 
-		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+		$lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
 		$modelData = $lookedUpTable->find('all')
 								->select(['name', $lookupColumn])
 								->order($lookupModel.'.area_administrative_level_id', $lookupModel.'.order')
@@ -82,8 +82,8 @@ class ImportUserBehavior extends Behavior {
 		}
 	}
 
-	public function onImportPopulateGendersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
-		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+	public function onImportPopulateGendersData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+		$lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
 		$modelData = $lookedUpTable->find('all')
 								->select(['name', $lookupColumn])
 								->order([$lookupModel.'.order'])

@@ -2,7 +2,7 @@
 namespace App\Controller;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
@@ -24,7 +24,7 @@ class PreferencesController extends AppController {
         return $events;
     }
 
-    public function isActionIgnored(Event $event, $action)
+    public function isActionIgnored(EventInterface $event, $action)
     {
         return true;
     }
@@ -51,7 +51,7 @@ class PreferencesController extends AppController {
 		$this->set('contentHeader', $header);
 	}
 
-	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+	public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra) {
 		if (!is_null($this->activeObj)) {
 			if ($model->hasField('security_user_id') && !is_null($this->activeObj)) {
 				$model->fields['security_user_id']['type'] = 'hidden';
@@ -65,7 +65,7 @@ class PreferencesController extends AppController {
 		return $this->redirect(['plugin' => false, 'controller' => $this->name, 'action' => 'Preferences', 'view', $this->ControllerAction->paramsEncode(['id' => $userId])]);
 	}
 
-	public function beforePaginate(Event $event, $model, Query $query, ArrayObject $options) {
+	public function beforePaginate(EventInterface $event, $model, Query $query, ArrayObject $options) {
 		$user = $this->Auth->user();
 		if (isset($user['id'])) {
 			$userId = $user['id'];
@@ -77,7 +77,7 @@ class PreferencesController extends AppController {
 		}
 	}
 
-    public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {
+    public function beforeQuery(EventInterface $event, Table $model, Query $query, ArrayObject $extra) {
         $this->beforePaginate($event, $model, $query, $extra);
     }
 }

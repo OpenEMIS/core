@@ -29,7 +29,7 @@ class RiskShell extends Shell
     {
         $canCopy = false;
 
-        $RiskTable = TableRegistry::get('Institution.Risks');
+        $RiskTable = TableRegistry::getTableLocator()->get('Institution.Risks');
         $count = $RiskTable->find()->where([$RiskTable->aliasField('academic_period_id') => $copyTo])->count();
         // can copy if no risk created in current acedemic period before
         if ($count == 0) {
@@ -42,7 +42,7 @@ class RiskShell extends Shell
     private function copyProcess($copyFrom, $copyTo)
     {
         try {
-            $RiskTable = TableRegistry::get('Institution.Risks');
+            $RiskTable = TableRegistry::getTableLocator()->get('Institution.Risks');
             $connection = ConnectionManager::get('default');     
             $risk_res = $connection->execute('SELECT * FROM risks WHERE academic_period_id="'.$copyFrom.'"');
             $RiskData = $risk_res->fetchAll('assoc');

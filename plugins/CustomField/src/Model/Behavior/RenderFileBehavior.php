@@ -3,7 +3,7 @@ namespace CustomField\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use CustomField\Model\Behavior\RenderBehavior;
 use Cake\Http\Session;
 use Cake\Log\Log;
@@ -57,7 +57,7 @@ class RenderFileBehavior extends RenderBehavior
         return $events;
     }
 
-    public function onGetCustomFileElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomFileElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         $value = '';
 
@@ -176,12 +176,12 @@ class RenderFileBehavior extends RenderBehavior
         return $value;
     }
 
-    public function onUpdateIncludes(Event $event, ArrayObject $includes, $action)
+    public function onUpdateIncludes(EventInterface $event, ArrayObject $includes, $action)
     {
         $includes['jasny']['include'] = true;
     }
 
-    public function onFileInitialize(Event $event, Entity $entity, ArrayObject $settings)
+    public function onFileInitialize(EventInterface $event, Entity $entity, ArrayObject $settings)
     {
         $fieldKey = $settings['fieldKey'];
         $customValue = $settings['customValue'];
@@ -198,7 +198,7 @@ class RenderFileBehavior extends RenderBehavior
         $session->write($sessionKey, $parseFileData);
     }
 
-    public function patchFileValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
+    public function patchFileValues(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
     {
         $fieldKey = $settings['fieldKey'];
         $customValue = $settings['customValue'];
@@ -272,7 +272,7 @@ class RenderFileBehavior extends RenderBehavior
      *
      * @return mixed Result of the delegated file processing method.
      */
-    public function processFileValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
+    public function processFileValues(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
     {
         $fieldKey    = $settings['fieldKey'];
         $customValue = $settings['customValue'];
@@ -301,7 +301,7 @@ class RenderFileBehavior extends RenderBehavior
     }
 
     //POCOR-9407  
-    public function processFileExist(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
+    public function processFileExist(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
     {
         $settings['valueKey'] = 'file';
 
@@ -333,7 +333,7 @@ class RenderFileBehavior extends RenderBehavior
     }
 
     //POCOR-9407
-    public function processFileNewRequest(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
+    public function processFileNewRequest(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
     {
         $settings['valueKey'] = 'file';
 
@@ -490,7 +490,7 @@ class RenderFileBehavior extends RenderBehavior
     }
 
 
-    /*public function patchFileValuesbkp(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
+    /*public function patchFileValuesbkp(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
     {
         $fieldKey = $settings['fieldKey'];
         $customValue = $settings['customValue'];
@@ -536,7 +536,7 @@ class RenderFileBehavior extends RenderBehavior
         $settings['customValue'] = $customValue;
     }*/
 
-    /*public function processFileValuesbkp(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
+    /*public function processFileValuesbkp(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
     {
         $settings['valueKey'] = 'text_value';
 

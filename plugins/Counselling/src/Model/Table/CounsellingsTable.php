@@ -5,7 +5,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 use App\Model\Table\AppTable;
 
@@ -34,7 +34,7 @@ class CounsellingsTable extends AppTable
         return $events;
     }
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'download' || $action == 'image') {
             // check for the user permission to download here
@@ -70,7 +70,7 @@ class CounsellingsTable extends AppTable
     public function getCounselorOptions($institutionId)
     {
         // get the staff that assigned from the institution from security user
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
 
         $counselorOptions = $this->Counselors
             ->find('list', [

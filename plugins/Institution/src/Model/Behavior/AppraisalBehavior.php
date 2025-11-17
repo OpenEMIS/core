@@ -6,7 +6,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Utility\Hash;
 use Cake\Chronos\Date;
@@ -35,7 +35,7 @@ class AppraisalBehavior extends Behavior
         return $events;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
         $model->field('staff_id', ['visible' => false]);
@@ -46,7 +46,7 @@ class AppraisalBehavior extends Behavior
         $model->setFieldOrder(['appraisal_type_id', 'appraisal_form_id', 'appraisal_period_from', 'appraisal_period_to', 'date_appraised']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $model = $this->_table;
         // determine if download button is shown
@@ -73,7 +73,7 @@ class AppraisalBehavior extends Behavior
         $model->setupFieldOrder();
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'AppraisalPeriods.AcademicPeriods', 'AppraisalForms',
@@ -81,7 +81,7 @@ class AppraisalBehavior extends Behavior
         ]);
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
         $model->field('staff_id', ['type' => 'hidden', 'value' => $model->staff->id]);
@@ -100,13 +100,13 @@ class AppraisalBehavior extends Behavior
         $model->printAppraisalCustomField($appraisalFormId, $entity);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $model = $this->_table;
         $model->setupFieldOrder();
     }
 
-    public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterQuery(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $model = $this->_table;
         $model->field('staff_id', ['type' => 'hidden', 'value' => $entity->staff_id]);
@@ -146,16 +146,16 @@ class AppraisalBehavior extends Behavior
             ->toArray();
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event,  $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event,  $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['onChangeReload'] = true;
-            $attr['options'] = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getYearList();
+            $attr['options'] = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')->getYearList();
             return $attr;
         }
     }
 
-    public function onUpdateFieldAppraisalTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAppraisalTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $model = $this->_table;
         if ($action == 'add') {
@@ -177,7 +177,7 @@ class AppraisalBehavior extends Behavior
         }
     }
 
-    public function onUpdateFieldAppraisalFormId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAppraisalFormId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $model = $this->_table;
         if ($action == 'add') {
@@ -198,7 +198,7 @@ class AppraisalBehavior extends Behavior
         }
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $model = $this->_table;
         $errors = $entity->getErrors();
@@ -228,7 +228,7 @@ class AppraisalBehavior extends Behavior
             $staffAppraisalId = $entity->has('id') ? $entity->id : -1;
 
             // retrieve all form criterias containing results
-            $AppraisalFormsCriterias = TableRegistry::get('StaffAppraisal.AppraisalFormsCriterias');
+            $AppraisalFormsCriterias = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalFormsCriterias');
             $query = $AppraisalFormsCriterias->find()
                 ->contain([
                     'AppraisalCriterias' => [
@@ -398,7 +398,7 @@ class AppraisalBehavior extends Behavior
 
     //POCOR-8627 Start
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         // Logic for reorder field in report Start
         //Desired field order
@@ -447,7 +447,7 @@ class AppraisalBehavior extends Behavior
         $recordId = $settings['id'];
         $appraisalFormId = $recordId ? $this->_table->get($recordId)->appraisal_form_id : json_decode($settings['process']['params'] ?? '{}')->appraisal_form_id;
         $staffAppraisalId = $recordId ? $this->_table->get($recordId)->id : -1;
-        $AppraisalFormsCriterias = TableRegistry::get('StaffAppraisal.AppraisalFormsCriterias');
+        $AppraisalFormsCriterias = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalFormsCriterias');
 
         if (!$appraisalFormId) {
             return; // Exit if appraisal_form_id is not found
@@ -515,7 +515,7 @@ class AppraisalBehavior extends Behavior
     }
 
 
-    public function onExcelRenderCustomField(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderCustomField(EventInterface $event, Entity $entity, array $attr)
     {
         $recordId = $entity['id'];
         if(!empty( $recordId)) {
@@ -524,7 +524,7 @@ class AppraisalBehavior extends Behavior
             $criteriaCounter = new ArrayObject();
             $staffAppraisalId = $entity->has('id') ? $entity->id : -1;
             // retrieve all form criterias containing results
-            $AppraisalFormsCriterias = TableRegistry::get('StaffAppraisal.AppraisalFormsCriterias');
+            $AppraisalFormsCriterias = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalFormsCriterias');
             $query = $AppraisalFormsCriterias->find()
             ->contain([
                 'AppraisalCriterias' => [

@@ -1,8 +1,9 @@
 <?php
-use Cake\Routing\Router;
 use Cake\Routing\RouteBuilder;
 
-Router::scope('/Healths', ['plugin' => 'Health'], function (RouteBuilder $routes) {
-	$routes->connect('/Healths', ['plugin' => 'Health', 'controller' => 'Healths']);
-	$routes->connect('/Healths/:action/*', ['plugin' => 'Health', 'controller' => 'Healths']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/Healths', ['plugin' => 'Health'], function (RouteBuilder $routes) {
+    	$routes->connect('/Healths', ['plugin' => 'Health', 'controller' => 'Healths']);
+    	$routes->connect('/Healths/:action/*', ['plugin' => 'Health', 'controller' => 'Healths']);
+    });
+};

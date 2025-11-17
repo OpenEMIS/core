@@ -3,7 +3,7 @@ namespace Examination\Model\Table;
 
 use ArrayObject;
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\ORM\Entity;
@@ -47,10 +47,10 @@ class ExaminationCentreRoomsExaminationsTable extends ControllerActionTable
 
     // used when new room is added to an exam centre
     // add all linked exams to new room
-    public function examinationCentreRoomsAfterSave(Event $event, $roomEntity)
+    public function examinationCentreRoomsAfterSave(EventInterface $event, $roomEntity)
     {
         if (!empty($roomEntity) && $roomEntity->isNew()) {
-            $ExamCentresExams = TableRegistry::get('Examination.ExaminationCentresExaminations');
+            $ExamCentresExams = TableRegistry::getTableLocator()->get('Examination.ExaminationCentresExaminations');
             $linkedExaminations = $ExamCentresExams->find()
                 ->select([$ExamCentresExams->aliasField('examination_id')])
                 ->where([$ExamCentresExams->aliasField('examination_centre_id') => $roomEntity->examination_centre_id])
@@ -72,7 +72,7 @@ class ExaminationCentreRoomsExaminationsTable extends ControllerActionTable
 
     // used when new exam centres are linked to an exam
     // add all rooms to exam
-    public function examinationCentreExaminationsAfterSave(Event $event, $examCentreExamEntity)
+    public function examinationCentreExaminationsAfterSave(EventInterface $event, $examCentreExamEntity)
     {
         if (!empty($examCentreExamEntity) && $examCentreExamEntity->isNew()) {
             $examCentreRooms = $this->ExaminationCentreRooms->find()

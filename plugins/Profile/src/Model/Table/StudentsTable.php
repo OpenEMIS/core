@@ -3,7 +3,7 @@ namespace Profile\Model\Table;
 
 use ArrayObject;
 use Cake\I18n\Time;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Utility\Text;
@@ -33,21 +33,21 @@ class StudentsTable extends ControllerActionTable
         $this->addBehavior('ControllerAction.Image');
     }
 
-    public function afterAction(Event $event, $data)
+    public function afterAction(EventInterface $event, $data)
     {
         $this->setFieldOrder([
             'photo_content', 'openemis_no', 'student_id'
         ]);
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->field('student_id', ['type' => 'select']);
         $this->field('guardian_id', ['type' => 'hidden']);
         $this->field('guardian_relation_id', ['type' => 'hidden']);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $guardianId = $this->Session->read('Auth.User.id');
         $conditions[$this->aliasField('guardian_id')] = $guardianId;
@@ -68,14 +68,14 @@ class StudentsTable extends ControllerActionTable
         }
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         $value = $entity->user->openemis_no;
 
         return $value;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 

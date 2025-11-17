@@ -2,7 +2,7 @@
 namespace Security\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -26,10 +26,10 @@ class AccountsTable extends AppTable {
      * POCOR-7159
      * add data in user_activities table while updating password
     */
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) 
     {
-        $userActivities = TableRegistry::get('User.UserActivities');
-        $userTable = TableRegistry::get('Security.Users');
+        $userActivities = TableRegistry::getTableLocator()->get('User.UserActivities');
+        $userTable = TableRegistry::getTableLocator()->get('Security.Users');
         $user = $this->Auth->user();
         $userId = $user['id'];
         $currentTimeZone = date("Y-m-d H:i:s");
@@ -90,7 +90,7 @@ class AccountsTable extends AppTable {
         
     }
 
-    public function beforeAction(Event $event) {
+    public function beforeAction(EventInterface $event) {
     if ($this->action == 'view') {
         $this->fields['username']['visible'] = true;
         $this->fields['last_login']['visible'] = true;
@@ -99,7 +99,7 @@ class AccountsTable extends AppTable {
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true) {
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true) {
         if ($this->action == 'view') {
             switch ($field) {
                 case 'new_password':
@@ -109,7 +109,7 @@ class AccountsTable extends AppTable {
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity) {
+    public function viewAfterAction(EventInterface $event, Entity $entity) {
         $this->setupFields($entity);
     }
 

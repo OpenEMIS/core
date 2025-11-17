@@ -5,7 +5,7 @@ use ArrayObject;
 use DateTime;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -35,26 +35,26 @@ class EnrollmentOutliersTable extends AppTable  {
 		$this->addBehavior('Report.ReportList');
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(EventInterface $event) {
 		$this->fields = [];
 		$this->ControllerAction->field('feature');
 		$this->ControllerAction->field('format');
 	}
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request) {
 		$attr['options'] = $this->controller->getFeatureOptions($this->alias());
 		return $attr;
 	}
 
 	
-	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
+	public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) 
 	{
 		$requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
-		$this->InstitutionStudents = TableRegistry::get('Institutions.InstitutionStudents');
-		$academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$institutions = TableRegistry::get('Institution.Institutions');
-		$this->ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+		$this->InstitutionStudents = TableRegistry::getTableLocator()->get('Institutions.InstitutionStudents');
+		$academicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+		$institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+		$this->ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 		$main_query  = "(SELECT academic_periods.name academic_period_name 	
 				        ,institutions.code institution_code			
 				        ,institutions.name institution_name			
@@ -119,7 +119,7 @@ class EnrollmentOutliersTable extends AppTable  {
 	}
 
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+	public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
 
     	$extraFields = [];

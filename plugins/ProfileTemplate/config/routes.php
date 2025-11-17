@@ -1,8 +1,9 @@
 <?php
-use Cake\Routing\Router;
 use Cake\Routing\RouteBuilder;
 
-Router::scope('/ProfileTemplates', ['plugin' => 'ProfileTemplate'], function ($routes) {
-    Router::connect('/ProfileTemplates', ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates']);
-    Router::connect('/ProfileTemplates/:action/*', ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/ProfileTemplates', ['plugin' => 'ProfileTemplate'], function (RouteBuilder $routes) {
+        $routes->connect('/ProfileTemplates', ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates']);
+        $routes->connect('/ProfileTemplates/:action/*', ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates']);
+    });
+};

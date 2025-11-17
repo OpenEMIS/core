@@ -2,7 +2,7 @@
 namespace StudentCustomField\Model\Table;
 
 use CustomField\Model\Table\CustomFieldsTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 
 class StudentCustomFieldsTable extends CustomFieldsTable {
@@ -24,7 +24,7 @@ class StudentCustomFieldsTable extends CustomFieldsTable {
 		]);
 	}
 
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+	public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'field_type') {
             return __('Field Type');

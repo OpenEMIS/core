@@ -1,0 +1,1298 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * MIT License
+ * For full license information, please view the LICENSE file that was distributed with this source code.
+ */
+
+namespace Migrations\Db\Adapter;
+
+use BadMethodCallException;
+use Cake\Database\Schema\TableSchema;
+use Cake\I18n\Date;
+use Cake\I18n\DateTime;
+use InvalidArgumentException;
+use Migrations\Db\AlterInstructions;
+use Migrations\Db\Literal;
+use Migrations\Db\Table\Column;
+use Migrations\Db\Table\ForeignKey;
+use Migrations\Db\Table\Index;
+use Migrations\Db\Table\Table;
+use Migrations\Db\Table\Table as TableMetadata;
+use Migrations\MigrationInterface;
+use Phinx\Util\Literal as PhinxLiteral;
+
+/**
+ * Migrations SqlServer Adapter.
+ */
+class SqlserverAdapter extends AbstractAdapter
+{
+    /**
+     * @var string[]
+     */
+    protected static array $specificColumnTypes = [
+        self::PHINX_TYPE_FILESTREAM,
+        self::PHINX_TYPE_BINARYUUID,
+        self::PHINX_TYPE_NATIVEUUID,
+    ];
+
+    /**
+     * @var string
+     */
+    protected string $schema = 'dbo';
+
+    /**
+     * @var bool[]
+     */
+    protected array $signedColumnTypes = [
+        self::PHINX_TYPE_INTEGER => true,
+        self::PHINX_TYPE_BIG_INTEGER => true,
+        self::PHINX_TYPE_FLOAT => true,
+        self::PHINX_TYPE_DECIMAL => true,
+    ];
+
+    /**
+     * Quotes a schema name for use in a query.
+     *
+     * @param string $schemaName Schema Name
+     * @return string
+     */
+    public function quoteSchemaName(string $schemaName): string
+    {
+        return $this->quoteColumnName($schemaName);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function quoteTableName(string $tableName): string
+    {
+        $parts = $this->getSchemaName($tableName);
+
+        return $this->quoteSchemaName($parts['schema']) . '.' . $this->quoteColumnName($parts['table']);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function hasTable(string $tableName): bool
+    {
+        if ($this->hasCreatedTable($tableName)) {
+            return true;
+        }
+        $dialect = $this->getSchemaDialect();
+
+        $parts = $this->getSchemaName($tableName);
+        [$query, $params] = $dialect->listTablesSql(['schema' => $parts['schema']]);
+
+        $rows = $this->query($query, $params)->fetchAll();
+        $tables = array_column($rows, 0);
+
+        return in_array($parts['table'], $tables, true);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function createTable(Table $table, array $columns = [], array $indexes = []): void
+    {
+        $options = $table->getOptions();
+        $parts = $this->getSchemaName($table->getName());
+
+        // Add the default primary key
+        if (!isset($options['id']) || $options['id'] === true) {
+            $options['id'] = 'id';
+        }
+
+        if (is_string($options['id'])) {
+            // Handle id => "field_name" to support AUTO_INCREMENT
+            $column = new Column();
+            $column->setName($options['id'])
+                ->setType('integer')
+                ->setOptions(['identity' => true]);
+
+            array_unshift($columns, $column);
+            if (isset($options['primary_key']) && (array)$options['id'] !== (array)$options['primary_key']) {
+                throw new InvalidArgumentException('You cannot enable an auto incrementing ID field and a primary key');
+            }
+            $options['primary_key'] = $options['id'];
+        }
+
+        $dialect = $this->getSchemaDialect();
+        $sql = 'CREATE TABLE ';
+        $sql .= $this->quoteTableName($table->getName()) . ' (';
+        $sqlBuffer = [];
+        $columnsWithComments = [];
+        foreach ($columns as $column) {
+            $sqlBuffer[] = $dialect->columnDefinitionSql($column->toArray());
+
+            // set column comments, if needed
+            if ($column->getComment()) {
+                $columnsWithComments[] = $column;
+            }
+        }
+
+        // set the primary key(s)
+        if (isset($options['primary_key'])) {
+            $pkSql = sprintf('CONSTRAINT PK_%s PRIMARY KEY (', $parts['table']);
+            /** @var string|array $primaryKey */
+            $primaryKey = $options['primary_key'];
+
+            if (is_string($primaryKey)) { // handle primary_key => 'id'
+                $pkSql .= $this->quoteColumnName($primaryKey);
+            } elseif (is_array($primaryKey)) { // handle primary_key => array('tag_id', 'resource_id')
+                $pkSql .= implode(',', array_map($this->quoteColumnName(...), $primaryKey));
+            }
+            $pkSql .= ')';
+            $sqlBuffer[] = $pkSql;
+        }
+
+        $sql .= implode(', ', $sqlBuffer);
+        $sql .= ');';
+
+        // process column comments
+        foreach ($columnsWithComments as $column) {
+            $sql .= $this->getColumnCommentSqlDefinition($column, $table->getName());
+        }
+
+        // set the indexes
+        foreach ($indexes as $index) {
+            $sql .= $this->getIndexSqlDefinition($index, $table->getName());
+        }
+
+        // execute the sql
+        $this->execute($sql);
+
+        $this->addCreatedTable($table->getName());
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws \InvalidArgumentException
+     */
+    protected function getChangePrimaryKeyInstructions(Table $table, $newColumns): AlterInstructions
+    {
+        $instructions = new AlterInstructions();
+
+        // Drop the existing primary key
+        $primaryKey = $this->getPrimaryKey($table->getName());
+        if (!empty($primaryKey['constraint'])) {
+            $sql = sprintf(
+                'DROP CONSTRAINT %s',
+                $this->quoteColumnName($primaryKey['constraint']),
+            );
+            $instructions->addAlter($sql);
+        }
+
+        // Add the primary key(s)
+        if ($newColumns) {
+            $sql = sprintf(
+                'ALTER TABLE %s ADD CONSTRAINT %s PRIMARY KEY (',
+                $this->quoteTableName($table->getName()),
+                $this->quoteColumnName('PK_' . $table->getName()),
+            );
+            if (is_string($newColumns)) { // handle primary_key => 'id'
+                $sql .= $this->quoteColumnName($newColumns);
+            } elseif (is_array($newColumns)) { // handle primary_key => array('tag_id', 'resource_id')
+                $sql .= implode(',', array_map($this->quoteColumnName(...), $newColumns));
+            }
+            $sql .= ')';
+            $instructions->addPostStep($sql);
+        }
+
+        return $instructions;
+    }
+
+    /**
+     * @inheritDoc
+     *
+     * SqlServer does not implement this functionality, and so will always throw an exception if used.
+     * @throws \BadMethodCallException
+     */
+    protected function getChangeCommentInstructions(Table $table, ?string $newComment): AlterInstructions
+    {
+        throw new BadMethodCallException('SqlServer does not have table comments');
+    }
+
+    /**
+     * Gets the SqlServer column comment definition for a column object.
+     *
+     * @param \Migrations\Db\Table\Column $column Column
+     * @param ?string $tableName Table name
+     * @return string
+     */
+    protected function getColumnCommentSqlDefinition(Column $column, ?string $tableName): string
+    {
+        // passing 'null' is to remove column comment
+        $currentComment = $this->getColumnComment((string)$tableName, $column->getName());
+
+        $comment = strcasecmp((string)$column->getComment(), 'NULL') !== 0 ? $this->quoteString((string)$column->getComment()) : '\'\'';
+        $command = $currentComment === null ? 'sp_addextendedproperty' : 'sp_updateextendedproperty';
+
+        return sprintf(
+            "EXECUTE %s N'MS_Description', N%s, N'SCHEMA', N'%s', N'TABLE', N'%s', N'COLUMN', N'%s';",
+            $command,
+            $comment,
+            $this->schema,
+            (string)$tableName,
+            (string)$column->getName(),
+        );
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function getRenameTableInstructions(string $tableName, string $newTableName): AlterInstructions
+    {
+        $this->updateCreatedTableName($tableName, $newTableName);
+        $sql = sprintf(
+            "EXEC sp_rename '%s', '%s'",
+            $tableName,
+            $newTableName,
+        );
+
+        return new AlterInstructions([], [$sql]);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function getDropTableInstructions(string $tableName): AlterInstructions
+    {
+        $this->removeCreatedTable($tableName);
+        $sql = sprintf('DROP TABLE %s', $this->quoteTableName($tableName));
+
+        return new AlterInstructions([], [$sql]);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function truncateTable(string $tableName): void
+    {
+        $sql = sprintf(
+            'TRUNCATE TABLE %s',
+            $this->quoteTableName($tableName),
+        );
+
+        $this->execute($sql);
+    }
+
+    /**
+     * @param string $tableName Table name
+     * @param ?string $columnName Column name
+     * @return string|null
+     */
+    public function getColumnComment(string $tableName, ?string $columnName): ?string
+    {
+        $sql = "SELECT cast(extended_properties.[value] as nvarchar(4000)) comment
+  FROM sys.schemas
+ INNER JOIN sys.tables
+    ON schemas.schema_id = tables.schema_id
+ INNER JOIN sys.columns
+    ON tables.object_id = columns.object_id
+ INNER JOIN sys.extended_properties
+    ON tables.object_id = extended_properties.major_id
+   AND columns.column_id = extended_properties.minor_id
+   AND extended_properties.name = 'MS_Description'
+   WHERE schemas.[name] = ? AND tables.[name] = ? AND columns.[name] = ?";
+        $params = [$this->schema, $tableName, (string)$columnName];
+        $row = $this->query($sql, $params)->fetch('assoc');
+
+        if ($row) {
+            return trim($row['comment']);
+        }
+
+        return null;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getColumns(string $tableName): array
+    {
+        $dialect = $this->getSchemaDialect();
+
+        $columns = [];
+        foreach ($dialect->describeColumns($tableName) as $columnInfo) {
+            $column = (new Column())
+                ->setName($columnInfo['name'])
+                ->setType($columnInfo['type'])
+                ->setNull($columnInfo['null'])
+                ->setLimit($columnInfo['length'])
+                ->setDefault($this->parseDefault($columnInfo['default']))
+                ->setComment($columnInfo['comment']);
+
+            if ($columnInfo['autoIncrement'] ?? false) {
+                $column->setIdentity($columnInfo['autoIncrement']);
+            }
+
+            $columns[$columnInfo['name']] = $column;
+        }
+
+        return $columns;
+    }
+
+    /**
+     * @param string|null $default Default
+     * @return int|string|null
+     */
+    protected function parseDefault(?string $default): int|string|null
+    {
+        // if a column is non-nullable and has no default, the value of column_default is null,
+        // otherwise it should be a string value that we parse below, including "(NULL)" which
+        // also stands for a null default
+        if ($default === null) {
+            return null;
+        }
+
+        $result = preg_replace(["/\('(.*)'\)/", "/\(\((.*)\)\)/", "/\((.*)\)/"], '$1', $default);
+
+        if (strtoupper($result) === 'NULL') {
+            $result = null;
+        } elseif (is_numeric($result)) {
+            $result = (int)$result;
+        }
+
+        return $result;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function hasColumn(string $tableName, string $columnName): bool
+    {
+        $parts = $this->getSchemaName($tableName);
+        $sql = "SELECT count(*) as [count]
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?";
+        /** @var array<string, mixed> $result */
+        $result = $this->query($sql, [$parts['schema'], $parts['table'], $columnName])->fetch('assoc');
+
+        return $result['count'] > 0;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function getAddColumnInstructions(Table $table, Column $column): AlterInstructions
+    {
+        $dialect = $this->getSchemaDialect();
+        $alter = sprintf(
+            'ALTER TABLE %s ADD %s',
+            $table->getName(),
+            $dialect->columnDefinitionSql($column->toArray()),
+        );
+
+        return new AlterInstructions([], [$alter]);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws \InvalidArgumentException
+     */
+    protected function getRenameColumnInstructions(string $tableName, string $columnName, string $newColumnName): AlterInstructions
+    {
+        if (!$this->hasColumn($tableName, $columnName)) {
+            throw new InvalidArgumentException("The specified column does not exist: $columnName");
+        }
+
+        $instructions = new AlterInstructions();
+
+        $oldConstraintName = "DF_{$tableName}_{$columnName}";
+        $newConstraintName = "DF_{$tableName}_{$newColumnName}";
+        $sql = <<<SQL
+IF (OBJECT_ID('$oldConstraintName', 'D') IS NOT NULL)
+BEGIN
+     EXECUTE sp_rename N'%s', N'%s', N'OBJECT'
+END
+SQL;
+        $instructions->addPostStep(sprintf(
+            $sql,
+            $oldConstraintName,
+            $newConstraintName,
+        ));
+
+        $instructions->addPostStep(sprintf(
+            "EXECUTE sp_rename N'%s.%s', N'%s', 'COLUMN' ",
+            $tableName,
+            $columnName,
+            $newColumnName,
+        ));
+
+        return $instructions;
+    }
+
+    /**
+     * Returns the instructions to change a column default value
+     *
+     * @param string $tableName The table where the column is
+     * @param \Migrations\Db\Table\Column $newColumn The column to alter
+     * @return \Migrations\Db\AlterInstructions
+     */
+    protected function getChangeDefault(string $tableName, Column $newColumn): AlterInstructions
+    {
+        $constraintName = "DF_{$tableName}_{$newColumn->getName()}";
+        $default = $newColumn->getDefault();
+        $instructions = new AlterInstructions();
+
+        if ($default === null) {
+            $default = 'DEFAULT NULL';
+        } else {
+            $default = ltrim($this->getDefaultValueDefinition($default));
+        }
+
+        if (!$default) {
+            return $instructions;
+        }
+
+        $instructions->addPostStep(sprintf(
+            'ALTER TABLE %s ADD CONSTRAINT %s %s FOR %s',
+            $this->quoteTableName($tableName),
+            $constraintName,
+            $default,
+            $this->quoteColumnName((string)$newColumn->getName()),
+        ));
+
+        return $instructions;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function getChangeColumnInstructions(string $tableName, string $columnName, Column $newColumn): AlterInstructions
+    {
+        $columns = $this->getColumns($tableName);
+        if (!isset($columns[$columnName])) {
+            throw new InvalidArgumentException("Unknown column {$columnName} cannot be changed.");
+        }
+
+        $changeDefault =
+            $newColumn->getDefault() !== $columns[$columnName]->getDefault() ||
+            $newColumn->getType() !== $columns[$columnName]->getType();
+
+        $instructions = new AlterInstructions();
+        $dialect = $this->getSchemaDialect();
+
+        if ($columnName !== $newColumn->getName()) {
+            $instructions->merge(
+                $this->getRenameColumnInstructions($tableName, $columnName, (string)$newColumn->getName()),
+            );
+        }
+
+        if ($changeDefault) {
+            $instructions->merge($this->getDropDefaultConstraint($tableName, (string)$newColumn->getName()));
+        }
+
+        // Sqlserver doesn't support defaults
+        $columnData = $newColumn->toArray();
+        unset($columnData['default']);
+
+        $alterColumn = sprintf(
+            'ALTER TABLE %s ALTER COLUMN %s',
+            $this->quoteTableName($tableName),
+            $dialect->columnDefinitionSql($columnData),
+        );
+        $alterColumn = preg_replace('/DEFAULT NULL/', '', $alterColumn);
+        $instructions->addPostStep($alterColumn);
+
+        // change column comment if needed
+        if ($newColumn->getComment()) {
+            $instructions->addPostStep($this->getColumnCommentSqlDefinition($newColumn, $tableName));
+        }
+
+        if ($changeDefault) {
+            $instructions->merge($this->getChangeDefault($tableName, $newColumn));
+        }
+
+        return $instructions;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function getDropColumnInstructions(string $tableName, string $columnName): AlterInstructions
+    {
+        $instructions = $this->getDropDefaultConstraint($tableName, $columnName);
+
+        $instructions->addPostStep(sprintf(
+            'ALTER TABLE %s DROP COLUMN %s',
+            $this->quoteTableName($tableName),
+            $this->quoteColumnName($columnName),
+        ));
+
+        return $instructions;
+    }
+
+    /**
+     * @param string $tableName Table name
+     * @param string|null $columnName Column name
+     * @return \Migrations\Db\AlterInstructions
+     */
+    protected function getDropDefaultConstraint(string $tableName, ?string $columnName): AlterInstructions
+    {
+        $defaultConstraint = $this->getDefaultConstraint($tableName, (string)$columnName);
+
+        if (!$defaultConstraint) {
+            return new AlterInstructions();
+        }
+
+        return $this->getDropForeignKeyInstructions($tableName, $defaultConstraint);
+    }
+
+    /**
+     * @param string $tableName Table name
+     * @param string $columnName Column name
+     * @return string|false
+     */
+    protected function getDefaultConstraint(string $tableName, string $columnName): string|false
+    {
+        $sql = "SELECT default_constraints.name
+        FROM sys.all_columns
+        INNER JOIN sys.tables ON all_columns.object_id = tables.object_id
+        INNER JOIN sys.schemas ON tables.schema_id = schemas.schema_id
+        INNER JOIN sys.default_constraints ON all_columns.default_object_id = default_constraints.object_id
+        WHERE schemas.name = 'dbo' AND tables.name = ? AND all_columns.name = ?";
+
+        $rows = $this->query($sql, [$tableName, $columnName])->fetchAll('assoc');
+
+        return empty($rows) ? false : $rows[0]['name'];
+    }
+
+    /**
+     * @param string $tableId Table ID
+     * @param string $indexId Index ID
+     * @return array
+     */
+    protected function getIndexColumns(string $tableId, string $indexId): array
+    {
+        $sql = 'SELECT AC.[name] AS [column_name]
+FROM sys.[index_columns] IC
+  INNER JOIN sys.[all_columns] AC ON IC.[column_id] = AC.[column_id]
+WHERE AC.[object_id] = ? AND IC.[index_id] = ?  AND IC.[object_id] = ?
+ORDER BY IC.[key_ordinal]';
+
+        $params = [$tableId, $indexId, $tableId];
+        $rows = $this->query($sql, $params)->fetchAll('assoc');
+        $columns = [];
+        foreach ($rows as $row) {
+            $columns[] = strtolower($row['column_name']);
+        }
+
+        return $columns;
+    }
+
+    /**
+     * Get an array of indexes from a particular table.
+     *
+     * @param string $tableName Table name
+     * @return array
+     */
+    public function getIndexes(string $tableName): array
+    {
+        $dialect = $this->getSchemaDialect();
+
+        return $dialect->describeIndexes($tableName);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function hasIndex(string $tableName, string|array $columns): bool
+    {
+        if (is_string($columns)) {
+            $columns = [$columns]; // str to array
+        }
+
+        $columns = array_map('strtolower', $columns);
+        $indexes = $this->getIndexes($tableName);
+
+        foreach ($indexes as $index) {
+            $a = array_diff($columns, $index['columns']);
+            if (!$a) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function hasIndexByName(string $tableName, string $indexName): bool
+    {
+        $indexes = $this->getIndexes($tableName);
+
+        foreach ($indexes as $index) {
+            if ($index['name'] === $indexName) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function getAddIndexInstructions(Table $table, Index $index): AlterInstructions
+    {
+        $sql = $this->getIndexSqlDefinition($index, $table->getName());
+
+        return new AlterInstructions([], [$sql]);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws \InvalidArgumentException
+     */
+    protected function getDropIndexByColumnsInstructions(string $tableName, $columns): AlterInstructions
+    {
+        if (is_string($columns)) {
+            $columns = [$columns]; // str to array
+        }
+
+        $indexes = $this->getIndexes($tableName);
+        $columns = array_map('strtolower', $columns);
+        $instructions = new AlterInstructions();
+
+        foreach ($indexes as $index) {
+            $a = array_diff($columns, $index['columns']);
+            if (!$a) {
+                $instructions->addPostStep(sprintf(
+                    'DROP INDEX %s ON %s',
+                    $this->quoteColumnName($index['name']),
+                    $this->quoteTableName($tableName),
+                ));
+
+                return $instructions;
+            }
+        }
+
+        throw new InvalidArgumentException(sprintf(
+            'The specified index on columns `%s` does not exist',
+            implode(',', $columns),
+        ));
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws \InvalidArgumentException
+     */
+    protected function getDropIndexByNameInstructions(string $tableName, string $indexName): AlterInstructions
+    {
+        $indexes = $this->getIndexes($tableName);
+        $instructions = new AlterInstructions();
+
+        foreach ($indexes as $index) {
+            if ($index['name'] === $indexName) {
+                $instructions->addPostStep(sprintf(
+                    'DROP INDEX %s ON %s',
+                    $this->quoteColumnName($indexName),
+                    $this->quoteTableName($tableName),
+                ));
+
+                return $instructions;
+            }
+        }
+
+        throw new InvalidArgumentException(sprintf(
+            'The specified index name `%s` does not exist',
+            $indexName,
+        ));
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function hasPrimaryKey(string $tableName, $columns, ?string $constraint = null): bool
+    {
+        $primaryKey = $this->getPrimaryKey($tableName);
+        if (!$primaryKey) {
+            return false;
+        }
+
+        if ($constraint) {
+            return $primaryKey['constraint'] === $constraint;
+        }
+
+        return $primaryKey['columns'] === (array)$columns;
+    }
+
+    /**
+     * Get the primary key from a particular table.
+     *
+     * @param string $tableName Table name
+     * @return array
+     */
+    public function getPrimaryKey(string $tableName): array
+    {
+        $indexes = $this->getIndexes($tableName);
+        $primaryKey = [
+            'columns' => [],
+        ];
+        foreach ($indexes as $row) {
+            if ($row['type'] == TableSchema::CONSTRAINT_PRIMARY) {
+                return $row;
+            }
+        }
+
+        return $primaryKey;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function hasForeignKey(string $tableName, $columns, ?string $constraint = null): bool
+    {
+        $foreignKeys = $this->getForeignKeys($tableName);
+        if ($constraint) {
+            foreach ($foreignKeys as $key) {
+                if ($key['name'] === $constraint) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        if (is_string($columns)) {
+            $columns = [$columns];
+        }
+
+        foreach ($foreignKeys as $key) {
+            if ($key['columns'] === $columns) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Get an array of foreign keys from a particular table.
+     *
+     * @param string $tableName Table name
+     * @return array
+     */
+    protected function getForeignKeys(string $tableName): array
+    {
+        $dialect = $this->getSchemaDialect();
+
+        return $dialect->describeForeignKeys($tableName);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function getAddForeignKeyInstructions(Table $table, ForeignKey $foreignKey): AlterInstructions
+    {
+        $instructions = new AlterInstructions();
+        $instructions->addPostStep(sprintf(
+            'ALTER TABLE %s ADD %s',
+            $this->quoteTableName($table->getName()),
+            $this->getForeignKeySqlDefinition($foreignKey, $table->getName()),
+        ));
+
+        return $instructions;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function getDropForeignKeyInstructions(string $tableName, string $constraint): AlterInstructions
+    {
+        $instructions = new AlterInstructions();
+        $instructions->addPostStep(sprintf(
+            'ALTER TABLE %s DROP CONSTRAINT %s',
+            $this->quoteTableName($tableName),
+            $this->quoteColumnName($constraint),
+        ));
+
+        return $instructions;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function getDropForeignKeyByColumnsInstructions(string $tableName, array $columns): AlterInstructions
+    {
+        $instructions = new AlterInstructions();
+
+        $matches = [];
+        $foreignKeys = $this->getForeignKeys($tableName);
+        foreach ($foreignKeys as $key) {
+            if ($key['columns'] === $columns) {
+                $matches[] = $key['name'];
+            }
+        }
+
+        if (!$matches) {
+            throw new InvalidArgumentException(sprintf(
+                'No foreign key on column(s) `%s` exists',
+                implode(', ', $columns),
+            ));
+        }
+
+        foreach ($matches as $name) {
+            $instructions->merge(
+                $this->getDropForeignKeyInstructions($tableName, $name),
+            );
+        }
+
+        return $instructions;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws \Migrations\Db\Adapter\UnsupportedColumnTypeException
+     */
+    public function getSqlType(Literal|string $type, ?int $limit = null): array
+    {
+        $type = (string)$type;
+        switch ($type) {
+            case static::PHINX_TYPE_FLOAT:
+            case static::PHINX_TYPE_DECIMAL:
+            case static::PHINX_TYPE_DATETIME:
+            case static::PHINX_TYPE_TIME:
+            case static::PHINX_TYPE_DATE:
+                return ['name' => $type];
+            case static::PHINX_TYPE_STRING:
+                return ['name' => 'nvarchar', 'limit' => 255];
+            case static::PHINX_TYPE_CHAR:
+                return ['name' => 'nchar', 'limit' => 255];
+            case static::PHINX_TYPE_TEXT:
+                return ['name' => 'ntext'];
+            case static::PHINX_TYPE_INTEGER:
+                return ['name' => 'int'];
+            case static::PHINX_TYPE_TINY_INTEGER:
+                return ['name' => 'tinyint'];
+            case static::PHINX_TYPE_SMALL_INTEGER:
+                return ['name' => 'smallint'];
+            case static::PHINX_TYPE_BIG_INTEGER:
+                return ['name' => 'bigint'];
+            case static::PHINX_TYPE_TIMESTAMP:
+                return ['name' => 'datetime'];
+            case static::PHINX_TYPE_BLOB:
+            case static::PHINX_TYPE_BINARY:
+                return ['name' => 'varbinary'];
+            case static::PHINX_TYPE_BOOLEAN:
+                return ['name' => 'bit'];
+            case static::PHINX_TYPE_BINARYUUID:
+            case static::PHINX_TYPE_UUID:
+            case static::PHINX_TYPE_NATIVEUUID:
+                return ['name' => 'uniqueidentifier'];
+            case static::PHINX_TYPE_FILESTREAM:
+                return ['name' => 'varbinary', 'limit' => 'max'];
+                // Geospatial database types
+            case static::PHINX_TYPE_GEOGRAPHY:
+            case static::PHINX_TYPE_POINT:
+            case static::PHINX_TYPE_LINESTRING:
+            case static::PHINX_TYPE_POLYGON:
+                // SQL Server stores all spatial data using a single data type.
+                // Specific types (point, polygon, etc) are set at insert time.
+                return ['name' => 'geography'];
+                // Geometry specific type
+            case static::PHINX_TYPE_GEOMETRY:
+                return ['name' => 'geometry'];
+            default:
+                throw new UnsupportedColumnTypeException('Column type "' . $type . '" is not supported by SqlServer.');
+        }
+    }
+
+    /**
+     * Returns Phinx type by SQL type
+     *
+     * @internal param string $sqlType SQL type
+     * @param string $sqlType SQL Type definition
+     * @throws \Migrations\Db\Adapter\UnsupportedColumnTypeException
+     * @return string Phinx type
+     */
+    public function getPhinxType(string $sqlType): string
+    {
+        switch ($sqlType) {
+            case 'nvarchar':
+            case 'varchar':
+                return static::PHINX_TYPE_STRING;
+            case 'char':
+            case 'nchar':
+                return static::PHINX_TYPE_CHAR;
+            case 'text':
+            case 'ntext':
+                return static::PHINX_TYPE_TEXT;
+            case 'int':
+            case 'integer':
+                return static::PHINX_TYPE_INTEGER;
+            case 'decimal':
+            case 'numeric':
+            case 'money':
+                return static::PHINX_TYPE_DECIMAL;
+            case 'tinyint':
+                return static::PHINX_TYPE_TINY_INTEGER;
+            case 'smallint':
+                return static::PHINX_TYPE_SMALL_INTEGER;
+            case 'bigint':
+                return static::PHINX_TYPE_BIG_INTEGER;
+            case 'real':
+            case 'float':
+                return static::PHINX_TYPE_FLOAT;
+            case 'binary':
+            case 'image':
+            case 'varbinary':
+                return static::PHINX_TYPE_BINARY;
+            case 'time':
+                return static::PHINX_TYPE_TIME;
+            case 'date':
+                return static::PHINX_TYPE_DATE;
+            case 'datetime':
+            case 'timestamp':
+                return static::PHINX_TYPE_DATETIME;
+            case 'bit':
+                return static::PHINX_TYPE_BOOLEAN;
+            case 'uniqueidentifier':
+                return static::PHINX_TYPE_UUID;
+            case 'filestream':
+                return static::PHINX_TYPE_FILESTREAM;
+            default:
+                throw new UnsupportedColumnTypeException('Column type "' . $sqlType . '" is not supported by SqlServer.');
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function createDatabase(string $name, array $options = []): void
+    {
+        if (isset($options['collation'])) {
+            $this->execute(sprintf('CREATE DATABASE [%s] COLLATE [%s]', $name, $options['collation']));
+        } else {
+            $this->execute(sprintf('CREATE DATABASE [%s]', $name));
+        }
+        $this->execute(sprintf('USE [%s]', $name));
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function hasDatabase(string $name): bool
+    {
+        /** @var array<string, mixed> $result */
+        $result = $this->query(
+            'SELECT count(*) as [count] FROM master.dbo.sysdatabases WHERE [name] = ?',
+            [$name],
+        )->fetch('assoc');
+
+        return $result['count'] > 0;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function dropDatabase(string $name): void
+    {
+        $sql = <<<SQL
+USE master;
+IF EXISTS(select * from sys.databases where name=N'$name')
+ALTER DATABASE [$name] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+DROP DATABASE [$name];
+SQL;
+        $this->execute($sql);
+        $this->createdTables = [];
+    }
+
+    /**
+     * Gets the SqlServer Index Definition for an Index object.
+     *
+     * @param \Migrations\Db\Table\Index $index Index
+     * @param string $tableName Table name
+     * @return string
+     */
+    protected function getIndexSqlDefinition(Index $index, string $tableName): string
+    {
+        $parts = $this->getSchemaName($tableName);
+        $columnNames = (array)$index->getColumns();
+
+        $indexName = $index->getName();
+        if (!is_string($indexName)) {
+            $indexName = sprintf('%s_%s', $parts['table'], implode('_', $columnNames));
+        }
+        $order = $index->getOrder() ?? [];
+        $columnNames = array_map(function ($columnName) use ($order) {
+            $ret = '[' . $columnName . ']';
+            if (isset($order[$columnName])) {
+                $ret .= ' ' . $order[$columnName];
+            }
+
+            return $ret;
+        }, $columnNames);
+
+        $include = $index->getInclude();
+        $includedColumns = $include ? sprintf(' INCLUDE ([%s])', implode('],[', $include)) : '';
+        $where = (string)$index->getWhere();
+        if ($where) {
+            $where = ' WHERE ' . $where;
+        }
+
+        return sprintf(
+            'CREATE %s INDEX %s ON %s (%s)%s%s;',
+            ($index->getType() === Index::UNIQUE ? 'UNIQUE' : ''),
+            $indexName,
+            $this->quoteTableName($tableName),
+            implode(',', $columnNames),
+            $includedColumns,
+            $where,
+        );
+    }
+
+    /**
+     * Gets the SqlServer Foreign Key Definition for an ForeignKey object.
+     *
+     * @param \Migrations\Db\Table\ForeignKey $foreignKey Foreign key
+     * @param string $tableName Table name
+     * @return string
+     */
+    protected function getForeignKeySqlDefinition(ForeignKey $foreignKey, string $tableName): string
+    {
+        $constraintName = $foreignKey->getName() ?: $tableName . '_' . implode('_', $foreignKey->getColumns());
+
+        $def = ' CONSTRAINT ' . $this->quoteColumnName($constraintName);
+        $def .= ' FOREIGN KEY ("' . implode('", "', $foreignKey->getColumns()) . '")';
+        $def .= " REFERENCES {$this->quoteTableName($foreignKey->getReferencedTable()->getName())} (\"" . implode('", "', $foreignKey->getReferencedColumns()) . '")';
+        if ($foreignKey->getOnDelete()) {
+            $def .= " ON DELETE {$foreignKey->getOnDelete()}";
+        }
+        if ($foreignKey->getOnUpdate()) {
+            $def .= " ON UPDATE {$foreignKey->getOnUpdate()}";
+        }
+
+        return $def;
+    }
+
+    /**
+     * Creates the specified schema.
+     *
+     * @param string $schemaName Schema Name
+     * @return void
+     */
+    public function createSchema(string $schemaName = 'public'): void
+    {
+        if ($this->hasSchema($schemaName) === false) {
+            $sql = sprintf('CREATE SCHEMA %s', $this->quoteColumnName($schemaName));
+            $this->execute($sql);
+        }
+    }
+
+    /**
+     * Checks to see if a schema exists.
+     *
+     * @param string $schemaName Schema Name
+     * @return bool
+     */
+    public function hasSchema(string $schemaName): bool
+    {
+        $sql = 'SELECT count(*) AS [count] FROM sys.schemas WHERE name = ?';
+        $result = $this->query($sql, [$schemaName])->fetch('assoc');
+        if (!$result) {
+            return false;
+        }
+
+        return $result['count'] > 0;
+    }
+
+    /**
+     * Drops the specified schema table.
+     *
+     * @param string $schemaName Schema name
+     * @return void
+     */
+    public function dropSchema(string $schemaName): void
+    {
+        $sql = sprintf('DROP SCHEMA IF EXISTS %s', $this->quoteSchemaName($schemaName));
+        $this->execute($sql);
+
+        foreach ($this->createdTables as $idx => $createdTable) {
+            if ($this->getSchemaName($createdTable)['schema'] === $this->quoteSchemaName($schemaName)) {
+                unset($this->createdTables[$idx]);
+            }
+        }
+    }
+
+    /**
+     * Drops all schemas.
+     *
+     * @return void
+     */
+    public function dropAllSchemas(): void
+    {
+        foreach ($this->getAllSchemas() as $schema) {
+            $this->dropSchema($schema);
+        }
+    }
+
+    /**
+     * Returns schemas.
+     *
+     * @return array
+     */
+    public function getAllSchemas(): array
+    {
+        $sql = "SELECT name
+                FROM sys.schemas
+                WHERE name not in ('information_schema', 'sys', 'guest', 'dbo') AND name not like 'db_%'";
+        $items = $this->fetchAll($sql);
+        $schemaNames = [];
+        foreach ($items as $item) {
+            $schemaNames[] = $item['name'];
+        }
+
+        return $schemaNames;
+    }
+
+    /**
+     * @param string $tableName Table name
+     * @return array
+     */
+    protected function getSchemaName(string $tableName): array
+    {
+        $schema = $this->getGlobalSchemaName();
+        $table = $tableName;
+        if (strpos($tableName, '.') !== false) {
+            [$schema, $table] = explode('.', $tableName);
+        }
+
+        return [
+            'schema' => $schema,
+            'table' => $table,
+        ];
+    }
+
+    /**
+     * Gets the schema name.
+     *
+     * @return string
+     */
+    protected function getGlobalSchemaName(): string
+    {
+        $options = $this->getOptions();
+        $config = $options['connection']->config() ?? [];
+
+        return empty($config['schema']) ? $this->schema : $config['schema'];
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getColumnTypes(): array
+    {
+        return array_merge(parent::getColumnTypes(), static::$specificColumnTypes);
+    }
+
+    /**
+     * Records a migration being run.
+     *
+     * @param \Migrations\MigrationInterface $migration Migration
+     * @param string $direction Direction
+     * @param string $startTime Start Time
+     * @param string $endTime End Time
+     * @return \Phinx\Db\Adapter\AdapterInterface
+     */
+    public function migrated(MigrationInterface $migration, string $direction, string $startTime, string $endTime): AdapterInterface
+    {
+        $startTime = str_replace(' ', 'T', $startTime);
+        $endTime = str_replace(' ', 'T', $endTime);
+
+        return parent::migrated($migration, $direction, $startTime, $endTime);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function insert(TableMetadata $table, array $row): void
+    {
+        $sql = $this->generateInsertSql($table, $row);
+
+        $sql = $this->updateSQLForIdentityInsert($table->getName(), $sql);
+
+        if ($this->isDryRunEnabled()) {
+            $this->io->out($sql);
+        } else {
+            $vals = [];
+            foreach ($row as $value) {
+                $placeholder = '?';
+                if ($value instanceof Literal || $value instanceof PhinxLiteral) {
+                    $placeholder = (string)$value;
+                }
+                if ($placeholder === '?') {
+                    $vals[] = $value;
+                }
+            }
+            $this->getConnection()->execute($sql, $vals);
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function bulkinsert(TableMetadata $table, array $rows): void
+    {
+        $sql = $this->generateBulkInsertSql($table, $rows);
+
+        $sql = $this->updateSQLForIdentityInsert($table->getName(), $sql);
+
+        if ($this->isDryRunEnabled()) {
+            $this->io->out($sql);
+        } else {
+            $vals = [];
+            foreach ($rows as $row) {
+                foreach ($row as $v) {
+                    $placeholder = '?';
+                    if ($v instanceof Literal || $v instanceof PhinxLiteral) {
+                        $placeholder = (string)$v;
+                    }
+                    if ($placeholder == '?') {
+                        if ($v instanceof DateTime) {
+                            $vals[] = $v->toDateTimeString();
+                        } elseif ($v instanceof Date) {
+                            $vals[] = $v->toDateString();
+                        } elseif (is_bool($v)) {
+                            $vals[] = $this->castToBool($v);
+                        } else {
+                            $vals[] = $v;
+                        }
+                    }
+                }
+            }
+            $this->getConnection()->execute($sql, $vals);
+        }
+    }
+
+    /**
+     * @param string $tableName Table name
+     * @param string $sql SQL statement
+     * @return string
+     */
+    private function updateSQLForIdentityInsert(string $tableName, string $sql): string
+    {
+        $options = $this->getOptions();
+        if (isset($options['identity_insert']) && $options['identity_insert'] == true) {
+            $identityInsertStart = sprintf(
+                'SET IDENTITY_INSERT %s ON',
+                $this->quoteTableName($tableName),
+            );
+            $identityInsertEnd = sprintf(
+                'SET IDENTITY_INSERT %s OFF',
+                $this->quoteTableName($tableName),
+            );
+            $sql = $identityInsertStart . ';' . PHP_EOL . $sql . ';' . PHP_EOL . $identityInsertEnd;
+        }
+
+        return $sql;
+    }
+}

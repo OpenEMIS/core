@@ -4,7 +4,7 @@ namespace Staff\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
 use Cake\Utility\Security;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use ArrayObject;
 
 class QualificationsSpecialisationsTable extends AppTable {

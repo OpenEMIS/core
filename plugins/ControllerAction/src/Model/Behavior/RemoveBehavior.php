@@ -8,7 +8,7 @@ use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Datasource\Exception\RecordNotFoundException;
@@ -45,7 +45,7 @@ class RemoveBehavior extends Behavior
             ]);
     }
 
-    public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function transferAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $model = $this->_table;
         $request = $model->request;
@@ -65,7 +65,7 @@ class RemoveBehavior extends Behavior
         }
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
         $visibleFields = [''];
@@ -135,7 +135,7 @@ class RemoveBehavior extends Behavior
         }
     }
 
-    public function remove(Event $mainEvent, ArrayObject $extra)
+    public function remove(EventInterface $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
         $request = $model->request;
@@ -345,7 +345,7 @@ class RemoveBehavior extends Behavior
         return $model->controller->redirect($extra['redirect']);
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         $model = $this->_table;
         if ($model->action == 'remove' && $model->actions('remove') == 'restrict') {
@@ -356,7 +356,7 @@ class RemoveBehavior extends Behavior
         }
     }
 
-    public function transfer(Event $mainEvent, ArrayObject $extra)
+    public function transfer(EventInterface $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
         $controller = $model->controller;
@@ -702,7 +702,7 @@ class RemoveBehavior extends Behavior
 
     public static function checkPassword($field, array $globalData)
     {
-        $Users = TableRegistry::get('User.Users');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
         $model = $globalData['providers']['table'];
         return ((new DefaultPasswordHasher)->check($field, $Users->get($model->Auth->user('id'))->password));
     }

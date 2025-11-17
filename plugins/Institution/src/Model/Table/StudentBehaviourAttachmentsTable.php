@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Laminas\Diactoros\UploadedFile;
 use App\Model\Table\AppTable;
@@ -47,7 +47,7 @@ class StudentBehaviourAttachmentsTable extends ControllerActionTable {
         return $events;
     }
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'download') {
             // check for the user permission to download here
@@ -56,7 +56,7 @@ class StudentBehaviourAttachmentsTable extends ControllerActionTable {
         }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(EventInterface $event, ArrayObject $extra) {
         $tabElements = $this->getStudentBehaviourTabElements();
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->getAlias());
@@ -70,7 +70,7 @@ class StudentBehaviourAttachmentsTable extends ControllerActionTable {
         ]);
     }
     
-    public function onUpdateFieldHiddenFileName(Event $event, array $attr, $action,  $request)
+    public function onUpdateFieldHiddenFileName(EventInterface $event, array $attr, $action,  $request)
     {
         $entity = $attr['entity'];
         if ($action == 'view') {
@@ -83,7 +83,7 @@ class StudentBehaviourAttachmentsTable extends ControllerActionTable {
 
         return $attr;
     }
-    public function onUpdateFieldHiddenFileContent(Event $event, array $attr, $action,  $request)
+    public function onUpdateFieldHiddenFileContent(EventInterface $event, array $attr, $action,  $request)
     {
         $file_content = $attr['file_content'];
         if ($action == 'view') {
@@ -96,7 +96,7 @@ class StudentBehaviourAttachmentsTable extends ControllerActionTable {
 
         return $attr;
     }
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 
         if(!is_null($entity->file_content)){
@@ -134,7 +134,7 @@ class StudentBehaviourAttachmentsTable extends ControllerActionTable {
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $tmpData = $data->getArrayCopy();
         //echo "when edit";

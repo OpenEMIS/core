@@ -3,7 +3,7 @@ namespace Health\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
@@ -40,7 +40,7 @@ class ImmunizationsTable extends ControllerActionTable
     }
 
     //POCOR-5890 starts remain work
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('health_immunization_type_id', ['attr'=>['label'=>'Vaccination Type'], 'type' => 'select', 'before' => 'comment']);
         $this->field('dosage',['visible' => false]);
@@ -49,7 +49,7 @@ class ImmunizationsTable extends ControllerActionTable
         $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
     }
 
-    public function indexAfterAction(Event $event, $data)
+    public function indexAfterAction(EventInterface $event, $data)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
@@ -57,7 +57,7 @@ class ImmunizationsTable extends ControllerActionTable
         $this->field('dosage',['visible' => false]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'health_immunization_type_id':
@@ -73,14 +73,14 @@ class ImmunizationsTable extends ControllerActionTable
         }
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {   
         $this->field('dosage', ['visible' => false]);
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 
-    public function viewBeforeAction(Event $event)
+    public function viewBeforeAction(EventInterface $event)
     {
         $this->field('health_immunization_type_id', ['attr'=>['label'=>'Vaccination Type'], 'before' => 'comment']);
         $this->field('dosage', ['visible' => false]);
@@ -96,7 +96,7 @@ class ImmunizationsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
             'key'   => 'date',
@@ -130,7 +130,7 @@ class ImmunizationsTable extends ControllerActionTable
     }
 
      // POCOR-6131
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query){
         $session = $this->request->getSession();
         // $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
         $studentUserId = $session->read('Student.Students.id');
@@ -143,7 +143,7 @@ class ImmunizationsTable extends ControllerActionTable
     }
 
     // Start POCOR-5188
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
 		if($this->request->getParam('controller') == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Institutions','Vaccinations','Staff - Health');       
@@ -225,7 +225,7 @@ class ImmunizationsTable extends ControllerActionTable
     // End POCOR-5188
 
     //POCOR-8293
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
         $userId = $this->getUserID();
         $query->where([ $this->aliasField('security_user_id') => $userId]);
         return $query;

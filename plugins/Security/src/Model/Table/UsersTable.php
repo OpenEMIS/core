@@ -3,7 +3,7 @@ namespace Security\Model\Table;
 
 use ArrayObject;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -68,7 +68,6 @@ class UsersTable extends ControllerActionTable
         $this->hasMany('Insurances', ['className' => 'User.UserInsurances', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->hasMany('ScholarshipApplications', ['className' => 'Report.ScholarshipApplications', 'foreignKey' => 'applicant_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ScholarshipHistories', ['className' => 'Scholarship.Histories', 'foreignKey' => 'applicant_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices', 'foreignKey' => 'applicant_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'foreignKey' => 'applicant_id', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -105,7 +104,7 @@ class UsersTable extends ControllerActionTable
 
     }
 
-    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, $primary)
     {
         if ($primary) {
             $schema = $this->getSchema();
@@ -134,7 +133,7 @@ class UsersTable extends ControllerActionTable
     }
 
     //POCOR-6922 starts
-    public function getCustomFilter(Event $event)
+    public function getCustomFilter(EventInterface $event)
     {
         $filters['user_type'] = [
             'label' => __('User Type'),
@@ -157,7 +156,7 @@ class UsersTable extends ControllerActionTable
         return $filters;
     }
 
-    public function onModifyConditions(Event $events, $key, $value)
+    public function onModifyConditions(EventInterface $events, $key, $value)
     {
         $conditions = [];
         if ($key == 'user_type') {
@@ -199,12 +198,12 @@ class UsersTable extends ControllerActionTable
         return $conditions;
     }
 
-    public function indexAfterAction(Event $event)
+    public function indexAfterAction(EventInterface $event)
     {
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
     }//POCOR-6922 ends
 
-    public function studentsAfterSave(Event $event, Entity $entity)
+    public function studentsAfterSave(EventInterface $event, Entity $entity)
     {
         if ($entity->isNew()) {
             $this->updateAll(['is_student' => 1], ['id' => $entity->student_id]);
@@ -248,7 +247,7 @@ class UsersTable extends ControllerActionTable
         return $data;
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields['photo_content']['visible'] = false;
         $this->fields['password']['visible'] = true;
@@ -270,7 +269,7 @@ class UsersTable extends ControllerActionTable
         ]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $this->fields['first_name']['visible'] = false;
@@ -284,7 +283,7 @@ class UsersTable extends ControllerActionTable
         $this->fields['name']['visible'] = true;
     }
 
-    public function _indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
+    public function _indexBeforePaginate(EventInterface $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
         //POCOR-6922 Start
         if (!$this->isAdvancedSearchEnabled()) {
@@ -397,7 +396,7 @@ class UsersTable extends ControllerActionTable
         return $query->where([$this->aliasField('super_admin != 1')]);
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'openemis_no';
         $searchableFields[] = 'username';
@@ -405,7 +404,7 @@ class UsersTable extends ControllerActionTable
         $searchableFields[] = 'identity_number';
     }
 
-    public function viewBeforeAction(Event $event)
+    public function viewBeforeAction(EventInterface $event)
     {
         $this->field('roles', [
             'type' => 'role_table',
@@ -415,7 +414,7 @@ class UsersTable extends ControllerActionTable
         ]);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query)
     {
         $query->find('notSuperAdmin');
         $query->select($this->aliasField('IdentityTypes.name'));
@@ -423,21 +422,21 @@ class UsersTable extends ControllerActionTable
 
     }
 
-    public function viewBeforeQuery(Event $event, Query $query)
+    public function viewBeforeQuery(EventInterface $event, Query $query)
     {
         $options['auto_contain'] = false;
         $query->contain(['Roles', 'Nationalities']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(EventInterface $event, Entity $entity)
     {
         $this->setupTabElements(['id' => $entity->id]);
     }
 
     //POCOR-7736::Start
-    public function onGetCreatedUserId(Event $event, Entity $entity)
+    public function onGetCreatedUserId(EventInterface $event, Entity $entity)
     {
-        $Users = TableRegistry::get('User.Users');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
         $result = $Users
             ->find()
             ->select(['first_name','last_name'])
@@ -447,10 +446,10 @@ class UsersTable extends ControllerActionTable
         return $entity->created_user_id = $result->first_name.' '.$result->last_name;
     }
 
-    public function onGetModifiedUserId(Event $event, Entity $entity)
+    public function onGetModifiedUserId(EventInterface $event, Entity $entity)
     {
         if(!empty($entity->modified_user_id)) {
-            $Users = TableRegistry::get('User.Users');
+            $Users = TableRegistry::getTableLocator()->get('User.Users');
             $result = $Users
                 ->find()
                 ->select(['first_name','last_name'])
@@ -462,9 +461,9 @@ class UsersTable extends ControllerActionTable
     }
     //POCOR-7736::End
 
-    public function onGetNationalityId(Event $event, Entity $entity){
+    public function onGetNationalityId(EventInterface $event, Entity $entity){
         if (!empty($entity->nationality_id)) {
-           $nationalities = TableRegistry::get('User.Nationalities')->get($entity->nationality_id);
+           $nationalities = TableRegistry::getTableLocator()->get('User.Nationalities')->get($entity->nationality_id);
            $entity->nationality_name = $nationalities->name;
            return $entity->nationality_name;
         }
@@ -476,7 +475,7 @@ class UsersTable extends ControllerActionTable
         $this->controller->set('tabElements', $this->controller->getUserTabElements($options));
     }
 
-    public function onGetRoleTableElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetRoleTableElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         $tableHeaders = [__('Groups'), __('Roles')];
         $tableCells = [];
@@ -484,7 +483,7 @@ class UsersTable extends ControllerActionTable
         $key = 'roles';
 
         if ($action == 'view') {
-            $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+            $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
             $groupUserRecords = $GroupUsers->find()
                 ->matching('SecurityGroups')
                 ->matching('SecurityRoles')
@@ -520,10 +519,10 @@ class UsersTable extends ControllerActionTable
         return $event->getSubject()->renderElement('User.Accounts/' . $key, ['attr' => $attr]);
     }
 
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $uniqueOpenemisId = $this->getUniqueOpenemisId(['model'=>Inflector::singularize('User')]);
 
         $this->fields['openemis_no']['type'] = 'readonly';
@@ -552,14 +551,14 @@ class UsersTable extends ControllerActionTable
         $this->fields['password']['attr']['label']['text'] = __(Inflector::humanize($this->fields['password']['field'])) . $this->tooltipMessage($tooltipMessagePassword);
     }
 
-    public function editAfterAction(Event $event, Entity $entity)
+    public function editAfterAction(EventInterface $event, Entity $entity)
     {
         $this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
         $this->fields['nationality_id']['attr']['value'] = $entity->has('main_nationality') ? $entity->main_nationality->name : '';
         $this->fields['identity_type_id']['attr']['value'] = $entity->has('identity_type') ? $entity->identity_type->name : '';
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         // not saving empty passwords
         if (empty($data[$this->getAlias()]['password'])) {
@@ -571,7 +570,7 @@ class UsersTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
-        $BaseUsers = TableRegistry::get('User.Users');
+        $BaseUsers = TableRegistry::getTableLocator()->get('User.Users');
         $validator->requirePresence('gender_id', 'create'); //POCOR-8752 name,gender and dob should be mandatory
         return $BaseUsers->setUserValidation($validator, $this);
     }
@@ -630,7 +629,7 @@ class UsersTable extends ControllerActionTable
       * add change password button 
       * POCOR-9370
      **/
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -656,7 +655,7 @@ class UsersTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $options)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $options)
     {
         if (!$this->isAdvancedSearchEnabled()) {
             $event->stopPropagation();
@@ -851,7 +850,7 @@ class UsersTable extends ControllerActionTable
 
     /*POCOR-6380 ends*/
 
-    public function indexBeforeQuerybkp(Event $event, Query $query, ArrayObject $options)
+    public function indexBeforeQuerybkp(EventInterface $event, Query $query, ArrayObject $options)
     {
 
 
@@ -946,7 +945,7 @@ class UsersTable extends ControllerActionTable
     }
 
     /*POCOR-6380 starts : overwrite view button as it was taking null id after selecting specific columns in indexing*/
-    public function onUpdateActionButtonsbkp(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtonsbkp(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 

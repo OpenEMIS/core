@@ -3,7 +3,7 @@ namespace Historical\Model\Behavior;
 
 use ArrayObject;
 use Cake\Core\Exception\Exception;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
@@ -45,7 +45,7 @@ class HistoricalBehavior extends Behavior
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $controller = $this->_table->controller->getName();
         $action = $this->_table->action;
@@ -81,7 +81,7 @@ class HistoricalBehavior extends Behavior
     }
 
     // logic should only trigger if the current model is historical behavior
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         if ($this->isHistorialModel()) {
             $this->_table->controller->Alert->info('Historical.addEdit', ['reset' => true]);
@@ -91,7 +91,7 @@ class HistoricalBehavior extends Behavior
     }
 
     // logic should only trigger if the current model is historical behavior
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         if ($this->isHistorialModel()) {
             $this->updateBackButton($extra);
@@ -100,7 +100,7 @@ class HistoricalBehavior extends Behavior
     }
 
     // logic should only trigger if the current model is historical behavior
-    public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    public function deleteBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         if ($this->isHistorialModel()) {
             $extra['redirect'] = $this->getOriginUrl();
@@ -108,7 +108,7 @@ class HistoricalBehavior extends Behavior
     }
 
     // logic should only trigger if the current model is historical behavior
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         if ($this->isHistorialModel()) {
             $this->updateBreadcrumbAndPageTitle();
@@ -116,7 +116,7 @@ class HistoricalBehavior extends Behavior
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $controller = $this->_table->controller->getName();
         if ($this->checkHasAccess('remove') && in_array($controller, $this->getConfig('allowedController'))) {
@@ -132,12 +132,12 @@ class HistoricalBehavior extends Behavior
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         try {
             $model = $this->_table;
             $mainQuery = $model->find();
-            $HistoricalModelTable = TableRegistry::get($this->getConfig('model'));
+            $HistoricalModelTable = TableRegistry::getTableLocator()->get($this->getConfig('model'));
 
             //$historicalQuery = $HistoricalModelTable->find()->select(['id']);
             $historicalQuery = $HistoricalModelTable->find();

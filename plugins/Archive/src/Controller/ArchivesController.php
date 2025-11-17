@@ -4,7 +4,7 @@ namespace Archive\Controller;
 use ArrayObject;
 use Exception;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
@@ -37,7 +37,7 @@ class ArchivesController extends AppController
         parent::initialize();
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra) {
 
 		$header = 'Archive';    
         $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $this->request->getParam('action')]);
@@ -76,7 +76,7 @@ class ArchivesController extends AppController
 
     function downloadSql($archiveId){
         ini_set('memory_limit','-1');
-        $backupLog = $this->loadModel('Archive.BackupLogs');
+        $backupLog = $this->BackupLogs = $this->fetchTable('Archive.BackupLogs');
         $archiveData = $backupLog->findById($archiveId)->first();
         $fileLink = WWW_ROOT .'export/backup' . DS .$archiveData->name . '.sql';
         $filetype=filetype($fileLink);

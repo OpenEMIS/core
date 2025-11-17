@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -30,11 +30,11 @@ class StudentAccountTable extends AppTable {
         return $events;
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
         if ($action == 'view') {
                 $institutionId = $this->getInstitutionID();
                 $studentId = $this->getStudentID();
-                $StudentTable = TableRegistry::get('Institution.Students');
+                $StudentTable = TableRegistry::getTableLocator()->get('Institution.Students');
                 if (! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
                     if (isset($toolbarButtons['edit'])) {
                         unset($toolbarButtons['edit']);
@@ -62,7 +62,7 @@ class StudentAccountTable extends AppTable {
         // End POCOR-5188
     }
 
-    public function onUpdateFieldUsername(Event $event, array $attr, $action, ServerRequest $request) {
+    public function onUpdateFieldUsername(EventInterface $event, array $attr, $action, ServerRequest $request) {
         $editStudentUsername = $this->AccessControl->check(['Institutions', 'StudentAccountUsername', 'edit']);
 
         if ($editStudentUsername) {
@@ -75,10 +75,10 @@ class StudentAccountTable extends AppTable {
      * POCOR-7159
      * add data in user_activities table while updating password
     */
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        $userActivities = TableRegistry::get('User.UserActivities');
-        $userTable = TableRegistry::get('Security.Users');
+        $userActivities = TableRegistry::getTableLocator()->get('User.UserActivities');
+        $userTable = TableRegistry::getTableLocator()->get('Security.Users');
         $user = $this->Auth->user();
         $currentTimeZone = date("Y-m-d H:i:s");
         $userId = $user['id'];
@@ -115,7 +115,7 @@ class StudentAccountTable extends AppTable {
         $save =  $userActivities->save($entity);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'username') {
             return __('Username');
@@ -137,7 +137,7 @@ class StudentAccountTable extends AppTable {
     }
 
     //function added to  redirect to view after successfully edit account details
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $errors = $entity->getErrors();
         if (empty($errors)) {

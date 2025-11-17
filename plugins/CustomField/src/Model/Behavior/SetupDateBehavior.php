@@ -3,7 +3,7 @@ namespace CustomField\Model\Behavior;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use CustomField\Model\Behavior\SetupBehavior;
@@ -26,7 +26,7 @@ class SetupDateBehavior extends SetupBehavior
         $this->_table->addBehavior('ControllerAction.DatePicker', ['start_date', 'end_date']);
     }
 
-    public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterQuery(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $fieldType = '';
         if (!empty($this->_table->request->getData())) {
@@ -42,7 +42,7 @@ class SetupDateBehavior extends SetupBehavior
         }
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         if ($this->_table->request->is('POST')) {
             $fieldType = (array_key_exists('field_type', $this->_table->request->getData()[$this->_table->getAlias()]))? $this->_table->request->getData($this->_table->getAlias())['field_type']: null;
@@ -68,7 +68,7 @@ class SetupDateBehavior extends SetupBehavior
         ]);
     }
 
-    public function onSetDateElements(Event $event, Entity $entity)
+    public function onSetDateElements(EventInterface $event, Entity $entity)
     {
         $fieldType = strtolower($this->fieldTypeCode);
 
@@ -131,7 +131,7 @@ class SetupDateBehavior extends SetupBehavior
         }
     }
 
-    public function onGetValidationRulesDate(Event $event, Entity $entity)
+    public function onGetValidationRulesDate(EventInterface $event, Entity $entity)
     {
         $decodedParams = $event->getSubject()->HtmlField->decodeEscapeHtmlEntity($entity->params);
         $paramsArray = (!empty($decodedParams))? json_decode($decodedParams, true): [];
@@ -146,7 +146,7 @@ class SetupDateBehavior extends SetupBehavior
         }
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
         if ($data->offsetExists('validation_rules_date')) {

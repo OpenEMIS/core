@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 
@@ -34,10 +34,10 @@ class PasswordBehavior extends Behavior {
 
 
 
-	    public function buildValidator(Event $event, Validator $validator, $name) {
+	    public function buildValidator(EventInterface $event, Validator $validator, $name) {
         $validator->setProvider('custom', $event->getSubject()); //POCOR-8080 here is the problem
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 		$passwordMinLength = $ConfigItems->value('password_min_length');
 		$passwordHasUppercase = $ConfigItems->value('password_has_uppercase');
 		$passwordHasLowercase = $ConfigItems->value('password_has_lowercase');
@@ -146,17 +146,17 @@ class PasswordBehavior extends Behavior {
 	}
 
 	public static function checkUserPassword($field, $model, array $globalData) {
-		$Users = TableRegistry::get('User.Users');
+		$Users = TableRegistry::getTableLocator()->get('User.Users');
 		return ((new DefaultPasswordHasher)->check($field, $model->get($model->Auth->user('id'))->password));
 	}
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+	public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) {
 		if ($this->checkOwnPassword) {
 			$entity->password = $entity->{$this->targetField};
 		}
 	}
 
-	public function editAfterAction(Event $event, Entity $entity)  {
+	public function editAfterAction(EventInterface $event, Entity $entity)  {
 		if ($this->checkOwnPassword) {
 			$this->_table->ControllerAction->field($this->targetField, ['type' => 'password', 'attr' => ['value' => '']]);
 		}

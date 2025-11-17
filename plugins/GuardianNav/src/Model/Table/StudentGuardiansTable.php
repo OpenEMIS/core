@@ -2,7 +2,7 @@
 namespace GuardianNav\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -34,7 +34,7 @@ class StudentGuardiansTable extends ControllerActionTable
         $this->addBehavior('ControllerAction.Image');
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $guardianId = $this->Session->read('Auth.User.id');
         $conditions[$this->aliasField('guardian_id')] = $guardianId;

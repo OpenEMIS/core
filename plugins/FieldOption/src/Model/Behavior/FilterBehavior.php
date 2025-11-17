@@ -2,7 +2,7 @@
 namespace FieldOption\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Table;
@@ -38,13 +38,13 @@ class FilterBehavior extends DisplayBehavior {
 		$this->parentFieldOptionInfo = $parentFieldOptionInfo;
 
 		if(!empty($parentFieldOptionInfo['parentModel']) && !empty($parentFieldOptionInfo['foreignKey'])) {
-			$parentFieldOptionTable = TableRegistry::get($parentFieldOptionInfo['parentModel']);
+			$parentFieldOptionTable = TableRegistry::getTableLocator()->get($parentFieldOptionInfo['parentModel']);
 			$parentFieldOptions = $parentFieldOptionTable->find('list')->where([$parentFieldOptionTable->aliasField('visible') => 1])->toArray();
 			$this->parentFieldOptions = $parentFieldOptions;
 		}
 	}
 
-	public function indexBeforeAction(Event $event, ArrayObject $settings) {
+	public function indexBeforeAction(EventInterface $event, ArrayObject $settings) {
 		parent::indexBeforeAction($event, $settings);
         $query = $settings['query'];
 
@@ -63,7 +63,7 @@ class FilterBehavior extends DisplayBehavior {
 			'visible' => ['index' => false, 'view' => false, 'edit' => false]
 		]);
 
-		$table = TableRegistry::get($this->fieldOptionName);
+		$table = TableRegistry::getTableLocator()->get($this->fieldOptionName);
 		$query = $table->find();
 
 		$selectedParentFieldOption = $this->_table->ControllerAction->getVar('selectedParentFieldOption');
@@ -76,19 +76,19 @@ class FilterBehavior extends DisplayBehavior {
 		return $query;
 	}
 
-	public function viewBeforeAction(Event $event) {
+	public function viewBeforeAction(EventInterface $event) {
 		parent::viewBeforeAction($event);
 
 		$this->_table->fields['field_option_id']['value'] = $this->_table->fields['field_option_id']['attr']['value'];
-		$table = TableRegistry::get($this->fieldOptionName);
+		$table = TableRegistry::getTableLocator()->get($this->fieldOptionName);
 		$this->displayParentFields($table);
 		return $table;
 	}
 
-	public function addEditBeforeAction(Event $event) {
+	public function addEditBeforeAction(EventInterface $event) {
 		parent::addEditBeforeAction($event);
 
-		$table = TableRegistry::get($this->fieldOptionName);
+		$table = TableRegistry::getTableLocator()->get($this->fieldOptionName);
 		$this->displayParentFields($table);
 		return $table;
 	}
@@ -121,13 +121,13 @@ class FilterBehavior extends DisplayBehavior {
 
 	}
 
-	public function deleteBeforeAction(Event $event, ArrayObject $settings) {
+	public function deleteBeforeAction(EventInterface $event, ArrayObject $settings) {
 		$settings['deleteStrategy'] = 'transfer';
 		$settings['model'] = $this->fieldOptionName;
 	}
 
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
-		$table = TableRegistry::get($this->fieldOptionName);
+	public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra) {
+		$table = TableRegistry::getTableLocator()->get($this->fieldOptionName);
 		$foreignKey = $this->parentFieldOptionList[$this->fieldOptionName]['foreignKey'];
 
 		if(!empty($foreignKey)) {

@@ -3,7 +3,7 @@ namespace CustomField\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use CustomField\Model\Behavior\SetupBehavior;
 
@@ -22,7 +22,7 @@ class SetupNumberBehavior extends SetupBehavior
         ];
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
         $fieldTypes = $model->getFieldTypes();
@@ -33,7 +33,7 @@ class SetupNumberBehavior extends SetupBehavior
         }
     }
 
-    public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterQuery(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->field_type == $this->fieldTypeCode) {
             $this->buildNumberValidator();
@@ -108,7 +108,7 @@ class SetupNumberBehavior extends SetupBehavior
             ;
     }
 
-    public function onSetNumberElements(Event $event, Entity $entity)
+    public function onSetNumberElements(EventInterface $event, Entity $entity)
     {
         $model = $this->_table;
         $request = $model->request;
@@ -188,7 +188,7 @@ class SetupNumberBehavior extends SetupBehavior
         }
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['field_type']) && $data['field_type'] == $this->fieldTypeCode) {
             if (isset($data['validation_rule'])) {

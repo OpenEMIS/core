@@ -15,7 +15,7 @@ class SystemUpdatesShell extends AlertShell
     {
         parent::initialize();
 
-        $this->loadModel('System.SystemUpdates');
+        $this->SystemUpdates = $this->fetchTable('System.SystemUpdates');
     }
 
     public function main()

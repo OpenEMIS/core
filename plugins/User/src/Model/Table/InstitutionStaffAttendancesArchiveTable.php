@@ -4,7 +4,7 @@ namespace User\Model\Table;
 use ArrayObject;
 
 use Cake\I18n\Date;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -35,7 +35,7 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
         $this->toggle('search', false);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(EventInterface $event, ArrayObject $extra) {
         $this->field('absence_type_id', ['visible' => false]);
         $this->field('old_value', ['visible' => false]);
         $this->field('new_value', ['visible' => false]);
@@ -65,11 +65,11 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
         ];
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // Setup period options
-        $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionStaffAttendances = TableRegistry::getTableLocator()->get('Staff.InstitutionStaffAttendances');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
         if ($this->request->query('user_id') !== null) {
@@ -89,7 +89,7 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
             }
         }
 
-        $transfer_logs = TableRegistry::get('transfer_logs');
+        $transfer_logs = TableRegistry::getTableLocator()->get('transfer_logs');
         $transfer_logs_academic_period_result =$transfer_logs->find('all', array(
             'fields'=>'academic_period_id',
             'group' => 'academic_period_id'
@@ -176,7 +176,7 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'created_user_id') {
             return __('Last Modified By');

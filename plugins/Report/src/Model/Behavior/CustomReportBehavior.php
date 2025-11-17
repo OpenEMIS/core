@@ -2,7 +2,7 @@
 namespace Report\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
@@ -23,7 +23,7 @@ class CustomReportBehavior extends Behavior
         $result = [];
         if (isset($jsonArray['model'])) {
             $model = $jsonArray['model'];
-            $this->Table = TableRegistry::get($model);
+            $this->Table = TableRegistry::getTableLocator()->get($model);
             $query = $this->Table->find();
 
             // rename to avoid duplicate finders
@@ -104,7 +104,7 @@ class CustomReportBehavior extends Behavior
         $optionJoins = isset($optionsCondition["joins"]) ? $optionsCondition["joins"] : [];
         $optionConditions = isset($optionsCondition["conditions"]) ? $optionsCondition["conditions"] : [];
 
-        $queryTable = TableRegistry::get($optionModel);
+        $queryTable = TableRegistry::getTableLocator()->get($optionModel);
         $query = $queryTable->find();
 
         // do joins
@@ -112,7 +112,7 @@ class CustomReportBehavior extends Behavior
             if (!isset($joinData["model"])) {
                 continue;
             }
-            $joinTable = TableRegistry::get($joinData["model"]);
+            $joinTable = TableRegistry::getTableLocator()->get($joinData["model"]);
             $joinType = isset($joinData["type"]) ? $joinData["type"] : "INNER";
             $joinConditions = isset($joinData["conditions"]) ? $joinData["conditions"] : [];
 
@@ -206,7 +206,7 @@ class CustomReportBehavior extends Behavior
         if (!empty($values)) {
             foreach($values as $obj) {
                 if (isset($obj['model']) && isset($obj['type'])) {
-                    $joinTable = TableRegistry::get($obj['model']);
+                    $joinTable = TableRegistry::getTableLocator()->get($obj['model']);
                     $type = strtoupper($obj['type']);
 
                     $joinConditions = [];

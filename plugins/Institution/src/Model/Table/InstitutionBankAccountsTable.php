@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -42,7 +42,7 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 		return $validator;
 	}
 
-	public function beforeAction(Event $event, ArrayObject $extra) {
+	public function beforeAction(EventInterface $event, ArrayObject $extra) {
 		$this->field('account_name', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
 		$this->field('account_number', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
 		$this->field('active', ['type' => 'select', 'options' => $this->getSelectOptions('general.yesno'), 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
@@ -84,7 +84,7 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 ** index action methods
 **
 ******************************************************************************************************************/
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforePaginate(EventInterface $event, Request $request, Query $query, ArrayObject $options) {
 		$query->contain(['BankBranches.Banks']);
 	}
 
@@ -93,11 +93,11 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 ** viewEdit action methods
 **
 ******************************************************************************************************************/
-	public function viewEditBeforeQuery(Event $event, Query $query) {
+	public function viewEditBeforeQuery(EventInterface $event, Query $query) {
 		$query->contain('BankBranches.Banks');
 	}
 
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+	public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
     	switch ($field) {
             case 'active':
@@ -130,13 +130,13 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 ** addEdit action methods
 **
 ******************************************************************************************************************/
-	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+	public function addEditBeforeAction(EventInterface $event, ArrayObject $extra) {
 		$this->setFieldOrder([
 			'bank', 'bank_branch_id', 'account_name', 'account_number', 'active', 'remarks'
 		]);
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
 	{
 		if (empty($this->_bankOptions)) {
 			$this->_bankOptions = $this->getBankOptions();
@@ -169,11 +169,11 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 ** edit action methods
 **
 ******************************************************************************************************************/
-	public function editBeforeAction(Event $event, ArrayObject $extra) {
+	public function editBeforeAction(EventInterface $event, ArrayObject $extra) {
 		$this->fields['bank']['type'] = 'disabled';
 	}
 
-	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+	public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra) {
 		$this->fields['bank']['attr']['value'] = $entity->bank_branch->bank->name;
 	}
 
@@ -183,17 +183,17 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 ** field specific methods
 **
 ******************************************************************************************************************/
-	public function onGetBank(Event $event, Entity $entity) {
+	public function onGetBank(EventInterface $event, Entity $entity) {
 		return $entity->bank_branch->bank->name;
 	}
 
-	public function onUpdateFieldBank(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldBank(EventInterface $event, array $attr, $action, $request) {
 		$this->_bankOptions = $this->getBankOptions();
 		$attr['options'] = $this->_bankOptions;
 		return $attr;
 	}
 
-	public function onUpdateFieldBankBranchId(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldBankBranchId(EventInterface $event, array $attr, $action, $request) {
 		if (empty($this->_bankOptions)) {
 			$this->_bankOptions = $this->getBankOptions();
 		}
@@ -216,7 +216,7 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 		return $attr;
 	}
 
-	public function onGetActive(Event $event, Entity $entity) {
+	public function onGetActive(EventInterface $event, Entity $entity) {
 		$icons = [
 			0 => '<i class="fa kd-cross red"></i>',
 			1 => '<i class="fa kd-check green"></i>'
@@ -240,7 +240,7 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 	}
 
 	// POCOR-6160 starts
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
 		$banks = TableRegistry::getTableLocator()->get('FieldOption.Banks');
 
@@ -262,7 +262,7 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
     }
 	// POCOR-6160 ends
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->getSession();
         //$institutionId = $session->read('Institution.Institutions.id');
@@ -304,7 +304,7 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
         });
     }
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+	public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
 
         $extraField[] = [
@@ -353,7 +353,7 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
         return $events;
     }
 
-	public function addDeleteBeforeAction(Event $event, ArrayObject $extra)
+	public function addDeleteBeforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $model = $this;

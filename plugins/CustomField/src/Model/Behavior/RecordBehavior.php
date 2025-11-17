@@ -8,7 +8,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\ORM\Table;
 use Cake\Log\Log;
@@ -127,8 +127,8 @@ class RecordBehavior extends Behavior
             $this->CustomTableCells = $model->CustomTableCells;
         }
         $this->firstTabName = null;
-        $this->CustomModules = TableRegistry::get('CustomField.CustomModules');
-        $this->CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
+        $this->CustomModules = TableRegistry::getTableLocator()->get('CustomField.CustomModules');
+        $this->CustomFieldTypes = TableRegistry::getTableLocator()->get('CustomField.CustomFieldTypes');
         try{
             $this->CustomFields = $this->CustomFieldValues->CustomFields;
         }catch (\Exception $exception){
@@ -136,8 +136,8 @@ class RecordBehavior extends Behavior
         }
         $this->CustomFieldOptions = $this->CustomFieldValues->CustomFields->CustomFieldOptions;
         $this->CustomForms = $this->CustomFields->CustomForms;
-        $this->CustomFormsFields = TableRegistry::get($this->getConfig('formFieldClass.className'));
-        $this->CustomFormsFilters = TableRegistry::get($this->getConfig('formFilterClass.className'));
+        $this->CustomFormsFields = TableRegistry::getTableLocator()->get($this->getConfig('formFieldClass.className'));
+        $this->CustomFormsFilters = TableRegistry::getTableLocator()->get($this->getConfig('formFilterClass.className'));
 
         // Each field type will have one behavior attached
         $model->addBehavior('CustomField.RenderText');
@@ -181,22 +181,22 @@ class RecordBehavior extends Behavior
         return $events;
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $this->setToolbarButtons($toolbarButtons, $attr, $action);
     }
 
-    public function addOnInitialize(Event $event, Entity $entity)
+    public function addOnInitialize(EventInterface $event, Entity $entity)
     {
         $this->deleteUploadSessions();
     }
 
-    public function editOnInitialize(Event $event, Entity $entity)
+    public function editOnInitialize(EventInterface $event, Entity $entity)
     {
         $this->deleteUploadSessions();
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query)
     {
         // do not contain CustomFieldValues
         if (!is_null($this->getConfig('tableCellClass'))) {
@@ -205,12 +205,12 @@ class RecordBehavior extends Behavior
 
     }
 
-    public function editAfterQuery(Event $event, Entity $entity)
+    public function editAfterQuery(EventInterface $event, Entity $entity)
     {
         $this->formatEntity($entity);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(EventInterface $event, Entity $entity)
     {
 
         $model = $this->_table;
@@ -224,13 +224,13 @@ class RecordBehavior extends Behavior
         }
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
         $alias = $model->getAlias();
 
         if (isset($data[$alias])) {
-            $CustomFields = TableRegistry::get($this->getConfig('fieldClass.className'));
+            $CustomFields = TableRegistry::getTableLocator()->get($this->getConfig('fieldClass.className'));
 
             // patch custom_field_values
             if (isset($data[$alias]['custom_field_values'])) {
@@ -334,7 +334,7 @@ class RecordBehavior extends Behavior
         }
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity)
+    public function addEditAfterAction(EventInterface $event, Entity $entity)
     {
         $model = $this->_table;
         $this->setupCustomFields($entity);
@@ -346,7 +346,7 @@ class RecordBehavior extends Behavior
         }
     }
 
-    public function afterAction(Event $event)
+    public function afterAction(EventInterface $event)
     {
         if ($this->isCAv4()) {
             $extra = func_get_arg(1);
@@ -364,12 +364,12 @@ class RecordBehavior extends Behavior
         }
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         return $this->processSave($entity, $data, $extra);
     }
 
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         return $this->processSave($entity, $data, $extra);
     }
@@ -452,7 +452,7 @@ class RecordBehavior extends Behavior
                         if (is_null($this->getConfig('moduleKey'))) {
                             if (isset($data[$this->_table->getAlias()][$this->getConfig('formKey')])) {
                                 $surveyFormId = $data[$this->_table->getAlias()][$this->getConfig('formKey')];
-                                $SurveyRules = TableRegistry::get('Survey.SurveyRules');
+                                $SurveyRules = TableRegistry::getTableLocator()->get('Survey.SurveyRules');
                                 $rules = $SurveyRules
                                     ->find()
                                     ->where([
@@ -513,8 +513,8 @@ class RecordBehavior extends Behavior
                     // Logic to delete all exisiting values of a repeater
                     if ($entity->has('institution_repeater_surveys')) {
                         $formKey = 'survey_form_id';
-                        $RepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
-                        $RepeaterSurveyAnswers = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
+                        $RepeaterSurveys = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveys');
+                        $RepeaterSurveyAnswers = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveyAnswers');
 
                         $status = $entity->status_id;
                         $institutionId = $entity->institution_id;
@@ -1250,7 +1250,7 @@ class RecordBehavior extends Behavior
     }
 
     // Model.excel.onExcelBeforeStart
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $optionsValues = $this->CustomFieldOptions->find('list')->toArray();
         $sheets[] = [
@@ -1262,7 +1262,7 @@ class RecordBehavior extends Behavior
     }
 
     // Model.excel.onExcelUpdateFields
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
 
         $recordId = $settings['id'];
@@ -1402,7 +1402,7 @@ class RecordBehavior extends Behavior
     }
 
     // Model.excel.onExcelRenderCustomField
-    public function onExcelRenderCustomField(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderCustomField(EventInterface $event, Entity $entity, array $attr)
     {
         // POCOR-9067 start
         $request = $this->_table->request; //POCOR-8409

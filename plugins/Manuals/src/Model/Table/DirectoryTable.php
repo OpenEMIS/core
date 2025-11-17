@@ -3,7 +3,7 @@ namespace Manuals\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -26,7 +26,7 @@ class DirectoryTable extends ControllerActionTable
         $this->removeBehavior('Reorder');
     } 
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $query = $extra['query'];
         // $extra['pagination'] = false;
@@ -48,12 +48,12 @@ class DirectoryTable extends ControllerActionTable
         // return $query;
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->setupField();
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {        
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
@@ -66,7 +66,7 @@ class DirectoryTable extends ControllerActionTable
         $this->field('parent_id', ['visible' => false]);   
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     { 
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
@@ -97,7 +97,7 @@ class DirectoryTable extends ControllerActionTable
     }
 
 
-    public function onGetUrl(Event $event, Entity $entity)
+    public function onGetUrl(EventInterface $event, Entity $entity)
     {
         $link  = $entity['url'];
         if(!empty($link)){

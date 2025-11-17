@@ -4,7 +4,7 @@ namespace CustomExcel\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
@@ -156,7 +156,7 @@ class ReportCardsTable extends AppTable
         return $events;
     }
 
-    public function onExcelTemplateBeforeGenerate(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateBeforeGenerate(EventInterface $event, array $params, ArrayObject $extra)
     {
         $StudentsReportCards = self::getDynamicTableInstance('Institution.InstitutionStudentsReportCards'); // POCOR-9162
         if (!$StudentsReportCards->exists($params)) {
@@ -176,7 +176,7 @@ class ReportCardsTable extends AppTable
 
     }
 
-    public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateAfterGenerate(EventInterface $event, array $params, ArrayObject $extra)
     {
         $StudentsReportCards = self::getDynamicTableInstance('Institution.InstitutionStudentsReportCards'); // POCOR-9162
         $studentReportCardData = $StudentsReportCards
@@ -275,7 +275,7 @@ class ReportCardsTable extends AppTable
         // ]);
     }
 
-    public function afterRenderExcelTemplate(Event $event, ArrayObject $extra, $controller)
+    public function afterRenderExcelTemplate(EventInterface $event, ArrayObject $extra, $controller)
     {
         $params = $extra['params'];
         $url = [
@@ -292,7 +292,7 @@ class ReportCardsTable extends AppTable
         return $controller->redirect($url);
     }
 
-    public function onExcelTemplateInitialiseReportCards(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseReportCards(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['report_card_id'])) {
             $ReportCards = self::getDynamicTableInstance('ReportCard.ReportCards'); // POCOR-9162
@@ -306,7 +306,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseInstitutionStudentsReportCards(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutionStudentsReportCards(EventInterface $event, array $params, ArrayObject $extra)
     {
         $StudentsGpa = self::getDynamicTableInstance('Institution.InstitutionStudentsGpa'); // POCOR-9162
         if (isset($params['report_card_id'], $params['student_id'], $params['institution_id'], $params['academic_period_id'], $extra['report_card_education_grade_id'])) {
@@ -512,7 +512,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseFirstGuardian(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseFirstGuardian(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id'])) {
             $StudentGuardians = self::getDynamicTableInstance('Student.Guardians'); // POCOR-9162
@@ -574,7 +574,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseExtracurriculars(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseExtracurriculars(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
 
@@ -608,7 +608,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseAwards(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseAwards(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
 
@@ -635,7 +635,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseAdmissions(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseAdmissions(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id']) && isset($params['academic_period_id']) && isset($params['institution_id']) && isset($extra['report_card_education_grade_id'])) {
 
@@ -663,7 +663,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseInstitutionStudentsReportCardsComments(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutionStudentsReportCardsComments(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['report_card_id']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
             $StudentsReportCardsComments = self::getDynamicTableInstance('Institution.InstitutionStudentsReportCardsComments'); // POCOR-9162
@@ -765,7 +765,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseInstitutions(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutions(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id'])) {
             $Institutions = self::getDynamicTableInstance('Institution.Institutions'); // POCOR-9162
@@ -774,7 +774,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialisePrincipal(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialisePrincipal(EventInterface $event, array $params, ArrayObject $extra)
     {
         //POCOR-8013 rewritten
         if (isset($params['institution_id'])) {
@@ -797,7 +797,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseDeputyPrincipal(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseDeputyPrincipal(EventInterface $event, array $params, ArrayObject $extra)
     {
         //POCOR-8013 rewritten
         if (isset($params['institution_id'])) {
@@ -816,7 +816,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseInstitutionClasses(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutionClasses(EventInterface $event, array $params, ArrayObject $extra)
     {
 
         if (isset($params['institution_class_id'])) {
@@ -873,7 +873,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseInstitutionSubjectStudents(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutionSubjectStudents(EventInterface $event, array $params, ArrayObject $extra)
     {
         // POCOR_9252
         if (isset($params['student_id'])
@@ -907,7 +907,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseInstitutionSubjectStudentsWithName(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutionSubjectStudentsWithName(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id']) && isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
             $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents'); // POCOR-9162
@@ -944,7 +944,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseStudentBehaviours(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseStudentBehaviours(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id']) && isset($params['institution_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
             $StudentBehaviours = self::getDynamicTableInstance('Institution.StudentBehaviours'); // POCOR-9162
@@ -962,7 +962,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseInstitutionStudentAbsencesOldOne(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutionStudentAbsencesOldOne(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
 
@@ -1045,7 +1045,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseInstitutionStudentAbsences(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutionStudentAbsences(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
 
@@ -1360,7 +1360,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseCompetencyTemplates(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseCompetencyTemplates(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
             $CompetencyTemplates = self::getDynamicTableInstance('Competency.CompetencyTemplates'); // POCOR-9162
@@ -1387,7 +1387,7 @@ class ReportCardsTable extends AppTable
 
 
     //POCOR-7315::Start
-    public function onExcelTemplateInitialiseAttendanceAge(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseAttendanceAge(EventInterface $event, array $params, ArrayObject $extra)
     {
         $EducationGradesTable = self::getDynamicTableInstance('Education.EducationGrades'); // POCOR-9162
         $ConfigItemsTable = self::getDynamicTableInstance('Configuration.ConfigItems'); // POCOR-9162
@@ -1408,7 +1408,7 @@ class ReportCardsTable extends AppTable
     }
     //POCOR-7315::END
     //POCOR-7315::Start
-    public function onExcelTemplateInitialiseCompetencyPeriodsByTemplate(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseCompetencyPeriodsByTemplate(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
             $CompetencyPeriods = self::getDynamicTableInstance('Competency.CompetencyPeriods'); // POCOR-9162
@@ -1533,7 +1533,7 @@ class ReportCardsTable extends AppTable
 
     //POCOR-7315::END
 
-    public function onExcelTemplateInitialiseCompetencyPeriods(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseCompetencyPeriods(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
             $CompetencyPeriods = self::getDynamicTableInstance('Competency.CompetencyPeriods'); // POCOR-9162
@@ -1553,7 +1553,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseCompetencyItems(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseCompetencyItems(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids'])) {
             $CompetencyItems = self::getDynamicTableInstance('Competency.CompetencyItems'); // POCOR-9162
@@ -1573,7 +1573,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseCompetencyCriterias(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseCompetencyCriterias(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids'])) {
             $CompetencyCriterias = self::getDynamicTableInstance('Competency.CompetencyCriterias'); // POCOR-9162
@@ -1593,7 +1593,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseStudentCompetencyPeriodComments(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseStudentCompetencyPeriodComments(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $CompetencyPeriodComments = self::getDynamicTableInstance('Institution.InstitutionCompetencyPeriodComments'); // POCOR-9162
@@ -1612,7 +1612,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseStudentCompetencyItemComments(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseStudentCompetencyItemComments(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $CompetencyItemComments = self::getDynamicTableInstance('Institution.InstitutionCompetencyItemComments'); // POCOR-9162
@@ -1631,7 +1631,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseCompetencyCriteriasWithResults(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseCompetencyCriteriasWithResults(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['academic_period_id'])) {
             $CompetencyCriterias = self::getDynamicTableInstance('Competency.CompetencyCriterias'); // POCOR-9162
@@ -1686,7 +1686,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseStudentCompetencyResults(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseStudentCompetencyResults(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $StudentCompetencyResults = self::getDynamicTableInstance('Institution.InstitutionCompetencyResults'); // POCOR-9162
@@ -1706,7 +1706,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseAssessments(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseAssessments(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
             $Assessments = self::getDynamicTableInstance('Assessment.Assessments'); // POCOR-9162
@@ -1725,7 +1725,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseAssessmentPeriods(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseAssessmentPeriods(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['assessment_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
             $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods'); // POCOR-9162
@@ -1767,7 +1767,7 @@ class ReportCardsTable extends AppTable
 
 
 
-    public function onExcelTemplateInitialiseAssessmentItems(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseAssessmentItems(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['assessment_id']) && isset($params['institution_class_id'])) {
             $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems'); // POCOR-9162
@@ -1794,7 +1794,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseSubjectTeacher(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseSubjectTeacher(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['assessment_id']) && isset($params['institution_class_id'])) {
             //Start: POCOR-6769
@@ -1887,7 +1887,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseAssessmentItemsStudentSubjects(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseAssessmentItemsStudentSubjects(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_class_id']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['education_grade_id']) && isset($params['academic_period_id'])) {
 
@@ -2005,7 +2005,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseAssessmentItemsWithResults(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseAssessmentItemsWithResults(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_class_id']) && isset($extra['assessment_id']) &&
             isset($extra['assessment_period_ids'])
@@ -2055,14 +2055,14 @@ class ReportCardsTable extends AppTable
      * POCOR-9143: Centralized mark calculation and formatting logic to reduce redundancy and ensure consistency
      * across the application (UI and export tools).
      *
-     * @param \Cake\Event\Event $event The event object
+     * @param \Cake\Event\EventInterface $event The event object
      * @param \ArrayAccess $params Parameters passed to the event listener (student_id, institution_class_id, etc.)
      * @param \ArrayAccess $extra Extra context data (assessment_id, assessment_period_ids, etc.)
      * @return array The search results.
      *
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onExcelTemplateInitialiseAssessmentItemResults(Event $event, array $params, ArrayObject $extra): array
+    public function onExcelTemplateInitialiseAssessmentItemResults(EventInterface $event, array $params, ArrayObject $extra): array
     {
         $student_id = $params['student_id'];
         $institution_id = $params['institution_id'];
@@ -2204,7 +2204,7 @@ class ReportCardsTable extends AppTable
 
     }
 
-    public function onExcelTemplateInitialiseOutcomeTemplates(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseOutcomeTemplates(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
             $OutcomeTemplates = self::getDynamicTableInstance('Outcome.OutcomeTemplates');
@@ -2227,7 +2227,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseOutcomePeriods(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseOutcomePeriods(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['outcome_templates_ids']) && !empty($extra['outcome_templates_ids']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
             $OutcomePeriods = self::getDynamicTableInstance('Outcome.OutcomePeriods');
@@ -2247,7 +2247,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseOutcomeSubjects(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseOutcomeSubjects(EventInterface $event, array $params, ArrayObject $extra)
     {
 
         if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['education_grade_id']) && isset($params['institution_class_id']) && isset($extra['outcome_periods_ids']) && !empty($extra['outcome_periods_ids'])) {
@@ -2298,7 +2298,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseOutcomeCriterias(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseOutcomeCriterias(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['outcome_templates_ids']) && !empty($extra['outcome_templates_ids'])) {
             $OutcomeCriterias = self::getDynamicTableInstance('Outcome.OutcomeCriterias');
@@ -2325,7 +2325,7 @@ class ReportCardsTable extends AppTable
     }
 
 
-    public function onExcelTemplateInitialiseStudentOutcomeSubjectComments(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseStudentOutcomeSubjectComments(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['outcome_templates_ids']) && !empty($extra['outcome_templates_ids']) && isset($extra['outcome_periods_ids']) && !empty($extra['outcome_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
 
@@ -2343,7 +2343,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseStudentOutcomeResults(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseStudentOutcomeResults(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['outcome_templates_ids']) && !empty($extra['outcome_templates_ids']) && isset($extra['outcome_periods_ids']) && !empty($extra['outcome_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $StudentOutcomeResults = self::getDynamicTableInstance('Institution.InstitutionOutcomeResults');
@@ -2362,7 +2362,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseGroupAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseGroupAssessmentItemResults(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_class_id']) && isset($extra['assessment_id'])
             && isset($extra['assessment_period_ids'])
@@ -2456,7 +2456,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseGroupAssessmentPeriods(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseGroupAssessmentPeriods(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['assessment_id'])) {
             $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods');
@@ -2487,7 +2487,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseAssessmentTermResults(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseAssessmentTermResults(EventInterface $event, array $params, ArrayObject $extra)
     {
         // POCOR_9252 start
         if (isset($params['institution_class_id']) && isset($extra['assessment_id'])
@@ -2594,7 +2594,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseNextClassSubjects(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseNextClassSubjects(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id']) && isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
 
@@ -2634,7 +2634,7 @@ class ReportCardsTable extends AppTable
     }
 
     //  POCOR-4988
-    public function onExcelTemplateInitialiseStudentNextYearClass(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseStudentNextYearClass(EventInterface $event, array $params, ArrayObject $extra)
     {
 
         $condition = isset($params['student_id'])
@@ -2664,7 +2664,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseStudentIdentities(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseStudentIdentities(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id'])) {
             $UserIdentities = self::getDynamicTableInstance('user_identities');
@@ -2808,11 +2808,11 @@ class ReportCardsTable extends AppTable
      * Event handler for initializing the Excel template for Institution Students' Report Card and GPA.
      * This method is triggered when the report card template is being prepared with student GPA data for the institution.
      *
-     * @param Event $event The event that triggered the method.
+     * @param EventInterface $event The event that triggered the method.
      * @param array $params Parameters passed to the event.
      * @param ArrayObject $extra Additional data passed to the event.
      */
-    public function onExcelTemplateInitialiseInstitutionStudentsReportCardGpaOld(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutionStudentsReportCardGpaOld(EventInterface $event, array $params, ArrayObject $extra)
     {
         $student_id = $params['student_id'];
         $institution_id = $params['institution_id'];
@@ -2839,7 +2839,7 @@ class ReportCardsTable extends AppTable
         return $entity;
     }
 
-    public function onExcelTemplateInitialiseInstitutionStudentsReportCardGpa(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutionStudentsReportCardGpa(EventInterface $event, array $params, ArrayObject $extra)
     {
         $student_id = $params['student_id'];
         $institution_id = $params['institution_id'];
@@ -2901,11 +2901,11 @@ class ReportCardsTable extends AppTable
      * Event handler for initializing the Excel template for Institution Student Grade and GPA.
      * This method is triggered when the Excel template is being prepared with student grades and GPA data.
      *
-     * @param Event $event The event that triggered the method.
+     * @param EventInterface $event The event that triggered the method.
      * @param array $params Parameters passed to the event.
      * @param ArrayObject $extra Additional data passed to the event.
      */
-    public function onExcelTemplateInitialiseInstitutionStudentGradeGpaOld(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutionStudentGradeGpaOld(EventInterface $event, array $params, ArrayObject $extra)
     {
         $entity = null;
         if (!empty($params['student_id']) && !empty($params['institution_id']) && !empty($params['academic_period_id'])) {
@@ -2963,7 +2963,7 @@ class ReportCardsTable extends AppTable
     }
 
     //POCOR-9144 -- function updated for CGPA placeholder issue and GPA values for all terms.
-    public function onExcelTemplateInitialiseInstitutionStudentGradeGpa(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutionStudentGradeGpa(EventInterface $event, array $params, ArrayObject $extra)
     {
         $entity = null;
         if (!empty($params['student_id']) && !empty($params['institution_id']) && !empty($params['academic_period_id'])) {
@@ -3085,7 +3085,7 @@ class ReportCardsTable extends AppTable
     }
 
     //POCOR-9232 starts
-    public function onExcelTemplateInitialiseClassAndLevelRanking(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseClassAndLevelRanking(EventInterface $event, array $params, ArrayObject $extra)
     {
 
         if (empty($params['academic_period_id']) && empty($params['report_card_id']) && !empty($params['institution_id'])) {

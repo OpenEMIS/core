@@ -8,7 +8,7 @@ use ArrayObject;
 
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\I18n\Time;
@@ -55,7 +55,7 @@ class IdentitiesTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $extra)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         //$this->log('beforeSave', 'debug');
         //$this->log($entity, 'debug');
@@ -77,7 +77,7 @@ class IdentitiesTable extends ControllerActionTable
         }
     }
 
-    public function afterSaveUsers(Event $event, Entity $entity)
+    public function afterSaveUsers(EventInterface $event, Entity $entity)
     {
         //$this->log('beforeSage', 'debug');
         //$this->log($entity, 'debug');
@@ -143,7 +143,7 @@ class IdentitiesTable extends ControllerActionTable
 
     public function beforeAction($event, ArrayObject $extra)
     {
-        $UserNationalityTable = TableRegistry::get('User.UserNationalities');
+        $UserNationalityTable = TableRegistry::getTableLocator()->get('User.UserNationalities');
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userId = $this->getUserID();
         if(empty($userId)) {
@@ -191,7 +191,7 @@ class IdentitiesTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['comments']['visible'] = 'false';
 
@@ -276,7 +276,7 @@ class IdentitiesTable extends ControllerActionTable
     }
 
     /*POCOR-6267 Starts*/
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $userId = $this->getUserID();
         $query->where([$this->aliasField('security_user_id') => $userId]);
@@ -284,7 +284,7 @@ class IdentitiesTable extends ControllerActionTable
 
     /*POCOR-6267 Ends*/
 
-    public function editOnInitialize(Event $event, Entity $entity)
+    public function editOnInitialize(EventInterface $event, Entity $entity)
     {
         // set the defaultDate to false on initialize, for the empty date.
         if (empty($entity->issue_date)) {
@@ -338,7 +338,7 @@ class IdentitiesTable extends ControllerActionTable
         return $validator->allowEmpty('number');
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $extra)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         Log::debug(__FUNCTION__ . '1');
         if (!empty($entity->nationality_id)) {
@@ -412,7 +412,7 @@ class IdentitiesTable extends ControllerActionTable
         //POCOR-8664 end
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $listeners = [
             TableRegistry::getTableLocator()->get('User.Users')
@@ -457,7 +457,7 @@ class IdentitiesTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'identity_type_id') {
             return __('Identity Type');

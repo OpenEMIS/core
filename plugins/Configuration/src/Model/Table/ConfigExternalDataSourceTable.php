@@ -5,7 +5,7 @@ namespace Configuration\Model\Table;
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use Cake\Core\Configure;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -116,7 +116,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
 
     }//POCOR-6930 Ends
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         // POCOR-7981 Start
         if ($this->action == 'index') {
@@ -177,14 +177,14 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('value', ['visible' => true]);
         // POCOR-7981
         $this->field('attributes', ['type' => 'custom_external_source']);
     }
 
-    public function onGetCustomExternalSourceElement(Event $event, $action, Entity $entity, $attr, $options = [])
+    public function onGetCustomExternalSourceElement(EventInterface $event, $action, Entity $entity, $attr, $options = [])
     {
 // POCOR-9118 start
         $source = $entity->name;
@@ -271,7 +271,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request) // POCOR-8849
+    public function onUpdateFieldValue(EventInterface $event, array $attr, $action, ServerRequest $request) // POCOR-8849
     {
         // POCOR-7981 START
         if (in_array($action, ['edit'])) {
@@ -294,7 +294,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     /** POCOR-9118
      *
      **/
-    public function onUpdateFieldIdentityTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldIdentityTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         $IdentityTypesTable = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
@@ -307,7 +307,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         return $attr;
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
+    public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
     {
         // POCOR-7981 START
         $alias = $this->getAlias(); // POCOR-8849
@@ -359,7 +359,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         // POCOR-7981 END
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
     {
         //POCOR-6930, 7981 Starts
         $source = $entity->name;
@@ -396,7 +396,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 
         $source = $entity->name;
@@ -481,7 +481,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     }
 
     // POCOR-7981
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         if (isset($extra['toolbarButtons']['add'])) {
             unset($extra['toolbarButtons']['add']);
@@ -489,7 +489,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     }
 
     //POCOR-7981:Start
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
 //        $optionTable = self::getDynamicTableInstance('Configuration.ConfigItemOptions');
         $query
@@ -502,7 +502,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             ]);
     }
 
-    public function onGetValue(Event $event, Entity $entity)
+    public function onGetValue(EventInterface $event, Entity $entity)
     {
         $valueField = 'value';
 //        return 'Disabled';
@@ -514,7 +514,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
 
         return $value;
     }
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'value') {
             return __('Status');
@@ -527,7 +527,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
 
     //POCOR-7981:End
 
-    public function onGetLabel(Event $event, Entity $entity)
+    public function onGetLabel(EventInterface $event, Entity $entity)
     {
         return __($entity->label);
     }

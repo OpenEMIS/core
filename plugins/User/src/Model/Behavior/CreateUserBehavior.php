@@ -6,7 +6,7 @@ use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
 use Cake\ORM\Association\BelongsTo;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Datasource\Exception\MissingModelException;
 use DOMDocument;

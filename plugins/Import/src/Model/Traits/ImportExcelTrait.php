@@ -3,7 +3,7 @@ namespace Import\Model\Traits;
 
 use DateTime;
 use DateInterval;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 
 trait ImportExcelTrait

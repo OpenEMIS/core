@@ -2,7 +2,7 @@
 namespace App\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\ResultSet;
@@ -15,7 +15,7 @@ class ReorderBehavior extends Behavior
         'filterValues' => null
     ];
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
             $orderField = $this->getConfig('orderField');
@@ -85,7 +85,7 @@ class ReorderBehavior extends Behavior
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $orderField = $this->getConfig('orderField');
         $filter = $this->getConfig('filter');
@@ -94,7 +94,7 @@ class ReorderBehavior extends Behavior
     }
 
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $orderField = $this->getConfig('orderField');
         $filter = $this->getConfig('filter');

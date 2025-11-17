@@ -5,7 +5,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -28,14 +28,14 @@ class InstitutionProgrammesTable extends AppTable
 		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
-	public function beforeAction(Event $event)
+	public function beforeAction(EventInterface $event)
 	{
 		$this->fields = [];
 		$this->ControllerAction->field('feature');
 		$this->ControllerAction->field('format');
 	}
 
-	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+	public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
 	{
 		$requestData = json_decode($settings['process']['params']);
 		$institution_id = $requestData->institution_id;
@@ -55,13 +55,13 @@ class InstitutionProgrammesTable extends AppTable
 			->where(['AcademicPeriods.id' => $periodId, $where]);
 	}
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+	public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request)
 	{
 		$attr['options'] = $this->controller->getFeatureOptions('Institutions');
 		return $attr;
 	}
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+	public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
 	{
 		$cloneFields = $fields->getArrayCopy();
 		$newFields = [];
@@ -158,13 +158,13 @@ class InstitutionProgrammesTable extends AppTable
 		$fields->exchangeArray($newFields);
 	}
 
-	public function onExcelGetStartDate(Event $event, Entity $entity) {
+	public function onExcelGetStartDate(EventInterface $event, Entity $entity) {
 		if (!empty($entity->start_date)) {
 			return $this->formatDate($entity->start_date);
 		}
 	}
 
-	public function onExcelGetEndDate(Event $event, Entity $entity)
+	public function onExcelGetEndDate(EventInterface $event, Entity $entity)
 	{
 		if (!empty($entity->end_date)) {
 			return $this->formatDate($entity->end_date);
@@ -173,12 +173,12 @@ class InstitutionProgrammesTable extends AppTable
 	 //POCOR-9302 end
 
 	//POCOR-9301[START]
-	public function onExcelGetInstitutionCode(Event $event, Entity $entity)
+	public function onExcelGetInstitutionCode(EventInterface $event, Entity $entity)
     {
         return $entity->institution->code;
     }
 
-	// public function onExcelGetInstitutionId(Event $event, Entity $entity) {
+	// public function onExcelGetInstitutionId(EventInterface $event, Entity $entity) {
 	// 	return $entity->institution->code_name;
 	// }
 	

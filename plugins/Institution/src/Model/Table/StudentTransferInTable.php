@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -128,7 +128,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         return $events;
     }
 
-    public function studentsAfterSave(Event $event, $student)
+    public function studentsAfterSave(EventInterface $event, $student)
     {
         if ($student->isNew()) {
             // close other pending RECEIVING transfer applications (in same education system) if the student is successfully transferred in one school
@@ -136,7 +136,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {
         // Generate encoded query string once
         $queryString = $this->getQueryString();
@@ -156,7 +156,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
 
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $this->field('requested_date', ['type' => 'hidden']);
@@ -319,7 +319,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
             $roleIds = [0];
         }
 //        $this->log($roleIds);
-        $all_steps_and_roles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+        $all_steps_and_roles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
         $distinct_step = $all_steps_and_roles->find()
             ->select(['workflow_step_id'])
             ->where(['workflow_step_id' => $status_id,
@@ -335,7 +335,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         return $check;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         $paramInstituionId = $this->request->getAttribute('params')['institutionId'];
@@ -360,7 +360,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -383,7 +383,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $statusId = $entity['status']->id;
         $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
-        $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+        $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
         $editCheck = $WorkflowSteps->find()
             ->where([$WorkflowSteps->aliasField('id') => $statusId])
             ->first();
@@ -458,12 +458,12 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         //POCOR-5944 ends
     }
 
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['Users', 'Institutions', 'PreviousInstitutions', 'EducationGrades', 'PreviousEducationGrades', 'AcademicPeriods', 'PreviousAcademicPeriods']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $selectedAcademicPeriodData = $this->AcademicPeriods->get($entity->academic_period_id);
 
@@ -518,7 +518,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         ]);
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $studentId = $entity->student_id;
         $institutionId = $entity->institution_id;
@@ -526,7 +526,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $startDate = $entity->start_date;
         $newDate = date("Y-m-d", strtotime($startDate));
         $endDate = $entity->end_date;
-        $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+        $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $query = $institutionStudents->query();
         $query->update()
             ->set(['start_date' => $newDate])
@@ -535,7 +535,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
 
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if ($data->offsetExists('previous_academic_period_id') && $data->offsetExists('academic_period_id')) {
             $previousAcademicPeriodId = $data->offsetGet('previous_academic_period_id');
@@ -546,7 +546,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldRequestedDate(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldRequestedDate(EventInterface $event, array $attr, $action, $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -561,7 +561,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionClassId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -585,7 +585,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldStartDate(EventInterface $event, array $attr, $action, $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -604,7 +604,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -704,7 +704,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         // change in  POCOR-7027 add auto assign
         $assigneeOptions = [$this->Auth->user('id') => __('Auto Assign')]; //POCOR-7080

@@ -2,7 +2,7 @@
 namespace Guardian\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Http\ServerRequest;
@@ -22,7 +22,7 @@ class StudentUserTable extends UserTable {
         return $events;
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupTabElements($entity);
 
@@ -33,7 +33,7 @@ class StudentUserTable extends UserTable {
         }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         // MUST set user_type to request query before call parent's beforeAction
         $this->request->getQuery['user_type'] = UserTable::STUDENT;
@@ -41,7 +41,7 @@ class StudentUserTable extends UserTable {
         //parent::hideOtherInformationSection($this->controller->getName(), $this->action);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupTabElements($entity);
 

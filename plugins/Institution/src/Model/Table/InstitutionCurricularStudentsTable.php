@@ -6,7 +6,7 @@ use stdClass;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
@@ -50,9 +50,9 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         ]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
-        $this->Institutions = TableRegistry::get('Institution.Institutions');
+        $this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         if ($this->action == 'index') {
             $tabElements = $this->controller->getCurricularsTabElements();
             $this->controller->set('tabElements', $tabElements);
@@ -60,16 +60,16 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $paramsPass = $this->request->getQuery()['queryString'];
         $curricularIdGet = $this->paramsDecode($paramsPass)['id'];
         $institutionId = $this->getInstitutionID();
-        $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-        $curricularPositions = TableRegistry::get('FieldOption.CurricularPositions');
-        $InstitutionCurriculars = TableRegistry::get('Institution.InstitutionCurriculars');
-        $curricular_types = TableRegistry::get('FieldOption.CurricularTypes');
-        $Users = TableRegistry::get('Security.Users');
+        $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+        $curricularPositions = TableRegistry::getTableLocator()->get('FieldOption.CurricularPositions');
+        $InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
+        $curricular_types = TableRegistry::getTableLocator()->get('FieldOption.CurricularTypes');
+        $Users = TableRegistry::getTableLocator()->get('Security.Users');
         $conditions = [];
         $conditions[$this->aliasField('institution_curricular_id')]  = $curricularIdGet;
         $conditions[$institutionStudents->aliasField('institution_id')]  = $institutionId;
@@ -145,18 +145,18 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
     }
 
     //POCOR-8482[START]
-    // public function onGetCurricularCategory(Event $event, Entity $entity)
+    // public function onGetCurricularCategory(EventInterface $event, Entity $entity)
     // {
     //     return $entity['institution_curricular']['category'] ? __('Co-Curricular') : $entity->category ? __('Co-Curricular') : __('Extracurricular');
 
     // }
-    public function onGetCurricularCategory(Event $event, Entity $entity)
+    public function onGetCurricularCategory(EventInterface $event, Entity $entity)
     {
         return $entity['institution_curricular']['category'] ? __('Co-Curricular') : ($entity->category ? __('Co-Curricular') : __('Extracurricular'));
     }
     //POCOR-8482[END]   
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $paramsPass = $this->request->getQuery()['queryString'];
         $curricularIdGet = $this->paramsDecode($paramsPass)['id'];
@@ -201,10 +201,10 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     }
 
-   public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
+   public function onUpdateFieldStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         //POCOR- 8220 chnage academic period condition
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
         if ($action == 'add' || $action == 'edit') {
             //return $this->updateDateRangeField('start_date', $attr, $request);
@@ -223,10 +223,10 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         //POCOR- 8220 chnage academic period condition
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
         if ($action == 'add' || $action == 'edit') {
             //return $this->updateDateRangeField('end_date', $attr, $request);
@@ -272,7 +272,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCurricularPositionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCurricularPositionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $curricularPositions = TableRegistry::getTableLocator()->get('FieldOption.CurricularPositions');
         $curricularPositionsList = $curricularPositions->find('list')->where(['visible'=>1])->toArray();
@@ -286,9 +286,9 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStudentId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStudentId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
         //$session = $this->controller->request->session();
         //$institutionId = $session->read('Institution.Institutions.id');
@@ -330,7 +330,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $paramsPass = $this->request->getQuery()['queryString'];
         $curricularIdGet = $this->paramsDecode($paramsPass)['id'];
@@ -338,7 +338,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $entity->institution_curricular_id = $curricularIdGet;
     }
 
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $paramsPass = $this->request->getQuery()['queryString'];
         $curricularIdGet = $this->paramsDecode($paramsPass)['id'];
@@ -347,7 +347,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     }
 
-    public function onGetType(Event $event, Entity $entity)
+    public function onGetType(EventInterface $event, Entity $entity)
     {
         $connection = ConnectionManager::get('default');
         $results = $connection->query("SELECT name FROM curricular_types WHERE id=".$entity->institution_curricular->curricular_type_id);
@@ -356,7 +356,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     }
 
-    public function onGetCurricularType(Event $event, Entity $entity)
+    public function onGetCurricularType(EventInterface $event, Entity $entity)
     {
         if($entity->type != ''){
             return $entity->type;
@@ -369,7 +369,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         }
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('student_id', ['visible' => false]);
         $this->field('student_name', ['visible' => true]);
@@ -383,17 +383,17 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $this->field('curricular_position_id', ['visible' => true]);
     }
 
-    public function onGetCategory(Event $event, Entity $entity)
+    public function onGetCategory(EventInterface $event, Entity $entity)
     {
         return $entity->category ? __('Co-Curricular') : __('Extracurricular');
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         return $entity->user->openemis_no;
     }
 
-    public function onGetCurricularTypeId(Event $event, Entity $entity)
+    public function onGetCurricularTypeId(EventInterface $event, Entity $entity)
     {
         $curricularsID =  $entity->institution_curricular_id;
         $InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
@@ -409,7 +409,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     }
 
-    public function onGetStudentName(Event $event, Entity $entity)
+    public function onGetStudentName(EventInterface $event, Entity $entity)
     {
         $StudentId = $entity->student_id;
         $users = TableRegistry::getTableLocator()->get('User.Users');
@@ -424,7 +424,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
     }
 
     //POCOR-8056
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $modelAlias = 'InstitutionCurricularStudents';
         $userType = 'StudentUser';
@@ -482,7 +482,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         return $query;
     }
 
-    public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function beforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $action = $this->request->getAttribute('params')['action'];
         if($action != 'InstitutionCurricularStudents'){
@@ -531,7 +531,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $curricularStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStudents');
         $users = TableRegistry::getTableLocator()->get('User.Users');

@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\I18n\Date;
 use App\Model\Table\ControllerActionTable;
@@ -39,7 +39,7 @@ class WithdrawRequestsTable extends ControllerActionTable
 
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $data)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
         $queryString = $this->getQueryString();
         $institutionStudentId = $this->getQueryString('institution_student_id');
@@ -60,13 +60,13 @@ class WithdrawRequestsTable extends ControllerActionTable
         }
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $requestData)
     {
 //        POCOR-8003 refactured
         $status_can_be_changed = $this->checkStatusCanBeChanged($entity);
 
         if ($status_can_be_changed['can'] == false) {
-            $Students = TableRegistry::get('Institution.Students');
+            $Students = TableRegistry::getTableLocator()->get('Institution.Students');
             $action = $this->url('index');
             $action['action'] = $Students->getAlias();
             $event->stopPropagation();
@@ -84,13 +84,13 @@ class WithdrawRequestsTable extends ControllerActionTable
     private function checkStatusCanBeChanged(Entity $entity)
     {
         $status_can_be_changed = true;
-        $StudentsTable = TableRegistry::get('Institution.Students');
+        $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
         $student_id = $entity->student_id;
         $institution_id = $entity->institution_id;
         $education_grade_id = $entity->education_grade_id;
         $academic_period_id = $entity->academic_period_id;
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $editableAcademicPeriods = $AcademicPeriods->getYearList(['isEditable' => true]);
         $Enrolled = $StudentStatuses->getIdByCode('CURRENT');
         $message = "";
@@ -116,7 +116,7 @@ class WithdrawRequestsTable extends ControllerActionTable
 
 
         if ($status_can_be_changed == true) {
-            $StudentTransfersTable = TableRegistry::get('Institution.InstitutionStudentTransfers');
+            $StudentTransfersTable = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentTransfers');
             $pendingTransferStatuses = $StudentTransfersTable->getStudentTransferWorkflowStatuses('PENDING');
             $conditions = [
                 'student_id' => $entity->student_id,
@@ -140,7 +140,7 @@ class WithdrawRequestsTable extends ControllerActionTable
         return $can_be_changed;
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -160,7 +160,7 @@ class WithdrawRequestsTable extends ControllerActionTable
                 'student_withdraw_reason_id', 'comment','assignee_id',
             ]);
         } else {
-            $Students = TableRegistry::get('Institution.Students');
+            $Students = TableRegistry::getTableLocator()->get('Institution.Students');
             $action = $this->url('index');
             $action['action'] = $Students->getAlias();
             $event->stopPropagation();
@@ -169,19 +169,19 @@ class WithdrawRequestsTable extends ControllerActionTable
 
         $toolbarButtons = $extra['toolbarButtons'];
         $studentId = $this->getStudentID();
-        $Students = TableRegistry::get('Institution.StudentUser');
+        $Students = TableRegistry::getTableLocator()->get('Institution.StudentUser');
         $toolbarButtons['back']['url']['action'] = $Students->getAlias();
         $toolbarButtons['back']['url'][0] = 'view';
         $toolbarButtons['back']['url'][1] =  $encodedQueryString;
         $toolbarButtons['back']['url'][2] = $this->paramsEncode(['id' => $studentId]);
     }
 
-    public function addOnInitialize(Event $event, Entity $entity)
+    public function addOnInitialize(EventInterface $event, Entity $entity)
     {
         $institutionId = $this->getInstitutionID();
         //$id = $this->Session->read($this->getRegistryAlias().'.id');
         $id = $this->getQueryString('institution_student_id');
-        $Students = TableRegistry::get('Institution.Students');
+        $Students = TableRegistry::getTableLocator()->get('Institution.Students');
         $student = $Students->get($id);
         $entity->student_id = $student->student_id;
         $entity->academic_period_id = $student->academic_period_id;
@@ -212,16 +212,16 @@ class WithdrawRequestsTable extends ControllerActionTable
         return $events;
     }
 
-    public function onUpdateFieldEffectiveDate(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldEffectiveDate(EventInterface $event, array $attr, $action, $request)
     {
        // $id = $this->Session->read($this->getRegistryAlias().'.id');
         $id = $this->getQueryString('institution_student_id');
-        $studentData = TableRegistry::get('Institution.Students')->get($id);
+        $studentData = TableRegistry::getTableLocator()->get('Institution.Students')->get($id);
 
         $enrolledDate = $studentData['start_date']->format('d-m-Y');
         //POCOR-8003:start
         $academicPeriodId = $studentData['academic_period_id'];
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $endDate = $periodEntity->end_date->format('d-m-Y');
         $attr['date_options'] = ['startDate' => $enrolledDate, 'endDate' => $endDate];
@@ -232,13 +232,13 @@ class WithdrawRequestsTable extends ControllerActionTable
 
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'add', 'approve'])) { // POCOR-8411 start
             $workflowModel = 'Institutions > Students > Student Withdraw';
-            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
@@ -267,12 +267,12 @@ class WithdrawRequestsTable extends ControllerActionTable
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
-                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
                 if (!empty($stepRoles)) {
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $Areas = TableRegistry::get('Area.Areas');
-                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                    $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                    $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     if ($isSchoolBased) {
                         if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');

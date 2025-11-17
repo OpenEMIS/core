@@ -5,7 +5,7 @@ use ArrayObject;
 use DateTime;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -50,7 +50,7 @@ class AuditInstitutionStudentsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $startDate   = $requestData->report_start_date ?? null;
@@ -106,7 +106,7 @@ class AuditInstitutionStudentsTable extends AppTable
             ->order([$this->aliasField('education_grade_id') => 'ASC']);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
 
@@ -204,22 +204,22 @@ class AuditInstitutionStudentsTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetStartDate(Event $event, Entity $entity) {
+    public function onExcelGetStartDate(EventInterface $event, Entity $entity) {
         if (!empty($entity->start_date)) {
             return $this->formatDate($entity->start_date);
         }
     }
-    public function onExcelGetEndDate(Event $event, Entity $entity) {
+    public function onExcelGetEndDate(EventInterface $event, Entity $entity) {
         if (!empty($entity->end_date)) {
             return $this->formatDate($entity->end_date);
         }
     }
-    public function onExcelGetModified(Event $event, Entity $entity) {
+    public function onExcelGetModified(EventInterface $event, Entity $entity) {
         if (!empty($entity->modified)) {
             return $this->formatDate($entity->modified);
         }
     }
-    public function onExcelGetCreated(Event $event, Entity $entity) {
+    public function onExcelGetCreated(EventInterface $event, Entity $entity) {
         if (!empty($entity->created)) {
             return $this->formatDate($entity->created);
         }

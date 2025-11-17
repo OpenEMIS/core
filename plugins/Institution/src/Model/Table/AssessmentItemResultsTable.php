@@ -8,7 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Text;
 use Cake\Core\Configure;
 use App\Model\Traits\MessagesTrait;
@@ -68,7 +68,7 @@ class AssessmentItemResultsTable extends AppTable
         return $events;
     }*/
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
             $entity->id = Text::uuid();
@@ -77,7 +77,7 @@ class AssessmentItemResultsTable extends AppTable
         //$this->getAssessmentGrading($entity); // 5664
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         // delete record if user removes the mark or grading
         $marks = $entity->marks;
@@ -191,7 +191,7 @@ class AssessmentItemResultsTable extends AppTable
     }
 
     // result criteria for indexes will be hide for now.
-    // public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
+    // public function institutionStudentIndexCalculateIndexValue(EventInterface $event, ArrayObject $params)
     // {
     //     $institutionId = $params['institution_id'];
     //     $studentId = $params['student_id'];

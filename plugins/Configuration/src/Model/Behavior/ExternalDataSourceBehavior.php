@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Routing\Router;
 use Cake\Validation\Validator;
@@ -39,7 +39,7 @@ class ExternalDataSourceBehavior extends Behavior
         return $events;
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         if ($this->_table->action == 'view') {
             $key = $this->_table->id;
@@ -54,14 +54,14 @@ class ExternalDataSourceBehavior extends Behavior
         }
     }
 
-    public function editBeforeAction(Event $event, ArrayObject $extra)
+    public function editBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         if (isset($extra['toolbarButtons']['list'])) {
             unset($extra['toolbarButtons']['list']);
         }
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(EventInterface $event)
     {
         if ($this->_table->request->getQuery('type_value') == 'External Data Source Identity') {
             $urlParams = $this->_table->url('view');
@@ -79,7 +79,7 @@ class ExternalDataSourceBehavior extends Behavior
         }
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         if ($this->_table->action == 'view' || $this->_table->action == 'edit') {
             $key = $this->_table->id;
@@ -100,7 +100,7 @@ class ExternalDataSourceBehavior extends Behavior
         }
     }
 
-    public function afterAction(Event $event)
+    public function afterAction(EventInterface $event)
     {
         if ($this->_table->action == 'view' || $this->_table->action == 'edit') {
             $key = $this->_table->id;
@@ -122,7 +122,7 @@ class ExternalDataSourceBehavior extends Behavior
         }
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         if (isset($extra['toolbarButtons']['back'])) {
             unset($extra['toolbarButtons']['back']);
@@ -134,7 +134,7 @@ class ExternalDataSourceBehavior extends Behavior
 
     protected function processAuthentication(&$attribute, $authenticationType)
     {
-        $ExternalDataSourceAttributesTable = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+        $ExternalDataSourceAttributesTable = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
         $attributesArray = $ExternalDataSourceAttributesTable->find()->where([$ExternalDataSourceAttributesTable->aliasField('external_data_source_type') => $authenticationType])->toArray();
         $attributeFieldsArray = $this->_table->array_column($attributesArray, 'attribute_field');
         foreach ($attribute as $key => $values) {
@@ -153,7 +153,7 @@ class ExternalDataSourceBehavior extends Behavior
         }
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $configItem = $data[$this->getAlias()];
         if ($configItem['type'] == 'External Data Source Identity') {
@@ -168,9 +168,9 @@ class ExternalDataSourceBehavior extends Behavior
         }
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $ExternalDataSourceAttributesTable = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+        $ExternalDataSourceAttributesTable = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
         if ($data[$this->getAlias()]['value'] != 'None' && $data[$this->getAlias()]['type'] == 'External Data Source Identity' && empty($entity->getErrors())) {
             $externalDataSourceType = $data[$this->getAlias()]['value'];
             $ExternalDataSourceAttributesTable->deleteAll(
@@ -223,7 +223,7 @@ class ExternalDataSourceBehavior extends Behavior
         return true;
     }
 
-    public function onGetExternalDataSourceTypeElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetExternalDataSourceTypeElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         switch ($action) {
             case "view":

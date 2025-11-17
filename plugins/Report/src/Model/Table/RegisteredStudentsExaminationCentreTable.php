@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
@@ -49,7 +49,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart (EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),
@@ -59,19 +59,19 @@ class RegisteredStudentsExaminationCentreTable extends AppTable
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $selectedExam = $requestData->examination_id;
         $selectedExamCentre = $requestData->examination_centre_id;
         $examGrade = $this->Examinations->get($selectedExam)->education_grade_id;
 
-        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $Class = TableRegistry::get('Institution.InstitutionClasses');
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $Class = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
-        $RoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomsExaminationsStudents');
-        $Rooms = TableRegistry::get('Examination.ExaminationCentreRooms');
+        $RoomStudents = TableRegistry::getTableLocator()->get('Examination.ExaminationCentreRoomsExaminationsStudents');
+        $Rooms = TableRegistry::getTableLocator()->get('Examination.ExaminationCentreRooms');
 
         $query
             ->contain(['Users.Genders', 'Users.MainNationalities', 'Users.BirthplaceAreas', 'Users.AddressAreas', 'Users.SpecialNeeds.SpecialNeedsTypes', 'Institutions', 'Examinations.EducationGrades'])
@@ -101,7 +101,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
 
@@ -241,7 +241,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetExaminationId(Event $event, Entity $entity)
+    public function onExcelGetExaminationId(EventInterface $event, Entity $entity)
     {
         if ($entity->examination_id) {
             return $entity->examination->code_name;
@@ -250,7 +250,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable
         }
     }
 
-    public function onExcelGetExaminationCentreId(Event $event, Entity $entity)
+    public function onExcelGetExaminationCentreId(EventInterface $event, Entity $entity)
     {
         if ($entity->examination_centre_id) {
             return $entity->examination_centre->code_name;
@@ -259,7 +259,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable
         }
     }
 
-    public function onExcelGetStudentType(Event $event, Entity $entity)
+    public function onExcelGetStudentType(EventInterface $event, Entity $entity)
     {
         $normal = 'Normal Candidate';
         $private = 'Private Candidate';
@@ -271,7 +271,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable
         }
     }
 
-    public function onExcelGetSpecialNeeds(Event $event, Entity $entity)
+    public function onExcelGetSpecialNeeds(EventInterface $event, Entity $entity)
     {
         if ($entity->has('user') && $entity->user->has('special_needs') && !empty($entity->user->special_needs)) {
             $specialNeeds = $entity->user->special_needs;
@@ -287,7 +287,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable
         }
     }
 
-    public function onExcelGetInstitutionId(Event $event, Entity $entity)
+    public function onExcelGetInstitutionId(EventInterface $event, Entity $entity)
     {
         if ($entity->institution_id) {
             return $entity->institution->code_name;

@@ -2,7 +2,7 @@
 namespace Configuration\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\ORM\Entity;
@@ -107,7 +107,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         return $validator;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain(['WebhookEvents']);
@@ -133,12 +133,12 @@ class ConfigWebhooksTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['WebhookEvents']);
     }
 
-    public function editOnInitialize(Event $event, Entity $entity)
+    public function editOnInitialize(EventInterface $event, Entity $entity)
     {
         $this->request->getData($this->getAlias())['triggered_event']['_ids'] = [];
         foreach ($entity->webhook_events as $event) {
@@ -146,9 +146,9 @@ class ConfigWebhooksTable extends ControllerActionTable
         }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
-        $supportedMethod = TableRegistry::get('Webhook.Webhooks')->supportedMethod;
+        $supportedMethod = TableRegistry::getTableLocator()->get('Webhook.Webhooks')->supportedMethod;
         $this->fields['description']['visible']['index'] = false;
         $this->field('name');
         $this->field('url', ['type' => 'string']);
@@ -156,7 +156,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         $this->field('method', ['options' => $supportedMethod]);
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('triggered_event', [
             'type' => 'chosenSelect',
@@ -166,14 +166,14 @@ class ConfigWebhooksTable extends ControllerActionTable
         ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('triggered_event', [
             'before' => 'description'
         ]);
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $data['webhook_events'] = [];
         if (is_array($data['triggered_event']['_ids'])) {
@@ -188,13 +188,13 @@ class ConfigWebhooksTable extends ControllerActionTable
         ];
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('triggered_event');
         $this->setFieldOrder(['triggered_event', 'name', 'url', 'status', 'method']);
     }
 
-    public function onGetTriggeredEvent(Event $event, Entity $entity)
+    public function onGetTriggeredEvent(EventInterface $event, Entity $entity)
     {
         $returnString = '';
         foreach ($entity->webhook_events as $event) {
@@ -210,11 +210,11 @@ class ConfigWebhooksTable extends ControllerActionTable
      using the `id` from the query string
      * The event keys are then used to pre-select options in the triggered_event chosenSelect dropdown
      * */
-    public function editBeforeAction(Event $event, ArrayObject $extra)
+    public function editBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $recordId = $queryString['id'];
-        $webhookEvents = TableRegistry::get('Configuration.WebhookEvents');
+        $webhookEvents = TableRegistry::getTableLocator()->get('Configuration.WebhookEvents');
         $record = $webhookEvents->find()
             ->where([$webhookEvents->aliasField('webhook_id') => $recordId])
             ->all(); 

@@ -7,7 +7,7 @@ use Alert\Model\Behavior\AlertRuleBehavior;
 
 use Cake\ORM\Entity;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class AlertRuleScholarshipDisbursementBehavior extends AlertRuleBehavior
 {
@@ -74,7 +74,7 @@ class AlertRuleScholarshipDisbursementBehavior extends AlertRuleBehavior
         parent::initialize($config);
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
@@ -93,12 +93,12 @@ class AlertRuleScholarshipDisbursementBehavior extends AlertRuleBehavior
         }
     }
 
-    public function onScholarshipDisbursementSetupFields(Event $event, Entity $entity)
+    public function onScholarshipDisbursementSetupFields(EventInterface $event, Entity $entity)
     {
         $this->onAlertRuleSetupFields($event, $entity);
     }
 
-    public function onGetScholarshipDisbursementThreshold(Event $event, Entity $entity)
+    public function onGetScholarshipDisbursementThreshold(EventInterface $event, Entity $entity)
     {
         $thresholdData = json_decode($entity->threshold, true);
         return $thresholdData['value'];

@@ -61,7 +61,7 @@ class AcademicPeriodsControllerTest extends AppTestCase
     //     $this->get($testUrl);
     //     $this->assertResponseCode(200);
 
-    //     $table = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+    //     $table = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
     //     $data = [
     //         'AcademicPeriods' => [
     //             'academic_period_level_id' => 1,
@@ -88,7 +88,7 @@ class AcademicPeriodsControllerTest extends AppTestCase
     // {
     //     $testUrl = $this->url('view/'.$this->testingId, ['parent' => 1]);
 
-    //     $table = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+    //     $table = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
     //     $this->get($testUrl);
 
     //     $this->assertResponseCode(200);
@@ -99,7 +99,7 @@ class AcademicPeriodsControllerTest extends AppTestCase
     //     $testUrl = $this->url('edit/'.$this->testingId);
 
     //     // TODO: DO A GET FIRST
-    //     $table = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+    //     $table = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
     //     $this->get($testUrl);
 
     //     $this->assertResponseCode(200);

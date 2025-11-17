@@ -49,7 +49,7 @@ class POCOR7981 extends AbstractMigration
 
     public function getPresentOption()
     {
-        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemsTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $presentOption = $ConfigItemsTable->find()
             ->where([
                 $ConfigItemsTable->aliasField('code') => 'external_data_source_type'

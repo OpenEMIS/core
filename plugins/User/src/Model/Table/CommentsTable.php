@@ -3,7 +3,7 @@ namespace User\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Entity; //POCOR-6353
-use Cake\Event\Event; //POCOR-6353
+use Cake\Event\EventInterface; //POCOR-6353
 use Cake\ORM\TableRegistry; //POCOR-6353
 use App\Model\Table\ControllerActionTable; //POCOR-6353
 use Cake\I18n\Time; //POCOR-6353
@@ -40,7 +40,7 @@ class CommentsTable extends ControllerActionTable
      * @author Akshay patodi <akshay.patodi@mail.valuecoders.com>
      * @ticket POCOR-6353
     */
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $user_id = $this->getUserID();
         $this->field('comment_type_id', ['type' => 'select']);
@@ -58,7 +58,7 @@ class CommentsTable extends ControllerActionTable
     }
 
     // Start POCOR-5188
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
 		$is_manual_exist = $this->getManualUrl('Personal','Comments','General');
 		if(!empty($is_manual_exist)){
@@ -88,7 +88,7 @@ class CommentsTable extends ControllerActionTable
 
 
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'comment_date') {
             return __('Date');

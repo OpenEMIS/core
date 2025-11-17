@@ -6,7 +6,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
@@ -89,7 +89,7 @@ class ProfileTemplatesTable extends ControllerActionTable
         return $validator;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['excel_template_name']['visible'] = false;
         $this->field('generate_start_date', ['type' => 'date']);
@@ -97,7 +97,7 @@ class ProfileTemplatesTable extends ControllerActionTable
         $this->field('excel_template');
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['description']['visible'] = false;
@@ -105,10 +105,10 @@ class ProfileTemplatesTable extends ControllerActionTable
 		$this->setupTabElements();
 	}
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        $institutionPositionsTable = TableRegistry::get('Institution.InstitutionPositions');
-        $StaffTable = TableRegistry::get('Institution.Staff');
+        $institutionPositionsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
+        $StaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
         $alreadyAssignedStaffs = $StaffTable->find()->select([
             'institution_position_id' => $StaffTable->aliasField('institution_position_id'),
             'status_id' => $institutionPositionsTable->aliasField('status_id')
@@ -144,7 +144,7 @@ class ProfileTemplatesTable extends ControllerActionTable
         $this->field('academic_period_id', ['entity' => $entity]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // determine if download button is shown
         $showFunc = function() use ($entity) {
@@ -161,32 +161,32 @@ class ProfileTemplatesTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'generate_start_date', 'generate_end_date', 'excel_template']);
     }
 
-    public function onGetExcelTemplate(Event $event, Entity $entity)
+    public function onGetExcelTemplate(EventInterface $event, Entity $entity)
     {
         if ($entity->has('excel_template_name')) {
             return $entity->excel_template_name;
         }
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // to set template download button
         $downloadUrl = $this->url('downloadTemplate');
         $this->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
         $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'generate_start_date', 'generate_end_date', 'excel_template']);
     }
 
-    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
         $this->fields['code']['type'] = 'readonly';
@@ -194,8 +194,8 @@ class ProfileTemplatesTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'generate_start_date', 'generate_end_date', 'excel_template']);
     }
 
-    // public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action)
+    // public function onUpdateFieldExcelTemplate(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldExcelTemplate(EventInterface $event, array $attr, $action)
     {
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';
@@ -220,7 +220,7 @@ class ProfileTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -235,7 +235,7 @@ class ProfileTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addAfterPatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         if (empty($entity->getErrors())) {
             if ($entity->teacher_comments_required == self::ALL_SUBJECTS) {
@@ -244,7 +244,7 @@ class ProfileTemplatesTable extends ControllerActionTable
         }
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
        
     }
@@ -291,7 +291,7 @@ class ProfileTemplatesTable extends ControllerActionTable
         } 
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) {
 
         if (!empty($entity->generate_start_date)) {
             $entity->generate_start_date = (new FrozenDate($entity->generate_start_date))->modify('+2 day')->format('Y-m-d H:i:s');
@@ -303,7 +303,7 @@ class ProfileTemplatesTable extends ControllerActionTable
 
     } 
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if (!empty($data['generate_start_date'])) {
             $data['generate_start_date'] = (new FrozenDate($data['generate_start_date']))->format('Y-m-d H:i:s');
@@ -337,7 +337,7 @@ class ProfileTemplatesTable extends ControllerActionTable
 		return $tabElements;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'academic_period_id') {
             return __('Academic Period');

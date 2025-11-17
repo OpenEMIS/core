@@ -15,12 +15,12 @@ class EmailAllStaffReportCardsShell extends Shell
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('SystemProcesses');
-        $this->loadModel('ReportCard.StaffReportCardEmailProcesses');
-        $this->loadModel('Institution.StaffReportCards');
-        $this->loadModel('Email.EmailProcesses');
-        $this->loadModel('Email.EmailProcessAttachments');
-        $this->loadModel('Email.EmailTemplates');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
+        $this->StaffReportCardEmailProcesses = $this->fetchTable('ReportCard.StaffReportCardEmailProcesses');
+        $this->StaffReportCards = $this->fetchTable('Institution.StaffReportCards');
+        $this->EmailProcesses = $this->fetchTable('Email.EmailProcesses');
+        $this->EmailProcessAttachments = $this->fetchTable('Email.EmailProcessAttachments');
+        $this->EmailTemplates = $this->fetchTable('Email.EmailTemplates');
     }
 
     public function main()
@@ -189,7 +189,7 @@ class EmailAllStaffReportCardsShell extends Shell
     {
         $subject = '';
 
-        $StaffReportCardEmailTable = TableRegistry::get('ReportCard.StaffReportCardEmail');
+        $StaffReportCardEmailTable = TableRegistry::getTableLocator()->get('ReportCard.StaffReportCardEmail');
 		$modelAlias = $StaffReportCardEmailTable->registryAlias();
         $availablePlaceholders = $StaffReportCardEmailTable->getPlaceholders();
         $reportCardId = $staffsReportCardEntity->staff_profile_template_id;
@@ -205,7 +205,7 @@ class EmailAllStaffReportCardsShell extends Shell
     {
         $message = '';
 
-        $StaffReportCardEmailTable = TableRegistry::get('ReportCard.StaffReportCardEmail');
+        $StaffReportCardEmailTable = TableRegistry::getTableLocator()->get('ReportCard.StaffReportCardEmail');
         $modelAlias = $StaffReportCardEmailTable->registryAlias();
         $availablePlaceholders = $StaffReportCardEmailTable->getPlaceholders();
         $reportCardId = $staffsReportCardEntity->staff_profile_template_id;

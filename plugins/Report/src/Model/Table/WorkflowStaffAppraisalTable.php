@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 
 class WorkflowStaffAppraisalTable extends AppTable  
@@ -62,7 +62,7 @@ class WorkflowStaffAppraisalTable extends AppTable
     }
 
     //POCOR-7619
-    public function onExcelGetOpenemisNo(Event $event, Entity $entity)
+    public function onExcelGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         $openemisNo = '';
         if(!empty($entity['user'])){

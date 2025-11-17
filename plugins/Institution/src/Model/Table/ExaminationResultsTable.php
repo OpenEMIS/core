@@ -6,7 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
 
 class ExaminationResultsTable extends ControllerActionTable
@@ -67,7 +67,7 @@ class ExaminationResultsTable extends ControllerActionTable
         return $events;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($this->startsWith($field, $this->fieldPrefix)) {
             $examinationItemId = str_replace($this->fieldPrefix, "", $field);
@@ -84,7 +84,7 @@ class ExaminationResultsTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $extra['auto_contain'] = false;
 
@@ -112,7 +112,7 @@ class ExaminationResultsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->field('date_of_birth', ['visible' => false]);
         $this->field('gender_id', ['visible' => false]);
@@ -123,7 +123,7 @@ class ExaminationResultsTable extends ControllerActionTable
         $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // Start: not applicable to unregister from Institutions > Examinations > Results
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
@@ -141,7 +141,7 @@ class ExaminationResultsTable extends ControllerActionTable
         $this->setFieldOrder(['registration_number']);
     }
 
-    public function onGetCustomResultsElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomResultsElement(EventInterface $event, $action, $entity, $attr, $options=[])
     {
         if ($action == 'view') {
             $tableHeaders = [__('Examination Item'), __('Subject'), __('Mark'), __('Weight'), __('Total Mark')];
@@ -228,7 +228,7 @@ class ExaminationResultsTable extends ControllerActionTable
     {
         $gradingTypes = [];
 
-        $ExaminationGradingTypes = TableRegistry::get('Examination.ExaminationGradingTypes');
+        $ExaminationGradingTypes = TableRegistry::getTableLocator()->get('Examination.ExaminationGradingTypes');
         $gradingTypeResults = $ExaminationGradingTypes
             ->find()
             ->toArray();
@@ -244,8 +244,8 @@ class ExaminationResultsTable extends ControllerActionTable
     {
         $items = [];
 
-        $ExaminationSubjects = TableRegistry::get('Examination.ExaminationSubjects');
-        $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+        $ExaminationSubjects = TableRegistry::getTableLocator()->get('Examination.ExaminationSubjects');
+        $EducationSubjects = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
         $ExaminationStudentSubjectResults = $ExaminationSubjects
             ->find()
             ->leftJoinWith('EducationSubjects')
@@ -275,7 +275,7 @@ class ExaminationResultsTable extends ControllerActionTable
 
     private function getStudentExaminationResults($academicPeriodId, $examinationId, $institutionId, $studentId)
     {
-        $ExaminationStudentSubjectResults = TableRegistry::get('Examination.ExaminationStudentSubjectResults');
+        $ExaminationStudentSubjectResults = TableRegistry::getTableLocator()->get('Examination.ExaminationStudentSubjectResults');
         $studentExaminationResults = $ExaminationStudentSubjectResults
             ->find()
             ->select([
@@ -322,7 +322,7 @@ class ExaminationResultsTable extends ControllerActionTable
     private function setStudentExaminationResults(ResultSet $data)
     {
         $gradingTypes = $this->getGradingTypes();
-        $ExaminationStudentSubjectResults = TableRegistry::get('Examination.ExaminationStudentSubjectResults');
+        $ExaminationStudentSubjectResults = TableRegistry::getTableLocator()->get('Examination.ExaminationStudentSubjectResults');
 
         foreach ($data as $examCentreStudentKey => $examCentreStudentObj) {
             $academicPeriodId = $examCentreStudentObj['academic_period_id'];
@@ -371,17 +371,17 @@ class ExaminationResultsTable extends ControllerActionTable
     }
 
     // POCOR-6159 START
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $academicPeriodId =  ($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $examinationId = ($this->request->getQuery('examination_id')) ? $this->request->getQuery('examination_id') : 0 ;
         $session = $this->request->getSession();
         $institutionId  = $this->getInstitutionID();
 
-        $students = TableRegistry::get('User.Users');
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-        $nationality = TableRegistry::get('FieldOption.Nationalities');
-        $examinations = TableRegistry::get('Institution.InstitutionExaminations');
+        $students = TableRegistry::getTableLocator()->get('User.Users');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+        $nationality = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
+        $examinations = TableRegistry::getTableLocator()->get('Institution.InstitutionExaminations');
 
         $query->select([
             $this->aliasField('id') ,
@@ -421,8 +421,8 @@ class ExaminationResultsTable extends ControllerActionTable
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-                $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+                $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+                $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
                 $statuses = $StudentStatuses->findCodeList();
                 $repeatedStatus = $statuses['REPEATED'];
 
@@ -442,7 +442,7 @@ class ExaminationResultsTable extends ControllerActionTable
                 //->autoFields(true)
                 ->first();
 
-                $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
+                $StudentTransfers = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentTransfers');
                 $approvedStatuses = $StudentTransfers->getStudentTransferWorkflowStatuses('APPROVED');
                 $institutionStudentTransfer = $StudentTransfers
                 ->find()
@@ -489,7 +489,7 @@ class ExaminationResultsTable extends ControllerActionTable
         });
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
 
         $extraField[] = [

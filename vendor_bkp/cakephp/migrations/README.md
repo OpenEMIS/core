@@ -1,0 +1,53 @@
+# Migrations plugin for CakePHP
+
+[![CI](https://github.com/cakephp/migrations/actions/workflows/ci.yml/badge.svg)](https://github.com/cakephp/migrations/actions/workflows/ci.yml)
+[![Coverage Status](https://img.shields.io/codecov/c/github/cakephp/migrations/3.x.svg?style=flat-square)](https://app.codecov.io/github/cakephp/migrations/tree/3.x)
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.txt)
+[![Total Downloads](https://img.shields.io/packagist/dt/cakephp/migrations.svg?style=flat-square)](https://packagist.org/packages/cakephp/migrations)
+
+This is a Database Migrations system for CakePHP.
+
+The plugin consists of a CakePHP CLI wrapper for the [Phinx](https://book.cakephp.org/phinx/0/en/index.html) migrations library.
+
+This branch is for use with CakePHP **5.x**. See [version map](https://github.com/cakephp/migrations/wiki#version-map) for details.
+
+## Installation
+
+You can install this plugin into your CakePHP application using [Composer](https://getcomposer.org).
+
+Run the following command
+```sh
+composer require cakephp/migrations
+ ```
+
+## Configuration
+
+You can load the plugin using the shell command:
+
+```
+bin/cake plugin load Migrations --only-cli
+```
+
+If you are using the PendingMigrations middleware, use:
+```
+bin/cake plugin load Migrations
+```
+
+### Enabling the builtin backend
+
+In a future release, migrations will be switching to a new backend based on the CakePHP ORM. We're aiming
+to be compatible with as many existing migrations as possible, and could use your feedback. Enable the
+new backend with:
+
+```php
+// in app/config/app_local.php
+$config = [
+    // Other configuration
+    'Migrations' => ['backend' => 'builtin'],
+];
+
+```
+
+## Documentation
+
+Full documentation of the plugin can be found on the [CakePHP Cookbook](https://book.cakephp.org/migrations/4/).

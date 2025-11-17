@@ -3,7 +3,7 @@ namespace App\Controller;
 
 use ArrayObject;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\ORM\Table;
 use App\Controller\AppController;
@@ -11,7 +11,6 @@ use Cake\Log\Log;
 use Cake\I18n\Time;
 use App\Model\Table\AlertsTable;
 use Cake\Controller\Controller;
-use Cake\Event\EventInterface;
 use Cake\Http\Client;
 use Cake\Http\Response;
 use Cake\I18n\FrozenTime;
@@ -72,7 +71,7 @@ class DashboardController extends AppController
         return $events;
     }
 
-    public function isActionIgnored(Event $event, $action)
+    public function isActionIgnored(EventInterface $event, $action)
     {
         return true;
     }
@@ -131,7 +130,7 @@ class DashboardController extends AppController
 
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         // set header
         $header = $model->getHeader($model->alias);
@@ -387,7 +386,7 @@ class DashboardController extends AppController
         $data = array();
         $profileComplete = 0;
         //$totalProfileComplete = 6;
-        $securityUsers = TableRegistry::get('security_users');
+        $securityUsers = TableRegistry::getTableLocator()->get('security_users');
         $securityUsersData = $securityUsers->find()
             ->select([
                 'created' => 'security_users.created',
@@ -411,7 +410,7 @@ class DashboardController extends AppController
             $data[0]['modifiedDate'] = 'Not updated';
         }
 
-        $userDemographics = TableRegistry::get('user_demographics');
+        $userDemographics = TableRegistry::getTableLocator()->get('user_demographics');
         $userDemographicsData = $userDemographics->find()
             ->select([
                 'created' => 'user_demographics.created',
@@ -434,7 +433,7 @@ class DashboardController extends AppController
             $data[1]['modifiedDate'] = 'Not updated';
         }
 
-        $userIdentities = TableRegistry::get('user_identities');
+        $userIdentities = TableRegistry::getTableLocator()->get('user_identities');
         $userIdentitiesData = $userIdentities->find()
             ->select([
                 'created' => 'user_identities.created',
@@ -457,7 +456,7 @@ class DashboardController extends AppController
             $data[2]['modifiedDate'] = 'Not updated';
         }
 
-        $userNationalities = TableRegistry::get('user_nationalities');
+        $userNationalities = TableRegistry::getTableLocator()->get('user_nationalities');
         $userNationalitiesData = $userNationalities->find()
             ->select([
                 'created' => 'user_nationalities.created',
@@ -479,7 +478,7 @@ class DashboardController extends AppController
             $data[3]['modifiedDate'] = 'Not updated';
         }
 
-        $userContacts = TableRegistry::get('user_contacts');
+        $userContacts = TableRegistry::getTableLocator()->get('user_contacts');
         $userContactsData = $userContacts->find()
             ->select([
                 'created' => 'user_contacts.created',
@@ -670,9 +669,9 @@ class DashboardController extends AppController
         //         $this->sendSystemUpdateAlerts(); //POCOR-7559
         //        $this->sendRetirementWarningAlerts(); //POCOR-8341
 
-        $alertsTable = TableRegistry::get('Alert.Alerts');
-        $alertRulesTable = TableRegistry::get('Alert.AlertRules');
-        $systemProcessesTable = TableRegistry::get('SystemProcesses');
+        $alertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+        $alertRulesTable = TableRegistry::getTableLocator()->get('Alert.AlertRules');
+        $systemProcessesTable = TableRegistry::getTableLocator()->get('SystemProcesses');
 
 
         $userRoleIds = $isSuperAdmin ? [] : $this->getUserSecurityRoleIds($userId);

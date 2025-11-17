@@ -39,8 +39,8 @@ class ArchiveStudentAttendancesShell extends Shell
     {
         //POCOR-7521-HINDOL cleaned the code even more
         parent::initialize();
-        $this->loadModel('SystemProcesses');
-        $this->loadModel('Archive.TransferLogs');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
+        $this->TransferLogs = $this->fetchTable('Archive.TransferLogs');
     }
 
     /**

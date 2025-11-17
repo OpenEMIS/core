@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use Cake\Network\Exception\NotFoundException;
 
@@ -47,7 +47,7 @@ class DownloadBehavior extends Behavior
         return $events;
     }
 
-    public function downloadPdf(Event $mainEvent, ArrayObject $extra)
+    public function downloadPdf(EventInterface $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
         $ids = $model->paramsDecode($model->paramsPass(0));
@@ -80,7 +80,7 @@ class DownloadBehavior extends Behavior
         exit();
     }
 	
-	 public function download(Event $mainEvent, ArrayObject $extra)
+	 public function download(EventInterface $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
         $controllerName = $model->controller->getName();

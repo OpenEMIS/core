@@ -2,7 +2,7 @@
 namespace Staff\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
@@ -59,7 +59,7 @@ class PositionsTable extends ControllerActionTable {
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         // Commet this code for Add export button (POCOR-6135)
 
@@ -71,12 +71,12 @@ class PositionsTable extends ControllerActionTable {
         } */
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $this->dispatchEvent('Excel.Historical.beforeQuery', [$query, $settings], $this);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
 
@@ -139,25 +139,25 @@ class PositionsTable extends ControllerActionTable {
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetName(Event $event, Entity $entity)
+    public function onExcelGetName(EventInterface $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'user');
         return $rowEntity->name;
     }
 
-    public function onExcelGetOpenemisNo(Event $event, Entity $entity)
+    public function onExcelGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'user');
         return $rowEntity->openemis_no;
     }
 
-    public function onExcelGetInstitutionName(Event $event, Entity $entity)
+    public function onExcelGetInstitutionName(EventInterface $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
         return $rowEntity->code_name;
     }
 
-    public function onExcelGetPositionName(Event $event, Entity $entity)
+    public function onExcelGetPositionName(EventInterface $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution_position');
         if ($entity->is_historical) {
@@ -167,19 +167,19 @@ class PositionsTable extends ControllerActionTable {
         }
     }
 
-    public function onExcelGetStaffTypeId(Event $event, Entity $entity)
+    public function onExcelGetStaffTypeId(EventInterface $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'staff_type');
         return $rowEntity->name;
     }
 
-    public function onExcelGetStaffStatusId(Event $event, Entity $entity)
+    public function onExcelGetStaffStatusId(EventInterface $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'staff_status');
         return $rowEntity->name;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['start_year']['visible'] = false;
         $this->fields['end_year']['visible'] = false;
@@ -241,7 +241,7 @@ class PositionsTable extends ControllerActionTable {
 		// End POCOR-5188
     }
 
-    public function indexHistoricalBeforeQuery(Event $event, Query $mainQuery, Query $historicalQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
+    public function indexHistoricalBeforeQuery(EventInterface $event, Query $mainQuery, Query $historicalQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
     {
         $session = $this->request->getSession();
 
@@ -350,7 +350,7 @@ class PositionsTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -378,20 +378,20 @@ class PositionsTable extends ControllerActionTable {
         return $buttons;
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra) {
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra) {
         $options = ['type' => 'staff'];
         $tabElements = $this->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function onGetInstitutionId(Event $event, Entity $entity)
+    public function onGetInstitutionId(EventInterface $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
         return $rowEntity->code_name;
     }
 
-    public function onGetInstitutionPositionId(Event $event, Entity $entity)
+    public function onGetInstitutionPositionId(EventInterface $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution_position');
         if ($entity->is_historical) {
@@ -401,30 +401,30 @@ class PositionsTable extends ControllerActionTable {
         }
     }
 
-    public function onGetStaffTypeId(Event $event, Entity $entity)
+    public function onGetStaffTypeId(EventInterface $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'staff_type');
         return $rowEntity->name;
     }
 
-    public function onGetStaffStatusId(Event $event, Entity $entity)
+    public function onGetStaffStatusId(EventInterface $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'staff_status');
         return $rowEntity->name;
     }
 
-    public function onGetShift(Event $event, Entity $entity)
+    public function onGetShift(EventInterface $event, Entity $entity)
     {
-       $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
+       $institutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
        $staffId=$institutionStaff->find()->select(['staff_id'])->where(['id' =>$entity->id])->first();
        $staff_id = $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['staff_id'];
        $staff_id = !empty($staff_id) ? $staff_id : $staffId['staff_id'];
        $institutaionStaffid = $entity->id; //POCOR-7185
-       $institutionShifts = TableRegistry::get('Institution.InstitutionShifts');
-       $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
-       $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
-       $institutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
-       $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+       $institutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
+       $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+       $ShiftOptions = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');
+       $institutionStaffShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffShifts');
+       $InstitutionPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
        //POCOR-7109
        $res = $InstitutionStaff->find()
                 ->select(['name' =>  $ShiftOptions->aliasField('name')])
@@ -470,7 +470,7 @@ class PositionsTable extends ControllerActionTable {
                                return  rtrim($shift,',');  */
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'institution_id') {
             return __('Institution');

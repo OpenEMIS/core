@@ -5,7 +5,7 @@ namespace Security\Model\Table;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
@@ -44,7 +44,7 @@ class PermissionsTable extends ControllerActionTable
         return $flag;
     }
 
-    public function afterAction(Event $event, ArrayObject $options)
+    public function afterAction(EventInterface $event, ArrayObject $options)
     {
         $plugin = __($this->controller->getPlugin());
         $id = $this->request->getAttribute('params')['pass'][1];
@@ -59,7 +59,7 @@ class PermissionsTable extends ControllerActionTable
     }
 
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $controller = $this->controller;
 
@@ -93,7 +93,7 @@ class PermissionsTable extends ControllerActionTable
     }
 
     // Event: ControllerAction.Model.index.beforeAction
-    public function indexBeforeActionbak(Event $event, ArrayObject $extra)
+    public function indexBeforeActionbak(EventInterface $event, ArrayObject $extra)
     {
         $query = $extra['query'];
         $controller = $this->controller;
@@ -163,7 +163,7 @@ class PermissionsTable extends ControllerActionTable
 
     }
 
-    public function indexAfterAction(Event $event,
+    public function indexAfterAction(EventInterface $event,
                                      Query $query,
                                      Array $data, //POCOR-8074
                                      ArrayObject $extra)
@@ -272,7 +272,7 @@ class PermissionsTable extends ControllerActionTable
         return $tooltipMessage;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $query = $extra['query'];
         $controller = $this->controller;

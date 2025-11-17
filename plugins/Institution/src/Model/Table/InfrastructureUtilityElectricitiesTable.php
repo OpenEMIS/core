@@ -8,7 +8,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
 
 use App\Model\Table\AppTable;
@@ -36,14 +36,14 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
         ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $modelAlias = 'InfrastructureUtilityElectricities';
         $userType = '';
         $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('utility_electricity_type_id', ['attr' => ['label' => __('Type')]]);
         $this->field('utility_electricity_condition_id', ['attr' => ['label' => __('Condition')]]);
@@ -93,7 +93,7 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
             case 'comment':
@@ -119,13 +119,13 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
         ->orderDesc($this->aliasField('created'));
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
@@ -140,11 +140,11 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
         $this->field('utility_electricity_condition_id', ['attr' => ['label' => __('Condition')]]);
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         unset($sheets[0]);
         $infrastructureTabsData = $this->infrastructureTabsData;
-        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $institutionStudentId = $settings['id'];
 
         foreach ($infrastructureTabsData as $key => $val)
@@ -161,7 +161,7 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     { 
         $sheetData = $settings['sheet']['sheetData'];
         $infrastructureType = $sheetData['infrastructure_tabs_type'];
@@ -236,7 +236,7 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
 
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
 //print_r($query->sql()); exit;
         $sheetData = $settings['sheet']['sheetData'];
@@ -260,10 +260,10 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
                 $academicPeriod = $this->AcademicPeriods->getCurrent();
             }
             //print_r($academicPeriod); exit;
-            $infrastructureUtilityInternets = TableRegistry::get('Institution.InfrastructureUtilityInternets');
-            $utilityInternetConditions = TableRegistry::get('Institution.UtilityInternetConditions');
-            $utilityInternetTypes = TableRegistry::get('Institution.UtilityInternetTypes');
-            $utilityInternetBandwidths = TableRegistry::get('Institution.UtilityInternetBandwidths');
+            $infrastructureUtilityInternets = TableRegistry::getTableLocator()->get('Institution.InfrastructureUtilityInternets');
+            $utilityInternetConditions = TableRegistry::getTableLocator()->get('Institution.UtilityInternetConditions');
+            $utilityInternetTypes = TableRegistry::getTableLocator()->get('Institution.UtilityInternetTypes');
+            $utilityInternetBandwidths = TableRegistry::getTableLocator()->get('Institution.UtilityInternetBandwidths');
             $res=$query
              ->select(['utility_internet_type_name' => $utilityInternetTypes->aliasField('name'),
                 'utility_internet_conditions_name' => $utilityInternetConditions->aliasField('name'),
@@ -285,9 +285,9 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
                 $academicPeriod = $this->AcademicPeriods->getCurrent();
             }
             //print_r($academicPeriod); exit;
-            $infrastructureUtilityTelephones = TableRegistry::get('Institution.InfrastructureUtilityTelephones');
-            $utilityTelephoneConditions = TableRegistry::get('Institution.UtilityTelephoneConditions');
-            $utilityTelephoneTypes = TableRegistry::get('Institution.UtilityTelephoneTypes');
+            $infrastructureUtilityTelephones = TableRegistry::getTableLocator()->get('Institution.InfrastructureUtilityTelephones');
+            $utilityTelephoneConditions = TableRegistry::getTableLocator()->get('Institution.UtilityTelephoneConditions');
+            $utilityTelephoneTypes = TableRegistry::getTableLocator()->get('Institution.UtilityTelephoneTypes');
             $query
              ->select(['utility_telephone_type_name' => $utilityTelephoneTypes->aliasField('name'),
                 'utility_telephone_conditions_name' => $utilityTelephoneConditions->aliasField('name')

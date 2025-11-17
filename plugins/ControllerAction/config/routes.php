@@ -1,6 +1,6 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::plugin('ControllerAction', function ($routes) {
+return function (RouteBuilder $routes) {
     $routes->fallbacks('InflectedRoute');
-});
+};

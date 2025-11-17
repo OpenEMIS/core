@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use DateTime;
 class SecurityUserPasswordRequestsTable extends AppTable
@@ -16,7 +16,7 @@ class SecurityUserPasswordRequestsTable extends AppTable
         parent::initialize($config);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) 
     {
         //POCOR-8609
         $now = new DateTime();

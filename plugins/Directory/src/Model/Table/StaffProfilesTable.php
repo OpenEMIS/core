@@ -8,7 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use Cake\Log\Log;
 
@@ -66,10 +66,10 @@ class StaffProfilesTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
 
-		$this->StaffTemplates = TableRegistry::get('ProfileTemplate.StaffTemplates');
-        $this->StaffReportCards = TableRegistry::get('Institution.StaffReportCards');
-        $this->StaffReportCardProcesses = TableRegistry::get('ReportCard.StaffReportCardProcesses');
-        $this->StaffReportCardEmailProcesses = TableRegistry::get('ReportCard.StaffReportCardEmailProcesses');
+		$this->StaffTemplates = TableRegistry::getTableLocator()->get('ProfileTemplate.StaffTemplates');
+        $this->StaffReportCards = TableRegistry::getTableLocator()->get('Institution.StaffReportCards');
+        $this->StaffReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.StaffReportCardProcesses');
+        $this->StaffReportCardEmailProcesses = TableRegistry::getTableLocator()->get('ReportCard.StaffReportCardEmailProcesses');
 
         $this->statusOptions = [
             self::NEW_REPORT => __('New'),
@@ -101,7 +101,7 @@ class StaffProfilesTable extends ControllerActionTable
         return $events;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         unset($buttons['view']);
@@ -236,7 +236,7 @@ class StaffProfilesTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('staff_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
@@ -267,7 +267,7 @@ class StaffProfilesTable extends ControllerActionTable
         // end POCOR-5188
     }
 
-	public function indexBeforeAction(Event $event, ArrayObject $extra)
+	public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('report_queue');
         $this->setFieldOrder(['openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
@@ -293,9 +293,9 @@ class StaffProfilesTable extends ControllerActionTable
             ->toArray();
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         // Academic Periods filter
         $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
@@ -395,7 +395,7 @@ class StaffProfilesTable extends ControllerActionTable
         }
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $reportCardId = $this->request->getQuery('staff_profile_template_id');
         $institutionId = $this->request->getQuery('institution_id');
@@ -457,7 +457,7 @@ class StaffProfilesTable extends ControllerActionTable
                 $generateButton['label'] = '<i class="fa fa-refresh"></i>';
                 $generateButton['attr'] = $toolbarAttr;
                 $generateButton['attr']['title'] = __('Generate All');
-                //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
+                //$ReportCards = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
                 if (!is_null($this->request->getQuery('staff_profile_template_id'))) {
                     $reportCardId = $this->request->getQuery('staff_profile_template_id');
                 }
@@ -522,24 +522,24 @@ class StaffProfilesTable extends ControllerActionTable
         }
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'staff_id';
         $searchableFields[] = 'openemis_no';
     }
 
-	public function viewBeforeAction(Event $event, ArrayObject $extra)
+	public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder(['academic_period_id', 'openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
 		$this->setFieldVisible(['view'], ['academic_period_id', 'openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         return $query;
     }
 
-    public function onGetStatus(Event $event, Entity $entity)
+    public function onGetStatus(EventInterface $event, Entity $entity)
     {
         if ($entity->has('report_card_status')) {
             $value = $this->statusOptions[$entity->report_card_status];
@@ -549,7 +549,7 @@ class StaffProfilesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetStartedOn(Event $event, Entity $entity)
+    public function onGetStartedOn(EventInterface $event, Entity $entity)
     {
         $value = '';
 
@@ -561,7 +561,7 @@ class StaffProfilesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetCompletedOn(Event $event, Entity $entity)
+    public function onGetCompletedOn(EventInterface $event, Entity $entity)
     {
         $value = '';
 
@@ -573,7 +573,7 @@ class StaffProfilesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetReportQueue(Event $event, Entity $entity)
+    public function onGetReportQueue(EventInterface $event, Entity $entity)
     {
         if ($entity->has('staff_profile_template_id')) {
             $reportCardId = $entity->staff_profile_template_id;
@@ -598,7 +598,7 @@ class StaffProfilesTable extends ControllerActionTable
         }
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('user')) {
@@ -607,7 +607,7 @@ class StaffProfilesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetProfileName(Event $event, Entity $entity)
+    public function onGetProfileName(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('staff_profile_template_id')) {
@@ -626,7 +626,7 @@ class StaffProfilesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetEmailStatus(Event $event, Entity $entity)
+    public function onGetEmailStatus(EventInterface $event, Entity $entity)
     {
         $emailStatuses = $this->StaffReportCardEmailProcesses->getEmailStatus();
         $value = '<i class="fa fa-minus"></i>';
@@ -642,7 +642,7 @@ class StaffProfilesTable extends ControllerActionTable
         return $value;
     }
 
-	public function downloadExcel(Event $event, ArrayObject $extra)
+	public function downloadExcel(EventInterface $event, ArrayObject $extra)
     {
 		$model = $this->StaffReportCards;
         $ids = $this->getQueryString();
@@ -673,7 +673,7 @@ class StaffProfilesTable extends ControllerActionTable
         exit();
     }
 
-	public function downloadPDF(Event $event, ArrayObject $extra)
+	public function downloadPDF(EventInterface $event, ArrayObject $extra)
     {
 		$model = $this->StaffReportCards;
         $ids = $this->getQueryString();
@@ -712,7 +712,7 @@ class StaffProfilesTable extends ControllerActionTable
     * @ticket POCOR-6667
     */
 
-    public function viewPDF(Event $event, ArrayObject $extra)
+    public function viewPDF(EventInterface $event, ArrayObject $extra)
     {
 		$model = $this->StaffReportCards;
         $ids = $this->getQueryString();
@@ -744,7 +744,7 @@ class StaffProfilesTable extends ControllerActionTable
         exit();
     }
 
-    public function generate(Event $event, ArrayObject $extra)
+    public function generate(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->StaffTemplates->checkIfHasTemplate($params['staff_profile_template_id']);
@@ -759,13 +759,13 @@ class StaffProfilesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function generateAll(Event $event, ArrayObject $extra)
+    public function generateAll(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->StaffTemplates->checkIfHasTemplate($params['staff_profile_template_id']);
 
         if ($hasTemplate) {
-            $StaffReportCardProcesses = TableRegistry::get('ReportCard.StaffReportCardProcesses');
+            $StaffReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.StaffReportCardProcesses');
             $inProgress = $StaffReportCardProcesses->find()
                 ->where([
                     $StaffReportCardProcesses->aliasField('staff_profile_template_id') => $params['staff_profile_template_id'],
@@ -791,7 +791,7 @@ class StaffProfilesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-	public function downloadAllPdf(Event $event, ArrayObject $extra)
+	public function downloadAllPdf(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
 
@@ -847,7 +847,7 @@ class StaffProfilesTable extends ControllerActionTable
         }
     }
 
-    public function downloadAll(Event $event, ArrayObject $extra)
+    public function downloadAll(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
 
@@ -896,7 +896,7 @@ class StaffProfilesTable extends ControllerActionTable
         }
     }
 
-    public function publish(Event $event, ArrayObject $extra)
+    public function publish(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $result = $this->StaffReportCards->updateAll(['status' => self::PUBLISHED], $params);
@@ -905,7 +905,7 @@ class StaffProfilesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function publishAll(Event $event, ArrayObject $extra)
+    public function publishAll(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
 
@@ -925,7 +925,7 @@ class StaffProfilesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function unpublish(Event $event, ArrayObject $extra)
+    public function unpublish(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $result = $this->StaffReportCards->updateAll(['status' => self::NEW_REPORT], $params);
@@ -934,7 +934,7 @@ class StaffProfilesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function unpublishAll(Event $event, ArrayObject $extra)
+    public function unpublishAll(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
 
@@ -954,7 +954,7 @@ class StaffProfilesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function email(Event $event, ArrayObject $extra)
+    public function email(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $this->addReportCardsToEmailProcesses($this->getInstitutionId($params['staff_id']), $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
@@ -965,7 +965,7 @@ class StaffProfilesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function emailAll(Event $event, ArrayObject $extra)
+    public function emailAll(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
 
@@ -995,8 +995,8 @@ class StaffProfilesTable extends ControllerActionTable
     {
         Log::write('debug', 'Initialize Add All Staff Profile Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.Time::now().')');
 
-        $StaffReportCardProcesses = TableRegistry::get('ReportCard.StaffReportCardProcesses');
-        $staffTable = TableRegistry::get('institution_staff');
+        $StaffReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.StaffReportCardProcesses');
+        $staffTable = TableRegistry::getTableLocator()->get('institution_staff');
         $where = [];
         $where[$staffTable->aliasField('institution_id')] = $institutionId;
         if (!is_null($staffId)) {
@@ -1074,7 +1074,7 @@ class StaffProfilesTable extends ControllerActionTable
 
     private function triggerGenerateAllReportCardsShell($institutionId, $academicPeriodId, $reportCardId, $staffId = null)
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
 
         foreach ($runningProcess as $key => $processData) {
@@ -1121,7 +1121,7 @@ class StaffProfilesTable extends ControllerActionTable
     {
         Log::write('debug', 'Initialize Add All Staff Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to email processes ('.Time::now().')');
 
-		$staffTable = TableRegistry::get('institution_staff');
+		$staffTable = TableRegistry::getTableLocator()->get('institution_staff');
         $where = [];
         $where[$staffTable->aliasField('institution_id')] = $institutionId;
         if (!is_null($staffId)) {
@@ -1168,7 +1168,7 @@ class StaffProfilesTable extends ControllerActionTable
 
     private function triggerEmailAllReportCardsShell($institutionId, $institutionClassId, $reportCardId, $staffId = null)
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($this->StaffReportCardEmailProcesses->registryAlias());
 
         // to-do: add logic to purge shell which is 30 minutes old

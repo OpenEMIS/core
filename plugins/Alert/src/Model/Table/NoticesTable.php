@@ -5,7 +5,7 @@ namespace Alert\Model\Table;
 use ArrayObject;
 use Cake\Utility\Inflector;
 use InvalidArgumentException;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -44,7 +44,7 @@ class NoticesTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
         $this->controller->set('contentHeader', $header);
@@ -60,7 +60,7 @@ class NoticesTable extends ControllerActionTable
             ->requirePresence('status');
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra) {
         $this->field('security_role_id', ['entity' => $entity, 'visible' => true]);
         $this->field('status', ['entity' => $entity, 'visible' => true]);
         $this->field('notice_status', ['entity' => $entity, 'visible' => false]);
@@ -69,7 +69,7 @@ class NoticesTable extends ControllerActionTable
         $this->setFieldOrder(['status', 'security_role_id', 'subject', 'message']);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('created', ['visible' => true, 'sort' => true]);
         $this->field('created_user_id', ['visible' => true, 'sort' => false]);
@@ -81,7 +81,7 @@ class NoticesTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryParams = $this->request->getQuery();
         if (!isset($queryParams['sort'])) {
@@ -92,7 +92,7 @@ class NoticesTable extends ControllerActionTable
 
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'status') {
             return __('Enable');
@@ -103,7 +103,7 @@ class NoticesTable extends ControllerActionTable
         }
     }
 
-   public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request)
+   public function onUpdateFieldStatus(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $status = [1 => 'Enable', 0 => 'Disable'];
         if ($action == 'add') {
@@ -124,7 +124,7 @@ class NoticesTable extends ControllerActionTable
 
         return $attr;
     }
-    public function onUpdateFieldSecurityRoleId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldSecurityRoleId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $roleOptions = $this->SecurityRoles
             ->find('list')
@@ -141,7 +141,7 @@ class NoticesTable extends ControllerActionTable
 
         if ($action === 'edit') {
             $getRecordId = $this->getQueryString();
-            $noticeRoleTable = TableRegistry::get('Alert.NoticeRoles');
+            $noticeRoleTable = TableRegistry::getTableLocator()->get('Alert.NoticeRoles');
             
             $roleIds = $noticeRoleTable->find()
                 ->select(['security_role_id'])
@@ -166,7 +166,7 @@ class NoticesTable extends ControllerActionTable
 
     
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if (!empty($entity->get('security_role_id')['_ids'])) {
             $NoticeRolesTable = TableRegistry::getTableLocator()->get('Alert.NoticeRoles');
@@ -183,7 +183,7 @@ class NoticesTable extends ControllerActionTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('status', ['entity' => $entity]);
         $this->field('notice_status', ['visible' => false]);
@@ -197,7 +197,7 @@ class NoticesTable extends ControllerActionTable
        $this->setFieldOrder(['status', 'security_role_id', 'subject', 'message']);
     }
 
-    public function onGetStatus(Event $event, Entity $entity)
+    public function onGetStatus(EventInterface $event, Entity $entity)
     {
         if($entity->status == 1){
             return 'Enable';
@@ -206,9 +206,9 @@ class NoticesTable extends ControllerActionTable
         }
     }
 
-    public function onGetSecurityRoleId(Event $event, Entity $entity)
+    public function onGetSecurityRoleId(EventInterface $event, Entity $entity)
     {
-        $table = TableRegistry::get('Security.SecurityRoles');
+        $table = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $obj = [];
         $roles = TableRegistry::getTableLocator()->get('Alert.NoticeRoles')
                 ->find()
@@ -234,7 +234,7 @@ class NoticesTable extends ControllerActionTable
         return $values;
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
         $id = $entity->id;
         $NoticeRolesTable = TableRegistry::getTableLocator()->get('Alert.NoticeRoles');

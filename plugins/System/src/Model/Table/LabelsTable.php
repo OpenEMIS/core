@@ -4,7 +4,7 @@ namespace System\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
@@ -31,7 +31,7 @@ class LabelsTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
         $this->controller->set('contentHeader', $header);
@@ -42,14 +42,14 @@ class LabelsTable extends ControllerActionTable
         $this->field('field', ['visible' => false]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('created', ['visible' => false, 'sort' => true]);
         $this->field('message', ['sort' => true]);
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryParams = $this->request->getQuery();
         if (!isset($queryParams['sort'])) {
@@ -60,17 +60,17 @@ class LabelsTable extends ControllerActionTable
 
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
 
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setfieldOrder($this->fieldsOrder);
     }
@@ -92,7 +92,7 @@ class LabelsTable extends ControllerActionTable
             ->requirePresence('field_name');
         return $validator;
     }
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //do not save empty strings
         if ($entity->code == "") {
@@ -105,7 +105,7 @@ class LabelsTable extends ControllerActionTable
     }
 
 // POCOR-9022 start
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $keyFetch = $entity->module.'.'.$entity->field;
         $keyValue = self::concatenateLabel($entity);
@@ -125,7 +125,7 @@ class LabelsTable extends ControllerActionTable
         return $keyValue;
     }
     // POCOR-9022 end
-    public function editBeforeAction(Event $event)
+    public function editBeforeAction(EventInterface $event)
     {
         $this->field('module_name', ['type' => 'readonly']);
         $this->field('field_name', ['type' => 'readonly']);

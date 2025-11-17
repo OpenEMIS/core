@@ -2,7 +2,7 @@
 namespace Examination\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\ORM\Entity;
 use App\Model\Table\ControllerActionTable;
@@ -42,7 +42,7 @@ class ExaminationCentresExaminationsSubjectsStudentsTable extends ControllerActi
         return $events;
     }
 
-    public function examinationResultsAfterSave(Event $event, $results)
+    public function examinationResultsAfterSave(EventInterface $event, $results)
     {
         // used to update total mark whenever an examination mark is added or updated
         $studentId = $results->student_id;

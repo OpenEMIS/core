@@ -18,6 +18,7 @@ namespace Localization\Controller\Component;
 
 use Cake\Controller\Component;
 use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\I18n;
 use Cake\Cache\Cache;
 use Cake\ORM\TableRegistry;
@@ -26,7 +27,6 @@ use Cake\I18n\Time;
 use Cake\Filesystem\File;
 use Cake\Event\EventManager;
 use Cake\Event\EventDispatcherTrait;
-use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Http\Cookie\Cookie;
 use Cake\Http\Response;
@@ -49,7 +49,8 @@ class LocalizationComponent extends Component
         'es' => ['name' => 'español', 'direction' => 'ltr', 'locale' => 'es_ES']
     ];
 
-    public $components = ['Cookie', 'Auth'];
+    // Components are defined in the parent class as protected $components = []
+    // We set them in initialize() method instead to avoid type declaration conflicts
 
     public function implementedEvents(): array
     {
@@ -61,9 +62,21 @@ class LocalizationComponent extends Component
     // Is called before the controller's beforeFilter method.
     public function initialize(array $config): void
     {
+        // Set components to avoid redeclaring the property (which causes type conflicts in CakePHP 5)
+        $this->components = ['Cookie', 'Auth'];
+        
+        // Manually populate _componentMap since we set components after constructor
+        // This is needed for __get() to work properly in CakePHP 5
+        if ($this->components) {
+            $this->_componentMap = $this->_registry->normalizeArray($this->components);
+        }
+        
         $session = $this->getController()->getRequest()->getSession();
         $lang = !empty($session->read('System.language')) ? $session->read('System.language') : 'en';
         $this->controller = $this->_registry->getController();
+        
+        // Access Cookie component - it will be loaded lazily via __get() magic method
+        // In CakePHP 5, components are loaded when first accessed
         $this->Cookie->name = str_replace(' ', '_', $config['productName']) . '_COOKIE';
         $this->Cookie->time = 3600 * 24 * 30; // expires after one month
         // list($this->language, $this->showLanguage) = $this->detectLanguage();

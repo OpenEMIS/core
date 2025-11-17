@@ -13,11 +13,11 @@ class UpdateSecurityGroupUsersShell extends Shell
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('Security.SecurityRoles');
-        $this->loadModel('Security.SecurityGroupUsers');
-        $this->loadModel('Institution.StaffPositionTitles');
-        $this->loadModel('Institution.InstitutionPositions');
-        $this->loadModel('Institution.Staff');
+        $this->SecurityRoles = $this->fetchTable('Security.SecurityRoles');
+        $this->SecurityGroupUsers = $this->fetchTable('Security.SecurityGroupUsers');
+        $this->StaffPositionTitles = $this->fetchTable('Institution.StaffPositionTitles');
+        $this->InstitutionPositions = $this->fetchTable('Institution.InstitutionPositions');
+        $this->Staff = $this->fetchTable('Institution.Staff');
     }
     
     public function main()

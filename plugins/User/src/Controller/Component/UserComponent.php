@@ -3,7 +3,7 @@ namespace User\Controller\Component;
 
 use Cake\Controller\Component;
 use Page\Model\Entity\PageElement;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 
@@ -16,11 +16,21 @@ class UserComponent extends Component
 
     private $controller = null;
 
-    public $components = ['Area.Areapicker'];
+    // Components are defined in the parent class as protected $components = []
+    // We set them in initialize() method instead to avoid type declaration conflicts
 
     public function initialize(array $config): void
     {
         parent::initialize($config);
+        // Set components to avoid redeclaring the property (which causes type conflicts in CakePHP 5)
+        $this->components = ['Area.Areapicker'];
+        
+        // Manually populate _componentMap since we set components after constructor
+        // This is needed for __get() to work properly in CakePHP 5
+        if ($this->components) {
+            $this->_componentMap = $this->_registry->normalizeArray($this->components);
+        }
+        
         $this->controller = $this->_registry->getController();
     }
 
@@ -86,7 +96,7 @@ class UserComponent extends Component
         $this->controller->Page->move('other_information')->after('birthplace_area_id');
     }
 
-    public function onRenderAddressAreaId(Event $event, Entity $entity, PageElement $element)
+    public function onRenderAddressAreaId(EventInterface $event, Entity $entity, PageElement $element)
     {
         $params = [
             'targetModel' => 'Area.AreaAdministratives',
@@ -95,7 +105,7 @@ class UserComponent extends Component
         $this->Areapicker->renderAreaId($entity, $params);
     }
 
-    public function onRenderBirthplaceAreaId(Event $event, Entity $entity, PageElement $element)
+    public function onRenderBirthplaceAreaId(EventInterface $event, Entity $entity, PageElement $element)
     {
         $params = [
             'targetModel' => 'Area.AreaAdministratives',
@@ -104,7 +114,7 @@ class UserComponent extends Component
         $this->Areapicker->renderAreaId($entity, $params);
     }
 
-    public function onRenderPhotoContent(Event $event, Entity $entity, PageElement $element)
+    public function onRenderPhotoContent(EventInterface $event, Entity $entity, PageElement $element)
     {
         $fileContent = $entity->photo_content;
         $userEntity = $entity;

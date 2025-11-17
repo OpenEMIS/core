@@ -3,7 +3,7 @@ namespace Scholarship\Controller\Component;
 
 use Cake\Controller\Component;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\I18n\Date;
@@ -11,16 +11,26 @@ use Cake\Log\Log;
 
 class ScholarshipTabsComponent extends Component
 {
-    public $components = ['TabPermission', 'Page.Page'];
+    // Components are defined in the parent class as protected $components = []
+    // We set them in initialize() method instead to avoid type declaration conflicts
     private $queryString;
 
     public function initialize(array $config) : void
     {
+        // Set components to avoid redeclaring the property (which causes type conflicts in CakePHP 5)
+        $this->components = ['TabPermission', 'Page.Page'];
+        
+        // Manually populate _componentMap since we set components after constructor
+        // This is needed for __get() to work properly in CakePHP 5
+        if ($this->components) {
+            $this->_componentMap = $this->_registry->normalizeArray($this->components);
+        }
+        
         $this->controller = $this->_registry->getController();
         $this->queryString = $this->getController()->getRequest()->getQuery('queryString');
 
-        $this->controller->loadModel('Scholarship.Scholarships');
-        $this->controller->loadModel('Scholarship.FinancialAssistanceTypes');
+        $this->controller->Scholarships = $this->controller->fetchTable('Scholarship.Scholarships');
+        $this->controller->FinancialAssistanceTypes = $this->controller->fetchTable('Scholarship.FinancialAssistanceTypes');
     }
 
     public function getScholarshipApplicationTabs($options = [])
@@ -112,7 +122,7 @@ class ScholarshipTabsComponent extends Component
             $scholarshipEntity = $this->controller->Scholarships->get($ids['scholarship_id']);
             // $isLoan = $this->controller->FinancialAssistanceTypes->is($scholarshipEntity->scholarship_financial_assistance_type_id, 'LOAN');
             // Start POCOR-7570
-            $FinancialAssistanceTypesTable = TableRegistry::get('Scholarship.FinancialAssistanceTypes');
+            $FinancialAssistanceTypesTable = TableRegistry::getTableLocator()->get('Scholarship.FinancialAssistanceTypes');
             $rec = $FinancialAssistanceTypesTable->get($scholarshipEntity->scholarship_financial_assistance_type_id);
             $isLoan = false;
             if(!empty($rec)){

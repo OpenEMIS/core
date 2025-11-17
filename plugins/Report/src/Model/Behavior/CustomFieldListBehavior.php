@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\ORM\Table;
 use Cake\Log\Log; // POCOR-9116
@@ -62,7 +62,7 @@ class CustomFieldListBehavior extends Behavior
     }
 
     // Model.excel.onExcelBeforeStart
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         if (!(is_null($this->getConfig('moduleKey')))) {
             $filter = $this->getFilter($this->getConfig('model'));
@@ -102,7 +102,7 @@ class CustomFieldListBehavior extends Behavior
      */
     public function getFilter($model)
     {
-        $CustomModuleTable = TableRegistry::get('CustomField.CustomModules');
+        $CustomModuleTable = TableRegistry::getTableLocator()->get('CustomField.CustomModules');
         $filter = $CustomModuleTable
             ->find()
             ->where([$CustomModuleTable->aliasField('model') => $model])
@@ -146,7 +146,7 @@ class CustomFieldListBehavior extends Behavior
     {
         $filterKey = '';
         if (isset($filter)) {
-            $associations = TableRegistry::get($filter)->associations();
+            $associations = TableRegistry::getTableLocator()->get($filter)->associations();
             foreach ($associations as $assoc) {
                 if ($assoc->getRegistryAlias() == $model) {
                     $filterKey = $assoc->getForeignKey();
@@ -206,7 +206,7 @@ class CustomFieldListBehavior extends Behavior
             $formId = $configCondition[$formKeyAlias] ?? -1;
         }
 
-        $SurveyFormsTable = TableRegistry::get('Survey.SurveyForms');
+        $SurveyFormsTable = TableRegistry::getTableLocator()->get('Survey.SurveyForms');
         return $SurveyFormsTable
             ->find('list', [
                 'keyField' => 'id',
@@ -239,7 +239,7 @@ class CustomFieldListBehavior extends Behavior
         return $this->_condition;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         if (isset($settings['sheet']['customFieldOptions'])) {
             $this->setCustomFieldOptionsList($settings['sheet']['customFieldOptions']);
@@ -429,7 +429,7 @@ class CustomFieldListBehavior extends Behavior
 
     // Function to generate the excel content
 
-    public function onExcelRenderCustomField(Event $event, Entity $entity, array $attr) // POCOR-9116
+    public function onExcelRenderCustomField(EventInterface $event, Entity $entity, array $attr) // POCOR-9116
     {
         // Getting the temporary field values that is set
         $tmpFieldValues = $this->getTmpFieldValues();
