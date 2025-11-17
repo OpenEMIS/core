@@ -17,8 +17,8 @@ class AlertScholarshipApplicationShell extends AlertShell
     {
         parent::initialize();
 
-        $this->loadModel('Scholarship.Applications');
-        $this->loadModel('Security.Users');
+        $this->Applications = $this->fetchTable('Scholarship.Applications');
+        $this->Users = $this->fetchTable('Security.Users');
     }
 
     public function main()

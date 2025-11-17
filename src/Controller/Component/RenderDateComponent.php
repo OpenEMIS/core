@@ -2,7 +2,7 @@
 namespace App\Controller\Component;
 
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\I18n\Date;
@@ -36,9 +36,9 @@ class RenderDateComponent extends Component
         return $events;
     }
 
-    public function onRenderDate(Event $event, Entity $entity, PageElement $element)
+    public function onRenderDate(EventInterface $event, Entity $entity, PageElement $element)
     {
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $format = $ConfigItem->value('date_format');
         $key = $element->getKey();
         $value = $entity->{$key};

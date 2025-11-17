@@ -3,7 +3,7 @@ namespace Gpa\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
@@ -37,17 +37,17 @@ class GpaGradingTypeTable extends ControllerActionTable {
             ->notEmpty('max');
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controller->getGpaTab();
         
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $option = array('Marks' =>'Marks', 'Grades' => 'Grades','Duration' => 'Duration');
         $this->field('result_type', ['type' => 'select', 'options' => $option]);

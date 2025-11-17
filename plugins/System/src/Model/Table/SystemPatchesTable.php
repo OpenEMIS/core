@@ -1,7 +1,7 @@
 <?php
 namespace System\Model\Table;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 
 class SystemPatchesTable extends AppTable {
@@ -16,7 +16,7 @@ class SystemPatchesTable extends AppTable {
         return $events;
     }
 
-    public function onGetAllowedActions(Event $event)
+    public function onGetAllowedActions(EventInterface $event)
     {
         return ['index'];
     }

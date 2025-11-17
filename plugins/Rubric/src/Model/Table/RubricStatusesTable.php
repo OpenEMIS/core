@@ -7,7 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Http\ServerRequest;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class RubricStatusesTable extends AppTable
 {
@@ -44,12 +44,12 @@ class RubricStatusesTable extends AppTable
         return $events;
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'rubric_template_id';
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('rubric_template_id', ['type' => 'select']);
         $this->ControllerAction->field('academic_period_level');
@@ -72,7 +72,7 @@ class RubricStatusesTable extends AppTable
         ]);
     }
 
-    public function indexBeforePaginate(Event $event, $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(EventInterface $event, $request, Query $query, ArrayObject $options)
     {
         $query->contain($this->_contain);
 
@@ -84,12 +84,12 @@ class RubricStatusesTable extends AppTable
         }
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query)
     {
         $query->contain($this->_contain);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity)
+    public function addEditAfterAction(EventInterface $event, Entity $entity)
     {
 		$academicPeriodIds = [];
 		if(!empty($entity->academic_periods)) {
@@ -104,9 +104,9 @@ class RubricStatusesTable extends AppTable
         $this->fields['programmes']['options'] = $programmeOptions;
     }
 
-    public function onUpdateFieldAcademicPeriodLevel(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodLevel(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $AcademicPeriodLevels = TableRegistry::get('AcademicPeriod.AcademicPeriodLevels');
+        $AcademicPeriodLevels = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriodLevels');
         $levelOptions = $AcademicPeriodLevels->getList()->toArray();
 
         $attr['options'] = $levelOptions;
@@ -117,14 +117,14 @@ class RubricStatusesTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriods(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriods(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $selectedLevel = key($this->fields['academic_period_level']['options']);
         if ($this->request->is('post')) {
             $selectedLevel = $this->request->getData($this->aliasField('academic_period_level'));
         }
 
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodOptions = $AcademicPeriods
             ->find('list')
             ->find('visible')
@@ -142,7 +142,7 @@ class RubricStatusesTable extends AppTable
     public function getSelectOptions($academicPeriodIds)
     {
         //Return all required options and their key
-        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $securityRoleOptions = $SecurityRoles
             ->find('list')
             ->find('visible')
@@ -150,7 +150,7 @@ class RubricStatusesTable extends AppTable
             ->toArray();
         $selectedSecurityRole = key($securityRoleOptions);
 
-        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
         $programmeOptions = [];
 		if(!empty($academicPeriodIds)) {
 			$programmeOptions = $EducationProgrammes
@@ -168,7 +168,7 @@ class RubricStatusesTable extends AppTable
         return compact('securityRoleOptions', 'selectedSecurityRole', 'programmeOptions', 'selectedProgramme');
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'rubric_template_id') {
             return __('Rubric Template');
@@ -197,13 +197,13 @@ class RubricStatusesTable extends AppTable
         }
     }
 
-     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();

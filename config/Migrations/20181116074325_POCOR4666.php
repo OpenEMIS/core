@@ -17,10 +17,10 @@ class POCOR4666 extends AbstractMigration
 
         $patchModel = 'Cases.InstitutionCases'; 
 
-        $SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
-        $WorkflowRulesTable = TableRegistry::get('Workflow.WorkflowRules');
-        $WorkflowStepsRolesTable = TableRegistry::get('Workflow.WorkflowStepsRoles');
-        $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
+        $SecurityRolesTable = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        $WorkflowRulesTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
+        $WorkflowStepsRolesTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
+        $WorkflowsTable = TableRegistry::getTableLocator()->get('Workflow.Workflows');
 
         $roleCodeList = $SecurityRolesTable
             ->find('list', [

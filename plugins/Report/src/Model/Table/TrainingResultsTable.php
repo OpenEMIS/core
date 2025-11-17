@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\Datasource\ResultSetInterface; // POCOR-6596
@@ -30,7 +30,7 @@ class TrainingResultsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart (EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),
@@ -40,7 +40,7 @@ class TrainingResultsTable extends AppTable
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $TrainingSessionResults = TableRegistry::getTableLocator()->get('Training.TrainingSessionResults');
         $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
@@ -201,7 +201,7 @@ class TrainingResultsTable extends AppTable
         // END : POCOR-6596
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
 
@@ -332,7 +332,7 @@ class TrainingResultsTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelRenderInstitutionCode(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderInstitutionCode(EventInterface $event, Entity $entity, array $attr)
     {
         if ($entity->has('trainee_id')) {
             $traineeId = $entity->trainee_id;
@@ -348,7 +348,7 @@ class TrainingResultsTable extends AppTable
         }
     }
 
-    public function onExcelRenderInstitutionName(Event $event, Entity $entity)
+    public function onExcelRenderInstitutionName(EventInterface $event, Entity $entity)
     {
         if (isset($this->institutionDetails->institution->name) && !empty($this->institutionDetails->institution->name)) {
             return $this->institutionDetails->institution->name;
@@ -382,7 +382,7 @@ class TrainingResultsTable extends AppTable
      * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
      * @ticket POCOR-6596
      */
-    public function onExcelGetTraineeInfoTraineeName(Event $event, Entity $entity)
+    public function onExcelGetTraineeInfoTraineeName(EventInterface $event, Entity $entity)
     {
         return
             $entity->trainee_info_first_name  . ' ' .
@@ -396,7 +396,7 @@ class TrainingResultsTable extends AppTable
      * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
      * @ticket POCOR-6596
      */
-    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    public function onExcelGetIdentityType(EventInterface $event, Entity $entity)
     {
         $userIdentities = TableRegistry::getTableLocator()->get('User.UserIdentities');
         $userIdentitiesResult = $userIdentities->find()
@@ -430,7 +430,7 @@ class TrainingResultsTable extends AppTable
      * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
      * @ticket POCOR-6596
      */
-    public function onExcelGetIdentityNumber(Event $event, Entity $entity)
+    public function onExcelGetIdentityNumber(EventInterface $event, Entity $entity)
     {
         return $entity->custom_identity_number;
     }
@@ -440,7 +440,7 @@ class TrainingResultsTable extends AppTable
      * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
      * @ticket POCOR-6596
      */
-    public function onExcelGetOtherIdentity(Event $event, Entity $entity)
+    public function onExcelGetOtherIdentity(EventInterface $event, Entity $entity)
     {
         return $entity->custom_identity_other_data;
     }

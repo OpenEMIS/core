@@ -1,7 +1,7 @@
 <?php
 namespace App\Model\Behavior;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use ArrayObject;
@@ -15,7 +15,7 @@ class ModificationBehavior extends Behavior
         return $events;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) {
         $schema = $this->_table->getSchema();
         $columns = $schema->columns();
 

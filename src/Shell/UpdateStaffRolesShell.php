@@ -3,7 +3,7 @@ namespace App\Shell;
 
 use Cake\Console\Shell;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Exception;
 use ControllerAction\Model\Traits\UtilityTrait;
 use Cake\I18n\Time;
@@ -32,11 +32,11 @@ class UpdateStaffRolesShell extends Shell {
 			'titleId' => $titleId
 		];
 		$name = 'Update Staff Roles';
-		$model = TableRegistry::get('Institution.StaffPositionTitles');
+		$model = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
 		$eventName = 'shellRestartUpdateRole';
 		$processModel = $model->registryAlias();
 		$param = json_encode($param);
-		$SystemProcesses = TableRegistry::get('SystemProcesses');
+		$SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
 		if (!is_null($systemProcessId)) {
 			$SystemProcesses->updatePid($systemProcessId, $pid);
 		} else {

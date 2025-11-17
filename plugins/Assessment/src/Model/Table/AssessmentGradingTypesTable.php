@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Collection\Collection;
 
@@ -92,7 +92,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 			->requirePresence('grading_options');
 	}
 
-	public function beforeAction(Event $event, ArrayObject $extra) {
+	public function beforeAction(EventInterface $event, ArrayObject $extra) {
 		$this->field('result_type', ['type' => 'select', 'options' => $this->getSelectOptions($this->aliasField('result_type'))]);
 		$this->field('max', ['length' => 7, 'attr' => ['min' => 0]]);
 		$this->field('pass_mark', ['length' => 7, 'attr' => ['min' => 0]]);
@@ -105,7 +105,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		]);
 	}
 
-	public function indexBeforeAction(Event $event, ArrayObject $extra)
+	public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
 	{
 		$this->setFieldOrder(['visible', 'code', 'name', 'result_type', 'max', 'pass_mark']);
 
@@ -136,7 +136,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 ** addEdit action events
 **
 ******************************************************************************************************************/
-	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+	public function addEditBeforeAction(EventInterface $event, ArrayObject $extra) {
 		$connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
 		if ($this->action=='edit') {
@@ -149,10 +149,10 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		]);
 	}
 
-	public function addEditAfterAction (Event $event, Entity $entity, ArrayObject $extra)
+	public function addEditAfterAction (EventInterface $event, Entity $entity, ArrayObject $extra)
 	{
 		// $gradingOptions will contain the GradeOptionId and the association.(1 for true and 0 for false)
-		$AssessmentGradingOptions = TableRegistry::get('Assessment.AssessmentGradingOptions');
+		$AssessmentGradingOptions = TableRegistry::getTableLocator()->get('Assessment.AssessmentGradingOptions');
 		$gradingOptions = [];
 		if (!is_null($entity->grading_options)) {
 			foreach ($entity->grading_options as $key => $gradingOption) {
@@ -168,14 +168,14 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		$this->controller->set('gradingOptions', $gradingOptions);
 	}
 
-   public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+   public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         if (!isset($data[$this->getAlias()]['grading_options']) || empty($data[$this->getAlias()]['grading_options'])) {
             $this->Alert->warning($this->aliasField('noGradingOptions'));
         }
     }
 
-	public function addEditOnReload(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
+	public function addEditOnReload(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
 		$groupOptionData = $this->GradingOptions->getFormFields();
 		if (!empty($entity->id)) {
 			$groupOptionData['assessment_grading_type_id'] = $entity->id;
@@ -196,7 +196,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 ** edit action events
 **
 ******************************************************************************************************************/
-	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+	public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         if (!isset($data[$this->getAlias()]['grading_options']) || empty($data[$this->getAlias()]['grading_options'])) {
             $this->Alert->warning($this->aliasField('noGradingOptions'));
@@ -204,7 +204,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
     }
 
     //POCOR 8001 starts
-    public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function beforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $extra['excludedModels'] = [ //this will exclude checking during remove restrict
             $this->GradingOptions->getAlias()
@@ -216,10 +216,10 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
         }
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
 	{
 		// get the array of the original gradeOptions
-		$AssessmentGradingOptions = TableRegistry::get('Assessment.AssessmentGradingOptions');
+		$AssessmentGradingOptions = TableRegistry::getTableLocator()->get('Assessment.AssessmentGradingOptions');
 		$query = $AssessmentGradingOptions
 			->find()
 			->where(['assessment_grading_type_id' => $entity->id])
@@ -269,7 +269,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 ** view action events
 **
 ******************************************************************************************************************/
-	public function viewBeforeAction(Event $event, ArrayObject $extra) {
+	public function viewBeforeAction(EventInterface $event, ArrayObject $extra) {
 		$this->fields['grading_options']['formFields'] = array_keys($this->GradingOptions->getFormFields('view'));
 
 		$this->setFieldOrder([
@@ -283,7 +283,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 ** viewEdit action events
 **
 ******************************************************************************************************************/
-	public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+	public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
 		$query->contain([
 			$this->GradingOptions->getAlias()
 		]);
@@ -294,7 +294,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 ** delete action events
 **
 ******************************************************************************************************************/
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+	public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
             $this->GradingOptions->getAlias()
@@ -322,7 +322,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		return $this->getList($query);
 	}
 
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+	public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'academic_period_id') {
             return __('Academic Period');
@@ -356,7 +356,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
     }
 
     //POCOR-8554
-	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+	public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
 	{
 	    $checkRecord = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemsGradingTypes');
 	    $data = $checkRecord->find()

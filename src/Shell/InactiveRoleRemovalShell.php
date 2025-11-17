@@ -3,7 +3,7 @@ namespace App\Shell;
 
 use Cake\Console\Shell;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Exception;
 
 class InactiveRoleRemovalShell extends Shell {
@@ -15,7 +15,7 @@ class InactiveRoleRemovalShell extends Shell {
 		$this->out('Initialize Inactive Role Removal Shell ...');
 
 		try {
-			$model = TableRegistry::get('Institution.Staff');
+			$model = TableRegistry::getTableLocator()->get('Institution.Staff');
 			$model->removeInactiveStaffSecurityRole();
 
 			$this->out('End Processing Inactive Role Removal');

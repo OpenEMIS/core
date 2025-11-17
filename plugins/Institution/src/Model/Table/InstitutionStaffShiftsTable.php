@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
@@ -32,10 +32,10 @@ class InstitutionStaffShiftsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //POCOR-5444 - start
-        $staff = TableRegistry::get('Institution.Staff');
+        $staff = TableRegistry::getTableLocator()->get('Institution.Staff');
         $bodyData = $staff->find('all',
                                 [ 'contain' => [
                                     'Institutions',
@@ -115,7 +115,7 @@ class InstitutionStaffShiftsTable extends ControllerActionTable
                     
                 }
             }
-            $shift =  TableRegistry::get('Institution.InstitutionShifts');
+            $shift =  TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
             $shiftData = $shift->find('all',
                                 [ 'contain' => [
                                     'ShiftOptions'                   
@@ -164,7 +164,7 @@ class InstitutionStaffShiftsTable extends ControllerActionTable
                 'role_name' => ($role == 1) ? 'staff' : NULL
             ];
         
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             $Webhooks->triggerShell('staff_create', ['username' => ''], $body);
         //POCOR-5444 - End
     }

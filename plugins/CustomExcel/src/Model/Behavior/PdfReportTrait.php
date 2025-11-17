@@ -651,7 +651,7 @@ trait PdfReportTrait
         Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
         // Convert spreadsheet object into html
         // POCOR-9336 start
-        $reportCard = TableRegistry::get('ReportCard.ReportCards');
+        $reportCard = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
         $configVal = $reportCard->find()->select(['pdf_no' => $reportCard->aliasField('pdf_page_number')])->where([$reportCard->aliasField('id') => $report_card_id])->first();
         if (!empty($configVal)) { //POCOR-7096
             $configValue = $configVal['pdf_no'];

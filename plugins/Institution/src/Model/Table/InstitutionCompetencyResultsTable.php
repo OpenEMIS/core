@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use App\Model\Table\AppTable;
@@ -26,7 +26,7 @@ class InstitutionCompetencyResultsTable extends AppTable
         $this->addBehavior('CompositeKey');
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         // do not save new record if result is empty and comments is empty - update for POCOR4466
         $gradingOption = $entity->competency_grading_option_id;
@@ -37,7 +37,7 @@ class InstitutionCompetencyResultsTable extends AppTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         // delete record if user removes result and comments is empty - update for POCOR4466
         $gradingOption = $entity->competency_grading_option_id;

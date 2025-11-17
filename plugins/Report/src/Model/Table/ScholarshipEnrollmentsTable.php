@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
@@ -36,10 +36,10 @@ class ScholarshipEnrollmentsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) 
     {
-        $RecipientAcademicStandings = TableRegistry::get('Scholarship.RecipientAcademicStandings');
-        $Semesters = TableRegistry::get('Scholarship.Semesters');
+        $RecipientAcademicStandings = TableRegistry::getTableLocator()->get('Scholarship.RecipientAcademicStandings');
+        $Semesters = TableRegistry::getTableLocator()->get('Scholarship.Semesters');
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $financialAssistanceType = $requestData->scholarship_financial_assistance_type_id;
@@ -144,7 +144,7 @@ class ScholarshipEnrollmentsTable extends AppTable
             ]);
     }
 
-   public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+   public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields) 
    {
        $newFields = [];
         $newFields[] = [

@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -86,7 +86,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         return $events;
     }
 
-    public function getWorkflowEvents(Event $event, ArrayObject $eventsObject)
+    public function getWorkflowEvents(EventInterface $event, ArrayObject $eventsObject)
     {
         foreach ($this->workflowEvents as $key => $attr) {
             $attr['text'] = __($attr['text']);
@@ -95,11 +95,11 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         }
     }
 
-    public function onTransferStudent(Event $event, $id, Entity $workflowTransitionEntity)
+    public function onTransferStudent(EventInterface $event, $id, Entity $workflowTransitionEntity)
     {
         $entity = $this->get($id);
-        $Students = TableRegistry::get('Institution.Students');
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $Students = TableRegistry::getTableLocator()->get('Institution.Students');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
         // find previous student record (could be enrolled/promoted/graduated status)
         $previousStudentRecord = $Students->find()
@@ -132,7 +132,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
 
             //POCOR-6362 starts
             if($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED'] || $previousStudentRecord->student_status_id == $statuses['CURRENT']){
-                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $academicPeriod = $AcademicPeriods
                         ->find()
                         ->where([
@@ -176,11 +176,11 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         }
     }
 
-    public function onCancel(Event $event, $id, Entity $workflowTransitionEntity)
+    public function onCancel(EventInterface $event, $id, Entity $workflowTransitionEntity)
     {
         $entity = $this->get($id);
-        $Students = TableRegistry::get('Institution.Students');
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $Students = TableRegistry::getTableLocator()->get('Institution.Students');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
 
         $newStudentRecord = $Students->find()
@@ -229,7 +229,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     }
 
     // to determine if workflow buttons should be shown in view page
-    public function checkIfCanAddButtons(Event $event, Entity $entity)
+    public function checkIfCanAddButtons(EventInterface $event, Entity $entity)
     {
         $canAddButtons = false;
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
@@ -245,7 +245,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     }
 
     // to get the correct list of assignees in modal and in UpdateAssigneeShell
-    public function onSetCustomAssigneeParams(Event $event, Entity $entity, $params)
+    public function onSetCustomAssigneeParams(EventInterface $event, Entity $entity, $params)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
 
@@ -258,19 +258,19 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     }
 
     // to determine if assignee list or 'Auto Assign' should be shown
-    public function setAutoAssignAssigneeFlag(Event $event, Entity $action)
+    public function setAutoAssignAssigneeFlag(EventInterface $event, Entity $action)
     {
         $currentInstitutionOwner = $this->getWorkflowStepsParamValue($action->workflow_step_id, 'institution_owner');
         $nextInstitutionOwner = $this->getWorkflowStepsParamValue($action->next_workflow_step_id, 'institution_owner');
         return $currentInstitutionOwner != $nextInstitutionOwner ? 1 : 0;
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'student_id';
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {
         $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
@@ -283,13 +283,13 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         $Navigation->addCrumb($previousTitle);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('all_visible', ['type' => 'hidden']);
     }
 
     // for index
-    public function onGetStatusId(Event $event, Entity $entity)
+    public function onGetStatusId(EventInterface $event, Entity $entity)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
         /*$parmaInstitutionId = $this->request->getParam('institutionId');
@@ -306,7 +306,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     }
 
     // for view
-    public function onGetWorkflowStatus(Event $event, Entity $entity)
+    public function onGetWorkflowStatus(EventInterface $event, Entity $entity)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
         /*$parmaInstitutionId = $this->request->getParam('institutionId');
@@ -324,7 +324,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         }
     }
 
-    public function onGetPreviousInstitutionId(Event $event, Entity $entity)
+    public function onGetPreviousInstitutionId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('previous_institution')) {
@@ -333,7 +333,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetInstitutionId(Event $event, Entity $entity)
+    public function onGetInstitutionId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('institution')) {
@@ -342,7 +342,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetPreviousEducationGradeId(Event $event, Entity $entity)
+    public function onGetPreviousEducationGradeId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('previous_education_grade')) {
@@ -351,7 +351,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetEducationGradeId(Event $event, Entity $entity)
+    public function onGetEducationGradeId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('education_grade')) {
@@ -360,7 +360,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetStudentId(Event $event, Entity $entity)
+    public function onGetStudentId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('user')) {
@@ -369,7 +369,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'institution_id') {
             return __('New Institution');
@@ -384,7 +384,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         // if the record changes institution_owner at least once, both institutions should be able to see the record
         if (!$entity->isNew() && $entity->getDirty('status_id')) {
@@ -403,7 +403,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
 
         //POCOR-6995 start
         $classId = $entity->institution_class_id;
-        $institutionClass =  TableRegistry::get('Institution.InstitutionClasses');
+        $institutionClass =  TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         if(!empty($classId)){
             $bodyData = $institutionClass->find('all',
                             [ 'contain' => [
@@ -484,7 +484,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                     'institution_classes_secondary_staff_openemis_no' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
                     'institution_class_students_openemis_no' => !empty($students) ? $students : NULL
                 ];
-                    $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                    $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
                     if ($this->Auth->user()) {
                         $Webhooks->triggerShell('class_update', ['username' => $username], $body);
                     }
@@ -503,7 +503,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
 
     public function getStudentTransferWorkflowStatuses($statusCode)
     {
-        $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+        $WorkflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
         $transferInStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentTransferIn', $statusCode);
         $transferOutStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentTransferOut', $statusCode);
         return $transferInStatus + $transferOutStatus;
@@ -511,7 +511,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
 
     public function rejectPendingTransferRequests($registryAlias, $student)
     {
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
 
         if ($student->student_status_id == $enrolled) {
@@ -519,7 +519,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
             $educationGradesToUpdate = $this->EducationGrades->getEducationGradesBySystem($educationSystemId);
 
             $workflowEntity = $this->getWorkflow($registryAlias);
-            $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+            $WorkflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
             $pendingStatuses = $WorkflowModelsTable->getWorkflowStatusSteps($registryAlias, 'PENDING');
 
             // get the first step in 'REJECTED' workflow statuses
@@ -550,7 +550,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
 
                     if ($this->save($entity)) {
                         // add workflow transition
-                        $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+                        $WorkflowTransitions = TableRegistry::getTableLocator()->get('Workflow.WorkflowTransitions');
                         $prevStepEntity = $this->Statuses->get($prevStep);
 
                         $transition = [

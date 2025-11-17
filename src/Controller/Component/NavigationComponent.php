@@ -15,10 +15,20 @@ class NavigationComponent extends Component
     public $action;
     public $breadcrumbs = [];
 
-    public $components = ['AccessControl'];
+    // Components are defined in the parent class as protected $components = []
+    // We set them in initialize() method instead to avoid type declaration conflicts
 
     public function initialize(array $config): void
     {
+        // Set components to avoid redeclaring the property (which causes type conflicts in CakePHP 5)
+        $this->components = ['AccessControl'];
+        
+        // Manually populate _componentMap since we set components after constructor
+        // This is needed for __get() to work properly in CakePHP 5
+        if ($this->components) {
+            $this->_componentMap = $this->_registry->normalizeArray($this->components);
+        }
+        
         $this->controller = $this->_registry->getController();
         $this->action = $this->getController()->getRequest()->getParam('action');
     }
@@ -255,7 +265,7 @@ class NavigationComponent extends Component
         ]);
 
         if (isset($user_id)) {
-            $userInfo = TableRegistry::get('User.Users')->get($user_id);
+            $userInfo = TableRegistry::getTableLocator()->get('User.Users')->get($user_id);
             if (!empty($userInfo) && $userInfo->is_guardian == 1) {
                 $newNavigation = [
                     'GuardianNavs.GuardianNavs.index' => [
@@ -325,7 +335,7 @@ class NavigationComponent extends Component
      */
     private function getReportAdminstrationNavigation($user_id)
     {
-        $users = TableRegistry::get('User.Users');
+        $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([
             $users->aliasField('super_admin') => 1,
             $users->aliasField('id') => $user_id
@@ -1296,7 +1306,7 @@ class NavigationComponent extends Component
         $institutionStudentId = $this->controller->getQueryString('institution_student_id');
         //POCOR-8551
         if (empty($institutionStudentId)) {
-            $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+            $InstitutionStudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
             $query = $InstitutionStudentsTable->find()
                 ->select(['id']) // Specify the field you want to extract
                 ->where([

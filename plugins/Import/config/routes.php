@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Imports', ['plugin' => 'Import'], function ($routes) {
-	Router::connect('/Imports', ['plugin' => 'Import', 'controller' => 'Imports']);
-	Router::connect('/Imports/:action/*', ['plugin' => 'Import', 'controller' => 'Imports']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/Imports', ['plugin' => 'Import'], function (RouteBuilder $routes) {
+    	$routes->connect('/Imports', ['plugin' => 'Import', 'controller' => 'Imports']);
+    	$routes->connect('/Imports/:action/*', ['plugin' => 'Import', 'controller' => 'Imports']);
+    });
+};

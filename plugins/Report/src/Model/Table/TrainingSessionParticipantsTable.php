@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\Http\ServerRequest;
@@ -31,7 +31,7 @@ class TrainingSessionParticipantsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart (EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),
@@ -41,7 +41,7 @@ class TrainingSessionParticipantsTable extends AppTable
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
         $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
@@ -223,7 +223,7 @@ class TrainingSessionParticipantsTable extends AppTable
         // POCOR-6594 get other identities data
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
 
@@ -344,7 +344,7 @@ class TrainingSessionParticipantsTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelRenderTraineeStatus(Event $event, Entity $entity)
+    public function onExcelRenderTraineeStatus(EventInterface $event, Entity $entity)
     {
         if ($entity->has('status')) {
             $status = $entity->status;

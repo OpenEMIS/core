@@ -8,7 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Date;
 
 use App\Model\Table\ControllerActionTable;
@@ -49,7 +49,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
             true
         );
 
-        $this->SubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+        $this->SubjectStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
 
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['Visits'=>['id']]
@@ -65,13 +65,13 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
     }
 
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         //$institutionId = $this->Session->read('Institution.Institutions.id');
         $institutionId = $this->getInstitutionID();
 
-        $Classes = TableRegistry::get('Institution.InstitutionClasses');
-        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         $periodId = $this->request->getQuery('academic_period_id');
 
         $query
@@ -118,9 +118,9 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
-        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
 
         $extraField[] = [
@@ -154,12 +154,12 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'VisitRequests'];
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // from onUpdateToolbarButtons
         $btnAttr = [
@@ -203,7 +203,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // determine if download button is shown
         $showFunc = function () use ($entity) {
@@ -220,29 +220,29 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['CreatedUser']);
     }
 
-    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupValues($entity);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         //clear querystring after add so it wont effected the next add / edit process
         unset($extra['redirect']['period']);
         unset($extra['redirect']['subject']);
     }
 
-    public function onGetStaffId(Event $event, Entity $entity)
+    public function onGetStaffId(EventInterface $event, Entity $entity)
     {
         if ($entity->staff) {
             if ($this->action == 'view') {
@@ -259,7 +259,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
         } elseif ($action == 'add' || $action == 'edit') {
@@ -295,7 +295,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionSubjectId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionSubjectId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
         } elseif ($action == 'add' || $action == 'edit') {
@@ -349,7 +349,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStaffId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
         } elseif ($action == 'add' || $action == 'edit') {
@@ -381,7 +381,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEvaluator(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEvaluator(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
         } elseif ($action == 'add') {
@@ -401,7 +401,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangePeriod(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         $queryParams = $request->getQueryParams();
@@ -418,7 +418,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         }
     }
 
-    public function addEditOnChangeSubject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeSubject(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         $queryParams = $request->getQueryParams();
@@ -462,7 +462,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         $entity->evaluator = $entity->created_user->name;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'date':

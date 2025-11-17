@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 
 class WorkflowStudentTransferOutTable extends AppTable  
@@ -38,7 +38,7 @@ class WorkflowStudentTransferOutTable extends AppTable
         ]);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query) {
         $requestData = json_decode($settings['process']['params']);
         $institutionId = $requestData->institution_id;
         $reportStartDate = $requestData->report_start_date;
@@ -54,7 +54,7 @@ class WorkflowStudentTransferOutTable extends AppTable
     }
 
     //POCOR-7619
-    public function onExcelGetOpenemisNo(Event $event, Entity $entity)
+    public function onExcelGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         $openemisNo = '';
         if(!empty($entity['user'])){

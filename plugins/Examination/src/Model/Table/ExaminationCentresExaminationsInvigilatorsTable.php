@@ -7,7 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
@@ -66,7 +66,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
             ->notEmpty('rooms');
         return $validator;
     }
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {
         $this->queryString = $this->request->getQuery['queryString'];
         $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
@@ -77,7 +77,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         $Navigation->addCrumb('Invigilators');
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controller->getExamCentresTab();
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
@@ -92,7 +92,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         $this->fields['invigilator_id']['type'] = 'integer';
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         if (is_null($this->examCentreId)) {
             $event->stopPropagation();
@@ -101,7 +101,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['invigilator_id']['sort'] = ['field' => 'Invigilators.first_name'];
         $this->field('openemis_no', ['sort' => ['field' => 'Invigilators.openemis_no']]);
@@ -129,7 +129,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         // End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // set queryString for page refresh
         $this->controller->set('queryString', $this->queryString);
@@ -153,7 +153,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         }
 
         // Room filter
-        $ExamCentreRooms = TableRegistry::get('Examination.ExaminationCentreRooms');
+        $ExamCentreRooms = TableRegistry::getTableLocator()->get('Examination.ExaminationCentreRooms');
         $roomOptions = $ExamCentreRooms->find('list')
             ->where([$ExamCentreRooms->aliasField('examination_centre_id') => $this->examCentreId])
             ->toArray();
@@ -193,25 +193,25 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         $extra['options']['sortWhitelist'] = $sortList;
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'invigilator_id';
         $searchableFields['Invigilators'] = 'openemis_no';
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('openemis_no');
         $this->field('rooms');
         $this->setFieldOrder(['openemis_no', 'invigilator_id', 'examination_id', 'rooms']);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['Invigilators', 'Examinations', 'ExaminationCentreRoomsExaminationsInvigilators.ExaminationCentreRooms']);
     }
 
-    public function onGetRooms(Event $event, Entity $entity)
+    public function onGetRooms(EventInterface $event, Entity $entity)
     {
         if ($entity->has('examination_centre_rooms_examinations_invigilators')) {
             $roomInvigilators = $entity->examination_centre_rooms_examinations_invigilators;
@@ -226,7 +226,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         return ''; // Return an empty string if no rooms are found
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('invigilator')) {
@@ -236,7 +236,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         return $value;
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['invigilator_id']['visible'] = false;
         $this->field('academic_period_id', ['type' => 'readonly']);
@@ -247,7 +247,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         $this->setFieldOrder(['academic_period_id', 'examination_centre_id', 'examination_id', 'rooms', 'invigilators']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['type' => 'readonly']);
         $this->field('examination_centre_id', ['type' => 'readonly']);
@@ -257,7 +257,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         $this->setFieldOrder(['academic_period_id', 'examination_centre_id', 'invigilator_id', 'examination_id', 'rooms']);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $examCentreEntity = $this->ExaminationCentres->get($this->examCentreId, ['contain' => ['AcademicPeriods']]);
         $academicPeriod = $examCentreEntity->academic_period->name;
@@ -265,7 +265,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         return $attr;
     }
 
-    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldExaminationCentreId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $examCentreEntity = $this->ExaminationCentres->get($this->examCentreId);
         $attr['value'] = $this->examCentreId;
@@ -273,7 +273,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         return $attr;
     }
 
-    public function onUpdateFieldInvigilatorId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInvigilatorId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
         $attr['value'] = $entity->invigilator_id;
@@ -281,7 +281,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         return $attr;
     }
 
-    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldExaminationId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $linkedExams = $this->ExaminationCentresExaminations->find('list', [
@@ -304,7 +304,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         return $attr;
     }
 
-    public function addOnChangeExaminationId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnChangeExaminationId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data[$this->getAlias()])) {
             if (isset($data[$this->getAlias()]['invigilators'])) {
@@ -313,7 +313,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         }
     }
 
-    public function onUpdateFieldRooms(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldRooms(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $ExaminationCentreRooms = $this->ExaminationCentres->ExaminationCentreRooms;
         $roomOptions = $ExaminationCentreRooms->find('list')
@@ -338,7 +338,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         return $attr;
     }
 
-    public function onGetCustomInvigilatorsElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomInvigilatorsElement(EventInterface $event, $action, $entity, $attr, $options=[])
     {
         $tableHeaders = [__('OpenEMIS ID'), __('Invigilator')];
         $tableCells = [];
@@ -422,7 +422,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         return $event->getSubject()->renderElement('Examination.ExaminationCentres/' . $fieldKey, ['attr' => $attr]);
     }
 
-    public function onUpdateIncludes(Event $event, ArrayObject $includes, $action)
+    public function onUpdateIncludes(EventInterface $event, ArrayObject $includes, $action)
     {
         if ($action == 'edit') {
             $includes['autocomplete'] = [
@@ -492,7 +492,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
      * @param \ArrayObject $data The request data array.
      * @param \ArrayObject $options Additional options for processing.
      */
-    public function addOnAddInvigilator(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnAddInvigilator(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $alias = $this->getAlias();
         $fieldKey = 'invigilators';
@@ -541,12 +541,12 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         }
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $requestData[$this->getAlias()]['invigilator_id'] = 0;
     }
 
-    public function addBeforeSave(Event $event, $entity, $requestData, $extra)
+    public function addBeforeSave(EventInterface $event, $entity, $requestData, $extra)
     {
         $process = function ($model, $entity) use ($requestData) {
             if (!empty($entity->getErrors())) {
@@ -591,7 +591,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         return $process;
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         if (isset($data[$this->getAlias()]['rooms']) && !empty($data[$this->getAlias()]['rooms'])) {
             $roomInvigilators = [];
@@ -609,7 +609,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         }
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         // manually delete hasMany roomInvigilators data
         $fieldKey = 'examination_centre_rooms_examinations_invigilators';
@@ -628,7 +628,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'invigilator_id') {
             return __('Invigilator');

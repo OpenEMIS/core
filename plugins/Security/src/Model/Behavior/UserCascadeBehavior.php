@@ -8,7 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\Table; // POCOR-8683
 use Cake\Utility\Inflector; // POCOR-8683
@@ -18,7 +18,7 @@ class UserCascadeBehavior extends Behavior {
 		// $this->showSQL();
 	}
 
-	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+	public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options) {
 		$userId = $entity->id;
 		$this->cleanUserRecords($userId);
 
@@ -27,7 +27,7 @@ class UserCascadeBehavior extends Behavior {
         	'security_user_id' => $userId
         ];
 
-		$Webhooks = TableRegistry::get('Webhook.Webhooks');
+		$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
 		$Webhooks->triggerShell('security_user_delete', ['username' => ''], $body);
 	}
 
@@ -66,7 +66,7 @@ class UserCascadeBehavior extends Behavior {
 			}
 		}
 
-		$table = TableRegistry::get('Institution.InstitutionClasses');
+		$table = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
 		$table->updateAll(
 			['staff_id' => 0],
 			['staff_id' => $userId]

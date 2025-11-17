@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\Validation\Validator;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use App\Model\Table\AppTable;
@@ -65,7 +65,7 @@ class InsurancesTable extends ControllerActionTable
     }
 
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $sentData = $this->request->getData();
         $alias = $this->getAlias();
@@ -103,7 +103,7 @@ class InsurancesTable extends ControllerActionTable
         }
     }
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'download' || $action == 'image') {
             // check for the user permission to download here
@@ -123,7 +123,7 @@ class InsurancesTable extends ControllerActionTable
         ;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('start_date', ['attr' => ['label' => __('Start date')]]);
         $this->field('end_date', ['attr' => ['label' => __('End date')]]);
@@ -156,20 +156,20 @@ class InsurancesTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $userID = $this->getUserID();
         $query->where([$this->aliasField('security_user_id') => $userID]);
     }
     /* POCOR-6131 */
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
     /* POCOR-6131 */
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
             case 'start_date':
@@ -185,13 +185,13 @@ class InsurancesTable extends ControllerActionTable
         }
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query){
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $extra, Query $query){
         $userID = $this->getUserID();
         $query->where([$this->aliasField('security_user_id') => $userID])
         ->orderDesc($this->aliasField('created'));
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
             'key'   => 'start_date',
@@ -224,7 +224,7 @@ class InsurancesTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('start_date',['attr' => ['label' => __('Start Date')]]);
         $this->field('end_date',['attr' => ['label' => __('End Date')]]);

@@ -4,7 +4,7 @@ namespace Competency\Model\Table;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
@@ -63,12 +63,12 @@ class CompetencyPeriodsTable extends ControllerActionTable
             // ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controller->getCompetencyTabs();
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $serverRequest = new ServerRequest();
         $request = $this->request;
@@ -127,7 +127,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         if (isset($extra['selectedPeriod'])) {
             if ($extra['selectedPeriod']) {
@@ -144,7 +144,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
         $query->where([$conditions]);
     }
 
-    public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function addOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($this->request->getQuery('queryString') && !$this->request->getQuery('period') && !$this->request->getQuery('template')) {
             $queryString = $this->getQueryString();
@@ -160,14 +160,14 @@ class CompetencyPeriodsTable extends ControllerActionTable
         }
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'CompetencyItems.Criterias','Templates'
         ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('competency_items', [
             'type' => 'element',
@@ -179,7 +179,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
         ]);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id', [
             'type' => 'select',
@@ -202,7 +202,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
         ]);
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         //massage data to match many to many data format.
         if (array_key_exists($this->getAlias(), (array)$requestData)) {
@@ -227,7 +227,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
 
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
@@ -246,7 +246,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnChangeAcademicPeriod(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         $request->getQuery['template'] = '-1';
@@ -260,7 +260,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldCompetencyTemplateId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCompetencyTemplateId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $selectedPeriod = $request->getData($this->aliasField('academic_period_id'));
@@ -290,7 +290,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeCompetencyTemplate(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnChangeCompetencyTemplate(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         $request->getQuery['item'] = '-1';
@@ -308,7 +308,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldCompetencyItems(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCompetencyItems(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             // POCOR-9056 start
@@ -328,7 +328,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [ //this will exclude checking during remove restrict
             $this->CompetencyItems->getAlias(),
@@ -383,7 +383,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
         return $locator->get($tableFullAlias);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'academic_period_id') {
             return __('Academic Period');

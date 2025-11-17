@@ -5,7 +5,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
@@ -48,7 +48,7 @@ class CounsellingsTable extends ControllerActionTable
         return $events;
     }
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'download' || $action == 'image') {
             // check for the user permission to download here
@@ -84,7 +84,7 @@ class CounsellingsTable extends ControllerActionTable
     public function getCounselorOptions($institutionId)
     {
         // get the staff that assigned from the institution from security user
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
 
         $counselorOptions = $this->Counselors
             ->find('list', [
@@ -110,11 +110,11 @@ class CounsellingsTable extends ControllerActionTable
 
     public function getRequesterOptions($institutionId)
     {
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
-        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $UserData = TableRegistry::get('User.Users');
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $UserData = TableRegistry::getTableLocator()->get('User.Users');
+        $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
         $join = [];
         $join[''] = [
@@ -159,7 +159,7 @@ class CounsellingsTable extends ControllerActionTable
             return $data;
     }
 
-    public function indexBeforeAction(Event $event) {
+    public function indexBeforeAction(EventInterface $event) {
         
         $this->field('date');
         $this->field('description');
@@ -173,13 +173,13 @@ class CounsellingsTable extends ControllerActionTable
         $this->field('comment',['visible' => false]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
         ->orderDesc($this->aliasField('created'));
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         /*$academicPeriodOptions = $this->AcademicPeriods->getYearList();
         

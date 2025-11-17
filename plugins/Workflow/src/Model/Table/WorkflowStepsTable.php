@@ -7,7 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Http\ServerRequest;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 
@@ -72,7 +72,7 @@ class WorkflowStepsTable extends AppTable {
 			->requirePresence('is_system_defined');
 	}
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+	public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) {
 		// Auto insert default workflow_actions when add
 		if ($entity->isNew()) {
 			if ($entity->has('is_system_defined') && $entity->is_system_defined == 1) {
@@ -105,12 +105,12 @@ class WorkflowStepsTable extends AppTable {
 		}
 	}
 
-	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-		$models = TableRegistry::get('Workflow.WorkflowModels')->find()->all();
+	public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options) {
+		$models = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels')->find()->all();
 		$broadcaster = $this;
 		$listeners = [];
 		foreach ($models as $key => $obj) {
-			$listeners[] = TableRegistry::get($obj->model);
+			$listeners[] = TableRegistry::getTableLocator()->get($obj->model);
 		}
 
 		if (!empty($listeners)) {
@@ -118,7 +118,7 @@ class WorkflowStepsTable extends AppTable {
 		}
 	}
 
-	public function onGetCategory(Event $event, Entity $entity) {
+	public function onGetCategory(EventInterface $event, Entity $entity) {
 		$value = '';
 		if (!empty($entity->category)) {
 			$categoryOptions = $this->getSelectOptions('WorkflowSteps.category');
@@ -130,22 +130,22 @@ class WorkflowStepsTable extends AppTable {
 		return $value;
 	}
 
-	public function onGetIsEditable(Event $event, Entity $entity) {
+	public function onGetIsEditable(EventInterface $event, Entity $entity) {
 		return $entity->is_editable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
 
-	public function onGetIsRemovable(Event $event, Entity $entity) {
+	public function onGetIsRemovable(EventInterface $event, Entity $entity) {
 		return $entity->is_removable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(EventInterface $event) {
 		$this->ControllerAction->field('security_roles', [
 			'type' => 'chosenSelect',
 			'placeholder' => __('Select Security Roles')
 		]);
 	}
 
-	public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options) {
+	public function indexBeforePaginate(EventInterface $event, ServerRequest $request, Query $query, ArrayObject $options) {
 		list($modelOptions, $selectedModel) = array_values($this->getModelOptions());
 		list($workflowOptions, $selectedWorkflow) = array_values($this->getWorkflowOptions($selectedModel));
 
@@ -159,7 +159,7 @@ class WorkflowStepsTable extends AppTable {
 			->where([$this->aliasField('workflow_id') => $selectedWorkflow]);
 	}
 
-	public function indexAfterAction(Event $event, $data) {
+	public function indexAfterAction(EventInterface $event, $data) {
 		$this->setupFields();
 
 		$session = $this->request->getSession();
@@ -171,19 +171,19 @@ class WorkflowStepsTable extends AppTable {
 		}
 	}
 
-	public function viewEditBeforeQuery(Event $event, Query $query) {
+	public function viewEditBeforeQuery(EventInterface $event, Query $query) {
 		$query->matching('Workflows')
 			->contain(['SecurityRoles', 'WorkflowStepsParams']);
 	}
 
-	public function addOnInitialize(Event $event, Entity $entity) {
+	public function addOnInitialize(EventInterface $event, Entity $entity) {
 		$request = $this->request;
 		$queryParams = $request->getQuery();
 		unset($queryParams['model']);
 		$request = $request->withQueryParams($queryParams);
 	}
 
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
+	public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra) {
 		list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
 		if (!$isDeletable) {
@@ -199,21 +199,21 @@ class WorkflowStepsTable extends AppTable {
 		$extra['excludedModels'] = [$this->WorkflowActions->getAlias()] + $this->getExcludedModels($entity);
     }
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(EventInterface $event, Entity $entity) {
 		$this->setupFields($entity);
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity) {
+	public function addEditAfterAction(EventInterface $event, Entity $entity) {
 		$this->setupFields($entity);
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
+	public function editAfterAction(EventInterface $event, Entity $entity) {
 		if ($entity->has('is_system_defined') && !empty($entity->is_system_defined)) {
 			$this->Alert->info($this->aliasField('systemDefined'));
 		}
 	}
 
-	public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, ServerRequest $request) {
+	public function onUpdateFieldWorkflowModelId(EventInterface $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'view' || $action == 'edit' || $action == 'index') {
 			$attr['visible'] = false;
 		} else if ($action == 'add') {
@@ -226,7 +226,7 @@ class WorkflowStepsTable extends AppTable {
 
 		return $attr;
 	}
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['submit']) && $data['submit'] == 'save') {
             $workflowStepId = $data['id'];
@@ -234,8 +234,8 @@ class WorkflowStepsTable extends AppTable {
 
             // to only add validations on edit operations for the first workflow steps for any workflows with post event rules
             if (!is_null($workflowStepId) && $workflowStepId !== '') {
-                $WorkflowRuleEventsTable = TableRegistry::get('Workflow.WorkflowRuleEvents');
-                $WorkflowRulesTable = TableRegistry::get('Workflow.WorkflowRules');
+                $WorkflowRuleEventsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowRuleEvents');
+                $WorkflowRulesTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
                 $workflowId = $data['workflow_id'];
 
                 $firstStepEntity = $WorkflowRulesTable->getWorkflowFirstStep($workflowId);
@@ -279,7 +279,7 @@ class WorkflowStepsTable extends AppTable {
 
                         // validations will only add if the first steps has nay security roles associated to it
                         if (!empty($securityRoleCodes)) {
-                            $SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
+                            $SecurityRolesTable = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
                             $roleIds = $SecurityRolesTable
                                 ->find('list', [
                                     'keyField' => 'id',
@@ -316,7 +316,7 @@ class WorkflowStepsTable extends AppTable {
         }
     }
 
-	public function onUpdateFieldWorkflowId(Event $event, array $attr, $action, ServerRequest $request) {
+	public function onUpdateFieldWorkflowId(EventInterface $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'add') {
 			$selectedModel = $request->getQuery('model');
 			list($workflowOptions) = array_values($this->getWorkflowOptions($selectedModel));
@@ -335,7 +335,7 @@ class WorkflowStepsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldName(Event $event, array $attr, $action, ServerRequest $request) {
+	public function onUpdateFieldName(EventInterface $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'edit') {
 			$entity = $attr['attr']['entity'];
 
@@ -350,7 +350,7 @@ class WorkflowStepsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, ServerRequest $request) {
+	public function onUpdateFieldSecurityRoles(EventInterface $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'add' || $action == 'edit') {
 	        $securityRoleOptions = $this->SecurityRoles
 	        	->find('list')
@@ -362,7 +362,7 @@ class WorkflowStepsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldCategory(Event $event, array $attr, $action, ServerRequest $request) {
+	public function onUpdateFieldCategory(EventInterface $event, array $attr, $action, ServerRequest $request) {
 		$categoryOptions = $this->getSelectOptions('WorkflowSteps.category');
 		if ($action == 'view' || $action == 'add') {
 			$attr['type'] = 'select';
@@ -384,7 +384,7 @@ class WorkflowStepsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldIsEditable(Event $event, array $attr, $action, ServerRequest $request) {
+	public function onUpdateFieldIsEditable(EventInterface $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'view' || $action == 'add' || $action == 'edit') {
 			$attr['type'] = 'select';
 			$attr['select'] = false;
@@ -394,7 +394,7 @@ class WorkflowStepsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldIsRemovable(Event $event, array $attr, $action, ServerRequest $request) {
+	public function onUpdateFieldIsRemovable(EventInterface $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'view' || $action == 'add' || $action == 'edit') {
 			$attr['type'] = 'select';
 			$attr['select'] = false;
@@ -404,7 +404,7 @@ class WorkflowStepsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldIsSystemDefined(Event $event, array $attr, $action, ServerRequest $request) {
+	public function onUpdateFieldIsSystemDefined(EventInterface $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'add') {
 			$attr['value'] = 0;
 		}
@@ -412,7 +412,7 @@ class WorkflowStepsTable extends AppTable {
 		return $attr;
 	}
 
-	public function addEditOnChangeModel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	public function addEditOnChangeModel(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
 	{
 	    $request = $this->request;
 	    $queryParams = $request->getQuery();
@@ -521,7 +521,7 @@ class WorkflowStepsTable extends AppTable {
 			->first();
 
 		$workflowModelEntity = $workflowStepEntity->_matchingData['WorkflowModels'];
-		$model = TableRegistry::get($workflowModelEntity->model);
+		$model = TableRegistry::getTableLocator()->get($workflowModelEntity->model);
 
 		if (array_key_exists($model->getRegistryAlias(), $defaultList)) {
 			unset($defaultList[$model->getRegistryAlias()]);

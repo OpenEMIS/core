@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Alerts', ['plugin' => 'Alert'], function ($routes) {
-	Router::connect('/Alerts', ['plugin' => 'Alert', 'controller' => 'Alerts']);
-	Router::connect('/Alerts/:action/*', ['plugin' => 'Alert', 'controller' => 'Alerts']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/Alerts', ['plugin' => 'Alert'], function (RouteBuilder $routes) {
+    	$routes->connect('/Alerts', ['plugin' => 'Alert', 'controller' => 'Alerts']);
+    	$routes->connect('/Alerts/:action/*', ['plugin' => 'Alert', 'controller' => 'Alerts']);
+    });
+};

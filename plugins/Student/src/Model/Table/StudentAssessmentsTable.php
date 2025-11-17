@@ -3,7 +3,7 @@
 namespace Student\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -37,7 +37,7 @@ class StudentAssessmentsTable extends ControllerActionTable
 
     public function getTemplateOptions($period, $templateQuerystring)
     {
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
         $studentGrades = $InstitutionStudents->find()
             ->where([
                 $InstitutionStudents->aliasField('student_id') => $this->Auth->User('id'),
@@ -68,7 +68,7 @@ class StudentAssessmentsTable extends ControllerActionTable
         return compact('templateOptions', 'selectedTemplate');
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($this->request->getQuery('period')));
@@ -97,7 +97,7 @@ class StudentAssessmentsTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id','education_grade_id', 'education_subject_id', 'assessment_period_id', 'marks','total_mark']);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('assessment_id IS') => $extra['selectedTemplate']]); //show assessment period based on the selected assessment.
         if ($extra['selectedTemplate'] != 'empty') {
@@ -126,17 +126,17 @@ class StudentAssessmentsTable extends ControllerActionTable
         
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
 
-    public function onGetTotalMark(Event $event, Entity $entity)
+    public function onGetTotalMark(EventInterface $event, Entity $entity)
     {
         return $this->getTotalMark($entity->student_id,$entity->academic_period_id,$entity->education_subject->id,$entity->education_grade_id );
     }
     
-    public function onGetEducationSubjectId(Event $event, Entity $entity)
+    public function onGetEducationSubjectId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('education_subject')) {
@@ -174,7 +174,7 @@ class StudentAssessmentsTable extends ControllerActionTable
             ])->toArray(); 
             $sumMarks = [];
             foreach ($totalMarks as $result) {
-                $assessmentItemResults = TableRegistry::get('assessment_item_results');
+                $assessmentItemResults = TableRegistry::getTableLocator()->get('assessment_item_results');
                 $assessmentItemResultsData = $assessmentItemResults->find()
                         ->select([
                             $assessmentItemResults->aliasField('marks')

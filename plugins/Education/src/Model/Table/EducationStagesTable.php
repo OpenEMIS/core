@@ -3,7 +3,7 @@ namespace Education\Model\Table;
 
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use ArrayObject;
 
@@ -29,19 +29,19 @@ class EducationStagesTable extends ControllerActionTable
         return $validator;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true) {
         if ($field == 'name') {
             return __('Name');
         } elseif ($field == 'education_level_id') {

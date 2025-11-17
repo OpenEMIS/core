@@ -3,7 +3,7 @@ namespace Rest\Controller;
 
 use Cake\Log\Log;
 use Cake\I18n\Time;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use App\Controller\AppController;
 use Cake\Utility\Security;
@@ -12,7 +12,6 @@ use Firebase\JWT\ExpiredException;
 use Cake\Core\Configure;
 use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Cookie\Cookie;
-use Cake\Event\EventInterface;
 use Cake\Routing\Router;
 
 class RestController extends AppController
@@ -45,7 +44,7 @@ class RestController extends AppController
                 'TableCell' => 'Institution.InstitutionSurveyTableCells'
             ]
         ]);
-        $this->SecurityRestSessions = TableRegistry::get('Rest.SecurityRestSessions');
+        $this->SecurityRestSessions = TableRegistry::getTableLocator()->get('Rest.SecurityRestSessions');
         $this->loadComponent('Cookie');
     }
 

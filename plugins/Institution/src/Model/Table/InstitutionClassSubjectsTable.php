@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
@@ -36,7 +36,7 @@ class InstitutionClassSubjectsTable extends ControllerActionTable
         ]);
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $subjectEntity = $this->InstitutionSubjects->get($entity->institution_subject_id);
         $this->InstitutionSubjects->delete($subjectEntity);

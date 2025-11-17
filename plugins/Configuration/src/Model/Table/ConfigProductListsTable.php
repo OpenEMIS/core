@@ -2,7 +2,7 @@
 namespace Configuration\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Network\Session;
@@ -68,14 +68,14 @@ class ConfigProductListsTable extends ControllerActionTable
         return sprintf($defaultImgMsg, __($photoMessage), $formatSupported);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('name');
         $this->field('url', ['type' => 'string']);
         $this->field('file_name', ['visible' => false]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['file_content']['visible'] = false;
 
@@ -100,28 +100,28 @@ class ConfigProductListsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('file_content', ['type' => 'image', 'defaultWidth' => 95]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_content', ['type' => 'image']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_content', ['type' => 'image']);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $session = new Session();
         $session->delete('ConfigProductLists.list');
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if (!empty($entity->file_name)) {
             $imagePath = WWW_ROOT . 'img' . DS . 'product_list_logo' . DS . $entity->file_name;

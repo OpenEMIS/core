@@ -7,7 +7,7 @@ use Cake\Core\Configure;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\I18n\I18n;
@@ -154,7 +154,7 @@ class InstitutionStatusTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         // set action for webhook
@@ -230,7 +230,7 @@ class InstitutionStatusTable extends ControllerActionTable
             $this->field('logo_content', ['type' => 'image']);
         }
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $LatLongPermission = $ConfigItems->value("latitude_longitude");
 
         if ($LatLongPermission == LatLongOptions::EXCLUDED) {
@@ -351,7 +351,7 @@ class InstitutionStatusTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetLogoContent(Event $event, Entity $entity)
+    public function onGetLogoContent(EventInterface $event, Entity $entity)
     {
         $fileContent = $entity->logo_content;
         $value = "";
@@ -369,7 +369,7 @@ class InstitutionStatusTable extends ControllerActionTable
     ** view action methods
     **
     ******************************************************************************************************************/
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
         $this->setFieldOrder([
@@ -470,7 +470,7 @@ class InstitutionStatusTable extends ControllerActionTable
     ** index action methods
     **
     ******************************************************************************************************************/
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->Session->delete('Institutions.id');
 
@@ -490,7 +490,7 @@ class InstitutionStatusTable extends ControllerActionTable
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //the query options are setup so that Security.InstitutionBehavior can reuse it
         $extra['query'] = [
@@ -520,7 +520,7 @@ class InstitutionStatusTable extends ControllerActionTable
         // end POCOR-3983
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->dashboardQuery = clone $query;
         $search = $this->getSearchKey();
@@ -548,7 +548,7 @@ class InstitutionStatusTable extends ControllerActionTable
         }
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         if ($this->action == 'index') {
             $institutionCount = $this->find();
@@ -588,7 +588,7 @@ class InstitutionStatusTable extends ControllerActionTable
     }
 
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->Alert->info(__('general.status_update'));
         $data = $this->find()->where(['id' => $entity->id])->first();
@@ -657,7 +657,7 @@ class InstitutionStatusTable extends ControllerActionTable
         // back button
 }
 
-public function editAfterSave(Event $event, Entity $entity, ArrayObject $options)
+public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $options)
 {
     if (!$entity->isNew()) {
         /*$this->validator()->remove('area_id', 'required');
@@ -670,9 +670,9 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
 
         if ($options['InstitutionStatus']['current_status'] == 'Active') {
             if(!empty($options['InstitutionStatus']['withdraw_students']) && $options['InstitutionStatus']['withdraw_students'] == 1) {
-                $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+                $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
                 //Start POCOR-6624 For enrolled status, all the students should be withdrawn
-                $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+                $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
                 $statuses = $StudentStatuses->findCodeList();
                 $query = $institutionStudents->query();
                 $query->where(['student_status_id NOT IN' => [$statuses['TRANSFERRED'],
@@ -685,7 +685,7 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
 
                 //Start:POCOR-6736
                 //also changed the student_status from institution_class_students table..
-                $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+                $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
                 $query1 = $InstitutionClassStudents->query();
                 $query1->where(['student_status_id NOT IN' => [$statuses['TRANSFERRED'],
                     $statuses['PROMOTED'], $statuses['REPEATED'],$statuses['GRADUATED']]]);
@@ -699,7 +699,7 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
 
             }
             if(!empty($options['InstitutionStatus']['end_staff_positions']) && $options['InstitutionStatus']['end_staff_positions'] == 1) {
-                $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
+                $institutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
                 $query = $institutionStaff->query();
                 $query->update()
                 ->set(['end_date' => date('Y-m-d'), 'staff_status_id' => 2])
@@ -707,7 +707,7 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
                 ->execute();
             }
             if(!empty($options['InstitutionStatus']['end_infrastructure_usage']) && $options['InstitutionStatus']['end_infrastructure_usage'] == 1) {
-                $institutionRoom = TableRegistry::get('Institution.InstitutionRooms');
+                $institutionRoom = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
                 $query = $institutionRoom->query();
                 $query->update()
                 ->set(['end_date' => date('Y-m-d'), 'room_status_id' => 2])
@@ -715,7 +715,7 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
                 ->execute();
                 //Start:POCOR-6736
                 //floors
-                $institutionRoom = TableRegistry::get('Institution.InstitutionFloors');
+                $institutionRoom = TableRegistry::getTableLocator()->get('Institution.InstitutionFloors');
                 $query = $institutionRoom->query();
                 $query->update()
                 ->set(['end_date' => date('Y-m-d'), 'floor_status_id' => 2])
@@ -723,7 +723,7 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
                 ->execute();
 
                 //Building
-                $institutionRoom = TableRegistry::get('Institution.InstitutionBuildings');
+                $institutionRoom = TableRegistry::getTableLocator()->get('Institution.InstitutionBuildings');
                 $query = $institutionRoom->query();
                 $query->update()
                 ->set(['end_date' => date('Y-m-d'), 'building_status_id' => 2])
@@ -731,7 +731,7 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
                 ->execute();
 
                 //land
-                $institutionRoom = TableRegistry::get('Institution.InstitutionLands');
+                $institutionRoom = TableRegistry::getTableLocator()->get('Institution.InstitutionLands');
                 $query = $institutionRoom->query();
                 $query->update()
                 ->set(['end_date' => date('Y-m-d'), 'land_status_id' => 2])
@@ -740,7 +740,7 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
                 //End:POCOR-6736
             }
 
-            $institutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+            $institutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
             $institutionShiftsData = $institutionShifts->find()
                     ->select([
                         'institution_id' => 'InstitutionShifts.institution_id',
@@ -773,7 +773,7 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
     }
 }
 
-public function onUpdateFieldDateOpened(Event $event, array $attr, $action, ServerRequest $request)
+public function onUpdateFieldDateOpened(EventInterface $event, array $attr, $action, ServerRequest $request)
 {
     $session = $this->request->getSession();
     $institutionId =$this->request->getAttribute('params')['pass'][1];
@@ -797,7 +797,7 @@ public function onUpdateFieldDateOpened(Event $event, array $attr, $action, Serv
     return $attr;
 }
 
-public function onUpdateFieldDateClosed(Event $event, array $attr, $action, ServerRequest $request)
+public function onUpdateFieldDateClosed(EventInterface $event, array $attr, $action, ServerRequest $request)
 {
     $session = $this->request->getSession();
     $institutionId = $this->request->getAttribute('params')['pass'][1];
@@ -817,7 +817,7 @@ public function onUpdateFieldDateClosed(Event $event, array $attr, $action, Serv
     return $attr;
 }
 
-public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
 {
     if ($field == 'name') {
         return __('Institution Name');

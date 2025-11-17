@@ -49,7 +49,7 @@ class Institution1RoomsControllerTest extends AppTestCase
         $this->setInstitutionSession(1);
 
         $this->urlPrefix('/Institutions/Rooms/');
-        $table = TableRegistry::get('Institution.InstitutionRooms');
+        $table = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
     }
 
 // Test as an Owner
@@ -99,7 +99,7 @@ class Institution1RoomsControllerTest extends AppTestCase
         $this->get($testUrl);
         $this->assertResponseCode(200);
 
-        $table = TableRegistry::get('Institution.InstitutionRooms');
+        $table = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
         $data = [
             'InstitutionRooms' => [
                 'code' => 'ABS6653802010104',
@@ -131,7 +131,7 @@ class Institution1RoomsControllerTest extends AppTestCase
         $this->setInstitutionSession(1);
         $testUrl = $this->url('view/'.$this->testingId, ['parent' => 13, 'parent_level' => 3]);
 
-        $table = TableRegistry::get('Institution.InstitutionRooms');
+        $table = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
         $this->get($testUrl);
 
         $this->assertResponseCode(200);
@@ -144,7 +144,7 @@ class Institution1RoomsControllerTest extends AppTestCase
         $testUrl = $this->url('edit/'.$this->testingId, ['parent' => 13, 'parent_level' => 3]);
 
         // TODO: DO A GET FIRST
-        $table = TableRegistry::get('Institution.InstitutionRooms');
+        $table = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
         $this->get($testUrl);
 
         $this->assertResponseCode(200);
@@ -181,7 +181,7 @@ class Institution1RoomsControllerTest extends AppTestCase
     public function testDelete() {
         $testUrl = $this->url('remove/'.$this->testingId, ['parent' => 13, 'parent_level' => 3]);
 
-        $table = TableRegistry::get('Institution.InstitutionRooms');
+        $table = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
 
         $exists = $table->exists([$table->primaryKey() => $this->testingId]);
         $this->assertTrue($exists);
@@ -250,7 +250,7 @@ class Institution1RoomsControllerTest extends AppTestCase
         $this->setInstitutionSession(2);
         $testUrl = $this->url('view/'.$this->testingId, ['parent' => 13, 'parent_level' => 3]);
 
-        $table = TableRegistry::get('Institution.InstitutionRooms');
+        $table = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
         $this->get($testUrl);
 
         $this->assertResponseCode(200);

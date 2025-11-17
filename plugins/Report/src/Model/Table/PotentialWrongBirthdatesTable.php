@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
@@ -35,20 +35,20 @@ class PotentialWrongBirthdatesTable extends AppTable
         $this->addBehavior('Report.ReportList');
 	}
 
-    public function beforeAction(Event $event) 
+    public function beforeAction(EventInterface $event) 
     {
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) 
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request) 
     {
         $attr['options'] = $this->controller->getFeatureOptions($this->alias());
         return $attr;
     }
 
-    public function onExcelGetAge(Event $event, Entity $entity)
+    public function onExcelGetAge(EventInterface $event, Entity $entity)
     {
         // Calculate the age
         $age = '';
@@ -61,7 +61,7 @@ class PotentialWrongBirthdatesTable extends AppTable
         return $age;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $enrolledStatus = $this->StudentStatuses->getIdByCode('CURRENT');
 
@@ -114,7 +114,7 @@ class PotentialWrongBirthdatesTable extends AppTable
             ]);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
 

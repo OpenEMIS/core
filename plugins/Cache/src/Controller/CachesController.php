@@ -2,7 +2,7 @@
 namespace Cache\Controller;
 
 use Cache\Controller\AppController;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Cache\Cache;
 use Cake\ORM\TableRegistry;
 use Cake\Core\Configure;

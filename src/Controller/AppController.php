@@ -19,7 +19,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use Cake\Controller\Controller;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
@@ -27,11 +27,8 @@ use ControllerAction\Model\Traits\ControllerActionTrait;
 use ControllerAction\Model\Traits\SecurityTrait;
 use Cake\Utility\Inflector;
 use Cake\Cache\Cache;
-use Cake\Filesystem\File;
-use Cake\Filesystem\Folder;
 use Cake\ORM\Table;
 use Cake\Http\ServerRequest;
-use Cake\Event\EventInterface;
 use Cake\Log\Log;
 
 
@@ -115,6 +112,11 @@ class AppController extends Controller
                 'plugin' => 'User',
                 'controller' => 'Users',
                 'action' => 'login'
+            ],
+            'loginRedirect' => [
+                'plugin' => false,
+                'controller' => 'Dashboard',
+                'action' => 'index'
             ],
             'logoutRedirect' => [
                 'plugin' => 'User',
@@ -270,8 +272,10 @@ class AppController extends Controller
         }
 
         // Delete old theme images
-        $folder = new Folder();
-        $folder->delete(WWW_ROOT . 'img' . DS . 'themes');
+        $themesPath = WWW_ROOT . 'img' . DS . 'themes';
+        if (is_dir($themesPath)) {
+            $this->deleteDirectory($themesPath);
+        }
 
         // Get only themes with the correct config_item_id
         $themeTable = TableRegistry::getTableLocator()->get('Theme.Themes');
@@ -283,9 +287,12 @@ class AppController extends Controller
         foreach ($themeQuery as $r) {
             // Handle file content writing
             if ($r->content) {
-                $file = new File(WWW_ROOT . 'img' . DS . 'themes' . DS . $r->value, true);
-                $file->write(stream_get_contents($r->content));
-                $file->close();
+                $filePath = WWW_ROOT . 'img' . DS . 'themes' . DS . $r->value;
+                $dir = dirname($filePath);
+                if (!is_dir($dir)) {
+                    mkdir($dir, 0755, true);
+                }
+                file_put_contents($filePath, stream_get_contents($r->content));
             }
 
             // Create code-friendly key
@@ -315,9 +322,8 @@ class AppController extends Controller
 
         $loginBackground = $basePath . Configure::read('App.imageBaseUrl') . $themes['login_page_image'];
 
-        $templateFile = new File($customPath . 'layout.core.template.css');
-        $template = $templateFile->read();
-        $templateFile->close();
+        $templatePath = $customPath . 'layout.core.template.css';
+        $template = file_exists($templatePath) ? file_get_contents($templatePath) : '';
 
         $template = str_replace('${bgImg}', "'$loginBackground'", $template);
         $template = str_replace('${secondColor}', $secondaryColour, $template);
@@ -325,9 +331,11 @@ class AppController extends Controller
 
         // Write final CSS
         $finalCssPath = WWW_ROOT . 'css' . DS . 'themes' . DS . 'layout.min.css';
-        $file = new File($finalCssPath, true);
-        $file->write($template);
-        $file->close();
+        $finalCssDir = dirname($finalCssPath);
+        if (!is_dir($finalCssDir)) {
+            mkdir($finalCssDir, 0755, true);
+        }
+        file_put_contents($finalCssPath, $template);
 
         // Add timestamp and cache
         $themes['timestamp'] = $configItems->value('themes');
@@ -341,7 +349,7 @@ class AppController extends Controller
     /**
      * Before render callback.
      *
-     * @param \Cake\Event\Event $event The beforeRender event.
+     * @param \Cake\Event\EventInterface $event The beforeRender event.
      * @return void
      */
     public function beforeRender(EventInterface $event)
@@ -363,7 +371,7 @@ class AppController extends Controller
 
     // Triggered from LocalizationComponent
     // Controller.Localization.getLanguageOptions
-    public function getLanguageOptions(Event $event)
+    public function getLanguageOptions(EventInterface $event)
     {
         $ConfigItemsTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $languageArr = $ConfigItemsTable->getSystemLanguageOptions();
@@ -379,7 +387,7 @@ class AppController extends Controller
 
     // Triggered from Localization component
     // Controller.Localization.updateLoginLanguage
-    public function updateLoginLanguage(Event $event, $user, $lang)
+    public function updateLoginLanguage(EventInterface $event, $user, $lang)
     {
         $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
         $UsersTable->dispatchEvent('Model.Users.updateLoginLanguage', [$user, $lang], $this);
@@ -1139,5 +1147,30 @@ class AppController extends Controller
         $editAccess = $this->AccessControl->check($toCheck);
         //        die(print_r([$toCheck, $editAccess], true));
         return $editAccess;
+    }
+
+    /**
+     * Recursively delete a directory and its contents
+     *
+     * @param string $dir Directory path to delete
+     * @return bool True on success, false on failure
+     */
+    private function deleteDirectory(string $dir): bool
+    {
+        if (!is_dir($dir)) {
+            return false;
+        }
+
+        $files = array_diff(scandir($dir), ['.', '..']);
+        foreach ($files as $file) {
+            $path = $dir . DS . $file;
+            if (is_dir($path)) {
+                $this->deleteDirectory($path);
+            } else {
+                unlink($path);
+            }
+        }
+
+        return rmdir($dir);
     }
 }

@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
@@ -61,7 +61,7 @@ class AreasTable extends ControllerActionTable
         return $events;
     }
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'index' || $action == 'view') {
             // check for the user permission to view here
@@ -159,7 +159,7 @@ class AreasTable extends ControllerActionTable
         return $entity;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
@@ -213,12 +213,12 @@ class AreasTable extends ControllerActionTable
         $this->recover();
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setfieldOrder($this->fieldsOrder);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options){
         // Webhook Education Area create -- start
         if ($this->associations()->has('usergroups') != '1') {
             if($entity->isNew()){
@@ -230,7 +230,7 @@ class AreasTable extends ControllerActionTable
                     'area_parent_id' =>$entity->parent_id,
                     'area_level_id' =>$entity->area_level_id
                 ];
-                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
                 //POCOR-8308 start
                 if (isset($options['skip_callbacks']) && $options['skip_callbacks']) {}
                 else{
@@ -253,7 +253,7 @@ class AreasTable extends ControllerActionTable
                     'area_parent_id' =>$entity->parent_id,
                     'area_level_id' =>$entity->area_level_id
                 ];
-                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
                 //POCOR-8308 start
                 if (isset($options['skip_callbacks']) && $options['skip_callbacks']) {}
                 else{
@@ -268,14 +268,14 @@ class AreasTable extends ControllerActionTable
 
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options){
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options){
 
         // Webhook Education Grade Subject Delete -- Start
         $body = array();
         $body = [
             'area_id' => $entity->id
         ];
-        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
         if($this->Auth->user()){
             $username = $this->Auth->user()['username']; // POCOR-9351
             $Webhooks->triggerShell('area_education_delete', ['username' => $username], $body);
@@ -283,7 +283,7 @@ class AreasTable extends ControllerActionTable
         // Webhook Education Grade Subject Delete -- End
     }
 
-    public function onGetConvertOptions(Event $event, Entity $entity, Query $query)
+    public function onGetConvertOptions(EventInterface $event, Entity $entity, Query $query)
     {
         $level = $entity->area_level_id;
         $query->where([
@@ -372,7 +372,7 @@ class AreasTable extends ControllerActionTable
         return $missingAreaArray;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // Add breadcrumb
         $serverRequest = $this->request;
@@ -424,7 +424,7 @@ class AreasTable extends ControllerActionTable
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // POCOR-9351 start
         $sortList = ['zero_code'];
@@ -484,11 +484,11 @@ class AreasTable extends ControllerActionTable
                     return $results;
                 });
         }
-        $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+        $SecurityGroupAreas = TableRegistry::getTableLocator()->get('Security.SecurityGroupAreas');
         $authorisedAreas = $SecurityGroupAreas->getAreasByUser($options['userId']);
         $authorisedAreaIds = $this->find('list', ['keyField' => 'id', 'valueField' => 'id']);
 
-        $UsersTable = TableRegistry::get('User.Users');
+        $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
         $isSuperAdmin = $UsersTable->get($options['userId'])->super_admin;
 
         $areaCondition = [];
@@ -537,7 +537,7 @@ class AreasTable extends ControllerActionTable
     }
 
     // POCOR-9351
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->field('code', ['visible' => false]);
         $this->field('zero_code', ['visible' => true, 'sort' => ['field'=>'code']]);
@@ -575,7 +575,7 @@ class AreasTable extends ControllerActionTable
         }
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
@@ -610,12 +610,12 @@ class AreasTable extends ControllerActionTable
         }
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['disableForceDelete'] = true;
     }
 
-    public function onGetName(Event $event, Entity $entity)
+    public function onGetName(EventInterface $event, Entity $entity)
     {
         return $event->getSubject()->HtmlField->link($entity->name, [
             'plugin' => $this->controller->getPlugin(),
@@ -627,12 +627,12 @@ class AreasTable extends ControllerActionTable
     }
 
     // POCOR-9351
-    public function onGetZeroCode(Event $event, Entity $entity)
+    public function onGetZeroCode(EventInterface $event, Entity $entity)
     {
         return ' ' . $entity->code;
     }
 
-    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldAreaLevelId(EventInterface $event, array $attr, $action, ServerRequest $request){
         $serverRequest = $this->request;
         $parentId = !is_null($serverRequest->getQuery('parent')) ? $serverRequest->getQuery('parent') : null;
         $results = $this
@@ -694,7 +694,7 @@ class AreasTable extends ControllerActionTable
         return $data;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         // when the API is set, the edit and remove action buttons will be unset.
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
@@ -707,7 +707,7 @@ class AreasTable extends ControllerActionTable
     }
 
     // POCOR-9351
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true){
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true){
 
         if ($field == 'zero_code') {
             return __('Code');
@@ -716,7 +716,7 @@ class AreasTable extends ControllerActionTable
         }
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         // on the sync page the save button was renamed to confirm button.
         switch ($this->action) {
@@ -731,7 +731,7 @@ class AreasTable extends ControllerActionTable
     {
         // get the url from the config table
         $resultURL = [];
-        $configItems = TableRegistry::get('Configuration.ConfigItems');
+        $configItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $resultURL = $configItems
             ->find('list', [
                 'keyField' => 'id',
@@ -817,7 +817,7 @@ class AreasTable extends ControllerActionTable
 
     public function doUpdateAssociatedRecord($requestData)
     {
-        $securityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+        $securityGroupAreas = TableRegistry::getTableLocator()->get('Security.SecurityGroupAreas');
 
         if (array_key_exists($this->getAlias(), $requestData)) {
             if (array_key_exists('transfer_areas', $requestData[$this->getAlias()])) {

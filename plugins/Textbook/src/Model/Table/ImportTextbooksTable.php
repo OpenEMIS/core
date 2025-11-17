@@ -4,7 +4,7 @@ namespace Textbook\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\Collection\Collection;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -23,8 +23,8 @@ class ImportTextbooksTable extends AppTable
             'backUrl' => ['plugin' => 'Textbook', 'controller' => 'Textbooks', 'action' => 'Textbooks']
         ]);
 
-        $this->EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
-        $this->Textbooks = TableRegistry::get('Textbook.Textbooks');
+        $this->EducationGradesSubjects = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects');
+        $this->Textbooks = TableRegistry::getTableLocator()->get('Textbook.Textbooks');
     }
 
     public function implementedEvents(): array
@@ -36,9 +36,9 @@ class ImportTextbooksTable extends AppTable
         return $events;
     }
 
-    public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
+    public function onImportPopulateAcademicPeriodsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->getAvailableAcademicPeriods(false);
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $startDateLabel = $this->getExcelLabel($lookedUpTable, 'start_date');
@@ -60,9 +60,9 @@ class ImportTextbooksTable extends AppTable
         }
     }
 
-    public function onImportPopulateEducationGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
+    public function onImportPopulateEducationGradesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $programmeHeader = $this->getExcelLabel($lookedUpTable, 'education_programme_id');
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 3;
@@ -86,9 +86,9 @@ class ImportTextbooksTable extends AppTable
         }
     }
 
-    public function onImportPopulateEducationSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
+    public function onImportPopulateEducationSubjectsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $gradeHeader = $this->getExcelLabel($lookedUpTable, 'education_grade_id');
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 3;
@@ -116,7 +116,7 @@ class ImportTextbooksTable extends AppTable
         }
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         $validationResult = true;
 
@@ -146,7 +146,7 @@ class ImportTextbooksTable extends AppTable
         }
 
         //check year_published must be following config
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $lowestYear = $ConfigItems->value('lowest_year');
 
         if (!is_numeric($tempRow['year_published'])) {

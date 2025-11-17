@@ -4,7 +4,7 @@ namespace Staff\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
@@ -55,7 +55,7 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
         ]);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) 
     {
         //POCOR-7255 start
         session_start();
@@ -74,7 +74,7 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
     }
     
     //POCOR-7225 add institutionId, academicPeriodId, shiftOptionId in shell command
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
      
         $shiftOptionId = $_SESSION['shiftOptionId']; //POCOR-7255 

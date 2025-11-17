@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Theme', ['plugin' => 'Theme'], function ($routes) {
-    Router::connect('/Theme', ['plugin' => 'Theme', 'controller' => 'Themes']);
-    Router::connect('/Theme/:action/*', ['plugin' => 'Theme', 'controller' => 'Themes']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/Theme', ['plugin' => 'Theme'], function (RouteBuilder $routes) {
+        $routes->connect('/Theme', ['plugin' => 'Theme', 'controller' => 'Themes']);
+        $routes->connect('/Theme/:action/*', ['plugin' => 'Theme', 'controller' => 'Themes']);
+    });
+};

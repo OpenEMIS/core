@@ -1,0 +1,13 @@
+# Define the line ending behavior of the different file extensions
+# Set default behaviour, in case users don't have core.autocrlf set.
+* text=auto
+* text eol=lf
+
+# Remove files for archives generated using `git archive`
+.phive export-ignore
+.editorconfig export-ignore
+phpunit.xml.dist export-ignore
+phpcs.xml.dist export-ignore
+.github export-ignore
+phpstan.neon export-ignore
+psalm.xml export-ignore

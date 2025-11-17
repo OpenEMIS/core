@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\I18n\Date;
 use Cake\Collection\Collection;
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
@@ -27,9 +27,9 @@ class ImportCompetencyTemplatesTable extends AppTable {
         ]);  
         //POCOR-6616 start
         $this->belongsTo('EducationGrade', ['className' => 'Education.EducationGrades']);  
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $this->EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $this->competencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
+        $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $this->EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $this->competencyTemplates = TableRegistry::getTableLocator()->get('Competency.CompetencyTemplates');
         //POCOR-6616 end
     }    
 
@@ -45,8 +45,8 @@ class ImportCompetencyTemplatesTable extends AppTable {
         return $events;
     }
 
-    /*public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+    /*public function onImportPopulateAcademicPeriodsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->getAvailableAcademicPeriods(false);
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $startDateLabel = $this->getExcelLabel($lookedUpTable, 'start_date');
@@ -68,7 +68,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
         }
     }
 */
-    public function onImportPopulateEducationProgrammesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulateEducationProgrammesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
         //POCOR-6616 Start
         $request = $this->request;
         $selectedperiodyear = $request->getQuery('period'); 
@@ -78,7 +78,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
             $selectedperiod = $this->AcademicPeriods->getCurrent();
         }
         //POCOR-6616 End
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 2; //POCOR-6616
         $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
@@ -110,7 +110,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
         }        
     }
 
-    public function onImportPopulateEducationGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulateEducationGradesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
         //POCOR-6616 start
         $request = $this->request;
         $selectedperiodyear = $request->getQuery('period'); 
@@ -120,7 +120,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
             $selectedperiod = $this->AcademicPeriods->getCurrent();
         }
         //POCOR-6616 End
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $programmeHeader = $this->getExcelLabel($lookedUpTable, 'education_programme_id');
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 3;//POCOR-6616
@@ -160,9 +160,9 @@ class ImportCompetencyTemplatesTable extends AppTable {
         }        
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-        $CompetencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
+        $CompetencyTemplates = TableRegistry::getTableLocator()->get('Competency.CompetencyTemplates');
         //POCOR-6616 start
         $request = $this->request;
         $tempRow['academic_period_id'] = $request->getQuery('period');
@@ -205,7 +205,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
     * POCOR-6616 
     * add filter in template page
     */
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         $this->ControllerAction->field('academic_period_id', [
             'type' => 'select',
@@ -228,7 +228,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
     /**
     * POCOR-6616 
     */
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriod($this->request->getQuery('period'), true));
 
@@ -243,7 +243,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
     /**
     * POCOR-6616 
     */
-    public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeAcademicPeriod(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         
@@ -279,12 +279,12 @@ class ImportCompetencyTemplatesTable extends AppTable {
     /**
     * POCOR-6616 
     */
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationProgrammeId(EventInterface $event, array $attr, $action, Request $request)
     {
-        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
 
         if ($action == 'add') {
-            $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             if(!empty($this->request->query('period')) && empty($request->data($this->aliasField('academic_period_id')))) {
                 $academicPeriodId = $this->request->query('period');
             } else {
@@ -307,7 +307,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
     /**
     * POCOR-6616 
     */
-    public function addEditOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeEducationProgrammeId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         unset($request->query['programme']);
@@ -323,7 +323,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
     /**
     * POCOR-6616 
     */
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         list($gradeOption, $selectedGrade) = array_values($this->getEducationGrade($this->request->getQuery('grade'), true));
 
@@ -350,7 +350,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
     /**
     * POCOR-6616 
     */
-    public function addEditOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeEducationGrade(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         if ($request->is(['post', 'put'])) {

@@ -1,7 +1,7 @@
 <?php
 namespace App\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Utility\Inflector;
 use Cake\I18n\Time;
@@ -19,9 +19,9 @@ class ApiSecuritiesController extends PageController
     {
         parent::initialize();
 
-        $this->loadModel('ApiSecuritiesScopes');
-        $this->loadModel('ApiScopes');
-        $this->loadModel('ApiSecurities');
+        $this->ApiSecuritiesScopes = $this->fetchTable('ApiSecuritiesScopes');
+        $this->ApiScopes = $this->fetchTable('ApiScopes');
+        $this->ApiSecurities = $this->fetchTable('ApiSecurities');
 
         $this->Page->setDisable(['add', 'delete']);
     }
@@ -169,7 +169,7 @@ class ApiSecuritiesController extends PageController
         }
     }
 
-    public function onRenderApiScopeId(Event $event, Entity $entity, PageElement $element)
+    public function onRenderApiScopeId(EventInterface $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
 
@@ -181,7 +181,7 @@ class ApiSecuritiesController extends PageController
         }
     }
 
-    public function onRenderIcon(Event $event, Entity $entity, PageElement $element)
+    public function onRenderIcon(EventInterface $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
 

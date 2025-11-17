@@ -56,9 +56,9 @@ class POCOR5186 extends AbstractMigration
             ->update();
 
         // add wrokflow behaviour    
-        $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
-        $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-        $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
+        $WorkflowsTable = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        $WorkflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        $WorkflowStatusesTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowStatuses');
 
         $workflow_models = $this->query("SELECT * FROM workflow_models order by id DESC LIMIT 1 ");
         $workflow_models_id = $workflow_models->fetchAll();

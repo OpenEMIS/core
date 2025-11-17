@@ -3,7 +3,7 @@ namespace Gpa\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
@@ -44,7 +44,7 @@ class GpaSystemTable extends ControllerActionTable {
             ]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
@@ -62,12 +62,12 @@ class GpaSystemTable extends ControllerActionTable {
         $query->where($where);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controller->getGpaTab(); 
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('name');
         $this->field('academic_period_id', ['type' => 'select']);
@@ -81,7 +81,7 @@ class GpaSystemTable extends ControllerActionTable {
         $this->setFieldOrder(['name','academic_period_id', 'education_grade_id', 'gpa_grading_type_id','start_date','end_date']);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('name');
         $this->field('academic_period_id', ['type' => 'select','entity' => $entity]);
@@ -93,7 +93,7 @@ class GpaSystemTable extends ControllerActionTable {
         $this->setFieldOrder(['name','academic_period_id', 'start_date','end_date','gpa_education_programme_id','education_grade_id', 'gpa_grading_type_id']);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
        
         if ($action == 'add' || $action == 'edit') {
@@ -117,14 +117,14 @@ class GpaSystemTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldGpaEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldGpaEducationProgrammeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $request = $this->request;
         if ($action == 'view') {
             $attr['visible'] = false;
         } else if ($action == 'add' || $action == 'edit') {
-            $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-            $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
+            $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
             if ($action == 'add') {
                 $programmeOptions = $EducationProgrammes
@@ -161,7 +161,7 @@ class GpaSystemTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $request = $this->request;
         if ($action == 'add' || $action == 'edit' ) {
@@ -222,7 +222,7 @@ class GpaSystemTable extends ControllerActionTable {
         return compact('periodOptions', 'selectedPeriod');
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'education_grade_id') {
             return __('Education Grade');
@@ -234,7 +234,7 @@ class GpaSystemTable extends ControllerActionTable {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $data) 
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $data) 
     {
         $request = \Cake\Routing\Router::getRequest();
 
@@ -250,7 +250,7 @@ class GpaSystemTable extends ControllerActionTable {
     }
 
     
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) 
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data) 
     {
         if (isset($entity->start_date) && isset($entity->end_date)) {
             $entity->start_date = date('Y-m-d', strtotime($entity->start_date));
@@ -260,13 +260,13 @@ class GpaSystemTable extends ControllerActionTable {
         
     }
 
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         //POCOR-9148[START]
 
-        // $this->Gpa = TableRegistry::get('Gpa.GpaSystem');
-        // $this->Cumulative = TableRegistry::get('Gpa.Cumulative');
-        // $this->InstitutionStudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
+        // $this->Gpa = TableRegistry::getTableLocator()->get('Gpa.GpaSystem');
+        // $this->Cumulative = TableRegistry::getTableLocator()->get('Gpa.Cumulative');
+        // $this->InstitutionStudentsGpa = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsGpa');
 
         // // Check if any associated records exist in related tables
         // $associatedRecordsExist =  

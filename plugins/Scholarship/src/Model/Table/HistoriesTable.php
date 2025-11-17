@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
 use App\Model\Table\ControllerActionTable;
@@ -55,7 +55,7 @@ class HistoriesTable extends ControllerActionTable
         return $events;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryString  = $this->getQueryString('scholarship_id');
         $scholarshipId = $queryString;
@@ -66,7 +66,7 @@ class HistoriesTable extends ControllerActionTable
             ->order(['AcademicPeriods.name' => 'DESC']);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $applicantId = $this->getQueryString('applicant_id');
         $applicantName = $this->Applicants->get($applicantId)->name;
@@ -77,7 +77,7 @@ class HistoriesTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('requested_amount', ['visible' => false]);
         $this->field('assignee_id', ['visible' => false]);
@@ -86,17 +86,17 @@ class HistoriesTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'scholarship_id', 'comments']);
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {   
         $this->Navigation->substituteCrumb($this->getHeader($this->getAlias()), __('Scholarship History'));
     }
 
-    public function onGetAcademicPeriodId(Event $event, Entity $entity)
+    public function onGetAcademicPeriodId(EventInterface $event, Entity $entity)
     {
         return $entity->scholarship->academic_period->name;
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);

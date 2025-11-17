@@ -11,7 +11,7 @@ class StaffSubject extends Entity
 	protected function _getAcademicPeriod() {
 		$name = '';
 		if ($this->has('institution_subject') && $this->institution_subject->has('academic_period_id')) {
-			$data = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($this->institution_subject->academic_period_id)->toArray();
+			$data = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')->get($this->institution_subject->academic_period_id)->toArray();
 			if (!empty($data)) {
 				$name = $data['name'];
 			}
@@ -22,7 +22,7 @@ class StaffSubject extends Entity
 	protected function _getInstitutionClass() {
 		$name[] = '';
 		if ($this->has('institution_subject') && $this->institution_subject->has('id')) {
-			$InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+			$InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
 			$data = $InstitutionClassSubjects
 			->find()
 			->contain('InstitutionClasses')
@@ -57,7 +57,7 @@ class StaffSubject extends Entity
 	protected function _getEducationSubject() {
 		$name = '';
 		if ($this->has('institution_subject') && $this->institution_subject->has('education_subject_id')) {
-			$data = TableRegistry::get('Education.EducationSubjects')->get($this->institution_subject->education_subject_id)->toArray();
+			$data = TableRegistry::getTableLocator()->get('Education.EducationSubjects')->get($this->institution_subject->education_subject_id)->toArray();
 			if (!empty($data)) {
 				$name = $data['name'];
 			}
@@ -68,9 +68,9 @@ class StaffSubject extends Entity
 	protected function _getMaleStudents() {
 		$count = 0;
 		if ($this->has('institution_subject_id')) {
-			$count = TableRegistry::get('Institution.InstitutionSubjectStudents')->getMaleCountBySubject($this->institution_subject_id);
+			$count = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents')->getMaleCountBySubject($this->institution_subject_id);
 		} else if ($this->has('id')) {
-			$count = TableRegistry::get('Institution.InstitutionSubjectStudents')->getMaleCountBySubject($this->id);
+			$count = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents')->getMaleCountBySubject($this->id);
 		}
 		return $count;
 	}
@@ -78,9 +78,9 @@ class StaffSubject extends Entity
 	protected function _getFemaleStudents() {
 		$count = 0;
 		if ($this->has('institution_subject_id')) {
-			$count = TableRegistry::get('Institution.InstitutionSubjectStudents')->getFemaleCountBySubject($this->institution_subject_id);
+			$count = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents')->getFemaleCountBySubject($this->institution_subject_id);
 		} else if ($this->has('id')) {
-			$count = TableRegistry::get('Institution.InstitutionSubjectStudents')->getFemaleCountBySubject($this->id);
+			$count = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents')->getFemaleCountBySubject($this->id);
 		}
 		return $count;
 	}

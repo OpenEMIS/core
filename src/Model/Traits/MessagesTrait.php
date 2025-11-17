@@ -2712,7 +2712,7 @@ trait MessagesTrait
         $sprintf = (isset($options['sprintf']))? $options['sprintf']: [];
         $defaultMessage = (isset($options['defaultMessage']))? $options['defaultMessage']: true;
 
-        $Labels = TableRegistry::get('Labels');
+        $Labels = TableRegistry::getTableLocator()->get('Labels');
         $message = Cache::read($code, $Labels->getDefaultConfig());
 
         if ($message == false) {

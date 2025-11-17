@@ -2,7 +2,7 @@
 namespace Configuration\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\ORM\Entity;
@@ -33,13 +33,13 @@ class ConfigAutomatedStudentEnrollmentsTable extends ControllerActionTable
         //$this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'webhook_id', 'joinType' => 'INNER']);
         $this->hasMany('ConfigAutomatedStudentEnrollmentsAreas', ['className' => 'Configuration.ConfigAutomatedStudentEnrollmentsAreas', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'area_programme_institution_id', 'joinType' => 'LEFT']);
         
-        //$ConfigAutomatedStudentEnrollmentsAreas = TableRegistry::get('Configuration.ConfigAutomatedStudentEnrollmentsAreas');
+        //$ConfigAutomatedStudentEnrollmentsAreas = TableRegistry::getTableLocator()->get('Configuration.ConfigAutomatedStudentEnrollmentsAreas');
    
         $this->toggle('edit', 'delete', false);
     }
 
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {   
         $this->field('area_name', ['visible' => true]);    
         $this->field('modified_by', ['visible' => false]);
@@ -52,7 +52,7 @@ class ConfigAutomatedStudentEnrollmentsTable extends ControllerActionTable
         ]);
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extram)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extram)
     {
         $condition = [];
         $this->field('academic_period_id', ['visible' => true]);
@@ -61,7 +61,7 @@ class ConfigAutomatedStudentEnrollmentsTable extends ControllerActionTable
         $this->field('area_administrative_id', ['visible' => true]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
 
         // Join the related tables
@@ -113,7 +113,7 @@ class ConfigAutomatedStudentEnrollmentsTable extends ControllerActionTable
         return $query;
     }
 
-    public function onGetAreaName(Event $event, Entity $entity)
+    public function onGetAreaName(EventInterface $event, Entity $entity)
     { //echo "<pre>";print_r($entity);exit;
         if ($this->action == 'index' || $this->action == 'view') {
             $areaName = $entity->area_names;
@@ -123,15 +123,15 @@ class ConfigAutomatedStudentEnrollmentsTable extends ControllerActionTable
         return $entity->Area_name;
     }
 
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {   //echo "<pre>";print_r($query);exit;
         
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         //echo "here";exit;
-        //$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        //$AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         if ($action = 'add') {
             $periodOptions = $this->AcademicPeriods->getYearList();
 
@@ -141,7 +141,7 @@ class ConfigAutomatedStudentEnrollmentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $institutionQuery = $InstitutionsTable
@@ -167,7 +167,7 @@ class ConfigAutomatedStudentEnrollmentsTable extends ControllerActionTable
 
 
     public
-    function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
+    function onUpdateFieldEducationProgrammeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $request = $this->request;
         $academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : '';
@@ -181,7 +181,7 @@ class ConfigAutomatedStudentEnrollmentsTable extends ControllerActionTable
         if ($action == 'view') {
             $attr['visible'] = false;
         } else if ($action == 'add' || $action == 'edit') {
-            $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+            $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
 
             if ($action == 'add' || $action == 'edit') {
                 $programmeOptions = $EducationProgrammes
@@ -200,10 +200,10 @@ class ConfigAutomatedStudentEnrollmentsTable extends ControllerActionTable
     }
     }
 
-    public function onUpdateFieldAreaAdministrativeIdOrg(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaAdministrativeIdOrg(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
        // echo "kkk";exit;
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $validateAreaAdministrativeLevel = $ConfigItems->value('institution_validate_area_administrative_level_id');
         
         $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
@@ -218,10 +218,10 @@ class ConfigAutomatedStudentEnrollmentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // Check config
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $validateAreaAdministrativeLevel = $ConfigItems->value('institution_validate_area_administrative_level_id');
         
         $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
@@ -241,7 +241,7 @@ class ConfigAutomatedStudentEnrollmentsTable extends ControllerActionTable
         
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id', [
             'type' => 'select',
@@ -270,7 +270,7 @@ class ConfigAutomatedStudentEnrollmentsTable extends ControllerActionTable
         ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $districtNames = [];
         $areaAdIds = [];
@@ -280,7 +280,7 @@ class ConfigAutomatedStudentEnrollmentsTable extends ControllerActionTable
         }
         
         if(!empty($areaAdIds)) {
-            $AreaAdministratives = TableRegistry::get('Area.AreaAdministratives');
+            $AreaAdministratives = TableRegistry::getTableLocator()->get('Area.AreaAdministratives');
             $districtNames = $AreaAdministratives
                 ->find()
                 ->where(['id IN' => $areaAdIds])
@@ -295,14 +295,14 @@ class ConfigAutomatedStudentEnrollmentsTable extends ControllerActionTable
 
 
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $request = $this->request;
         //echo "<pre>";print_r($request);exit;
         $areaAdministrativeId = $request->getData('ConfigAutomatedStudentEnrollments')['area_administrative_id']['_ids'];
         
         // Get the Table for saving dependent data
-        $ConfigAutomatedStudentEnrollmentsAreas = TableRegistry::get('Configuration.ConfigAutomatedStudentEnrollmentsAreas');
+        $ConfigAutomatedStudentEnrollmentsAreas = TableRegistry::getTableLocator()->get('Configuration.ConfigAutomatedStudentEnrollmentsAreas');
         
         // Ensure area_programme_institution_id is available (it's the saved entity's ID)
         $areaProgrammeInstitutionId = $entity->get('id');
@@ -354,7 +354,7 @@ class ConfigAutomatedStudentEnrollmentsTable extends ControllerActionTable
         return true; // Return true if the process completes successfully
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['ConfigAutomatedStudentEnrollmentsAreas']);
         //echo "<pre>";print_r($query);exit;

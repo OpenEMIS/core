@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 
@@ -28,7 +28,7 @@ class Uis5Table extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         unset($sheets[0]);
         $uisTabsData = $this->uisTabsData;
@@ -42,7 +42,7 @@ class Uis5Table extends AppTable
 
         
     }
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $sheetData = $settings['sheet']['sheetData'];
         $UISType = $sheetData['uis_tabs_type'];
@@ -72,20 +72,20 @@ class Uis5Table extends AppTable
     }
 
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $sheetData = $settings['sheet']['sheetData'];
         $uisType = $sheetData['uis_tabs_type'];
-        $areaAdministratives = TableRegistry::get('Area.AreaAdministrativesTable');
-        $institutions = TableRegistry::get('Instituion.Institutions');
-        $area = TableRegistry::get('Area.Areas');
+        $areaAdministratives = TableRegistry::getTableLocator()->get('Area.AreaAdministrativesTable');
+        $institutions = TableRegistry::getTableLocator()->get('Instituion.Institutions');
+        $area = TableRegistry::getTableLocator()->get('Area.Areas');
         $reqData = json_decode($settings['process']['params'], true);
         $academic_period_id = $reqData['academic_period_id'];
 
         
         if ($uisType == 'UIS-A5')
         {
-            $SummaryGradeStatusGenders = TableRegistry::get('summary_grade_status_genders');
+            $SummaryGradeStatusGenders = TableRegistry::getTableLocator()->get('summary_grade_status_genders');
             $res = $query->select([
                 'academic_period_id2' => $this->aliasField('academic_period_id'),
                 'academic_period_name2' => $this->aliasField('academic_period_name'),
@@ -126,8 +126,8 @@ class Uis5Table extends AppTable
 
             $query->formatResults(function ($results) {
                 return $results->map(function ($row)  { 
-                    $SummaryGradeStatusGenders1 = TableRegistry::get('summary_grade_status_genders');
-                    $SummaryGradeGenderAges = TableRegistry::get('summary_grade_gender_ages');
+                    $SummaryGradeStatusGenders1 = TableRegistry::getTableLocator()->get('summary_grade_status_genders');
+                    $SummaryGradeGenderAges = TableRegistry::getTableLocator()->get('summary_grade_gender_ages');
                
                     $sumGradeData = $SummaryGradeStatusGenders1->find('all',['conditions'=>[
                         'student_status_id' =>8,

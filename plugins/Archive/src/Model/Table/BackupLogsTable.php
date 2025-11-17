@@ -6,7 +6,7 @@ use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -61,7 +61,7 @@ class BackupLogsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('name', ['visible' => false]);
         $this->field('path', ['visible' => false]);
@@ -71,7 +71,7 @@ class BackupLogsTable extends ControllerActionTable
         $this->setFieldOrder(['generated_on', 'generated_by']);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons){
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons){
 
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -96,7 +96,7 @@ class BackupLogsTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('name', ['visible' => false]);
         $this->field('path', ['visible' => false]);
@@ -135,9 +135,9 @@ class BackupLogsTable extends ControllerActionTable
         return $available_disksize;
     }
 
-    public function onGetGeneratedBy(Event $event, Entity $entity)
+    public function onGetGeneratedBy(EventInterface $event, Entity $entity)
     {
-        $Users = TableRegistry::get('User.Users');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
         $result = $Users
             ->find()
             ->select(['first_name','last_name'])
@@ -147,7 +147,7 @@ class BackupLogsTable extends ControllerActionTable
         return $entity->generated_by = $result->first_name.' '.$result->last_name;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $data){
 
         $dbSize = $this->getDbSize();
         $available_disksize = $this->getDiskSpace();
@@ -188,7 +188,7 @@ class BackupLogsTable extends ControllerActionTable
         Log::write('debug', $shellCmd);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'generated_on':

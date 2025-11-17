@@ -15,7 +15,7 @@ class AlertLicenseRenewalShell extends AlertShell
     {
         parent::initialize();
 
-        $this->loadModel('Staff.StaffTrainings');
+        $this->StaffTrainings = $this->fetchTable('Staff.StaffTrainings');
     }
 
     public function main()

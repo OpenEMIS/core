@@ -4,7 +4,7 @@ namespace Training\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\Collection\Collection;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -42,7 +42,7 @@ class ImportTraineesTable extends AppTable
         $this->trainingSessionId = $this->paramsDecode($trainingId)['id'];
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) 
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) 
     {
         if ($action == 'add' || $action == 'results') {
             $backUrl = [
@@ -56,12 +56,12 @@ class ImportTraineesTable extends AppTable
         }
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         //validate OpenEMIS ID
         $tempRow['trainee_id'] = '';
         if (!empty($tempRow['openemis_no'])) {
-            $Users = TableRegistry::get('User.Users');
+            $Users = TableRegistry::getTableLocator()->get('User.Users');
 
             $query = $Users->find()
                     ->where([
@@ -77,7 +77,7 @@ class ImportTraineesTable extends AppTable
         } else {
             //validate Identity Type and Number Pair
             if (!empty($tempRow['identity_type_id']) && !empty($tempRow['identity_number'])) {
-                $Identities = TableRegistry::get('User.Identities');
+                $Identities = TableRegistry::getTableLocator()->get('User.Identities');
 
                 $query = $Identities->find()
                         ->where([
@@ -104,10 +104,10 @@ class ImportTraineesTable extends AppTable
         if (!empty($tempRow['trainee_id'])) {
 
             //check against target population
-            $TargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
-            $Staff = TableRegistry::get('Institution.Staff');
-            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-            $Positions = TableRegistry::get('Institution.InstitutionPositions');
+            $TargetPopulations = TableRegistry::getTableLocator()->get('Training.TrainingCoursesTargetPopulations');
+            $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
+            $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
+            $Positions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
 
             $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
 

@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 use Cake\Http\ServerRequest;
 
@@ -35,7 +35,7 @@ class DirectoryTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
@@ -43,12 +43,12 @@ class DirectoryTable extends AppTable
         $this->ControllerAction->field('user_type', ['type' => 'hidden']);
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('filter_types', ['type' => 'hidden']);
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action)
     {
         if ($action == 'add') {
             $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
@@ -62,7 +62,7 @@ class DirectoryTable extends AppTable
         }
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
        
         $requestData = json_decode($settings['process']['params']);
@@ -102,7 +102,7 @@ class DirectoryTable extends AppTable
             ->where([$condition]);
     }
 
-    public function onUpdateFieldFilterTypes(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFilterTypes(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData['Directory']['feature'])) {
             $feature = $this->request->getData['Directory']['feature'];
@@ -120,7 +120,7 @@ class DirectoryTable extends AppTable
         }
     }
 
-    public function onUpdateFieldUserType(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldUserType(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -140,7 +140,7 @@ class DirectoryTable extends AppTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         
         $extraFields[] = [
@@ -202,7 +202,7 @@ class DirectoryTable extends AppTable
         $fields->exchangeArray($extraFields);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options) 
     {
         if($this->_table->controller->getPlugin() == 'Report'){
             $redirectIndex = "/Reports/" . $this->_table->getAlias();

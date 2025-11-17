@@ -4,7 +4,7 @@ namespace System\Controller;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use System\Controller\AppController;
 use Cake\Http\ServerRequest;

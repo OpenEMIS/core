@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
@@ -30,7 +30,7 @@ class InstitutionTextbooksTable extends AppTable  {
         $this->addBehavior('Report.ReportList');
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('academic_period_id', ['select' => false]);
@@ -38,19 +38,19 @@ class InstitutionTextbooksTable extends AppTable  {
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request) {
         $attr['options'] = $this->controller->getFeatureOptions($this->alias());
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, Request $request)
     {
         $attr['options'] = $this->AcademicPeriods->getYearList();
         $attr['default'] = $this->AcademicPeriods->getCurrent();
         return $attr;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -78,7 +78,7 @@ class InstitutionTextbooksTable extends AppTable  {
         $userId = $requestData->user_id;
         $institutionIds = [];
         if (!$superAdmin) {
-            $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+            $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $instituitionData = $InstitutionsTable->find('byAccess', ['userId' => $userId])->toArray();
             if (isset($instituitionData)) {
                 foreach ($instituitionData as $key => $value) {
@@ -96,19 +96,19 @@ class InstitutionTextbooksTable extends AppTable  {
         pr($query);
     }
 
-    public function onExcelGetInstitutionId(Event $event, Entity $entity) {
+    public function onExcelGetInstitutionId(EventInterface $event, Entity $entity) {
         return $entity->institution->code_name;
     }
 
-    public function onExcelGetTextbookId(Event $event, Entity $entity) {
+    public function onExcelGetTextbookId(EventInterface $event, Entity $entity) {
         return $entity->textbook->code_title;
     }
 
-    public function onExcelGetStudentId(Event $event, Entity $entity) {
+    public function onExcelGetStudentId(EventInterface $event, Entity $entity) {
         return $entity->user->name_with_id;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         foreach ($fields as $key => $field) {
             //get the value from the table, but change the label to become default identity type.

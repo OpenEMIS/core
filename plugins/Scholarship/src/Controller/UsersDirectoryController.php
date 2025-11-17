@@ -2,7 +2,7 @@
 namespace Scholarship\Controller;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Controller\PageController;
 
 class UsersDirectoryController extends PageController
@@ -10,7 +10,7 @@ class UsersDirectoryController extends PageController
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('Scholarship.UsersDirectory');
+        $this->UsersDirectory = $this->fetchTable('Scholarship.UsersDirectory');
         $this->loadComponent('User.User');
         $this->loadComponent('Page.Page');
         $this->Page->loadElementsFromTable($this->UsersDirectory);
@@ -95,7 +95,7 @@ class UsersDirectoryController extends PageController
         }
     }
 
-    public function getEntityRowActions(Event $event, $entity, ArrayObject $rowActions)
+    public function getEntityRowActions(EventInterface $event, $entity, ArrayObject $rowActions)
     {
         $applicantId = $entity->id;
         $queryString = $this->paramsEncode(['applicant_id' => $applicantId]);

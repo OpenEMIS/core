@@ -1,7 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Utility\Inflector;
@@ -239,7 +239,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         $institutionPositionId = $contextData['institution_position_id'];
                         $FTE = $contextData['FTE'];
                         $newStartDate = new Date($value); // new start_date
-                        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+                        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
                         $originalStartDate = new Date($InstitutionStaff->get($institutionStaffId)->start_date);
                         // get the records that have same institution_id, same position_id, other than the records itself
                         // with the start_date before the record_original_start_date and end_date is after the new_start_date
@@ -311,7 +311,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         $institutionPositionId = $contextData['institution_position_id'];
                         $FTE = $contextData['FTE'];
                         $newStartDate = new Date($value); // new start_date
-                        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+                        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
                         $originalStartDate = new Date($InstitutionStaff->get($institutionStaffId)->start_date);
                         // get the records that have same institution_id, same position_id, other than the records itself
                         // with the start_date before the record_original_start_date and end_date is after the new_start_date
@@ -355,7 +355,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
     }
 
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'staff_id';
         $searchableFields[] = 'openemis_no';
@@ -371,7 +371,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
      * - Validates and updates associated data to ensure consistency.
      * POCOR-8853 fixed change FTE and change homeroom teacher
      */
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $approved_status = $this->getApprovedStatus();
         $requestedStaffChangeCode = $this->getStaffChangeCode($entity);
@@ -418,8 +418,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
             if ($requestedStaffChangeCode == 'CHANGE_OF_SHIFT') {
                 $entity->status_id = $approved_status;
-                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-                $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+                $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+                $InstitutionPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
                 $periodId = $AcademicPeriods->getCurrent();
 
                 if (!empty($entity->new_shift)) { // POCOR-7109
@@ -454,7 +454,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         $requestData = $this->request->getData();
         $staffChangeTypes = $this->staffChangeTypesList;
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         $associatedData = [];
         if ((array_key_exists($this->getAlias(), $requestData)) && $requestData[$this->getAlias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {
@@ -463,7 +463,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $institutionPositionId = $entity->institution_position_id;
             $institutionStaffId = $entity->institution_staff_id;
 
-            $InstitutionStaff = TableRegistry::get('Institution.Staff');
+            $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
             $originalStartDate = new Date($InstitutionStaff->get($institutionStaffId)->start_date);
             $newStartDate = new Date($entity->start_date);
 
@@ -477,7 +477,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         'new_start_date' => $newStartDate
                     ]);
 
-                    $associatedModel = TableRegistry::get($model);
+                    $associatedModel = TableRegistry::getTableLocator()->get($model);
 
                     $event = $associatedModel->dispatchEvent('Model.StaffPositionProfiles.getAssociatedModelData', [$params], $this);
 
@@ -500,12 +500,12 @@ class StaffPositionProfilesTable extends ControllerActionTable
         return $associatedData;
     }
 
-    public function addAfterSave(Event $event, $entity, $requestData, ArrayObject $extra)
+    public function addAfterSave(EventInterface $event, $entity, $requestData, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         if (!$entity->getErrors()) {
-            $StaffTable = TableRegistry::get('Institution.Staff');
+            $StaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
            // $url = $this->url('view');
             $url['plugin'] = 'Institution';
             $url['controller'] = 'Institutions';
@@ -524,17 +524,17 @@ class StaffPositionProfilesTable extends ControllerActionTable
     }
 
     //POCOR-8447 Start
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if(isset($entity->staff_change_type_id) && !empty($entity->staff_change_type_id)) {
-            $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
+            $StaffChangeTypes = TableRegistry::getTableLocator()->get('Staff.StaffChangeTypes');
 
             $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
                     ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
                     ->first();
             if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT' || $StaffChangeTypesDataForShift->code == 'HOMEROOM_TEACHER'){
                 if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT' && !empty($entity->new_shift)) {
-                    $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+                    $InstitutionPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
                     $shiftUpdate =   $InstitutionPositions->updateAll(
                         ['shift_id' => $entity->new_shift,'modified_user_id' => 1,'modified' => new Time('NOW')],    //field
                         [
@@ -550,10 +550,10 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 }
                 //POCOR 7289 tables updation start for homeroom
                 if ($entity->staff_change_type_id == 6) {
-                    $InstitutionStaff = TableRegistry::get('Institution.Staff');
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $SecurityGroups = TableRegistry::get('Security.SecurityGroups');
-                    $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+                    $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
+                    $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                    $SecurityGroups = TableRegistry::getTableLocator()->get('Security.SecurityGroups');
+                    $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
                     $SecurityGroupInstitutionData = $SecurityGroupInstitutions->find()
                         ->select(["security_group_id" => $SecurityGroups->aliasField('id')])
                         ->innerJoin(
@@ -637,7 +637,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
     }
     //POCOR-8447 End
 
-    public function workflowBeforeTransition(Event $event, $requestData)
+    public function workflowBeforeTransition(EventInterface $event, $requestData)
     {
         $errors = true;
         $approved = $this->Workflow->getStepsByModelCode($this->getRegistryAlias(), 'APPROVED');
@@ -674,7 +674,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
     }
 
-    public function getWorkflowEvents(Event $event, ArrayObject $eventsObject)
+    public function getWorkflowEvents(EventInterface $event, ArrayObject $eventsObject)
     {
         foreach ($this->workflowEvents as $key => $attr) {
             $attr['text'] = __($attr['text']);
@@ -683,7 +683,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
     }
 
-    public function onApprove(Event $event, $id, Entity $workflowTransitionEntity)
+    public function onApprove(EventInterface $event, $id, Entity $workflowTransitionEntity)
     {
         $data = $this->get($id)->toArray();
 
@@ -694,7 +694,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if ($staff_change_code == 'CHANGE_IN_FTE') {
             $this->rejectPendingTransfer($data);
         }
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
         $InstitutionStaff->save($newEntity);
     }
 
@@ -702,7 +702,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         // reject all pending transfers
         $staffId = $data['staff_id'];
-        $InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
+        $InstitutionStaffTransfers = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffTransfers');
         $doneStatus = $InstitutionStaffTransfers::DONE;
 
         $transferRecords = $InstitutionStaffTransfers->find()
@@ -734,7 +734,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     $InstitutionStaffTransfers->autoAssignAssignee($entity);
 
                     if ($InstitutionStaffTransfers->save($entity)) {
-                        $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+                        $WorkflowTransitions = TableRegistry::getTableLocator()->get('Workflow.WorkflowTransitions');
                         $prevStepEntity = $this->Statuses->get($prevStep);
 
                         $transition = [
@@ -757,7 +757,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     private function patchStaffProfile(array $data)
     {
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
         $newEntity = null;
 
         // Get the latest staff record entry
@@ -786,7 +786,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         return '<span class="status past">'.$oldValue.'</span> <span class="transition-arrow"></span> <span class="status highlight">'.$newValue.'</span>';
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {
         $url = [];
 
@@ -797,7 +797,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $Navigation->substituteCrumb('Staff Position Profiles', 'Change in Assignment', $url);
     }
 
-    public function onGetFTE(Event $event, Entity $entity)
+    public function onGetFTE(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             $oldValue = ($entity->institution_staff->FTE * 100). '%';
@@ -814,7 +814,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
     }
 
-    public function onGetStartDate(Event $event, Entity $entity)
+    public function onGetStartDate(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             $oldValue = $entity->institution_staff->start_date;
@@ -827,10 +827,10 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
     }
 
-    public function onGetEndDate(Event $event, Entity $entity)
+    public function onGetEndDate(EventInterface $event, Entity $entity)
     {
         //POCOR-6979
-        $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
+        $StaffChangeTypes = TableRegistry::getTableLocator()->get('Staff.StaffChangeTypes');
         $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
                         ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
                         ->first();
@@ -890,7 +890,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     }
 
-    public function onGetStaffTypeId(Event $event, Entity $entity)
+    public function onGetStaffTypeId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             $oldValue = $entity->institution_staff->staff_type->name;
@@ -903,11 +903,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra): void
+    public function beforeAction(EventInterface $event, ArrayObject $extra): void
     {
         // Set the header of the page
         $institutionId = $this->getQueryString('institution_id');
-        //$this->Institutions = TableRegistry::get('Institution.Institutions');
+        //$this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         if ($institutionId) {
             $institutionName = $this->Institutions->get($institutionId)->name;
         }
@@ -919,7 +919,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'Staff', 'index'];
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->Session->delete('Institution.StaffPositionProfiles.viewBackUrl');
         if (isset($extra['toolbarButtons']['add'])) {
@@ -937,7 +937,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $selectedStatus = $this->request->getQuery('staff_status_id');
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $request = $this->request;
         $query->contain(['Positions']);
@@ -948,7 +948,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         if ($requestData[$this->getAlias()]['staff_change_type_id'] == $this->staffChangeTypesList['CHANGE_IN_FTE']) {
             $patchOptions['validate'] = 'IncludeEffectiveDate';
@@ -972,7 +972,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 
         $queryString = $this->getQueryString();
@@ -1013,7 +1013,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $this->field('current_homeroom_teacher', ['before'=>'homeroom_teacher','type'=>'disabled','options'=>$homeroomOptions]);//POCOR-7289
     }
 
-    public function onUpdateFieldStaffChangeTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStaffChangeTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['type'] = 'select';
         $attr['onChangeReload'] = true;
@@ -1027,7 +1027,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCurrentStaffType(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCurrentStaffType(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $requestData = $request->getData();
@@ -1048,7 +1048,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStaffTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $requestData = $request->getData();
@@ -1076,7 +1076,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCurrentFTE(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCurrentFTE(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         // POCOR-8553 cleaned some code
         $data = $request->getData($this->getAlias());
@@ -1107,7 +1107,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldFTE(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFTE(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         // POCOR-8853 cleaned some code
         $data = $request->getData($this->getAlias());
@@ -1146,7 +1146,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEffectiveDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEffectiveDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $requestData = $request->getData();
@@ -1170,7 +1170,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         // $entity = $attr['entity'];
 
@@ -1217,7 +1217,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $attr['value'] = $startDate->format('Y-m-d');
             $attr['attr']['value'] = $this->formatDate($startDate);
         } else {
-            $getStaffStartData = TableRegistry::get('Institution.InstitutionStaff');
+            $getStaffStartData = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
             $getStaffStartDateData = $getStaffStartData->find()
             ->where([
                 $getStaffStartData->aliasField('staff_id') => $entity->staff_id,
@@ -1236,7 +1236,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $requestData = $request->getData();
@@ -1250,7 +1250,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                     $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
 
-                    $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+                    $InstitutionSubjectStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
                     $latestSubjectStartDate = $InstitutionSubjectStaff->find()
                         ->where([
                             $InstitutionSubjectStaff->aliasField('staff_id') => $entity->staff_id,
@@ -1288,7 +1288,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function viewBeforeAction(Event $event, $extra)
+    public function viewBeforeAction(EventInterface $event, $extra)
     {
         $queryString = $this->getQueryString();
         $institutionId = $queryString['institution_id'];
@@ -1320,9 +1320,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
        // return $this->controller->redirect($url);
 
     }
-    public function viewAfterAction(Event $event, Entity $entity, $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, $extra)
     {
-        $StaffTable = TableRegistry::get('Institution.Staff');
+        $StaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
         $staffEntity = $StaffTable->find()
             ->contain(['StaffTypes'])
             ->where([$StaffTable->aliasField('id') => $entity->institution_staff_id])
@@ -1350,7 +1350,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if (is_null($institutionStaffId)) {
             return true;
         }
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
 
         $staff = $InstitutionStaff->get($institutionStaffId);
 
@@ -1394,9 +1394,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
     }
 
-    public function editOnInitialize(Event $event, Entity $entity)
+    public function editOnInitialize(EventInterface $event, Entity $entity)
     {
-        $staffEntity = TableRegistry::get('Institution.Staff')->get($entity->institution_staff_id);
+        $staffEntity = TableRegistry::getTableLocator()->get('Institution.Staff')->get($entity->institution_staff_id);
         $this->Session->write('Institution.StaffPositionProfiles.staffRecord', $staffEntity);
         //$data = $this->request->getData();
         //$data['staff_change_type_id'] = $entity->staff_change_type_id;
@@ -1405,7 +1405,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $this->request = $this->request->withData($this->getAlias(). '.staff_change_type_id',$entity->staff_change_type_id);
     }
 
-    public function addOnInitialize(Event $event, Entity $entity)
+    public function addOnInitialize(EventInterface $event, Entity $entity)
     {
 
         $queryString = $this->getQueryString();
@@ -1509,11 +1509,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
     * @return string
     * @ticket POCOR-6928 starts
     */
-    public function onUpdateFieldCurrentShift(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCurrentShift(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $InstitutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
-        $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
-        $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
+        $InstitutionStaffShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffShifts');
+        $InstitutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
+        $ShiftOptions = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');
         $shifts = [];
         $requestData = $request->getData();
         if ($action == 'add' || $action == 'edit') {
@@ -1525,8 +1525,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 $attr['type'] = 'readOnly';
                 if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                     $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
-                    $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
-                    $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+                    $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+                    $InstitutionPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
                     $staffId = $entity->staff_id;
                     $staffShifts  = $InstitutionStaff
                             ->find()
@@ -1560,7 +1560,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
     * @return string
     * @ticket POCOR-6928 starts
     */
-    public function onUpdateFieldNewShift(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldNewShift(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         //POCOR-7109 start
         $requestData = $request->getData();
@@ -1568,10 +1568,10 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if($institutionId == ''){
             $institutionId = $this->getQueryString('institution_id');
         }
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodId = $AcademicPeriods->getCurrent();
-        $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
-        $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
+        $InstitutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
+        $ShiftOptions = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');
         $optionList = $ShiftOptions->find('list')
                         ->leftJoin([$InstitutionShifts->getAlias() => $InstitutionShifts->getTable()],
                         [$InstitutionShifts->aliasField('shift_option_id = ') . $ShiftOptions->aliasField('id')])
@@ -1602,11 +1602,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
     }
     /** POCOR-6928 ends*/
 
-    public function onUpdateFieldCurrentShiftOne(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCurrentShiftOne(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $InstitutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
-        $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
-        $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
+        $InstitutionStaffShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffShifts');
+        $InstitutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
+        $ShiftOptions = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');
         $shifts = [];
         $requestData = $request->getData();
         if ($action == 'add' || $action == 'edit') {
@@ -1644,7 +1644,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
         $staff_change_type_code = $this->getStaffChangeCodeFromRequest();
         if(($staff_change_type_code == 'CHANGE_OF_SHIFT') || ($staff_change_type_code == 'HOMEROOM_TEACHER')){
@@ -1654,7 +1654,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
     }
 
      //Pocor 7289 homeroom teachers option start
-     public function onUpdateFieldCurrentHomeroomTeacher(Event $event, array $attr, $action, ServerRequest $request)
+     public function onUpdateFieldCurrentHomeroomTeacher(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $staffChangeTypes = $this->staffChangeTypesList;
@@ -1682,7 +1682,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldHomeroomTeacher(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldHomeroomTeacher(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $staffChangeTypes = $this->staffChangeTypesList;

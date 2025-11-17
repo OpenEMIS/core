@@ -2,7 +2,7 @@
 namespace App\Controller;
 //use Cake\Controller\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Page\Controller\PageController as BaseController;
 use Cake\ORM\Entity;
 use Page\Model\Entity\PageElement;
@@ -456,7 +456,7 @@ class PageController extends BaseController
 
     }
 
-    public function onRenderBinary(Event $event, Entity $entity, PageElement $element)
+    public function onRenderBinary(EventInterface $event, Entity $entity, PageElement $element)
     {
         $attributes = $element->getAttributes();
         $type = isset($attributes['type']) ? $attributes['type'] : 'binary';

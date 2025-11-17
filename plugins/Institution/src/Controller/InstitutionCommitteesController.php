@@ -2,7 +2,7 @@
 namespace Institution\Controller;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Log\Log;
 use App\Controller\PageController;
@@ -12,8 +12,8 @@ class InstitutionCommitteesController extends PageController
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('AcademicPeriod.AcademicPeriods');
-        $this->loadModel('Institution.InstitutionCommitteeTypes');
+        $this->AcademicPeriods = $this->fetchTable('AcademicPeriod.AcademicPeriods');
+        $this->InstitutionCommitteeTypes = $this->fetchTable('Institution.InstitutionCommitteeTypes');
         $this->Page->disable(['search']);
     }
 

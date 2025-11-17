@@ -7,7 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use App\Model\Table\AppTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 
 class SecurityGroupUsersTable extends AppTable {
@@ -34,7 +34,7 @@ class SecurityGroupUsersTable extends AppTable {
         return $events;
     }
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'index' || $action == 'view') {
             // check for the user permission to view here
@@ -59,7 +59,7 @@ class SecurityGroupUsersTable extends AppTable {
         return $query;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options) {
         // only update workflow assignee if the user is added to the group or the role of the user has changed
         if ($entity->isNew()) {
             $model = 0;
@@ -84,7 +84,7 @@ class SecurityGroupUsersTable extends AppTable {
         }
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options) {
         $model = 0;
         $id = 0;
         $statusId = 0;

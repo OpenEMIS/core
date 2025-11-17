@@ -10,7 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\HtmlTrait;
 use Cake\Collection\Collection;
@@ -97,7 +97,7 @@ class TrainingSessionsTable extends ControllerActionTable
             ]);
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['trainees']) && is_array($data['trainees'])) {
             foreach ($data['trainees'] as &$trainee) {
@@ -110,7 +110,7 @@ class TrainingSessionsTable extends ControllerActionTable
         }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $this->setupTabElements();
@@ -122,18 +122,18 @@ class TrainingSessionsTable extends ControllerActionTable
 
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         return $this->hideEditDeleteButtonsForUser($event, $entity, $buttons);
     }
 
        /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param Entity $entity
      * @param array $buttons
      * @return array
      */
-    private function hideEditDeleteButtonsForUser(Event $event, Entity $entity, array $buttons): array
+    private function hideEditDeleteButtonsForUser(EventInterface $event, Entity $entity, array $buttons): array
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $userId = $this->Session->read('Auth.User.id');
@@ -152,7 +152,7 @@ class TrainingSessionsTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder([
             'code',
@@ -163,7 +163,7 @@ class TrainingSessionsTable extends ControllerActionTable
             'training_provider_id'
         ]);
     }
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
                 'Trainers' => [
@@ -180,7 +180,7 @@ class TrainingSessionsTable extends ControllerActionTable
             ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $class = __CLASS__;
         $line = __LINE__;
@@ -188,7 +188,7 @@ class TrainingSessionsTable extends ControllerActionTable
         $this->setupFields($event, $entity);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $class = __CLASS__;
         $line = __LINE__;
@@ -196,7 +196,7 @@ class TrainingSessionsTable extends ControllerActionTable
         $this->setupFields($event, $entity); // POCOR-8074-3 entity needed for dependant select field
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         //Required by patchEntity for associated data
         // _joinData is required for 'saveStrategy' => 'replace' to work
@@ -235,7 +235,7 @@ class TrainingSessionsTable extends ControllerActionTable
         }
     }
 
-    public function addEditOnChangeCourse(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeCourse(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         // POCOR-8074 clear and clean change process
         $alias = $this->getAlias();
@@ -251,23 +251,23 @@ class TrainingSessionsTable extends ControllerActionTable
         $this->addQueryParam($param, $value); // POCOR-8074 adding query params
     }
 
-    public function addEditOnAddTrainer(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnAddTrainer(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
 
         $this->addTrainerToDataTrainerArray($data, $options);
     }
 
-    public function addEditOnAddTrainee(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnAddTrainee(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $this->addTraineeToDataTraineeArray($entity, $data, $options);
     }
 
-    public function editBeforeAction(Event $event, ArrayObject $extra)
+    public function editBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->addExportImportButtons($extra);
     }
 
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         $model = $this;
         $process = function ($model, $entity) use ($data) {
@@ -306,7 +306,7 @@ class TrainingSessionsTable extends ControllerActionTable
         return $process;
     }
 
-    public function onUpdateIncludes(Event $event, ArrayObject $includes, $action)
+    public function onUpdateIncludes(EventInterface $event, ArrayObject $includes, $action)
     {
         if ($action == 'edit') {
             $includes['autocomplete'] = [
@@ -349,11 +349,11 @@ class TrainingSessionsTable extends ControllerActionTable
                 $id = !empty($this->request->getAttribute('params')['pass'][1]) ? $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'] : $session->read($sessionKey);
                 $entity = $this->get($id);
 
-                $TargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
-                $Staff = TableRegistry::get('Institution.Staff');
-                $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-                $Users = TableRegistry::get('User.Users');
-                $Positions = TableRegistry::get('Institution.InstitutionPositions');
+                $TargetPopulations = TableRegistry::getTableLocator()->get('Training.TrainingCoursesTargetPopulations');
+                $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
+                $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
+                $Users = TableRegistry::getTableLocator()->get('User.Users');
+                $Positions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
                 $search = sprintf('%s%%', $term);
 
                 $targetPopulationIds = $TargetPopulations
@@ -363,7 +363,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
                 // POCOR-4060 if select all targetPopulations will get all the ids.
                 if (array_key_exists(self::SELECT_ALL_TARGET_POPULATIONS, $targetPopulationIds)) {
-                    $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+                    $StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
                     $targetPopulationIds = $StaffPositionTitles
                         ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
                         ->toArray();
@@ -405,7 +405,7 @@ class TrainingSessionsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTrainingCourseId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         $entity = $attr['entity'];
@@ -425,13 +425,13 @@ class TrainingSessionsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingProviderId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTrainingProviderId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
         if ($action == 'add' || $action == 'edit') {
             //$providerOptions = $this->getTrainingCourseProvidersOptions($entity);
             $courseId = $entity->training_course_id;
-            $TrainingCoursesProviders = TableRegistry::get('Training.TrainingCoursesProviders');
+            $TrainingCoursesProviders = TableRegistry::getTableLocator()->get('Training.TrainingCoursesProviders');
             $providers = $TrainingCoursesProviders
                 ->find()
                 ->matching('TrainingProviders')
@@ -449,7 +449,7 @@ class TrainingSessionsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onGetCustomTrainersElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomTrainersElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         $tableHeaders = [$this->getMessage($this->aliasField('trainer_type')), $this->getMessage($this->aliasField('trainer'))];
 
@@ -485,7 +485,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
     }
 
-    public function onGetCustomTraineesElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomTraineesElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
 
         $tableCells = [];
@@ -550,7 +550,7 @@ class TrainingSessionsTable extends ControllerActionTable
         return $trainerType;
     }
 
-    public function setupFields(Event $event, Entity $entity)
+    public function setupFields(EventInterface $event, Entity $entity)
     {
         $fieldOrder = [
             'training_course_id', 'training_provider_id',
@@ -668,7 +668,7 @@ class TrainingSessionsTable extends ControllerActionTable
         die;
     }
 
-    public function addEditOnMassAddTrainees(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnMassAddTrainees(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->controller->request;
         $model = $this;
@@ -752,11 +752,11 @@ class TrainingSessionsTable extends ControllerActionTable
                 return $event->response;
             }
 
-            $TargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
-            $Staff = TableRegistry::get('Institution.Staff');
-            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-            $Users = TableRegistry::get('User.Users');
-            $Positions = TableRegistry::get('Institution.InstitutionPositions');
+            $TargetPopulations = TableRegistry::getTableLocator()->get('Training.TrainingCoursesTargetPopulations');
+            $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
+            $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
+            $Users = TableRegistry::getTableLocator()->get('User.Users');
+            $Positions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
 
             $targetPopulationIds = $TargetPopulations
                 ->find('list', ['keyField' => 'target_population_id', 'valueField' => 'target_population_id'])
@@ -916,13 +916,13 @@ class TrainingSessionsTable extends ControllerActionTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Administration > Training > Sessions';
-            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $workModelId = $Workflows
                 ->find()
                 ->select(['id' => $workflowModelsTable->aliasField('id'),
@@ -950,12 +950,12 @@ class TrainingSessionsTable extends ControllerActionTable
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
-                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
                 if (!empty($stepRoles)) {
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $Areas = TableRegistry::get('Area.Areas');
-                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                    $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                    $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     if ($isSchoolBased) {
                         if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
@@ -1002,7 +1002,7 @@ class TrainingSessionsTable extends ControllerActionTable
     }
 
     //POCOR-8256
-    public function onGetCustomEvaluatorsElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomEvaluatorsElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
 
         $tableHeaders = [$this->getMessage($this->aliasField('evaluator_types')), $this->getMessage($this->aliasField('evaluator'))];
@@ -1124,7 +1124,7 @@ class TrainingSessionsTable extends ControllerActionTable
     }
 
     //POCOR-8256
-    public function addEditOnAddEvaluator(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnAddEvaluator(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
        /* $alias = $this->getAlias();
         $fieldKey = 'evaluators';

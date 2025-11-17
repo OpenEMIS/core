@@ -3,7 +3,7 @@ namespace MoodleApi\Controller;
 
 use ArrayObject;
 use App\Controller\AppController;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Table;
 
 class MoodleApiLogController extends AppController
@@ -25,7 +25,7 @@ class MoodleApiLogController extends AppController
         parent::beforeFilter($event);
     }
 
-	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+	public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra) {
 		$header = __('Communications');
 
 		$header .= ' - ' . $model->getHeader($model->alias);

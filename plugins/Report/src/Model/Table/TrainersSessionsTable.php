@@ -5,7 +5,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
@@ -26,7 +26,7 @@ class TrainersSessionsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),
@@ -36,7 +36,7 @@ class TrainersSessionsTable extends AppTable
         ];
     }
 
-    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    public function onExcelGetIdentityType(EventInterface $event, Entity $entity)
     {
         $userIdentities = TableRegistry::getTableLocator()->get('User.Identities');
         $userIdentitiesResult = $userIdentities->find()
@@ -65,17 +65,17 @@ class TrainersSessionsTable extends AppTable
         return $entity->custom_identity_name;
     }
 
-    public function onExcelGetIdentityNumber(Event $event, Entity $entity)
+    public function onExcelGetIdentityNumber(EventInterface $event, Entity $entity)
     {
         return $entity->custom_identity_number;
     }
 
-    public function onExcelGetOtherIdentity(Event $event, Entity $entity)
+    public function onExcelGetOtherIdentity(EventInterface $event, Entity $entity)
     {
         return $entity->custom_identity_other_data;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $trainer_id  = $requestData->trainer_name;
@@ -159,7 +159,7 @@ class TrainersSessionsTable extends AppTable
        // print_r($query->Sql());die('hj');
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
         $newFields[] = [

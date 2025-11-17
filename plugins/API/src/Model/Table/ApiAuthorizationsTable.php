@@ -4,7 +4,7 @@ namespace API\Model\Table;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Exception;
 use DateTime;
 

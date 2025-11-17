@@ -5,7 +5,7 @@ namespace CustomField\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use CustomField\Model\Behavior\RenderBehavior;
 use Cake\Log\Log;
 use Cake\View\Helper\IdGeneratorTrait;
@@ -29,15 +29,15 @@ class RenderStaffListBehavior extends RenderBehavior
         parent::initialize($config);
     }
 
-    public function onGetCustomStaffListElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomStaffListElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
 
-        $CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
-        $CustomFields = TableRegistry::get('Survey.SurveyQuestions');
-        $CustomFormsFields = TableRegistry::get('Survey.SurveyFormsQuestions');
-        $Staff = TableRegistry::get('Institution.Staff');
-        $staffsurveys = TableRegistry::get('Staff.StaffSurveys');
-        $staffsurveyAnswers = TableRegistry::get('Staff.StaffSurveyAnswers');
+        $CustomFieldTypes = TableRegistry::getTableLocator()->get('CustomField.CustomFieldTypes');
+        $CustomFields = TableRegistry::getTableLocator()->get('Survey.SurveyQuestions');
+        $CustomFormsFields = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
+        $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
+        $staffsurveys = TableRegistry::getTableLocator()->get('Staff.StaffSurveys');
+        $staffsurveyAnswers = TableRegistry::getTableLocator()->get('Staff.StaffSurveyAnswers');
 
         $model = $this->_table;
         $session = $model->request->getSession();
@@ -662,7 +662,7 @@ class RenderStaffListBehavior extends RenderBehavior
         return $value;
     }
 
-    public function formatStaffListEntity(Event $event, Entity $entity, ArrayObject $settings)
+    public function formatStaffListEntity(EventInterface $event, Entity $entity, ArrayObject $settings)
     {
 
         $surveysArray = $entity->has('institution_staff_surveys') ? $entity->institution_staff_surveys : [];
@@ -677,9 +677,9 @@ class RenderStaffListBehavior extends RenderBehavior
 
             if (array_key_exists($formKey, $params)) {
 
-                $staffsurveys = TableRegistry::get('Staff.StaffSurveys');
+                $staffsurveys = TableRegistry::getTableLocator()->get('Staff.StaffSurveys');
 
-                $staffsurveyAnswers = TableRegistry::get('Staff.StaffSurveyAnswers');
+                $staffsurveyAnswers = TableRegistry::getTableLocator()->get('Staff.StaffSurveyAnswers');
 
                 $status = $entity->status_id;
                 $institutionId = $entity->institution_id;
@@ -729,7 +729,7 @@ class RenderStaffListBehavior extends RenderBehavior
         $entity->set('institution_staff_surveys', $surveysArray);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //echo "<pre>";print_r($_SESSION['SurveyTabCount']);die;
         $tabcount = $_SESSION['SurveyTabCount'];
@@ -737,8 +737,8 @@ class RenderStaffListBehavior extends RenderBehavior
             if ($entity->has('institution_staff_surveys')) {
                 $fieldKey = 'survey_question_id';
                 $formKey = 'survey_form_id';
-                $staffsurveys = TableRegistry::get('Staff.StaffSurveys');
-                $staffsurveyAnswers = TableRegistry::get('Staff.StaffSurveyAnswers');
+                $staffsurveys = TableRegistry::getTableLocator()->get('Staff.StaffSurveys');
+                $staffsurveyAnswers = TableRegistry::getTableLocator()->get('Staff.StaffSurveyAnswers');
 
                 $status = $entity->status_id;
                 $institutionId = $entity->institution_id;
@@ -833,8 +833,8 @@ class RenderStaffListBehavior extends RenderBehavior
             if ($entity->has('institution_staff_surveys')) {
                 $fieldKey = 'survey_question_id';
                 $formKey = 'survey_form_id';
-                $staffsurveys = TableRegistry::get('Staff.StaffSurveys');
-                $staffsurveyAnswers = TableRegistry::get('Staff.StaffSurveyAnswers');
+                $staffsurveys = TableRegistry::getTableLocator()->get('Staff.StaffSurveys');
+                $staffsurveyAnswers = TableRegistry::getTableLocator()->get('Staff.StaffSurveyAnswers');
 
                 $status = $entity->status_id;
                 $institutionId = $entity->institution_id;

@@ -7,7 +7,7 @@ use stdClass;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Utility\Text;
@@ -42,12 +42,12 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $sortable = !is_null($this->request->getQuery('sort')) ? true : false;
         $institutionId = $this->getInstitutionID();
-        $curricularStudent = TableRegistry::get('Institution.InstitutionCurricularStudents');
-        $users = TableRegistry::get('User.Users');
+        $curricularStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStudents');
+        $users = TableRegistry::getTableLocator()->get('User.Users');
 
         $query->select([
             'id',
@@ -90,7 +90,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('total_male_students', ['visible' => false]);
         $this->field('total_female_students', ['visible' => false]);
@@ -103,7 +103,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
             'curricular_type_id']);
     }
 
-    public function editBeforeAction(Event $event, ArrayObject $extra)
+    public function editBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('total_male_students', ['visible' => false]);
         $this->field('total_female_students', ['visible' => false]);
@@ -129,9 +129,9 @@ class InstitutionCurricularsTable extends ControllerActionTable
             }
         }
 
-        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $UserData = TableRegistry::get('User.Users');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $UserData = TableRegistry::getTableLocator()->get('User.Users');
         $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
         $this->InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
@@ -172,7 +172,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     }
 
-    public function onUpdateFieldCategory(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCategory(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $categories = array(1 => 'Co-Curricular', 0 => 'Extracurricular'); //POCOR-7751
         $entity = $attr['entity'];
@@ -192,14 +192,14 @@ class InstitutionCurricularsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCurricularTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCurricularTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $categoryId = $this->request->getData()[$this->getAlias()]['category'];
         if($categoryId == null){
             $categoryId = $categoryData ? 0 : 1;
         }
-        $CurricularTypes = TableRegistry::get('FieldOption.CurricularTypes');
-        $this->InstitutionCurriculars = TableRegistry::get('Institution.InstitutionCurriculars');
+        $CurricularTypes = TableRegistry::getTableLocator()->get('FieldOption.CurricularTypes');
+        $this->InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
         $getCurricularsType = $CurricularTypes->find('list')->where(['category'=>$categoryId])->toArray();
         if ($action == 'add') {
             $attr['type'] = 'chosenSelect';
@@ -224,7 +224,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
     }
 
 
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
 //        $entity->institution_curricular_id = $_SESSION['curricularId'];
         $curricularId = $_SESSION['curricularId'];
@@ -257,7 +257,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
     }
 
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $tabElements = $this->controller->getCurricularsTabElements();
         $this->controller->set('tabElements', $tabElements);
@@ -266,7 +266,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $this->field('staff_id', ['visible' => true]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $paramPass = $this->request->getParam('pass');
         $ids = isset($paramPass[1]['id']) ? $this->paramsDecode($paramPass[1]['id']) : 0;
@@ -274,19 +274,19 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 
         $this->field('curricular_type_id', ['type' => 'select', 'entity' => $entity]);
     }
 
-    public function onGetCategory(Event $event, Entity $entity)
+    public function onGetCategory(EventInterface $event, Entity $entity)
     {
 
         return $entity->category ? __('Co-Curricular') : __('Extracurricular');
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
 
         if ($field == 'total_male_students') {
@@ -298,7 +298,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         }
     }
 
-    public function onGetStaffId(Event $event, Entity $entity)
+    public function onGetStaffId(EventInterface $event, Entity $entity)
     {
         $curricularId = $entity->id;
         $curricularStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStaff');
@@ -315,7 +315,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         return implode(', ', $staff);
     }
 
-    public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function beforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // $curricularId = $_SESSION['curricularId'];
         $queryString = $this->request->getData('primaryKey');
@@ -331,14 +331,14 @@ class InstitutionCurricularsTable extends ControllerActionTable
         }
     }
 
-    public function onGetTotalStudents(Event $event, Entity $entity)
+    public function onGetTotalStudents(EventInterface $event, Entity $entity)
     {
 
         $total = $entity->total_male_students + $entity->total_female_students;
         return $total;
     }
 
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //show staff selected in multiselected dropdown, chosenselec
         $curricularId = $_SESSION['curricularId'];
@@ -360,7 +360,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         });
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         //POCOR-8028 removed academic period
         $institutionId = $this->getInstitutionID();
@@ -379,7 +379,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         //POCOR-8028 removed academic period
         $newArray = [];
@@ -429,7 +429,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $fields->exchangeArray($newArray);
     }
 
-    public function onExcelGetCategoryName(Event $event, Entity $entity)
+    public function onExcelGetCategoryName(EventInterface $event, Entity $entity)
     {
         if ($entity->category == 1) {
             return 'Curricular';
@@ -439,7 +439,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
     }
 
     //POCOR-7691 start
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $modelAlias = 'InstitutionCurriculars';
         $userType = '';

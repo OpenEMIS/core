@@ -3,7 +3,7 @@ namespace Staff\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\Query;
@@ -31,7 +31,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->addBehavior('Staff.StaffTab');
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('staff_id', ['visible' => false]);
         $this->field('staff_behaviour_category_id', ['type' => 'select']);
@@ -42,7 +42,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->setFieldOrder(['institution_id', 'date_of_behaviour', 'time_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options['type'] = 'staff';
         $tabElements = $this->getCareerTabElements($options);
@@ -93,7 +93,7 @@ class StaffBehavioursTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -117,7 +117,7 @@ class StaffBehavioursTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'start_date':

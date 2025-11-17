@@ -19,9 +19,9 @@ class GenerateAllClassProfilesShell extends Shell
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('CustomExcel.ClassProfiles');
-        $this->loadModel('ReportCard.ClassProfileProcesses');
-        $this->loadModel('SystemProcesses');
+        $this->ClassProfiles = $this->fetchTable('CustomExcel.ClassProfiles');
+        $this->ClassProfileProcesses = $this->fetchTable('ReportCard.ClassProfileProcesses');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
     }
 
     public function main()

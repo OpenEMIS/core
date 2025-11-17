@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 
@@ -20,7 +20,7 @@ class AbsenceBehavior extends Behavior {
 		return $events;
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforePaginate(EventInterface $event, Request $request, Query $query, ArrayObject $options) {
 		$options['auto_search'] = false;
 		$search = $this->_table->ControllerAction->getSearchKey();
 		if (!empty($search)) {
@@ -57,7 +57,7 @@ class AbsenceBehavior extends Behavior {
 			7 => 'sunday'
 		);
 		
-		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+		$ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
 		$settingFirstWeekDay = $ConfigItems->value('first_day_of_week');
 		if(empty($settingFirstWeekDay) || !in_array($settingFirstWeekDay, $weekdaysArr)){
@@ -90,7 +90,7 @@ class AbsenceBehavior extends Behavior {
 		return $weekdays;
 	}
 
-	// public function beforeFind(Event $event, Query $query, $options) {
+	// public function beforeFind(EventInterface $event, Query $query, $options) {
 	// 	$query
 	// 		->join([
 	// 			'table' => 'institution_students',
@@ -111,7 +111,7 @@ class AbsenceBehavior extends Behavior {
 	// 	return $events;
 	// }
 
-	// public function beforeAction(Event $event) {
+	// public function beforeAction(EventInterface $event) {
 	// 	$this->_table->fields['super_admin']['visible'] = false;
 	// 	$this->_table->fields['status']['visible'] = false;
 	// 	$this->_table->fields['date_of_death']['visible'] = false;
@@ -119,7 +119,7 @@ class AbsenceBehavior extends Behavior {
 	// 	$this->_table->fields['photo_name']['visible'] = false;
 	// }
 
-	// public function indexBeforeAction(Event $event) {
+	// public function indexBeforeAction(EventInterface $event) {
 	// 	$this->_table->ControllerAction->addField('Picture', [
 	// 		'type' => 'element',
 	// 		'element' => 'Student.Students/picture'

@@ -2,7 +2,7 @@
 namespace Examination\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
 use ArrayObject;
@@ -42,7 +42,7 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {
         $queryString = $this->request->getQuery('queryString');
         $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
@@ -79,7 +79,7 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
             ]);
     }*/
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controller->getExamCentresTab();
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
@@ -109,7 +109,7 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
 		// End POCOR-5188
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         if (is_null($this->examCentreId)) {
             $event->stopPropagation();
@@ -117,17 +117,17 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('examination_centre_id', ['visible' => false]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('examination_centre_id') => $this->examCentreId]);
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('name');
         $this->field('size');
@@ -138,13 +138,13 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         $this->setFieldOrder(['academic_period_id', 'examination_centre_id', 'name', 'size', 'number_of_seats']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->fields['examination_centre_id']['visible'] = false;
         $this->setFieldOrder(['name', 'size', 'number_of_seats']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('name');
         $this->field('size');
@@ -154,38 +154,38 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         $this->setFieldOrder(['academic_period_id', 'examination_centre_id', 'name', 'size', 'number_of_seats']);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['ExaminationCentres.AcademicPeriods']);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $examCentreId = $entity->examination_centre_id;
-        $listeners = [TableRegistry::get('Examination.ExaminationCentreRoomsExaminations')];
+        $listeners = [TableRegistry::getTableLocator()->get('Examination.ExaminationCentreRoomsExaminations')];
         $this->dispatchEventToModels('Model.ExaminationCentreRooms.afterSave', [$entity], $this, $listeners);
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
             $this->Examinations->getAlias()
         ];
 
-        $ExamRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomsExaminationsStudents');
+        $ExamRoomStudents = TableRegistry::getTableLocator()->get('Examination.ExaminationCentreRoomsExaminationsStudents');
         $associatedStudentCount = $ExamRoomStudents->find()
             ->where([$ExamRoomStudents->aliasField('examination_centre_room_id') => $entity->id])
             ->count();
         $extra['associatedRecords'][] = ['model' => 'Students', 'count' => $associatedStudentCount];
 
-        $ExamRoomInvigilators = TableRegistry::get('Examination.ExaminationCentreRoomsExaminationsInvigilators');
+        $ExamRoomInvigilators = TableRegistry::getTableLocator()->get('Examination.ExaminationCentreRoomsExaminationsInvigilators');
         $associatedInvigilatorsCount = $ExamRoomInvigilators->find()
             ->where([$ExamRoomInvigilators->aliasField('examination_centre_room_id') => $entity->id])
             ->count();
         $extra['associatedRecords'][] = ['model' => 'Invigilators', 'count' => $associatedInvigilatorsCount];
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'institution_id') {
             return __('Institution');

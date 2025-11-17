@@ -5,7 +5,7 @@ namespace Institution\Model\Table;
 use App\Model\Table\AppTable;
 use ArrayObject;
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -35,8 +35,8 @@ class UndoStudentStatusTable extends AppTable
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 
         // Undo behavior
-        $this->Grades = TableRegistry::get('Institution.InstitutionGrades');
-        $this->Students = TableRegistry::get('Institution.Students');
+        $this->Grades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+        $this->Students = TableRegistry::getTableLocator()->get('Institution.Students');
         $this->statuses = $this->StudentStatuses->findCodeList();
         $settings = [
             'model' => 'Institution.Students',
@@ -66,7 +66,7 @@ class UndoStudentStatusTable extends AppTable
     }
 
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $params = $this->ControllerAction->getQueryString();
         
@@ -76,7 +76,7 @@ class UndoStudentStatusTable extends AppTable
             $encodedQueryParams = $this->request->getParam('pass')[1];
             $this->institutionId = $this->paramsDecode($encodedQueryParams)['institution_id'];
         }
-        $institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
+        $institutionClassTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         
         $this->institutionClasses = $institutionClassTable->find('list')
             ->where([$institutionClassTable->aliasField('institution_id') => $this->institutionId])
@@ -99,14 +99,14 @@ class UndoStudentStatusTable extends AppTable
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, $request, Component $Navigation, $persona = false)
+    public function onGetBreadcrumb(EventInterface $event, $request, Component $Navigation, $persona = false)
     {
         $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'];
         $Navigation->substituteCrumb('Undo', 'Students', $url);
         $Navigation->addCrumb('Undo');
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
         $alias = $this->getAlias();
         $studentIds = [];
@@ -115,9 +115,9 @@ class UndoStudentStatusTable extends AppTable
             unset($errors['student_id']);
         }
         //POCOR-6992 start
-        $institutionStudent = TableRegistry::get('Institution.InstitutionStudents');
-        $institution = TableRegistry::get('Institution.Institutions');
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $institutionStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+        $institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $currentId = $StudentStatuses->getIdByCode('CURRENT');
         $promoteId = $StudentStatuses->getIdByCode('PROMOTED');
         //POCOR-6992 end
@@ -208,13 +208,13 @@ class UndoStudentStatusTable extends AppTable
     }
 
     public
-    function addAfterAction(Event $event, Entity $entity)
+    function addAfterAction(EventInterface $event, Entity $entity)
     {
         $this->setupFields($entity);
     }
 
     public
-    function onGetFormButtons(Event $event, ArrayObject $buttons)
+    function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         // unset buttons if no students found
         switch ($this->action) {
@@ -231,7 +231,7 @@ class UndoStudentStatusTable extends AppTable
     }
 
     public
-    function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         $model = $this;
@@ -285,7 +285,7 @@ class UndoStudentStatusTable extends AppTable
     }
 
     public
-    function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $model = $this;
         $alias = $this->getAlias();
@@ -364,7 +364,7 @@ class UndoStudentStatusTable extends AppTable
     }
 
     public
-    function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, ServerRequest $request)
+    function onUpdateFieldStudentStatusId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $model = $this;
         $alias = $this->getAlias();
@@ -415,7 +415,7 @@ class UndoStudentStatusTable extends AppTable
     }
 
     public
-    function onUpdateFieldClass(Event $event, array $attr, $action, ServerRequest $request)
+    function onUpdateFieldClass(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $model = $this;
         $alias = $this->getAlias();
@@ -426,7 +426,7 @@ class UndoStudentStatusTable extends AppTable
             $requestData = $this->Session->read($sessionKey . 'Data');
         }
        // echo "<pre>"; print_r($requestData); die;
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $data = $request->getData();
         $alias = $this->getAlias();
         $theData = $data[$alias];
@@ -496,7 +496,7 @@ class UndoStudentStatusTable extends AppTable
     }
 
     public
-    function onUpdateFieldStudents(Event $event, array $attr, $action, ServerRequest $request)
+    function onUpdateFieldStudents(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $model = $this;
         $alias = $this->getAlias();
@@ -716,7 +716,7 @@ class UndoStudentStatusTable extends AppTable
     }
 
     public
-    function addEditOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    function addEditOnChangePeriod(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request->withQueryParams([
             'grade' => -1,
@@ -742,7 +742,7 @@ class UndoStudentStatusTable extends AppTable
 
 
     public
-    function addEditOnChangeClass(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    function addEditOnChangeClass(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
 
@@ -776,7 +776,7 @@ class UndoStudentStatusTable extends AppTable
 
 
     public
-    function addEditOnChangeGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    function addEditOnChangeGrade(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
 
@@ -808,7 +808,7 @@ class UndoStudentStatusTable extends AppTable
 
 
     public
-    function addEditOnChangeStatus(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    function addEditOnChangeStatus(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
 
@@ -836,7 +836,7 @@ class UndoStudentStatusTable extends AppTable
 
 
     public
-    function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $request = $this->request;
         //$params = $this->ControllerAction->getQueryString();
@@ -897,7 +897,7 @@ class UndoStudentStatusTable extends AppTable
                 $institution_id = $requestData[$alias]['institution_id'];
 
                 if ($requestData[$alias]['student_status_id'] == $statusWidhtdrawn) {
-                    $institutionStudentWithdrawTbl = TableRegistry::get('Institution.StudentWithdraw');
+                    $institutionStudentWithdrawTbl = TableRegistry::getTableLocator()->get('Institution.StudentWithdraw');
                     $institutionStudentWithdraw = $institutionStudentWithdrawTbl->find()
                         ->where([
                             $institutionStudentWithdrawTbl->aliasField('institution_id') => $institution_id,
@@ -1036,7 +1036,7 @@ class UndoStudentStatusTable extends AppTable
     {
         // START: POCOR-6436
 
-        $StudentTransfer = TableRegistry::get('Institution.InstitutionStudentTransfers');
+        $StudentTransfer = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentTransfers');
         if (empty($options['selectedGrade'])) {
             $options['selectedGrade'] = '';
         }

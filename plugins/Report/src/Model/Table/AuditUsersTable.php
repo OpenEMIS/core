@@ -5,7 +5,7 @@ use ArrayObject;
 use DateTime;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -38,7 +38,7 @@ class AuditUsersTable extends AppTable
     }
 
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         
@@ -100,7 +100,7 @@ class AuditUsersTable extends AppTable
         } 
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
 
@@ -171,7 +171,7 @@ class AuditUsersTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetIsStaff(Event $event, Entity $entity)
+    public function onExcelGetIsStaff(EventInterface $event, Entity $entity)
     {
         $options = $this->getSelectOptions('general.yesno');
 
@@ -182,7 +182,7 @@ class AuditUsersTable extends AppTable
         return '';
     }
 
-    public function onExcelGetIsGuardian(Event $event, Entity $entity)
+    public function onExcelGetIsGuardian(EventInterface $event, Entity $entity)
     {
         $options = $this->getSelectOptions('general.yesno');
 
@@ -193,7 +193,7 @@ class AuditUsersTable extends AppTable
         return '';
     }
 
-    public function onExcelGetIsStudent(Event $event, Entity $entity)
+    public function onExcelGetIsStudent(EventInterface $event, Entity $entity)
     {
         $options = $this->getSelectOptions('general.yesno');
 
@@ -204,17 +204,17 @@ class AuditUsersTable extends AppTable
         return '';
     }
 
-    public function onExcelGetModifiedBy(Event $event, Entity $entity)
+    public function onExcelGetModifiedBy(EventInterface $event, Entity $entity)
     {
         return $entity->created_user->name;
     }
 
-    public function onExcelGetModifiedOn(Event $event, Entity $entity)
+    public function onExcelGetModifiedOn(EventInterface $event, Entity $entity)
     {
         return $entity->modified_on->format('Y-m-d H:i:s');
     }
 
-    public function onExcelGetUserFirstLastName(Event $event, Entity $entity)
+    public function onExcelGetUserFirstLastName(EventInterface $event, Entity $entity)
     {
         return $entity->user->name;
     }

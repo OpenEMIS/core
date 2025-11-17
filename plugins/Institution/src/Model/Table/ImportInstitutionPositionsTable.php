@@ -6,7 +6,7 @@ use PHPExcel_Worksheet;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
@@ -29,8 +29,8 @@ class ImportInstitutionPositionsTable extends AppTable
             'model' => 'InstitutionPositions'
         ]);
 
-        $this->Workflows = TableRegistry::get('Workflow.Workflows');
-        $this->InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+        $this->Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        $this->InstitutionPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
     }
 
     public function implementedEvents(): array
@@ -48,7 +48,7 @@ class ImportInstitutionPositionsTable extends AppTable
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {
         // POCOR-7799 start
         $queryString = $this->getQueryString();
@@ -59,10 +59,10 @@ class ImportInstitutionPositionsTable extends AppTable
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
     //POCOR-7684:: Start
-    public function onImportPopulateShiftOptionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateShiftOptionsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . "InstitutionShifts");
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . "InstitutionShifts");
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->getCurrent();
         // POCOR-7799 start
         $queryString = $this->getQueryString();
@@ -97,7 +97,7 @@ class ImportInstitutionPositionsTable extends AppTable
     }
     //POCOR-7684:: End
 
-    public function onImportGetHomeroomTeacherId(Event $event, $cellValue)
+    public function onImportGetHomeroomTeacherId(EventInterface $event, $cellValue)
     {
         $options = $this->getSelectOptions('general.yesno');
         foreach ($options as $key => $value) {
@@ -108,9 +108,9 @@ class ImportInstitutionPositionsTable extends AppTable
         return null;
     }
 
-    public function onImportPopulateStaffPositionTitlesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateStaffPositionTitlesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
 
         $staffTitleResults = $lookedUpTable
             ->find()
@@ -146,7 +146,7 @@ class ImportInstitutionPositionsTable extends AppTable
         }
     }
 
-    public function onImportPopulateHomeroomTeacherData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateHomeroomTeacherData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $translatedReadableCol = $this->getExcelLabel('Homeroom Teacher', 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
@@ -161,9 +161,9 @@ class ImportInstitutionPositionsTable extends AppTable
         }
     }
 
-    public function onImportPopulateWorkflowStepsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateWorkflowStepsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
 
         $workflowResult = $this->Workflows
             ->find()
@@ -198,14 +198,14 @@ class ImportInstitutionPositionsTable extends AppTable
         }
     }
 
-    public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow)
+    public function onImportSetModelPassedRecord(EventInterface $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow)
     {
         $flipped = array_flip($columns);
         $key = $flipped['position_no'];
         $tempPassedRecord['data'][$key] = $clonedEntity->position_no;
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
 //        return true;
         //POCOR-7417:Start
@@ -271,9 +271,9 @@ class ImportInstitutionPositionsTable extends AppTable
 
         //POCOR-7800::Start
         if(empty($tempRow['assignee_id'])){
-            $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
-            $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-            $Institutions = TableRegistry::get('Institution.Institutions');
+            $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
+            $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $stepRoles = $WorkflowStepsRoles->getRolesByStep($tempRow['status_id']);
             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $tempRow['institution_id']])->contain(['Areas'])->first();
             $securityGroupId = $institutionObj->security_group_id;

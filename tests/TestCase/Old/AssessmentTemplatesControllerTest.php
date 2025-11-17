@@ -79,8 +79,8 @@ class AssessmentTemplatesControllerTest extends AppTestCase
         $this->get($testUrl);
         $this->assertResponseCode(200);
 
-        $table = TableRegistry::get('Assessment.Assessments');
-        $hasManyTable = TableRegistry::get('Assessment.AssessmentItems');
+        $table = TableRegistry::getTableLocator()->get('Assessment.Assessments');
+        $hasManyTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentItems');
         $data = [
             'Assessments' => [
                 'code' => 'Assessment03',
@@ -140,8 +140,8 @@ class AssessmentTemplatesControllerTest extends AppTestCase
         $testUrl = $this->url('edit/'.$this->id);
 
         // TODO: DO A GET FIRST
-        $table = TableRegistry::get('Assessment.Assessments');
-        $hasManyTable = TableRegistry::get('Assessment.AssessmentItems');
+        $table = TableRegistry::getTableLocator()->get('Assessment.Assessments');
+        $hasManyTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentItems');
 
         $this->get($testUrl);
         $this->assertResponseCode(200);
@@ -203,8 +203,8 @@ class AssessmentTemplatesControllerTest extends AppTestCase
     {
         $testUrl = $this->url('remove');
 
-        $table = TableRegistry::get('Assessment.Assessments');
-        $hasManyTable = TableRegistry::get('Assessment.AssessmentItems');
+        $table = TableRegistry::getTableLocator()->get('Assessment.Assessments');
+        $hasManyTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentItems');
 
         $exists = $table->exists([$table->primaryKey() => $this->id]);
         $this->assertTrue($exists);

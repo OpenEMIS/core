@@ -2,7 +2,7 @@
 namespace StaffAppraisal\Controller;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use App\Controller\AppController;
@@ -27,7 +27,7 @@ class StaffAppraisalsController extends AppController
         $this->set('contentHeader', __($header));
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $header = __('Appraisals');
         $header .= ' - ' . __($model->getHeader($model->alias));

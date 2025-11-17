@@ -6,7 +6,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\I18n\Time;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Utility\Inflector;
 use Cake\Core\Configure;
@@ -43,7 +43,7 @@ class ConfigItemsBehavior extends Behavior
             ['name' => 'Configuration.controls', 'data' => [], 'options' => []]
         ];
         $this->model->controller->set('toolbarElements', $toolbarElements);
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
 
         $typeList = $ConfigItem
@@ -178,12 +178,12 @@ class ConfigItemsBehavior extends Behavior
         }
     }
 
-    public function beforeAction(Event $event, $extra)
+    public function beforeAction(EventInterface $event, $extra)
     {
         $extra['config']['selectedLink'] = ['controller' => 'Configurations', 'action' => 'index'];
     }
 
-    public function indexBeforeAction(Event $event, $extra)
+    public function indexBeforeAction(EventInterface $event, $extra)
     {
         if ($this->isCAv4()) {
             $extra['elements']['controls'] = $this->buildSystemConfigFilters();
@@ -197,7 +197,7 @@ class ConfigItemsBehavior extends Behavior
     /**
      * Handles updating the toolbar buttons during the action.
      *
-     * @param Event $event The event triggered during the action.
+     * @param EventInterface $event The event triggered during the action.
      * @param ArrayObject $buttons The existing buttons for the action.
      * @param ArrayObject $toolbarButtons The toolbar buttons that will be modified.
      * @param array $attr Additional attributes or options for the action.
@@ -205,7 +205,7 @@ class ConfigItemsBehavior extends Behavior
      * @param bool $isFromModel Flag indicating if the action is originating from a model.
      */
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         if ($this->_table->action == 'view') {
             $session = $this->_table->request->getSession();

@@ -3,7 +3,7 @@ namespace CustomField\Model\Behavior;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
@@ -27,7 +27,7 @@ class SetupTimeBehavior extends SetupBehavior
         $this->_table->addBehavior('ControllerAction.TimePicker', ['start_time', 'end_time']);
     }
 
-    public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterQuery(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $fieldType = '';
         if (!empty($this->_table->request->getData())) {
@@ -43,7 +43,7 @@ class SetupTimeBehavior extends SetupBehavior
         }
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         if ($this->_table->request->is('POST')) {
             $fieldType = (array_key_exists('field_type', $this->_table->request->getData()[$this->_table->getAlias()]))? $this->_table->request->getData()[$this->_table->getAlias()]['field_type']: null;
@@ -69,7 +69,7 @@ class SetupTimeBehavior extends SetupBehavior
         ]);
     }
 
-    public function onSetTimeElements(Event $event, Entity $entity)
+    public function onSetTimeElements(EventInterface $event, Entity $entity)
     {
         $fieldType = strtolower($this->fieldTypeCode);
 
@@ -132,7 +132,7 @@ class SetupTimeBehavior extends SetupBehavior
         }
     }
 
-    public function onGetValidationRulesTime(Event $event, Entity $entity)
+    public function onGetValidationRulesTime(EventInterface $event, Entity $entity)
     {
         $decodedParams = $event->getSubject()->HtmlField->decodeEscapeHtmlEntity($entity->params);
         $paramsArray = (!empty($decodedParams))? json_decode($decodedParams, true): [];
@@ -147,7 +147,7 @@ class SetupTimeBehavior extends SetupBehavior
         }
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
         if ($data->offsetExists('validation_rules_time')) {

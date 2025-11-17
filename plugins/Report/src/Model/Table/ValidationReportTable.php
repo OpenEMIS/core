@@ -5,7 +5,7 @@ use ArrayObject;
 use DateTime;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -35,7 +35,7 @@ class ValidationReportTable extends AppTable  {
         $this->addBehavior('Report.ReportList');
     }
 
-    public function beforeAction(Event $event) {
+    public function beforeAction(EventInterface $event) {
         $controllerName = $this->controller->name;
         $reportName = __('Validation Report');
         $this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
@@ -46,12 +46,12 @@ class ValidationReportTable extends AppTable  {
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request) {
         $attr['options'] = $this->controller->getFeatureOptions($this->alias());
         return $attr;
     }
     
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) 
     {
         $requestData = json_decode($settings['process']['params']);
         $areaLevelId = $requestData->area_level_id;
@@ -59,9 +59,9 @@ class ValidationReportTable extends AppTable  {
         $institution_id = $requestData->institution_id;
         //$institution_status_id = $requestData->institution_status_id;
         $academic_period_id = $requestData->academic_period_id;
-        $AreaLvlT = TableRegistry::get('area_levels'); 
+        $AreaLvlT = TableRegistry::getTableLocator()->get('area_levels'); 
         $AreaLvlData = $AreaLvlT->find('all')->where(['id' => $areaLevelId])->first();
-        $AreaT = TableRegistry::get('areas');                
+        $AreaT = TableRegistry::getTableLocator()->get('areas');                
         //Level-1
         if($areaId != -1){
             $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
@@ -461,7 +461,7 @@ class ValidationReportTable extends AppTable  {
             //print_r($query->Sql());die;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
 
         $extraFields = [];

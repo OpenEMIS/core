@@ -4,7 +4,7 @@ namespace Survey\Model\Table;
 use ArrayObject;
 use CustomField\Model\Table\CustomFieldsTable;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
 use Cake\Utility\Text;
@@ -53,26 +53,26 @@ class SurveyQuestionsTable extends CustomFieldsTable
         return $validator;
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder(['code', 'name', 'description', 'field_type', 'is_mandatory', 'is_unique']);
     }
 
     //POCOR-7742 start
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('code');
         $this->field('params', ['attr' => ['style' => 'display:none;']]);
     }
 
-    public function editBeforeAction(Event $event, ArrayObject $extra)
+    public function editBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('code');
         $this->field('params', ['attr' => ['disabled' => 'disabled']]);
     }
     //POCOR-7742 end
     
-    public function onUpdateFieldCode(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCode(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
     //    echo "<pre>";print_r($event);die;
         if ($action == 'add') {
@@ -90,7 +90,7 @@ class SurveyQuestionsTable extends CustomFieldsTable
      * @author Prajakta
      * @ticket POCOR-9359
      */
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if (!$entity->isNew() && $entity->isDirty('name')) {
             $surveyFormsQuestionsTable = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
@@ -104,7 +104,7 @@ class SurveyQuestionsTable extends CustomFieldsTable
 
 
     /*POCOR-6187 starts*/
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
        $surveyQuestionId = $requestData['SurveyQuestions']['id'];
         if(empty($surveyQuestionId) && isset($this->request->getParam('pass')[1])) {
@@ -138,7 +138,7 @@ class SurveyQuestionsTable extends CustomFieldsTable
     /*POCOR-6187 ends*/
 
     // Start POCOR-5188
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
 		$is_manual_exist = $this->getManualUrl('Administration','Questions','Survey');       
 		if(!empty($is_manual_exist)){
@@ -164,7 +164,7 @@ class SurveyQuestionsTable extends CustomFieldsTable
     }
     // End POCOR-5188
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         $a = $this->request->getParam('pass')[0];
         if ($field == 'name') { //POCOR-8635

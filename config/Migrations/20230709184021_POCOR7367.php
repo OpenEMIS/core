@@ -34,10 +34,10 @@ class POCOR7367 extends AbstractMigration
              PRIMARY KEY (`id`)
           )  ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
-        $institutionCasesTable = TableRegistry::get('institution_cases');
-        $institutionCaseRecordsTable = TableRegistry::get('institution_case_records');
-        $institutionStudentAbsencesTable = TableRegistry::get('institution_student_absences');
-        $AbsenceTypeTable = TableRegistry::get('absence_types');
+        $institutionCasesTable = TableRegistry::getTableLocator()->get('institution_cases');
+        $institutionCaseRecordsTable = TableRegistry::getTableLocator()->get('institution_case_records');
+        $institutionStudentAbsencesTable = TableRegistry::getTableLocator()->get('institution_student_absences');
+        $AbsenceTypeTable = TableRegistry::getTableLocator()->get('absence_types');
       
         $institutionCases = $institutionCasesTable->find()->toArray();  
         foreach($institutionCases as $institutionCase){

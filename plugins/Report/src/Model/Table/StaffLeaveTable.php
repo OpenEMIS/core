@@ -2,7 +2,7 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -27,7 +27,7 @@ class StaffLeaveTable extends AppTable {
         $this->addBehavior('AcademicPeriod.Period');
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    public function onExcelBeforeStart (EventInterface $event, ArrayObject $settings, ArrayObject $sheets) {
         $sheets[] = [
             'name' => $this->getAlias(),
             'table' => $this,
@@ -36,7 +36,7 @@ class StaffLeaveTable extends AppTable {
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -113,9 +113,9 @@ class StaffLeaveTable extends AppTable {
             //POCOR-5762 starts
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
-                    $nationalities = TableRegistry::get('FieldOption.Nationalities');
-                    $identity_types = TableRegistry::get('FieldOption.IdentityTypes');
-                    $user_identities = TableRegistry::get('FieldOption.UserIdentities');
+                    $nationalities = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
+                    $identity_types = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+                    $user_identities = TableRegistry::getTableLocator()->get('FieldOption.UserIdentities');
                     $userData = $user_identities->find()
                                     ->select([
                                         $user_identities->aliasfield('identity_type_id'),
@@ -170,8 +170,8 @@ class StaffLeaveTable extends AppTable {
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
     return $results->map(function ($row) {
 
-        $StaffCustomFieldValues = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
-        $StaffCustomField = TableRegistry::get('StaffCustomField.StaffCustomFields');
+        $StaffCustomFieldValues = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFieldValues');
+        $StaffCustomField = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFields');
 
         $customFieldData = $StaffCustomFieldValues->find()
             ->select([
@@ -234,7 +234,7 @@ class StaffLeaveTable extends AppTable {
 
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
 
@@ -301,7 +301,7 @@ class StaffLeaveTable extends AppTable {
             'label' => __('Identity Number')
         ];
 
-        $StaffCustomFields = TableRegistry::get('StaffCustomField.StaffCustomFields');
+        $StaffCustomFields = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFields');
 
         $customFieldData = $StaffCustomFields->find()
             ->select([
@@ -370,10 +370,10 @@ class StaffLeaveTable extends AppTable {
     }
 
     // POCOR-9109 start
-    public function onExcelGetDateFrom(Event $event, Entity $entity) {
+    public function onExcelGetDateFrom(EventInterface $event, Entity $entity) {
         return $this->formatDate($entity->date_from);
     }
-    public function onExcelGetDateTO(Event $event, Entity $entity) {
+    public function onExcelGetDateTO(EventInterface $event, Entity $entity) {
         return $this->formatDate($entity->date_to);
     }
     // POCOR-9109 end

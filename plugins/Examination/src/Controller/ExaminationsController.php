@@ -3,7 +3,7 @@ namespace Examination\Controller;
 
 use App\Controller\AppController;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
@@ -63,7 +63,7 @@ class ExaminationsController extends AppController
         }
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra) {
         $header = __('Examination');
 
         $alias = ($model->alias == 'ExamResults') ? 'Results' : $model->alias;

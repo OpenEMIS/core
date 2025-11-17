@@ -3,7 +3,7 @@ namespace CustomField\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 
 class CustomRecordsTable extends AppTable {
@@ -14,19 +14,19 @@ class CustomRecordsTable extends AppTable {
 		]);
 	}
 
-	public function editOnInitialize(Event $event, Entity $entity) {
+	public function editOnInitialize(EventInterface $event, Entity $entity) {
 		//$this->request->getQuery('form') = $entity->custom_form_id;
 		$queryParams = $this->request->getQueryParams();
 		$queryParams['form'] = $entity->custom_form_id;
 		$this->request = $this->request->withQueryParams($queryParams);
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity) {
+	public function addEditAfterAction(EventInterface $event, Entity $entity) {
 		$this->setupFields($entity);
 		$entity->custom_form_id = $this->request->getQuery('form');
 	}
 
-	public function onUpdateFieldCustomFormId(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldCustomFormId(EventInterface $event, array $attr, $action, $request) {
 		if ($action == 'add') {
 			$formOptions = $this->CustomForms
 				->find('list')
@@ -48,7 +48,7 @@ class CustomRecordsTable extends AppTable {
 		return $attr;
 	}
 
-	public function addEditOnChangeForm(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnChangeForm(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$request = $this->request;
 		//unset($request->getQuery('form'));
 		$queryParams = $this->request->getQueryParams();

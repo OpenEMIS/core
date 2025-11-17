@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -40,7 +40,7 @@ class SurveysReportTable extends AppTable
     }
 
     //Modify query -- POCOR-8043
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query)
     {
         $condition = [];
         $groupBy = [];
@@ -54,15 +54,15 @@ class SurveysReportTable extends AppTable
         $selectedArea = $requestData->area_id;
         $surveyFormId = $requestData->survey_form_id; // POCOR-9116
 
-        $surveyForms = TableRegistry::get('Survey.SurveyForms');
-        $institutions = TableRegistry::get('Institution.Institutions');
-        $institutionStatuses = TableRegistry::get('Institution.InstitutionStatuses');
-        $areas = TableRegistry::get('Area.Areas');
-        $areaLevels = TableRegistry::get('Area.AreaLevels');
+        $surveyForms = TableRegistry::getTableLocator()->get('Survey.SurveyForms');
+        $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $institutionStatuses = TableRegistry::getTableLocator()->get('Institution.InstitutionStatuses');
+        $areas = TableRegistry::getTableLocator()->get('Area.Areas');
+        $areaLevels = TableRegistry::getTableLocator()->get('Area.AreaLevels');
 
         //POCOR-8525 starts find record is exist in `institution_repeater_surveys` table for Repeater case
         if($institutionID <= 0){
-            $Institutions = TableRegistry::get('Institution.Institutions');
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $InstitutionsData = $Institutions->find()->toArray();
             if(!empty($InstitutionsData)){
                 $instArr = [];
@@ -80,10 +80,10 @@ class SurveysReportTable extends AppTable
 
         // if exists
         if((count($repeaterListCountResult) > 0) && ((count($staffListCountResult) <= 0) && (count($studentListCountResult) <= 0))){
-            $SecurityUsers = TableRegistry::get('Security.Users');
-            $WorkflowSteps  = TableRegistry::get('Workflow.WorkflowSteps');
-            $AreaAdministratives = TableRegistry::get('Area.AreaAdministratives');
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
+            $WorkflowSteps  = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $AreaAdministratives = TableRegistry::getTableLocator()->get('Area.AreaAdministratives');
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
             if($institutionID > 0){
                 $condition[$institutions->aliasField('id')] = $institutionID;
@@ -180,11 +180,11 @@ class SurveysReportTable extends AppTable
                     return $results->map(function ($row) use ($surveySection, $surveyFormId, $tableQuestion) {
                         //get data related to survey section
                         $surveySectionId = "$surveySection";
-                        $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
+                        $surveySection = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
                         $surveySectionData = $surveySection->find()->where([ $surveySection->aliasField('id') => $surveySectionId ])->first();
                         //get survey_form_id from the parent_form_id
-                        $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
-                        $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
+                        $SurveyFormsQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
+                        $surveyQuestion = TableRegistry::getTableLocator()->get('Survey.SurveyQuestions');
                         $SurveyFormsQuestionsData = $SurveyFormsQuestions->find()
                             ->select([
                                 'id' => $SurveyFormsQuestions->aliasField('id'),
@@ -212,7 +212,7 @@ class SurveysReportTable extends AppTable
                             $InstitutionRepeaterSurveys_survey_form_id = $SurveyFormsQuestionsData->surveyQuestion_survey_form_id;
                         }
                         //get all questions list
-                        $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
+                        $SurveyFormsQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
                         $SurveyFormsQuestionsRes = $SurveyFormsQuestions->find()
                             ->select([
                                 'id' => $SurveyFormsQuestions->aliasField('id'),
@@ -226,10 +226,10 @@ class SurveysReportTable extends AppTable
 
                         if(!empty($SurveyFormsQuestionsRes)){
                             foreach($SurveyFormsQuestionsRes AS $sfq_key => $sfq_val){
-                                $InstitutionRepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
-                                $InstitutionRepeaterSurveyAnswers = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
+                                $InstitutionRepeaterSurveys = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveys');
+                                $InstitutionRepeaterSurveyAnswers = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveyAnswers');
                                 $SurveyQuestionChoices = TableRegistry::getTableLocator()->get('Survey.SurveyQuestionChoices');
-                                $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
+                                $surveyQuestion = TableRegistry::getTableLocator()->get('Survey.SurveyQuestions');
 
                                 $InstitutionRepeaterSurveyAnswersRes = $InstitutionRepeaterSurveyAnswers
                                     ->find()
@@ -297,10 +297,10 @@ class SurveysReportTable extends AppTable
                     });
                 });
         }else if((count($staffListCountResult) > 0) && ((count($repeaterListCountResult) <= 0) && (count($studentListCountResult) <= 0))){
-            $SecurityUsers = TableRegistry::get('Security.Users');
-            $WorkflowSteps  = TableRegistry::get('Workflow.WorkflowSteps');
-            $AreaAdministratives = TableRegistry::get('Area.AreaAdministratives');
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
+            $WorkflowSteps  = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $AreaAdministratives = TableRegistry::getTableLocator()->get('Area.AreaAdministratives');
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
             if($institutionID > 0){
                 $condition[$institutions->aliasField('id')] = $institutionID;
@@ -398,11 +398,11 @@ class SurveysReportTable extends AppTable
                     return $results->map(function ($row) use ($surveySection, $surveyFormId, $tableQuestion) {
                         //get data related to survey section
                         $surveySectionId = "$surveySection";
-                        $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
+                        $surveySection = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
                         $surveySectionData = $surveySection->find()->where([ $surveySection->aliasField('id') => $surveySectionId ])->first();
                         //get survey_form_id from the parent_form_id
-                        $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
-                        $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
+                        $SurveyFormsQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
+                        $surveyQuestion = TableRegistry::getTableLocator()->get('Survey.SurveyQuestions');
                         $SurveyFormsQuestionsData = $SurveyFormsQuestions->find()
                             ->select([
                                 'id' => $SurveyFormsQuestions->aliasField('id'),
@@ -433,7 +433,7 @@ class SurveysReportTable extends AppTable
                         }
 
                         //get all questions list
-                        $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
+                        $SurveyFormsQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
                         $SurveyFormsQuestionsRes = $SurveyFormsQuestions->find()
                             ->select([
                                 'id' => $SurveyFormsQuestions->aliasField('id'),
@@ -446,10 +446,10 @@ class SurveysReportTable extends AppTable
                             ->toArray();
                         if(!empty($SurveyFormsQuestionsRes)){
                             foreach($SurveyFormsQuestionsRes AS $sfq_key => $sfq_val){
-                                $InstitutionStaffSurveys = TableRegistry::get('Staff.StaffSurveys');
-                                $InstitutionStaffSurveyAnswers = TableRegistry::get('Staff.StaffSurveyAnswers');
+                                $InstitutionStaffSurveys = TableRegistry::getTableLocator()->get('Staff.StaffSurveys');
+                                $InstitutionStaffSurveyAnswers = TableRegistry::getTableLocator()->get('Staff.StaffSurveyAnswers');
                                 $SurveyQuestionChoices = TableRegistry::getTableLocator()->get('Survey.SurveyQuestionChoices');
-                                $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
+                                $surveyQuestion = TableRegistry::getTableLocator()->get('Survey.SurveyQuestions');
 
                                 $InstitutionStaffSurveyAnswersRes = $InstitutionStaffSurveyAnswers
                                     ->find()
@@ -519,10 +519,10 @@ class SurveysReportTable extends AppTable
                     });
                 });
         }else if((count($studentListCountResult) > 0) && ((count($repeaterListCountResult) <= 0) && (count($staffListCountResult) <= 0))){
-            $SecurityUsers = TableRegistry::get('Security.Users');
-            $WorkflowSteps  = TableRegistry::get('Workflow.WorkflowSteps');
-            $AreaAdministratives = TableRegistry::get('Area.AreaAdministratives');
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
+            $WorkflowSteps  = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $AreaAdministratives = TableRegistry::getTableLocator()->get('Area.AreaAdministratives');
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
             if($institutionID > 0){
                 $condition[$institutions->aliasField('id')] = $institutionID;
@@ -618,11 +618,11 @@ class SurveysReportTable extends AppTable
                 $query->formatResults(function (ResultSetInterface $results) use ($surveySection, $surveyFormId, $tableQuestion) {
                     return $results->map(function ($row) use ($surveySection, $surveyFormId, $tableQuestion) {
                         $surveySectionId = "$surveySection";
-                        $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
+                        $surveySection = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
                         $surveySectionData = $surveySection->find()->where([ $surveySection->aliasField('id') => $surveySectionId ])->first();
                         //get survey_form_id from the parent_form_id
-                        $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
-                        $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
+                        $SurveyFormsQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
+                        $surveyQuestion = TableRegistry::getTableLocator()->get('Survey.SurveyQuestions');
                         $SurveyFormsQuestionsData = $SurveyFormsQuestions->find()
                             ->select([
                                 'id' => $SurveyFormsQuestions->aliasField('id'),
@@ -652,7 +652,7 @@ class SurveysReportTable extends AppTable
                             $InstitutionStudentSurveys_survey_form_id = $SurveyFormsQuestionsData->surveyQuestion_survey_form_id;
                         }
                         //get all questions list
-                        $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
+                        $SurveyFormsQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
                         $SurveyFormsQuestionsRes = $SurveyFormsQuestions->find()
                             ->select([
                                 'id' => $SurveyFormsQuestions->aliasField('id'),
@@ -666,10 +666,10 @@ class SurveysReportTable extends AppTable
 
                         if(!empty($SurveyFormsQuestionsRes)){
                             foreach($SurveyFormsQuestionsRes AS $sfq_key => $sfq_val){
-                                $InstitutionStudentSurveys = TableRegistry::get('Student.StudentSurveys');
-                                $InstitutionStudentSurveyAnswers = TableRegistry::get('Student.StudentSurveyAnswers');
+                                $InstitutionStudentSurveys = TableRegistry::getTableLocator()->get('Student.StudentSurveys');
+                                $InstitutionStudentSurveyAnswers = TableRegistry::getTableLocator()->get('Student.StudentSurveyAnswers');
                                 $SurveyQuestionChoices = TableRegistry::getTableLocator()->get('Survey.SurveyQuestionChoices');
-                                $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
+                                $surveyQuestion = TableRegistry::getTableLocator()->get('Survey.SurveyQuestions');
 
                                 $InstitutionStudentSurveyAnswersRes = $InstitutionStudentSurveyAnswers
                                     ->find()
@@ -741,12 +741,12 @@ class SurveysReportTable extends AppTable
         }else{//POCOR-8525 ends
             //not exists
             //POCOR-8043 - Starts
-            $surveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
-            $institutionTypes = TableRegistry::get('Institution.InstitutionTypes');
-            $surveyFormsQuestion = TableRegistry::get('Survey.SurveyFormsQuestions');
-            $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
-            $SurveyRows = TableRegistry::get('Survey.SurveyTableRows');
-            $SurveyColumns = TableRegistry::get('Survey.SurveyTableColumns');
+            $surveyFormsFilters = TableRegistry::getTableLocator()->get('Survey.SurveyFormsFilters');
+            $institutionTypes = TableRegistry::getTableLocator()->get('Institution.InstitutionTypes');
+            $surveyFormsQuestion = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
+            $surveyQuestion = TableRegistry::getTableLocator()->get('Survey.SurveyQuestions');
+            $SurveyRows = TableRegistry::getTableLocator()->get('Survey.SurveyTableRows');
+            $SurveyColumns = TableRegistry::getTableLocator()->get('Survey.SurveyTableColumns');
 
             $groupBy[] = $surveyForms->aliasField('id');
             $groupBy[] = $surveyQuestion->aliasField('id');
@@ -832,10 +832,10 @@ class SurveysReportTable extends AppTable
             $query->formatResults(function (ResultSetInterface $results) use ($tableQuestion) {
                 return $results->map(function ($row) use ($tableQuestion) {
                     $survey_table_row_id = $row->survey_table_row_id;
-                    $insSurveyTblCell = TableRegistry::get('Institution.InstitutionSurveyTableCells');
-                    $surveyTableColumns = TableRegistry::get('Survey.SurveyTableColumns');
-                    $institutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
-                    $institutions = TableRegistry::get('Institution.Institutions');
+                    $insSurveyTblCell = TableRegistry::getTableLocator()->get('Institution.InstitutionSurveyTableCells');
+                    $surveyTableColumns = TableRegistry::getTableLocator()->get('Survey.SurveyTableColumns');
+                    $institutionSurveys = TableRegistry::getTableLocator()->get('Institution.InstitutionSurveys');
+                    $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     $insSurveyTblCellRes = $insSurveyTblCell
                         ->find()
                         ->select([
@@ -891,7 +891,7 @@ class SurveysReportTable extends AppTable
     }
 
     public function getChildren($id, $idArray) {
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $result = $Areas->find()
                            ->where([
                                $Areas->aliasField('parent_id') => $id
@@ -907,13 +907,13 @@ class SurveysReportTable extends AppTable
     // POCOR-9087
     public function checkSurveyExistanceInRepeater($institutions=[], $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion){
 
-        $childSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
+        $childSurveys = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveys');
         $surveySectionId = "$surveySection";
-        $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
+        $surveySection = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
         $surveySectionData = $surveySection->find()->where([ $surveySection->aliasField('id') => $surveySectionId ])->first();
 
-        $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
-        $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
+        $SurveyFormsQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
+        $surveyQuestion = TableRegistry::getTableLocator()->get('Survey.SurveyQuestions');
         $StaffSurveysRes = $SurveyFormsQuestions->find()
             ->select([
                 'id' => $childSurveys->aliasField('id'),
@@ -940,13 +940,13 @@ class SurveysReportTable extends AppTable
         return $StaffSurveysRes;    }
 
     public function checkSurveyExistanceInStaff($institutions=[], $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion){
-        $childSurveys = TableRegistry::get('Staff.StaffSurveys'); // POCOR-9087
+        $childSurveys = TableRegistry::getTableLocator()->get('Staff.StaffSurveys'); // POCOR-9087
         $surveySectionId = "$surveySection";
-        $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
+        $surveySection = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
         $surveySectionData = $surveySection->find()->where([ $surveySection->aliasField('id') => $surveySectionId ])->first();
 
-        $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
-        $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
+        $SurveyFormsQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
+        $surveyQuestion = TableRegistry::getTableLocator()->get('Survey.SurveyQuestions');
         $StaffSurveysRes = $SurveyFormsQuestions->find()
             ->select([
                 'id' => $childSurveys->aliasField('id'),
@@ -974,13 +974,13 @@ class SurveysReportTable extends AppTable
     }
 
     public function checkSurveyExistanceInStudent($institutions=[], $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion){
-        $childSurveys = TableRegistry::get('Student.StudentSurveys'); // POCOR-9087
+        $childSurveys = TableRegistry::getTableLocator()->get('Student.StudentSurveys'); // POCOR-9087
         $surveySectionId = "$surveySection";
-        $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
+        $surveySection = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
         $surveySectionData = $surveySection->find()->where([ $surveySection->aliasField('id') => $surveySectionId ])->first();
 
-        $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
-        $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
+        $SurveyFormsQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
+        $surveyQuestion = TableRegistry::getTableLocator()->get('Survey.SurveyQuestions');
         $StudentSurveysRes = $SurveyFormsQuestions->find()
             ->select([
                 'id' => $childSurveys->aliasField('id'),
@@ -1006,7 +1006,7 @@ class SurveysReportTable extends AppTable
         return $StudentSurveysRes;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $requestData = json_decode($settings['process']['params']);
         $tableQuestion = $requestData->table_question;
@@ -1014,7 +1014,7 @@ class SurveysReportTable extends AppTable
         //POCOR-8525 starts find record is exist in `institution_repeater_surveys` table for Repeater case
         $institutionID = $requestData->institution_id;
         if($institutionID <= 0){
-            $Institutions = TableRegistry::get('Institution.Institutions');
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $InstitutionsData = $Institutions->find()->toArray();
             if(!empty($InstitutionsData)){
                 $instArr = [];
@@ -1133,11 +1133,11 @@ class SurveysReportTable extends AppTable
             }
 
             $surveySectionId = "$requestData->survey_section";
-            $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
+            $surveySection = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
             $surveySectionData = $surveySection->find()->where([ $surveySection->aliasField('id') => $surveySectionId ])->first();
 
-            $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
-            $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
+            $SurveyFormsQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
+            $surveyQuestion = TableRegistry::getTableLocator()->get('Survey.SurveyQuestions');
             $SurveyFormsQuestionsData = $SurveyFormsQuestions->find()
                 ->select([
                     'id' => $SurveyFormsQuestions->aliasField('id'),
@@ -1160,7 +1160,7 @@ class SurveysReportTable extends AppTable
                     $surveyQuestion->aliasField('id') => $tableQuestion,
                 ])->first();
             if($SurveyFormsQuestionsData){
-                $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
+                $SurveyFormsQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
                 $SurveyFormsQuestionsRes = $SurveyFormsQuestions->find()
                     ->select([
                         'id' => $SurveyFormsQuestions->aliasField('id'),
@@ -1279,8 +1279,8 @@ class SurveysReportTable extends AppTable
                 'label' => __('Survey Question Name')
             ];
 
-            $SurveyTblColumns = TableRegistry::get('Survey.SurveyTableColumns');
-            $surveyFormsQuestion = TableRegistry::get('Survey.SurveyFormsQuestions');
+            $SurveyTblColumns = TableRegistry::getTableLocator()->get('Survey.SurveyTableColumns');
+            $surveyFormsQuestion = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
             $SurveyTblColumnRes = $SurveyTblColumns
                 ->find()
                 ->select([

@@ -9,7 +9,7 @@ use Cake\Collection\Collection;
 use Cake\Controller\Component;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
@@ -37,10 +37,10 @@ class ImportStaffTable extends AppTable
         $this->addBehavior('Institution.ImportStaff');
 
         // register the target table once
-        $this->Institutions = TableRegistry::get('Institution.Institutions');
-        $this->InstitutionStaff = TableRegistry::get('Institution.Staff');
-        $this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-        $this->Staff = TableRegistry::get('Security.Users');
+        $this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $this->InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
+        $this->InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+        $this->Staff = TableRegistry::getTableLocator()->get('Security.Users');
 
         $positionTypes = $this->getSelectOptions('Position.types');
         $this->positionTypes = [];
@@ -86,13 +86,13 @@ class ImportStaffTable extends AppTable
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {
         $crumbTitle = $this->getHeader($this->getAlias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
 
-    public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
+    public function onImportCheckUnique(EventInterface $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
     {
         $institutionId = $this->getQueryString('institution_id'); // POCOR-9080
         $this->_institution = $this->Institutions->get($institutionId); // POCOR-9080
@@ -125,12 +125,12 @@ class ImportStaffTable extends AppTable
         // POCOR-9080 end
     }
 
-    public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity)
+    public function onImportUpdateUniqueKeys(EventInterface $event, ArrayObject $importedUniqueCodes, Entity $entity)
     {
         $importedUniqueCodes[] = $entity->staff_id;
     }
 
-    public function onImportGetPositionTypesId(Event $event, $cellValue)
+    public function onImportGetPositionTypesId(EventInterface $event, $cellValue)
     {
         return $this->getPositionTypeId($cellValue);
     }
@@ -147,7 +147,7 @@ class ImportStaffTable extends AppTable
         return $positionType;
     }
 
-    public function onImportPopulatePositionTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulatePositionTypesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $translatedReadableCol = $this->getExcelLabel('Imports', 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
@@ -162,10 +162,10 @@ class ImportStaffTable extends AppTable
     }
 
     //POCOR-7711 :: Start
-    public function onImportPopulateStaffPositionGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateStaffPositionGradesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . "StaffPositionGrades");
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . "StaffPositionGrades");
         $InstitutionShiftsResults = $lookedUpTable
             ->find()
             ->select([
@@ -190,7 +190,7 @@ class ImportStaffTable extends AppTable
 
     //POCOR-7711 :: End
 
-    public function onImportGetFTEId(Event $event, $cellValue)
+    public function onImportGetFTEId(EventInterface $event, $cellValue)
     {
         return $this->getFteId($cellValue);
     }
@@ -207,7 +207,7 @@ class ImportStaffTable extends AppTable
         return $id;
     }
 
-    public function onImportPopulateFTEData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateFTEData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $translatedReadableCol = $this->getExcelLabel('Imports', 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
@@ -220,7 +220,7 @@ class ImportStaffTable extends AppTable
         }
     }
 
-    public function onImportPopulateInstitutionPositionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateInstitutionPositionsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $institutionId = ($this->_institution instanceof Entity) ? $this->_institution->id : false;
         //POCOR-8947 -- START
@@ -299,12 +299,12 @@ class ImportStaffTable extends AppTable
         }
     }
 
-    public function onImportPopulateStaffData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateStaffData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         unset($data[$columnOrder]);
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         // POCOR-9080 start
         $tempRow = $tempRow->getArrayCopy();
@@ -424,7 +424,7 @@ class ImportStaffTable extends AppTable
 
     private function checkInstitutionPosition($institutionId, $positionId)
     {
-        $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+        $InstitutionPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
         $checkPosition = $InstitutionPositions
             ->find()
             ->where([
@@ -436,7 +436,7 @@ class ImportStaffTable extends AppTable
         return $checkPosition;
     }
 
-    public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow)
+    public function onImportSetModelPassedRecord(EventInterface $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow)
     {
         $flipped = array_flip($columns);
         $key = $flipped['staff_id'];

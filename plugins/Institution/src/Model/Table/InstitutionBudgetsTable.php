@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -56,7 +56,7 @@ class InstitutionBudgetsTable extends ControllerActionTable
             ->allowEmpty('file_content');
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $data) {
         //$entity->institution_id = $this->request->getSession()->read('Institution.Institutions.id');
         $entity->institution_id = $this->getInstitutionID();
     }
@@ -70,22 +70,22 @@ class InstitutionBudgetsTable extends ControllerActionTable
         $this->field('file_content', ['visible' => false]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'budget_type_id') {
             return __('Type');
@@ -123,7 +123,7 @@ class InstitutionBudgetsTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'budget_type_id', 'amount','file_name', 'file_content', 'description']);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->getSession();
         //$institutionId = $session->read('Institution.Institutions.id');
@@ -147,7 +147,7 @@ class InstitutionBudgetsTable extends ControllerActionTable
 
     }
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+	public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
 
         $extraField[] = [

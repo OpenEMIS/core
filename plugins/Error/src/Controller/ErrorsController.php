@@ -2,7 +2,6 @@
 namespace Error\Controller;
 
 use App\Controller\AppController;
-use Cake\Event\Event;
 use Cake\Event\EventInterface;
 
 class ErrorsController extends AppController{

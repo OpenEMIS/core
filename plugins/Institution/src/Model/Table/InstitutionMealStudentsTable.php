@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use App\Model\Table\AppTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -31,7 +31,7 @@ class InstitutionMealStudentsTable extends ControllerActionTable
         ]);
     }
 
-     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //POCOR-7908:start
         $meal_received_id = $entity->meal_received_id;
@@ -43,7 +43,7 @@ class InstitutionMealStudentsTable extends ControllerActionTable
         }
         if ($meal_received_id == 1) {
             if(!isset($meal_benefit_id) || empty($meal_benefit_id) || $meal_benefit_id == null){
-                $MealBenefit = TableRegistry::get('Meal.MealBenefit');
+                $MealBenefit = TableRegistry::getTableLocator()->get('Meal.MealBenefit');
                 $MealBenefitData = $MealBenefit->find()->where([
                     'default' => 1
                 ])->first();
@@ -61,9 +61,9 @@ class InstitutionMealStudentsTable extends ControllerActionTable
 //            return;
 //        }
         //POCOR-7908:end
-    	$InstitutionMealStudents = TableRegistry::get('Institution.InstitutionMealStudents');
-        $institution_meal_programmes = TableRegistry::get('institution_meal_programmes');
-        $MealBenefit = TableRegistry::get('Meal.MealBenefit');
+    	$InstitutionMealStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionMealStudents');
+        $institution_meal_programmes = TableRegistry::getTableLocator()->get('institution_meal_programmes');
+        $MealBenefit = TableRegistry::getTableLocator()->get('Meal.MealBenefit');
     	$classId = $entity->institution_class_id;
         $academicPeriodId = $entity->academic_period_id;
         $mealProgrammesId = $entity->meal_programmes_id;

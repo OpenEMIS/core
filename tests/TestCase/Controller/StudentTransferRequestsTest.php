@@ -89,7 +89,7 @@ class StudentTransferRequestsTest extends AppTestCase
 
         $this->postData($url, $data);
 
-        $table = TableRegistry::get('Institution.TransferRequests');
+        $table = TableRegistry::getTableLocator()->get('Institution.TransferRequests');
         $entity = $table->get($data['TransferRequests']['id']);
         $this->assertEquals($data['TransferRequests']['id'], $entity->id);
     }
@@ -133,7 +133,7 @@ class StudentTransferRequestsTest extends AppTestCase
 
         $this->postData($url, $data);
 
-        $table = TableRegistry::get('Institution.TransferRequests');
+        $table = TableRegistry::getTableLocator()->get('Institution.TransferRequests');
         $entity = $table->get($data['TransferRequests']['id']);
         $this->assertEquals(new Date($data['TransferRequests']['created']), $entity->requested_date);
     }
@@ -161,7 +161,7 @@ class StudentTransferRequestsTest extends AppTestCase
         $this->assertResponseOk();
         $this->assertEquals(true, (count($this->viewVariable('data')) == 1));
 
-        $table = TableRegistry::get('Institution.TransferRequests');
+        $table = TableRegistry::getTableLocator()->get('Institution.TransferRequests');
         $entity = $table->get($this->primaryKey);
 
         $data = [
@@ -194,7 +194,7 @@ class StudentTransferRequestsTest extends AppTestCase
 
         // $this->deleteData($url);
 
-        // $table = TableRegistry::get('Institution.TransferRequests');
+        // $table = TableRegistry::getTableLocator()->get('Institution.TransferRequests');
         // $entity = $table->find()->where($this->primaryKey)->first();
         // $this->assertEquals($entity, null);
     }
@@ -239,7 +239,7 @@ class StudentTransferRequestsTest extends AppTestCase
 
         $this->postData($url, $data);
 
-        $table = TableRegistry::get('Institution.TransferRequests');
+        $table = TableRegistry::getTableLocator()->get('Institution.TransferRequests');
         $dataBetweenDate = $table->getDataBetweenDate($data, $this->modelAlias);
         $this->assertTrue(array_key_exists($expected, $dataBetweenDate));
     }

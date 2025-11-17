@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 
 /**
@@ -23,7 +23,7 @@ class ReportTrainingNeedStatisticsTable extends AppTable
         
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),
@@ -33,7 +33,7 @@ class ReportTrainingNeedStatisticsTable extends AppTable
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData        = json_decode($settings['process']['params']);
         $institution_status = $requestData->institution_status;
@@ -124,7 +124,7 @@ class ReportTrainingNeedStatisticsTable extends AppTable
         ]);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
         $newFields[] = [

@@ -3,7 +3,7 @@ namespace ControllerAction\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use ControllerAction\Model\Traits\SecurityTrait;
 

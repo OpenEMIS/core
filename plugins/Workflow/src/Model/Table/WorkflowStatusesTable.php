@@ -4,7 +4,7 @@ namespace Workflow\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\ORM\Table;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Http\ServerRequest;
@@ -26,7 +26,7 @@ class WorkflowStatusesTable extends AppTable {
 		]);
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(EventInterface $event) {
 		//Add controls filter to index page
 		$toolbarElements = [
             ['name' => 'Workflow.WorkflowModels/controls', 'data' => [], 'options' => []]
@@ -35,7 +35,7 @@ class WorkflowStatusesTable extends AppTable {
 		// End
 	}
 
-	public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options) {
+	public function indexBeforePaginate(EventInterface $event, ServerRequest $request, Query $query, ArrayObject $options) {
 		$modelOptions = $this->WorkflowModels->find('list')
             ->order([ //POCOR-8033 readable
                 $this->WorkflowModels->aliasField('name')
@@ -50,11 +50,11 @@ class WorkflowStatusesTable extends AppTable {
 		}
 	}
 
-	public function viewEditBeforeQuery(Event $event, Query $query) {
+	public function viewEditBeforeQuery(EventInterface $event, Query $query) {
 		$query->contain($this->_contain);
 	}
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+	public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		// Remove the delete button if the status is not editable
 		if (! $entity->is_removable) {
@@ -65,7 +65,7 @@ class WorkflowStatusesTable extends AppTable {
 		return $buttons;
 	}
 
-	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		// To handle when delete all mappings
 		if (!array_key_exists('workflow_steps', $data[$this->getAlias()])) {
 			$data[$this->getAlias()]['workflow_steps'] = [];
@@ -80,7 +80,7 @@ class WorkflowStatusesTable extends AppTable {
 		$options->exchangeArray($arrayOptions);
 	}
 
-	public function onGetStatusesStepsElement(Event $event, $action, $entity, $attr, $options=[]) {
+	public function onGetStatusesStepsElement(EventInterface $event, $action, $entity, $attr, $options=[]) {
 		switch ($action) {
 			case 'view':
 				$tableHeaders = [__('Workflow Step Name'), __('Workflow Name')];
@@ -254,19 +254,19 @@ class WorkflowStatusesTable extends AppTable {
 			->toArray();
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(EventInterface $event) {
 		$this->ControllerAction->field('is_editable', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>true, 'add' => true], 'type'=>'hidden']);
 		$this->ControllerAction->field('is_removable', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>true, 'add' => true], 'type'=>'hidden']);
 		$this->ControllerAction->field('statuses_steps', ['type' => 'statuses_steps', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
 	}
 	
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(EventInterface $event, Entity $entity) {
 		$this->ControllerAction->setFieldOrder([
 			'workflow_model_id', 'code', 'name', 'statuses_steps'
 		]);
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
+	public function editAfterAction(EventInterface $event, Entity $entity) {
 		$this->request->getData()[$this->getAlias()]['workflow_model_id'] = $entity->workflow_model_id;
 		$this->request->getData()[$this->getAlias()]['code'] = $entity->code;
 		$this->request->getData()[$this->getAlias()]['name'] = $entity->name;
@@ -279,8 +279,8 @@ class WorkflowStatusesTable extends AppTable {
 		]);
 	}
 
-	// public function addBeforeAction(Event $event) {
-	public function addAfterAction(Event $event, Entity $entity) {
+	// public function addBeforeAction(EventInterface $event) {
+	public function addAfterAction(EventInterface $event, Entity $entity) {
 		$this->ControllerAction->field('workflow_model_id', ['type' => 'select']);
 		$this->ControllerAction->field('is_editable', ['value' => 1]);
 		$this->ControllerAction->field('is_removable', ['value' => 1]);
@@ -289,7 +289,7 @@ class WorkflowStatusesTable extends AppTable {
 		]);
 	}
 
-	public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldWorkflowModelId(EventInterface $event, array $attr, $action, $request) {
 		if ($action == 'add') {
 			$attr['onChangeReload'] = 'changeModel';
 		} else if ($action == 'edit') {
@@ -303,7 +303,7 @@ class WorkflowStatusesTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldCode(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldCode(EventInterface $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
 			if (!$this->request->getData()[$this->getAlias()]['is_editable']) {
 				$code = $this->request->getData()[$this->getAlias()]['code'];
@@ -315,7 +315,7 @@ class WorkflowStatusesTable extends AppTable {
 		}
 	}
 
-	public function onUpdateFieldName(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldName(EventInterface $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
 			if (!$this->request->getData()[$this->getAlias()]['is_editable']) {
 				$name = $this->request->getData()[$this->getAlias()]['name'];
@@ -327,7 +327,7 @@ class WorkflowStatusesTable extends AppTable {
 		}
 	}
 
-	public function addEditOnChangeModel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
+	public function addEditOnChangeModel(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
 	{
 	    $request = $this->request;
 	    $queryParams = $request->getQuery();

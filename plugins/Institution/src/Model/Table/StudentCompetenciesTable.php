@@ -6,7 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
 use Cake\Http\ServerRequest;
@@ -70,7 +70,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         if ($this->action != 'index') {
             $tabElements = $this->controller->getCompetencyTabElements();
@@ -90,7 +90,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->field('institution_course_id', ['visible' => false]);//POCOR-6863
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -122,7 +122,7 @@ class StudentCompetenciesTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
@@ -249,7 +249,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'name') {
             return __('Class Name');
@@ -269,7 +269,7 @@ class StudentCompetenciesTable extends ControllerActionTable
     }
 
 
-    public function onGetEducationGrade(Event $event, Entity $entity)
+    public function onGetEducationGrade(EventInterface $event, Entity $entity)
     {
         $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
         $grade = $EducationGrades->get($entity->education_grade_id);
@@ -277,7 +277,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         return $grade->programme_grade_name;
     }
     //POCOR-7965 start
-    public function onGetTotalMaleStudents(Event $event, Entity $entity)
+    public function onGetTotalMaleStudents(EventInterface $event, Entity $entity)
     {
 
         $gender_code = 'M';
@@ -297,7 +297,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         return $count;
     }
 
-    public function onGetTotalFemaleStudents(Event $event, Entity $entity)
+    public function onGetTotalFemaleStudents(EventInterface $event, Entity $entity)
     {
 
         $gender_code = 'F';
@@ -318,7 +318,7 @@ class StudentCompetenciesTable extends ControllerActionTable
     }
     //POCOR-7965 end
 
-    public function onGetCompetencyTemplate(Event $event, Entity $entity)
+    public function onGetCompetencyTemplate(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             $CompetencyTemplates = TableRegistry::getTableLocator()->get('Competency.CompetencyTemplates');
@@ -333,7 +333,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         }
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain(['AcademicPeriods'])
@@ -344,7 +344,7 @@ class StudentCompetenciesTable extends ControllerActionTable
             ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
@@ -443,7 +443,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $baseUrl = $this->url($this->action, false);
         $params = $this->getQueryString();
 
-        $CompetencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
+        $CompetencyTemplates = TableRegistry::getTableLocator()->get('Competency.CompetencyTemplates');
         if (!is_null($this->classId)) {
             $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
             $Users = $ClassStudents->Users;
@@ -510,7 +510,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         return $studentOptions;
     }
 
-    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomCriteriasElement(EventInterface $event, $action, $entity, $attr, $options=[])
     {
 
         // set Competency Period filter
@@ -658,7 +658,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->setFieldOrder(['name', 'academic_period_id', 'competency_template', 'total_male_students', 'total_female_students', 'student']);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $entity->institution_id = $this->getInstitutionID();
         $params = [
@@ -713,9 +713,9 @@ class StudentCompetenciesTable extends ControllerActionTable
      */
     private function getTotalGenderStudents($class_id, $grade_id, $gender_code)
     {
-        $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-        $Users = TableRegistry::get('User.Users');
-        $Genders = TableRegistry::get('User.Genders');
+        $InstitutionClassStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
+        $Genders = TableRegistry::getTableLocator()->get('User.Genders');
         $count = $InstitutionClassStudentsTable->find()
             ->leftJoin([$Users->getAlias() => $Users->getTable()], [
                 $Users->aliasField('id') . ' = ' . $InstitutionClassStudentsTable->aliasField('student_id')

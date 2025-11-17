@@ -25,7 +25,7 @@ class ConfigAdministrativeBoundariesControllerTest extends AppTestCase
     {
         parent::setUp();
         $this->urlPrefix('/Configurations/AdministrativeBoundaries/');
-        $this->table = TableRegistry::get('Configuration.ConfigItems');
+        $this->table = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
     }
 
     public function testIndex()

@@ -19,7 +19,7 @@ class POCOR5784 extends AbstractMigration
         $this->execute('CREATE TABLE `z_5784_security_roles` LIKE `security_roles`');
         $this->execute('INSERT INTO `z_5784_security_roles` SELECT * FROM `security_roles`');
         
-        $table = TableRegistry::get('SecurityRoles');
+        $table = TableRegistry::getTableLocator()->get('SecurityRoles');
         
         $securityRoles = $table->find()->where(['security_group_id IN ' => [self::FIXED_SYSTEM_GROUP_ID, self::CUSTOM_SYSTEM_GROUP_ID]])->order(['`order` ASC']);
         $order = 1;

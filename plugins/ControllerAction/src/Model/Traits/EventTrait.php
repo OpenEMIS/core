@@ -2,6 +2,7 @@
 namespace ControllerAction\Model\Traits;
 
 use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 trait EventTrait {
 	private function onEvent($subject, $eventKey, $method) {

@@ -1,0 +1,193 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Call to an undefined method object\:\:loadHelper\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Command/BakeMigrationCommand.php
+
+		-
+			message: '#^Call to an undefined method object\:\:loadHelper\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Command/BakeMigrationDiffCommand.php
+
+		-
+			message: '#^Call to an undefined method object\:\:loadHelper\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Command/BakeMigrationSnapshotCommand.php
+
+		-
+			message: '#^PHPDoc tag @var with type string is not subtype of native type non\-falsy\-string\|true\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: src/Command/BakeSeedCommand.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between string and false will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Command/BakeSeedCommand.php
+
+		-
+			message: '#^Call to an undefined method Cake\\Datasource\\ConnectionInterface\:\:cacheMetadata\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Command/Phinx/CacheBuild.php
+
+		-
+			message: '#^Call to an undefined method Cake\\Datasource\\ConnectionInterface\:\:cacheMetadata\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Command/Phinx/CacheClear.php
+
+		-
+			message: '#^Instanceof between Migrations\\CakeManager and Migrations\\CakeManager will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: src/Command/Phinx/MarkMigrated.php
+
+		-
+			message: '#^Instanceof between Migrations\\CakeManager and Migrations\\CakeManager will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: src/Command/Phinx/Status.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(int\|string\)\: mixed\)\|null, Closure\(string\)\: string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Db/Adapter/AbstractAdapter.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Db/Adapter/AdapterFactory.php
+
+		-
+			message: '#^Offset ''id'' on non\-empty\-array\<string, mixed\> in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.offset
+			count: 2
+			path: src/Db/Adapter/MysqlAdapter.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: src/Db/Adapter/MysqlAdapter.php
+
+		-
+			message: '#^Parameter \#1 \$columns of method Migrations\\Db\\Table\\Index\:\:setColumns\(\) expects array\<string\>\|string, array\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Db/Adapter/PhinxAdapter.php
+
+		-
+			message: '#^Parameter \#1 \$constraint of method Migrations\\Db\\Table\\ForeignKey\:\:setConstraint\(\) expects string, array\<string\>\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Db/Adapter/PhinxAdapter.php
+
+		-
+			message: '#^Parameter \#1 \$includedColumns of method Migrations\\Db\\Table\\Index\:\:setInclude\(\) expects array\<string\>, array\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Db/Adapter/PhinxAdapter.php
+
+		-
+			message: '#^Parameter \#1 \$limit of method Migrations\\Db\\Table\\Index\:\:setLimit\(\) expects array\|int, array\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Db/Adapter/PhinxAdapter.php
+
+		-
+			message: '#^Parameter \#1 \$name of method Migrations\\Db\\Table\\Index\:\:setName\(\) expects string, array\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Db/Adapter/PhinxAdapter.php
+
+		-
+			message: '#^Parameter \#1 \$onDelete of method Migrations\\Db\\Table\\ForeignKey\:\:setOnDelete\(\) expects string, array\<string\>\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Db/Adapter/PhinxAdapter.php
+
+		-
+			message: '#^Parameter \#1 \$onUpdate of method Migrations\\Db\\Table\\ForeignKey\:\:setOnUpdate\(\) expects string, array\<string\>\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Db/Adapter/PhinxAdapter.php
+
+		-
+			message: '#^Parameter \#1 \$order of method Migrations\\Db\\Table\\Index\:\:setOrder\(\) expects array\<string\>, array\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Db/Adapter/PhinxAdapter.php
+
+		-
+			message: '#^Parameter \#1 \$type of method Migrations\\Db\\Table\\Index\:\:setType\(\) expects string, array\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Db/Adapter/PhinxAdapter.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: src/Db/Adapter/SqliteAdapter.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between Cake\\Database\\StatementInterface and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Db/Adapter/SqliteAdapter.php
+
+		-
+			message: '#^PHPDoc tag @return with type Phinx\\Db\\Adapter\\AdapterInterface is not subtype of native type Migrations\\Db\\Adapter\\AdapterInterface\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: src/Db/Adapter/SqlserverAdapter.php
+
+		-
+			message: '#^Call to an undefined method Migrations\\Db\\Table\\Index\:\:setUnique\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Db/Table/Index.php
+
+		-
+			message: '#^Call to an undefined method Migrations\\MigrationInterface\:\:down\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Migration/Environment.php
+
+		-
+			message: '#^Call to an undefined method Migrations\\MigrationInterface\:\:up\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Migration/Environment.php
+
+		-
+			message: '#^Call to function method_exists\(\) with Migrations\\MigrationInterface and ''useTransactions'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Migration/Environment.php
+
+		-
+			message: '#^Parameter \#1 \.\.\.\$arg1 of function max expects non\-empty\-array, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Migration/Manager.php
+
+		-
+			message: '#^Offset 0 on non\-empty\-list\<string\> in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.offset
+			count: 2
+			path: src/Util/TableFinder.php
+
+		-
+			message: '#^Possibly invalid array key type Cake\\Database\\Schema\\TableSchemaInterface\|string\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 2
+			path: src/View/Helper/MigrationHelper.php

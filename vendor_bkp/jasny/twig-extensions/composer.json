@@ -1,0 +1,53 @@
+{
+    "name": "jasny/twig-extensions",
+    "description": "A set of useful Twig filters",
+    "keywords": ["templating", "PCRE", "preg", "regex", "date", "time", "datetime", "text", "array"],
+    "license": "MIT",
+    "homepage": "http://github.com/jasny/twig-extensions#README",
+    "authors": [
+        {
+            "name": "Arnold Daniels",
+            "email": "arnold@jasny.net",
+            "homepage": "http://www.jasny.net"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/jasny/twig-extensions/issues",
+        "source": "https://github.com/jasny/twig-extensions"
+    },
+    "require": {
+        "php": ">=7.4.0",
+        "twig/twig": "^2.7 | ^3.0"
+    },
+    "suggest": {
+        "ext-intl": "Required for the use of the LocalDate Twig extension",
+        "ext-pcre": "Required for the use of the PCRE Twig extension"
+    },
+    "autoload": {
+        "psr-4": {
+            "Jasny\\Twig\\": "src/"
+        }
+    },
+    "require-dev": {
+        "ext-intl": "*",
+        "ext-pcre": "*",
+        "ext-json": "*",
+        "phpstan/phpstan": "^1.12.0",
+        "phpunit/phpunit": "^9.6",
+        "squizlabs/php_codesniffer": "^3.10"
+    },
+    "autoload-dev": {
+        "psr-4": {
+          "Jasny\\Twig\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "test": [
+            "phpstan analyse",
+            "XDEBUG_MODE=coverage phpunit --testdox --colors=always --coverage-text",
+            "phpcs -p src"
+        ]
+    }
+}

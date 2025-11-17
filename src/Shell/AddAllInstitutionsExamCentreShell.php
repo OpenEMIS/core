@@ -10,15 +10,15 @@ use Cake\I18n\Time;
 class AddAllInstitutionsExamCentreShell extends Shell {
     public function initialize(): void {
         parent::initialize();
-        $this->loadModel('Examination.ExaminationCentres');
-        $this->loadModel('Institution.Institutions');
+        $this->ExaminationCentres = $this->fetchTable('Examination.ExaminationCentres');
+        $this->Institutions = $this->fetchTable('Institution.Institutions');
     }
 
     public function main() {
         if (!empty($this->args[0])) {
             $PAGE_LIMIT = 500;
             $pid = getmypid();
-            $SystemProcesses = TableRegistry::get('SystemProcesses');
+            $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
             $systemProcessId = !empty($this->args[0]) ? $this->args[0] : 0;
             $institutionTypeId = !empty($this->args[1]) ? $this->args[1] : 0; // POCOR-8919
 

@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 namespace FieldOption\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -65,7 +65,7 @@ class FieldOptionBehavior extends Behavior
         return $events;
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if (!$data->offsetExists('default')) {
             $data['default'] = '0';
@@ -76,7 +76,7 @@ class FieldOptionBehavior extends Behavior
         }//POCOR-7485 ends
     }
 
-    public function buildValidator(Event $event, Validator $validator, $name)
+    public function buildValidator(EventInterface $event, Validator $validator, $name)
     {
         $model = $this->_table; // POCOR-8696
         $validator = $model->validationDefault($validator); // POCOR-8696
@@ -115,7 +115,7 @@ class FieldOptionBehavior extends Behavior
             ->requirePresence('default');
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options) {
         // only perform for v4
         if ($this->_table->hasBehavior('ControllerAction')) {
             if ($entity->has('default') && $entity->default == 1) {
@@ -144,24 +144,24 @@ class FieldOptionBehavior extends Behavior
         return $fieldOptions;
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
+    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
     {
 
     }
 
-    public function onGetEditable(Event $event, Entity $entity)
+    public function onGetEditable(EventInterface $event, Entity $entity)
     {
         return $entity->editable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
 
-    public function onGetDefault(Event $event, Entity $entity)
+    public function onGetDefault(EventInterface $event, Entity $entity)
     {
         return $entity->default == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
 
     // for CA v4
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
         $fieldOptions = $this->buildFieldOptions();
@@ -173,7 +173,7 @@ class FieldOptionBehavior extends Behavior
         if ($model->alias == 'Nationalities') {
             $defaultOptions = ['' => '-- '.__('Select').' --'];
             $zeroOptions = ['0' =>__('None')];
-            $externalTypes = TableRegistry::get('Configuration.ConfigItems');
+            $externalTypes = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $externalTypeOptions = $externalTypes
                 ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                 ->where(['type' => 'External Data Source - Identity',
@@ -208,7 +208,7 @@ class FieldOptionBehavior extends Behavior
         $extra['elements']['controls'] = ['name' => 'FieldOption.controls', 'data' => $data, 'order' => 2];
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $model = $this->_table;
         if ($entity->has('editable') && $entity->editable == false) {
@@ -222,7 +222,7 @@ class FieldOptionBehavior extends Behavior
         }
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(EventInterface $event)
     {
         $model = $this->_table;
         $model->field('name', ['after' => 'editable']);

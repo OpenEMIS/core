@@ -29,7 +29,8 @@ class SyncExamComponent extends Component
      * 
      * @var array
      */
-    public $components = ['CurlRequest', 'ControllerAction.Alert'];
+    // Components are defined in the parent class as protected $components = []
+    // We set them in initialize() method instead to avoid type declaration conflicts
 
     /**
      * API endpoint base paths
@@ -57,7 +58,17 @@ class SyncExamComponent extends Component
      * @param array $config Configuration settings
      * @return void
      */
-    public function initialize(array $config): void {}
+    public function initialize(array $config): void
+    {
+        // Set components to avoid redeclaring the property (which causes type conflicts in CakePHP 5)
+        $this->components = ['CurlRequest', 'ControllerAction.Alert'];
+        
+        // Manually populate _componentMap since we set components after constructor
+        // This is needed for __get() to work properly in CakePHP 5
+        if ($this->components) {
+            $this->_componentMap = $this->_registry->normalizeArray($this->components);
+        }
+    }
 
     /**
      * Connect to OpenEMIS Exam Project API and get authentication token

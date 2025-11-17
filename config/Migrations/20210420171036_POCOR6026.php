@@ -18,8 +18,8 @@ class POCOR6026 extends AbstractMigration
         $this->execute('CREATE TABLE `zz_6026_config_items` LIKE `config_items`');
         $this->execute('INSERT INTO `zz_6026_config_items` SELECT * FROM `config_items`');
         
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $StudentWithdrawReasons = TableRegistry::get('Student.StudentWithdrawReasons');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $StudentWithdrawReasons = TableRegistry::getTableLocator()->get('Student.StudentWithdrawReasons');
         $value = $StudentWithdrawReasons->find()
                 ->order([$StudentWithdrawReasons->aliasField('order ASC')])
                 ->first();

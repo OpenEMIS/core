@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use Cake\Core\Configure;
 use Cake\Network\Exception\NotFoundException;
@@ -20,7 +20,7 @@ class ImageBehavior extends Behavior
         return $events;
     }
 
-    public function image(Event $mainEvent, ArrayObject $extra)
+    public function image(EventInterface $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
         $ids = $model->paramsDecode($model->paramsPass(0));

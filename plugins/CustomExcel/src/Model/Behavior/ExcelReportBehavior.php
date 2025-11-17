@@ -6,7 +6,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use Cake\Utility\Hash;
@@ -79,7 +79,7 @@ class ExcelReportBehavior extends Behavior
         return $events;
     }
 
-    public function onGetExcelTemplateVars(Event $event, ArrayObject $extra)
+    public function onGetExcelTemplateVars(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
 
@@ -91,18 +91,18 @@ class ExcelReportBehavior extends Behavior
         //die;
     }
 
-    public function onRenderExcelTemplate(Event $event, ArrayObject $extra)
+    public function onRenderExcelTemplate(EventInterface $event, ArrayObject $extra)
     {
         ini_set('max_execution_time', 360);
         $this->renderExcelTemplate($extra, $event);
     }
 
-    //POCOR-8568[Here added  Event $event]
+    //POCOR-8568[Here added  EventInterface $event]
 
     /**
      * @throws \Exception
      */
-    public function renderExcelTemplate(ArrayObject $extra, Event $event = null) //POCOR-8588
+    public function renderExcelTemplate(ArrayObject $extra, EventInterface $event = null) //POCOR-8588
     {
         $model = $this->_table;
         $format = $this->getConfig('format');
@@ -163,7 +163,7 @@ class ExcelReportBehavior extends Behavior
             $pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['student_id'].'.txt';
             $pdfFileContent = file_get_contents($pdfFilePath);
 
-            $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+            $StudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
             // save Pdf file
             $StudentsReportCards->updateAll([
                 'file_content_pdf' => $pdfFileContent,
@@ -190,8 +190,8 @@ class ExcelReportBehavior extends Behavior
         gc_collect_cycles();
     }
 
-    //POCOR-8568[Here added  Event $event]
-    public function loadExcelTemplate(ArrayObject $extra, Event $event = null) //POCOR-8588
+    //POCOR-8568[Here added  EventInterface $event]
+    public function loadExcelTemplate(ArrayObject $extra, EventInterface $event = null) //POCOR-8588
     {
         $model = $this->_table;
         if (isset($extra['requestQuery']) && isset($extra['requestQuery'][$this->getConfig('templateTableKey')])) {
@@ -205,7 +205,7 @@ class ExcelReportBehavior extends Behavior
             $recordId = $params[$this->getConfig('templateTableKey')];
         }
 
-        $Table = TableRegistry::get($this->getConfig('templateTable'));
+        $Table = TableRegistry::getTableLocator()->get($this->getConfig('templateTable'));
 
         if (empty($recordId)) {
             $objSpreadsheet = new Spreadsheet();
