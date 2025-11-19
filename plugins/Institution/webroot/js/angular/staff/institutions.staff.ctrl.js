@@ -987,6 +987,27 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             userCtrl.error.mobile_number = 'This field cannot be left empty';
             hasError = true;
         }
+        //POCOR-9442 start
+        userCtrl.customFieldsArray.forEach((customField) => {
+            customField.data.forEach((field) => {
+                if (field.is_mandatory === 1) {
+                    if (field.field_type === 'TEXT' || field.field_type === 'TEXTAREA' || field.field_type === 'NOTE' || field.field_type === 'DROPDOWN' || field.field_type === 'NUMBER' || field.field_type === 'DECIMAL' || field.field_type === 'DATE' || field.field_type === 'TIME') {
+                        if (!field.answer) {
+                            field.errorMessage = 'This field is required.';
+                            isCustomFieldNotValidated = true;
+                            hasError = true;
+                        }
+                    } else if (field.field_type === 'CHECKBOX') {
+                        if (field.answer.length === 0) {
+                            field.errorMessage = 'This field is required.';
+                            isCustomFieldNotValidated = true;
+                            hasError = true;
+                        }
+                    }
+                }
+            })
+        });
+        //POCOR-9442 end
 
         if (hasError) {
             return;
