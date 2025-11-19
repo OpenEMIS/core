@@ -34,7 +34,6 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator): Validator
     {
-
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
         $requestData = $this->request->getData();
@@ -149,7 +148,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
         $tableHeaders = [__('Attribute Name'), __('Value')];
         $tableCells = [];
         $ExternalDataSourceAttributes = self::getDynamicTableInstance('Configuration.ExternalDataSourceAttributes');
-        $source = $entity->name;
+        $source = $entity->id . ':'. $entity->name;
 
         $attributes = $ExternalDataSourceAttributes
             ->find('list', [
@@ -157,17 +156,19 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
                 'valueField' => 'value'
             ])
             ->where([
-                $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $entity->name
+                $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $source
             ])
             ->orderAsc('attribute_field')
             ->toArray();
         $visibleAttributes = [];
         switch ($source) {
-            case self::OPEN_EMIS_EXAMS:
-                $visibleAttributes = ['api_url',
-                    'username', 'password'];
+            case $entity->id . ':' . self::OPEN_EMIS_EXAMS:
+                $visibleAttributes = [
+                    'api_url',
+                    'username',
+                    'password'];
                 break;
-            case self::OPEN_EMIS_CORE:
+            case $entity->id . ':' . self::OPEN_EMIS_CORE:
                 $visibleAttributes = ['api_url',
                     'username', 'password', 'api_key'];
                 break;
@@ -222,7 +223,50 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
 
         return $attr;
     }
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $buttons = self::fixActionButtons($buttons);
+//        dd($buttons);
 
+        return $buttons;
+    }
+
+    private static function fixActionButtons($links)
+    {
+        foreach (['view', 'edit'] as $action) {
+            if (!isset($links[$action]['url'])) {
+                continue;
+            }
+
+            $url = $links[$action]['url'];
+
+            // Extract encoded IDs (keys that are numeric and value starts with 'eyJ')
+            $encodedKeys = [];
+            foreach ($url as $k => $v) {
+                if (is_numeric($k) && is_string($v) && str_starts_with($v, 'eyJ')) {
+                    $encodedKeys[] = $k;
+                }
+            }
+
+            // If there are two encoded IDs: remove first, keep second
+            if (count($encodedKeys) === 2) {
+                $first  = $encodedKeys[0];
+                $second = $encodedKeys[1];
+
+                // Remove the first encoded id
+                unset($url[$first]);
+
+                // Move the second encoded id to index 1
+                $url[1] = $url[$second];
+                unset($url[$second]);
+            }
+
+            // Save back
+            $links[$action]['url'] = $url;
+        }
+        return $links;
+    }
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra): void
     {
 
@@ -258,7 +302,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
             //POCOR-7981:ends
             $this->Alert->error('general.externalSourceDataErr', ['reset' => true]);
         } else {//POCOR-6930 Ends
-            $this->updateAttributes($source, $entity);
+            $this->updateAttributes($entity);
         }
     }
 
@@ -366,7 +410,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
     public function setExternalAttributes($entity)
     {
         $id = $entity->id;
-        $source = $entity->name;
+        $source = $id . ':' . $entity->name;
 //        dd($source);
 
         if (!empty($id)) {
@@ -406,7 +450,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
             // Try to get the table instance directly
             return $locator->get($tableName);
         } catch (\Exception $e) {
-            Log::debug('Error: ' . $e->getMessage());
+            Log::info('Error: ' . $e->getMessage());
         }
 
         $parts = explode('.', $tableName);
@@ -450,13 +494,15 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
      * @param Entity $entity
      * @return void
      */
-    private function updateAttributes(mixed $source, Entity $entity): void
+    private function updateAttributes(Entity $entity): void
     {
+        $source = $entity->id . ':' . $entity->name;
         $ExternalDataSourceAttributes = self::getDynamicTableInstance('Configuration.ExternalDataSourceAttributes'); // POCOR-8849
         $existingRecords = $ExternalDataSourceAttributes->find('list', [
             'keyField' => 'attribute_field',
             'valueField' => 'value'
-        ])->where(['external_data_source_type' => $source])->toArray();
+        ])->where(['external_data_source_type' => $source])
+            ->toArray();
 
         $fields = [
             'api_url', 'username', 'password', 'api_key'
@@ -495,5 +541,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
                 }
             }
         }
+
+
     }
 }

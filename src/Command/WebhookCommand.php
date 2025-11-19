@@ -10,8 +10,6 @@ use Cake\I18n\FrozenTime;
 
 class WebhookCommand extends Command
 {
-    const string OPEN_EMIS_EXAMS = 'OpenEMIS Exams';
-    const string OPEN_EMIS_CORE = 'OpenEMIS CORE';
 
     public function execute(Arguments $args, ConsoleIo $io)
     {
