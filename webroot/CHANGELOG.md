@@ -1,3 +1,19 @@
+### [4.48.1] - 2025-11-14
+- Bug Fixed: Administrations > System setup > System configuration: On selecting the options Staff Releases and/or Staff Transfers, the page refreshes and goes back to the default option on the dropdown.
+- Bug Fixed: Institutions>Students>Transfer: Student transferred from school A to school B is showing system groups of both schools
+- Bug Fixed: Institution classes api is not showing total students correctly
+- Bug Fixed: Docker build for the Angular frontend not functional
+
+### [4.48.0] - 2025-11-07
+- Implemented: Develop deleted records audit report
+- Implemented: Develop programme filter for performance report
+- Bug Fixed: Institutions>Add>Staff: Unable to add staff
+- Bug Fixed: Institutions > Survey > Form > Import : Develop an Import selection page for Survey
+- Bug Fixed: Directory>Search User:Clicking on a record is taking user to the wrong Institution
+- Bug Fixed: Institutions>Attendance>Staff: It should not check based on staff leave workflow name
+- Bug Fixed: Reports>Institutions>Add: The report generated for one Area level shows Institutions from All Area Levels
+- Bug Fixed: Administrations > Examinations > Results : Rows are missing after switching in between tabs
+
 ### [4.47.0] - 2025-10-29
 - Implemented: Develop changes to rename Institution Curriculars to Curriculars
 - Bug Fixed: Institution>Attendance>Staff: Assigned Staff not showing up against Attendance>Staff
