@@ -259,59 +259,6 @@ class ConfigWebhooksTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldUrl(Event $event, array $attr, $action, ServerRequest $request)
-    {
-        $entity = $attr['entity'];
-        if ($action == 'add' || $action == 'edit') {
-//            dd($entity);
-            $external_data_source_id = $entity->external_data_source_id;
-            if ($external_data_source_id) {
-                $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
-                $externalDataExam = $ConfigItems->find('All')
-                    ->where(['id' => $external_data_source_id,
-                        'code' => 'external_data_source_webhooks_exams'
-                    ])
-                    ->first();
-                if ($externalDataExam) {
-                    $ExternalDataSourceAttributes = self::getDynamicTableInstance('Configuration.ExternalDataSourceAttributes');
-                    $attributes = $ExternalDataSourceAttributes
-                        ->find('list', [
-                            'keyField' => 'attribute_field',
-                            'valueField' => 'value'
-                        ])
-                        ->where([
-                            $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $externalDataExam->name
-                        ])
-                        ->orderAsc('attribute_field')
-                        ->toArray();
-//                    $api_url = $attributes['api_url'];
-//                    if (!empty($attributes) && isset($api_url)) {
-//                        if(!empty($api_url)){
-//                        $attr['value'] = $api_url;
-//                        $attr['attr']['value'] = $api_url;
-//                        $attr['default_value'] = $api_url;
-//                        $attr['attr']['default_value'] = $api_url;
-//                        $attr['type'] = 'readonly';
-//                        }
-////                        return
-//                    }
-
-                } else {
-                    if ($entity->isDirty('url')) {
-                        $url = $entity->getOriginal('url');
-                        $attr['value'] = $url;
-                        $attr['attr']['value'] = $url;
-                        $attr['default_value'] = $url;
-                        $attr['attr']['default_value'] = $url;
-                    }
-                }
-
-            };
-
-        }
-//        dd($attr);
-        return $attr;
-    }
     /**
      * Get a dynamic table instance with all associations.
      *
@@ -1081,6 +1028,7 @@ class ConfigWebhooksTable extends ControllerActionTable
      */
     protected function buildWebhookCommand($webhookConfig, string $url, string $bodyArg): string
     {
+
         $escapedBody = escapeshellarg($bodyArg);
         $cmd = ROOT . DS . 'bin' . DS . 'cake webhook ' .
             escapeshellarg($url) . ' ' .
@@ -1093,7 +1041,8 @@ class ConfigWebhooksTable extends ControllerActionTable
                 'keyField' => 'attribute_field',
                 'valueField' => 'value'
             ])
-                ->where([$ExternalAttributes->aliasField('external_data_source_type') => $webhookConfig->external_data_webhook_name])
+                ->where([$ExternalAttributes->aliasField('external_data_source_type')
+                => $webhookConfig->id . ':' . $webhookConfig->external_data_webhook_name])
                 ->toArray();
 
             if (!empty($attributes['username'])
