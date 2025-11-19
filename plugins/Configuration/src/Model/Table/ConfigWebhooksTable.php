@@ -906,6 +906,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         // 🔍 Fetch ALL active webhook configurations for this event key
         $webhooks = $this->find()
             ->select([
+                'id' => $configItems->aliasField('id'),
                 'url' => $this->aliasField('url'),
                 'query_template' => $this->aliasField('query_template'),
                 'body_template' => $this->aliasField('body_template'),
@@ -939,25 +940,27 @@ class ConfigWebhooksTable extends ControllerActionTable
             $queryTemplate = $webhookConfig->query_template ?? '';
             $bodyTemplate  = $webhookConfig->body_template ?? '';
 
-            // 🧩 Build final URL
+            // Build final URL
             $url = $this->buildWebhookUrl($url, $queryTemplate, $body);
 
-            // 🧱 Build body (JSON / template)
+            // Build body (JSON / template)
             $finalBody = $this->prepareFinalWebhookBody($bodyTemplate, $body);
 
-            // 📦 Save JSON body to temp file (if needed)
+            // Save JSON body to temp file (if needed)
             $bodyArg = $this->prepareBodyArgument($finalBody);
 
-            // 🧰 Build shell command
+            // Build shell command
             $cmd = $this->buildWebhookCommand($webhookConfig, $url, $bodyArg);
+            $bareCmd = $this->buildBareWebhookCommand($webhookConfig, $url, $bodyArg);
 
-            // 🚀 Execute asynchronously
+            // Execute asynchronously
             $logs = ROOT . DS . 'logs' . DS . 'webhook.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
+            $bareShellCmd = $bareCmd . ' ' ;
 
             try {
                 $pid = exec($shellCmd);
-                Log::debug("Webhook triggered [PID: $pid] URL: $url CMD: $shellCmd");
+                Log::info("Webhook triggered [PID: $pid] URL: $url CMD: $bareShellCmd");
             } catch (\Throwable $ex) {
                 Log::error("Exception triggering webhook [$eventKey]: " . $ex->getMessage());
             }
@@ -1032,7 +1035,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         $escapedBody = escapeshellarg($bodyArg);
         $cmd = ROOT . DS . 'bin' . DS . 'cake webhook ' .
             escapeshellarg($url) . ' ' .
-            escapeshellarg($webhookConfig->method ?? 'post') . ' ' .
+            escapeshellarg(strtolower($webhookConfig->method ?? 'post')) . ' ' .
             $escapedBody;
         // Include credentials if needed
         if (in_array($webhookConfig->external_data_webhook_name, [self::OPEN_EMIS_EXAMS, self::OPEN_EMIS_CORE], true)) {
@@ -1058,6 +1061,18 @@ class ConfigWebhooksTable extends ControllerActionTable
                 $cmd .= ' ' . escapeshellarg(json_encode($serverParams));
             }
         }
+
+        return $cmd;
+    }
+
+    protected function buildBareWebhookCommand($webhookConfig, string $url, string $bodyArg): string
+    {
+
+        $escapedBody = escapeshellarg($bodyArg);
+        $cmd = ROOT . DS . 'bin' . DS . 'cake webhook ' .
+            escapeshellarg($url) . ' ' .
+            escapeshellarg(strtolower($webhookConfig->method ?? 'post')) . ' ' .
+            $escapedBody;
 
         return $cmd;
     }
