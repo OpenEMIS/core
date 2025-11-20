@@ -8,13 +8,12 @@ use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\Locator\LocatorAwareTrait;
-use Cake\Utility\Text;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 
-// POCOR-9354
-class EducationStructureCopyCommand extends \Cake\Command\Command
+// POCOR-9456
+class CopyPerformanceCompetenciesCommand extends \Cake\Command\Command
 {
     use LocatorAwareTrait;
 
@@ -38,7 +37,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
     public static function defaultName(): string
     {
         // Run as: bin/cake education:copy-structure FROM_PERIOD_ID TO_PERIOD_ID USER_ID
-        return 'education:copy-structure';
+        return 'performances:copy-competence FROM_PERIOD_ID TO_PERIOD_ID USER_ID';
     }
 
     public function buildOptionParser(ConsoleOptionParser $parser): ConsoleOptionParser
@@ -88,7 +87,6 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
         $this->conn = ConnectionManager::get('default');
         $this->conn->getDriver()->enableAutoQuoting(true);
 
-        $t = $this->getTableLocator();
         $this->AcademicPeriods                  = self::getDynamicTableInstance('academic_periods');
         $this->EducationSystems                 = self::getDynamicTableInstance('education_systems');
         $this->EducationLevels                  = self::getDynamicTableInstance('education_levels');
@@ -106,8 +104,8 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
 
         // Check destination has no systems yet (same as your shell)
         $existsTo = $this->EducationSystems->find()->where(['academic_period_id' => $toId])->count();
-        if ($existsTo > 0) {
-            $io->err('Target academic period already has education systems. Aborting.');
+        if ($existsTo == 0) {
+            $io->err('Target academic period does not have education systems. Aborting.');
             return static::CODE_ERROR;
         }
 

@@ -8,12 +8,13 @@ use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\Locator\LocatorAwareTrait;
+use Cake\Utility\Text;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 
-// POCOR-9456
-class PerformanceCompetenciesCopyCommand extends \Cake\Command\Command
+// POCOR-9354
+class CopyEducationStructureCommand extends \Cake\Command\Command
 {
     use LocatorAwareTrait;
 
@@ -37,7 +38,7 @@ class PerformanceCompetenciesCopyCommand extends \Cake\Command\Command
     public static function defaultName(): string
     {
         // Run as: bin/cake education:copy-structure FROM_PERIOD_ID TO_PERIOD_ID USER_ID
-        return 'performances:copy-competence FROM_PERIOD_ID TO_PERIOD_ID USER_ID';
+        return 'education:copy-structure';
     }
 
     public function buildOptionParser(ConsoleOptionParser $parser): ConsoleOptionParser
