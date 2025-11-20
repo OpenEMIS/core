@@ -1477,7 +1477,7 @@ class RecordBehavior extends Behavior
                 [$customFieldValueTable->aliasField($customFieldsForeignKey).'='.$customFieldsTable->aliasField('id')]
             )
             ->select($selectedColumns)
-            ->where([$customFieldValueTable->aliasField($customRecordsForeignKey) => $recordId])
+            ->where([$customFieldValueTable->aliasField($customRecordsForeignKey) . ' IS' => $recordId])
             ->group([$customFieldValueTable->aliasField($customFieldsForeignKey)])
             ->toArray();
 
