@@ -368,17 +368,26 @@ class PositionsTable extends ControllerActionTable {
                 $rowEntityId = $this->getFieldEntity($entity->is_historical, $entity->id, 'id');
                 $buttons = $this->getHistoricalActionButtons($buttons, $rowEntityId);
             } else {
-                $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
-                $institutionId = $rowEntity->id;
+                // POCOR-9426 start
+                $institutionEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
+                $staffEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'user');
+
+                $institutionId = $institutionEntity->id;
+                $staffId = $staffEntity->id;
+
                 // $institutionId = $entity->institution->id
                 $url = [
                     'plugin' => 'Institution',
                     'controller' => 'Institutions',
                     'action' => 'Staff',
                     'view',
-                    $this->paramsEncode(['id' => $entity->id, 'institution_id' => $institutionId]),
+                    $this->paramsEncode(['id' => $entity->id,
+                        'institution_id' => $institutionId,
+                        'staff_id' => $staffId,
+                        'user_id' => $staffEntity]),
                     //'institution_id' => $institutionId,
-                    $encodedQueryString
+//                    $encodedQueryString
+                    // POCOR-9426 end
                 ];
                 $buttons['view']['url'] = $url;
             }
