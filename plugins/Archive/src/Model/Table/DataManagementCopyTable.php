@@ -480,7 +480,7 @@ class DataManagementCopyTable extends ControllerActionTable
                 return $this->runCommand(
                     'education:copy-structure',
                     [$from, $to, $user],
-                    'EducationStructureCopy' // log file stem
+                    'CopyEducationStructure' // log file stem
                 );
             }
             case self::PERFORMANCE_ASSESSMENTS:

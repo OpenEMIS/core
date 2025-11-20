@@ -17,15 +17,15 @@ class PerformanceCompetenciesShell extends Shell
     public function initialize(): void
     {
         parent::initialize();
-
+        
         $this->loadModel('SystemProcesses');
     }
 
     public function main()
     {
-
+        
         if (!empty($this->args)) {
-            $exit = false;
+            $exit = false;           
 
             $fromAcademicPeriod = $this->args[0];
             $toAcademicPeriod = $this->args[1];
@@ -36,10 +36,9 @@ class PerformanceCompetenciesShell extends Shell
 
             $this->out('Initializing Performance Competencies ('.Time::now().')');
 
-            $SystemProcesses = $this->SystemProcesses;
-            $systemProcessId = $SystemProcesses->addProcess('PerformanceCompetencies', getmypid(), 'Archive.PerformanceCompetencies', $this->args);
-            $SystemProcesses->updateProcess($systemProcessId, null, $SystemProcesses::RUNNING, 0);
-
+            $systemProcessId = $this->SystemProcesses->addProcess('PerformanceCompetencies', getmypid(), 'Archive.PerformanceCompetencies', $this->args);
+            $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
+            
             // while (!$exit) {
                 $recordToProcess = $this->getRecords($fromAcademicPeriod, $toAcademicPeriod, $competency_criterias_value, $competency_templates_value, $competency_items_value, $competency_periods_value);
                 $this->out($recordToProcess);
@@ -58,13 +57,13 @@ class PerformanceCompetenciesShell extends Shell
                 }
             // }
             $this->out('End Update for Performance Outcomes ('. Time::now() .')');
-            $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::COMPLETED);
+            $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
         }else{
             $this->out('Error in Performance Outcomes');
         }
     }
 
-
+    
     public function getRecords($fromAcademicPeriod, $toAcademicPeriod, $competency_criterias_value, $competency_templates_value, $competency_items_value, $competency_periods_value){
 
         $connection = ConnectionManager::get('default');
@@ -80,7 +79,7 @@ class PerformanceCompetenciesShell extends Shell
             ->find('all')
             ->where(['academic_period_id' => $fromAcademicPeriod])
             ->toArray();
-
+            
             foreach($CompetencyTemplatesData AS $CompetencyTemplatesValue){
                 if(isset($CompetencyTemplatesValue['modified'])){
                     if ($CompetencyTemplatesValue['modified'] instanceof Time || $CompetencyTemplatesValue['modified'] instanceof Date) {
@@ -127,7 +126,7 @@ class PerformanceCompetenciesShell extends Shell
                             $CompetencyItemsData = $CompetencyItemsTable
                             ->find()
                             ->where(['academic_period_id' => $fromAcademicPeriod,
-                                    'competency_template_id' => $CompetencyTemplatesValue['id'] ]  //POCOR-7670
+                                    'competency_template_id' => $CompetencyTemplatesValue['id'] ]  //POCOR-7670 
                             )
                             ->contain(['Periods'])
                             ->toArray();
@@ -168,8 +167,8 @@ class PerformanceCompetenciesShell extends Shell
                                 } catch (Exception $e) {
                                     pr($e->getMessage());
                                 }
-                                if (!empty($newItemDataId)) {
-                                    //CompetencyCriteria[START]
+                                if (!empty($newItemDataId)) { 
+                                    //CompetencyCriteria[START]      
                                     if(isset($competency_criterias_value) && $competency_criterias_value == 0){
                                         $CompetencyCriteriasData = $CompetencyCriteriasTable
                                         ->find()
@@ -218,7 +217,7 @@ class PerformanceCompetenciesShell extends Shell
                                         }
                                     }
                                 } //CompetencyCriteria[END]
-
+                                
                                //CompetencyPeriods[START] POCOR-8504 Start
                                 if(!empty($newItemDataId)){
                                     if(isset($competency_periods_value) && $competency_periods_value == 0){
@@ -322,9 +321,9 @@ class PerformanceCompetenciesShell extends Shell
                             }
                         }
                 }//CompetencyItem[END]
-
-
-        //CompetencyCriterias[END]
+                
+       
+        //CompetencyCriterias[END] 
             }
         }
         //CompetencyTemplates[END]
