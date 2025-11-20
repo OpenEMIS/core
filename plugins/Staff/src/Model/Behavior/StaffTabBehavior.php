@@ -67,6 +67,7 @@ class StaffTabBehavior extends Behavior
 
     public function getCareerTabElements($options = [], $modelName = null)
     {
+
         $model = $this->_table;
         $type = (isset($options['type'])) ? $options['type'] : null;//POCOR-8401
         //POCOR-8359 starts
@@ -176,9 +177,27 @@ class StaffTabBehavior extends Behavior
             unset($tabElements['StaffCurriculars']);
         }
         $checkedTabPermission = $controller->TabPermission->checkTabPermission($tabElements);
+        $checkedTabPermission = $this->transformStaffLinks($checkedTabPermission); // POCOR-9426
         return $checkedTabPermission;//POCOR-8379
     }
 
+    // POCOR-9426
+    function transformStaffLinks(array $data): array
+    {
+        $model = $this->_table;
+        foreach ($data as $key => &$entry) {
+            if (!isset($entry['url']) || !is_array($entry['url'])) {
+                continue;
+            }
+
+            // Change plugin and controller
+            $entry['url']['plugin'] = $entry['url']['plugin'] == 'Institution' ? 'Staff' : $entry['url']['plugin'];
+            $entry['url']['controller'] = $entry['url']['controller'] == 'Institutions' ? 'Staff' : $entry['url']['controller'];
+
+            }
+
+        return $data;
+    }
 
     public function getProfessionalTabElements($options = [])
     {

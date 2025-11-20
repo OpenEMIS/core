@@ -173,9 +173,11 @@ class InstitutionTabBehavior extends Behavior
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
-        $buttons = $this->fixActionButtons($entity, $buttons);
+        if ($this->_table->getAlias() != "Positions") { // POCOR_9426
+            $buttons = $this->fixActionButtons($entity, $buttons);
+        }
         //POCOR-8561 -- Start
-        if($this->_table->alias == "Positions") {
+        if($this->_table->getAlias() == "InstitutionPositions") { // POCOR_9426
             $workflowStep = $this->_table->getWorkflowStep($entity);
             $isEditable = false;
             $isDeletable = false;

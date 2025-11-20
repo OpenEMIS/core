@@ -1008,10 +1008,13 @@ class RecordBehavior extends Behavior
                 //$model->controller->TabPermission->checkTabPermission($tabElements);
                 $model->controller->set('tabElements', $tabElements);
                 $model->controller->set('selectedAction', $selectedAction);
-
-                $query->where([
-                    $this->CustomFormsFields->aliasField('section') => $tabElements[$selectedAction]['section']
-                ]);
+                //POCOR-9349 STARTS
+                //When section found for the selected tab, then set query to fetch record
+                if($tabElements[$selectedAction]['section']) {
+                    $query->where([
+                        $this->CustomFormsFields->aliasField('section') => $tabElements[$selectedAction]['section']
+                    ]);
+                }//POCOR-9349 STARTS
             }
         }
         // End
@@ -1206,7 +1209,8 @@ class RecordBehavior extends Behavior
                                                     }
                                                 }
                                             }
-                                            $renderField = $forRender;
+                                            //$renderField = $forRender;//POCOR-9349
+                                            $renderField = true;//POCOR-9349
                                         }
                                     }
 
