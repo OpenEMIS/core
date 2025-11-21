@@ -170,8 +170,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
     // column definitions
     function getColumnDefs(selectedDayDate) {
-        console.log("selectedDayDate");
-        console.log(selectedDayDate);
+        // console.log("selectedDayDate");
+        // console.log(selectedDayDate);
         var columnDefs = [];
         var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
@@ -700,7 +700,18 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
     function saveStaffAttendance(params, dataKey, dataValue, academicPeriodId) {
         var dateString = params.data.date;
-        var shift_id = params.context.date;
+
+        // ---- Prevent saving attendance for future dates ----
+        var today = new Date();
+        today.setHours(0, 0, 0, 0); // normalize
+        var selectedDate = new Date(dateString);
+
+        if (selectedDate > today) {
+            AlertSvc.info(params.context.$scope, 'Future dates cannot be saved');
+            return false; // Stop execution, no API call
+        }
+        // ----------------------------------------------------
+
         var staffAttendanceData = {
             staff_id: params.data.staff_id,
             institution_id: params.data.institution_id,
@@ -711,7 +722,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             time_out: params.data.attendance[dateString].time_out,
             comment: params.data.attendance[dateString].comment
         };
-        // console.log(staffAttendanceData);
 
         staffAttendanceData[dataKey] = dataValue;
         if(!params.data.attendance[dateString].isNew) {

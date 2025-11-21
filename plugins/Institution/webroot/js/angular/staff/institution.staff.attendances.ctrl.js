@@ -106,8 +106,8 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
         }, vm.error)
         .then(function(shiftListOptions) {
             vm.setShiftListOptions(shiftListOptions);
-            console.log("---PARAM---");
-            console.log(vm.getAllStaffAttendancesParams());
+            // console.log("---PARAM---");
+            // console.log(vm.getAllStaffAttendancesParams());
             return InstitutionStaffAttendancesSvc.getAllStaffAttendances(vm.getAllStaffAttendancesParams());
         }, vm.error)
         .then(function(allStaffAttendances) {
@@ -179,6 +179,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
     }
 
     vm.changeDay = function() {
+        AlertSvc.reset($scope);
         UtilsSvc.isAppendLoader(true);
         vm.initGrid();
         var dayObj = vm.dayListOptions.find(obj => obj.id == vm.selectedDay);
@@ -199,6 +200,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
     }
 
     vm.changeShift = function() {
+        AlertSvc.reset($scope);
         UtilsSvc.isAppendLoader(true);
         vm.initGrid();
         var shiftObj = vm.shiftListOptions.find(obj => obj.id == vm.selectedShift);
@@ -383,11 +385,21 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
     }
 
     vm.onEditClick = function() {
+
+        // Prevent editing on future dates
+        var today = new Date();
+        var selectedDate = new Date(vm.selectedDayDate);
+
+        if (selectedDate > today) {
+            AlertSvc.info($scope, 'Future dates cannot be edited');
+            return false;
+        }
+
         //POCOR-6971[START]
         if(vm.selectedShift == -1){
             AlertSvc.info($scope, 'Please select shift');
             return false;
-        }else{
+        }
             //POCOR-6971[END]
             vm.action = 'edit';
             vm.gridOptions.context.ownEdit = vm.ownEdit;
@@ -396,7 +408,6 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
             vm.gridOptions.context.action = vm.action;
             vm.setColumnDef();
             AlertSvc.info($scope, 'Attendance will be saved automatically.');
-        }
     };
 
     vm.onBackClick = function() {
