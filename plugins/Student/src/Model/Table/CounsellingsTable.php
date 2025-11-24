@@ -6,7 +6,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
-
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
@@ -108,7 +108,165 @@ class CounsellingsTable extends ControllerActionTable
         return $counselorOptions;
     }
 
+    public function indexBeforeAction(Event $event) {
+        
+        $this->field('date');
+        $this->field('description');
+        $this->field('intervention');
+        $this->field('counselor_id');
+        $this->field('guidance_type_id');
+        $this->field('requester_id');
+        $this->field('guidance_utilized',['visible' => false]);
+        $this->field('file_name',['visible' => false]);
+        $this->field('file_content',['visible' => false]);
+        $this->field('comment',['visible' => false]);
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query
+        ->orderDesc($this->aliasField('created'));
+    }
+
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        /*$academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        
+        $this->fields['academic_period_id']['type'] = 'select';
+        $this->fields['academic_period_id']['options'] = $academicPeriodOptions;
+        $this->field('academic_period_id', ['attr' => ['label' => __('Academic Period')]]);*/
+        $queryString = $this->getQueryString();
+        $institutionId = $queryString['institution_id'];
+        $studentId = $queryString['student_id'];
+
+        $counselorOptions = $this->getCounselorOptions($institutionId);
+        
+        $this->fields['counselor_id']['type'] = 'select';
+        $this->fields['counselor_id']['options'] = $counselorOptions;
+        $this->field('counselor_id', ['attr' => ['label' => __('Counselor')]]);
+
+        $this->fields['guidance_type_id']['type'] = 'select';
+        $this->field('guidance_type_id', ['attr' => ['label' => __('Guidance Type')]]);
+        $this->field('requester_id', ['visible' => true]);
+        $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('student_id', ['type' => 'hidden', 'value'=> $studentId]);
+
+        $this->setFieldOrder(['date', 'counselor_id', 'guidance_type_id', 'requester_id', 'guidance_utilized', 'description', 'intervention', 'comment', 'file_name', 'file_content']);
+    }
+
+    /**
+     * Retrieve requester options for a given institution.
+     * 
+     * This function returns a combined list of Users as requesters in the system.It includes-
+     *  - Students (linked to the institution_students)
+     *  - Staff (assigned to the institution_staff)
+     *  - Guardians (related to students. student_guardians)
+     * @param int $institutionId  The institution ID used to filter students, staff, and guardians.
+     * @return array              List of requester options formatted for dropdowns.
+     * POCOR-9459
+     */
     public function getRequesterOptions($institutionId)
+    {
+        $UserData = TableRegistry::get('User.Users');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodId = (int) $AcademicPeriods->getCurrent();
+
+        $subQuery = "
+            SELECT ist.student_id AS user_id
+            FROM institution_students ist
+            INNER JOIN academic_periods ap
+                ON ap.id = ist.academic_period_id
+            WHERE ap.id = {$academicPeriodId}
+              AND ist.institution_id = {$institutionId}
+              AND (
+                    (CURRENT_DATE BETWEEN ap.start_date AND ap.end_date
+                     AND ist.student_status_id = 1)
+                    OR
+                    (NOT (CURRENT_DATE BETWEEN ap.start_date AND ap.end_date)
+                     AND ist.student_status_id IN (1, 7, 6, 8))
+                  )
+            GROUP BY ist.student_id
+            UNION ALL
+            SELECT ins.staff_id AS user_id
+            FROM institution_staff ins
+            INNER JOIN academic_periods ap
+                ON (
+                        (ins.end_date IS NOT NULL AND ins.start_date <= ap.start_date AND ins.end_date >= ap.start_date)
+                    OR  (ins.end_date IS NOT NULL AND ins.start_date <= ap.end_date AND ins.end_date >= ap.end_date)
+                    OR  (ins.end_date IS NOT NULL AND ins.start_date >= ap.start_date AND ins.end_date <= ap.end_date)
+                    OR  (ins.end_date IS NULL AND ins.start_date <= ap.end_date)
+                   )
+            WHERE ap.id = {$academicPeriodId}
+              AND ins.institution_id = {$institutionId}
+              AND ins.staff_status_id = 1
+            GROUP BY ins.staff_id
+            UNION ALL
+            SELECT sg.guardian_id AS user_id
+            FROM student_guardians sg
+            INNER JOIN institution_students ist
+                  ON ist.student_id = sg.student_id
+                 AND ist.institution_id = {$institutionId}
+                 AND ist.academic_period_id = {$academicPeriodId}
+            INNER JOIN security_users su
+                  ON su.id = sg.guardian_id
+            WHERE su.is_guardian = 1
+            GROUP BY sg.guardian_id
+        ";
+
+        $join = [
+            [
+                'table' => "({$subQuery})",
+                'alias' => 'subq',
+                'type' => 'INNER',
+                'conditions' => "subq.user_id = Users.id"
+            ]
+        ];
+
+        $rows = $UserData->find()
+        ->select([
+            'id' => 'Users.id',
+            'openemis_no' => 'Users.openemis_no',
+            'first_name' => 'Users.first_name',
+            'middle_name' => 'Users.middle_name',
+            'third_name' => 'Users.third_name',
+            'last_name' => 'Users.last_name'
+        ])
+        ->join($join)
+        ->enableHydration(false)
+        ->toArray();
+
+        $data = [];
+        foreach ($rows as $r) {
+            // Combine full name 
+            $fullName = trim(
+                $r['first_name'] . ' ' .
+                ($r['middle_name'] ?? '') . ' ' .
+                ($r['third_name'] ?? '') . ' ' .
+                ($r['last_name'] ?? '')
+            );
+
+            $fullName = preg_replace('/\s+/', ' ', $fullName);
+            $data[$r['id']] = $r['openemis_no'] . ' - ' . $fullName;
+        }
+
+        return $data;
+    }
+
+    //POCOR-9459
+    public function onUpdateFieldRequesterId(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        $queryString = $this->getQueryString();
+        $institutionId = $queryString['institution_id'];
+        $requesterOptions = $this->getRequesterOptions($institutionId);
+        $attr['type'] = 'chosenSelect';
+        $attr['attr']['multiple'] = false;
+        $attr['onChangeReload'] = true;
+        $attr['options'] = $requesterOptions;
+        return $attr;
+    }
+
+    public function getRequesterOptionsbkp($institutionId)
     {
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
         $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
@@ -157,58 +315,6 @@ class CounsellingsTable extends ControllerActionTable
 
           $data =   $requestorOptions->join($join)->toArray();
             return $data;
-    }
-
-    public function indexBeforeAction(Event $event) {
-        
-        $this->field('date');
-        $this->field('description');
-        $this->field('intervention');
-        $this->field('counselor_id');
-        $this->field('guidance_type_id');
-        $this->field('requester_id');
-        $this->field('guidance_utilized',['visible' => false]);
-        $this->field('file_name',['visible' => false]);
-        $this->field('file_content',['visible' => false]);
-        $this->field('comment',['visible' => false]);
-    }
-
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $query
-        ->orderDesc($this->aliasField('created'));
-    }
-
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
-    {
-        /*$academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        
-        $this->fields['academic_period_id']['type'] = 'select';
-        $this->fields['academic_period_id']['options'] = $academicPeriodOptions;
-        $this->field('academic_period_id', ['attr' => ['label' => __('Academic Period')]]);*/
-        $queryString = $this->getQueryString();
-        $institutionId = $queryString['institution_id'];
-        $studentId = $queryString['student_id'];
-
-        $counselorOptions = $this->getCounselorOptions($institutionId);
-        
-        $this->fields['counselor_id']['type'] = 'select';
-        $this->fields['counselor_id']['options'] = $counselorOptions;
-        $this->field('counselor_id', ['attr' => ['label' => __('Counselor')]]);
-
-        $this->fields['guidance_type_id']['type'] = 'select';
-        $this->field('guidance_type_id', ['attr' => ['label' => __('Guidance Type')]]);
-
-        $requesterOptions = $this->getRequesterOptions($institutionId);
-        $this->fields['requester_id']['type'] = 'select';
-        $this->fields['requester_id']['options'] = $requesterOptions;
-        $this->field('requester_id', ['attr' => ['label' => __('Requester')]]);
-
-        $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
-        $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
-        $this->field('student_id', ['type' => 'hidden', 'value'=> $studentId]);
-
-        $this->setFieldOrder(['date', 'counselor_id', 'guidance_type_id', 'requester_id', 'guidance_utilized', 'description', 'intervention', 'comment', 'file_name', 'file_content']);
     }
 
 }
