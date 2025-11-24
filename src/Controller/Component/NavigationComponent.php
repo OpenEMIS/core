@@ -136,7 +136,7 @@ class NavigationComponent extends Component
         //POCOR-9429 start
         $userRoleIdArray = $this->getUserRoleIdArray($authUserId);
         
-        if(!$this->AccessControl->isAdmin() && empty($userRoleIdArray)) { //POCOR-9429 
+        if(!$this->AccessControl->isAdmin() && (empty($userRoleIdArray)||$userRoleIdArray[0]==0)) { //POCOR-9429 
            $navigations = [];
            $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigationForUsersWithoutSecurityRoles());
            $navigations = $this->appendNavigation('Profiles.Personal', $navigations, $this->getProfileNavigationForUsersWithoutSecurityRoles());

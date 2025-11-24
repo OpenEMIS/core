@@ -255,8 +255,10 @@ class AccessControlComponent extends Component
         $params = $request->getParam('pass');
 
         // Handle special case: Profiles/Personal/view for user without roles
-        if ($controller === 'Profiles' && $action === 'Personal' && $params[0] === 'view') {
-            return true;
+        //POCOR-9429
+        if ($controller === 'Profiles' && $action === 'Personal' && $params[0] === 'view' && empty($roleIds)) {
+               return true;
+          
         }
         //POCOR-9429 end
         //POCOR-8379 Starts use if condition only
@@ -434,6 +436,7 @@ class AccessControlComponent extends Component
         if ($this->Session->read('Permissions.reportCardGenerateAllowed')) {
             return true;
         }
+        
         return false;
     }
 
