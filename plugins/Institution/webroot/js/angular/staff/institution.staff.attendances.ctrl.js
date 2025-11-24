@@ -391,13 +391,13 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
         var selectedDate = new Date(vm.selectedDayDate);
 
         if (selectedDate > today) {
-            AlertSvc.info($scope, 'Future dates cannot be edited');
+            AlertSvc.warning($scope, 'Future dates cannot be edited');
             return false;
         }
 
         //POCOR-6971[START]
         if(vm.selectedShift == -1){
-            AlertSvc.info($scope, 'Please select shift');
+            AlertSvc.warning($scope, 'Please select shift');
             return false;
         }
             //POCOR-6971[END]
