@@ -707,7 +707,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         var selectedDate = new Date(dateString);
 
         if (selectedDate > today) {
-            AlertSvc.info(params.context.$scope, 'Future dates cannot be saved');
+            AlertSvc.warning(params.context.$scope, 'Future dates cannot be saved');
             return false; // Stop execution, no API call
         }
         // ----------------------------------------------------
