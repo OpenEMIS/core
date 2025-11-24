@@ -26,6 +26,7 @@ use Cake\Http\ServerRequest;
 use Cake\ORM\Table;
 use App\Model\Table\AppTable;
 use Laminas\Diactoros\UploadedFile;
+use Cake\Datasource\ConnectionManager; //POCOR-9469
 
 class InstitutionsTable extends ControllerActionTable
 {
@@ -963,6 +964,8 @@ class InstitutionsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $connection = ConnectionManager::get('default');
+        $connection->execute('SET foreign_key_checks = 0'); //POCOR-9469
         $DataManagementConnections = TableRegistry::getTableLocator()->get('Archive.DataManagementConnections');
         $DataManagementConnectionsResult = $DataManagementConnections
             ->find()
@@ -1439,7 +1442,8 @@ class InstitutionsTable extends ControllerActionTable
             }
         }
         $extra['formButtons'] = false;
-
+        $connection = ConnectionManager::get('default');
+        $connection->execute('SET foreign_key_checks = 1'); //POCOR-9469
     }
 
     public function getNumberOfInstitutionsByModel($params = [])
