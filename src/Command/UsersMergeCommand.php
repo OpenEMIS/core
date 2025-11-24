@@ -129,8 +129,74 @@ class UsersMergeCommand extends Command
                 }
                 $Users->saveOrFail($base, ['checkRules' => false, 'atomic' => false]);
 
+                // --- NEW: Sync identity details from merge user to base user ---
+                // Explanation: user identities are stored in a separate table (user_identities).
+                // If we don't move/update those rows, identity info remains with the merged-away user
+                // and FK repointing will later either cause duplicates or leave stale data.
+                $UserIdentities = TableRegistry::getTableLocator()->get('User.UserIdentities');
+
+                // Fetch merge user's identity rows
+                $mergeIdentities = $UserIdentities->find()
+                    ->where(['security_user_id' => $this->mergeId])
+                    ->all();
+
+                foreach ($mergeIdentities as $mi) {
+                    // Check if base user already has an identity with same identity_type_id
+                    $existing = $UserIdentities->find()
+                        ->where([
+                            'security_user_id' => $this->baseId,
+                            'identity_type_id' => $mi->identity_type_id
+                        ])
+                        ->first();
+
+                    if ($existing) {
+                        // If base identity exists but is empty, copy the value from merge
+                        // Use string cast and trim to be robust against null/empty
+                        $existingValue = trim((string)($existing->value ?? ''));
+                        $mergeValue = trim((string)($mi->value ?? ''));
+
+                        if ($existingValue === '' && $mergeValue !== '') {
+                            $existing->value = $mi->value;
+                            try {
+                                $UserIdentities->save($existing, ['checkRules' => false, 'atomic' => false]);
+                                Log::info("[UsersMerge] Copied identity value for identity_type_id={$mi->identity_type_id} to base {$this->baseId}");
+                            } catch (\Throwable $e) {
+                                Log::warning("[UsersMerge] Failed to save copied identity for base {$this->baseId}: " . $e->getMessage());
+                            }
+                        }
+
+                        // Delete the merge row to avoid duplicate PK (if user_id + identity_type_id is PK)
+                        try {
+                            $UserIdentities->delete($mi);
+                            Log::info("[UsersMerge] Deleted merge identity id={$mi->id} for merge {$this->mergeId}");
+                        } catch (\Throwable $e) {
+                            Log::warning("[UsersMerge] Failed to delete merge identity id={$mi->id}: " . $e->getMessage());
+                        }
+                    } else {
+                        // Move merge identity row to base user (safe)
+                        $mi->security_user_id = $this->baseId;
+                        try {
+                            $UserIdentities->save($mi, ['checkRules' => false, 'atomic' => false]);
+                            Log::info("[UsersMerge] Moved identity id={$mi->id} to base {$this->baseId}");
+                        } catch (\Throwable $e) {
+                            Log::warning("[UsersMerge] Failed to move identity id={$mi->id} to base: " . $e->getMessage());
+                            // As fallback delete to avoid later duplicate PK collisions from repoint step:
+                            try {
+                                $UserIdentities->delete($mi);
+                                Log::info("[UsersMerge] Deleted merge identity id={$mi->id} after failed move.");
+                            } catch (\Throwable $inner) {
+                                Log::error("[UsersMerge] Could not delete problematic identity id={$mi->id}: " . $inner->getMessage());
+                                // Let repointForeignKeysSafe handle any remaining conflicts
+                            }
+                        }
+                    }
+                }
+                // --- END NEW ---
+
                 // 7) Repoint foreign keys referencing the MERGE user → BASE user
-                $this->repointForeignKeys($conn, $this->baseId, $this->mergeId, $SystemProcesses, $this->systemProcessId);
+                //$this->repointForeignKeys($conn, $this->baseId, $this->mergeId, $SystemProcesses, $this->systemProcessId);
+                $this->repointForeignKeysSafe($conn, $this->baseId, $this->mergeId, $SystemProcesses, $this->systemProcessId);
+
 
                 // 8) Deactivate MERGE user (and optionally scrub PII to avoid future uniqueness surprises)
                 $conn->execute(
@@ -208,7 +274,7 @@ class UsersMergeCommand extends Command
         $columns = $schema->columns();
 
         $present = array_intersect(self::CANDIDATE_UNIQUE_FIELDS, array_keys($columns));
-        if(empty($present)){
+        if (empty($present)) {
             $present = array_intersect(self::CANDIDATE_UNIQUE_FIELDS, array_values($columns));
         }
 
@@ -258,11 +324,11 @@ class UsersMergeCommand extends Command
 
         if ($isNullable) {
             $merge->set($field, null);
-            $this->io->out('Force Nulled');
+            Log::info('Force Nulled ' . $field);
         } else {
             $token = sprintf('MERGED-%d-%s', $mergeId, substr(sha1((string)$current), 0, 6));
             $merge->set($field, mb_substr($token, 0, max(1, $maxLen)));
-            $this->io->out("Force Changed to $token");
+            Log::info("Force Changed {$field} to $token");
         }
     }
 
@@ -276,6 +342,11 @@ class UsersMergeCommand extends Command
             if ($value === null || $value === '') {
                 continue;
             }
+            if (!in_array($field, self::CANDIDATE_UNIQUE_FIELDS, true)) {
+                // Non-unique fields don't need preflight
+                continue;
+            }
+
             // Probe if some *other* row (not base or merge) already has this value
             $exists = $Users->find()
                     ->select(['id'])
@@ -298,6 +369,168 @@ class UsersMergeCommand extends Command
                 // Softer policy: just skip moving that field
                 // unset($plan[$field]);
             }
+        }
+    }
+
+    /**
+     * Safely repoint foreign keys referencing the merge user id -> base user id.
+     * Avoids duplicate-primary / unique-key collisions by checking each merge-row:
+     *  - If an identical row already exists for base -> delete merge row
+     *  - Else -> update merge row's FK to base
+     */
+    private function repointForeignKeysSafe($conn, int $baseId, int $mergeId, Table $SystemProcesses, int $systemProcessId): void
+    {
+        $db = $conn->config()['database'];
+
+        // Get candidate columns referencing user ids (same as before)
+        $rows = $conn->execute(
+            "SELECT COLUMN_NAME, TABLE_NAME
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE COLUMN_NAME IN ('security_user_id','student_id','user_id','core_user_id',
+                                   'staff_id','secondary_staff_id','assignee_id','guardian_id')
+               AND COLUMN_NAME NOT IN ('modified_user_id','created_user_id')
+               AND TABLE_NAME NOT LIKE 'z%'
+               AND TABLE_SCHEMA = :db",
+            ['db' => $db]
+        )->fetchAll('assoc');
+
+        $done = 0;
+        $errors = [];
+
+        foreach ($rows as $r) {
+            $table = $r['TABLE_NAME'];
+            $col   = $r['COLUMN_NAME'];
+
+            try {
+                // Fetch all rows that belong to merge user in this table
+                $mergeRows = $conn->execute(
+                    "SELECT * FROM `{$table}` WHERE `{$col}` = :merge",
+                    ['merge' => $mergeId]
+                )->fetchAll('assoc');
+
+                if (empty($mergeRows)) {
+                    $done++;
+                    if (method_exists($SystemProcesses, 'updateProcess')) {
+                        $SystemProcesses->updateProcess($systemProcessId, null, $SystemProcesses::RUNNING, $done);
+                    }
+                    continue;
+                }
+
+                // Get unique indexes (non-unique = 0)
+                $uniqueIndexRows = $conn->execute(
+                    "SHOW INDEX FROM `{$table}` WHERE Non_unique = 0"
+                )->fetchAll('assoc');
+
+                $uniqueIndexes = [];
+                foreach ($uniqueIndexRows as $ui) {
+                    $uniqueIndexes[$ui['Key_name']][] = $ui['Column_name'];
+                }
+
+                // Get primary key cols for deletion/identification
+                $pkRows = $conn->execute(
+                    "SHOW KEYS FROM `{$table}` WHERE Key_name = 'PRIMARY'"
+                )->fetchAll('assoc');
+                $pkCols = array_column($pkRows, 'Column_name');
+
+                foreach ($mergeRows as $row) {
+                    $conflict = false;
+
+                    // Build checks for each unique index: if any index would collide when merge->base, we have a conflict
+                    foreach ($uniqueIndexes as $idxName => $cols) {
+                        // Build WHERE conditions to check "does base already have a row identical to this merge row, except for the FK column (which should be baseId)"
+                        $conds = [];
+                        foreach ($cols as $c) {
+                            if ($c === $col) {
+                                // FK col will be replaced with baseId for check
+                                $conds[] = "`{$c}` = " . $conn->quote($baseId);
+                            } else {
+                                $val = $row[$c] ?? null;
+                                if ($val === null) {
+                                    $conds[] = "`{$c}` IS NULL";
+                                } else {
+                                    $conds[] = "`{$c}` = " . $conn->quote($val);
+                                }
+                            }
+                        }
+                        $sqlCheck = "SELECT 1 FROM `{$table}` WHERE " . implode(' AND ', $conds) . " LIMIT 1";
+                        $exists = (bool)$conn->execute($sqlCheck)->fetch();
+
+                        if ($exists) {
+                            $conflict = true;
+                            break;
+                        }
+                    }
+
+                    if ($conflict) {
+                        // Delete the merge row to avoid duplicate (use primary key columns)
+                        if (empty($pkCols)) {
+                            // no primary key? fallback to deleting by FK+all columns that match the row
+                            $whereParts = [];
+                            foreach ($row as $colName => $val) {
+                                if ($val === null) {
+                                    $whereParts[] = "`{$colName}` IS NULL";
+                                } else {
+                                    $whereParts[] = "`{$colName}` = " . $conn->quote($val);
+                                }
+                            }
+                            $delSql = "DELETE FROM `{$table}` WHERE " . implode(' AND ', $whereParts);
+                            $conn->execute($delSql);
+                            Log::info("[UsersMerge] Deleted duplicate row in {$table} (no PK) for mergeId {$mergeId}");
+                        } else {
+                            $whereParts = [];
+                            foreach ($pkCols as $pkc) {
+                                $val = $row[$pkc];
+                                $whereParts[] = "`{$pkc}` = " . $conn->quote($val);
+                            }
+                            $delSql = "DELETE FROM `{$table}` WHERE " . implode(' AND ', $whereParts) . " LIMIT 1";
+                            $conn->execute($delSql);
+                            Log::info("[UsersMerge] Deleted duplicate row in {$table} where PK matched for mergeId {$mergeId}");
+                        }
+                    } else {
+                        // Safe to update this single merge row's FK to baseId
+                        // Identify the row by its primary key(s) if possible
+                        if (!empty($pkCols)) {
+                            $setParts = [];
+                            $whereParts = [];
+                            foreach ($pkCols as $pkc) {
+                                $whereParts[] = "`{$pkc}` = " . $conn->quote($row[$pkc]);
+                            }
+                            $updateSql = "UPDATE `{$table}` SET `{$col}` = :base WHERE " . implode(' AND ', $whereParts) . " LIMIT 1";
+                            $conn->execute($updateSql, ['base' => $baseId]);
+                            Log::info("[UsersMerge] Updated {$table}.{$col} for PK row to baseId {$baseId}");
+                        } else {
+                            // Fallback: update rows matching the entire row data but only where FK is mergeId
+                            $andParts = ["`{$col}` = " . $conn->quote($mergeId)];
+                            foreach ($row as $colName => $val) {
+                                if ($colName === $col) {
+                                    continue;
+                                }
+                                if ($val === null) {
+                                    $andParts[] = "`{$colName}` IS NULL";
+                                } else {
+                                    $andParts[] = "`{$colName}` = " . $conn->quote($val);
+                                }
+                            }
+                            $updateSql = "UPDATE `{$table}` SET `{$col}` = :base WHERE " . implode(' AND ', $andParts) . " LIMIT 1";
+                            $conn->execute($updateSql, ['base' => $baseId]);
+                            Log::info("[UsersMerge] Updated {$table}.{$col} (fallback) for mergeId {$mergeId} to baseId {$baseId}");
+                        }
+                    }
+                } // foreach mergeRows
+
+            } catch (\Throwable $e) {
+                $errors[] = "[{$table}.{$col}] {$e->getMessage()}";
+                Log::error("[UsersMerge] Error handling table {$table}.{$col}: " . $e->getMessage());
+            }
+
+            $done++;
+            if (method_exists($SystemProcesses, 'updateProcess')) {
+                $SystemProcesses->updateProcess($systemProcessId, null, $SystemProcesses::RUNNING, $done);
+            }
+        } // foreach rows
+
+        if ($errors) {
+            throw new \RuntimeException('User merge failed: ' . implode(' | ', $errors));
         }
     }
 
