@@ -478,7 +478,7 @@ class DataManagementCopyTable extends ControllerActionTable
 
                 // previously: $this->triggerCopyShell('EducationStructureCopy', $from, $to, $user);
                 return $this->runCommand(
-                    'education:copy-structure',
+                    'copy:education-structure',
                     [$from, $to, $user],
                     'CopyEducationStructure' // log file stem
                 );
