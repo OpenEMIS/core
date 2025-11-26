@@ -1082,7 +1082,7 @@ class ImportUsersTable extends AppTable
             'assignee_id',
             'student_id',
             'education_grade_id',
-            'institution_class_id'
+//            'institution_class_id'
         ];
 
         // Validate required fields
