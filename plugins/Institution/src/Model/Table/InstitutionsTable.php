@@ -384,6 +384,7 @@ class InstitutionsTable extends ControllerActionTable
             // ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
             //     'rule' => ['checkConfiguredArea']
             // ])
+            ->notEmpty('institution_provider_id', 'Provider is required') //POCOR-9452
             ->add('institution_provider_id', 'ruleLinkedSector', [
                 'rule' => 'checkLinkedSector',
                 'provider' => 'table'
