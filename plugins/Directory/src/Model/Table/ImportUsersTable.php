@@ -1290,10 +1290,10 @@ class ImportUsersTable extends AppTable
         $class_name = $tempRow['class_name'] ?? '';
 
         if (trim($class_name) === '') {
-            $this->addError($rowInvalidCodeCols, 'class_name', __('No class name specified'));
+//            $this->addError($rowInvalidCodeCols, 'class_name', __('No class name specified'));
             $tempRow['class_name'] = null;
             $tempRow['institution_class_id'] = null;
-            return true;
+            return false;
         }
 
         $institution_class_id = $this->getInstitutionClass(
