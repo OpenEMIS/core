@@ -37,8 +37,8 @@ class CopyEducationStructureCommand extends \Cake\Command\Command
 
     public static function defaultName(): string
     {
-        // Run as: bin/cake education:copy-structure FROM_PERIOD_ID TO_PERIOD_ID USER_ID
-        return 'education:copy-structure';
+        // Run as: bin/cake copy:education-structure FROM_PERIOD_ID TO_PERIOD_ID USER_ID
+        return 'copy:education-structure';
     }
 
     public function buildOptionParser(ConsoleOptionParser $parser): ConsoleOptionParser
