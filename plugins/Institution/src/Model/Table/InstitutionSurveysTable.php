@@ -1342,8 +1342,9 @@ class InstitutionSurveysTable extends ControllerActionTable
         if ($isSuperAdmin) {
             $where = [];
         }
+        //POCOR-9429: This check is added to restrict users which don't have any roles assigned.
         if (!isset($roleId) && !$isSuperAdmin) {
-            return $query;
+            return $query->where(['1 = 0']);
         }
 
         $query = $query

@@ -15,6 +15,7 @@ use Cake\Utility\Security;
 use Cake\Datasource\ConnectionManager;
 
 use App\Model\Table\ControllerActionTable;
+use Cake\Validation\Validator; // POCOR-9474
 
 //POCOR-6673
 class StudentCurricularsTable extends ControllerActionTable
@@ -36,6 +37,21 @@ class StudentCurricularsTable extends ControllerActionTable
             ]
         ]);
     }
+
+    // POCOR-9474
+    public function validationDefault(Validator $validator): Validator
+    {
+
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+        return $validator
+            ->requirePresence('institution_curricular_id')
+            ->notEmptyString('institution_curricular_id', __('Please select the Curriculars'))
+            ->requirePresence('curricular_position_id')
+            ->notEmptyString('curricular_position_id', __('Please select the Position'));
+//        return $validator;
+    }
+
     //POCOR-8056
     public function beforeAction(Event $event, ArrayObject $extra)
     {
@@ -44,7 +60,7 @@ class StudentCurricularsTable extends ControllerActionTable
             $modelAlias = 'StudentCurriculars';
             $userType = 'StudentUser';
             $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
-        }//POCOR-8413 ends     
+        }//POCOR-8413 ends
     }
     //POCOR-8056
 
@@ -101,8 +117,6 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->field('curricular_type', ['visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]]);
         $this->field('category', ['visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => false]]);
 
-        $this->field('education_grade', ['visible' => true]);
-        $this->field('institution_class', ['visible' => true]);
         $this->field('curricular_category', ['visible' => true]);
         $this->setFieldOrder([
             'student_name',
@@ -114,7 +128,7 @@ class StudentCurricularsTable extends ControllerActionTable
             'start_date',
             'end_date']);
         if ($this->controller->getName() == 'Profiles') {
-            unset($settings['indexButtons']['view']);
+            unset($extra['indexButtons']['view']); // POCOR-9474
         }
 
     }
@@ -214,7 +228,12 @@ class StudentCurricularsTable extends ControllerActionTable
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         // $this->field('student_id', ['visible' => false]);
-        $InstitutionID = $this->getStudentID();
+        // POCOR-9474 start
+        $InstitutionID = $this->getInstitutionID();
+        if (!$InstitutionID) {
+            $InstitutionID = -1;
+        }
+        // POCOR-9474 end
         $InstitutionCurriculars = TableRegistry::get('Institution.InstitutionCurriculars');
         $result = $InstitutionCurriculars
             ->find()
@@ -241,7 +260,7 @@ class StudentCurricularsTable extends ControllerActionTable
                 $cp_arr[$val->id] = $val->name;
             }
         }
-        $session = $this->request->getSession();
+
         $sId = $this->getStudentID();
         $this->field('institution_curricular_id', ['type' => 'select', 'options' => $ic_arr]);
         $this->field('start_date');
@@ -289,7 +308,7 @@ class StudentCurricularsTable extends ControllerActionTable
 
             $fullName = $result->first_name.' '.$result->last_name;
             try {
-                
+
                 $gettabName = 'Institution Curriculars';
                 $this->controller->set('contentHeader', $fullName . ' - ' . $gettabName);
                 //$this->controller->set('contentHeader', $plugin);
