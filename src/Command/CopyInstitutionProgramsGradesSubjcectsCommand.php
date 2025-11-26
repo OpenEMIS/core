@@ -10,7 +10,7 @@ use Cake\Console\ConsoleOptionParser;
 use Cake\Datasource\ConnectionManager;
 
 // POCOR-9354
-class InstitutionCopyProgramsGradesCommand extends Command
+class CopyInstitutionProgramsGradesSubjcectsCommand extends Command
 {
     /** @var \Cake\Database\Connection */
     private $conn;
@@ -22,7 +22,7 @@ class InstitutionCopyProgramsGradesCommand extends Command
     public static function defaultName(): string
     {
         // Run as: bin/cake institution:copy-programs-grades FROM_PERIOD_ID TO_PERIOD_ID [-u 2] [--dry-run]
-        return 'institution:copy-programs-grades';
+        return 'copy:institution-programs-grades-subjects';
     }
 
     public function buildOptionParser(ConsoleOptionParser $parser): ConsoleOptionParser

@@ -446,7 +446,7 @@ class DataManagementCopyTable extends ControllerActionTable
         switch ($entity->features) {
             case self::INSTITUTION_PROGRAMMES_GRADES_AND_SUBJECTS:
                 // ✅ PORTED TO COMMAND:
-                // bin/cake institution:copy-programs-grades FROM TO
+                // bin/cake copy:institution-programs-grades-subjects FROM TO
                 return $this->triggerInstitutionProgramsGradesCommand(
                     (int)$entity->from_academic_period,
                     (int)$entity->to_academic_period
