@@ -8,10 +8,14 @@ use Cake\Console\ConsoleOptionParser;
 use Cake\Console\Arguments;
 use Cake\Console\ConsoleIo;
 use Cake\Datasource\ConnectionManager;
+use Cake\Datasource\ConnectionInterface;
 use Cake\I18n\FrozenTime;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use Cake\ORM\Entity;
+use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Datasource\EntityInterface;
 
 /**
  * Base class for all academic structure/data copy CLI commands.
@@ -38,6 +42,13 @@ abstract class CopyCommandBase extends Command
 
     /** @var ConsoleIo|null */
     protected ?ConsoleIo $io = null;
+
+    /** @var ConnectionInterface|null */
+    protected ?ConnectionInterface $conn = null;
+
+    // NEW
+    protected ?EntityInterface $fromAcademicPeriod = null;
+    protected ?EntityInterface $toAcademicPeriod = null;
 
     /**
      * Each subclass must call this in their `buildOptionParser`.
@@ -72,6 +83,7 @@ abstract class CopyCommandBase extends Command
     /**
      * Call this in every `execute()` method to hydrate input.
      */
+
     protected function initializeFromInput(Arguments $args, ConsoleIo $io): void
     {
         $this->setConsoleIo($io);
@@ -82,6 +94,25 @@ abstract class CopyCommandBase extends Command
 
         $this->dryRun = (bool)$args->getOption('dry-run');
         $this->quiet  = (bool)$args->getOption('quiet');
+
+        $this->conn = ConnectionManager::get('default');
+        $this->conn->getDriver()->enableAutoQuoting(true);
+
+        $apTable = $this->getDynamicTableInstance('academic_periods');
+
+        try {
+            $this->fromAcademicPeriod = $apTable->get($this->fromId);
+        } catch (RecordNotFoundException $e) {
+            $io->err("Source academic period ID {$this->fromId} not found.");
+            exit(static::CODE_ERROR);
+        }
+
+        try {
+            $this->toAcademicPeriod = $apTable->get($this->toId);
+        } catch (RecordNotFoundException $e) {
+            $io->err("Target academic period ID {$this->toId} not found.");
+            exit(static::CODE_ERROR);
+        }
     }
 
     /**
@@ -186,6 +217,15 @@ abstract class CopyCommandBase extends Command
         if (!$this->quiet && $this->io) {
             $this->io->out($msg);
         }
+    }
+
+    protected function getConnection(): \Cake\Database\Connection
+    {
+        if (!$this->conn) {
+            $this->conn = ConnectionManager::get('default');
+            $this->conn->getDriver()->enableAutoQuoting(true);
+        }
+        return $this->conn;
     }
 
 }

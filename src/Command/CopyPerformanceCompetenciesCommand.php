@@ -6,406 +6,244 @@ namespace App\Command;
 use Cake\Console\Arguments;
 use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
-use Cake\Datasource\ConnectionManager;
-use Cake\ORM\Locator\LocatorAwareTrait;
+use Cake\ORM\Entity;
 use Cake\ORM\Table;
-use Cake\ORM\TableRegistry;
-use Cake\Utility\Inflector;
+use App\Command\CopyCommandBase;
 
-// POCOR-9456
-class CopyPerformanceCompetenciesCommand extends \Cake\Command\Command
+class CopyPerformanceCompetenciesCommand extends CopyCommandBase
 {
-    use LocatorAwareTrait;
-
-    /** @var \Cake\Database\Connection */
-    private $conn;
-
-    // Tables
-    private $AcademicPeriods;
-    private $EducationSystems;
-    private $EducationLevels;
-    private $EducationCycles;
-    private $EducationProgrammes;
-    private $EducationProgrammesNextProgrammes;
-    private $EducationGrades;
-    private $EducationGradesSubjects;
-
-    // Options
-    private bool $dryRun = false;
-    private bool $verbose = true;
-
     public static function defaultName(): string
     {
-        // Run as: bin/cake education:copy-structure FROM_PERIOD_ID TO_PERIOD_ID USER_ID
-        return 'performances:copy-competence FROM_PERIOD_ID TO_PERIOD_ID USER_ID';
+        return 'copy:competency-performance-competencies';
     }
 
     public function buildOptionParser(ConsoleOptionParser $parser): ConsoleOptionParser
     {
-        $parser
-            ->setDescription('Copy education structure (systems, levels, cycles, programmes, grades, grade-subjects) from one academic period to another.')
-            ->addArgument('from', [
-                'help' => 'Source academic_period_id',
-                'required' => true,
-            ])
-            ->addArgument('to', [
-                'help' => 'Target academic_period_id',
-                'required' => true,
-            ])
-            ->addArgument('userId', [
-                'help' => 'User ID to stamp as created_user_id for new rows (like the Shell third arg)',
-                'required' => true,
-            ])
-            ->addOption('dry-run', [
-                'help' => 'Validate and log without writing changes',
-                'boolean' => true,
-                'default' => false,
-            ])
-            ->addOption('quiet', [
-                'help' => 'Reduce console output',
-                'boolean' => true,
-                'default' => false,
-            ]);
-
-        return $parser;
+        return $this->addStandardOptions(
+            $parser->setDescription('Copy competency templates, items, criterias, and periods from one academic period to another.')
+        );
     }
 
-    public function execute(Arguments $args, ConsoleIo $io): ?int
+    public function execute(Arguments $args, ConsoleIo $io): int
     {
-        ini_set('memory_limit', '2G');
+        $this->initializeFromInput($args, $io);
+        $conn = $this->getConnection();
+        $conn->begin();
 
-        $fromId = (int)$args->getArgument('from');
-        $toId   = (int)$args->getArgument('to');
-        $userId = (int)$args->getArgument('userId');
-        $io->out("$fromId, $toId, $userId");
-        $this->dryRun  = (bool)$args->getOption('dry-run');
-        $dryRun = $this->dryRun;
-        $this->verbose = !$args->getOption('quiet');
-        $verbose = $this->verbose;
-        $io->out("$dryRun, $verbose");
-
-        $this->conn = ConnectionManager::get('default');
-        $this->conn->getDriver()->enableAutoQuoting(true);
-
-        $this->AcademicPeriods                  = self::getDynamicTableInstance('academic_periods');
-        $this->EducationSystems                 = self::getDynamicTableInstance('education_systems');
-        $this->EducationLevels                  = self::getDynamicTableInstance('education_levels');
-        $this->EducationCycles                  = self::getDynamicTableInstance('education_cycles');
-        $this->EducationProgrammes              = self::getDynamicTableInstance('education_programmes');
-        $this->EducationProgrammesNextProgrammes= self::getDynamicTableInstance('education_programmes_next_programmes');
-        $this->EducationGrades                  = self::getDynamicTableInstance('education_grades');
-        $this->EducationGradesSubjects          = self::getDynamicTableInstance('education_grades_subjects');
-
-        $io->out('Start Education Structure Copy');
-
-        // Validate periods + get names for suffix-swap
-        $fromAp = $this->AcademicPeriods->find()->select(['id', 'name'])->where(['id' => $fromId])->firstOrFail();
-        $toAp   = $this->AcademicPeriods->find()->select(['id', 'name'])->where(['id' => $toId])->firstOrFail();
-
-        // Check destination has no systems yet (same as your shell)
-        $existsTo = $this->EducationSystems->find()->where(['academic_period_id' => $toId])->count();
-        if ($existsTo == 0) {
-            $io->err('Target academic period does not have education systems. Aborting.');
-            return static::CODE_ERROR;
-        }
-
-        $this->conn->begin();
         try {
-            $this->copyProcess($fromId, $toId, $userId, (string)$fromAp->name, (string)$toAp->name, $io);
+            $this->logMsg("Starting competency copy: {$this->fromId} ➜ {$this->toId} " . ($this->dryRun ? '[dry-run]' : ''));
+
+            $map = [];
+            $templates = $this->getDynamicTableInstance('competency_templates');
+            $items = $this->getDynamicTableInstance('competency_items');
+            $criterias = $this->getDynamicTableInstance('competency_criterias');
+            $periods = $this->getDynamicTableInstance('competency_periods');
+            $itemPeriods = $this->getDynamicTableInstance('competency_items_periods');
+
+            $map['templates'] = $this->copyTemplates($templates);
+            $map['items']     = $this->copyItems($items, $map['templates']);
+            $map['criterias'] = $this->copyCriterias($criterias);
+            $map['periods']   = $this->copyPeriods($periods, $map['templates']);
+            $this->copyItemPeriods($itemPeriods, $map);
+
+            $this->fixTemplateGrades($this->fromId, $this->toId, $templates);
 
             if ($this->dryRun) {
-                $io->out('<info>Dry-run: rolling back.</info>');
-                $this->conn->rollback();
+                $conn->rollback();
+                $this->logMsg("<info>Dry-run complete: rolling back.</info>");
             } else {
-                $this->conn->commit();
+                $conn->commit();
+                $this->logMsg("Competency data copied successfully.");
             }
+
+            $this->completeProcess();
+            return static::CODE_SUCCESS;
         } catch (\Throwable $e) {
-            $this->conn->rollback();
-            $io->err($e->getMessage());
-            // $io->err($e->getTraceAsString()); // uncomment for deep debug
+            $conn->rollback();
+            $this->failProcess($e);
+            $io->error("Error: " . $e->getMessage());
             return static::CODE_ERROR;
         }
-
-        $io->out('End Education Structure Copy');
-        return static::CODE_SUCCESS;
     }
 
-    private function copyProcess(int $fromPeriod, int $toPeriod, int $userId, string $fromApName, string $toApName, ConsoleIo $io): void
+    private function copyTemplates(Table $table): array
     {
-        $now = date('Y-m-d H:i:s');
+        $this->logMsg("-> Copying templates …");
+        $map = [];
 
-        // Maps: old_id => new_id
-        $levelMap = [];
-        $cycleMap = [];
-        $programmeMap = [];
-        $gradeMap = [];
-        $pendingEdges = []; // POCOR-9356
+        foreach ($table->find()->where(['academic_period_id' => $this->fromId]) as $tpl) {
+            /** @var Entity $tpl */
+            $clone = $table->newEntity($tpl->toArray());
+            unset($clone->id);
+            $clone->academic_period_id = $this->toId;
+            $clone->created_user_id = $this->userId;
+            $clone->created = date('Y-m-d H:i:s');
 
-        // 1) Education Systems in FROM period
-        $systems = $this->EducationSystems->find()
-            ->where(['academic_period_id' => $fromPeriod])
-            ->order(['`order`'])
-            ->all();
+            $this->saveOrThrow($table, $clone, 'Template');
+            $map[$tpl->id] = $clone->id ?? null;
+        }
 
-        foreach ($systems as $sys) {
-            // If a name ends with " <fromApName>", rewrite it to " <toApName>"
-            $newSystemName = $this->swapNameTail((string)$sys->name, $fromApName, $toApName);
-            $io->out('Start Education Structure Copy To ' . $newSystemName);
+        return $map;
+    }
 
-            // Avoid duplicates in TO: same system name for that TO period
-            $existing = $this->EducationSystems->find()
-                ->where([
-                    'academic_period_id' => $toPeriod,
-                    'name'               => $newSystemName,
-                ])->first();
+    private function copyItems(Table $table, array $templateMap): array
+    {
+        $this->logMsg("-> Copying items …");
+        $map = [];
 
-            if ($existing) {
-                $newSystemId = (int)$existing->id;
-                $this->v($io, "System exists: {$newSystemName} (id={$newSystemId})");
-            } else {
-                $entity = $this->EducationSystems->newEntity([
-                    'name'               => $newSystemName,
-                    'academic_period_id' => $toPeriod,
-                    'order'            => $sys->order ?? 1,
-                    'visible'            => $sys->visible ?? 1,
-                    'created_user_id'    => $sys->created_user_id ?? $userId,
-                    'created'            => $sys->created ?? $now,
-                ]);
-//                $this->v($io, "System to create: " . print_r($entity, true));
-                $this->saveOrThrow($this->EducationSystems, $entity, 'education_systems');
-                $newSystemId = (int)$entity->id;
-                $this->v($io, "System +: {$newSystemName} (id={$newSystemId})");
-            }
+        foreach ($table->find()->where(['academic_period_id' => $this->fromId]) as $item) {
+            $clone = $table->newEntity($item->toArray());
+            unset($clone->id);
+            $clone->academic_period_id = $this->toId;
+            $clone->competency_template_id = $templateMap[$item->competency_template_id] ?? null;
+            $clone->created_user_id = $this->userId;
+            $clone->created = date('Y-m-d H:i:s');
 
-            // 2) Levels under this system
-            $levels = $this->EducationLevels->find()
-                ->where(['education_system_id' => $sys->id])
-                ->order(['`order`'])
-                ->all();
+            $this->saveOrThrow($table, $clone, 'Item');
+            $map[$item->id] = $clone->id ?? null;
+        }
 
-            foreach ($levels as $lvl) {
-                $lvlName = $this->swapNameTail((string)$lvl->name, $fromApName, $toApName);
+        return $map;
+    }
 
-                // insert (no dedupe across names here; structure copy expects fresh tree)
-                $lvlEntity = $this->EducationLevels->newEntity([
-                    'education_system_id'      => $newSystemId,
-                    'education_level_isced_id' => $lvl->education_level_isced_id,
-                    'name'                     => $lvlName,
-                    'order'                  => $lvl->order,
-                    'visible'                  => $lvl->visible ?? 1,
-                    'created_user_id'          => $userId,
-                    'created'                  => $now,
-                ]);
-//                $this->v($io, "Level to create: " . print_r($lvlEntity, true));
+    private function copyCriterias(Table $table): array
+    {
+        $this->logMsg("-> Copying criterias …");
+        $map = [];
 
-                $this->saveOrThrow($this->EducationLevels, $lvlEntity, 'education_levels');
-                $newLevelId = (int)$lvlEntity->id;
-                $levelMap[(int)$lvl->id] = $newLevelId;
+        foreach ($table->find()->where(['academic_period_id' => $this->fromId]) as $c) {
+            $clone = $table->newEntity($c->toArray());
+            unset($clone->id);
+            $clone->academic_period_id = $this->toId;
+            $clone->created_user_id = $this->userId;
+            $clone->created = date('Y-m-d H:i:s');
 
-                // 3) Cycles under level
-                $cycles = $this->EducationCycles->find()
-                    ->where(['education_level_id' => $lvl->id])
-                    ->order(['`order`'])
-                    ->all();
+            $this->saveOrThrow($table, $clone, 'Criteria');
+            $map[$c->id] = $clone->id ?? null;
+        }
 
-                foreach ($cycles as $cyc) {
-                    $cycName = $this->swapNameTail((string)$cyc->name, $fromApName, $toApName);
+        return $map;
+    }
 
-                    $cycEntity = $this->EducationCycles->newEntity([
-                        'education_level_id' => $newLevelId,
-                        'name'               => $cycName,
-                        'admission_age'      => $cyc->admission_age,
-                        'order'            => $cyc->order,
-                        'visible'            => $cyc->visible ?? 1,
-                        'created_user_id'    => $userId,
-                        'created'            => $now,
-                    ]);
-                    $this->saveOrThrow($this->EducationCycles, $cycEntity, 'education_cycles');
-                    $newCycleId = (int)$cycEntity->id;
-                    $cycleMap[(int)$cyc->id] = $newCycleId;
+    private function copyPeriods(Table $table, array $templateMap): array
+    {
+        $this->logMsg("-> Copying periods …");
+        $map = [];
+        $inserted = 0;
+        $existing = 0;
 
-                    // 4) Programmes under cycle
-                    $progs = $this->EducationProgrammes->find()
-                        ->where(['education_cycle_id' => $cyc->id])
-                        ->order(['`order`'])
-                        ->all();
+        foreach ($table->find()->where(['academic_period_id' => $this->fromId]) as $p) {
+            $exists = $table->find()->where(['code' => $p->code, 'academic_period_id' => $this->toId])->first();
 
-                    foreach ($progs as $prg) {
-                        $progName = $this->swapNameTail((string)$prg->name, $fromApName, $toApName);
-
-                        $progEntity = $this->EducationProgrammes->newEntity([
-                            'education_cycle_id'          => $newCycleId,
-                            'education_field_of_study_id' => $prg->education_field_of_study_id,
-                            'education_certification_id'  => $prg->education_certification_id,
-                            'code'                        => $prg->code,
-                            'name'                        => $progName,
-                            'duration'                    => $prg->duration,
-                            'order'                     => $prg->order,
-                            'visible'                     => $prg->visible ?? 1,
-                            'created_user_id'             => $userId,
-                            'created'                     => $now,
-                        ]);
-                        $this->saveOrThrow($this->EducationProgrammes, $progEntity, 'education_programmes');
-                        $newProgId = (int)$progEntity->id;
-                        $programmeMap[(int)$prg->id] = $newProgId;
-
-                        // (A) Programme edges (next_programmes) — MAP to new IDs (fixes legacy shell behavior)
-                        //POCOR-9356 -- START
-                        $edges = $this->EducationProgrammesNextProgrammes->find()
-                            ->where(['education_programme_id' => $prg->id])
-                            ->all();
-
-                        foreach ($edges as $edge) {
-                            $oldNext = (int)$edge->next_programme_id;
-                            $newNext = $programmeMap[$oldNext] ?? null;
-
-                            if ($newNext) {
-                                // insert now (and avoid duplicates)
-                                $exists = $this->EducationProgrammesNextProgrammes->find()
-                                    ->where([
-                                        'education_programme_id' => $newProgId,
-                                        'next_programme_id'      => $newNext
-                                    ])->first();
-                                if (!$exists) {
-                                    $npEntity = $this->EducationProgrammesNextProgrammes->newEntity([
-                                        'id'                     => $this->uuid(),
-                                        'education_programme_id' => $newProgId,
-                                        'next_programme_id'      => $newNext,
-                                    ]);
-                                    $this->saveOrThrow($this->EducationProgrammesNextProgrammes, $npEntity, 'education_programmes_next_programmes');
-                                }
-                            } else {
-                                // target not created yet — resolve later
-                                $pendingEdges[] = [
-                                    'new_programme_id' => $newProgId,
-                                    'old_next_id'      => $oldNext,
-                                ];
-                            }
-                        }
-                        //POCOR-9356 -- END
-
-                        // 5) Grades under programme
-                        $grades = $this->EducationGrades->find()
-                            ->where(['education_programme_id' => $prg->id])
-                            ->order(['`order`'])
-                            ->all();
-
-                        foreach ($grades as $gr) {
-                            $gradeName = $this->swapNameTail((string)$gr->name, $fromApName, $toApName);
-
-                            $grEntity = $this->EducationGrades->newEntity([
-                                'education_programme_id' => $newProgId,
-                                'education_stage_id'     => $gr->education_stage_id, // global ref
-                                'code'                   => $gr->code,
-                                'name'                   => $gradeName,
-                                'admission_age'          => $gr->admission_age,
-                                'order'                => $gr->order,
-                                'visible'                => $gr->visible ?? 1,
-                                'created_user_id'        => $userId,
-                                'created'                => $now,
-                            ]);
-                            $this->saveOrThrow($this->EducationGrades, $grEntity, 'education_grades');
-                            $newGradeId = (int)$grEntity->id;
-                            $gradeMap[(int)$gr->id] = $newGradeId;
-
-                            // 6) Grade-Subject pairs
-                            $pairs = $this->EducationGradesSubjects->find()
-                                ->where(['education_grade_id' => $gr->id])
-                                ->all();
-
-                            foreach ($pairs as $pair) {
-                                // Skip if target pair already exists
-                                $existsPair = $this->EducationGradesSubjects->find()
-                                    ->where([
-                                        'education_grade_id'   => $newGradeId,
-                                        'education_subject_id' => (int)$pair->education_subject_id
-                                    ])->first();
-                                if ($existsPair) {
-                                    continue;
-                                }
-
-                                $egsEntity = $this->EducationGradesSubjects->newEntity([
-                                    'id'                     => $this->uuid(), // column exists even if PK is composite
-                                    'education_grade_id'    => $newGradeId,
-                                    'education_subject_id'  => (int)$pair->education_subject_id,
-                                    'hours_required'        => $pair->hours_required,
-                                    'visible'               => $pair->visible ?? 1,
-                                    'auto_allocation'       => $pair->auto_allocation ?? 1,
-                                    'requirement'           => $pair->requirement,
-                                    'result_type'           => $pair->result_type ?? 'Assessments',
-                                    'created_user_id'       => $userId,
-                                    'created'               => $now,
-                                ]);
-                                $this->saveOrThrow($this->EducationGradesSubjects, $egsEntity, 'education_grades_subjects');
-                            }
-                        } // grades
-                    } // programmes
-                } // cycles
-            } // levels
-        } // systems
-        // POCOR-9356 -- START resolve any deferred edges now that $programmeMap is complete
-        foreach ($pendingEdges as $pe) {
-            $newProgId = (int)$pe['new_programme_id'];
-            $oldNext   = (int)$pe['old_next_id'];
-            $newNext   = $programmeMap[$oldNext] ?? null;
-
-            // skip edges that point outside the copied tree (e.g., old 23)
-            if (!$newNext) {
+            if ($exists) {
+                $map[$p->id] = $exists->id;
+                $existing++;
+                $this->logMsg("  ↺ Period already exists -> {$exists->id} ({$p->code})");
                 continue;
             }
 
-            $exists = $this->EducationProgrammesNextProgrammes->find()
-                ->where([
-                    'education_programme_id' => $newProgId,
-                    'next_programme_id'      => $newNext
-                ])->first();
+            $newId = $this->nextIncrement($table);
 
-            if (!$exists) {
-                $npEntity = $this->EducationProgrammesNextProgrammes->newEntity([
-                    'id'                     => $this->uuid(),
-                    'education_programme_id' => $newProgId,
-                    'next_programme_id'      => $newNext,
-                ]);
-                $this->saveOrThrow($this->EducationProgrammesNextProgrammes, $npEntity, 'education_programmes_next_programmes');
+            $clone = $table->newEntity([
+                'id' => $newId,
+                'code' => $p->code,
+                'name' => $p->name,
+                'start_date' => $p->start_date,
+                'end_date' => $p->end_date,
+                'date_enabled' => $p->date_enabled,
+                'date_disabled' => $p->date_disabled,
+                'academic_period_id' => $this->toId,
+                'competency_template_id' => $templateMap[$p->competency_template_id] ?? null,
+                'created_user_id' => $this->userId,
+                'created' => date('Y-m-d H:i:s'),
+                'modified_user_id' => null,
+                'modified' => null
+            ]);
+
+            if (!$clone->competency_template_id) {
+                $this->logMsg("  ~ Skipped period {$p->id}: missing template map");
+                continue;
+            }
+
+            $this->saveOrThrow($table, $clone, 'Period');
+            $map[$p->id] = $clone->id;
+            $inserted++;
+        }
+
+        $this->logMsg("  Periods: inserted={$inserted}, existing={$existing}");
+        return $map;
+    }
+
+    private function copyItemPeriods(Table $table, array $map): void
+    {
+        $this->logMsg("-> Copying item-period links …");
+        $inserted = $existing = $skipped = $failed = 0;
+
+        foreach ($table->find()->where(['academic_period_id' => $this->fromId]) as $ip) {
+            $oldItemId = (int)$ip->competency_item_id;
+            $oldPeriodId = (int)$ip->competency_period_id;
+            $oldTplId = (int)$ip->competency_template_id;
+
+            $newItemId = $map['items'][$oldItemId] ?? null;
+            $newPeriodId = $map['periods'][$oldPeriodId] ?? null;
+            $newTplId = $map['templates'][$oldTplId] ?? null;
+
+            if (!$newItemId || !$newPeriodId || !$newTplId) {
+                $skipped++;
+                $this->logMsg("  ~ Skipping item-period: missing mapping for item={$oldItemId}, period={$oldPeriodId}, template={$oldTplId}");
+                continue;
+            }
+
+            $exists = $this->conn->execute(
+                "SELECT 1 FROM competency_items_periods
+                 WHERE competency_item_id = :item
+                   AND competency_period_id = :period
+                   AND academic_period_id = :ap
+                   AND competency_template_id = :tpl
+                 LIMIT 1",
+                [
+                    'item' => $newItemId,
+                    'period' => $newPeriodId,
+                    'ap' => $this->toId,
+                    'tpl' => $newTplId,
+                ]
+            )->fetch('assoc');
+
+            if ($exists) {
+                $existing++;
+                continue;
+            }
+
+            if ($this->dryRun) {
+                $inserted++;
+                $this->logMsg(" ? [dry-run] Would insert item-period link: item={$newItemId}, period={$newPeriodId}, tpl={$newTplId}");
+                continue;
+            }
+
+            try {
+                $this->conn->execute(
+                    "INSERT INTO competency_items_periods
+                    (id, competency_item_id, competency_period_id, academic_period_id, competency_template_id,
+                     created_user_id, created)
+                    VALUES (:id, :item, :period, :ap, :tpl, :uid, :ts)",
+                    [
+                        'id' => $this->uuid(),
+                        'item' => $newItemId,
+                        'period' => $newPeriodId,
+                        'ap' => $this->toId,
+                        'tpl' => $newTplId,
+                        'uid' => $this->userId,
+                        'ts' => date('Y-m-d H:i:s')
+                    ]
+                );
+                $inserted++;
+            } catch (\Throwable $e) {
+                $failed++;
+                $this->io->err("  x Failed to insert item-period link: {$e->getMessage()}");
             }
         }
-        //POCOR-9356 -- END
 
-        $this->v($io, 'Copy complete.');
-    }
-
-    /**
-     * Replace a trailing " <fromApName>" with " <toApName>" if present.
-     * Examples:
-     *   "National System 2025" + (from="2025", to="2026") → "National System 2026"
-     *   "Cycle (2025)"         + (from="2025", to="2026") → unchanged (pattern is only " SPACE + fromName")
-     */
-    private function swapNameTail(string $name, string $fromApName, string $toApName): string
-    {
-        $pattern = '/\s+' . preg_quote($fromApName, '/') . '$/u';
-        if (preg_match($pattern, $name) === 1) {
-            return preg_replace($pattern, ' ' . $toApName, $name) ?? $name;
-        }
-        return $name;
-    }
-
-    private function saveOrThrow($Table, $entity, string $label): void
-    {
-        if ($this->dryRun) {
-            // No write, just log the intent
-            return;
-        }
-        if (!$Table->save($entity)) {
-            $errors = json_encode($entity->getErrors(), JSON_UNESCAPED_UNICODE);
-            throw new \RuntimeException("Failed to save {$label}: {$errors}");
-        }
-    }
-
-    private function v(ConsoleIo $io, string $msg): void
-    {
-        if ($this->verbose) {
-            $io->out($msg);
-        }
+        $this->logMsg("  ItemsPeriods: inserted={$inserted}, existing={$existing}, skipped={$skipped}, failed={$failed}");
     }
 
     private function uuid(): string
@@ -415,45 +253,52 @@ class CopyPerformanceCompetenciesCommand extends \Cake\Command\Command
         $data[8] = chr((ord($data[8]) & 0x3f) | 0x80);
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
-    private static function getDynamicTableInstance(string $tableName): Table
+
+    private function nextIncrement(Table $table): int
     {
-        // Parse plugin and table names if dot notation is used
-        $locator = TableRegistry::getTableLocator();
-        try {
-            return $locator->get($tableName);
-        } catch (\Exception $exception) {
+        $row = $table->find()->select(['max_id' => 'MAX(id)'])->first();
+        return ((int)$row->max_id) + 1;
+    }
 
+    private function fixTemplateGrades(int $fromId, int $toId, Table $templates): void
+    {
+        $sql = <<<SQL
+SELECT subq1.grade_id AS wrong_grade, subq2.grade_id AS correct_grade
+FROM
+(
+    SELECT g.id AS grade_id, g.name AS grade_name
+    FROM education_grades g
+    INNER JOIN education_programmes p ON g.education_programme_id = p.id
+    INNER JOIN education_cycles c ON p.education_cycle_id = c.id
+    INNER JOIN education_levels l ON c.education_level_id = l.id
+    INNER JOIN education_systems s ON l.education_system_id = s.id
+    WHERE s.academic_period_id = :fromId
+) subq1
+JOIN
+(
+    SELECT g.id AS grade_id, g.name AS grade_name
+    FROM education_grades g
+    INNER JOIN education_programmes p ON g.education_programme_id = p.id
+    INNER JOIN education_cycles c ON p.education_cycle_id = c.id
+    INNER JOIN education_levels l ON c.education_level_id = l.id
+    INNER JOIN education_systems s ON l.education_system_id = s.id
+    WHERE s.academic_period_id = :toId
+) subq2
+ON subq1.grade_name = subq2.grade_name
+SQL;
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('fromId', $fromId, 'integer');
+        $stmt->bindValue('toId', $toId, 'integer');
+        $stmt->execute();
+
+        foreach ($stmt->fetchAll('assoc') as $row) {
+            $templates->updateAll(
+                ['education_grade_id' => (int)$row['correct_grade']],
+                ['education_grade_id' => (int)$row['wrong_grade'], 'academic_period_id' => $toId]
+            );
         }
-        $parts = explode('.', $tableName);
-        $plugin = count($parts) > 1 ? $parts[0] : null;
-        $table = count($parts) > 1 ? $parts[1] : $parts[0];
 
-        // Convert the table name to camel case as expected by CakePHP conventions
-        $tableFullAlias = Inflector::camelize($tableName);
-        $tableAlias = Inflector::camelize($table);
-
-        // Create the fully qualified class name if a plugin is specified
-        if ($plugin) {
-            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
-        } else {
-            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
-        }
-        // Check if the table instance already exists
-        if (!$locator->exists($tableFullAlias)) {
-            // Check if the specific table class exists
-            if (!class_exists($className)) {
-                $className = Table::class; // Fallback to generic Table class
-            }
-
-            // Configure a new table instance
-            $locator->setConfig($tableAlias, [
-                'className' => $className,
-                'table' => $table,
-                'alias' => $tableAlias,
-            ]);
-        }
-
-        // Return the table instance
-        return $locator->get($tableFullAlias);
+        $this->logMsg("✔ Fixed education_grade_id mismatches in templates");
     }
 }
