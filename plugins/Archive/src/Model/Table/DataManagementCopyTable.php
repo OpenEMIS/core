@@ -449,7 +449,8 @@ class DataManagementCopyTable extends ControllerActionTable
                 // bin/cake copy:institution-programs-grades-subjects FROM TO
                 return $this->triggerInstitutionProgramsGradesCommand(
                     (int)$entity->from_academic_period,
-                    (int)$entity->to_academic_period
+                    (int)$entity->to_academic_period,
+                    $this->Auth->User('id')
                 );
 
             case self::SHIFTS:
@@ -459,16 +460,21 @@ class DataManagementCopyTable extends ControllerActionTable
                 return $this->triggerShell('Risk', $entity->from_academic_period, $entity->to_academic_period);
 
             case self::PERFORMANCE_COMPETENCIES:
-                return $this->triggerPerformanceCompetenciesShell(
-                    'PerformanceCompetencies',
-                    $entity->from_academic_period,
-                    $entity->to_academic_period,
-                    $entity->competency_criterias_value,
-                    $entity->competency_templates_value,
-                    $entity->competency_items_value,
-                    $entity->competency_periods_value
-                );
+//                return $this->triggerPerformanceCompetenciesShell(
+//                    'PerformanceCompetencies',
+//                    $entity->from_academic_period,
+//                    $entity->to_academic_period,
+//                    $entity->competency_criterias_value,
+//                    $entity->competency_templates_value,
+//                    $entity->competency_items_value,
+//                    $entity->competency_periods_value
+//                );
 
+                return $this->triggerPerformanceCompetenciesCommand(
+                    (int)$entity->from_academic_period,
+                    (int)$entity->to_academic_period,
+                    $this->Auth->User('id')
+                );
             case self::EDUCATION_STRUCTURE:
                 // Still shell-based per your note; append user id
             case self::EDUCATION_STRUCTURE: {
@@ -503,17 +509,31 @@ class DataManagementCopyTable extends ControllerActionTable
     /*───────────────────────────────────────────────────────────────────────────
      | NEW: Command trigger for Institution Programmes/Grades/Subjects
      ───────────────────────────────────────────────────────────────────────────*/
-    private function triggerInstitutionProgramsGradesCommand(int $from, int $to): bool
+    private function triggerInstitutionProgramsGradesCommand(int $from, int $to, int $userId): bool
     {
         // If you later want parity options, add flags here:
         // e.g. $flags = ['--ensure-egs', '--copy-edges', '--copy-gpa'];
         $flags = [];
-        $args = array_merge([$from, $to], $flags);
+        $args = array_merge([$from, $to, $userId], $flags);
 
         return $this->runCommand(
-            'institution:copy-programs-grades',
+            'copy:institution-programs-grades-subjects',
             $args,
-            'InstitutionCopyProgramsGrades' // log file stem
+            'CopyInstitutionProgramsGradesSubjects' // log file stem
+        );
+    }
+
+    private function triggerPerformanceCompetenciesCommand(int $from, int $to, int $userId): bool
+    {
+        // If you later want parity options, add flags here:
+        // e.g. $flags = ['--ensure-egs', '--copy-edges', '--copy-gpa'];
+        $flags = [];
+        $args = array_merge([$from, $to, $userId], $flags);
+
+        return $this->runCommand(
+            'copy:competency-performance-competencies',
+            $args,
+            'CopyPerformanceCompetencies' // log file stem
         );
     }
 

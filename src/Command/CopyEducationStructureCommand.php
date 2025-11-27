@@ -14,9 +14,6 @@ class CopyEducationStructureCommand extends CopyCommandBase
 {
     use LocatorAwareTrait;
 
-    /** @var \Cake\Database\Connection */
-    private $conn;
-
     // Tables
     private $AcademicPeriods;
     private $EducationSystems;
@@ -45,10 +42,9 @@ class CopyEducationStructureCommand extends CopyCommandBase
 
         $this->initializeFromInput($args, $io);
 
-        $this->conn = ConnectionManager::get('default');
-        $this->conn->getDriver()->enableAutoQuoting(true);
+        $this->conn = $this->getConnection();
 
-        $this->AcademicPeriods                  = $this->getDynamicTableInstance('academic_periods');
+//        $this->AcademicPeriods                  = $this->getDynamicTableInstance('academic_periods');
         $this->EducationSystems                 = $this->getDynamicTableInstance('education_systems');
         $this->EducationLevels                  = $this->getDynamicTableInstance('education_levels');
         $this->EducationCycles                  = $this->getDynamicTableInstance('education_cycles');
@@ -62,8 +58,8 @@ class CopyEducationStructureCommand extends CopyCommandBase
         $toId = $this->toId;
         $userId = $this->userId;
         // Validate periods + get names for suffix-swap
-        $fromAp = $this->AcademicPeriods->find()->select(['id', 'name'])->where(['id' => $fromId])->firstOrFail();
-        $toAp   = $this->AcademicPeriods->find()->select(['id', 'name'])->where(['id' => $toId])->firstOrFail();
+        $fromAp = $this->fromAcademicPeriod;
+        $toAp   = $this->toAcademicPeriod;
 
         // Check destination has no systems yet (same as your shell)
         $existsTo = $this->EducationSystems->find()->where(['academic_period_id' => $toId])->count();
@@ -124,7 +120,7 @@ class CopyEducationStructureCommand extends CopyCommandBase
 
             if ($existing) {
                 $newSystemId = (int)$existing->id;
-                $this->v($io, "System exists: {$newSystemName} (id={$newSystemId})");
+                $this->logMsg("System exists: {$newSystemName} (id={$newSystemId})");
             } else {
                 $entity = $this->EducationSystems->newEntity([
                     'name'               => $newSystemName,
@@ -134,10 +130,9 @@ class CopyEducationStructureCommand extends CopyCommandBase
                     'created_user_id'    => $sys->created_user_id ?? $userId,
                     'created'            => $sys->created ?? $now,
                 ]);
-//                $this->v($io, "System to create: " . print_r($entity, true));
                 $this->saveOrThrow($this->EducationSystems, $entity, 'education_systems');
                 $newSystemId = (int)$entity->id;
-                $this->v($io, "System +: {$newSystemName} (id={$newSystemId})");
+                $this->logMsg("System +: {$newSystemName} (id={$newSystemId})");
             }
 
             // 2) Levels under this system
@@ -159,7 +154,6 @@ class CopyEducationStructureCommand extends CopyCommandBase
                     'created_user_id'          => $userId,
                     'created'                  => $now,
                 ]);
-//                $this->v($io, "Level to create: " . print_r($lvlEntity, true));
 
                 $this->saveOrThrow($this->EducationLevels, $lvlEntity, 'education_levels');
                 $newLevelId = (int)$lvlEntity->id;
@@ -334,7 +328,7 @@ class CopyEducationStructureCommand extends CopyCommandBase
         }
         //POCOR-9356 -- END
 
-        $this->v($io, 'Copy complete.');
+        $this->logMsg('Copy complete.');
     }
 
     /**
@@ -352,13 +346,6 @@ class CopyEducationStructureCommand extends CopyCommandBase
         return $name;
     }
 
-
-    private function v(ConsoleIo $io, string $msg): void
-    {
-        if ($this->verbose) {
-            $this->logMsg($msg);
-        }
-    }
 
     private function uuid(): string
     {
