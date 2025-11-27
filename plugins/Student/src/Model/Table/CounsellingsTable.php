@@ -213,7 +213,18 @@ class CounsellingsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function getRequesterOptionsbkp($institutionId)
+     /**
+     * Retrieve requester options for a given institution.
+     * 
+     * This function returns a combined list of Users as requesters in the system.It includes-
+     *  - Students (linked to the institution_students)
+     *  - Staff (assigned to the institution_staff)
+     *  - Guardians (related to students. student_guardians)
+     * @param int $institutionId  The institution ID used to filter students, staff, and guardians.
+     * @return array List of requester options formatted for dropdowns.
+     * 
+     */
+    /*public function getRequesterOptionsbkp($institutionId)
     {
         $UserData = TableRegistry::get('User.Users');
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -298,6 +309,6 @@ class CounsellingsTable extends ControllerActionTable
         }
 
         return $data;
-    }
+    }*/
 
 }
