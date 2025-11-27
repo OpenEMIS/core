@@ -1,3 +1,13 @@
+### [4.48.2] - 2025-11-21
+- Bug Fixed: Institutions>Staff>Add: User is unable to add positions to existing staff
+- Bug Fixed: Directory: User is getting 404 when login
+- Bug Fixed: Institutions>Infrastructure>Overview: User getting 404 error 
+- Bug Fixed: Institutions>Students>Academic>Curriculars>Add: Institution curriculars showing empty
+
+### [4.48.2] - 2025-11-21
+- Bug Fixed: Institutions>Staff>Add: User is unable to add positions to existing staff
+- Bug Fixed: Institutions>Add Institution: Upon Leaving Provider Field empty,user is getting 404 error
+
 ### [4.48.1] - 2025-11-14
 - Bug Fixed: Administrations > System setup > System configuration: On selecting the options Staff Releases and/or Staff Transfers, the page refreshes and goes back to the default option on the dropdown.
 - Bug Fixed: Institutions>Students>Transfer: Student transferred from school A to school B is showing system groups of both schools
