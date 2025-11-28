@@ -248,6 +248,19 @@ class AccessControlComponent extends Component
         if ($superAdmin || !is_array($url)) { // if $url is a string, then skip checking of permission
             return true;
         }
+        //POCOR-9429 start
+        $request = $this->getController()->getRequest();
+        $controller = $request->getParam('controller');
+        $action = $request->getParam('action');
+        $params = $request->getParam('pass');
+
+        // Handle special case: Profiles/Personal/view for user without roles
+        //POCOR-9429
+        if ($controller === 'Profiles' && $action === 'Personal' && $params[0] === 'view' && empty($roleIds)) {
+               return true;
+          
+        }
+        //POCOR-9429 end
         //POCOR-8379 Starts use if condition only
         if($this->getController()->getRequest()->getParam('controller') != 'GuardianNavs'){
             $superUser = $this->isSuperRole();//V4 POCOR-8385
@@ -423,6 +436,7 @@ class AccessControlComponent extends Component
         if ($this->Session->read('Permissions.reportCardGenerateAllowed')) {
             return true;
         }
+        
         return false;
     }
 
