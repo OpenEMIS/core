@@ -3,7 +3,7 @@
 - Bug Fixed: Institutions>Attendance>Staff: Users can enter attendance for staff
 - Bug Fixed: Institution>Student>List>Counselling: The list of names that appear in the Requester list is of Students.
 
-### [4.48.3] - 2025-11-21
+### [4.48.3] - 2025-11-26
 - Bug Fixed: Institutions>Staff>Add: User is unable to add positions to existing staff
 - Bug Fixed: Directory: User is getting 404 when login
 - Bug Fixed: Institutions>Infrastructure>Overview: User getting 404 error 
