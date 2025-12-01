@@ -877,41 +877,35 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         if (userCtrl.step === 'confirmation') {
             const result = await userCtrl.checkUserExistByIdentityFromConfiguration();
         }
-
-        if (userCtrl.isInternalSearchSelected) {
-            if (userCtrl.staffData && userCtrl.staffData.is_diff_school > 0) {
-                userCtrl.messageClass = 'alert-warning';
-                userCtrl.message = `This staff is already allocated to ${userCtrl.staffData.current_enrol_institution_code} - ${userCtrl.staffData.current_enrol_institution_name}`;
-                userCtrl.step = 'add_staff';
-            } else {
-                userCtrl.processNewUser();
-            }
-            userCtrl.isInternalSearchSelected = false;
-        } else if (userCtrl.isExternalSearchSelected) {
-            userCtrl.processNewUser();
-            userCtrl.isExternalSearchSelected = false;
-        } else {
-            switch (userCtrl.step) {
-                case 'user_details':
-                    userCtrl.checkUserAge();
-                    break;
-                case 'internal_search': {
-                    if (userCtrl.isExternalSearchEnable) {
-                        userCtrl.step = 'external_search';
-                        userCtrl.externalGridOptions = null;
-                        userCtrl.goToExternalSearch();
+        // POCOR-9470 start
+        switch (userCtrl.step) {
+            case 'user_details':
+                userCtrl.checkUserAge();
+                break;
+            case 'internal_search': {
+                if (userCtrl.isExternalSearchEnable && !userCtrl.isInternalSearchSelected) {
+                    userCtrl.step = 'external_search';
+                    userCtrl.externalGridOptions = null;
+                    userCtrl.goToExternalSearch();
+                } else {
+                    if (userCtrl.staffData && userCtrl.staffData.is_diff_school > 0) {
+                        userCtrl.messageClass = 'alert-warning';
+                        userCtrl.message = `This staff is already allocated to ${userCtrl.staffData.current_enrol_institution_code} - ${userCtrl.staffData.current_enrol_institution_name}`;
+                        userCtrl.step = 'add_staff';
                     } else {
                         userCtrl.processNewUser();
                     }
-                    return;
                 }
-                case 'external_search':
-                    userCtrl.processNewUser();                    break;
-                case 'confirmation':
-                    userCtrl.validateAdditionalDetails();
-                    break;
-
+                // POCOR-9470 end
+                return;
             }
+            case 'external_search':
+                userCtrl.processNewUser();
+                break;
+            case 'confirmation':
+                userCtrl.validateAdditionalDetails();
+                break;
+
         }
     }
 
@@ -987,6 +981,27 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             userCtrl.error.mobile_number = 'This field cannot be left empty';
             hasError = true;
         }
+        //POCOR-9442 start
+        userCtrl.customFieldsArray.forEach((customField) => {
+            customField.data.forEach((field) => {
+                if (field.is_mandatory === 1) {
+                    if (field.field_type === 'TEXT' || field.field_type === 'TEXTAREA' || field.field_type === 'NOTE' || field.field_type === 'DROPDOWN' || field.field_type === 'NUMBER' || field.field_type === 'DECIMAL' || field.field_type === 'DATE' || field.field_type === 'TIME') {
+                        if (!field.answer) {
+                            field.errorMessage = 'This field is required.';
+                            isCustomFieldNotValidated = true;
+                            hasError = true;
+                        }
+                    } else if (field.field_type === 'CHECKBOX') {
+                        if (field.answer.length === 0) {
+                            field.errorMessage = 'This field is required.';
+                            isCustomFieldNotValidated = true;
+                            hasError = true;
+                        }
+                    }
+                }
+            })
+        });
+        //POCOR-9442 end
 
         if (hasError) {
             return;

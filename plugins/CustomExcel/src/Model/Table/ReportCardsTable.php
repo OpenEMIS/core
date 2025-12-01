@@ -783,8 +783,8 @@ class ReportCardsTable extends AppTable
             $institutionId = $params['institution_id'];
             //POCOR-8093 to fetch staff position
             $StaffPositionTitles = self::getDynamicTableInstance('Institution.StaffPositionTitles'); // POCOR-9162
-            $staffPosnId = $StaffPositionTitles->getPrincipalRoleId($staffRoleId); //POCOR-9413
-            $staff = self::getInstitutionSecurityStaff($institutionId, $staffPosnId);
+            $staffPosnIds = $StaffPositionTitles->getPrincipalRoleId($staffRoleId); //POCOR-9413
+            $staff = self::getInstitutionSecurityStaff($institutionId, $staffPosnIds); //POCOR-9442 - now returns array
             if (!empty($staff)) {
                 $staff->principal = $staff->user->name;
                 $staff->principal_gender = $staff->gender;
@@ -2697,7 +2697,7 @@ class ReportCardsTable extends AppTable
      * @return mixed
      */
 
-     public static function getInstitutionSecurityStaff($institutionId, $staffPosnId)
+    public static function getInstitutionSecurityStaff($institutionId, $staffPosnId)
      {
 
          $Staff = self::getDynamicTableInstance('Institution.Staff');
@@ -2708,10 +2708,12 @@ class ReportCardsTable extends AppTable
          $StaffStatuses = self::getDynamicTableInstance('Staff.StaffStatuses');
          $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
          //POCOR-8798
-         if(!empty($staffPosnId)){
-            $condition = [
-                'InstitutionPositions.staff_position_title_id' => $staffPosnId
-            ];
+        if (!empty($staffPosnId)) {
+            if (is_array($staffPosnId)) {
+                $condition = ['InstitutionPositions.staff_position_title_id IN' => $staffPosnId]; //POCOR-9442
+            } else {
+                $condition = ['InstitutionPositions.staff_position_title_id' => $staffPosnId];
+            }
         } else {
             $condition = [];
         }

@@ -1,3 +1,41 @@
+### [4.48.4] - 2025-11-28
+- Bug Fixed: Institutions>Performance>Assessments>PDF: Upon clicking PDF button, user is getting 404 error
+- Bug Fixed: Institutions>Attendance>Staff: Users can enter attendance for staff
+- Bug Fixed: Institution>Student>List>Counselling: The list of names that appear in the Requester list is of Students.
+
+### [4.48.3] - 2025-11-26
+- Bug Fixed: Institutions>Staff>Add: User is unable to add positions to existing staff
+- Bug Fixed: Directory: User is getting 404 when login
+- Bug Fixed: Institutions>Infrastructure>Overview: User getting 404 error 
+- Bug Fixed: Institutions>Students>Academic>Curriculars>Add: Institution curriculars showing empty
+
+### [4.48.2] - 2025-11-21
+- Bug Fixed: Institutions>Staff>Add: User is unable to add positions to existing staff
+- Bug Fixed: Institutions>Add Institution: Upon Leaving Provider Field empty,user is getting 404 error
+
+### [4.48.1] - 2025-11-14
+- Bug Fixed: Administrations > System setup > System configuration: On selecting the options Staff Releases and/or Staff Transfers, the page refreshes and goes back to the default option on the dropdown.
+- Bug Fixed: Institutions>Students>Transfer: Student transferred from school A to school B is showing system groups of both schools
+- Bug Fixed: Institution classes api is not showing total students correctly
+- Bug Fixed: Docker build for the Angular frontend not functional
+
+### [4.48.0] - 2025-11-07
+- Implemented: Develop deleted records audit report
+- Implemented: Develop programme filter for performance report
+- Bug Fixed: Institutions>Add>Staff: Unable to add staff
+- Bug Fixed: Institutions > Survey > Form > Import : Develop an Import selection page for Survey
+- Bug Fixed: Directory>Search User:Clicking on a record is taking user to the wrong Institution
+- Bug Fixed: Institutions>Attendance>Staff: It should not check based on staff leave workflow name
+- Bug Fixed: Reports>Institutions>Add: The report generated for one Area level shows Institutions from All Area Levels
+- Bug Fixed: Administrations > Examinations > Results : Rows are missing after switching in between tabs
+
+### [4.47.0] - 2025-10-29
+- Implemented: Develop changes to rename Institution Curriculars to Curriculars
+- Bug Fixed: Institution>Attendance>Staff: Assigned Staff not showing up against Attendance>Staff
+- Bug Fixed: Institutions>Students>Withdraw: Creates a migration script for student withdraw and adds delete
+- Bug Fixed: Adminstration>Security>Users: Users who have permissions cannot access the credentials
+- Bug Fixed: Institutions>Academic>Programmes: Adds Start date to the page
+
 ### [4.46.0] - 2025-10-21
 - Implemented: Develop a status field in Exempt/Unassign page
 - Bug Fixed: Institution > Attendances > Students : SQLSTATE[40001]: Serialization failure: 1213 Deadlock found when trying to get lock; try restarting transaction
