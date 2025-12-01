@@ -741,7 +741,7 @@ trait PdfReportTrait
         if ($filenames) {
 //           echo "<pre>";print_r($mpdf);die; //This is very unusual code need to debug again
             $filesTotal = sizeof($filenames);
-            $mpdf->SetImportUse();
+            //$mpdf->SetImportUse(); //POCOR-9450
 
             for ($i = 0; $i < count($filenames); $i++) {
                 $curFile = $filenames[$i];
@@ -1379,11 +1379,41 @@ trait PdfReportTrait
             // Save the processed html into a temp pdf
             $mpdf->AddPage('L');
 
-            $mpdf->WriteHTML($processedHtml);
-            $filepathname = $namePdf . '.pdf';
-            $mpdf->Output($filepathname, 'D');
-            $filePaths[] = $filepath;
-            unset($mdpf);// POCOR-6908 end
+            //$mpdf->WriteHTML($processedHtml); //POCOR-9450
+
+            //POCOR-9450 -- START
+            // --- SAFE FIX: Write HTML in smaller chunks to prevent pcre.backtrack_limit crash ---
+            // Separate CSS <style> section from HTML body
+                preg_match('/<style.*?>(.*?)<\/style>/is', $processedHtml, $cssMatches);
+
+                $css = $cssMatches[1] ?? '';
+                $htmlWithoutCss = preg_replace('/<style.*?>.*?<\/style>/is', '', $processedHtml);
+
+                // First write CSS properly
+                if (!empty($css)) {
+                    $mpdf->WriteHTML($css, \Mpdf\HTMLParserMode::HEADER_CSS);
+                }
+
+                // Now write remaining HTML in chunks
+                $chunkSize = 100000; // 100 KB
+                $htmlLength = strlen($htmlWithoutCss);
+                $offset = 0;
+
+                while ($offset < $htmlLength) {
+                    $chunk = substr($htmlWithoutCss, $offset, $chunkSize);
+                    $mpdf->WriteHTML($chunk, \Mpdf\HTMLParserMode::HTML_BODY);
+                    $offset += $chunkSize;
+                }
+
+            // --- END FIX ---
+            //POCOR-9450 -- END
+
+             $filepathname = $filepath . '.pdf'; // full path for each sheet
+            // SAVE PDF TO DISK, not browser
+            $mpdf->Output($filepathname, \Mpdf\Output\Destination::FILE);
+            // store correct PDF path for merging
+            $filePaths[] = $filepathname;
+            unset($mpdf);// POCOR-6908 end
         }
         // Merge all the pdf that belongs to one report
         if (!empty($student_id)) {

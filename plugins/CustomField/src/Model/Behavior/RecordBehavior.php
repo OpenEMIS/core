@@ -366,12 +366,21 @@ class RecordBehavior extends Behavior
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        return $this->processSave($entity, $data, $extra);
+        if(!empty($data['InstitutionSurveys'])){ //POCOR-9439
+            return $this->processSaveSurvey($entity, $data, $extra);
+        }else{
+            return $this->processSave($entity, $data, $extra);
+        }
     }
 
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        return $this->processSave($entity, $data, $extra);
+        if(!empty($data['InstitutionSurveys'])){ //POCOR-9439
+            return $this->processSaveSurvey($entity, $data, $extra); 
+        }else{
+            return $this->processSave($entity, $data, $extra);
+        }
+        
     }
 
     private function processSave(Entity $entity, ArrayObject $data, ArrayObject $extra)
@@ -667,6 +676,477 @@ class RecordBehavior extends Behavior
         return $process;
     }
 
+    //POCOR-9439
+    private function processSaveSurvey(Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+        $model = $this->_table;
+        if ($model->getRegistryAlias() == "Institution.InstitutionClasses") {
+            return;
+        }
+
+        $process = function ($model, $entity) use ($data) {
+            try {
+                $repeaterSuccess = true;
+                $repeaterErrors = false;
+
+                // read existing entity errors (if any)
+                $errors = $entity->getErrors();
+
+                $fileErrors = [];
+                $session = $model->request->getSession();
+                $sessionErrors = $model->getRegistryAlias() . '.parseFileError';
+                if ($session->check($sessionErrors)) {
+                    $fileErrors = $session->read($sessionErrors);
+                }
+
+                $alias = $model->getAlias();
+                if (empty($errors) && empty($fileErrors)) {
+                    $tableCells = [];
+                    if (isset($data[$alias]) && isset($data[$alias]['custom_table_cells'])) {
+                        $tableCells = $data[$alias]['custom_table_cells'];
+                    }
+
+                    $settings = new ArrayObject([
+                        'recordKey' => $this->getConfig('recordKey'),
+                        'fieldKey' => $this->getConfig('fieldKey'),
+                        'formKey' => $this->getConfig('formKey'),
+                        'tableColumnKey' => $this->getConfig('tableColumnKey'),
+                        'tableRowKey' => $this->getConfig('tableRowKey'),
+                        'valueKey' => null,
+                        'customValue' => null,
+                        'fieldValues' => [],
+                        'tableCells' => $tableCells,
+                        'deleteFieldIds' => []
+                    ]);
+
+                    if (isset($data[$alias]) && isset($data[$alias]['custom_field_values'])) {
+                        $values = $data[$alias]['custom_field_values'];
+                        foreach ($values as $key => $obj) {
+                            $fieldType = Inflector::camelize(strtolower($obj['field_type']));
+                            $settings['customValue'] = $obj;
+
+                            $event = $model->dispatchEvent('Render.process' . $fieldType . 'Values', [$entity, $data, $settings], $model);
+                            if ($event->isStopped()) {
+                                return $event->getResult();
+                            }
+                        }
+                    }
+
+                    // calling processRepeaterValues() in RenderRepeaterBehavior if behaviour present
+                    if ($this->_table->hasBehavior('RenderRepeater')
+                        && isset($data[$alias])
+                        && isset($data[$alias]['institution_repeater_surveys'])
+                    ) {
+                        $event = $model->dispatchEvent('Render.processRepeaterValues', [$entity, $data, $settings], $model);
+                        if ($event->isStopped()) {
+                            return $event->getResult();
+                        }
+                    }
+
+                    // update the data with processed field values
+                    $data[$alias]['custom_field_values'] = $settings['fieldValues'];
+
+                    $conn = ConnectionManager::get('default');
+                    $conn->begin();
+
+                    // POCOR-4799: delete dependent answers only if selected value isn't show_options
+                    if ($alias == 'InstitutionSurveys') {
+                        $entityCustomFieldValues = [];
+                        if ($entity->has('custom_field_values')) {
+                            foreach ($entity->custom_field_values as $key => $value) {
+                                $entityCustomFieldValues[$value['survey_question_id']] = $value;
+                            }
+                        }
+
+                        if (is_null($this->getConfig('moduleKey'))) {
+                            if (isset($data[$this->_table->getAlias()][$this->getConfig('formKey')])) {
+                                $surveyFormId = $data[$this->_table->getAlias()][$this->getConfig('formKey')];
+                                $SurveyRules = TableRegistry::get('Survey.SurveyRules');
+                                $rules = $SurveyRules
+                                    ->find()
+                                    ->where([
+                                        $SurveyRules->aliasField('survey_form_id') => $surveyFormId,
+                                        $SurveyRules->aliasField('enabled') => 1
+                                    ])
+                                    ->toArray();
+
+                                if (!empty($rules)) {
+                                    foreach ($rules as $rule) {
+                                        $ruleShowOptions = json_decode($rule->show_options);
+                                        // POCOR-9129 start
+                                        if (!is_array($ruleShowOptions)) {
+                                            $ruleShowOptions = [$ruleShowOptions];
+                                        }
+                                        // POCOR-9129 end
+
+                                        if (isset($entityCustomFieldValues[$rule->dependent_question_id])
+                                            && !in_array($entityCustomFieldValues[$rule->dependent_question_id]['number_value'], $ruleShowOptions)
+                                        ) {
+                                            $settings['deleteFieldIds'][] = $rule->survey_question_id;
+                                            if (isset($data[$alias]['custom_field_values'])) {
+                                                foreach ($data[$alias]['custom_field_values'] as $k => $v) {
+                                                    if ($v['survey_question_id'] == $rule->survey_question_id) {
+                                                        unset($data[$alias]['custom_field_values'][$k]);
+                                                    }
+                                                }
+                                                $data[$alias]['custom_field_values'] = array_values($data[$alias]['custom_field_values']);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // when edit always delete all the checkbox values before reinsert,
+                    // also delete previously saved records with empty value
+                    if (isset($entity->id)) {
+                        $id = $entity->id;
+                        $deleteFieldIds = $settings['deleteFieldIds'];
+
+                        if (!empty($deleteFieldIds)) {
+                            $this->CustomFieldValues->deleteAll([
+                                $this->CustomFieldValues->aliasField($settings['recordKey']) => $id,
+                                $this->CustomFieldValues->aliasField($settings['fieldKey'] . ' IN ') => $deleteFieldIds
+                            ]);
+
+                            // when edit always delete all the cell values before reinsert
+                            if (!is_null($this->getConfig('tableCellClass'))) {
+                                $this->CustomTableCells->deleteAll([
+                                    $this->CustomTableCells->aliasField($settings['recordKey']) => $id,
+                                    $this->CustomTableCells->aliasField($settings['fieldKey'] . ' IN ') => $deleteFieldIds
+                                ]);
+                            }
+                        }
+                    }
+
+                    // ----------------- CLEANUP: remove empty  / field rows -----------------
+                    if (isset($data[$alias]['custom_field_values']) && is_array($data[$alias]['custom_field_values'])) {
+                        foreach ($data[$alias]['custom_field_values'] as $k => $v) {
+                            $hasValue =
+                                (isset($v['number_value']) && $v['number_value'] !== '' && $v['number_value'] !== null) ||
+                                (isset($v['text_value']) && trim((string)$v['text_value']) !== '') ||
+                                (isset($v['option_value']) && $v['option_value'] !== '' && $v['option_value'] !== null) ||
+                                (isset($v['textarea_value']) && trim((string)$v['textarea_value']) !== '') ||
+                                (isset($v['decimal_value']) && $v['decimal_value'] !== '' && $v['decimal_value'] !== null) ||
+                                (isset($v['date_value']) && $v['date_value'] !== '' && $v['date_value'] !== null) ||
+                                (isset($v['time_value']) && $v['time_value'] !== '' && $v['time_value'] !== null);
+
+                            if (!$hasValue) {
+                                unset($data[$alias]['custom_field_values'][$k]);
+                            }
+                        }
+                        // reindex
+                        $data[$alias]['custom_field_values'] = array_values($data[$alias]['custom_field_values']);
+                    }
+
+                    // Also clean custom_table_cells (if present)
+                    if (isset($data[$alias]['custom_table_cells']) && is_array($data[$alias]['custom_table_cells'])) {
+                        foreach ($data[$alias]['custom_table_cells'] as $tableId => $rows) {
+                            foreach ($rows as $rowId => $cols) {
+                                foreach ($cols as $fieldId => $col) {
+                                    $empty = true;
+                                    if (is_array($col)) {
+                                        foreach ($col as $k => $val) {
+                                            if ($val !== '' && $val !== null) {
+                                                $empty = false;
+                                                break;
+                                            }
+                                        }
+                                    } else {
+                                        if ($col !== '' && $col !== null) $empty = false;
+                                    }
+                                    if ($empty) {
+                                        unset($data[$alias]['custom_table_cells'][$tableId][$rowId][$fieldId]);
+                                    }
+                                }
+                                if (empty($data[$alias]['custom_table_cells'][$tableId][$rowId])) {
+                                    unset($data[$alias]['custom_table_cells'][$tableId][$rowId]);
+                                }
+                            }
+                            if (empty($data[$alias]['custom_table_cells'][$tableId])) {
+                                unset($data[$alias]['custom_table_cells'][$tableId]);
+                            }
+                        }
+                    }
+                    // ----------------- END CLEANUP -----------------
+
+                    // patch the entity with the cleaned request data
+                    $requestData = $data->getArrayCopy();
+                    $entity = $model->patchEntity($entity, $requestData);
+
+                    // End
+
+                    // Logic to delete all existing values of a repeater
+                    if ($entity->has('institution_repeater_surveys')) {
+                        $formKey = 'survey_form_id';
+                        $RepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
+                        $RepeaterSurveyAnswers = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
+
+                        $status = $entity->status_id;
+                        $institutionId = $entity->institution_id;
+                        $periodId = $entity->academic_period_id;
+                        $parentFormId = $entity->{$formKey};
+
+                        foreach ($entity->institution_repeater_surveys as $fieldId => $fieldObj) {
+                            $formId = $fieldObj[$formKey];
+                            unset($fieldObj[$formKey]);
+
+                            // Logic to delete all answers before re-insert
+                            $repeaterIds = array_keys($fieldObj);
+
+                            $originalRepeaterIds = [];
+                            if ($entity->has('institution_repeaters')) {
+                                if (isset($entity->institution_repeaters[$fieldId])) {
+                                    $originalRepeaterIds = array_values($entity->institution_repeaters[$fieldId]);
+                                }
+                            }
+
+                            $surveyIds = [];
+                            if (!empty($originalRepeaterIds)) {
+                                $surveyIds = $RepeaterSurveys
+                                    ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+                                    ->where([
+                                        $RepeaterSurveys->aliasField('status_id') => $status,
+                                        $RepeaterSurveys->aliasField('institution_id') => $institutionId,
+                                        $RepeaterSurveys->aliasField('academic_period_id') => $periodId,
+                                        $RepeaterSurveys->aliasField($formKey) => $formId,
+                                        $RepeaterSurveys->aliasField('repeater_id IN') => $originalRepeaterIds
+                                    ])
+                                    ->toArray();
+                            }
+
+                            // remove previous repeater answers before re-insert if we have surveyIds and we have new values to insert
+                            if (!empty($surveyIds) && isset($settings['repeaterValues'])) {
+                                $RepeaterSurveyAnswers->deleteAll([
+                                    $RepeaterSurveyAnswers->aliasField('institution_repeater_survey_id IN ') => $surveyIds
+                                ]);
+                            }
+
+                            if (!empty($repeaterIds)) {
+                                if (!empty($originalRepeaterIds)) {
+                                    $missingRepeaters = array_diff($originalRepeaterIds, $repeaterIds);
+                                    if (!empty($missingRepeaters)) {
+                                        // if user has removed particular repeater from form, delete that repeater from DB too
+                                        $RepeaterSurveys->deleteAll([
+                                            $RepeaterSurveys->aliasField('status_id') => $status,
+                                            $RepeaterSurveys->aliasField('institution_id') => $institutionId,
+                                            $RepeaterSurveys->aliasField('academic_period_id') => $periodId,
+                                            $RepeaterSurveys->aliasField($formKey) => $formId,
+                                            $RepeaterSurveys->aliasField('repeater_id IN') => $missingRepeaters
+                                        ]);
+                                    }
+                                }
+                            } else {
+                                // if user removed all rows from form, delete away all repeater records for that form
+                                $RepeaterSurveys->deleteAll([
+                                    $RepeaterSurveys->aliasField('status_id') => $status,
+                                    $RepeaterSurveys->aliasField('institution_id') => $institutionId,
+                                    $RepeaterSurveys->aliasField('academic_period_id') => $periodId,
+                                    $RepeaterSurveys->aliasField($formKey) => $formId
+                                ]);
+                            }
+                        }
+
+                        // POCOR-8436 if settings is an array
+                        // POCOR-8231 simplified and cleancoded
+                        if (is_array($settings)) {
+                            $settingsArray = $settings;
+                        } else {
+                            $settingsArray = $settings->getArrayCopy();
+                        }
+
+                        //determine which repeater form id should be taken, based on dropdown rules
+                        $cleanRepeaters = [];
+                        $CustomValues = $data[$alias]['custom_field_values'] ?? [];
+                        $currentFormId = null;
+
+                        $SurveyRules = TableRegistry::getTableLocator()->get('Survey.SurveyRules');
+                        $SurveyQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyQuestions');
+
+                        foreach ($CustomValues as $field) {
+                            if (
+                                ($field['field_type'] ?? '') === 'DROPDOWN' &&
+                                !empty($field['number_value']) &&
+                                !empty($field['survey_question_id'])
+                            ) {
+                                $answeredQuestionId = $field['survey_question_id'];
+                                $selectedValue = (int)$field['number_value'];
+
+                                // Get all rules for this dependent question
+                                $rules = $SurveyRules->find()
+                                    ->where(['dependent_question_id' => $answeredQuestionId])
+                                    ->all();
+
+                                $matchedRule = null;
+                                foreach ($rules as $rule) {
+                                    $options = json_decode($rule->show_options, true);
+                                    if (!is_array($options)) {
+                                        continue;
+                                    }
+                                    // selectedValue must exist in show_options array
+                                    if (in_array($selectedValue, $options)) {
+                                        $matchedRule = $rule;
+                                        break;
+                                    }
+                                }
+
+                                if (!$matchedRule) {
+                                    continue;
+                                }
+
+                                // Parent repeater question id from survey_rules
+                                $triggerQuestionId = $matchedRule->survey_question_id;
+
+                                // Load trigger question (should be REPEATER)
+                                $triggerQuestion = $SurveyQuestions->find()
+                                    ->where(['id' => $triggerQuestionId, 'field_type' => 'REPEATER'])
+                                    ->first();
+
+                                if (!$triggerQuestion) {
+                                    continue;
+                                }
+
+                                $params = json_decode($triggerQuestion->params, true);
+                                if (!empty($params['survey_form_id'])) {
+                                    $currentFormId = (int)$params['survey_form_id'];
+                                    // we break because once we determine the current form id from a matched rule,
+                                    // we can use it to filter repeaterValues below. If your logic requires multiple
+                                    // matched rules and combining forms, adjust accordingly.
+                                    break;
+                                }
+                            }
+                        }
+
+                        // if no repeaterValues: nothing to insert
+                        if (isset($settingsArray['repeaterValues']) && is_array($settingsArray['repeaterValues'])) {
+                            foreach ($settingsArray['repeaterValues'] as $key => $value) {
+                                // If currentFormId was determined, skip rows for other forms
+                                if ($currentFormId !== null) {
+                                    if (!isset($value['survey_form_id']) || (int)$value['survey_form_id'] !== (int)$currentFormId) {
+                                        continue;
+                                    }
+                                }
+                                // If currentFormId is null => keep all repeater rows (do not filter)
+
+                                // Check if this repeater row has any filled values (avoid saving empty rows)
+                                $hasValue = false;
+                                if (!empty($value['custom_field_values']) && is_array($value['custom_field_values'])) {
+                                    foreach ($value['custom_field_values'] as $field) {
+                                        if (
+                                            (isset($field['number_value']) && $field['number_value'] !== '' && $field['number_value'] !== null) ||
+                                            (isset($field['text_value']) && trim($field['text_value']) !== '') ||
+                                            (isset($field['decimal_value']) && $field['decimal_value'] !== '') ||
+                                            (isset($field['option_value']) && $field['option_value'] !== '')
+                                        ) {
+                                            $hasValue = true;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (!$hasValue) {
+                                    // skip empty rows
+                                    continue;
+                                }
+
+                                // create & save repeater entity
+                                $surveyEntity = $RepeaterSurveys->newEntity($value);
+                                $all[] = $surveyEntity;
+
+                                try {
+                                    if (!$RepeaterSurveys->save($surveyEntity)) {
+                                        Log::write('debug', print_r($surveyEntity->getErrors(), true));
+                                        $repeaterErrors = true;
+                                        $repeaterSuccess = false;
+                                    }
+                                } catch (\Exception $ex) {
+                                    // on DB or other exceptions, record and fail gracefully
+                                    Log::write('error', $ex);
+                                    $repeaterErrors = true;
+                                    $repeaterSuccess = false;
+                                }
+                            }
+
+                            // pass the entity list back for rendering the repeater element errors in the form
+                            $entity['institution_repeater_surveys_error_obj'] = $all ?? [];
+
+                            if ($repeaterErrors) {
+                                // Attach a general error so the form-level message is shown,
+                                // but the more important part is to show field errors below.
+                                $entity->setError('institution_repeater_surveys', __('One or more repeater rows have problems.'));
+                            }
+                        }
+                    }
+
+                    // finally save the main entity
+                    $result = $model->save($entity);
+                    if ($result && $repeaterSuccess) {
+                        $conn->commit();
+                    } else {
+                        $conn->rollback();
+                    }
+                    return $result;
+                } else {
+                    // There are validation errors from patchEntity() or file errors.
+                    // Map those errors to the correct custom_field_values children so each field shows the message.
+
+                    $indexedErrors = [];
+                    $fields = ['text_value', 'number_value', 'decimal_value', 'textarea_value', 'date_value', 'time_value', 'file'];
+                    // if there are errors on custom_field_values (structure from patchEntity)
+                    if (isset($errors['custom_field_values']) && $entity->has('custom_field_values')) {
+                        foreach ($entity->custom_field_values as $key => $obj) {
+                            $fieldId = $obj->{$this->getConfig('fieldKey')};
+
+                            if (isset($errors['custom_field_values'][$key])) {
+                                $indexedErrors[$fieldId] = $errors['custom_field_values'][$key];
+                                // mark these fields as show validation errors in the form inputs
+                                foreach ($fields as $field) {
+                                    $entity->custom_field_values[$key]->getDirty($field, true);
+                                }
+                            }
+                        }
+                    }
+
+                    // merge any fileErrors
+                    $indexedErrors = $indexedErrors + $fileErrors;
+
+                    if (!empty($indexedErrors)) {
+                        if (isset($data[$alias]) && isset($data[$alias]['custom_field_values'])) {
+                            foreach ($data[$alias]['custom_field_values'] as $key => $obj) {
+                                $fieldId = $obj[$this->getConfig('fieldKey')];
+
+                                if (isset($indexedErrors[$fieldId])) {
+                                    foreach ($fields as $field) {
+                                        if (isset($indexedErrors[$fieldId][$field])) {
+                                            $error = $indexedErrors[$fieldId][$field];
+                                            if (isset($entity->custom_field_values[$key])) {
+                                                // Use setError so validation shows beside the input 
+                                                $entity->custom_field_values[$key]->setError($field, $error);
+                                                // also will render error properly
+                                                $entity->custom_field_values[$key]->getDirty($field, true);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    return false;
+                }
+            } catch (\Exception $ex) {
+                Log::write('error', $ex);
+                $msg = $ex->getMessage();
+                $model->Alert->error($msg, ['type' => 'text', 'reset' => true]);
+                return false;
+            }
+        };
+
+        return $process;
+    }
+
+
     /**
      *  Function to get the filter key from the filter specified
      *
@@ -877,7 +1357,7 @@ class RecordBehavior extends Behavior
         }
 
         $query = $this->getCustomFieldQuery($entity, ['withContain' => ['CustomFields']]);
-		$tabSection = '';
+        $tabSection = '';
         $fieldValues = [];  // values of custom field must be in sequence for validation errors to be placed correctly
         if (!is_null($query)) {
             $where =[];
@@ -903,8 +1383,8 @@ class RecordBehavior extends Behavior
 
                 // only apply for field type store in custom_field_values
                 if (in_array($fieldTypeCode, $this->fieldValueArray)) {
-					if(empty($tabSection) || ($slug == $tabSection)) {
-						$fieldId = $customField->id;
+                    if(empty($tabSection) || ($slug == $tabSection)) {
+                        $fieldId = $customField->id;
                         //$formId = $customField->student_custom_form_id;//not useable
                         //POCOR-8434 starts
                         $recordKey = $entity->id;
@@ -1008,10 +1488,13 @@ class RecordBehavior extends Behavior
                 //$model->controller->TabPermission->checkTabPermission($tabElements);
                 $model->controller->set('tabElements', $tabElements);
                 $model->controller->set('selectedAction', $selectedAction);
-
-                $query->where([
-                    $this->CustomFormsFields->aliasField('section') => $tabElements[$selectedAction]['section']
-                ]);
+                //POCOR-9349 STARTS
+                //When section found for the selected tab, then set query to fetch record
+                if($tabElements[$selectedAction]['section']) {
+                    $query->where([
+                        $this->CustomFormsFields->aliasField('section') => $tabElements[$selectedAction]['section']
+                    ]);
+                }//POCOR-9349 STARTS
             }
         }
         // End
@@ -1206,7 +1689,8 @@ class RecordBehavior extends Behavior
                                                     }
                                                 }
                                             }
-                                            $renderField = $forRender;
+                                            //$renderField = $forRender;//POCOR-9349
+                                            $renderField = true;//POCOR-9349
                                         }
                                     }
 
