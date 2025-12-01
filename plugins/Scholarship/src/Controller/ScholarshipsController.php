@@ -29,6 +29,11 @@ class ScholarshipsController extends AppController
     // public function UsersDirectory(){
     //     echo "asdfas";die;
     // }
+    //POCOR-9435 start
+    public function UsersDirectory(){
+       $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.UsersDirectory']);
+    }
+    //POCOR-9435 end
 
     public function Applications()
     {
