@@ -1543,7 +1543,7 @@ class ExcelReportBehavior extends Behavior
         return $errorMessage;
     }
 
-    private function extractVarSafe(array $vars, string $path): array|\ArrayAccess
+    private function extractVarSafe(array $vars, string $path): array
     {
         $result = Hash::extract($vars, $path);
 
@@ -1551,12 +1551,9 @@ class ExcelReportBehavior extends Behavior
             return $result;
         }
 
-        // Log for debugging
-        $errorMessage = "MISSING DATA for extract $path";
-        Log::warning($errorMessage);
+        Log::warning("MISSING DATA for extract $path");
 
-        // Return placeholder-style array for consistency with normal extract
-        return [  ];
+        return ['']; // safe fallback
     }
 
     private function combineVarSafe(array $vars, string $keyPath, string $valuePath): array
@@ -1567,12 +1564,8 @@ class ExcelReportBehavior extends Behavior
             return $result;
         }
 
-        // Log for debugging
-        $errorMessage = "MISSING DATA for combine($keyPath, $valuePath)";
-        Log::warning($errorMessage);
+        Log::warning("MISSING DATA for combine($keyPath, $valuePath)");
 
-        // Return a placeholder array so repeatRows() still works
-
-        return [ [ '__error' => ' ' ] ];
+        return [0 => '']; // safe fallback
     }
 }
