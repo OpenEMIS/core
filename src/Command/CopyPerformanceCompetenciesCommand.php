@@ -14,7 +14,7 @@ class CopyPerformanceCompetenciesCommand extends CopyCommandBase
 {
     public static function defaultName(): string
     {
-        return 'copy:competency-performance-competencies';
+        return 'copy:performance-competencies';
     }
 
     public function buildOptionParser(ConsoleOptionParser $parser): ConsoleOptionParser
