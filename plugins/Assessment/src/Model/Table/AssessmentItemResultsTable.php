@@ -17,6 +17,8 @@ use Cake\Log\Log;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 use Cake\ORM\Table; //POCOR-8224
 use Cake\Utility\Inflector; //POCOR-8224
+use Cake\Http\Session;
+use Cake\Http\ServerRequest;
 
 class AssessmentItemResultsTable extends AppTable
 {
@@ -71,6 +73,35 @@ class AssessmentItemResultsTable extends AppTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        //session_start();
+        
+        $result = $this
+                        ->find()
+                        ->select(['marks', 'assessment_grading_option_id'])
+                        ->where([
+                            'student_id' => $entity->student_id,
+                            'assessment_id' => $entity->assessment_id,
+                            'education_subject_id' => $entity->education_subject_id,
+                            'education_grade_id' => $entity->education_grade_id,
+                            'academic_period_id' => $entity->academic_period_id,
+                            'institution_classes_id' => $entity->institution_classes_id,
+                            'institution_id' => $entity->institution_id,
+                            'assessment_period_id' => $entity->assessment_period_id,
+                        ])
+                        ->enableHydration(false)
+                        ->first();
+
+            /*$session = $this->request->getSession();
+            $session->write('old_marks', $result['marks']);
+            echo "<pre>"; print_r($this->request); die;*/
+
+            /*if ($existing) {
+            // Store old marks inside the entity (NOT in session)
+            $entity->set('_old_marks', $existing['marks']);
+            $entity->set('_old_grade_option', $existing['assessment_grading_option_id']);
+        }*/
+            //echo "<pre>"; print_r([$result['marks'], $result['assessment_grading_option_id']]); die;
+       // $_SESSION["marks"] = 67.00;
         //POCOR-6824 start
         $institutionId = $entity->institution_id;
         $InstitutionClassId = $entity->institution_classes_id;
@@ -1308,6 +1339,40 @@ class AssessmentItemResultsTable extends AppTable
 
 
         return $returnArray;
+    }
+
+    //POCOR-9477
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        if (!empty($data['student_id'])) {
+
+            $AssessmentItemResults = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
+            $existing = $AssessmentItemResults->find()
+                ->select(['marks', 'assessment_grading_option_id'])
+                ->where([
+                    'student_id' => $data['student_id'],
+                    'assessment_id' => $data['assessment_id'],
+                    'education_subject_id' => $data['education_subject_id'],
+                    'education_grade_id' => $data['education_grade_id'],
+                    'academic_period_id' => $data['academic_period_id'],
+                    'institution_classes_id' => $data['institution_classes_id'],
+                    'institution_id' => $data['institution_id'],
+                    'assessment_period_id' => $data['assessment_period_id'],
+                ])
+                ->enableHydration(false)
+                ->first();
+            if ($existing) {
+                $data['_old_marks'] = $existing['marks'];
+                $data['_old_grade_option'] = $existing['assessment_grading_option_id'];
+            }
+        }
+    }
+
+    //POCOR-9477
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $oldMarks = $entity->get('_old_marks');
+        $oldOption = $entity->get('_old_grade_option');
     }
 
 }
