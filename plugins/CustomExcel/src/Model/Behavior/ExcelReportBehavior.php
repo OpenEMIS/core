@@ -719,7 +719,7 @@ class ExcelReportBehavior extends Behavior
 
             $objCell = $objWorksheet->getCell($cellCoordinate);
             if (is_object($objCell->getValue())) {
-                Log::debug(print_r(['A' => $objCell->getValue()], true));
+                Log::debug(print_r(['A Value' => $objCell->getValue()], true));
                 $objWorksheet->setCellValue($cellCoordinate, 'A!');
                 continue;
 //                $cellValue = $objCell->getValue()->getPlainText();
@@ -736,7 +736,7 @@ class ExcelReportBehavior extends Behavior
 //                }
             } else {
                 $cellValue = $objCell->getValue();
-                Log::debug(print_r(['B' => $cellValue], true));
+                Log::debug(print_r(['B Value' => $cellValue], true));
                 $objWorksheet->setCellValue($cellCoordinate, 'B!');
                 if ($this->isExcelErrorValue($cellValue)) {
                     $warning = "TEMPLATE ERROR: Fix cell $cellCoordinate in template";
