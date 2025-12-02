@@ -632,7 +632,7 @@ class ExcelReportBehavior extends Behavior
             $formattedPlaceholder = $this->formatPlaceholder($placeholder);
             $placeholderData = !is_null($placeholder) ?
 
-                Hash::extract($extra['vars'], $formattedPlaceholder) :
+                $this->extractVarSafe($extra['vars'], $formattedPlaceholder) :
                 [];
 
             $count = 1;
@@ -645,17 +645,19 @@ class ExcelReportBehavior extends Behavior
             $formattedPlaceholderId = $this->formatPlaceholder($placeholderId);
 
             // check if data has id
-            $idData = !is_null($placeholderId) ? Hash::extract($extra['vars'], $formattedPlaceholderId) : [];
-            $valueData = !is_null($placeholderId) ? Hash::extract($extra['vars'], $formattedPlaceholder) : [];
+            $idData = !is_null($placeholderId) ? $this->extractVarSafe($extra['vars'], $formattedPlaceholderId) : [];
+            $valueData = !is_null($placeholderId) ? $this->extractVarSafe($extra['vars'], $formattedPlaceholder) : [];
             $equal = count($idData) == count($valueData);
 
             if (!empty($idData) && $equal) {
                 // get id and value as key-value pair
                 // selected field needs to be present in vars if not there will be a key-value number mismatch (be careful of using contain)
-                $placeholderData = !is_null($placeholder) ? Hash::combine($extra['vars'], $formattedPlaceholderId, $formattedPlaceholder) : [];
+                $placeholderData = !is_null($placeholder) ?
+                    $this->combineVarSafe($extra['vars'], $formattedPlaceholderId, $formattedPlaceholder) :
+                    [];
             } else {
                 // only get value
-                $placeholderData = !is_null($placeholder) ? Hash::extract($extra['vars'], $formattedPlaceholder) : [];
+                $placeholderData = !is_null($placeholder) ? $this->extractVarSafe($extra['vars'], $formattedPlaceholder) : [];
             }
         }
 
@@ -930,7 +932,7 @@ class ExcelReportBehavior extends Behavior
             $placeholderFormat = $this->formatPlaceholder($placeholderPrefix) . $filterStr . ".";
             $placeholder = sprintf($placeholderFormat . $placeholderSuffix, $parentKey);
             $placeholderId = sprintf($placeholderFormat . 'id', $parentKey);
-            $nestedData = Hash::combine($extra['vars'], $placeholderId, $placeholder);
+            $nestedData = $this->combineVarSafe($extra['vars'], $placeholderId, $placeholder);
         } else {
             $nestedData = $nestedAttr['data'];
         }
@@ -1134,7 +1136,7 @@ class ExcelReportBehavior extends Behavior
                         $placeholderFormat = $this->formatPlaceholder($attr['placeholderPrefix']) . $attr['filterStr'] . "." . $attr['placeholderSuffix'];
                         $placeholder = sprintf($placeholderFormat, $value);
 
-                        $matchData = Hash::extract($extra['vars'], $placeholder);
+                        $matchData = $this->extractVarSafe($extra['vars'], $placeholder);
                         $matchValue = !empty($matchData) ? current($matchData) : '';
 
                         $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
@@ -1184,7 +1186,7 @@ class ExcelReportBehavior extends Behavior
                             $placeholder = sprintf($placeholderFormat, $value, $nestedValue);
                         }
 
-                        $matchData = Hash::extract($extra['vars'], $placeholder);
+                        $matchData = $this->extractVarSafe($extra['vars'], $placeholder);
                         $matchValue = !empty($matchData) ? current($matchData) : '';
 
                         $nestedColumnValue = Coordinate::stringFromColumnIndex($columnIndex);
@@ -1200,7 +1202,7 @@ class ExcelReportBehavior extends Behavior
                     } else {
                         $placeholder = sprintf($placeholderFormat, $value);
                     }
-                    $matchData = Hash::extract($extra['vars'], $placeholder);
+                    $matchData = $this->extractVarSafe($extra['vars'], $placeholder);
                     $matchValue = !empty($matchData) ? current($matchData) : '';
 
                     $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
@@ -1243,7 +1245,7 @@ class ExcelReportBehavior extends Behavior
 
                     $placeholder = sprintf($placeholderFormat . $placeholderSuffix, $parentKey);
                     $placeholderId = sprintf($placeholderFormat . 'id', $parentKey);
-                    $nestedData = Hash::combine($extra['vars'], $placeholderId, $placeholder);
+                    $nestedData = $this->combineVarSafe($extra['vars'], $placeholderId, $placeholder);
                 } else {
                     $nestedData = $this->getPlaceholderData($nestedMatchFrom, $extra);
                 }
@@ -1264,7 +1266,7 @@ class ExcelReportBehavior extends Behavior
                         // printedMatchFilter already contains all key values, no need for sprintf again
                         $placeholder = $this->formatPlaceholder($attr['placeholderPrefix']) . $printedMatchFilter . "." . $attr['placeholderSuffix'];
 
-                        $matchData = Hash::extract($extra['vars'], $placeholder);
+                        $matchData = $this->extractVarSafe($extra['vars'], $placeholder);
                         $matchValue = !empty($matchData) ? current($matchData) : '';
 
                         $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
@@ -1305,7 +1307,7 @@ class ExcelReportBehavior extends Behavior
 
                 $placeholder = sprintf($placeholderFormat . $placeholderSuffix, $parentKey);
                 $placeholderId = sprintf($placeholderFormat . 'id', $parentKey);
-                $data = Hash::combine($extra['vars'], $placeholderId, $placeholder);
+                $data = $this->combineVarSafe($extra['vars'], $placeholderId, $placeholder);
             } else {
                 $data = $this->getPlaceholderData($mergeFrom, $extra);
             }
@@ -1399,13 +1401,13 @@ class ExcelReportBehavior extends Behavior
         $attr['imageMarginLeft'] = isset($attr['imageMarginLeft']) ? $attr['imageMarginLeft'] : 0;
         $attr['imageMarginTop'] = isset($attr['imageMarginTop']) ? $attr['imageMarginTop'] : 0;
 
-        $data = Hash::extract($extra['vars'], $attr['displayValue']);
+        $data = $this->extractVarSafe($extra['vars'], $attr['displayValue']);
         $imageContent = current($data);
 
         //for institution logo
         if ($attr['displayValue'] == 'Institutions.logo_content') {
             if (is_resource($imageContent)) {
-                $institutionId = Hash::extract($extra['vars'], 'Institutions.id');
+                $institutionId = $this->extractVarSafe($extra['vars'], 'Institutions.id');
                 $institutionId = current($institutionId);
 
                 $mimeType = mime_content_type($imageContent);
@@ -1467,14 +1469,14 @@ class ExcelReportBehavior extends Behavior
         }
 
         // Log the error for debugging
-        $errorMessage = "ExcelReport: MISSING DATA for placeholder $path";
+        $errorMessage = "MISSING DATA for $path";
         Log::warning($errorMessage);
 
         // RETURN A HELPFUL MESSAGE IN THE EXCEL CELL (NOT BLANK)
         return $errorMessage;
     }
 
-    private function extractVarSafe(array $vars, string $path)
+    private function extractVarSafe(array $vars, string $path): array|\ArrayAccess
     {
         $result = Hash::extract($vars, $path);
 
@@ -1483,10 +1485,26 @@ class ExcelReportBehavior extends Behavior
         }
 
         // Log for debugging
-        $errorMessage = "ExcelReport: MISSING DATA for placeholder $path";
+        $errorMessage = "MISSING DATA for extract $path";
         Log::warning($errorMessage);
 
         // Return placeholder-style array for consistency with normal extract
-        return [$errorMessage];
+        return [];
+    }
+
+    private function combineVarSafe(array $vars, string $keyPath, string $valuePath): array
+    {
+        $result = Hash::combine($vars, $keyPath, $valuePath);
+
+        if (!empty($result)) {
+            return $result;
+        }
+
+        // Log for debugging
+        $errorMessage = "MISSING DATA for combine($keyPath, $valuePath)";
+        Log::warning($errorMessage);
+
+        // Return a placeholder array so repeatRows() still works
+        return [$keyPath => ''];
     }
 }
