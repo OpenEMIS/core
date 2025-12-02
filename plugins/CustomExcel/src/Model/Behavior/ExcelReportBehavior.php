@@ -1117,7 +1117,7 @@ class ExcelReportBehavior extends Behavior
 
                             // merge range based on mergeColumns attr
                             $nestedMergeColumnIndex = $nestedColumnIndex + ($nestedMergeColumns - 1);
-                            $this->mergeRange($nestedColumnIndex, $nestedRowValue, $nestedMergeColumnIndex, $nestedRowValue, $objWorksheet, $attr);
+                            $this->safeMergeRange($nestedColumnIndex, $nestedRowValue, $nestedMergeColumnIndex, $nestedRowValue, $objWorksheet, $attr);
                             $nestedColumnIndex = $nestedMergeColumnIndex;
 
                             $nestedColumnIndex++;
@@ -1133,7 +1133,7 @@ class ExcelReportBehavior extends Behavior
 
                         // mergeColumns even if there is no data
                         $nestedMergeColumnIndex = $nestedColumnIndex + ($nestedMergeColumns - 1);
-                        $this->mergeRange($nestedColumnIndex, $nestedRowValue, $nestedMergeColumnIndex, $nestedRowValue, $objWorksheet, $attr);
+                        $this->safeMergeRange($nestedColumnIndex, $nestedRowValue, $nestedMergeColumnIndex, $nestedRowValue, $objWorksheet, $attr);
 
                         $nestedColumnIndex = $nestedMergeColumnIndex;
                     }
@@ -1141,7 +1141,7 @@ class ExcelReportBehavior extends Behavior
 
                 // mergeColumns attr from parent will only be used if there is no nested column
                 $mergeColumnIndex = isset($nestedColumnIndex) ? $nestedColumnIndex : $columnIndex + ($mergeColumns - 1);
-                $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
+                $this->safeMergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
                 $columnIndex = $mergeColumnIndex;
 
                 $columnIndex++;
@@ -1153,7 +1153,7 @@ class ExcelReportBehavior extends Behavior
 
             // mergeColumns even if there is no data
             $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
-            $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
+            $this->safeMergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
         }
     }
 
@@ -1209,7 +1209,7 @@ class ExcelReportBehavior extends Behavior
                         $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
                         $cellCoordinate = $columnValue . $rowValue;
                         $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $matchValue, $attr, $extra);
-                        $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
+                        $this->safeMergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
 
                         $rowValue++;
                     }
@@ -1221,7 +1221,7 @@ class ExcelReportBehavior extends Behavior
             $columnValue = $attr['columnValue'];
             $cellCoordinate = $columnValue . $rowValue;
             $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
-            $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
+            $this->safeMergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
         }
     }
 
@@ -1342,7 +1342,7 @@ class ExcelReportBehavior extends Behavior
                         $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, $matchValue, $attr, $extra);
 
                         $mergeRowValue = ($mergeRowCount > 1) ? $rowValue + ($mergeRowCount - 1) : $rowValue;
-                        $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
+                        $this->safeMergeRange($columnIndex, $rowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
 
                         $rowValue = $mergeRowValue;
                         $rowValue++;
@@ -1543,15 +1543,15 @@ class ExcelReportBehavior extends Behavior
         return $errorMessage;
     }
 
-    private function extractVarSafe(array $vars, string $path): array|\ArrayAccess
+    private function extractVarSafe(array $vars, string $path): array
     {
         $result = Hash::extract($vars, $path);
 
         if (empty($result)) {
             Log::warning("MISSING DATA for extract $path");
+            return [];     // TRUE EMPTY
         }
 
-        // Always return real result – even if empty
         return $result;
     }
 
@@ -1561,9 +1561,34 @@ class ExcelReportBehavior extends Behavior
 
         if (empty($result)) {
             Log::warning("MISSING DATA for combine($keyPath, $valuePath)");
+            return [];     // TRUE EMPTY
         }
 
-        // IMPORTANT: do NOT fabricate `[0 => '']` here
         return $result;
     }
+
+    private function safeMergeRange($startCol, $startRow, $endCol, $endRow, $objWorksheet, $attr)
+    {
+        // If no real data, do a 1-row merge only.
+        if ($endRow < $startRow) {
+            $endRow = $startRow;
+        }
+
+        if ($endCol < $startCol) {
+            $endCol = $startCol;
+        }
+
+        $fromCol = Coordinate::stringFromColumnIndex($startCol);
+        $toCol   = Coordinate::stringFromColumnIndex($endCol);
+
+        $range = "{$fromCol}{$startRow}:{$toCol}{$endRow}";
+
+        $objWorksheet->mergeCells($range);
+
+        // Restore style
+        $cellStyle = $attr['style'];
+        $cellStyle->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+        $objWorksheet->duplicateStyle($cellStyle, $range);
+    }
+
 }
