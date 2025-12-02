@@ -716,37 +716,36 @@ class ExcelReportBehavior extends Behavior
         $cells = $cellCollection->getCoordinates();
 
         foreach ($cells as $cellCoordinate) {
-            $objWorksheet->setCellValue($cellCoordinate, 'A!');
-            continue;
+
             $objCell = $objWorksheet->getCell($cellCoordinate);
             if (is_object($objCell->getValue())) {
-                $cellValue = $objCell->getValue()->getPlainText();
-                if ($this->isExcelErrorValue($cellValue)) {
-                    $warning = "TEMPLATE ERROR: Fix cell $cellCoordinate in template";
-                    $objWorksheet->setCellValue($cellCoordinate, $warning);
-
-                    // Optional: style warning in red
-                    $objWorksheet->getStyle($cellCoordinate)
-                        ->getFont()->getColor()->setARGB('FFFF0000'); // red
-
-                    // continue — do NOT process placeholders inside this cell
-                    continue;
-                }
+                Log::debug(print_r(['A' => $objCell->getValue()], true));
+                $objWorksheet->setCellValue($cellCoordinate, 'A!');
+                continue;
+//                $cellValue = $objCell->getValue()->getPlainText();
+//                if ($this->isExcelErrorValue($cellValue)) {
+//                    $warning = "TEMPLATE ERROR: Fix cell $cellCoordinate in template";
+//                    $objWorksheet->setCellValue($cellCoordinate, $warning);
+//
+//                    // Optional: style warning in red
+//                    $objWorksheet->getStyle($cellCoordinate)
+//                        ->getFont()->getColor()->setARGB('FFFF0000'); // red
+//
+//                    // continue — do NOT process placeholders inside this cell
+//                    continue;
+//                }
             } else {
                 $cellValue = $objCell->getValue();
-
-// NEW: detect Excel error values in template
+                Log::debug(print_r(['B' => $cellValue], true));
+                $objWorksheet->setCellValue($cellCoordinate, 'B!');
                 if ($this->isExcelErrorValue($cellValue)) {
                     $warning = "TEMPLATE ERROR: Fix cell $cellCoordinate in template";
                     $objWorksheet->setCellValue($cellCoordinate, $warning);
-
-                    // Optional: style warning in red
-                    $objWorksheet->getStyle($cellCoordinate)
-                        ->getFont()->getColor()->setARGB('FFFF0000'); // red
-
                     // continue — do NOT process placeholders inside this cell
                     continue;
                 }
+                continue;
+
             }
 
             if (strlen($cellValue) > 0) {
