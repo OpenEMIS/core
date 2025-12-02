@@ -26,9 +26,6 @@ class ScholarshipsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.Scholarships']);
     }
 
-    // public function UsersDirectory(){
-    //     echo "asdfas";die;
-    // }
     //POCOR-9435 start
     public function UsersDirectory(){
        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.UsersDirectory']);
@@ -108,10 +105,8 @@ class ScholarshipsController extends AppController
                 $model->toggle('edit', false);
                 $model->toggle('remove', false);
 
-                /*$queryString = $this->request->getQuery('queryString');
-                echo "<pre>"; print_r($queryString);die;*/
+                /*$queryString = $this->request->getQuery('queryString');*/
                 $queryString = $this->getQueryString();
-           //     echo "<pre>"; print_r($queryString); die;
                 if(isset($queryString)){
                     $applicantId = $this->getQueryString('applicant_id');
                     $header = $this->Users->get($applicantId)->name;
@@ -130,8 +125,8 @@ class ScholarshipsController extends AppController
                 $model->toggle('edit', true);
                 $model->toggle('remove', true);
 
-                /*$queryString = $this->request->getQuery('queryString');
-                echo "<pre>"; print_r($queryString);die;*/
+                /*$queryString = $this->request->getQuery('queryString'); */
+
                 $queryString = $this->getQueryString();
                 if(isset($queryString)){
                     $applicantId = $this->getQueryString('applicant_id');
