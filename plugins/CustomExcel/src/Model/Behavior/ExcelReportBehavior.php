@@ -1516,7 +1516,7 @@ class ExcelReportBehavior extends Behavior
         Log::warning($errorMessage);
 
         // Return placeholder-style array for consistency with normal extract
-        return [ '__missing__' => $errorMessage ];
+        return [  ];
     }
 
     private function combineVarSafe(array $vars, string $keyPath, string $valuePath): array
@@ -1533,6 +1533,6 @@ class ExcelReportBehavior extends Behavior
 
         // Return a placeholder array so repeatRows() still works
 
-        return [ [ '__error' => $errorMessage ] ];
+        return [ [ '__error' => ' ' ] ];
     }
 }
