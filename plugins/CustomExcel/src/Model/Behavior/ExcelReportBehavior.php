@@ -499,68 +499,60 @@ class ExcelReportBehavior extends Behavior
         $targetColumnValue = $targetCell->getColumn();
         $targetRowValue = $targetCell->getRow();
 
-        // Track boundaries
+        // Track last col/row
         $this->checkLastColumn($targetColumnValue);
         $this->checkLastRow($targetRowValue);
 
-        // -----------------------------------------
-        // SAFETY CHECK: error message returned by getVarSafe()
-        // -----------------------------------------
-        $isError = (
-            is_string($cellValue) &&
-            (str_starts_with($cellValue, "ExcelReport: MISSING") ||
-                str_contains($cellValue, "TEMPLATE ERROR"))
-        );
+        // ---------------------------
+        // SAFETY WRAPPER
+        // ---------------------------
+        try {
 
-        if (!$isError) {
-            // -----------------------------------------
-            // NORMAL VALUE PROCESSING
-            // -----------------------------------------
-            switch($type) {
+            switch ($type) {
 
                 case 'number':
                     if (!is_null($format) && is_numeric($cellValue)) {
-                        // Example: 2 decimal places
-                        $formatting = number_format(0, $format);
-                        $cellStyle->getNumberFormat()->setFormatCode($formatting);
+                        // correct Excel format for numeric decimals
+                        $cellStyle
+                            ->getNumberFormat()
+                            ->setFormatCode('0.' . str_repeat('0', (int)$format));
                     }
                     break;
 
                 case 'date':
-                    // only format if it's a DateTime object
-                    if (!is_null($format) && ($cellValue instanceof \DateTimeInterface)) {
-                        $cellValue = $cellValue->format($format);
+                    if (!is_null($format) && !empty($cellValue)) {
+                        if ($cellValue instanceof \DateTimeInterface) {
+                            $cellValue = $cellValue->format($format);
+                        } else {
+                            // Non-date object provided
+                            throw new \Exception("Invalid date value for $cellCoordinate");
+                        }
                     }
                     break;
 
                 case 'time':
-                    if (!is_null($format) && ($cellValue instanceof \DateTimeInterface)) {
-                        $cellValue = $cellValue->format($format);
+                    if (!is_null($format) && !empty($cellValue)) {
+                        if ($cellValue instanceof \DateTimeInterface) {
+                            $cellValue = $cellValue->format($format);
+                        } else {
+                            throw new \Exception("Invalid time value for $cellCoordinate");
+                        }
                     }
                     break;
             }
-        } else {
 
-            // -----------------------------------------
-            // ERROR MODE — highlight cell in red
-            // -----------------------------------------
-            $objWorksheet->getStyle($cellCoordinate)
-                ->getFont()->getColor()->setARGB('FFFF0000');
+        } catch (\Throwable $e) {
 
-            // Optional: bold error text
-            $objWorksheet->getStyle($cellCoordinate)
-                ->getFont()->setBold(true);
+            // Log the issue
+            Log::warning("ExcelReport renderCell error at $cellCoordinate: " . $e->getMessage());
 
-            // Optional: yellow background
-            // $objWorksheet->getStyle($cellCoordinate)
-            //     ->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-            //     ->getStartColor()->setARGB('FFFFFF00');
+            // Fallback to safe empty cell
+            $cellValue = "";
         }
 
-        // -----------------------------------------
-        // FINALLY SET CELL AND STYLE
-        // -----------------------------------------
-
+        // ---------------------------
+        // ALWAYS APPLY BASIC STYLE AND VALUE
+        // ---------------------------
         if ($this->getConfig('wrapText')) {
             $cellStyle->getAlignment()->setWrapText(true);
         }
