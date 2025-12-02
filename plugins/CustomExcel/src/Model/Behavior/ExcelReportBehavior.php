@@ -719,6 +719,17 @@ class ExcelReportBehavior extends Behavior
             $objCell = $objWorksheet->getCell($cellCoordinate);
             if (is_object($objCell->getValue())) {
                 $cellValue = $objCell->getValue()->getPlainText();
+                if ($this->isExcelErrorValue($cellValue)) {
+                    $warning = "TEMPLATE ERROR: Fix cell $cellCoordinate in template";
+                    $objWorksheet->setCellValue($cellCoordinate, $warning);
+
+                    // Optional: style warning in red
+                    $objWorksheet->getStyle($cellCoordinate)
+                        ->getFont()->getColor()->setARGB('FFFF0000'); // red
+
+                    // continue — do NOT process placeholders inside this cell
+                    continue;
+                }
             } else {
                 $cellValue = $objCell->getValue();
 
