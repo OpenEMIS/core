@@ -1469,7 +1469,7 @@ class ExcelReportBehavior extends Behavior
         }
 
         // Log the error for debugging
-        $errorMessage = "MISSING DATA for $path";
+        $errorMessage = "ERROR PLACEHOLDER $path";
         Log::warning($errorMessage);
 
         // RETURN A HELPFUL MESSAGE IN THE EXCEL CELL (NOT BLANK)
