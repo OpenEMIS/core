@@ -1496,11 +1496,11 @@ class ExcelReportBehavior extends Behavior
         }
 
         // Log the error for debugging
-        $errorMessage = "ERROR PLACEHOLDER $path";
+        $errorMessage = "MISSING PLACEHOLDER $path";
         Log::warning($errorMessage);
 
         // RETURN A HELPFUL MESSAGE IN THE EXCEL CELL (NOT BLANK)
-        return "";
+        return $errorMessage;
     }
 
     private function extractVarSafe(array $vars, string $path): array|\ArrayAccess
