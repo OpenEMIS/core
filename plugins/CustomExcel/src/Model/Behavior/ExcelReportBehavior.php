@@ -716,6 +716,8 @@ class ExcelReportBehavior extends Behavior
         $cells = $cellCollection->getCoordinates();
 
         foreach ($cells as $cellCoordinate) {
+            $objWorksheet->setCellValue($cellCoordinate, 'A!');
+            continue;
             $objCell = $objWorksheet->getCell($cellCoordinate);
             if (is_object($objCell->getValue())) {
                 $cellValue = $objCell->getValue()->getPlainText();
