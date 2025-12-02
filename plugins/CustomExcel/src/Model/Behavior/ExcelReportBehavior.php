@@ -499,45 +499,80 @@ class ExcelReportBehavior extends Behavior
         $targetColumnValue = $targetCell->getColumn();
         $targetRowValue = $targetCell->getRow();
 
-
-        //To identify Last Col and Row
+        // Track boundaries
         $this->checkLastColumn($targetColumnValue);
         $this->checkLastRow($targetRowValue);
 
-        switch ($type) {
-            case 'number':
-                // set to two decimal places
-                if (!is_null($format) && is_numeric($cellValue)) {
-                    $formatting = number_format(0, $format);
-                    $cellStyle->getNumberFormat()->setFormatCode($formatting);
-                }
-                break;
+        // -----------------------------------------
+        // SAFETY CHECK: error message returned by getVarSafe()
+        // -----------------------------------------
+        $isError = (
+            is_string($cellValue) &&
+            (str_starts_with($cellValue, "ExcelReport: MISSING") ||
+                str_contains($cellValue, "TEMPLATE ERROR"))
+        );
 
-            case 'date':
-                if (!is_null($format) && !empty($cellValue)) {
-                    $cellValue = $cellValue->format($format);
-                }
-                break;
+        if (!$isError) {
+            // -----------------------------------------
+            // NORMAL VALUE PROCESSING
+            // -----------------------------------------
+            switch($type) {
 
-            case 'time':
-                if (!is_null($format) && !empty($cellValue)) {
-                    $cellValue = $cellValue->format($format);
-                }
-                break;
+                case 'number':
+                    if (!is_null($format) && is_numeric($cellValue)) {
+                        // Example: 2 decimal places
+                        $formatting = number_format(0, $format);
+                        $cellStyle->getNumberFormat()->setFormatCode($formatting);
+                    }
+                    break;
+
+                case 'date':
+                    // only format if it's a DateTime object
+                    if (!is_null($format) && ($cellValue instanceof \DateTimeInterface)) {
+                        $cellValue = $cellValue->format($format);
+                    }
+                    break;
+
+                case 'time':
+                    if (!is_null($format) && ($cellValue instanceof \DateTimeInterface)) {
+                        $cellValue = $cellValue->format($format);
+                    }
+                    break;
+            }
+        } else {
+
+            // -----------------------------------------
+            // ERROR MODE — highlight cell in red
+            // -----------------------------------------
+            $objWorksheet->getStyle($cellCoordinate)
+                ->getFont()->getColor()->setARGB('FFFF0000');
+
+            // Optional: bold error text
+            $objWorksheet->getStyle($cellCoordinate)
+                ->getFont()->setBold(true);
+
+            // Optional: yellow background
+            // $objWorksheet->getStyle($cellCoordinate)
+            //     ->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            //     ->getStartColor()->setARGB('FFFFFF00');
         }
+
+        // -----------------------------------------
+        // FINALLY SET CELL AND STYLE
+        // -----------------------------------------
 
         if ($this->getConfig('wrapText')) {
             $cellStyle->getAlignment()->setWrapText(true);
         }
 
-        // set cell style to follow placeholder
-        $objWorksheet->getCell($cellCoordinate)->setValue($cellValue);
+        $objWorksheet->setCellValue($cellCoordinate, $cellValue);
         $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
 
-        // set column width to follow placeholder
+        // Column width
         $objWorksheet->getColumnDimension($targetColumnValue)->setAutoSize(false);
         $objWorksheet->getColumnDimension($targetColumnValue)->setWidth($columnWidth);
     }
+
 
     private function processAdvancedPlaceholder($objSpreadsheet, $objWorksheet, $extra)
     {
