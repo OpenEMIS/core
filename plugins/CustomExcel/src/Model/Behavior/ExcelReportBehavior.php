@@ -719,10 +719,10 @@ class ExcelReportBehavior extends Behavior
 
             $objCell = $objWorksheet->getCell($cellCoordinate);
             if (is_object($objCell->getValue())) {
-                Log::debug(print_r(['A Value' => $objCell->getValue()], true));
+                $cellValue = $objCell->getValue()->getPlainText();
+                Log::debug(print_r(['A Value' => $cellValue], true));
                 $objWorksheet->setCellValue($cellCoordinate, 'A!');
-                continue;
-//                $cellValue = $objCell->getValue()->getPlainText();
+//
 //                if ($this->isExcelErrorValue($cellValue)) {
 //                    $warning = "TEMPLATE ERROR: Fix cell $cellCoordinate in template";
 //                    $objWorksheet->setCellValue($cellCoordinate, $warning);
@@ -744,7 +744,6 @@ class ExcelReportBehavior extends Behavior
                     // continue — do NOT process placeholders inside this cell
                     continue;
                 }
-                continue;
 
             }
 
@@ -875,51 +874,84 @@ class ExcelReportBehavior extends Behavior
         $vars = $extra->offsetExists('vars') ? $extra['vars'] : [];
         $placeHolderAttr = $this->convertPlaceHolderToArray($search);
 
-        if (empty($placeHolderAttr)) {
-            // basic type without formating
-            $strArray = explode('${', $search);
-            array_shift($strArray); // first element will not contain the placeholder
+        $cellCoordinate = $objCell->getCoordinate();
+        $cellStyle = $objCell->getStyle($cellCoordinate);
 
-            foreach ($strArray as $key => $str) {
+        // SAFETY: detect Excel formula errors (#REF!, #DIV/0!, etc)
+        if ($this->isExcelErrorValue($search)) {
+            $msg = "TEMPLATE ERROR at $cellCoordinate";
+            $objWorksheet->setCellValue($cellCoordinate, $msg);
+            $objWorksheet->getStyle($cellCoordinate)->getFont()->getColor()->setARGB('FFFF0000');
+            return;
+        }
+
+        /**
+         * ---------------------------------------
+         * CASE 1 — BASIC PLACEHOLDER WITHOUT FORMAT
+         * Example:  ${Students.name}
+         * ---------------------------------------
+         */
+        if (empty($placeHolderAttr)) {
+
+            $strArray = explode('${', $search);
+            array_shift($strArray);
+
+            foreach ($strArray as $str) {
                 $pos = strpos($str, '}');
 
                 if ($pos !== false) {
                     $placeholder = substr($str, 0, $pos);
                     $replace = sprintf($format, $placeholder);
+
                     $value = Hash::get($vars, $placeholder);
 
-                    if (!is_null($value)) {
-                        $search = str_replace($replace, $value, $search);
-                    } else {
-                        // replace placeholder as blank if data is empty
-                        $search = '';
+                    if ($value === null) {
+                        // SAFETY: missing placeholder → show error
+                        $msg = "MISSING DATA: $placeholder";
+                        $objWorksheet->setCellValue($cellCoordinate, $msg);
+                        $objWorksheet->getStyle($cellCoordinate)->getFont()->getColor()->setARGB('FFFF0000');
+                        return;
                     }
+
+                    $search = str_replace($replace, $value, $search);
                 }
             }
-
-            $cellCoordinate = $objCell->getCoordinate();
-            $cellStyle = $objCell->getStyle($cellCoordinate);
 
             if ($this->getConfig('wrapText')) {
                 $cellStyle->getAlignment()->setWrapText(true);
             }
 
-            $objWorksheet->getCell($cellCoordinate)->setValue($search);
+            $objWorksheet->setCellValue($cellCoordinate, $search);
             $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
-        } else {
-            // basic types with formating
-            $cellCoordinate = $objCell->getCoordinate();
-            $cellAttr = $this->extractCellAttr($objWorksheet, $objCell);
-            $placeholder = $placeHolderAttr['displayValue'];
-            $replace = sprintf($format, $placeholder);
-
-            $flattenVar = Hash::flatten($vars, '.');
-            $value = isset($flattenVar[$placeholder]) ? $flattenVar[$placeholder] : '';
-
-            $attr = array_merge($placeHolderAttr, $cellAttr);
-            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
+            return;
         }
+
+
+        /**
+         * ---------------------------------------
+         * CASE 2 — FORMATTED PLACEHOLDER
+         * Example:  ${"student.name": {"type":"date"} }
+         * ---------------------------------------
+         */
+        $cellAttr = $this->extractCellAttr($objWorksheet, $objCell);
+        $placeholder = $placeHolderAttr['displayValue'];
+        $replace = sprintf($format, $placeholder);
+
+        $flattenVar = Hash::flatten($vars, '.');
+        $value = $flattenVar[$placeholder] ?? null;
+
+        if ($value === null) {
+            // SAFETY: missing variable → red error in cell
+            $msg = "MISSING DATA: $placeholder";
+            $objWorksheet->setCellValue($cellCoordinate, $msg);
+            $objWorksheet->getStyle($cellCoordinate)->getFont()->getColor()->setARGB('FFFF0000');
+            return;
+        }
+
+        $attr = array_merge($placeHolderAttr, $cellAttr);
+        $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
     }
+
 
     private function mergeRange($fromColumn, $fromRow, $toColumn, $toRow, $objWorksheet, $attr)
     {
