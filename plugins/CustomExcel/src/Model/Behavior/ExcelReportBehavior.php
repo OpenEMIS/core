@@ -1,26 +1,20 @@
 <?php
+
 namespace CustomExcel\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Behavior;
-use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use Cake\Utility\Hash;
 use Cake\Utility\Inflector;
-use Cake\Collection\Collection;
 use Cake\Log\Log;
-
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
-use PhpOffice\PhpSpreadsheet\Cell\DataType;
-use Cake\ORM\Table;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
@@ -87,9 +81,43 @@ class ExcelReportBehavior extends Behavior
 
         $vars = $this->getVars($params, $extra);
         $results = Hash::flatten($vars);
-       // pr($results);
+        // pr($results);
         //die;
     }
+
+    public function getVars($params, ArrayObject $extra)
+    {
+        $model = $this->_table;
+
+        $variableValues = new ArrayObject([]);
+        if ($this->getConfig('variableSource') == 'database') {
+            $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialiseQueryVariables', [$params, $extra], $this);
+            if ($event->isStopped()) {
+                return $event->getResult();
+            }
+            if ($event->getResult()) {
+                $variableValues = $event->getResult();
+            }
+
+        } else if ($this->getConfig('variableSource') == 'file') {
+            $variables = $this->getConfig('variables');
+
+            foreach ($variables as $var) {
+                $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise' . $var, [$params, $extra], $this);
+                if ($event->isStopped()) {
+                    return $event->getResult();
+                }
+                if ($event->getResult()) {
+                    $variableValues[$var] = $event->getResult();
+                }
+            }
+        }
+
+        $variableValues = $variableValues->getArrayCopy();
+        return $variableValues;
+    }
+
+    //POCOR-8568[Here added  Event $event]
 
     public function onRenderExcelTemplate(Event $event, ArrayObject $extra)
     {
@@ -109,11 +137,11 @@ class ExcelReportBehavior extends Behavior
         $paramVal = '';
         if (isset($extra['requestQuery'])) {
             $params = $extra['requestQuery'];
-            Log::write('debug', 'ExcelReportBehavior2 >>> filepath2: '.$paramVal);
+            Log::write('debug', 'ExcelReportBehavior2 >>> filepath2: ' . $paramVal);
         } else {
             Log::write('debug', 'ExcelReportBehavior2 >>> filepath2: ');
             $params = $model->getQueryString();
-            if(empty($params)){
+            if (empty($params)) {
                 $params = $model->paramsDecode($event->getSubject()->getRequest()->getQuery('queryString'));
             }
             $paramVal = $params['assessment_id']; //POCOR-6908
@@ -135,12 +163,12 @@ class ExcelReportBehavior extends Behavior
         $this->generateExcel($objSpreadsheet, $extra);
 
         Log::write('debug', 'ExcelReportBehavior >>> renderExcelTemplate');
-        if(!empty($paramVal)){ // POCOR-6908
-            Log::write('debug', 'ExcelReportBehavior2 >>> filepath1: '.$paramVal);
-            $this->saveFileAssessment($objSpreadsheet, $temppath, $format, $params['student_id'],$paramVal);
-        }else{
+        if (!empty($paramVal)) { // POCOR-6908
+            Log::write('debug', 'ExcelReportBehavior2 >>> filepath1: ' . $paramVal);
+            $this->saveFileAssessment($objSpreadsheet, $temppath, $format, $params['student_id'], $paramVal);
+        } else {
             Log::write('debug', 'ExcelReportBehavior1 >>> filepath2: ');
-            $this->saveFile($objSpreadsheet, $temppath, $format, $params['student_id'],$params['report_card_id']);
+            $this->saveFile($objSpreadsheet, $temppath, $format, $params['student_id'], $params['report_card_id']);
         }
 
         if ($extra->offsetExists('temp_logo')) {
@@ -160,14 +188,14 @@ class ExcelReportBehavior extends Behavior
         $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateAfterGenerate', [$params, $extra], $this);
 
         if (!empty($params['student_id'])) {
-            $pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['student_id'].'.txt';
+            $pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['student_id'] . '.txt';
             $pdfFileContent = file_get_contents($pdfFilePath);
 
             $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
             // save Pdf file
             $StudentsReportCards->updateAll([
                 'file_content_pdf' => $pdfFileContent,
-                'status'=>3//POCOR-7530
+                'status' => 3//POCOR-7530
             ], $params);
 
             $this->deleteFile($pdfFilePath);
@@ -190,7 +218,6 @@ class ExcelReportBehavior extends Behavior
         gc_collect_cycles();
     }
 
-    //POCOR-8568[Here added  Event $event]
     public function loadExcelTemplate(ArrayObject $extra, Event $event = null) //POCOR-8588
     {
         $model = $this->_table;
@@ -199,7 +226,7 @@ class ExcelReportBehavior extends Behavior
         } else {
             //$recordId = $model->getQueryString($this->getConfig('templateTableKey'));
             $params = $model->getQueryString();
-            if(empty($params)){
+            if (empty($params)) {
                 $params = $model->paramsDecode($event->getSubject()->getRequest()->getQuery('queryString'));
             }
             $recordId = $params[$this->getConfig('templateTableKey')];
@@ -240,6 +267,17 @@ class ExcelReportBehavior extends Behavior
         return $objSpreadsheet;
     }
 
+    private function getFile($phpResourceFile)
+    {
+        $file = '';
+        while (!feof($phpResourceFile)) {
+            $file .= fread($phpResourceFile, 8192);
+        }
+        fclose($phpResourceFile);
+
+        return $file;
+    }
+
     public function generateExcel($objSpreadsheet, ArrayObject $extra)
     {
         foreach ($objSpreadsheet->getWorksheetIterator() as $objWorksheet) {
@@ -255,127 +293,19 @@ class ExcelReportBehavior extends Behavior
         $objSpreadsheet->setActiveSheetIndex(0);
     }
 
-    public function renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $cellValue, $attr, $extra)
+    private function processWorksheet($objSpreadsheet, $objWorksheet, $extra)
     {
-        $type = $attr['type'];
-        $format = $attr['format'];
-        $cellStyle = $attr['style'];
-        $columnWidth = $attr['columnWidth'];
-
-        $targetCell = $objWorksheet->getCell($cellCoordinate);
-        $targetColumnValue = $targetCell->getColumn();
-        $targetRowValue = $targetCell->getRow();
-
-
-        //To identify Last Col and Row
-        $this->checkLastColumn($targetColumnValue);
-        $this->checkLastRow($targetRowValue);
-
-        switch($type) {
-            case 'number':
-                // set to two decimal places
-                if (!is_null($format) && is_numeric($cellValue)) {
-                    $formatting = number_format(0, $format);
-                    $cellStyle->getNumberFormat()->setFormatCode($formatting);
-                }
-                break;
-
-            case 'date':
-                if (!is_null($format) && !empty($cellValue)) {
-                    $cellValue = $cellValue->format($format);
-                }
-                break;
-
-            case 'time':
-                if (!is_null($format) && !empty($cellValue)) {
-                    $cellValue = $cellValue->format($format);
-                }
-                break;
+        if ($this->currentWorksheet !== $objWorksheet) {
+            $this->currentWorksheetIndex++;
+            $this->currentWorksheet = $objWorksheet;
         }
 
-        if ($this->getConfig('wrapText')) {
-            $cellStyle->getAlignment()->setWrapText(true);
+        $extra['placeholders'] = [];
+        $this->processBasicPlaceholder($objSpreadsheet, $objWorksheet, $extra);
+
+        if (!empty($extra['placeholders'])) {
+            $this->processAdvancedPlaceholder($objSpreadsheet, $objWorksheet, $extra);
         }
-
-        // set cell style to follow placeholder
-        $objWorksheet->getCell($cellCoordinate)->setValue($cellValue);
-        $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
-
-        // set column width to follow placeholder
-        $objWorksheet->getColumnDimension($targetColumnValue)->setAutoSize(false);
-        $objWorksheet->getColumnDimension($targetColumnValue)->setWidth($columnWidth);
-    }
-
-    public function renderDropdown($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $cellValue, $attr, $extra)
-    {
-        $_attr = [
-            'source' => '',
-            'promptTitle' => __('Select from list'),
-            'prompt' => __('Please select a value from the dropdown list.'),
-            'errorTitle' => __('Input error'),
-            'error' => __('Value is not in list.')
-        ];
-        $_attr = array_merge($_attr, $attr['dropdown']);
-
-        $objValidation = $objWorksheet->getCell($cellCoordinate)->getDataValidation();
-        $objValidation->setType(DataValidation::TYPE_LIST);
-        $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
-        $objValidation->setAllowBlank(false);
-        $objValidation->setShowInputMessage(true);
-        $objValidation->setShowErrorMessage(true);
-        $objValidation->setShowDropDown(true);
-        $objValidation->setPromptTitle($_attr['promptTitle']);
-        $objValidation->setPrompt($_attr['prompt']);
-        $objValidation->setErrorTitle($_attr['errorTitle']);
-        $objValidation->setError($_attr['error']);
-
-        if (is_array($_attr['source'])) {
-            $list = implode(",", $_attr['source']);
-            $format = '"%s"';
-            $value = sprintf($format, $list);
-
-            $objValidation->setFormula1($value);
-        } else {
-            list($sheetName, $coordinate) = explode(".", $_attr['source']);
-            $referencesWorksheet = $objSpreadsheet->getSheetByName($sheetName);
-            $referencesCell = $referencesWorksheet->getCell($coordinate);
-            $columnValue = $referencesCell->getColumn();
-            $rowValue = $referencesCell->getRow();
-            $highestRow = $referencesWorksheet->getHighestRow($columnValue);
-
-            $listLocation = sprintf('%s!$%s$%s:$%s$%s', "'$sheetName'", $columnValue, $rowValue, $columnValue, $highestRow);
-            $objValidation->setFormula1($listLocation);
-        }
-
-        // set to empty to remove the placeholder
-        $objWorksheet->getCell($cellCoordinate)->setValue($cellValue);
-    }
-
-    public function renderImage(
-        Spreadsheet $objSpreadsheet,
-        Worksheet $objWorksheet,
-                    $objCell,
-        string $cellCoordinate,
-        ?string $imagePath,
-        array $attr,
-        array|ArrayObject $extra = []
-    ): void {
-        $imageWidth      = (int)($attr['imageWidth']      ?? 120);
-        $imageMarginLeft = (int)($attr['imageMarginLeft'] ?? 0);
-        $imageMarginTop  = (int)($attr['imageMarginTop']  ?? 0);
-
-        if (!$imagePath || !is_file($imagePath) || !is_readable($imagePath)) {
-            Log::warning('renderImage: missing or unreadable image: ' . (string)$imagePath);
-            return;
-        }
-
-        $drawing = new Drawing();
-        $drawing->setPath($imagePath);                 // auto-detects type (png/jpg/gif)
-        $drawing->setCoordinates($cellCoordinate);
-        $drawing->setOffsetX($imageMarginLeft);
-        $drawing->setOffsetY($imageMarginTop);
-        $drawing->setWidth($imageWidth);               // keep aspect by default
-        $drawing->setWorksheet($objWorksheet);         // use the sheet we were given
     }
 
 //    public function renderImage($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $imagePath, $attr, $extra)
@@ -424,165 +354,39 @@ class ExcelReportBehavior extends Behavior
 //        }
 //    }
 
-    public function saveFile($objSpreadsheet, $filepath, $format, $student_id, $report_card_id)
+    private function processBasicPlaceholder($objSpreadsheet, $objWorksheet, $extra)
     {
-        Log::write('debug', 'ExcelReportBehavior >>> saveFile: '.$format);
-        $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
+        $cellCollection = $objWorksheet->getCellCollection();
+        $cells = $cellCollection->getCoordinates();
 
-        if ($format == 'pdf') {
-            $this->savePDF($objSpreadsheet, $filepath, $student_id, $report_card_id);
-        } else {
-            // pdf
-            if(!empty($student_id)) {
-                $this->savePDF($objSpreadsheet, $filepath, $student_id, $report_card_id);
-            }
-            // xlsx
-            $objWriter->save($filepath);
-        }
-
-        $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
-        $objWriter->save($filepath);
-        $objSpreadsheet->disconnectWorksheets();
-        unset($objWriter, $objSpreadsheet);
-        gc_collect_cycles();
-
-    }
-    /**
-    * POCOR-6908
-    */
-    public function saveFileAssessment($objSpreadsheet, $filepath, $format, $student_id,$paramVal)
-    {
-        Log::write('debug', 'ExcelReportBehavior >>> saveFile: '.$format);
-        $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
-
-        if ($format == 'pdf') {
-            $this->savePDFAssessment($objSpreadsheet, $filepath, $student_id,$paramVal);
-            return; // POCOR-9336
-        } else {
-            // pdf
-            if(!empty($student_id)) {
-                $this->savePDFAssessment($objSpreadsheet, $filepath, $student_id);
-            }
-            // xlsx
-            $objWriter->save($filepath);
-        }
-
-        $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
-        $objWriter->save($filepath);
-        $objSpreadsheet->disconnectWorksheets();
-        unset($objWriter, $objSpreadsheet);
-        gc_collect_cycles();
-
-    }
-
-    public function downloadFile($filecontent, $filename, $filesize)
-    {
-        header("Pragma: public", true);
-        header("Expires: 0"); // set expiration time
-        header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-        header("Content-Type: application/force-download");
-        header("Content-Type: application/octet-stream");
-        header("Content-Type: application/download");
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        header("Content-Transfer-Encoding: binary");
-        header("Content-Length: " . $filesize);
-        echo $filecontent;
-    }
-
-    public function deleteFile($filepath)
-    {
-        $file = new File($filepath);
-        $file->delete();
-    }
-
-    public function getParams($controller)
-    {
-        $model = $this->_table;
-        $params = $model->getQueryString();
-        return $params;
-    }
-
-    public function getVars($params, ArrayObject $extra)
-    {
-        $model = $this->_table;
-
-        $variableValues = new ArrayObject([]);
-        if ($this->getConfig('variableSource') == 'database') {
-            $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialiseQueryVariables', [$params, $extra], $this);
-            if ($event->isStopped()) { return $event->getResult(); }
-            if ($event->getResult()) {
-                $variableValues = $event->getResult();
+        foreach ($cells as $cellCoordinate) {
+            $objCell = $objWorksheet->getCell($cellCoordinate);
+            if (is_object($objCell->getValue())) {
+                $cellValue = $objCell->getValue()->getPlainText();
+            } else {
+                $cellValue = $objCell->getValue();
             }
 
-        } else if ($this->getConfig('variableSource') == 'file') {
-            $variables = $this->getConfig('variables');
+            if (strlen($cellValue) > 0) {
+                $this->checkLastRow($objCell->getRow());
 
-            foreach ($variables as $var) {
-                $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise'.$var, [$params, $extra], $this);
-                if ($event->isStopped()) { return $event->getResult(); }
-                if ($event->getResult()) {
-                    $variableValues[$var] = $event->getResult();
+                $pos = strpos($cellValue, '${');
+
+                if ($pos !== false) {
+                    // if is basic placeholder then replace first, else added into $placeholder to process later
+                    if ($this->isBasicType($cellValue)) {
+                        Log::write('debug', $cellCoordinate . ' - ' . $cellValue);
+                        $this->string($objSpreadsheet, $objWorksheet, $objCell, $cellValue, $extra);
+                    } else {
+                        $columnValue = $objCell->getColumn();
+                        $rowValue = $objCell->getRow();
+                        $columnIndex = Coordinate::columnIndexFromString($columnValue);
+                        $extra['placeholders'][$columnIndex][$rowValue] = $cellValue;
+                    }
                 }
             }
         }
 
-        $variableValues = $variableValues->getArrayCopy();
-        return $variableValues;
-    }
-
-    private function getFile($phpResourceFile)
-    {
-        $file = '';
-        while (!feof($phpResourceFile)) {
-            $file .= fread($phpResourceFile, 8192);
-        }
-        fclose($phpResourceFile);
-
-        return $file;
-    }
-
-    private function getAdvancedTypeKeyword($keyword)
-    {
-        $format = '${"%s":';
-        $value = sprintf($format, $keyword);
-
-        return $value;
-    }
-
-    private function getPlaceholderData($placeholder, $extra)
-    {
-        $placeholderArray = explode(".", $placeholder);
-        if (end($placeholderArray) == 'i') {
-            array_pop($placeholderArray);   // remove i
-            $placeholder = implode(".", $placeholderArray);
-            $formattedPlaceholder = $this->formatPlaceholder($placeholder);
-            $placeholderData = !is_null($placeholder) ? Hash::extract($extra['vars'], $formattedPlaceholder) : [];
-
-            $count = 1;
-            foreach ($placeholderData as $key => $value) {
-                $placeholderData[$key] = $count++;
-            }
-        } else {
-            $formattedPlaceholder = $this->formatPlaceholder($placeholder);
-            $placeholderId = $this->splitDisplayValue($placeholder)[0].'.id';
-            $formattedPlaceholderId = $this->formatPlaceholder($placeholderId);
-
-            // check if data has id
-            $idData = !is_null($placeholderId) ? Hash::extract($extra['vars'], $formattedPlaceholderId) : [];
-            $valueData = !is_null($placeholderId) ? Hash::extract($extra['vars'], $formattedPlaceholder) : [];
-            $equal = count($idData) == count($valueData);
-
-            if (!empty($idData) && $equal) {
-                // get id and value as key-value pair
-                // selected field needs to be present in vars if not there will be a key-value number mismatch (be careful of using contain)
-                $placeholderData = !is_null($placeholder) ? Hash::combine($extra['vars'], $formattedPlaceholderId, $formattedPlaceholder) : [];
-            } else {
-                // only get value
-                $placeholderData = !is_null($placeholder) ? Hash::extract($extra['vars'], $formattedPlaceholder) : [];
-            }
-        }
-
-        return $placeholderData;
     }
 
     private function isBasicType($str)
@@ -599,13 +403,187 @@ class ExcelReportBehavior extends Behavior
         return true;
     }
 
+    private function getAdvancedTypeKeyword($keyword)
+    {
+        $format = '${"%s":';
+        $value = sprintf($format, $keyword);
+
+        return $value;
+    }
+
+    private function string($objSpreadsheet, $objWorksheet, $objCell, $search, $extra)
+    {
+        $format = '${%s}';
+        $vars = $extra->offsetExists('vars') ? $extra['vars'] : [];
+        $placeHolderAttr = $this->convertPlaceHolderToArray($search);
+
+        if (empty($placeHolderAttr)) {
+            // basic type without formating
+            $strArray = explode('${', $search);
+            array_shift($strArray); // first element will not contain the placeholder
+
+            foreach ($strArray as $key => $str) {
+                $pos = strpos($str, '}');
+
+                if ($pos !== false) {
+                    $placeholder = substr($str, 0, $pos);
+                    $replace = sprintf($format, $placeholder);
+                    $value = $this->getVarSafe($vars, $placeholder);
+
+                    if (!is_null($value)) {
+                        $search = str_replace($replace, $value, $search);
+                    } else {
+                        // replace placeholder as blank if data is empty
+                        $search = '';
+                    }
+                }
+            }
+
+            $cellCoordinate = $objCell->getCoordinate();
+            $cellStyle = $objCell->getStyle($cellCoordinate);
+
+            if ($this->getConfig('wrapText')) {
+                $cellStyle->getAlignment()->setWrapText(true);
+            }
+
+            $objWorksheet->getCell($cellCoordinate)->setValue($search);
+            $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
+        } else {
+            // basic types with formating
+            $cellCoordinate = $objCell->getCoordinate();
+            $cellAttr = $this->extractCellAttr($objWorksheet, $objCell);
+            $placeholder = $placeHolderAttr['displayValue'];
+            $replace = sprintf($format, $placeholder);
+
+            $flattenVar = Hash::flatten($vars, '.');
+            $value = isset($flattenVar[$placeholder]) ? $flattenVar[$placeholder] : '';
+
+            $attr = array_merge($placeHolderAttr, $cellAttr);
+            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
+        }
+    }
+
     private function convertPlaceHolderToArray($str)
     {
         $pos = strpos($str, '$');
-        $json = substr($str, $pos+1, strlen($str));
+        $json = substr($str, $pos + 1, strlen($str));
         $jsonArray = json_decode($json, true);
 
         return $jsonArray;
+    }
+
+    private function extractCellAttr($objWorksheet, $objCell)
+    {
+        $attr = [];
+
+        $columnValue = $objCell->getColumn();
+        $attr['columnValue'] = $columnValue;
+        $attr['columnIndex'] = Coordinate::columnIndexFromString($columnValue);
+        $attr['columnWidth'] = $objWorksheet->getColumnDimension($columnValue)->getWidth();
+        $attr['rowValue'] = $objCell->getRow();
+        $coordinate = $objCell->getCoordinate();
+        $attr['coordinate'] = $coordinate;
+        $attr['style'] = $objCell->getStyle($coordinate);
+
+        return $attr;
+    }
+
+    public function renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $cellValue, $attr, $extra)
+    {
+        $type = $attr['type'];
+        $format = $attr['format'];
+        $cellStyle = $attr['style'];
+        $columnWidth = $attr['columnWidth'];
+
+        $targetCell = $objWorksheet->getCell($cellCoordinate);
+        $targetColumnValue = $targetCell->getColumn();
+        $targetRowValue = $targetCell->getRow();
+
+
+        //To identify Last Col and Row
+        $this->checkLastColumn($targetColumnValue);
+        $this->checkLastRow($targetRowValue);
+
+        switch ($type) {
+            case 'number':
+                // set to two decimal places
+                if (!is_null($format) && is_numeric($cellValue)) {
+                    $formatting = number_format(0, $format);
+                    $cellStyle->getNumberFormat()->setFormatCode($formatting);
+                }
+                break;
+
+            case 'date':
+                if (!is_null($format) && !empty($cellValue)) {
+                    $cellValue = $cellValue->format($format);
+                }
+                break;
+
+            case 'time':
+                if (!is_null($format) && !empty($cellValue)) {
+                    $cellValue = $cellValue->format($format);
+                }
+                break;
+        }
+
+        if ($this->getConfig('wrapText')) {
+            $cellStyle->getAlignment()->setWrapText(true);
+        }
+
+        // set cell style to follow placeholder
+        $objWorksheet->getCell($cellCoordinate)->setValue($cellValue);
+        $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
+
+        // set column width to follow placeholder
+        $objWorksheet->getColumnDimension($targetColumnValue)->setAutoSize(false);
+        $objWorksheet->getColumnDimension($targetColumnValue)->setWidth($columnWidth);
+    }
+
+    private function processAdvancedPlaceholder($objSpreadsheet, $objWorksheet, $extra)
+    {
+        // sort by column index so that to process the first column first
+        ksort($extra['placeholders']);
+
+        while (!empty($extra['placeholders'])) {
+            $columnIndex = key($extra['placeholders']);
+            $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
+            $rowsObj = current($extra['placeholders']);
+            $rowValue = key($rowsObj);
+            $cellValue = current($rowsObj);
+
+            $cellCoordinate = $columnValue . $rowValue;
+            $objCell = $objWorksheet->getCell($cellCoordinate);
+
+            foreach ($this->advancedTypes as $function => $keyword) {
+                $value = $this->getAdvancedTypeKeyword($keyword);
+                $pos = strpos($cellValue, $value);
+                if ($pos !== false) {
+                    if ($function == 'table') {
+                        $function = 'tableData';//POCOR-8529
+                    }
+                    if (method_exists($this, $function)) {
+                        $jsonArray = $this->convertPlaceHolderToArray($cellValue);
+                        if (!empty($jsonArray)) {
+                            $placeHolderAttr = $this->extractPlaceholderAttr($jsonArray, $keyword, $extra);
+                            $cellAttr = $this->extractCellAttr($objWorksheet, $objCell);
+                            $attr = array_merge($placeHolderAttr, $cellAttr);
+
+                            Log::write('debug', $cellCoordinate . ' - ' . $cellValue);
+                            $this->$function($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
+                        } else {
+                            Log::write('debug', $cellCoordinate . ' - ' . $cellValue . ' is not a valid json format');
+                        }
+                    } else {
+                        Log::write('debug', 'Function ' . $function . ' is not exists');
+                    }
+                }
+            }
+
+            unset($extra['placeholders'][$columnIndex][$rowValue]);
+            if (empty($extra['placeholders'][$columnIndex])) {
+                unset($extra['placeholders'][$columnIndex]);
+            }
+        }
     }
 
     private function extractPlaceholderAttr($jsonArray, $keyword, $extra)
@@ -645,44 +623,52 @@ class ExcelReportBehavior extends Behavior
         return $attr;
     }
 
-    private function extractCellAttr($objWorksheet, $objCell)
+    private function getPlaceholderData($placeholder, $extra)
     {
-        $attr = [];
+        $placeholderArray = explode(".", $placeholder);
+        if (end($placeholderArray) == 'i') {
+            array_pop($placeholderArray);   // remove i
+            $placeholder = implode(".", $placeholderArray);
+            $formattedPlaceholder = $this->formatPlaceholder($placeholder);
+            $placeholderData = !is_null($placeholder) ?
 
-        $columnValue = $objCell->getColumn();
-        $attr['columnValue'] = $columnValue;
-        $attr['columnIndex'] = Coordinate::columnIndexFromString($columnValue);
-        $attr['columnWidth'] = $objWorksheet->getColumnDimension($columnValue)->getWidth();
-        $attr['rowValue'] = $objCell->getRow();
-        $coordinate = $objCell->getCoordinate();
-        $attr['coordinate'] = $coordinate;
-        $attr['style'] = $objCell->getStyle($coordinate);
+                Hash::extract($extra['vars'], $formattedPlaceholder) :
+                [];
 
-        return $attr;
+            $count = 1;
+            foreach ($placeholderData as $key => $value) {
+                $placeholderData[$key] = $count++;
+            }
+        } else {
+            $formattedPlaceholder = $this->formatPlaceholder($placeholder);
+            $placeholderId = $this->splitDisplayValue($placeholder)[0] . '.id';
+            $formattedPlaceholderId = $this->formatPlaceholder($placeholderId);
+
+            // check if data has id
+            $idData = !is_null($placeholderId) ? Hash::extract($extra['vars'], $formattedPlaceholderId) : [];
+            $valueData = !is_null($placeholderId) ? Hash::extract($extra['vars'], $formattedPlaceholder) : [];
+            $equal = count($idData) == count($valueData);
+
+            if (!empty($idData) && $equal) {
+                // get id and value as key-value pair
+                // selected field needs to be present in vars if not there will be a key-value number mismatch (be careful of using contain)
+                $placeholderData = !is_null($placeholder) ? Hash::combine($extra['vars'], $formattedPlaceholderId, $formattedPlaceholder) : [];
+            } else {
+                // only get value
+                $placeholderData = !is_null($placeholder) ? Hash::extract($extra['vars'], $formattedPlaceholder) : [];
+            }
+        }
+
+        return $placeholderData;
     }
 
-    private function formatPlaceholder($str, $offset=1, $length=0, $replacement=['{n}'])
+    private function formatPlaceholder($str, $offset = 1, $length = 0, $replacement = ['{n}'])
     {
         $placeholderArray = explode('.', $str);
         array_splice($placeholderArray, $offset, $length, $replacement);
         $placeholder = implode(".", $placeholderArray);
 
         return $placeholder;
-    }
-
-    private function formatFilter($filterStr)
-    {
-        $value = null;
-
-        $filterArray = explode(".", $filterStr);
-        if (sizeof($filterArray) == 2) {
-            $filterKey = $filterArray[1];
-            $value = "[$filterKey=%s]";
-        } else {
-            $value = "[$filterStr=%s]";
-        }
-
-        return $value;
     }
 
     private function splitDisplayValue($displayValue)
@@ -695,475 +681,83 @@ class ExcelReportBehavior extends Behavior
         return [$placeholderPrefix, $placeholderSuffix];
     }
 
-    private function processWorksheet($objSpreadsheet, $objWorksheet, $extra)
+    /**
+     * POCOR-6908
+     */
+    public function saveFileAssessment($objSpreadsheet, $filepath, $format, $student_id, $paramVal)
     {
-        if ($this->currentWorksheet !== $objWorksheet) {
-            $this->currentWorksheetIndex++;
-            $this->currentWorksheet = $objWorksheet;
-        }
+        Log::write('debug', 'ExcelReportBehavior >>> saveFile: ' . $format);
+        $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
 
-        $extra['placeholders'] = [];
-        $this->processBasicPlaceholder($objSpreadsheet, $objWorksheet, $extra);
-
-        if (!empty($extra['placeholders'])) {
-            $this->processAdvancedPlaceholder($objSpreadsheet, $objWorksheet, $extra);
-        }
-    }
-
-    private function processBasicPlaceholder($objSpreadsheet, $objWorksheet, $extra)
-    {
-        $cellCollection = $objWorksheet->getCellCollection();
-        $cells = $cellCollection->getCoordinates();
-
-        foreach ($cells as $cellCoordinate) {
-
-            $objCell = $objWorksheet->getCell($cellCoordinate);
-            if (is_object($objCell->getValue())) {
-                $cellValue = $objCell->getValue()->getPlainText();
-                Log::debug(print_r(['A Value' => $cellValue], true));
-                $objWorksheet->setCellValue($cellCoordinate, 'A!');
-//
-//                if ($this->isExcelErrorValue($cellValue)) {
-//                    $warning = "TEMPLATE ERROR: Fix cell $cellCoordinate in template";
-//                    $objWorksheet->setCellValue($cellCoordinate, $warning);
-//
-//                    // Optional: style warning in red
-//                    $objWorksheet->getStyle($cellCoordinate)
-//                        ->getFont()->getColor()->setARGB('FFFF0000'); // red
-//
-//                    // continue — do NOT process placeholders inside this cell
-//                    continue;
-//                }
-            } else {
-                $cellValue = $objCell->getValue();
-                Log::debug(print_r(['B Value' => $cellValue], true));
-                $objWorksheet->setCellValue($cellCoordinate, 'B!');
-                if ($this->isExcelErrorValue($cellValue)) {
-                    $warning = "TEMPLATE ERROR: Fix cell $cellCoordinate in template";
-                    $objWorksheet->setCellValue($cellCoordinate, $warning);
-                    // continue — do NOT process placeholders inside this cell
-                    continue;
-                }
-
-            }
-
-            if (strlen($cellValue) > 0) {
-                $this->checkLastRow($objCell->getRow());
-
-                $pos = strpos($cellValue, '${');
-
-                if ($pos !== false) {
-                    // if is basic placeholder then replace first, else added into $placeholder to process later
-                    if ($this->isBasicType($cellValue)) {
-                        Log::write('debug', $cellCoordinate . ' - ' . $cellValue);
-                        $this->string($objSpreadsheet, $objWorksheet, $objCell, $cellValue, $extra);
-                    } else {
-                        $columnValue = $objCell->getColumn();
-                        $rowValue = $objCell->getRow();
-                        $columnIndex = Coordinate::columnIndexFromString($columnValue);
-                        $extra['placeholders'][$columnIndex][$rowValue] = $cellValue;
-                    }
-                }
-            }
-        }
-
-    }
-
-    private function isExcelErrorValue($value): bool
-    {
-        if (!is_string($value)) {
-            return false;
-        }
-
-        // All Excel errors
-        $errors = [
-            '#NULL!', '#DIV/0!', '#VALUE!', '#REF!', '#NAME?', '#NUM!',
-            '#N/A', '#GETTING_DATA'
-        ];
-
-        return in_array(strtoupper(trim($value)), $errors, true);
-    }
-
-    private function processAdvancedPlaceholder($objSpreadsheet, $objWorksheet, $extra)
-    {
-        // sort by column index so that to process the first column first
-        ksort($extra['placeholders']);
-
-        while(!empty($extra['placeholders'])) {
-            $columnIndex = key($extra['placeholders']);
-            $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
-            $rowsObj = current($extra['placeholders']);
-            $rowValue = key($rowsObj);
-            $cellValue = current($rowsObj);
-
-            $cellCoordinate = $columnValue.$rowValue;
-            $objCell = $objWorksheet->getCell($cellCoordinate);
-
-            foreach ($this->advancedTypes as $function => $keyword) {
-                $value = $this->getAdvancedTypeKeyword($keyword);
-                $pos = strpos($cellValue, $value);
-                if ($pos !== false) {
-                    if($function == 'table') {
-                        $function = 'tableData';//POCOR-8529
-                    }
-                    if (method_exists($this, $function)) {
-                        $jsonArray = $this->convertPlaceHolderToArray($cellValue);
-                        if (!empty($jsonArray)) {
-                            $placeHolderAttr = $this->extractPlaceholderAttr($jsonArray, $keyword, $extra);
-                            $cellAttr = $this->extractCellAttr($objWorksheet, $objCell);
-                            $attr = array_merge($placeHolderAttr, $cellAttr);
-
-                            Log::write('debug', $cellCoordinate . ' - ' . $cellValue);
-                            $this->$function($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
-                        } else {
-                            Log::write('debug', $cellCoordinate . ' - ' . $cellValue . ' is not a valid json format');
-                        }
-                    } else {
-                        Log::write('debug', 'Function ' . $function . ' is not exists');
-                    }
-                }
-            }
-
-            unset($extra['placeholders'][$columnIndex][$rowValue]);
-            if (empty($extra['placeholders'][$columnIndex])) {
-                unset($extra['placeholders'][$columnIndex]);
-            }
-        }
-    }
-
-    private function updatePlaceholderCoordinate($affectedColumnValue=null, $affectedRowValue=null, $extra)
-    {
-        if (!is_null($affectedColumnValue)) {
-            $affectedColumnIndex = Coordinate::columnIndexFromString($affectedColumnValue);
-
-            $placeholders = [];
-            foreach ($extra['placeholders'] as $columnIndex => $rowsObj) {
-                if ($columnIndex >= $affectedColumnIndex) {
-                    // logic to shift coordinate of unprocessed placeholder to right if it is affected after auto insert new column
-                    $newColumnIndex = $columnIndex + 1;
-                    $placeholders[$newColumnIndex] = $extra['placeholders'][$columnIndex];
-                } else {
-                    // if is not affected, the stay as it is
-                    $placeholders[$columnIndex] = $extra['placeholders'][$columnIndex];
-                }
-            }
-
-            $extra['placeholders'] = $placeholders;
-        } else if (!is_null($affectedRowValue)) {
-            $placeholders = [];
-            foreach ($extra['placeholders'] as $columnIndex => $rowsObj) {
-                foreach($rowsObj as $rowIndex => $obj) {
-                    if ($rowIndex >= $affectedRowValue) {
-                        // logic to shift coordinate of unprocessed placeholder below if it is affected after auto insert new row
-                        $newRowIndex = $rowIndex + 1;
-                        $placeholders[$columnIndex][$newRowIndex] = $extra['placeholders'][$columnIndex][$rowIndex];
-                    } else {
-                        // if is not affected, the stay as it is
-                        $placeholders[$columnIndex][$rowIndex] = $extra['placeholders'][$columnIndex][$rowIndex];
-                    }
-                }
-            }
-
-            $extra['placeholders'] = $placeholders;
-        }
-    }
-
-    private function string($objSpreadsheet, $objWorksheet, $objCell, $search, $extra)
-    {
-        $format = '${%s}';
-        $vars = $extra->offsetExists('vars') ? $extra['vars'] : [];
-        $placeHolderAttr = $this->convertPlaceHolderToArray($search);
-
-        $cellCoordinate = $objCell->getCoordinate();
-        $cellStyle = $objCell->getStyle($cellCoordinate);
-
-        // SAFETY: detect Excel formula errors (#REF!, #DIV/0!, etc)
-        if ($this->isExcelErrorValue($search)) {
-            $msg = "TEMPLATE ERROR at $cellCoordinate";
-            $objWorksheet->setCellValue($cellCoordinate, $msg);
-            $objWorksheet->getStyle($cellCoordinate)->getFont()->getColor()->setARGB('FFFF0000');
-            return;
-        }
-
-        /**
-         * ---------------------------------------
-         * CASE 1 — BASIC PLACEHOLDER WITHOUT FORMAT
-         * Example:  ${Students.name}
-         * ---------------------------------------
-         */
-        if (empty($placeHolderAttr)) {
-
-            $strArray = explode('${', $search);
-            array_shift($strArray);
-
-            foreach ($strArray as $str) {
-                $pos = strpos($str, '}');
-
-                if ($pos !== false) {
-                    $placeholder = substr($str, 0, $pos);
-                    $replace = sprintf($format, $placeholder);
-
-                    $value = Hash::get($vars, $placeholder);
-
-                    if ($value === null) {
-                        // SAFETY: missing placeholder → show error
-                        $msg = "MISSING DATA: $placeholder";
-                        $objWorksheet->setCellValue($cellCoordinate, $msg);
-                        $objWorksheet->getStyle($cellCoordinate)->getFont()->getColor()->setARGB('FFFF0000');
-                        return;
-                    }
-
-                    $search = str_replace($replace, $value, $search);
-                }
-            }
-
-            if ($this->getConfig('wrapText')) {
-                $cellStyle->getAlignment()->setWrapText(true);
-            }
-
-            $objWorksheet->setCellValue($cellCoordinate, $search);
-            $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
-            return;
-        }
-
-
-        /**
-         * ---------------------------------------
-         * CASE 2 — FORMATTED PLACEHOLDER
-         * Example:  ${"student.name": {"type":"date"} }
-         * ---------------------------------------
-         */
-        $cellAttr = $this->extractCellAttr($objWorksheet, $objCell);
-        $placeholder = $placeHolderAttr['displayValue'];
-        $replace = sprintf($format, $placeholder);
-
-        $flattenVar = Hash::flatten($vars, '.');
-        $value = $flattenVar[$placeholder] ?? null;
-
-        if ($value === null) {
-            // SAFETY: missing variable → red error in cell
-            $msg = "MISSING DATA: $placeholder";
-            $objWorksheet->setCellValue($cellCoordinate, $msg);
-            $objWorksheet->getStyle($cellCoordinate)->getFont()->getColor()->setARGB('FFFF0000');
-            return;
-        }
-
-        $attr = array_merge($placeHolderAttr, $cellAttr);
-        $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
-    }
-
-
-    private function mergeRange($fromColumn, $fromRow, $toColumn, $toRow, $objWorksheet, $attr)
-    {
-        if (($fromColumn != $toColumn) || ($fromRow != $toRow)) {
-            $fromColumnValue = Coordinate::stringFromColumnIndex($fromColumn);
-            $toColumnValue = Coordinate::stringFromColumnIndex($toColumn);
-            $mergeRange = $fromColumnValue.$fromRow.":".$toColumnValue.$toRow;
-
-            $objWorksheet->mergeCells($mergeRange);
-
-            // fix border doesn't set after cell is merged
-            $cellStyle = $attr['style'];
-            $cellStyle->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $objWorksheet->duplicateStyle($cellStyle, $mergeRange);
-        }
-    }
-
-    private function row($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
-    {
-        $rowValue = $attr['rowValue'];
-        $columnIndex = $attr['columnIndex'];
-        $columnValue = $attr['columnValue'];
-        $nestedRow = isset($attr['children']) ? $attr['children'] : [];
-
-        $mergeColumns = $attr['mergeColumns'];
-        $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
-
-        if (!empty($attr['data'])) {
-            foreach ($attr['data'] as $key => $value) {
-                // skip first row don't need to auto insert new row
-                if ($rowValue != $attr['rowValue']) {
-                    $objWorksheet->insertNewRowBefore($rowValue);
-                    $this->updatePlaceholderCoordinate(null, $rowValue, $extra);
-                }
-
-                $cellCoordinate = $columnValue.$rowValue;
-                $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
-
-                if (!empty($nestedRow)) {
-                    $nestedRowValue = $this->nestedRow($nestedRow, $key, $rowValue, $columnIndex, $mergeColumns, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
-                }
-
-                // merge range based on mergeColumns attr and nestedRowValue
-                $mergeRowValue = isset($nestedRowValue) ? $nestedRowValue : $rowValue;
-                $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
-                $rowValue = $mergeRowValue;
-
-                $rowValue++;
-            }
+        if ($format == 'pdf') {
+            $this->savePDFAssessment($objSpreadsheet, $filepath, $student_id, $paramVal);
+            return; // POCOR-9336
         } else {
-            // replace placeholder as blank if data is empty
-            $cellCoordinate = $columnValue.$rowValue;
-            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
-
-            // mergeColumns even if there is no data
-            $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
-
-            // set nestedRow parentKey = -1 to allow mergeColumns to apply even for empty nested cells
-            if (!empty($nestedRow)) {
-                $this->nestedRow($nestedRow, -1, $rowValue, $columnIndex, $mergeColumns, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
+            // pdf
+            if (!empty($student_id)) {
+                $this->savePDFAssessment($objSpreadsheet, $filepath, $student_id);
             }
+            // xlsx
+            $objWriter->save($filepath);
         }
+
+        $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+        $objWriter->save($filepath);
+        $objSpreadsheet->disconnectWorksheets();
+        unset($objWriter, $objSpreadsheet);
+        gc_collect_cycles();
+
     }
 
-    private function nestedRow($nestedRow, $parentKey, $parentRowValue, $parentColumnIndex, $parentMergeColumns, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
+    public function saveFile($objSpreadsheet, $filepath, $format, $student_id, $report_card_id)
     {
-        $nestedAttr = $this->extractPlaceholderAttr($nestedRow, $this->advancedTypes['row'], $extra);
-        $filter = isset($nestedAttr['filter']) ? $nestedAttr['filter'] : null;
-        $secondNestedRow = isset($nestedAttr['children']) ? $nestedAttr['children'] : [];
+        Log::write('debug', 'ExcelReportBehavior >>> saveFile: ' . $format);
+        $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
 
-        $nestedRowValue = $parentRowValue;
-        $nestedColumnIndex = $parentColumnIndex + ($parentMergeColumns - 1) + 1; // always output children to the immediate next column
-        $nestedColumnValue = Coordinate::stringFromColumnIndex($nestedColumnIndex);
-
-        $nestedMergeColumns = $nestedAttr['mergeColumns'];
-        $mergeColumnIndex = $nestedColumnIndex + ($nestedMergeColumns - 1);
-
-        // set column width to width of first nested column
-        $attr['columnWidth'] = $objWorksheet->getColumnDimension($nestedColumnValue)->getWidth();
-
-        if (!is_null($filter)) {
-            list($placeholderPrefix, $placeholderSuffix) = $this->splitDisplayValue($nestedAttr['displayValue']);
-            $filterStr = $this->formatFilter($filter);
-
-            $placeholderFormat = $this->formatPlaceholder($placeholderPrefix).$filterStr.".";
-            $placeholder = sprintf($placeholderFormat.$placeholderSuffix, $parentKey);
-            $placeholderId = sprintf($placeholderFormat.'id', $parentKey);
-            $nestedData = Hash::combine($extra['vars'], $placeholderId, $placeholder);
+        if ($format == 'pdf') {
+            $this->savePDF($objSpreadsheet, $filepath, $student_id, $report_card_id);
         } else {
-            $nestedData = $nestedAttr['data'];
+            // pdf
+            if (!empty($student_id)) {
+                $this->savePDF($objSpreadsheet, $filepath, $student_id, $report_card_id);
+            }
+            // xlsx
+            $objWriter->save($filepath);
         }
 
-        if (!empty($nestedData)) {
-            foreach ($nestedData as $nestedKey => $nestedValue) {
-                // skip first row don't need to auto insert new row
-                if ($nestedRowValue != $parentRowValue) {
-                    $objWorksheet->insertNewRowBefore($nestedRowValue);
-                    $this->updatePlaceholderCoordinate(null, $nestedRowValue, $extra);
-                }
+        $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+        $objWriter->save($filepath);
+        $objSpreadsheet->disconnectWorksheets();
+        unset($objWriter, $objSpreadsheet);
+        gc_collect_cycles();
 
-                $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
-                $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
-
-                if (!empty($secondNestedRow)) {
-                    $secondNestedRowValue = $this->nestedRow($secondNestedRow, $nestedKey, $nestedRowValue, $nestedColumnIndex, $nestedMergeColumns, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
-                }
-
-                // merge range based on mergeColumns attr and secondNestedRowValue
-                $mergeRowValue = isset($secondNestedRowValue) ? $secondNestedRowValue : $nestedRowValue;
-                $this->mergeRange($nestedColumnIndex, $nestedRowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
-                $nestedRowValue = $mergeRowValue;
-
-                $nestedRowValue++;
-            }
-
-            // -1 due to the last $nestedRowValue++
-            $nestedRowValue = $nestedRowValue - 1;
-
-        } else {
-            // renderCell as empty to set style
-            $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
-            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, "", $attr, $extra);
-
-            // mergeColumns even if there is no data
-            $this->mergeRange($nestedColumnIndex, $nestedRowValue, $mergeColumnIndex, $nestedRowValue, $objWorksheet, $attr);
-
-            // set nestedRow parentKey = -1 to allow mergeColumns to apply even for empty nested cells
-            if (!empty($secondNestedRow)) {
-                $this->nestedRow($secondNestedRow, -1, $nestedRowValue, $nestedColumnIndex, $nestedMergeColumns, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
-            }
-        }
-        return $nestedRowValue;
     }
 
-    private function column($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
+    public function deleteFile($filepath)
     {
-        $rowValue = $attr['rowValue'];
-        $columnIndex = $attr['columnIndex'];
-        $columnValue = $attr['columnValue'];
-        $mergeColumns = $attr['mergeColumns'];
-        $nestedColumn = isset($attr['children']) ? $attr['children'] : [];
+        $file = new File($filepath);
+        $file->delete();
+    }
 
-        if (!empty($attr['data'])) {
-            foreach ($attr['data'] as $key => $value) {
-                $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
+    public function downloadFile($filecontent, $filename, $filesize)
+    {
+        header("Pragma: public", true);
+        header("Expires: 0"); // set expiration time
+        header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+        header("Content-Type: application/force-download");
+        header("Content-Type: application/octet-stream");
+        header("Content-Type: application/download");
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header("Content-Transfer-Encoding: binary");
+        header("Content-Length: " . $filesize);
+        echo $filecontent;
+    }
 
-                // skip first column don't need to auto insert new column
-                if ($columnIndex != $attr['columnIndex']) {
-                    $objWorksheet->insertNewColumnBefore($columnValue);
-                    $this->updatePlaceholderCoordinate($columnValue, null, $extra);
-                }
-
-                $cellCoordinate = $columnValue.$rowValue;
-                $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
-
-                if (!empty($nestedColumn)) {
-                    $nestedAttr = $this->extractPlaceholderAttr($nestedColumn, $this->advancedTypes[__FUNCTION__], $extra);
-                    $nestedMergeColumns = $nestedAttr['mergeColumns'];
-                    $nestedRowValue = $rowValue + 1; // always output children to the immediate next row
-                    $nestedColumnIndex = $columnIndex;
-
-                    if (!empty($nestedAttr['data'])) {
-                        foreach ($nestedAttr['data'] as $nestedKey => $nestedValue) {
-                            $nestedColumnValue = Coordinate::stringFromColumnIndex($nestedColumnIndex);
-                            if ($nestedColumnIndex != $columnIndex) {
-                                $objWorksheet->insertNewColumnBefore($nestedColumnValue);
-                                $this->updatePlaceholderCoordinate($nestedColumnValue, null, $extra);
-                            }
-
-                            $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
-                            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
-
-                            // merge range based on mergeColumns attr
-                            $nestedMergeColumnIndex = $nestedColumnIndex + ($nestedMergeColumns - 1);
-                            $this->mergeRange($nestedColumnIndex, $nestedRowValue, $nestedMergeColumnIndex, $nestedRowValue, $objWorksheet, $attr);
-                            $nestedColumnIndex = $nestedMergeColumnIndex;
-
-                            $nestedColumnIndex++;
-                        }
-
-                        // -1 due to the last $nestedRowValue++
-                        $nestedColumnIndex = $nestedColumnIndex - 1;
-                    } else {
-                        // renderCell as empty to set style
-                        $nestedColumnValue = Coordinate::stringFromColumnIndex($nestedColumnIndex);
-                        $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
-                        $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, "", $attr, $extra);
-
-                        // mergeColumns even if there is no data
-                        $nestedMergeColumnIndex = $nestedColumnIndex + ($nestedMergeColumns - 1);
-                        $this->mergeRange($nestedColumnIndex, $nestedRowValue, $nestedMergeColumnIndex, $nestedRowValue, $objWorksheet, $attr);
-
-                        $nestedColumnIndex = $nestedMergeColumnIndex;
-                    }
-                }
-
-                // mergeColumns attr from parent will only be used if there is no nested column
-                $mergeColumnIndex = isset($nestedColumnIndex) ? $nestedColumnIndex : $columnIndex + ($mergeColumns - 1);
-                $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
-                $columnIndex = $mergeColumnIndex;
-
-                $columnIndex++;
-            }
-        } else {
-            // replace placeholder as blank if data is empty
-            $cellCoordinate = $columnValue.$rowValue;
-            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
-
-            // mergeColumns even if there is no data
-            $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
-            $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
-        }
+    public function getParams($controller)
+    {
+        $model = $this->_table;
+        $params = $model->getQueryString();
+        return $params;
     }
 
     public function tableData($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra) // POCOR-9336
@@ -1176,11 +770,11 @@ class ExcelReportBehavior extends Behavior
         $insertRows = $attr['insertRows'];
 
         if ($showHeaders) {
-            foreach($displayColumns as $key => $column) {
+            foreach ($displayColumns as $key => $column) {
                 $header = Inflector::humanize($key);
 
                 $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
-                $cellCoordinate = $columnValue.$rowValue;
+                $cellCoordinate = $columnValue . $rowValue;
                 $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $header, $attr, $extra);
                 $columnIndex++;
             }
@@ -1205,14 +799,14 @@ class ExcelReportBehavior extends Behavior
                     $value = null;
                     if (isset($column['displayValue'])) {
                         $field = $this->splitDisplayValue($column['displayValue'])[1];
-                        $value = Hash::get($vars, $field);
+                        $value = $this->getVarSafe($vars, $placeholder);
                     }
 
                     $attr['type'] = isset($column['type']) ? $column['type'] : null;
                     $attr['format'] = isset($column['format']) ? $column['format'] : null;
 
                     $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
-                    $cellCoordinate = $columnValue.$rowValue;
+                    $cellCoordinate = $columnValue . $rowValue;
                     $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
 
                     $columnIndex++;
@@ -1223,10 +817,275 @@ class ExcelReportBehavior extends Behavior
         } else {
             // replace placeholder as blank if data is empty
             $columnValue = $attr['columnValue'];
-            $cellCoordinate = $columnValue.$rowValue;
+            $cellCoordinate = $columnValue . $rowValue;
             $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
         }
 
+    }
+
+    private function row($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
+    {
+        $rowValue = $attr['rowValue'];
+        $columnIndex = $attr['columnIndex'];
+        $columnValue = $attr['columnValue'];
+        $nestedRow = isset($attr['children']) ? $attr['children'] : [];
+
+        $mergeColumns = $attr['mergeColumns'];
+        $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
+
+        if (!empty($attr['data'])) {
+            foreach ($attr['data'] as $key => $value) {
+                // skip first row don't need to auto insert new row
+                if ($rowValue != $attr['rowValue']) {
+                    $objWorksheet->insertNewRowBefore($rowValue);
+                    $this->updatePlaceholderCoordinate(null, $rowValue, $extra);
+                }
+
+                $cellCoordinate = $columnValue . $rowValue;
+                $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
+
+                if (!empty($nestedRow)) {
+                    $nestedRowValue = $this->nestedRow($nestedRow, $key, $rowValue, $columnIndex, $mergeColumns, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
+                }
+
+                // merge range based on mergeColumns attr and nestedRowValue
+                $mergeRowValue = isset($nestedRowValue) ? $nestedRowValue : $rowValue;
+                $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
+                $rowValue = $mergeRowValue;
+
+                $rowValue++;
+            }
+        } else {
+            // replace placeholder as blank if data is empty
+            $cellCoordinate = $columnValue . $rowValue;
+            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
+
+            // mergeColumns even if there is no data
+            $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
+
+            // set nestedRow parentKey = -1 to allow mergeColumns to apply even for empty nested cells
+            if (!empty($nestedRow)) {
+                $this->nestedRow($nestedRow, -1, $rowValue, $columnIndex, $mergeColumns, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
+            }
+        }
+    }
+
+    private function updatePlaceholderCoordinate($affectedColumnValue = null, $affectedRowValue = null, $extra)
+    {
+        if (!is_null($affectedColumnValue)) {
+            $affectedColumnIndex = Coordinate::columnIndexFromString($affectedColumnValue);
+
+            $placeholders = [];
+            foreach ($extra['placeholders'] as $columnIndex => $rowsObj) {
+                if ($columnIndex >= $affectedColumnIndex) {
+                    // logic to shift coordinate of unprocessed placeholder to right if it is affected after auto insert new column
+                    $newColumnIndex = $columnIndex + 1;
+                    $placeholders[$newColumnIndex] = $extra['placeholders'][$columnIndex];
+                } else {
+                    // if is not affected, the stay as it is
+                    $placeholders[$columnIndex] = $extra['placeholders'][$columnIndex];
+                }
+            }
+
+            $extra['placeholders'] = $placeholders;
+        } else if (!is_null($affectedRowValue)) {
+            $placeholders = [];
+            foreach ($extra['placeholders'] as $columnIndex => $rowsObj) {
+                foreach ($rowsObj as $rowIndex => $obj) {
+                    if ($rowIndex >= $affectedRowValue) {
+                        // logic to shift coordinate of unprocessed placeholder below if it is affected after auto insert new row
+                        $newRowIndex = $rowIndex + 1;
+                        $placeholders[$columnIndex][$newRowIndex] = $extra['placeholders'][$columnIndex][$rowIndex];
+                    } else {
+                        // if is not affected, the stay as it is
+                        $placeholders[$columnIndex][$rowIndex] = $extra['placeholders'][$columnIndex][$rowIndex];
+                    }
+                }
+            }
+
+            $extra['placeholders'] = $placeholders;
+        }
+    }
+
+    private function nestedRow($nestedRow, $parentKey, $parentRowValue, $parentColumnIndex, $parentMergeColumns, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
+    {
+        $nestedAttr = $this->extractPlaceholderAttr($nestedRow, $this->advancedTypes['row'], $extra);
+        $filter = isset($nestedAttr['filter']) ? $nestedAttr['filter'] : null;
+        $secondNestedRow = isset($nestedAttr['children']) ? $nestedAttr['children'] : [];
+
+        $nestedRowValue = $parentRowValue;
+        $nestedColumnIndex = $parentColumnIndex + ($parentMergeColumns - 1) + 1; // always output children to the immediate next column
+        $nestedColumnValue = Coordinate::stringFromColumnIndex($nestedColumnIndex);
+
+        $nestedMergeColumns = $nestedAttr['mergeColumns'];
+        $mergeColumnIndex = $nestedColumnIndex + ($nestedMergeColumns - 1);
+
+        // set column width to width of first nested column
+        $attr['columnWidth'] = $objWorksheet->getColumnDimension($nestedColumnValue)->getWidth();
+
+        if (!is_null($filter)) {
+            list($placeholderPrefix, $placeholderSuffix) = $this->splitDisplayValue($nestedAttr['displayValue']);
+            $filterStr = $this->formatFilter($filter);
+
+            $placeholderFormat = $this->formatPlaceholder($placeholderPrefix) . $filterStr . ".";
+            $placeholder = sprintf($placeholderFormat . $placeholderSuffix, $parentKey);
+            $placeholderId = sprintf($placeholderFormat . 'id', $parentKey);
+            $nestedData = Hash::combine($extra['vars'], $placeholderId, $placeholder);
+        } else {
+            $nestedData = $nestedAttr['data'];
+        }
+
+        if (!empty($nestedData)) {
+            foreach ($nestedData as $nestedKey => $nestedValue) {
+                // skip first row don't need to auto insert new row
+                if ($nestedRowValue != $parentRowValue) {
+                    $objWorksheet->insertNewRowBefore($nestedRowValue);
+                    $this->updatePlaceholderCoordinate(null, $nestedRowValue, $extra);
+                }
+
+                $nestedCellCoordinate = $nestedColumnValue . $nestedRowValue;
+                $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
+
+                if (!empty($secondNestedRow)) {
+                    $secondNestedRowValue = $this->nestedRow($secondNestedRow, $nestedKey, $nestedRowValue, $nestedColumnIndex, $nestedMergeColumns, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
+                }
+
+                // merge range based on mergeColumns attr and secondNestedRowValue
+                $mergeRowValue = isset($secondNestedRowValue) ? $secondNestedRowValue : $nestedRowValue;
+                $this->mergeRange($nestedColumnIndex, $nestedRowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
+                $nestedRowValue = $mergeRowValue;
+
+                $nestedRowValue++;
+            }
+
+            // -1 due to the last $nestedRowValue++
+            $nestedRowValue = $nestedRowValue - 1;
+
+        } else {
+            // renderCell as empty to set style
+            $nestedCellCoordinate = $nestedColumnValue . $nestedRowValue;
+            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, "", $attr, $extra);
+
+            // mergeColumns even if there is no data
+            $this->mergeRange($nestedColumnIndex, $nestedRowValue, $mergeColumnIndex, $nestedRowValue, $objWorksheet, $attr);
+
+            // set nestedRow parentKey = -1 to allow mergeColumns to apply even for empty nested cells
+            if (!empty($secondNestedRow)) {
+                $this->nestedRow($secondNestedRow, -1, $nestedRowValue, $nestedColumnIndex, $nestedMergeColumns, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
+            }
+        }
+        return $nestedRowValue;
+    }
+
+    private function formatFilter($filterStr)
+    {
+        $value = null;
+
+        $filterArray = explode(".", $filterStr);
+        if (sizeof($filterArray) == 2) {
+            $filterKey = $filterArray[1];
+            $value = "[$filterKey=%s]";
+        } else {
+            $value = "[$filterStr=%s]";
+        }
+
+        return $value;
+    }
+
+    private function mergeRange($fromColumn, $fromRow, $toColumn, $toRow, $objWorksheet, $attr)
+    {
+        if (($fromColumn != $toColumn) || ($fromRow != $toRow)) {
+            $fromColumnValue = Coordinate::stringFromColumnIndex($fromColumn);
+            $toColumnValue = Coordinate::stringFromColumnIndex($toColumn);
+            $mergeRange = $fromColumnValue . $fromRow . ":" . $toColumnValue . $toRow;
+
+            $objWorksheet->mergeCells($mergeRange);
+
+            // fix border doesn't set after cell is merged
+            $cellStyle = $attr['style'];
+            $cellStyle->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+            $objWorksheet->duplicateStyle($cellStyle, $mergeRange);
+        }
+    }
+
+    private function column($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
+    {
+        $rowValue = $attr['rowValue'];
+        $columnIndex = $attr['columnIndex'];
+        $columnValue = $attr['columnValue'];
+        $mergeColumns = $attr['mergeColumns'];
+        $nestedColumn = isset($attr['children']) ? $attr['children'] : [];
+
+        if (!empty($attr['data'])) {
+            foreach ($attr['data'] as $key => $value) {
+                $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
+
+                // skip first column don't need to auto insert new column
+                if ($columnIndex != $attr['columnIndex']) {
+                    $objWorksheet->insertNewColumnBefore($columnValue);
+                    $this->updatePlaceholderCoordinate($columnValue, null, $extra);
+                }
+
+                $cellCoordinate = $columnValue . $rowValue;
+                $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
+
+                if (!empty($nestedColumn)) {
+                    $nestedAttr = $this->extractPlaceholderAttr($nestedColumn, $this->advancedTypes[__FUNCTION__], $extra);
+                    $nestedMergeColumns = $nestedAttr['mergeColumns'];
+                    $nestedRowValue = $rowValue + 1; // always output children to the immediate next row
+                    $nestedColumnIndex = $columnIndex;
+
+                    if (!empty($nestedAttr['data'])) {
+                        foreach ($nestedAttr['data'] as $nestedKey => $nestedValue) {
+                            $nestedColumnValue = Coordinate::stringFromColumnIndex($nestedColumnIndex);
+                            if ($nestedColumnIndex != $columnIndex) {
+                                $objWorksheet->insertNewColumnBefore($nestedColumnValue);
+                                $this->updatePlaceholderCoordinate($nestedColumnValue, null, $extra);
+                            }
+
+                            $nestedCellCoordinate = $nestedColumnValue . $nestedRowValue;
+                            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
+
+                            // merge range based on mergeColumns attr
+                            $nestedMergeColumnIndex = $nestedColumnIndex + ($nestedMergeColumns - 1);
+                            $this->mergeRange($nestedColumnIndex, $nestedRowValue, $nestedMergeColumnIndex, $nestedRowValue, $objWorksheet, $attr);
+                            $nestedColumnIndex = $nestedMergeColumnIndex;
+
+                            $nestedColumnIndex++;
+                        }
+
+                        // -1 due to the last $nestedRowValue++
+                        $nestedColumnIndex = $nestedColumnIndex - 1;
+                    } else {
+                        // renderCell as empty to set style
+                        $nestedColumnValue = Coordinate::stringFromColumnIndex($nestedColumnIndex);
+                        $nestedCellCoordinate = $nestedColumnValue . $nestedRowValue;
+                        $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, "", $attr, $extra);
+
+                        // mergeColumns even if there is no data
+                        $nestedMergeColumnIndex = $nestedColumnIndex + ($nestedMergeColumns - 1);
+                        $this->mergeRange($nestedColumnIndex, $nestedRowValue, $nestedMergeColumnIndex, $nestedRowValue, $objWorksheet, $attr);
+
+                        $nestedColumnIndex = $nestedMergeColumnIndex;
+                    }
+                }
+
+                // mergeColumns attr from parent will only be used if there is no nested column
+                $mergeColumnIndex = isset($nestedColumnIndex) ? $nestedColumnIndex : $columnIndex + ($mergeColumns - 1);
+                $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
+                $columnIndex = $mergeColumnIndex;
+
+                $columnIndex++;
+            }
+        } else {
+            // replace placeholder as blank if data is empty
+            $cellCoordinate = $columnValue . $rowValue;
+            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
+
+            // mergeColumns even if there is no data
+            $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
+            $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
+        }
     }
 
     private function match($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
@@ -1245,7 +1104,7 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    private function matchRows($objSpreadsheet, $objWorksheet, $objCell, $attr, $rowsArray=[], $columnsArray=[], $extra)
+    private function matchRows($objSpreadsheet, $objWorksheet, $objCell, $attr, $rowsArray = [], $columnsArray = [], $extra)
     {
         $matchFrom = isset($rowsArray['matchFrom']) ? $rowsArray['matchFrom'] : [];
         $matchTo = isset($rowsArray['matchTo']) ? $rowsArray['matchTo'] : [];
@@ -1253,7 +1112,7 @@ class ExcelReportBehavior extends Behavior
         $nestedRow = isset($rowsArray['children']) ? $rowsArray['children'] : [];
 
         $filterStr = $this->formatFilter($matchTo);
-        $attr['filterStr'] = isset($attr['filterStr']) ? $attr['filterStr'].$filterStr : $filterStr;
+        $attr['filterStr'] = isset($attr['filterStr']) ? $attr['filterStr'] . $filterStr : $filterStr;
 
         $columnIndex = $attr['columnIndex'];
         $rowValue = $attr['rowValue'];
@@ -1272,14 +1131,14 @@ class ExcelReportBehavior extends Behavior
                         $printedMatchFilter = sprintf($attr['filterStr'], $key);
                         $rowValue = $this->nestedMatchRow($nestedRow, $printedMatchFilter, $key, $rowValue, $columnIndex, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
                     } else {
-                        $placeholderFormat = $this->formatPlaceholder($attr['placeholderPrefix']).$attr['filterStr'].".".$attr['placeholderSuffix'];
+                        $placeholderFormat = $this->formatPlaceholder($attr['placeholderPrefix']) . $attr['filterStr'] . "." . $attr['placeholderSuffix'];
                         $placeholder = sprintf($placeholderFormat, $value);
 
                         $matchData = Hash::extract($extra['vars'], $placeholder);
                         $matchValue = !empty($matchData) ? current($matchData) : '';
 
                         $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
-                        $cellCoordinate = $columnValue.$rowValue;
+                        $cellCoordinate = $columnValue . $rowValue;
                         $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $matchValue, $attr, $extra);
                         $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
 
@@ -1291,84 +1150,13 @@ class ExcelReportBehavior extends Behavior
         } else {
             // replace placeholder as blank if data is empty
             $columnValue = $attr['columnValue'];
-            $cellCoordinate = $columnValue.$rowValue;
+            $cellCoordinate = $columnValue . $rowValue;
             $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
             $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
         }
     }
 
-    private function nestedMatchRow($nestedRow, $matchFilter, $parentKey, $rowValue, $columnIndex, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
-    {
-        if (isset($nestedRow['rows'])) {
-            $nestedAttr = $nestedRow['rows'];
-            $nestedFilter = isset($nestedAttr['filter']) ? $nestedAttr['filter'] : null; // used to filter nested match row data
-            $nestedMatchFrom = isset($nestedAttr['matchFrom']) ? $nestedAttr['matchFrom'] : [];
-            $nestedMatchTo = isset($nestedAttr['matchTo']) ? $nestedAttr['matchTo'] : [];
-            $nestedMergeBy = isset($nestedAttr['mergeBy']) ? $nestedAttr['mergeBy'] : [];
-            $secondNestedRow = isset($nestedAttr['children']) ? $nestedAttr['children'] : [];
-
-            $mergeColumns = $attr['mergeColumns'];
-            $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
-
-            $variableMatchFilter = $matchFilter.$this->formatFilter($nestedMatchTo); // used to filter matching results
-
-            $nestedData = [];
-            if (!empty($nestedMatchFrom)) {
-                if (!is_null($nestedFilter)) {
-                    list($placeholderPrefix, $placeholderSuffix) = $this->splitDisplayValue($nestedMatchFrom);
-                    $nestedDataFilter = $this->formatFilter($nestedFilter);
-                    $placeholderFormat = $this->formatPlaceholder($placeholderPrefix).$nestedDataFilter.".";
-
-                    $placeholder = sprintf($placeholderFormat.$placeholderSuffix, $parentKey);
-                    $placeholderId = sprintf($placeholderFormat.'id', $parentKey);
-                    $nestedData = Hash::combine($extra['vars'], $placeholderId, $placeholder);
-                } else {
-                    $nestedData = $this->getPlaceholderData($nestedMatchFrom, $extra);
-                }
-            }
-
-            if (!empty($nestedData)) {
-                foreach ($nestedData as $nestedKey => $nestedValue) {
-                    $printedMatchFilter = sprintf($variableMatchFilter, $nestedValue);
-
-                    if (!empty($secondNestedRow)) {
-                        $rowValue = $this->nestedMatchRow($secondNestedRow, $printedMatchFilter, $nestedKey, $rowValue, $columnIndex, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
-                    } else {
-                        $mergeRowCount = 0;
-                        if (!empty($nestedMergeBy)) {
-                            $mergeRowCount = $this->countMergeData($nestedMergeBy, $nestedKey, $mergeRowCount, $extra);
-                        }
-
-                        // printedMatchFilter already contains all key values, no need for sprintf again
-                        $placeholder = $this->formatPlaceholder($attr['placeholderPrefix']).$printedMatchFilter.".".$attr['placeholderSuffix'];
-
-                        $matchData = Hash::extract($extra['vars'], $placeholder);
-                        $matchValue = !empty($matchData) ? current($matchData) : '';
-
-                        $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
-                        $nestedCellCoordinate = $columnValue.$rowValue;
-
-                        $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, $matchValue, $attr, $extra);
-
-                        $mergeRowValue = ($mergeRowCount > 1) ? $rowValue + ($mergeRowCount - 1) : $rowValue;
-                        $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
-
-                        $rowValue = $mergeRowValue;
-                        $rowValue++;
-                    }
-                }
-            } else {
-                $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
-                $nestedCellCoordinate = $columnValue.$rowValue;
-                $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, "", $attr, $extra);
-                $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
-                $rowValue++;
-            }
-        }
-        return $rowValue;
-    }
-
-    private function matchColumns($objSpreadsheet, $objWorksheet, $objCell, $attr, $columnsArray=[], &$columnIndex, &$rowValue, $filterValue=null, $extra)
+    private function matchColumns($objSpreadsheet, $objWorksheet, $objCell, $attr, $columnsArray = [], &$columnIndex, &$rowValue, $filterValue = null, $extra)
     {
         $matchFrom = isset($columnsArray['matchFrom']) ? $columnsArray['matchFrom'] : [];
         $matchTo = isset($columnsArray['matchTo']) ? $columnsArray['matchTo'] : [];
@@ -1389,7 +1177,7 @@ class ExcelReportBehavior extends Behavior
             foreach ($columnData as $key => $value) {
                 if (!empty($nestedColumnsArray)) {
                     foreach ($nestedColumnData as $nestedKey => $nestedValue) {
-                        $placeholderFormat = $this->formatPlaceholder($attr['placeholderPrefix']).$attr['filterStr'].".".$attr['placeholderSuffix'];
+                        $placeholderFormat = $this->formatPlaceholder($attr['placeholderPrefix']) . $attr['filterStr'] . "." . $attr['placeholderSuffix'];
                         if (!is_null($filterValue)) {
                             $placeholder = sprintf($placeholderFormat, $filterValue, $value, $nestedValue);
                         } else {
@@ -1400,13 +1188,13 @@ class ExcelReportBehavior extends Behavior
                         $matchValue = !empty($matchData) ? current($matchData) : '';
 
                         $nestedColumnValue = Coordinate::stringFromColumnIndex($columnIndex);
-                        $nestedCellCoordinate = $nestedColumnValue.$rowValue;
+                        $nestedCellCoordinate = $nestedColumnValue . $rowValue;
 
                         $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, $matchValue, $attr, $extra);
                         $columnIndex++;
                     }
                 } else {
-                    $placeholderFormat = $this->formatPlaceholder($attr['placeholderPrefix']).$attr['filterStr'].".".$attr['placeholderSuffix'];
+                    $placeholderFormat = $this->formatPlaceholder($attr['placeholderPrefix']) . $attr['filterStr'] . "." . $attr['placeholderSuffix'];
                     if (!is_null($filterValue)) {
                         $placeholder = sprintf($placeholderFormat, $filterValue, $value);
                     } else {
@@ -1416,7 +1204,7 @@ class ExcelReportBehavior extends Behavior
                     $matchValue = !empty($matchData) ? current($matchData) : '';
 
                     $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
-                    $cellCoordinate = $columnValue.$rowValue;
+                    $cellCoordinate = $columnValue . $rowValue;
 
                     $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $matchValue, $attr, $extra);
                     $columnIndex++;
@@ -1426,9 +1214,80 @@ class ExcelReportBehavior extends Behavior
         } else {
             // replace placeholder as blank if data is empty
             $columnValue = $attr['columnValue'];
-            $cellCoordinate = $columnValue.$rowValue;
+            $cellCoordinate = $columnValue . $rowValue;
             $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
         }
+    }
+
+    private function nestedMatchRow($nestedRow, $matchFilter, $parentKey, $rowValue, $columnIndex, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
+    {
+        if (isset($nestedRow['rows'])) {
+            $nestedAttr = $nestedRow['rows'];
+            $nestedFilter = isset($nestedAttr['filter']) ? $nestedAttr['filter'] : null; // used to filter nested match row data
+            $nestedMatchFrom = isset($nestedAttr['matchFrom']) ? $nestedAttr['matchFrom'] : [];
+            $nestedMatchTo = isset($nestedAttr['matchTo']) ? $nestedAttr['matchTo'] : [];
+            $nestedMergeBy = isset($nestedAttr['mergeBy']) ? $nestedAttr['mergeBy'] : [];
+            $secondNestedRow = isset($nestedAttr['children']) ? $nestedAttr['children'] : [];
+
+            $mergeColumns = $attr['mergeColumns'];
+            $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
+
+            $variableMatchFilter = $matchFilter . $this->formatFilter($nestedMatchTo); // used to filter matching results
+
+            $nestedData = [];
+            if (!empty($nestedMatchFrom)) {
+                if (!is_null($nestedFilter)) {
+                    list($placeholderPrefix, $placeholderSuffix) = $this->splitDisplayValue($nestedMatchFrom);
+                    $nestedDataFilter = $this->formatFilter($nestedFilter);
+                    $placeholderFormat = $this->formatPlaceholder($placeholderPrefix) . $nestedDataFilter . ".";
+
+                    $placeholder = sprintf($placeholderFormat . $placeholderSuffix, $parentKey);
+                    $placeholderId = sprintf($placeholderFormat . 'id', $parentKey);
+                    $nestedData = Hash::combine($extra['vars'], $placeholderId, $placeholder);
+                } else {
+                    $nestedData = $this->getPlaceholderData($nestedMatchFrom, $extra);
+                }
+            }
+
+            if (!empty($nestedData)) {
+                foreach ($nestedData as $nestedKey => $nestedValue) {
+                    $printedMatchFilter = sprintf($variableMatchFilter, $nestedValue);
+
+                    if (!empty($secondNestedRow)) {
+                        $rowValue = $this->nestedMatchRow($secondNestedRow, $printedMatchFilter, $nestedKey, $rowValue, $columnIndex, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
+                    } else {
+                        $mergeRowCount = 0;
+                        if (!empty($nestedMergeBy)) {
+                            $mergeRowCount = $this->countMergeData($nestedMergeBy, $nestedKey, $mergeRowCount, $extra);
+                        }
+
+                        // printedMatchFilter already contains all key values, no need for sprintf again
+                        $placeholder = $this->formatPlaceholder($attr['placeholderPrefix']) . $printedMatchFilter . "." . $attr['placeholderSuffix'];
+
+                        $matchData = Hash::extract($extra['vars'], $placeholder);
+                        $matchValue = !empty($matchData) ? current($matchData) : '';
+
+                        $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
+                        $nestedCellCoordinate = $columnValue . $rowValue;
+
+                        $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, $matchValue, $attr, $extra);
+
+                        $mergeRowValue = ($mergeRowCount > 1) ? $rowValue + ($mergeRowCount - 1) : $rowValue;
+                        $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
+
+                        $rowValue = $mergeRowValue;
+                        $rowValue++;
+                    }
+                }
+            } else {
+                $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
+                $nestedCellCoordinate = $columnValue . $rowValue;
+                $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, "", $attr, $extra);
+                $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
+                $rowValue++;
+            }
+        }
+        return $rowValue;
     }
 
     private function countMergeData($mergeAttr, $parentKey, $mergeCount, $extra)
@@ -1442,10 +1301,10 @@ class ExcelReportBehavior extends Behavior
             if (!is_null($filter)) {
                 list($placeholderPrefix, $placeholderSuffix) = $this->splitDisplayValue($mergeFrom);
                 $formattedFilter = $this->formatFilter($filter);
-                $placeholderFormat = $this->formatPlaceholder($placeholderPrefix).$formattedFilter.".";
+                $placeholderFormat = $this->formatPlaceholder($placeholderPrefix) . $formattedFilter . ".";
 
-                $placeholder = sprintf($placeholderFormat.$placeholderSuffix, $parentKey);
-                $placeholderId = sprintf($placeholderFormat.'id', $parentKey);
+                $placeholder = sprintf($placeholderFormat . $placeholderSuffix, $parentKey);
+                $placeholderId = sprintf($placeholderFormat . 'id', $parentKey);
                 $data = Hash::combine($extra['vars'], $placeholderId, $placeholder);
             } else {
                 $data = $this->getPlaceholderData($mergeFrom, $extra);
@@ -1475,7 +1334,7 @@ class ExcelReportBehavior extends Behavior
             $columnValue = $attr['columnValue'];
             $rowValue = $attr['rowValue'];
             foreach ($rowData as $key => $value) {
-                $cellCoordinate = $columnValue.$rowValue;
+                $cellCoordinate = $columnValue . $rowValue;
                 $this->renderDropdown($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
                 $rowValue++;
             }
@@ -1485,11 +1344,56 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
+    public function renderDropdown($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $cellValue, $attr, $extra)
+    {
+        $_attr = [
+            'source' => '',
+            'promptTitle' => __('Select from list'),
+            'prompt' => __('Please select a value from the dropdown list.'),
+            'errorTitle' => __('Input error'),
+            'error' => __('Value is not in list.')
+        ];
+        $_attr = array_merge($_attr, $attr['dropdown']);
+
+        $objValidation = $objWorksheet->getCell($cellCoordinate)->getDataValidation();
+        $objValidation->setType(DataValidation::TYPE_LIST);
+        $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
+        $objValidation->setAllowBlank(false);
+        $objValidation->setShowInputMessage(true);
+        $objValidation->setShowErrorMessage(true);
+        $objValidation->setShowDropDown(true);
+        $objValidation->setPromptTitle($_attr['promptTitle']);
+        $objValidation->setPrompt($_attr['prompt']);
+        $objValidation->setErrorTitle($_attr['errorTitle']);
+        $objValidation->setError($_attr['error']);
+
+        if (is_array($_attr['source'])) {
+            $list = implode(",", $_attr['source']);
+            $format = '"%s"';
+            $value = sprintf($format, $list);
+
+            $objValidation->setFormula1($value);
+        } else {
+            list($sheetName, $coordinate) = explode(".", $_attr['source']);
+            $referencesWorksheet = $objSpreadsheet->getSheetByName($sheetName);
+            $referencesCell = $referencesWorksheet->getCell($coordinate);
+            $columnValue = $referencesCell->getColumn();
+            $rowValue = $referencesCell->getRow();
+            $highestRow = $referencesWorksheet->getHighestRow($columnValue);
+
+            $listLocation = sprintf('%s!$%s$%s:$%s$%s', "'$sheetName'", $columnValue, $rowValue, $columnValue, $highestRow);
+            $objValidation->setFormula1($listLocation);
+        }
+
+        // set to empty to remove the placeholder
+        $objWorksheet->getCell($cellCoordinate)->setValue($cellValue);
+    }
+
     private function image($objSpreadsheet, $objWorksheet, $objCell, $attr, ArrayObject $extra)
     {
         $columnValue = $attr['columnValue'];
         $rowValue = $attr['rowValue'];
-        $cellCoordinate = $columnValue.$rowValue;
+        $cellCoordinate = $columnValue . $rowValue;
 
         $attr['imageWidth'] = isset($attr['imageWidth']) ? $attr['imageWidth'] : 50;
         $attr['imageMarginLeft'] = isset($attr['imageMarginLeft']) ? $attr['imageMarginLeft'] : 0;
@@ -1499,7 +1403,7 @@ class ExcelReportBehavior extends Behavior
         $imageContent = current($data);
 
         //for institution logo
-        if ($attr['displayValue'] == 'Institutions.logo_content' ) {
+        if ($attr['displayValue'] == 'Institutions.logo_content') {
             if (is_resource($imageContent)) {
                 $institutionId = Hash::extract($extra['vars'], 'Institutions.id');
                 $institutionId = current($institutionId);
@@ -1526,5 +1430,63 @@ class ExcelReportBehavior extends Behavior
 
         // set to empty to remove the placeholder
         $objWorksheet->getCell($cellCoordinate)->setValue('');
+    }
+
+    public function renderImage(
+        Spreadsheet       $objSpreadsheet,
+        Worksheet         $objWorksheet,
+                          $objCell,
+        string            $cellCoordinate,
+        ?string           $imagePath,
+        array             $attr,
+        array|ArrayObject $extra = []
+    ): void
+    {
+        $imageWidth = (int)($attr['imageWidth'] ?? 120);
+        $imageMarginLeft = (int)($attr['imageMarginLeft'] ?? 0);
+        $imageMarginTop = (int)($attr['imageMarginTop'] ?? 0);
+
+        if (!$imagePath || !is_file($imagePath) || !is_readable($imagePath)) {
+            Log::warning('renderImage: missing or unreadable image: ' . (string)$imagePath);
+            return;
+        }
+
+        $drawing = new Drawing();
+        $drawing->setPath($imagePath);                 // auto-detects type (png/jpg/gif)
+        $drawing->setCoordinates($cellCoordinate);
+        $drawing->setOffsetX($imageMarginLeft);
+        $drawing->setOffsetY($imageMarginTop);
+        $drawing->setWidth($imageWidth);               // keep aspect by default
+        $drawing->setWorksheet($objWorksheet);         // use the sheet we were given
+    }
+
+    private function getVarSafe(array $vars, string $path)
+    {
+        if (Hash::get($vars, $path) !== null) {
+            return Hash::get($vars, $path);
+        }
+
+        // Log the error for debugging
+        $errorMessage = "ExcelReport: MISSING DATA for placeholder $path";
+        Log::warning($errorMessage);
+
+        // RETURN A HELPFUL MESSAGE IN THE EXCEL CELL (NOT BLANK)
+        return $errorMessage;
+    }
+
+    private function extractVarSafe(array $vars, string $path)
+    {
+        $result = Hash::extract($vars, $path);
+
+        if (!empty($result)) {
+            return $result;
+        }
+
+        // Log for debugging
+        $errorMessage = "ExcelReport: MISSING DATA for placeholder $path";
+        Log::warning($errorMessage);
+
+        // Return placeholder-style array for consistency with normal extract
+        return [$errorMessage];
     }
 }
