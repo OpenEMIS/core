@@ -854,87 +854,60 @@ class ExcelReportBehavior extends Behavior
 
     private function row($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
     {
-        try {
-            $rowValue        = $attr['rowValue'];
-            $columnIndex     = $attr['columnIndex'];
-            $columnValue     = $attr['columnValue'];
-            $nestedRow       = $attr['children'] ?? [];
-            $mergeColumns    = $attr['mergeColumns'];
-            $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
+        $rowValue        = $attr['rowValue'];
+        $columnIndex     = $attr['columnIndex'];
+        $columnValue     = $attr['columnValue'];
+        $nestedRow       = $attr['children'] ?? [];
+        $mergeColumns    = $attr['mergeColumns'];
+        $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
 
-            // Always normalize data into an array with at least one placeholder row
-            $data = $attr['data'];
-            if (empty($data)) {
-                Log::warning("ExcelReport: EMPTY row() data at {$columnValue}{$rowValue}");
-                $data = [ '__missing__' => 'NO DATA' ];
+        $data = !empty($attr['data']) ? $attr['data'] : ['__missing__' => ''];
+
+        foreach ($data as $key => $value) {
+
+            if ($rowValue != $attr['rowValue']) {
+                $objWorksheet->insertNewRowBefore($rowValue);
+                $this->updatePlaceholderCoordinate(null, $rowValue, $extra);
             }
 
-            foreach ($data as $key => $value) {
-                // For repeated rows, shift down
-                if ($rowValue != $attr['rowValue']) {
-                    $objWorksheet->insertNewRowBefore($rowValue);
-                    $this->updatePlaceholderCoordinate(null, $rowValue, $extra);
-                }
+            $cellCoordinate = $columnValue . $rowValue;
+            $safeValue = is_scalar($value) ? $value : json_encode($value);
 
-                $cellCoordinate = $columnValue . $rowValue;
-                $safeValue = is_scalar($value) ? $value : json_encode($value);
+            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $safeValue, $attr, $extra);
 
-                // Render the cell safely
-                $this->renderCell(
-                    $objSpreadsheet,
-                    $objWorksheet,
-                    $objCell,
-                    $cellCoordinate,
-                    $safeValue,
-                    $attr,
-                    $extra
-                );
+            $nestedRowValue = $rowValue;
 
-                // SAFETY: always define nestedRowValue
-                $nestedRowValue = $rowValue;
-
-                if (!empty($nestedRow) && is_array($nestedRow)) {
-                    try {
-                        $nestedRowValue = $this->nestedRow(
-                            $nestedRow,
-                            $key,
-                            $rowValue,
-                            $columnIndex,
-                            $mergeColumns,
-                            $objSpreadsheet,
-                            $objWorksheet,
-                            $objCell,
-                            $attr,
-                            $extra
-                        );
-                    } catch (\Throwable $e) {
-                        Log::error("nestedRow() error at {$cellCoordinate}: " . $e->getMessage());
-                        $nestedRowValue = $rowValue; // fallback
-                    }
-                }
-
-                // MERGE ROW BLOCK SAFELY
+            if (!empty($nestedRow)) {
                 try {
-                    $this->safeMergeRange(
-                        $columnIndex,
+                    $nestedRowValue = $this->nestedRow(
+                        $nestedRow,
+                        $key,
                         $rowValue,
-                        $mergeColumnIndex,
-                        $nestedRowValue,
+                        $columnIndex,
+                        $mergeColumns,
+                        $objSpreadsheet,
                         $objWorksheet,
-                        $attr
+                        $objCell,
+                        $attr,
+                        $extra
                     );
                 } catch (\Throwable $e) {
-                    Log::error("mergeRange() failed at {$cellCoordinate}: " . $e->getMessage());
+                    Log::error("nestedRow() failed: " . $e->getMessage());
+                    $nestedRowValue = $rowValue;
                 }
-
-                $rowValue = $nestedRowValue + 1;
             }
 
-        } catch (\Throwable $e) {
-            Log::error("row() failed at row {$attr['rowValue']} col {$attr['columnValue']}: " . $e->getMessage());
-            // Do not crash — write error text inside that row
-            $objWorksheet->getCell($attr['columnValue'] . $attr['rowValue'])
-                ->setValue("ROW ERROR: " . $e->getMessage());
+            // SAFE MERGE
+            $this->safeMergeRange(
+                $columnIndex,
+                $rowValue,
+                $mergeColumnIndex,
+                max($nestedRowValue, $rowValue),
+                $objWorksheet,
+                $attr
+            );
+
+            $rowValue = $nestedRowValue + 1;
         }
     }
 
@@ -1021,6 +994,9 @@ class ExcelReportBehavior extends Behavior
 
                 // merge range based on mergeColumns attr and secondNestedRowValue
                 $mergeRowValue = isset($secondNestedRowValue) ? $secondNestedRowValue : $nestedRowValue;
+                if ($mergeRowValue < $nestedRowValue) {
+                    $mergeRowValue = $nestedRowValue;
+                }
                 $this->safeMergeRange($nestedColumnIndex, $nestedRowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
                 $nestedRowValue = $mergeRowValue;
 
@@ -1342,6 +1318,7 @@ class ExcelReportBehavior extends Behavior
                         $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, $matchValue, $attr, $extra);
 
                         $mergeRowValue = ($mergeRowCount > 1) ? $rowValue + ($mergeRowCount - 1) : $rowValue;
+
                         $this->safeMergeRange($columnIndex, $rowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
 
                         $rowValue = $mergeRowValue;
@@ -1549,7 +1526,7 @@ class ExcelReportBehavior extends Behavior
 
         if (empty($result)) {
             Log::warning("MISSING DATA for extract $path");
-            return [];     // TRUE EMPTY
+            return [''];     // TRUE EMPTY
         }
 
         return $result;
