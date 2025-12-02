@@ -531,7 +531,7 @@ class DataManagementCopyTable extends ControllerActionTable
         $args = array_merge([$from, $to, $userId], $flags);
 
         return $this->runCommand(
-            'copy:competency-performance-competencies',
+            'copy:performance-competencies',
             $args,
             'CopyPerformanceCompetencies' // log file stem
         );
