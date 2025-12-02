@@ -915,7 +915,7 @@ class ExcelReportBehavior extends Behavior
 
                 // MERGE ROW BLOCK SAFELY
                 try {
-                    $this->mergeRange(
+                    $this->safeMergeRange(
                         $columnIndex,
                         $rowValue,
                         $mergeColumnIndex,
@@ -1021,7 +1021,7 @@ class ExcelReportBehavior extends Behavior
 
                 // merge range based on mergeColumns attr and secondNestedRowValue
                 $mergeRowValue = isset($secondNestedRowValue) ? $secondNestedRowValue : $nestedRowValue;
-                $this->mergeRange($nestedColumnIndex, $nestedRowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
+                $this->safeMergeRange($nestedColumnIndex, $nestedRowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
                 $nestedRowValue = $mergeRowValue;
 
                 $nestedRowValue++;
@@ -1036,7 +1036,7 @@ class ExcelReportBehavior extends Behavior
             $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, "", $attr, $extra);
 
             // mergeColumns even if there is no data
-            $this->mergeRange($nestedColumnIndex, $nestedRowValue, $mergeColumnIndex, $nestedRowValue, $objWorksheet, $attr);
+            $this->safeMergeRange($nestedColumnIndex, $nestedRowValue, $mergeColumnIndex, $nestedRowValue, $objWorksheet, $attr);
 
             // set nestedRow parentKey = -1 to allow mergeColumns to apply even for empty nested cells
             if (!empty($secondNestedRow)) {
@@ -1352,7 +1352,7 @@ class ExcelReportBehavior extends Behavior
                 $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
                 $nestedCellCoordinate = $columnValue . $rowValue;
                 $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $nestedCellCoordinate, "", $attr, $extra);
-                $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
+                $this->safeMergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
                 $rowValue++;
             }
         }
