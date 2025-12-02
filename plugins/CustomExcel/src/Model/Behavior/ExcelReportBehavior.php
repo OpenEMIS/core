@@ -1543,29 +1543,27 @@ class ExcelReportBehavior extends Behavior
         return $errorMessage;
     }
 
-    private function extractVarSafe(array $vars, string $path): array
+    private function extractVarSafe(array $vars, string $path): array|\ArrayAccess
     {
         $result = Hash::extract($vars, $path);
 
-        if (!empty($result)) {
-            return $result;
+        if (empty($result)) {
+            Log::warning("MISSING DATA for extract $path");
         }
 
-        Log::warning("MISSING DATA for extract $path");
-
-        return ['']; // safe fallback
+        // Always return real result – even if empty
+        return $result;
     }
 
     private function combineVarSafe(array $vars, string $keyPath, string $valuePath): array
     {
         $result = Hash::combine($vars, $keyPath, $valuePath);
 
-        if (!empty($result)) {
-            return $result;
+        if (empty($result)) {
+            Log::warning("MISSING DATA for combine($keyPath, $valuePath)");
         }
 
-        Log::warning("MISSING DATA for combine($keyPath, $valuePath)");
-
-        return [0 => '']; // safe fallback
+        // IMPORTANT: do NOT fabricate `[0 => '']` here
+        return $result;
     }
 }
