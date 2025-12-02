@@ -854,90 +854,50 @@ class ExcelReportBehavior extends Behavior
 
     private function row($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
     {
-        try {
-            $rowValue        = $attr['rowValue'];
-            $columnIndex     = $attr['columnIndex'];
-            $columnValue     = $attr['columnValue'];
-            $nestedRow       = $attr['children'] ?? [];
-            $mergeColumns    = $attr['mergeColumns'];
-            $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
+        $rowValue = $attr['rowValue'];
+        $columnIndex = $attr['columnIndex'];
+        $columnValue = $attr['columnValue'];
+        $nestedRow = isset($attr['children']) ? $attr['children'] : [];
 
-            // Always normalize data into an array with at least one placeholder row
-            $data = $attr['data'];
-            if (empty($data)) {
-                Log::warning("ExcelReport: EMPTY row() data at {$columnValue}{$rowValue}");
-                $data = [ '__missing__' => 'NO DATA' ];
-            }
+        $mergeColumns = $attr['mergeColumns'];
+        $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
 
-            foreach ($data as $key => $value) {
-                // For repeated rows, shift down
+        if (!empty($attr['data'])) {
+            foreach ($attr['data'] as $key => $value) {
+                // skip first row don't need to auto insert new row
                 if ($rowValue != $attr['rowValue']) {
                     $objWorksheet->insertNewRowBefore($rowValue);
                     $this->updatePlaceholderCoordinate(null, $rowValue, $extra);
                 }
 
                 $cellCoordinate = $columnValue . $rowValue;
-                $safeValue = is_scalar($value) ? $value : json_encode($value);
+                $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
 
-                // Render the cell safely
-                $this->renderCell(
-                    $objSpreadsheet,
-                    $objWorksheet,
-                    $objCell,
-                    $cellCoordinate,
-                    $safeValue,
-                    $attr,
-                    $extra
-                );
-
-                // SAFETY: always define nestedRowValue
-                $nestedRowValue = $rowValue;
-
-                if (!empty($nestedRow) && is_array($nestedRow)) {
-                    try {
-                        $nestedRowValue = $this->nestedRow(
-                            $nestedRow,
-                            $key,
-                            $rowValue,
-                            $columnIndex,
-                            $mergeColumns,
-                            $objSpreadsheet,
-                            $objWorksheet,
-                            $objCell,
-                            $attr,
-                            $extra
-                        );
-                    } catch (\Throwable $e) {
-                        Log::error("nestedRow() error at {$cellCoordinate}: " . $e->getMessage());
-                        $nestedRowValue = $rowValue; // fallback
-                    }
+                if (!empty($nestedRow)) {
+                    $nestedRowValue = $this->nestedRow($nestedRow, $key, $rowValue, $columnIndex, $mergeColumns, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
                 }
 
-                // MERGE ROW BLOCK SAFELY
-                try {
-                    $this->mergeRange(
-                        $columnIndex,
-                        $rowValue,
-                        $mergeColumnIndex,
-                        $nestedRowValue,
-                        $objWorksheet,
-                        $attr
-                    );
-                } catch (\Throwable $e) {
-                    Log::error("mergeRange() failed at {$cellCoordinate}: " . $e->getMessage());
-                }
+                // merge range based on mergeColumns attr and nestedRowValue
+                $mergeRowValue = isset($nestedRowValue) ? $nestedRowValue : $rowValue;
+                $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
+                $rowValue = $mergeRowValue;
 
-                $rowValue = $nestedRowValue + 1;
+                $rowValue++;
             }
+        } else {
+            // replace placeholder as blank if data is empty
+            $cellCoordinate = $columnValue . $rowValue;
+            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
 
-        } catch (\Throwable $e) {
-            Log::error("row() failed at row {$attr['rowValue']} col {$attr['columnValue']}: " . $e->getMessage());
-            // Do not crash — write error text inside that row
-            $objWorksheet->getCell($attr['columnValue'] . $attr['rowValue'])
-                ->setValue("ROW ERROR: " . $e->getMessage());
+            // mergeColumns even if there is no data
+            $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
+
+            // set nestedRow parentKey = -1 to allow mergeColumns to apply even for empty nested cells
+            if (!empty($nestedRow)) {
+                $this->nestedRow($nestedRow, -1, $rowValue, $columnIndex, $mergeColumns, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
+            }
         }
     }
-
 
     private function updatePlaceholderCoordinate($affectedColumnValue = null, $affectedRowValue = null, $extra)
     {
@@ -1540,32 +1500,39 @@ class ExcelReportBehavior extends Behavior
         Log::warning($errorMessage);
 
         // RETURN A HELPFUL MESSAGE IN THE EXCEL CELL (NOT BLANK)
-        return '';
+        return $errorMessage;
     }
 
-    private function extractVarSafe(array $vars, string $path): array
+    private function extractVarSafe(array $vars, string $path): array|\ArrayAccess
     {
         $result = Hash::extract($vars, $path);
 
-        if (empty($result)) {
-            Log::warning("MISSING DATA for extract $path");
-            return [''];     // TRUE EMPTY
+        if (!empty($result)) {
+            return $result;
         }
 
-        return $result;
+        // Log for debugging
+        $errorMessage = "MISSING DATA for extract $path";
+        Log::warning($errorMessage);
+
+        // Return placeholder-style array for consistency with normal extract
+        return [  ];
     }
 
     private function combineVarSafe(array $vars, string $keyPath, string $valuePath): array
     {
         $result = Hash::combine($vars, $keyPath, $valuePath);
 
-        if (empty($result)) {
-            Log::warning("MISSING DATA for combine($keyPath, $valuePath)");
-            return [['']];     // TRUE EMPTY
+        if (!empty($result)) {
+            return $result;
         }
 
-        return $result;
+        // Log for debugging
+        $errorMessage = "MISSING DATA for combine($keyPath, $valuePath)";
+        Log::warning($errorMessage);
+
+        // Return a placeholder array so repeatRows() still works
+
+        return [ [ '__error' => ' ' ] ];
     }
-
-
 }
