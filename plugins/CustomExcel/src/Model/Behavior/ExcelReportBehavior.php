@@ -1473,7 +1473,7 @@ class ExcelReportBehavior extends Behavior
         Log::warning($errorMessage);
 
         // RETURN A HELPFUL MESSAGE IN THE EXCEL CELL (NOT BLANK)
-        return "";
+        return $errorMessage;
     }
 
     private function extractVarSafe(array $vars, string $path): array|\ArrayAccess
