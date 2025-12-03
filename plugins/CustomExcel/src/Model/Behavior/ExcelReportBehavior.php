@@ -745,7 +745,7 @@ class ExcelReportBehavior extends Behavior
         Log::debug('ExcelReportBehavior >>> saveFile: ' . $format);
 
         // clone for PDF processing so original stays clean
-        $spreadsheetForPdf = clone $objSpreadsheet;
+        $spreadsheetForPdf = $objSpreadsheet;
 
         if ($format === 'pdf') {
 
