@@ -768,8 +768,30 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseInstitutions(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id'])) {
+
             $Institutions = self::getDynamicTableInstance('Institution.Institutions'); // POCOR-9162
-            $entity = $Institutions->get($params['institution_id'], ['contain' => ['Providers', 'Areas', 'AreaAdministratives']]);
+
+            $entity = $Institutions->get(
+                $params['institution_id'],
+                [
+                    'contain' => [
+                        'Providers',
+                        'Areas',
+                        'AreaAdministratives'
+                    ]
+                ]
+            );
+
+            // Set fax to empty (as you already do)
+            $entity->fax = '';
+
+            // Safe read: use AreaAdministratives.name if present
+            if (!empty($entity->area_administrative) && !empty($entity->area_administrative->name)) {
+                $entity->address_area = $entity->area_administrative->name;
+            } else {
+                $entity->address_area = '';
+            }
+
             return $entity;
         }
     }
@@ -1047,7 +1069,12 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionStudentAbsences(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
+        Log::debug(print_r($params, true));
+        if (isset($params['institution_class_id'])
+            && isset($params['institution_id'])
+            && isset($params['student_id'])
+            && isset($extra['report_card_start_date'])
+            && isset($extra['report_card_end_date'])) {
 
             //POCOR-7040
             $startDate = $extra['report_card_start_date']->format('Y-m-d');
@@ -1351,9 +1378,9 @@ class ReportCardsTable extends AppTable
             ,attend_info.student_id");
             //POCOR-8902 end
             $getData = $sqlQuery->fetchAll('assoc');
-            $results['EXCUSED']['number_of_days'] = $getData[0]['excused_absence_counter'];
-            $results['UNEXCUSED']['number_of_days'] = $getData[0]['unexcused_absence_counter'];
-            $results['LATE']['number_of_days'] = $getData[0]['late_absence_counter'];
+            $results['EXCUSED']['number_of_days'] = $getData[0]['excused_absence_counter'] ?? 0;
+            $results['UNEXCUSED']['number_of_days'] = $getData[0]['unexcused_absence_counter'] ?? 0;
+            $results['LATE']['number_of_days'] = $getData[0]['late_absence_counter'] ?? 0;
             //POCOR-8017::end
             $results['TOTAL_ABSENCE']['number_of_days'] = count($total_count_arr);
             return $results;
