@@ -1210,9 +1210,10 @@ trait PdfReportTrait
 //        putenv("HOME=$tempDir"); // Ensures LibreOffice has a writable HOME directory
 //        Log::debug($tempDir);
         try {
+            $unique = uniqid('libo_', true);
             // 1. Save XLSX
-            $xlsxPath = $tempDir . $baseFileName . '.xlsx';
-            $pdfExpectedPath = $tempDir . $baseFileName . '.pdf';
+            $xlsxPath       = $tempDir . $unique . '.xlsx';
+            $pdfExpectedPath = $tempDir . $unique . '.pdf';
 
             $ss = $objSpreadsheet;
 

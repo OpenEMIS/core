@@ -744,49 +744,21 @@ class ExcelReportBehavior extends Behavior
     {
         Log::debug('ExcelReportBehavior >>> saveFile: ' . $format);
 
-        // clone for PDF processing so original stays clean
-        $spreadsheetForPdf = $objSpreadsheet;
-        $spreadsheetForExcel = $this->deepCloneSpreadsheet($objSpreadsheet);
-        if ($format === 'pdf') {
-
-            $this->savePDF($spreadsheetForPdf, $filepath, $student_id, $report_card_id);
-
-        } else {
-
-            // ALWAYS generate PDF for student_id, but using cloned object
-            if (!empty($student_id)) {
-                $this->savePDF($spreadsheetForPdf, $filepath, $student_id, $report_card_id);
-            }
-
-            // save XLSX exactly once
-
-        }
-        $writer = IOFactory::createWriter($spreadsheetForExcel, 'Xlsx');
+        // Write XLSX FIRST (before any LibreOffice modifies it)
+        $writer = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
         $writer->save($filepath);
-        // cleanup
-        $objSpreadsheet->disconnectWorksheets();
-        unset($writer, $spreadsheetForPdf, $objSpreadsheet);
-        gc_collect_cycles();
-    }
 
-    private function deepCloneSpreadsheet(Spreadsheet $source): Spreadsheet
-    {
-        // Create temp file
-        $tmp = tempnam(sys_get_temp_dir(), 'xlsx_clone_');
-        $backupTmp = $tmp . '.xlsx';
+        // Now that XLSX is safely saved — create copy for PDF
+        $pdfSpreadsheet = IOFactory::load($filepath);
 
-        // Write the spreadsheet into a temp xlsx
-        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($source, 'Xlsx');
-        $writer->save($backupTmp);
-
-        // Reload it — this is a true deep clone
-        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
-        $clone = $reader->load($backupTmp);
+        if ($format === 'pdf' || !empty($student_id)) {
+            $this->savePDF($pdfSpreadsheet, $filepath, $student_id, $report_card_id);
+        }
 
         // Cleanup
-        @unlink($backupTmp);
-
-        return $clone;
+        $objSpreadsheet->disconnectWorksheets();
+        $pdfSpreadsheet->disconnectWorksheets();
+        gc_collect_cycles();
     }
 
     public function deleteFile($filepath)
