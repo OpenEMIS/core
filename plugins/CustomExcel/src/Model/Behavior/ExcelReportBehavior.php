@@ -202,7 +202,7 @@ class ExcelReportBehavior extends Behavior
         }
 
         if ($this->getConfig('download')) {
-            $tempfile = new File($temppath . '.xslx');
+            $tempfile = new File($temppath);
             $tempinfo = $tempfile->info();
             $tempcontent = $tempfile->read();
             $tempfile->close();
@@ -746,8 +746,7 @@ class ExcelReportBehavior extends Behavior
 
         // clone for PDF processing so original stays clean
         $spreadsheetForPdf = $objSpreadsheet;
-        $writer = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
-        $writer->save($filepath . '.xlsx');
+        $spreadsheetForExcel = $this->deepCloneSpreadsheet($objSpreadsheet);
         if ($format === 'pdf') {
 
             $this->savePDF($spreadsheetForPdf, $filepath, $student_id, $report_card_id);
@@ -762,13 +761,33 @@ class ExcelReportBehavior extends Behavior
             // save XLSX exactly once
 
         }
-
+        $writer = IOFactory::createWriter($spreadsheetForExcel, 'Xlsx');
+        $writer->save($filepath);
         // cleanup
         $objSpreadsheet->disconnectWorksheets();
         unset($writer, $spreadsheetForPdf, $objSpreadsheet);
         gc_collect_cycles();
     }
 
+    private function deepCloneSpreadsheet(Spreadsheet $source): Spreadsheet
+    {
+        // Create temp file
+        $tmp = tempnam(sys_get_temp_dir(), 'xlsx_clone_');
+        $backupTmp = $tmp . '.xlsx';
+
+        // Write the spreadsheet into a temp xlsx
+        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($source, 'Xlsx');
+        $writer->save($backupTmp);
+
+        // Reload it — this is a true deep clone
+        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
+        $clone = $reader->load($backupTmp);
+
+        // Cleanup
+        @unlink($backupTmp);
+
+        return $clone;
+    }
 
     public function deleteFile($filepath)
     {
