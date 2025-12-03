@@ -202,7 +202,6 @@ class ExcelReportBehavior extends Behavior
         }
 
         if ($this->getConfig('download')) {
-            Log::debug('Im here');
             $tempfile = new File($temppath);
             $tempinfo = $tempfile->info();
             $tempcontent = $tempfile->read();
