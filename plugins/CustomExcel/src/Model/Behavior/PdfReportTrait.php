@@ -1204,7 +1204,7 @@ trait PdfReportTrait
     // POCOR-9303
     private function printPdfViaLibreOffice(Spreadsheet $objSpreadsheet, string $baseFileName, ?int $sheetCount = null): ?string
     {
-        $objSpreadsheetForLibre = $objSpreadsheet->copy();
+
         $tempDir = TMP; // or "/tmp"
         $baseFileName = basename($baseFileName, '.xlsx'); // safe name, no path
 //        putenv("HOME=$tempDir"); // Ensures LibreOffice has a writable HOME directory
@@ -1214,7 +1214,7 @@ trait PdfReportTrait
             $xlsxPath = $tempDir . $baseFileName . '.xlsx';
             $pdfExpectedPath = $tempDir . $baseFileName . '.pdf';
 
-            $ss = $objSpreadsheetForLibre;
+
 
             if ($sheetCount !== null) {
                 $total = $objSpreadsheet->getSheetCount();
@@ -1249,6 +1249,8 @@ trait PdfReportTrait
 
                     $ss = $limited;
                 }
+            }else{
+                $ss = $objSpreadsheet;
             }
 
             /* --- Style normalization on the final workbook ($ss) --- */
