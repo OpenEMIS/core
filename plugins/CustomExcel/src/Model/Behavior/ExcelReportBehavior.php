@@ -742,27 +742,33 @@ class ExcelReportBehavior extends Behavior
 
     public function saveFile($objSpreadsheet, $filepath, $format, $student_id, $report_card_id)
     {
-        Log::write('debug', 'ExcelReportBehavior >>> saveFile: ' . $format);
-        $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
+        Log::debug('ExcelReportBehavior >>> saveFile: ' . $format);
 
-        if ($format == 'pdf') {
-            $this->savePDF($objSpreadsheet, $filepath, $student_id, $report_card_id);
+        // clone for PDF processing so original stays clean
+        $spreadsheetForPdf = clone $objSpreadsheet;
+
+        if ($format === 'pdf') {
+
+            $this->savePDF($spreadsheetForPdf, $filepath, $student_id, $report_card_id);
+
         } else {
-            // pdf
+
+            // ALWAYS generate PDF for student_id, but using cloned object
             if (!empty($student_id)) {
-                $this->savePDF($objSpreadsheet, $filepath, $student_id, $report_card_id);
+                $this->savePDF($spreadsheetForPdf, $filepath, $student_id, $report_card_id);
             }
-            // xlsx
-            $objWriter->save($filepath);
+
+            // save XLSX exactly once
+
         }
-
-        $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
-        $objWriter->save($filepath);
+        $writer = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+        $writer->save($filepath);
+        // cleanup
         $objSpreadsheet->disconnectWorksheets();
-        unset($objWriter, $objSpreadsheet);
+        unset($writer, $spreadsheetForPdf, $objSpreadsheet);
         gc_collect_cycles();
-
     }
+
 
     public function deleteFile($filepath)
     {
