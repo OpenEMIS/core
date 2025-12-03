@@ -1,3 +1,12 @@
+### [4.48.5] - 2025-12-03
+- Bug Fixed: Institution>Performance>Assessment: The list of subjects seen in Academic Subjects does not reflect exactly on the Performance >Assessments page
+- Bug Fixed: Institutions>Students>Performance>GPA: GPA is calculating wrongly for grade 6 and grade 11
+- Bug Fixed: Institutions>Performance>Report Cards: Excel and pdf are not working properly in libreoffice
+- Bug Fixed: Administration>Scholarships>Applications: The User gets and error page when attempting to add a Scholarship application.
+- Bug Fixed: Directory: Directory section listing is not displaying the photos
+- Bug Fixed: Administration>Data Management>Copy: it is not reflecting in the Administration>Performance>Competencies when copying is done
+- Bug Fixed: Directory>Import: Class name should not be mandatory
+
 ### [4.48.4] - 2025-11-28
 - Bug Fixed: Institutions>Performance>Assessments>PDF: Upon clicking PDF button, user is getting 404 error
 - Bug Fixed: Institutions>Attendance>Staff: Users can enter attendance for staff
