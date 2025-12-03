@@ -1639,24 +1639,56 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseStudentCompetencyItemComments(Event $event, array $params, ArrayObject $extra)
-    {
-        if (isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
-            $CompetencyItemComments = self::getDynamicTableInstance('Institution.InstitutionCompetencyItemComments'); // POCOR-9162
+    public function onExcelTemplateInitialiseStudentCompetencyItemComments(
+        Event $event,
+        array $params,
+        ArrayObject $extra
+    ) {
+        if (
+            !empty($extra['competency_templates_ids']) &&
+            !empty($extra['competency_periods_ids']) &&
+            !empty($params['student_id']) &&
+            !empty($params['institution_id']) &&
+            !empty($params['academic_period_id'])
+        ) {
+            $CompetencyItemComments = self::getDynamicTableInstance(
+                'Institution.InstitutionCompetencyItemComments'
+            ); // POCOR-9162
 
-            $entity = $CompetencyItemComments->find()
+            $rows = $CompetencyItemComments->find()
                 ->where([
-                    $CompetencyItemComments->aliasField('competency_template_id IN ') => $extra['competency_templates_ids'],
-                    $CompetencyItemComments->aliasField('competency_period_id IN ') => $extra['competency_periods_ids'],
-                    $CompetencyItemComments->aliasField('student_id') => $params['student_id'],
-                    $CompetencyItemComments->aliasField('institution_id') => $params['institution_id'],
-                    $CompetencyItemComments->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $CompetencyItemComments->aliasField('competency_template_id IN') =>
+                        $extra['competency_templates_ids'],
+
+                    $CompetencyItemComments->aliasField('competency_period_id IN') =>
+                        $extra['competency_periods_ids'],
+
+                    $CompetencyItemComments->aliasField('student_id') =>
+                        $params['student_id'],
+
+                    $CompetencyItemComments->aliasField('institution_id') =>
+                        $params['institution_id'],
+
+                    $CompetencyItemComments->aliasField('academic_period_id') =>
+                        $params['academic_period_id'],
                 ])
                 ->toArray();
 
-            return $entity;
+            // ----------------------------------------
+            // SAFETY: ensure at least one row returned
+            // ----------------------------------------
+            if (empty($rows)) {
+                // create one clean empty entity
+                $rows = [$CompetencyItemComments->newEmptyEntity()];
+            }
+
+            return $rows;
         }
+
+        // fallback — must return array
+        return [ ];
     }
+
 
     public function onExcelTemplateInitialiseCompetencyCriteriasWithResults(Event $event, array $params, ArrayObject $extra)
     {
