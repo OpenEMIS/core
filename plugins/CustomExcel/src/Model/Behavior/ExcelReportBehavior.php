@@ -556,7 +556,9 @@ class ExcelReportBehavior extends Behavior
         if ($this->getConfig('wrapText')) {
             $cellStyle->getAlignment()->setWrapText(true);
         }
-
+        if(is_array($cellValue)){
+            $cellValue = $cellValue[0];
+        }
         $objWorksheet->setCellValue($cellCoordinate, $cellValue);
         $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
 
