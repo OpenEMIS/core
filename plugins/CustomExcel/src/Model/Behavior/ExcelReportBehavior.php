@@ -746,23 +746,20 @@ class ExcelReportBehavior extends Behavior
 
         // clone for PDF processing so original stays clean
         $spreadsheetForPdf = $objSpreadsheet;
+        $writer = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+        $writer->save($filepath);
 
         if ($format === 'pdf') {
-
             $this->savePDF($spreadsheetForPdf, $filepath, $student_id, $report_card_id);
-
         } else {
-
             // ALWAYS generate PDF for student_id, but using cloned object
             if (!empty($student_id)) {
                 $this->savePDF($spreadsheetForPdf, $filepath, $student_id, $report_card_id);
             }
-
             // save XLSX exactly once
 
         }
-        $writer = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
-        $writer->save($filepath);
+
         // cleanup
         $objSpreadsheet->disconnectWorksheets();
         unset($writer, $spreadsheetForPdf, $objSpreadsheet);

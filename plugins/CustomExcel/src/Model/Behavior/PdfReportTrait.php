@@ -1201,25 +1201,6 @@ trait PdfReportTrait
         return null;
     }
 
-    private function deepCloneSpreadsheet(Spreadsheet $source): Spreadsheet
-    {
-        // Create temp file
-        $tmp = tempnam(sys_get_temp_dir(), 'xlsx_clone_');
-        $backupTmp = $tmp . '.xlsx';
-
-        // Write the spreadsheet into a temp xlsx
-        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($source, 'Xlsx');
-        $writer->save($backupTmp);
-
-        // Reload it — this is a true deep clone
-        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
-        $clone = $reader->load($backupTmp);
-
-        // Cleanup
-        @unlink($backupTmp);
-
-        return $clone;
-    }
     // POCOR-9303
     private function printPdfViaLibreOffice(Spreadsheet $objSpreadsheet, string $baseFileName, ?int $sheetCount = null): ?string
     {
@@ -1233,7 +1214,7 @@ trait PdfReportTrait
             $xlsxPath = $tempDir . $baseFileName . '.xlsx';
             $pdfExpectedPath = $tempDir . $baseFileName . '.pdf';
 
-            $ss = $this->deepCloneSpreadsheet($objSpreadsheet);
+            $ss = $objSpreadsheet;
 
             if ($sheetCount !== null) {
                 $total = $objSpreadsheet->getSheetCount();
