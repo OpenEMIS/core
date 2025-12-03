@@ -1121,19 +1121,46 @@ class ExcelReportBehavior extends Behavior
 
     private function match($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
     {
-        list($attr['placeholderPrefix'], $attr['placeholderSuffix']) = $this->splitDisplayValue($attr['displayValue']);
+        list($attr['placeholderPrefix'], $attr['placeholderSuffix']) =
+            $this->splitDisplayValue($attr['displayValue']);
 
-        $rowsArray = isset($attr['rows']) ? $attr['rows'] : [];
-        $columnsArray = isset($attr['columns']) ? $attr['columns'] : [];
+        $rowsArray = $attr['rows'] ?? [];
+        $columnsArray = $attr['columns'] ?? [];
 
+        // -----------------------------------------------------------------
+        // 1) SAFETY CHECK — prevent crashes if root data set is empty
+        // -----------------------------------------------------------------
+        $rootData = $this->getPlaceholderData($attr['displayValue'], $extra);
+
+        if ($this->isEmptyMatchData($rootData)) {
+            // render one blank cell and exit
+            $cellCoordinate = $attr['columnValue'] . $attr['rowValue'];
+            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
+            return;
+        }
+
+        // -----------------------------------------------------------------
+        // 2) Normal behaviour — matchRows or matchColumns
+        // -----------------------------------------------------------------
         if (!empty($rowsArray)) {
             $this->matchRows($objSpreadsheet, $objWorksheet, $objCell, $attr, $rowsArray, $columnsArray, $extra);
         } else {
             $columnIndex = $attr['columnIndex'];
-            $rowValue = $attr['rowValue'];
-            $this->matchColumns($objSpreadsheet, $objWorksheet, $objCell, $attr, $columnsArray, $columnIndex, $rowValue, null, $extra);
+            $rowValue    = $attr['rowValue'];
+            $this->matchColumns(
+                $objSpreadsheet,
+                $objWorksheet,
+                $objCell,
+                $attr,
+                $columnsArray,
+                $columnIndex,
+                $rowValue,
+                null,
+                $extra
+            );
         }
     }
+
 
     private function matchRows($objSpreadsheet, $objWorksheet, $objCell, $attr, $rowsArray = [], $columnsArray = [], $extra)
     {
