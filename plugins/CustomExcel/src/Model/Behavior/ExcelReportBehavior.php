@@ -830,7 +830,7 @@ class ExcelReportBehavior extends Behavior
                     $value = null;
                     if (isset($column['displayValue'])) {
                         $field = $this->splitDisplayValue($column['displayValue'])[1];
-                        $value = $this->getVarSafe($vars, $placeholder);
+                        $value = $this->getVarSafe($vars, $field);
                     }
 
                     $attr['type'] = isset($column['type']) ? $column['type'] : null;
