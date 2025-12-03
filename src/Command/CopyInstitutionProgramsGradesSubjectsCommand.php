@@ -4,90 +4,72 @@ declare(strict_types=1);
 namespace App\Command;
 
 use Cake\Console\Arguments;
-use Cake\Command\Command;
 use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
-use Cake\Datasource\ConnectionManager;
+use Cake\Datasource\EntityInterface;
 
 // POCOR-9354
-class InstitutionCopyProgramsGradesCommand extends Command
+class CopyInstitutionProgramsGradesSubjectsCommand extends CopyCommandBase
 {
-    /** @var \Cake\Database\Connection */
-    private $conn;
 
-    private bool $dryRun   = false;
-    private bool $verbose  = true;
-    private int  $userId   = 2;
 
     public static function defaultName(): string
     {
         // Run as: bin/cake institution:copy-programs-grades FROM_PERIOD_ID TO_PERIOD_ID [-u 2] [--dry-run]
-        return 'institution:copy-programs-grades';
+        return 'copy:institution-programs-grades-subjects';
     }
 
     public function buildOptionParser(ConsoleOptionParser $parser): ConsoleOptionParser
     {
-        return $parser
-            ->setDescription('Copy Institution Grades and Institution Program Grade Subjects from one academic period to another (education structure must already exist in the target).')
-            ->addArgument('from', ['help' => 'Source academic_period_id', 'required' => true])
-            ->addArgument('to',   ['help' => 'Target academic_period_id', 'required' => true])
-            ->addOption('dry-run', ['help' => 'Log actions without writing', 'boolean' => true, 'default' => false])
-            ->addOption('quiet',   ['help' => 'Reduce output', 'boolean' => true, 'default' => false])
-            ->addOption('user',    ['help' => 'created_user_id/modified_user_id for inserts', 'short' => 'u', 'default' => 2]);
+        return $this->addStandardOptions(
+            $parser->setDescription('Copy Institution Grades and Institution Program Grade Subjects from one academic period to another (education structure must already exist in the target).')
+        );
     }
 
     public function execute(Arguments $args, ConsoleIo $io): int
     {
         ini_set('memory_limit', '2G');
 
-        $fromId      = (int)$args->getArgument('from');
-        $toId        = (int)$args->getArgument('to');
-        $this->dryRun  = (bool)$args->getOption('dry-run');
-        $this->verbose = !$args->getOption('quiet');
-        $this->userId  = (int)$args->getOption('user') ?: 2;
-        $this->conn    = ConnectionManager::get('default');
-        $this->conn->getDriver()->enableAutoQuoting(true);
+        $this->initializeFromInput($args, $io);
+        $fromId = $this->fromId;
+        $toId   = $this->toId;
+        $userId = $this->userId;
 
-        $io->out("=== Institution copy (programs -> grades -> IPGS) ===");
-        $io->out("from=$fromId -> to=$toId " . ($this->dryRun ? '[dry-run]' : ''));
+        $this->logMsg("=== Institution copy (programs -> grades -> IPGS) ===");
+        $this->logMsg("from=$fromId -> to=$toId " . ($this->dryRun ? '[dry-run]' : ''));
 
         // Academic period names (for tail swap in structure names)
-        [$fromApName, $toApName] = $this->getPeriodNames($fromId, $toId);
+
+        $fromApName = $this->fromAcademicPeriod->name;
+        $toApName   = $this->toAcademicPeriod->name;
+        $toAp   = $this->toAcademicPeriod;
 
         // Target period dates/years for IG rows
-        $toPeriodMeta = $this->conn->execute(
-            "SELECT start_date, start_year, end_date, end_year
-             FROM academic_periods WHERE id = ?",
-            [$toId]
-        )->fetch('assoc');
-        if (!$toPeriodMeta) {
-            $io->err("Target academic period #$toId not found.");
-            return static::CODE_ERROR;
-        }
 
+        $this->conn = $this->getConnection();
         $this->conn->begin();
         try {
-            $io->out("-> Building grade map (by path + codes) …");
-            $gradeMap = $this->buildGradeMap($fromId, $toId, $fromApName, $toApName, $io);
-            $io->out("  Grade map entries: " . count($gradeMap));
+            $this->logMsg("-> Building grade map (by path + codes) …");
+            $gradeMap = $this->buildGradeMap($fromId, $toId, $fromApName, $toApName);
+            $this->logMsg("  Grade map entries: " . count($gradeMap));
 
-            $io->out("-> Copying institution_grades …");
-            $igMap = $this->copyInstitutionGrades($fromId, $toId, $toPeriodMeta, $gradeMap, $io);
+            $this->logMsg("-> Copying institution_grades …");
+            $igMap = $this->copyInstitutionGrades($fromId, $toId, $userId, $toAp, $gradeMap);
 
-            $io->out("-> Copying institution_program_grade_subjects (valid EGS only) …");
-            $this->copyIPGS($fromId, $igMap, $gradeMap, $io);
+            $this->logMsg("-> Copying institution_program_grade_subjects (valid EGS only) …");
+            $this->copyIPGS($fromId, $igMap, $gradeMap, $userId);
 
             if ($this->dryRun) {
-                $io->out('<info>Dry-run complete: rolling back.</info>');
+                $this->logMsg('<info>Dry-run complete: rolling back.</info>');
                 $this->conn->rollback();
             } else {
                 $this->conn->commit();
-                $io->out('<info>Committed.</info>');
+                $this->logMsg('<info>Committed.</info>');
             }
             return static::CODE_SUCCESS;
         } catch (\Throwable $e) {
             $this->conn->rollback();
-            $io->err($e->getMessage());
+            $this->logMsg('<error>' . $e->getMessage() .'</error>');
             return static::CODE_ERROR;
         }
     }
@@ -98,7 +80,7 @@ class InstitutionCopyProgramsGradesCommand extends Command
     // Path names are normalized by swapping a trailing " <fromApName>" to " <toApName>"
     // so "National System 2025" will match "National System 2026", etc.
     // ---------------------------------------------------------------------
-    private function buildGradeMap(int $fromPeriod, int $toPeriod, string $fromAp, string $toAp, ConsoleIo $io): array
+    private function buildGradeMap(int $fromPeriod, int $toPeriod, string $fromApName, string $toApName): array
     {
         $sqlFrom = "
             SELECT
@@ -148,20 +130,20 @@ class InstitutionCopyProgramsGradesCommand extends Command
         $map = [];
         $missing = 0;
         foreach ($fromRows as $r) {
-            $sys = $this->swapTail($r['sys_name'], $fromAp, $toAp);
-            $lvl = $this->swapTail($r['lvl_name'], $fromAp, $toAp);
-            $cyc = $this->swapTail($r['cyc_name'], $fromAp, $toAp);
+            $sys = $this->swapTail($r['sys_name'], $fromApName, $toApName);
+            $lvl = $this->swapTail($r['lvl_name'], $fromApName, $toApName);
+            $cyc = $this->swapTail($r['cyc_name'], $fromApName, $toApName);
             $key = $this->keyPath($sys, $lvl, $cyc) . '|' . $r['prog_code'] . '|' . $r['grade_code'];
 
             if (isset($toIndex[$key])) {
                 $map[(int)$r['grade_id']] = $toIndex[$key];
             } else {
                 $missing++;
-                $this->v($io, "  ~ No target grade for {$key} (skipping related IG/IPGS rows)");
+                $this->logMsg( "  ~ No target grade for {$key} (skipping related IG/IPGS rows)");
             }
         }
         if ($missing) {
-            $io->out("  Unmapped grades (will be skipped): {$missing}");
+            $this->logMsg("  Unmapped grades (will be skipped): {$missing}");
         }
         return $map;
     }
@@ -173,11 +155,11 @@ class InstitutionCopyProgramsGradesCommand extends Command
     // - Uses start_date/start_year from the TO period.
     // ---------------------------------------------------------------------
     private function copyInstitutionGrades(
-        int $fromPeriod,
-        int $toPeriod,
-        array $toPeriodMeta,
-        array $gradeMap,
-        ConsoleIo $io
+        int       $fromPeriod,
+        int       $toPeriod,
+        int       $userId,
+        EntityInterface   $toAp,
+        array     $gradeMap
     ): array {
         $rows = $this->conn->execute(
             "SELECT id, education_grade_id, academic_period_id, institution_id
@@ -200,7 +182,7 @@ class InstitutionCopyProgramsGradesCommand extends Command
 
             if (!$newGrade) {
                 $skipped++;
-                $this->v($io, "  ~ IG#{$oldIgId} skipped: no grade map for grade {$oldGrade}");
+                $this->logMsg("  ~ IG#{$oldIgId} skipped: no grade map for grade {$oldGrade}");
                 continue;
             }
 
@@ -214,7 +196,7 @@ class InstitutionCopyProgramsGradesCommand extends Command
             if ($exists) {
                 $outMap[$oldIgId] = (int)$exists['id'];
                 $existing++;
-                $this->v($io, "  ↺ IG exists for inst {$instId}, grade {$newGrade} -> #{$exists['id']}");
+                $this->logMsg("  ↺ IG exists for inst {$instId}, grade {$newGrade} -> #{$exists['id']}");
                 continue;
             }
 
@@ -222,26 +204,26 @@ class InstitutionCopyProgramsGradesCommand extends Command
                 $fakeId = -1 * ($inserted + 1);
                 $outMap[$oldIgId] = $fakeId;
                 $inserted++;
-                $this->v($io, " ? (dry-run) Would insert IG for inst={$instId}, grade={$newGrade}, period={$toPeriod}");
+                $this->logMsg(" ? (dry-run) Would insert IG for inst={$instId}, grade={$newGrade}, period={$toPeriod}");
                 continue;
             }
 
             $params = [
                 'grade' => $newGrade,
                 'period'=> $toPeriod,
-                'sdate' => $toPeriodMeta['start_date'] ?? null,
-                'syear' => $toPeriodMeta['start_year'] ?? null,
+                'sdate' => $toAp->start_date ?? null,
+                'syear' => $toAp->start_year ?? null,
                 'edate' => null,
                 'eyear' => null,
                 'inst'  => $instId,
-                'muid'  => $this->userId,
+                'muid'  => $userId,
                 'mod'   => date('Y-m-d H:i:s'),
-                'cuid'  => $this->userId,
+                'cuid'  => $userId,
                 'crt'   => date('Y-m-d H:i:s'),
             ];
 
             // pre-insert context
-            $this->v($io, sprintf(
+            $this->logMsg(sprintf(
                 "  -> IG insert pending: inst=%d, grade=%d, period=%d, start_date=%s, start_year=%s",
                 $instId, $newGrade, $toPeriod,
                 $params['sdate'] ?? 'NULL',
@@ -270,11 +252,11 @@ class InstitutionCopyProgramsGradesCommand extends Command
 
                 $outMap[$oldIgId] = $newId;
                 $inserted++;
-                $this->v($io, "  ✓ IG inserted -> #{$newId} (inst {$instId}, grade {$newGrade})");
+                $this->logMsg("  ✓ IG inserted -> #{$newId} (inst {$instId}, grade {$newGrade})");
             } catch (\Throwable $e) {
                 $failed++;
                 // log the failure and keep going (do NOT rethrow)
-                $io->err(sprintf(
+                $this->io->err(sprintf(
                     "  x IG insert FAILED: inst=%d, grade=%d, period=%d. Error: %s",
                     $instId, $newGrade, $toPeriod, $e->getMessage()
                 ));
@@ -282,7 +264,7 @@ class InstitutionCopyProgramsGradesCommand extends Command
             }
         }
 
-        $io->out("  InstitutionGrades: inserted={$inserted}, existing={$existing}, skipped={$skipped}, failed={$failed}");
+        $this->logMsg("  InstitutionGrades: inserted={$inserted}, existing={$existing}, skipped={$skipped}, failed={$failed}");
         return $outMap;
     }
 
@@ -299,7 +281,7 @@ class InstitutionCopyProgramsGradesCommand extends Command
         int $fromPeriod,
         array $igMap,      // old_ig_id => new_ig_id
         array $gradeMap,   // old_grade_id => new_grade_id
-        ConsoleIo $io
+        int $userId
     ): void {
         // Pull source IPGS with their *old* IG and Grade
         $src = $this->conn->execute(
@@ -360,25 +342,25 @@ class InstitutionCopyProgramsGradesCommand extends Command
             // require maps
             if (!$newIG || !$newGr) {
                 $skipped++;
-                $this->v($io, "  ~ IPGS skip: missing IG/Grade map (oldIG {$oldIG} -> ".($newIG ?? '∅').", oldGr {$oldGr} -> ".($newGr ?? '∅').")");
+                $this->logMsg("  ~ IPGS skip: missing IG/Grade map (oldIG {$oldIG} -> ".($newIG ?? '∅').", oldGr {$oldGr} -> ".($newGr ?? '∅').")");
                 continue;
             }
             // skip negative ids from a dry-run feed or if IG not actually persisted
             if ($newIG <= 0 || empty($validNewIG[$newIG])) {
                 $missIG++;
-                $this->v($io, "  ~ IPGS skip: new IG#{$newIG} not persisted/valid (oldIG {$oldIG})");
+                $this->logMsg("  ~ IPGS skip: new IG#{$newIG} not persisted/valid (oldIG {$oldIG})");
                 continue;
             }
             // guard: institution must exist (avoid FK error if DB has orphans)
             if (empty($validInst[$instId])) {
                 $missInst++;
-                $this->v($io, "  ~ IPGS skip: institution #{$instId} missing");
+                $this->logMsg("  ~ IPGS skip: institution #{$instId} missing");
                 continue;
             }
             // guard: (grade, subject) must exist in EGS
             if (empty($allowed[$newGr . ':' . $subjId])) {
                 $blocked++;
-                $this->v($io, "  ^ IPGS blocked: subject {$subjId} is not linked to grade {$newGr} in EGS");
+                $this->logMsg("  ^ IPGS blocked: subject {$subjId} is not linked to grade {$newGr} in EGS");
                 continue;
             }
 
@@ -398,12 +380,12 @@ class InstitutionCopyProgramsGradesCommand extends Command
 
             if ($this->dryRun) {
                 $inserted++;
-                $this->v($io, " ? (dry-run) Would add IPGS: IG#{$newIG}, grade#{$newGr}, subject#{$subjId}, inst#{$instId}");
+                $this->logMsg(" ? (dry-run) Would add IPGS: IG#{$newIG}, grade#{$newGr}, subject#{$subjId}, inst#{$instId}");
                 continue;
             }
 
             // pre-insert context for troubleshooting
-            $this->v($io, "  -> IPGS insert pending: IG={$newIG}, grade={$newGr}, subject={$subjId}, inst={$instId}");
+            $this->logMsg("  -> IPGS insert pending: IG={$newIG}, grade={$newGr}, subject={$subjId}, inst={$instId}");
 
             try {
                 $this->conn->execute(
@@ -416,14 +398,14 @@ class InstitutionCopyProgramsGradesCommand extends Command
                         'gr'  => $newGr,
                         'subj'=> $subjId,
                         'inst'=> $instId,
-                        'uid' => $this->userId,
+                        'uid' => $userId,
                         'ts'  => date('Y-m-d H:i:s'),
                     ]
                 );
                 $inserted++;
             } catch (\Throwable $e) {
                 $failed++;
-                $io->err(sprintf(
+                $this->io->err(sprintf(
                     "  x IPGS insert FAILED: IG=%d, grade=%d, subject=%d, inst=%d. Error: %s",
                     $newIG, $newGr, $subjId, $instId, $e->getMessage()
                 ));
@@ -432,28 +414,9 @@ class InstitutionCopyProgramsGradesCommand extends Command
             }
         }
 
-        $io->out("  IPGS: inserted={$inserted}, existing={$existing}, skipped_no_map={$skipped}, blocked_not_in_EGS={$blocked}, missing_institution={$missInst}, missing_new_IG={$missIG}, failed={$failed}");
+        $this->logMsg("  IPGS: inserted={$inserted}, existing={$existing}, skipped_no_map={$skipped}, blocked_not_in_EGS={$blocked}, missing_institution={$missInst}, missing_new_IG={$missIG}, failed={$failed}");
     }
 
-    // ---------------------------------------------------------------------
-    // Helpers
-    // ---------------------------------------------------------------------
-    private function getPeriodNames(int $fromId, int $toId): array
-    {
-        $rows = $this->conn->execute(
-            "SELECT id, name FROM academic_periods WHERE id IN (?, ?)",
-            [$fromId, $toId]
-        )->fetchAll('assoc');
-
-        $byId = [];
-        foreach ($rows as $r) {
-            $byId[(int)$r['id']] = (string)$r['name'];
-        }
-        if (!isset($byId[$fromId], $byId[$toId])) {
-            throw new \RuntimeException('Academic period name(s) not found.');
-        }
-        return [$byId[$fromId], $byId[$toId]];
-    }
 
     private function keyPath(string $sys, string $lvl, string $cyc): string
     {
@@ -470,8 +433,4 @@ class InstitutionCopyProgramsGradesCommand extends Command
         return preg_replace($pattern, ' ' . $toTail, $name) ?? $name;
     }
 
-    private function v(ConsoleIo $io, string $msg): void
-    {
-        if ($this->verbose) $io->out($msg);
-    }
 }
