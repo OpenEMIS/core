@@ -267,9 +267,13 @@ class AssessmentItemsTable extends AppTable
                 $InstitutionSubjects->aliasField('institution_id') => $institution_id,
                 $InstitutionSubjects->aliasField('academic_period_id') => $academic_period_id,
             ])
+            // ->group([
+            //     $this->aliasField('education_subject_id'), //POCOR-9291
+            //     $EducationSubject->aliasField('id'),
+            //     $EducationSubject->aliasField('name')
+            // ])
             ->group([
-                $this->aliasField('education_subject_id'), //POCOR-9291
-                $EducationSubject->aliasField('id'),
+                $InstitutionSubjects->aliasField('id'),  //POCOR-9468
                 $EducationSubject->aliasField('name')
             ])
             ->order([
