@@ -4379,6 +4379,8 @@ class NavigationComponent extends Component
                             'Scholarships.Applications.index',
                             'UsersDirectory.index',
                             'UsersDirectory.view',
+                            'Scholarships.UsersDirectory.index',//POCOR-9435
+                            'Scholarships.UsersDirectory.view',//POCOR-9435
                             'Scholarships.Identities.index',
                             'Scholarships.Identities.view',
                             'Scholarships.Nationalities.index',
@@ -4447,15 +4449,17 @@ class NavigationComponent extends Component
                     'title' => 'Applications',
                     'parent' => 'Administration.Scholarships',
                     'params' => ['plugin' => 'Scholarship'],
-                    'selected' => [
-                        'Scholarships.Applications.index',
-                        'UsersDirectory.index',
-                        'UsersDirectory.view',
-                        'Scholarships.Identities.index',
-                        'Scholarships.Identities.view',
-                        'Scholarships.Nationalities.index',
-                        'Scholarships.Nationalities.view',
-                        'Scholarships.Contacts.index',
+                        'selected' => [
+                            'Scholarships.Applications.index',
+                            'UsersDirectory.index',
+                            'UsersDirectory.view',
+                            'Scholarships.UsersDirectory.index', //POCOR-9435
+                            'Scholarships.UsersDirectory.view', //POCOR-9435
+                            'Scholarships.Identities.index',
+                            'Scholarships.Identities.view',
+                            'Scholarships.Nationalities.index',
+                            'Scholarships.Nationalities.view',
+                            'Scholarships.Contacts.index',
                         'Scholarships.Contacts.view',
                         'Scholarships.Guardians.index',
                         'Scholarships.Guardians.view',
