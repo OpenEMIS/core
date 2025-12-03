@@ -980,11 +980,11 @@ class ReportCardGpaTable extends ControllerActionTable
                 subq.institution_id,
                 subq.student_id,
                 ROUND(
-                    AVG(
-                        IFNULL(gpa_grading_options.point, 0)
-                    ),
-                    2
-                ) gpa_per_student,
+                    SUM(IFNULL(gpa_grading_options.point, 0)) 
+                    /
+                    COUNT(DISTINCT subq.education_subject_id),
+                2
+                ) AS gpa_per_student,
                 GROUP_CONCAT(
                     CONCAT(
                         subq.education_subject_id,
