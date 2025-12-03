@@ -1317,11 +1317,13 @@ class DirectoriesTable extends ControllerActionTable
         if ($primary) {
             $schema = $this->getSchema();
             $fields = $schema->columns();
-            foreach ($fields as $key => $field) {
-                if ($schema->getColumn($field)['type'] == 'binary') {
-                    unset($fields[$key]);
-                }
-            }
+            //POCOR-9467 -- Start remove excluded binary fields from select
+            // foreach ($fields as $key => $field) {
+            //     if ($schema->getColumn($field)['type'] == 'binary') {
+            //         unset($fields[$key]);
+            //     }
+            // }
+            //POCOR-9467 -- End
             return $query->select($fields);
         }
     }
