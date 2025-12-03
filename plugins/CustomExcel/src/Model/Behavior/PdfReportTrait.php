@@ -1214,7 +1214,7 @@ trait PdfReportTrait
             $xlsxPath = $tempDir . $baseFileName . '.xlsx';
             $pdfExpectedPath = $tempDir . $baseFileName . '.pdf';
 
-
+            Log::debug('count ' . $sheetCount);
 
             if ($sheetCount !== null) {
                 $total = $objSpreadsheet->getSheetCount();
@@ -1256,7 +1256,7 @@ trait PdfReportTrait
             /* --- Style normalization on the final workbook ($ss) --- */
 
 // Ensure at least one default cell style exists
-            if (count($ss->getCellXfCollection()) === 0) {
+            if ($ss && count($ss->getCellXfCollection()) === 0) {
                 $ss->addCellXf(new Style());
             }
 
