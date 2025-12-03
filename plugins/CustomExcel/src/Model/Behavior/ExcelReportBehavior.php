@@ -1161,7 +1161,18 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-
+    private function isEmptyMatchData($arr)
+    {
+        if (empty($arr)) {
+            return true;
+        }
+        foreach ($arr as $v) {
+            if (!empty($v)) {
+                return false;
+            }
+        }
+        return true;
+    }
     private function matchRows($objSpreadsheet, $objWorksheet, $objCell, $attr, $rowsArray = [], $columnsArray = [], $extra)
     {
         $matchFrom = isset($rowsArray['matchFrom']) ? $rowsArray['matchFrom'] : [];
