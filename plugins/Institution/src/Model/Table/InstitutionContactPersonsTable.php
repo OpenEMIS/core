@@ -45,10 +45,10 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
                 'last' => true
             ])
             ->notEmptyString('mobile_number')
-            /*->add('mobile_number', 'ruleCustomMobile', [
+            ->add('mobile_number', 'ruleCustomMobile', [
                 'rule' => ['validateCustomPattern', 'institution_contact_person_mobile'],
                 'provider' => 'table'
-            ])*/
+            ])
             ->add('mobile_number', 'ruleMobileNumberPattern', [
                 'rule' => ['validateMobileNumberPattern', 'validate_contact_person_mobile_number'],
                 'provider' => 'table'
