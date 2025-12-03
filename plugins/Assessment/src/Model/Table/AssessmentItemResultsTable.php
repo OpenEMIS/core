@@ -73,35 +73,6 @@ class AssessmentItemResultsTable extends AppTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        //session_start();
-        
-        $result = $this
-                        ->find()
-                        ->select(['marks', 'assessment_grading_option_id'])
-                        ->where([
-                            'student_id' => $entity->student_id,
-                            'assessment_id' => $entity->assessment_id,
-                            'education_subject_id' => $entity->education_subject_id,
-                            'education_grade_id' => $entity->education_grade_id,
-                            'academic_period_id' => $entity->academic_period_id,
-                            'institution_classes_id' => $entity->institution_classes_id,
-                            'institution_id' => $entity->institution_id,
-                            'assessment_period_id' => $entity->assessment_period_id,
-                        ])
-                        ->enableHydration(false)
-                        ->first();
-
-            /*$session = $this->request->getSession();
-            $session->write('old_marks', $result['marks']);
-            echo "<pre>"; print_r($this->request); die;*/
-
-            /*if ($existing) {
-            // Store old marks inside the entity (NOT in session)
-            $entity->set('_old_marks', $existing['marks']);
-            $entity->set('_old_grade_option', $existing['assessment_grading_option_id']);
-        }*/
-            //echo "<pre>"; print_r([$result['marks'], $result['assessment_grading_option_id']]); die;
-       // $_SESSION["marks"] = 67.00;
         //POCOR-6824 start
         $institutionId = $entity->institution_id;
         $InstitutionClassId = $entity->institution_classes_id;
@@ -176,12 +147,8 @@ class AssessmentItemResultsTable extends AppTable
                             ->first();
                         //POCOR-7536-KHINDOL
                         $this->getAssessmentGrading($previousAssessment);
-//                        $this->log('saved_old_entity', 'debug');
-//                        $this->log($entity, 'debug');
                         $event->stopPropagation();
                     } else {
-//                        $this->log('created_new_entity', 'debug');
-//                        $this->log($entity, 'debug');
                         $entity->id = Text::uuid();
                     }
                 }
@@ -335,9 +302,7 @@ class AssessmentItemResultsTable extends AppTable
             ])
             ->group([$this->aliasField('assessment_period_id')])
             ->disableHydration();
-//        Log::debug($query->sql());
         $results = $query->toArray();
-//        Log::debug('step2');
         // Step 2: Fetch marks for students using getMarksForClass
         if(!empty($classId)){
             //can get institution
@@ -350,30 +315,23 @@ class AssessmentItemResultsTable extends AppTable
             "education_subject_id" => $subjectId,
             "student_id" => $studentId
         ];
-//        Log::debug($options);
         $marks = self::getMarksForClass($options);
-//        Log::debug('step22');
-//        Log::debug($marks);
         // Step 3: Calculate simple marks using getMarksWithSimpleMarks
         if(!is_array($marks)){
             $marks = [];
         }
         $marksWithSimpleMarks = self::getMarksWithSimpleMarks($marks);
-//        Log::debug('step3');
         // Step 4: Group marks per student and subject using getMarksPerStudentPerSubjectArray
         $marksPerStudent = self::getMarksPerStudentPerSubjectArray($marksWithSimpleMarks);
-//        Log::debug('step4');
         // Step 5: Process the results and add marks
         $returnArray = [];
         foreach ($results as $result) {
             $studentId = $result['student_id'];
             $assessmentPeriodId = $result['assessment_period_id'];
             $marks = $marksPerStudent[$studentId][$subjectId][$assessmentPeriodId] ?? [];
-
             // Sum the marks and round
             $totalMarks = array_sum(array_column($marks, 'simple_mark'));
             $result['marks'] = round($totalMarks, 2);
-
             // Structure the return array
             $returnArray[$studentId][$subjectId][$assessmentPeriodId] = [
                 'marks' => $result['marks'],
@@ -381,8 +339,6 @@ class AssessmentItemResultsTable extends AppTable
                 'grade_code' => $result['grade_code']
             ];
         }
-//        Log::debug('step5');
-//        Log::debug($returnArray);
         return $returnArray;
     }
 
@@ -1036,7 +992,6 @@ class AssessmentItemResultsTable extends AppTable
                     $exemptions_table->aliasField('education_grade_id') . ' = institution_class_students.education_grade_id'])
             ->where($where)
             ->disableHydration();
-//        Log::debug($exemptions_array->sql());
         $exemptions_array = $exemptions_array->toArray();
         return $exemptions_array;
     }
