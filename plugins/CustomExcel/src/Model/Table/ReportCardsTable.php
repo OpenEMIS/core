@@ -1069,7 +1069,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionStudentAbsences(Event $event, array $params, ArrayObject $extra)
     {
-        Log::debug(print_r($params, true));
+//        Log::debug(print_r($params, true));
         if (isset($params['institution_class_id'])
             && isset($params['institution_id'])
             && isset($params['student_id'])
@@ -1651,43 +1651,31 @@ class ReportCardsTable extends AppTable
             !empty($params['institution_id']) &&
             !empty($params['academic_period_id'])
         ) {
-            $CompetencyItemComments = self::getDynamicTableInstance(
-                'Institution.InstitutionCompetencyItemComments'
-            ); // POCOR-9162
+            $Table = self::getDynamicTableInstance('Institution.InstitutionCompetencyItemComments');
 
-            $rows = $CompetencyItemComments->find()
+            $rows = $Table->find()
                 ->where([
-                    $CompetencyItemComments->aliasField('competency_template_id IN') =>
-                        $extra['competency_templates_ids'],
-
-                    $CompetencyItemComments->aliasField('competency_period_id IN') =>
-                        $extra['competency_periods_ids'],
-
-                    $CompetencyItemComments->aliasField('student_id') =>
-                        $params['student_id'],
-
-                    $CompetencyItemComments->aliasField('institution_id') =>
-                        $params['institution_id'],
-
-                    $CompetencyItemComments->aliasField('academic_period_id') =>
-                        $params['academic_period_id'],
+                    $Table->aliasField('competency_template_id IN') => $extra['competency_templates_ids'],
+                    $Table->aliasField('competency_period_id IN')   => $extra['competency_periods_ids'],
+                    $Table->aliasField('student_id')                => $params['student_id'],
+                    $Table->aliasField('institution_id')            => $params['institution_id'],
+                    $Table->aliasField('academic_period_id')        => $params['academic_period_id'],
                 ])
                 ->toArray();
 
             // ----------------------------------------
-            // SAFETY: ensure at least one row returned
+            // SAFETY MODE: create structured empty rows
             // ----------------------------------------
             if (empty($rows)) {
-                // create one clean empty entity
-                $rows = [$CompetencyItemComments->newEmptyEntity()];
+                $rows = $this->buildEmptyCommentsRows($extra, $Table, $params);
             }
 
             return $rows;
         }
 
-        // fallback — must return array
-        return [ ];
+        return [];
     }
+
 
 
     public function onExcelTemplateInitialiseCompetencyCriteriasWithResults(Event $event, array $params, ArrayObject $extra)
@@ -1744,6 +1732,58 @@ class ReportCardsTable extends AppTable
             return $entity;
         }
     }
+
+    private function buildEmptyCommentsRows(ArrayObject $extra, $Table, array $params)
+    {
+        $result = [];
+
+        $templateIds = (array)$extra['competency_templates_ids'];
+        $periodIds   = (array)$extra['competency_periods_ids'];
+
+        // Optional: competency items & criteria (if available in vars)
+        $items = $extra['vars']['CompetencyItems']['id'] ?? [];
+        $criterias = $extra['vars']['CompetencyCriterias']['id'] ?? [];
+
+        foreach ($templateIds as $templateId) {
+            foreach ($periodIds as $periodId) {
+
+                foreach ($items as $itemId) {
+
+                    // If there are no criteria — still return one entity
+                    if (empty($criterias)) {
+                        $result[] = $Table->newEntity([
+                            'competency_template_id' => $templateId,
+                            'competency_period_id'   => $periodId,
+                            'competency_item_id'     => $itemId,
+                            'competency_criteria_id' => null,
+                            'student_id'             => $params['student_id'],
+                            'institution_id'         => $params['institution_id'],
+                            'academic_period_id'     => $params['academic_period_id'],
+                            'comments'               => ""
+                        ]);
+                    } else {
+                        foreach ($criterias as $criteriaId) {
+                            $result[] = $Table->newEntity([
+                                'competency_template_id' => $templateId,
+                                'competency_period_id'   => $periodId,
+                                'competency_item_id'     => $itemId,
+                                'competency_criteria_id' => $criteriaId,
+                                'student_id'             => $params['student_id'],
+                                'institution_id'         => $params['institution_id'],
+                                'academic_period_id'     => $params['academic_period_id'],
+                                'comments'               => ""
+                            ]);
+                        }
+                    }
+
+                }
+
+            }
+        }
+
+        return $result;
+    }
+
 
     public function onExcelTemplateInitialiseStudentCompetencyResults(Event $event, array $params, ArrayObject $extra)
     {
