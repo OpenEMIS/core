@@ -1331,15 +1331,15 @@ trait PdfReportTrait
             return null;
         } finally {
             // 3. Cleanup
-//            if (file_exists($xlsxPath)) {
-//                @unlink($xlsxPath);
-//                Log::debug("Deleted XLSX: $xlsxPath");
-//            }
-//
-//            if (file_exists($pdfExpectedPath)) {
-//                @unlink($pdfExpectedPath);
-//                Log::debug("Deleted PDF: $pdfExpectedPath");
-//            }
+            if (file_exists($xlsxPath)) {
+                @unlink($xlsxPath);
+                Log::debug("Deleted XLSX: $xlsxPath");
+            }
+
+            if (file_exists($pdfExpectedPath)) {
+                @unlink($pdfExpectedPath);
+                Log::debug("Deleted PDF: $pdfExpectedPath");
+            }
         }
 
         return null;
