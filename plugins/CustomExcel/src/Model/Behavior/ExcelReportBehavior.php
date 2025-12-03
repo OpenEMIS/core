@@ -754,7 +754,8 @@ class ExcelReportBehavior extends Behavior
         if ($format === 'pdf' || !empty($student_id)) {
             $this->savePDF($pdfSpreadsheet, $filepath, $student_id, $report_card_id);
         }
-
+        $writer = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+        $writer->save($filepath);
         // Cleanup
         $objSpreadsheet->disconnectWorksheets();
         $pdfSpreadsheet->disconnectWorksheets();

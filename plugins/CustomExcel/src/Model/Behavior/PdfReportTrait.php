@@ -680,7 +680,7 @@ trait PdfReportTrait
 
         if (!empty($pdfContent)) {
             $filename = $this->getConfig('filename') . '_' . (!empty($student_id) ? $student_id : date('Ymd\THis')) . '.txt';
-            $outputPath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $filename . '.pdf';
+            $outputPath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $filename;
             file_put_contents($outputPath, $pdfContent);
             $outputPath = $filepath;
             file_put_contents($outputPath, $pdfContent);
