@@ -1830,7 +1830,10 @@ class InstitutionsController extends AppController
             ->first();
         }
         if ($SecurityRoleTableData->code == 'PRINCIPAL') {
-            $_edit = true;
+                if($this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles)){
+                $_edit = true;
+                }
+            //$_edit = true;
         }
         //POCOR-9487['End']
 
