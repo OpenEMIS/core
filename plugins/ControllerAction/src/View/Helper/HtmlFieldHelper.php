@@ -539,6 +539,7 @@ class HtmlFieldHelper extends Helper
 					// '.$imageDefault.'
 					// </div>
 					// </div>';
+                $src = is_string($src) ? $src : "";
                 $value = (base64_decode($src, true)) ? '<div class="table-thumb"
                     data-load-image=true
                     data-image-width=' . $maxImageWidth . '
@@ -557,6 +558,7 @@ class HtmlFieldHelper extends Helper
                     if (is_resource($src)) {
                         $src = base64_encode(stream_get_contents($src));
                     }
+                    $src = is_string($src) ? $src : "";
                     $value = (base64_decode($src, true)) ? '<div class="table-thumb"><img src="data:image/jpeg;base64,'.$src.'" style="max-width:'.$maxImageWidth.'px;" /></div>' : $src;
                 }
             }

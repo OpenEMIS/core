@@ -1776,7 +1776,7 @@ public function getIdentityTypeData($value_selection)
             }
 
         } elseif ( $this->action == 'index' && $this->Session->check('Directory')) {
-            $this->Session->delete('Directory');
+//            $this->Session->delete('Directory');
         }
 
         // Start POCOR-5188
