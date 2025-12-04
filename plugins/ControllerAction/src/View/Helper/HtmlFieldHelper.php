@@ -539,7 +539,7 @@ class HtmlFieldHelper extends Helper
 					// '.$imageDefault.'
 					// </div>
 					// </div>';
-                $src = is_string($src) ? $src : "";
+                $src = is_string($src) ? $src : ""; // POCOR-9488
                 $value = (base64_decode($src, true)) ? '<div class="table-thumb"
                     data-load-image=true
                     data-image-width=' . $maxImageWidth . '

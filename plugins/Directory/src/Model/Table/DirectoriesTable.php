@@ -1545,8 +1545,8 @@ class DirectoriesTable extends ControllerActionTable
         if (!isset($this->request->getQuery['sort'])) {
             $orders = [
                 $this->aliasField('first_name'),
-                $this->aliasField('last_name'),
-                $this->aliasField('openemis_no')
+                $this->aliasField('last_name'), // POCOR-9488
+                $this->aliasField('openemis_no') // POCOR-9488
             ];
         }
 
@@ -1777,7 +1777,7 @@ public function getIdentityTypeData($value_selection)
             }
 
         } elseif ( $this->action == 'index' && $this->Session->check('Directory')) {
-//            $this->Session->delete('Directory');
+//            $this->Session->delete('Directory'); // POCOR-9488
         }
 
         // Start POCOR-5188
