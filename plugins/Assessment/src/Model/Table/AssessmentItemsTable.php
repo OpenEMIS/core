@@ -257,6 +257,43 @@ class AssessmentItemsTable extends AppTable
         if(!empty($InstitutionClassesData) || !empty($InstitutionClassesSecondaryStaffData)){
             $isHomeRoomTeacherOrSecondaryTeacher = 1;
         }
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $securityFunctionsData = $securityFunctions
+            ->find()
+            ->select([
+                'SecurityFunctions.id'
+            ])
+            ->where([
+                'SecurityFunctions.name' => 'Assessments',
+                'SecurityFunctions.controller' => 'Institutions',
+                'SecurityFunctions.module' => 'Institutions',
+                'SecurityFunctions.category' => 'Students'
+            ])
+            ->first();
+        $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
+        if(!empty($permission_id)){
+            $securityRoleFunctions =  TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+
+            $securityRoleFunctionsData = $securityRoleFunctions
+            ->find()
+            ->where([
+                'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+                'SecurityRoleFunctions.security_role_id' => $permission_id,
+            ])
+            ->first();
+            }
+        if(!empty($securityRoleFunctionsData)){
+            $SecurityRoleTable = TableRegistry::get('Security.SecurityRoles');
+            $SecurityRoleTableData = $SecurityRoleTable
+            ->find()
+            ->where([
+                $SecurityRoleTable->aliasField('id') => $securityRoleFunctionsData->security_role_id
+            ])
+            ->first();
+        }
+        if ($SecurityRoleTableData->code == 'PRINCIPAL') {
+           $isPrinciple = 1;
+        }
         //POCOR-9487[END]
 
         $query
@@ -311,14 +348,16 @@ class AssessmentItemsTable extends AppTable
                 $logged_in_user_id,
                 $super_admin,
                 $institution_id,
-                $isHomeRoomTeacherOrSecondaryTeacher
+                $isHomeRoomTeacherOrSecondaryTeacher,
+                $isPrinciple
             ) {
                 return $results->map(function ($row) use (
                     $InstitutionSubjectStaff,
                     $logged_in_user_id,
                     $super_admin,
                     $institution_id,
-                    $isHomeRoomTeacherOrSecondaryTeacher
+                    $isHomeRoomTeacherOrSecondaryTeacher,
+                    $isPrinciple
                 ) {
                     $row['education_subject_id'] = $row->education_subject_id;
                     $row['id'] = $row->id;
@@ -427,9 +466,21 @@ class AssessmentItemsTable extends AppTable
                             $row['is_editable'] = '';
                             return (array) $row;
                         }
+
+                        if($isPrincipal == 1){
+                            $row['is_editable'] = 1;
+                            return (array) $row;
+                        }else{
+                            $row['is_editable'] = '';
+                            return (array) $row;
+                        }
                         //POCOR-9487[END]
                     } else {
-                        $row['is_editable'] = 0;
+                        if($isPrinciple == 1){
+                             $row['is_editable'] = 1;
+                        }else{
+                            $row['is_editable'] = 0;
+                        }
                     }
                     //POCOR-7541 end
                     return (array) $row;
