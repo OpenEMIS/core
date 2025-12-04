@@ -1794,6 +1794,47 @@ class InstitutionsController extends AppController
         } else {
             $_edit = false;
         }
+        //POCOR-9487[START]
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $securityFunctionsData = $securityFunctions
+            ->find()
+            ->select([
+                'SecurityFunctions.id'
+            ])
+            ->where([
+                'SecurityFunctions.name' => 'Assessments',
+                'SecurityFunctions.controller' => 'Institutions',
+                'SecurityFunctions.module' => 'Institutions',
+                'SecurityFunctions.category' => 'Students'
+            ])
+            ->first();
+        $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
+        if(!empty($permission_id)){
+            $securityRoleFunctions =  TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+
+            $securityRoleFunctionsData = $securityRoleFunctions
+            ->find()
+            ->where([
+                'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+                'SecurityRoleFunctions.security_role_id' => $permission_id,
+            ])
+            ->first();
+            }
+        if(!empty($securityRoleFunctionsData)){
+            $SecurityRoleTable = TableRegistry::get('Security.SecurityRoles');
+            $SecurityRoleTableData = $SecurityRoleTable
+            ->find()
+            ->where([
+                $SecurityRoleTable->aliasField('id') => $securityRoleFunctionsData->security_role_id
+            ])
+            ->first();
+        }
+        if ($SecurityRoleTableData->code == 'PRINCIPAL') {
+            $_edit = true;
+        }
+        //POCOR-9487['End']
+
+
         // end POCOR-3983
         $queryString = $this->request->getQuery('queryString');
         $this->set('_edit', $_edit);
