@@ -277,35 +277,7 @@ class UsersMergeCommand extends Command
         }
     }
 
-    private function forceNeutralizeOrg(Entity $merge, string $field, mixed $current, int $mergeId, \Cake\Database\Schema\TableSchema $schema): void
-    {
-
-        $colMeta    = $schema->getColumn($field) ?? [];
-        $isNullable = (bool)($colMeta['null'] ?? false);
-        $maxLen     = (int)($colMeta['length'] ?? 191);
-
-        if ($isNullable) {
-            $merge->set($field, null);
-            $this->io->out('Force Nulled');
-        } else {
-            $token = sprintf('MERGED-%d-%s', $mergeId, substr(sha1((string)$current), 0, 6));
-            $merge->set($field, mb_substr($token, 0, max(1, $maxLen)));
-            $this->io->out("Force Changed to $token");
-        }
-
-        if (is_numeric($current)) {
-            // If it can be null → set NULL
-            if ($isNullable) {
-                $merge->set($field, null);
-            } else {
-                // fallback value safe for integer columns
-                $merge->set($field, 0);
-            }
-            return;
-        }
-
-    }
-
+    
     /**
      * Optional safety: ensure that no third-party row will collide with BASE after move.
      * If it would, we throw — you can change this policy to "skip that field" instead.
