@@ -462,12 +462,9 @@ class AssessmentItemsTable extends AppTable
                          if($isHomeRoomTeacherOrSecondaryTeacher == 1){
                             $row['is_editable'] = 1;
                             return (array) $row;
-                        }else{
-                            $row['is_editable'] = '';
-                            return (array) $row;
-                        }
+                         }
 
-                        if($isPrincipal == 1){
+                         else if($isPrinciple == 1){
                             $row['is_editable'] = 1;
                             return (array) $row;
                         }else{
