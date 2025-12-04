@@ -380,8 +380,7 @@ class InstitutionSubjectStudentsTable extends AppTable
      */
     public function findStudentResults(Query $query, array $options)
     {
-//    POCOR-7419-KHINDOL
-//        $this->log('findStudentResults', 'debug');
+        //POCOR-7419-KHINDOL
         $institution_id = self::getFromArray($options, 'institution_id');
         $institution_class_id = self::getFromArray($options, 'institution_class_id'); //568
         $assessment_id = self::getFromArray($options, 'assessment_id');
@@ -393,28 +392,36 @@ class InstitutionSubjectStudentsTable extends AppTable
         if($archive){
             $archive = true;
         }
-        if ($institution_subject_id) {
-            $education_subject_id = $this->getStrictEdicationSubjectIdForResults($institution_subject_id, $education_subject_id);
-        }
-        if ($education_subject_id) {
-            $options['education_subject_id'] = $education_subject_id;
-        } else {
-            $options['education_subject_id'] = -1;
-        }
-//        Log::debug($options);
+        //POCOR-9468 -- FIX subject filtering to use institution_subject_id
+        // if ($institution_subject_id) {
+        //     $education_subject_id = $this->getStrictEdicationSubjectIdForResults($institution_subject_id, $education_subject_id);
+        // }
+        // if ($education_subject_id) {
+        //     $options['education_subject_id'] = $education_subject_id;
+        // } else {
+        //     $options['education_subject_id'] = -1;
+        // }
+        //POCOR-9468 -- END FIX
         $where = [
             $this->aliasField('institution_class_id = ') . $institution_class_id,
             $this->aliasField('institution_id = ') . $institution_id,
             $this->aliasField('academic_period_id = ') . $academic_period_id,
         ];
-        if ($options['education_subject_id'] > 0) {
-            $where[] = $this->aliasField('education_subject_id = ') . $education_subject_id;
+
+        //POCOR-9468 --- FIX: USE institution_subject_id for filtering ---
+        if ($institution_subject_id) {
+            $where[] = $this->aliasField('institution_subject_id = ') . $institution_subject_id;
         }
+
+        //POCOR-9468 remove education_subject_id filter completely
+        // if ($options['education_subject_id'] > 0) {
+        //     $where[] = $this->aliasField('education_subject_id = ') . $education_subject_id;
+        // }
+
         if ($options['education_grade_id'] > 0) {
             $where[] = $this->aliasField('education_grade_id = ') . $education_grade_id;
         }
-//        $this->log('$where', 'debug');
-//        $this->log($where, 'debug');
+
         if(!$archive){
             $where[$this->StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED', 'WITHDRAWN', 'REPEATED'];
         }
