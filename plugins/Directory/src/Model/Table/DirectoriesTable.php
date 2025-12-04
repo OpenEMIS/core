@@ -1545,7 +1545,8 @@ class DirectoriesTable extends ControllerActionTable
         if (!isset($this->request->getQuery['sort'])) {
             $orders = [
                 $this->aliasField('first_name'),
-                $this->aliasField('last_name')
+                $this->aliasField('last_name'),
+                $this->aliasField('openemis_no')
             ];
         }
 
