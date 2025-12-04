@@ -724,7 +724,12 @@ class DashboardController extends AppController
                     'frequency NOT IN' => ['Never', 'Once']
                 ]);
         }
-
+        //POCOR-9429 start
+        if(empty($userRoleIds)){
+            return [];
+        }
+        //POCOR-9429 end 
+           
         return $alertsTable->find()
             ->distinct(['Alerts.id'])
             ->matching('AlertRules.SecurityRoles', function ($q) use ($userRoleIds) {

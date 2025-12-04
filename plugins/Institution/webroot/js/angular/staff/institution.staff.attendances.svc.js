@@ -170,8 +170,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
     // column definitions
     function getColumnDefs(selectedDayDate) {
-        console.log("selectedDayDate");
-        console.log(selectedDayDate);
+        // console.log("selectedDayDate");
+        // console.log(selectedDayDate);
         var columnDefs = [];
         var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
@@ -700,18 +700,57 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
     function saveStaffAttendance(params, dataKey, dataValue, academicPeriodId) {
         var dateString = params.data.date;
-        var shift_id = params.context.date;
-        var staffAttendanceData = {
-            staff_id: params.data.staff_id,
-            institution_id: params.data.institution_id,
-            academic_period_id: academicPeriodId,
-            date: dateString,
-            shift_id: params.context.date, //POCOR-6971
-            time_in: params.data.attendance[dateString].time_in,
-            time_out: params.data.attendance[dateString].time_out,
-            comment: params.data.attendance[dateString].comment
-        };
-        // console.log(staffAttendanceData);
+
+        // ---- Prevent saving attendance for future dates ----
+        var today = new Date();
+        today.setHours(8, 0, 0, 0); // normalize
+
+        try {
+            var selectedDate = new Date(dateString);
+            if (selectedDate > today) {
+                AlertSvc.warning(params.context.$scope, 'Future dates cannot be saved');
+
+                return false; // prevent API call or further execution
+            }
+        } catch (error) {
+            console.error('Failed to show alert for future date:', error);
+            // optionally: AlertSvc.error(params.context.$scope, 'Warning display failed');
+        }
+
+        // ----------------------------------------------------
+
+        var staffAttendanceData = {};
+        try {
+            var timeIn  = params.data.attendance[dateString].time_in;
+            var timeOut = params.data.attendance[dateString].time_out;
+
+            // If user entered reversed time — fix automatically
+            if (timeIn && timeOut && timeIn > timeOut) {
+                console.warn('time_in is after time_out — swapping automatically');
+                var tmp   = timeIn;
+                timeIn    = timeOut;
+                timeOut   = tmp;
+
+                // Optional UI alert
+                // AlertSvc.info(params.context.$scope, 'Time in/out order was corrected automatically');
+            }
+
+            staffAttendanceData = {
+                staff_id: params.data.staff_id,
+                institution_id: params.data.institution_id,
+                academic_period_id: academicPeriodId,
+                date: dateString,
+                shift_id: params.context.date, // POCOR-6971
+                time_in: timeIn,
+                time_out: timeOut,
+                comment: params.data.attendance[dateString].comment
+            };
+
+        } catch (error) {
+            console.error('Error building staffAttendanceData:', error);
+            AlertSvc.error(params.context.$scope, 'Unable to prepare attendance data');
+            return false; // stop execution if something breaks
+        }
 
         staffAttendanceData[dataKey] = dataValue;
         if(!params.data.attendance[dateString].isNew) {
