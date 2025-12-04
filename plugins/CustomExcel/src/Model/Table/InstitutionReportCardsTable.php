@@ -874,6 +874,8 @@ class InstitutionReportCardsTable extends AppTable
             return $staff;
         }
     }
+
+    //POCOR-9480
     public  function getInstitutionSecurityStaff($institutionId, $staffPosnId)
     {
 
@@ -951,6 +953,7 @@ class InstitutionReportCardsTable extends AppTable
          return $entity;
     }
 
+    //POCOR-9480
     public static function getInstitutionSecurityGroupsIds($institution_id)
     {
         $securityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
