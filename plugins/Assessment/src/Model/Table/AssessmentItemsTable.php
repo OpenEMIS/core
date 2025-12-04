@@ -270,7 +270,7 @@ class AssessmentItemsTable extends AppTable
                 'SecurityFunctions.category' => 'Students'
             ])
             ->first();
-        $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
+        $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['edit'];
         if(!empty($permission_id)){
             $securityRoleFunctions =  TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
 
@@ -278,7 +278,7 @@ class AssessmentItemsTable extends AppTable
             ->find()
             ->where([
                 'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
-                'SecurityRoleFunctions.security_role_id' => $permission_id,
+                'SecurityRoleFunctions.security_role_id IN' => $permission_id,
             ])
             ->first();
             }
@@ -292,7 +292,9 @@ class AssessmentItemsTable extends AppTable
             ->first();
         }
         if ($SecurityRoleTableData->code == 'PRINCIPAL') {
-           $isPrinciple = 1;
+            if($securityRoleFunctionsData->_edit == 1){
+                $isPrinciple = 1;
+            }
         }
         //POCOR-9487[END]
 
