@@ -870,9 +870,103 @@ class InstitutionReportCardsTable extends AppTable
             //POCOR-8093 to fetch staff position
             $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
             $staffPosnId = $StaffPositionTitles->getPrincipalRoleId();
-            $staff = $ReportCards::getInstitutionSecurityStaff($institutionId, $staffPosnId);
+            $staff = $this->getInstitutionSecurityStaff($institutionId, $staffPosnId);
             return $staff;
         }
+    }
+    public  function getInstitutionSecurityStaff($institutionId, $staffPosnId)
+    {
+
+         $Staff = TableRegistry::get('Institution.Staff');
+         $institutionSecurityGroupsIds = $this->getInstitutionSecurityGroupsIds($institutionId);
+         $institutionsPositions = TableRegistry::get('Institution.InstitutionPosition');
+         $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+         $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+        if (!empty($staffPosnId)) {
+            if (is_array($staffPosnId)) {
+                $condition = ['InstitutionPositions.staff_position_title_id IN' => $staffPosnId]; 
+            } else {
+                $condition = ['InstitutionPositions.staff_position_title_id' => $staffPosnId];
+            }
+        } else {
+            $condition = [];
+        }
+         $where = [
+             $Staff->aliasField('institution_id') => $institutionId,
+             $condition,
+             'SecurityGroupUsers.security_group_id IN (' . implode(',', $institutionSecurityGroupsIds) . ')',
+             $Staff->aliasField('staff_status_id') => $assignedStatus
+         ];
+
+         $staffQuery = $Staff
+             ->find()
+             ->select([
+                 $Staff->aliasField('id'),
+                 $Staff->aliasField('FTE'),
+                 $Staff->aliasField('start_date'),
+                 $Staff->aliasField('start_year'),
+                 $Staff->aliasField('end_date'),
+                 $Staff->aliasField('end_year'),
+                 $Staff->aliasField('staff_id'),
+                 $Staff->aliasField('security_group_user_id'),
+                 $Staff->aliasField('institution_position_id')
+             ])
+             ->innerJoin(
+                 ['InstitutionPositions' => 'institution_positions'],
+                     ['InstitutionPositions.id = Staff.institution_position_id']
+             )
+             ->innerJoinWith('SecurityGroupUsers')
+             ->contain([
+                 'Users' => [
+                     'fields' => [
+                         'openemis_no',
+                         'first_name',
+                         'middle_name',
+                         'third_name',
+                         'last_name',
+                         'preferred_name',
+                         'email',
+                         'address',
+                         'postal_code',
+                         'gender_id' 
+                     ]
+                 ]
+             ])
+             ->where($where);
+         $entity = $staffQuery
+             ->first();
+         if (!empty($entity)) {
+             if ($entity->user->gender_id == '1') {
+                 $entity->user->gender_id = "Male";
+                 $entity->gender = "Male";
+             } else {
+                 $entity->user->gender_id = "Female";
+                 $entity->gender = "Male";
+             }
+             $username = $entity->user->name;
+             if(empty($username) || $username = ""){
+                 $entity->user->name = $entity->user->first_name . ' ' . $entity->user->last_name;
+             }
+         }
+         return $entity;
+    }
+
+    public static function getInstitutionSecurityGroupsIds($institution_id)
+    {
+        $securityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+        $distinctResults = $securityGroupInstitutions
+            ->find('all')
+            ->select(['security_group_id'])
+            ->distinct(['security_group_id'])
+            ->where(['institution_id' => $institution_id])
+            ->toArray();
+        $distinctResultsValues = array_column($distinctResults, 'security_group_id');
+        if (sizeof($distinctResultsValues) > 0) {
+            $uniqu_array = array_unique($distinctResultsValues);
+        } else {
+            $uniqu_array = [0];
+        };
+        return $uniqu_array;
     }
 
     public function onExcelTemplateInitialiseDeputyPrincipal(Event $event, array $params, ArrayObject $extra)
@@ -886,7 +980,7 @@ class InstitutionReportCardsTable extends AppTable
             //POCOR-8093 to fetch staff position
             $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
             $staffPosnId = $StaffPositionTitles->getDeputyPrincipalRoleId();
-            $staff = $ReportCards::getInstitutionSecurityStaff($institutionId, $staffPosnId);
+            $staff = $this->getInstitutionSecurityStaff($institutionId, $staffPosnId);
             return $staff;
         }
     }
