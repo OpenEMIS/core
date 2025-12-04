@@ -1,3 +1,6 @@
+### [4.48.6] - 2025-12-05
+- Bug Fixed: Institutions>Performance>Assessments: When user is not a homeroom/secondary/subject teacher, edit assessment button should be hidden
+
 ### [4.48.5] - 2025-12-03
 - Bug Fixed: Institution>Performance>Assessment: The list of subjects seen in Academic Subjects does not reflect exactly on the Performance >Assessments page
 - Bug Fixed: Institutions>Students>Performance>GPA: GPA is calculating wrongly for grade 6 and grade 11
