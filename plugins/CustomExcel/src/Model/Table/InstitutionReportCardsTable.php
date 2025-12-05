@@ -954,7 +954,7 @@ class InstitutionReportCardsTable extends AppTable
     }
 
     //POCOR-9480
-    public static function getInstitutionSecurityGroupsIds($institution_id)
+    public function getInstitutionSecurityGroupsIds($institution_id)
     {
         $securityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
         $distinctResults = $securityGroupInstitutions
