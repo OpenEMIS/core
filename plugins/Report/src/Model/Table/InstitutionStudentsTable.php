@@ -122,7 +122,6 @@ class InstitutionStudentsTable extends AppTable
             $query->where([$this->aliasField('institution_id') => $institution_id]);
         }
         
-        //POCOR-7794 end
         /**POCOR-6919 starts - modified query to fetch result on the basis of selected education level*/
         if ($educationlevelId > 0) {
             $gradesArr = $this->EducationGrades
