@@ -404,6 +404,9 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                 if(scope.externalSearchSourceName === 'OpenEMIS Core') {
                     scope.basicFieldsRequired = false;
                 }
+                if(scope.externalSearchSourceName === 'Seychelles Civil Status') {
+                    scope.basicFieldsRequired = false;
+                }
                 if(scope.externalSearchSourceName === 'UNHCR') {
                     scope.basicFieldsRequired = false;
                 }
@@ -1056,6 +1059,9 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             if (externalSearchSourceName === 'OpenEMIS Core') {
                 return ['Identity', false];
             }
+            if (externalSearchSourceName === 'Seychelles Civil Status') {
+                return ['Identity', false];
+            }
         }
 
         if (isGeneralInfodHasError) {
@@ -1187,6 +1193,21 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                         // console.log(gridData);
                         gridData.forEach((data, idx) => {
                             if (scope.externalSearchSourceName === 'UNHCR') {
+                                scope.selectedUserData.identity_number = null;
+                                data.name = scope.selectedUserData.name;
+                                data.gender = scope.selectedUserData.gender.name;
+                                data.gender_id = scope.selectedUserData.gender_id;
+                                data.nationality_id = scope.selectedUserData.nationality_id;
+                                data.nationality = scope.selectedUserData.nationality_name;
+                                data.identity_type = scope.selectedUserData.identity_type_name;
+                                data.identity_type_id = scope.selectedUserData.identity_type_id;
+                                data.first_name = scope.selectedUserData.first_name;
+                                data.last_name = scope.selectedUserData.last_name;
+                                data.middle_name = scope.selectedUserData.middle_name;
+                                data.third_name = scope.selectedUserData.third_name;
+                                data.preferred_name = scope.selectedUserData.preferred_name;
+                                data.date_of_birth = scope.selectedUserData.date_of_birth;
+                            } else if (scope.externalSearchSourceName === 'Seychelles Civil Status') {
                                 scope.selectedUserData.identity_number = null;
                                 data.name = scope.selectedUserData.name;
                                 data.gender = scope.selectedUserData.gender.name;
