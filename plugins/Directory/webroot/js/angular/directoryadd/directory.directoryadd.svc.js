@@ -1043,6 +1043,9 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         if (identity_type_name === 'UNHCR') {
             isSkipableForIdentity = false;
         }
+        if (identity_type_name === 'Seychelles Civil Status') {
+            isSkipableForIdentity = false;
+        }
 
         if (isOpenEmisNoHasError) {
             return ["OpenEMIS_ID", false];
@@ -1646,6 +1649,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         // if (checkVars.identity_number && !checkVars.user_id && !checkVars.isExternalSearchEnable && isInternalSearch) return true; // POCOR-8776
         if (isInternalSearch && !checkVars.isExternalSearchEnable && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;
         if (isExternalSearch && checkVars.externalSearchSourceName === 'UNHCR' && !checkVars.identity_number) return true;
+        if (isExternalSearch && checkVars.externalSearchSourceName === 'Seychelles Civil Status' && !checkVars.identity_number) return true;
         if (isExternalSearch && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;
 
         return false;
