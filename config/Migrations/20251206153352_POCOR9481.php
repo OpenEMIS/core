@@ -7,19 +7,21 @@ use Cake\Utility\Text;
 
 class POCOR9481 extends AbstractMigration
 {
+    private $seychellesIdentityID = 0;
+//    private $seychellesNationalityID = 0;
     public function up()
     {
-
-
         $this->backupTables();
-//
+
         $this->insertNewExternalDataSourceAttributes();
-//
+
         $this->insertIdentitySeychelles();
 
         $this->insertNewConfigItems();
 
+        $this->insertNationalitySeychelles();   // <-- Add this
     }
+
 
     // rollback
 
@@ -122,15 +124,20 @@ class POCOR9481 extends AbstractMigration
         $attributes = [
             // API Credentials
             ['api_url', 'api_url', 'https://beta.gov.sc/identityserverbeta/'],
-            ['client_id', 'client_id', 'OpenEMISClient1'],
+            ['client_id', 'client_id', 'OpenEMISClient'],
             ['client_secret', 'client_secret', 'password123'],
             ['token_uri', 'token_uri', 'https://beta.gov.sc/identityserverbeta/connect/token'],
             ['grant_type', 'grant_type', 'client_credentials'],
             ['scopes', 'scopes', 'npd.level2'],
+            ['first_name_mapping', 'first_name_mapping', 'givenNames'],
+            ['last_name_mapping', 'last_name_mapping', 'presentSurname'],
+            ['date_of_birth_mapping', 'date_of_birth_mapping', 'dob'],
+            ['gender_mapping', 'gender_mapping', 'sex'],
+            ['nationality_mapping', 'nationality_mapping', 'nationality'],
 
         ];
 
-        $data = array_map(fn($attr) => $this->generateExternalDataSourceAttribute('OpenEMIS Core', ...$attr), $attributes);
+        $data = array_map(fn($attr) => $this->generateExternalDataSourceAttribute('Seychelles Civil Status', ...$attr), $attributes);
 
         $table->insert($data)->save();
     }
@@ -150,20 +157,20 @@ class POCOR9481 extends AbstractMigration
 
     public function insertIdentitySeychelles()
     {
-        // Identity type name as shown in your screenshot
         $identityName = 'National Identity Number (NIN)';
 
-        // Check if already exists
+        // 1. Check if already exists
         $existing = $this->fetchRow("
         SELECT id FROM identity_types WHERE name = '{$identityName}'
     ");
 
         if ($existing) {
-            // Already present — do nothing
+            // If present — store and exit
+            $this->seychellesIdentityID = $existing['id'];
             return;
         }
 
-        // Get max order and max id
+        // 2. Get max order and max id
         $orderRow = $this->fetchRow("SELECT MAX(`order`) AS max_order FROM identity_types");
         $idRow    = $this->fetchRow("SELECT MAX(`id`) AS max_id FROM identity_types");
 
@@ -172,7 +179,7 @@ class POCOR9481 extends AbstractMigration
 
         $newId = $maxId + 1;
 
-        // Prepare new entry
+        // 3. Build insert record
         $data = [
             'id'                 => $newId,
             'name'               => $identityName,
@@ -189,12 +196,84 @@ class POCOR9481 extends AbstractMigration
             'created'            => date('Y-m-d H:i:s')
         ];
 
-        // Insert
+        // 4. Insert new identity type
         $table = $this->table('identity_types');
         $table->insert($data)->save();
 
-        // Store new ID if needed later
-//        $this->seychellesIdentityID = $newId;
+        // 5. Store for later use
+        $this->seychellesIdentityID = $newId;
+    }
+
+
+    private function insertNationalitySeychelles()
+    {
+        $nationalityName = 'Seychellois';
+
+        // 1. Check if already exists
+        $existing = $this->fetchRow("
+        SELECT id FROM nationalities WHERE name = '{$nationalityName}'
+    ");
+
+        if ($existing) {
+            // Already present, nothing to do
+            return;
+        }
+
+        // 2. Get identity_type_id for the newly inserted NIN identity
+        $identityRow = $this->fetchRow("
+        SELECT id FROM identity_types WHERE name = 'National Identity Number (NIN)'
+    ");
+
+        if (!$identityRow) {
+            throw new \RuntimeException("Identity type 'National Identity Number (NIN)' not found — cannot create nationality.");
+        }
+
+        $identityTypeId = $identityRow['id'];
+
+        // 3. Get external validation config id
+        $configRow = $this->fetchRow("
+        SELECT id FROM config_items WHERE code = 'external_data_source_seychelles_c_s'
+    ");
+
+        if (!$configRow) {
+            throw new \RuntimeException("Config item 'external_data_source_seychelles_c_s' not found — cannot create nationality.");
+        }
+
+        $externalValidationId = $configRow['id'];
+
+        // 4. Get order + new id
+        $orderRow = $this->fetchRow("SELECT MAX(`order`) AS max_order FROM nationalities");
+        $idRow    = $this->fetchRow("SELECT MAX(`id`) AS max_id FROM nationalities");
+
+        $maxOrder = $orderRow['max_order'] ?? 0;
+        $maxId    = $idRow['max_id'] ?? 0;
+
+        $newNationalityId = $maxId + 1;
+
+        // 5. Insert nationality record
+        $data = [
+            'id'                 => $newNationalityId,
+            'name'               => $nationalityName,
+            'order'              => $maxOrder + 1,
+            'visible'            => 1, // should be visible in dropdown
+            'editable'           => 1,
+            'identity_type_id'   => $identityTypeId,
+            'default'            => 0,
+            'international_code' => null,
+            'national_code'      => null,
+            'external_validation'=> $externalValidationId,
+            'is_refugee'         => 0,
+            'modified_user_id'   => null,
+            'modified'           => null,
+            'created_user_id'    => 1,
+            'created'            => date('Y-m-d H:i:s')
+        ];
+
+        $table = $this->table('nationalities');
+        $table->insert($data)->save();
+
+        // Store for reference if needed
+//        $this->seychellesNationalityID = $newNationalityId;
     }
 
 

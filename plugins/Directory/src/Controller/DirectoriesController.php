@@ -1965,6 +1965,8 @@ class DirectoriesController extends AppController
         try {
             if ($searchType === 'UNHCR') {
                 $response = $this->getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth);
+            } elseif ($searchType === 'Seychelles Civil Status') {
+                $response = $this->getSeychellesData($attributes, $noData, $identityNumber, $dateOfBirth);
             } elseif ($searchType === 'OpenEMIS Core') {
 //                $response = ['data' => ['first_name' => 'Pablo']];
 
@@ -2043,6 +2045,122 @@ class DirectoriesController extends AppController
         }
 
         return $responseData;
+    }
+
+    /**
+     * Fetches Seychelles Civil Status data using OAuth2 client_credentials.
+     * POCOR-9481
+     *
+     * @param array $attributes External data source attributes
+     * @param string $noData JSON string for empty data response
+     * @param string $identityNumber National Identification Number (NIN)
+     * @param string|null $dateOfBirth (Not required for Seychelles but kept for consistency)
+     * @return array
+     * @throws \Exception
+     * @author Khindol
+     */
+    private function getSeychellesData(array $attributes, string $noData, string $identityNumber, ?string $dateOfBirth = null): array
+    {
+        $responseData = json_decode($noData, true);
+
+        // ------------------------------------------------------------
+        // 1. Read configuration
+        // ------------------------------------------------------------
+        $clientId     = $attributes['client_id'];
+        $secret       = $attributes['secret_code'];
+        $tokenUri     = $attributes['token_uri'];
+        $apiUrl       = rtrim($attributes['api_url'], '/');
+        $grantType    = $attributes['grant_type'];
+        $scopes       = $attributes['scopes'];
+
+        // Mapping fields (configured in admin panel)
+        $mapFirst     = $attributes['first_name_mapping']     ?? 'givennames';
+        $mapLast      = $attributes['last_name_mapping']      ?? 'presentsurname';
+        $mapDob       = $attributes['date_of_birth_mapping']  ?? 'dob';
+        $mapGender    = $attributes['gender_mapping']         ?? 'sex';
+        $mapNationality = $attributes['nationality_mapping']  ?? 'nationality';
+
+        // ------------------------------------------------------------
+        // 2. REQUEST ACCESS TOKEN (client_credentials)
+        // ------------------------------------------------------------
+        $http = new \Cake\Http\Client();
+
+        $tokenRequestBody = [
+            'grant_type'    => $grantType,      // "client_credentials"
+            'client_id'     => $clientId,
+            'client_secret' => $secret,
+            'scope'         => $scopes
+        ];
+
+        $tokenHeaders = [
+            'Content-Type' => 'application/x-www-form-urlencoded'
+        ];
+
+        $tokenResponse = $http->post($tokenUri, $tokenRequestBody, ['headers' => $tokenHeaders]);
+        $decodedToken = $tokenResponse->getJson();
+
+        if (!$tokenResponse->isOk() || empty($decodedToken['access_token'])) {
+            return $responseData; // no data
+        }
+
+        $accessToken = $decodedToken['access_token'];
+
+        // ------------------------------------------------------------
+        // 3. CALL NIN LOOKUP
+        // Seychelles endpoint example:
+        // GET https://beta.gov.sc/NPDService/api/v1/NIN/NINExt/{identityNumber}
+        // ------------------------------------------------------------
+        $ninEndpoint = $apiUrl . "/NPDService/api/v1/NIN/NINExt/" . $identityNumber;
+
+        $headers = [
+            'Authorization' => 'Bearer ' . $accessToken,
+            'Accept'        => 'application/json'
+        ];
+
+        $userResponse = $http->get($ninEndpoint, [], ['headers' => $headers]);
+        $raw = $userResponse->getJson();
+
+        if (!$userResponse->isOk() || empty($raw)) {
+            return $responseData;
+        }
+
+        // ------------------------------------------------------------
+        // 4. NORMALIZE DATA TO OPENEMIS FORMAT
+        // ------------------------------------------------------------
+        // raw sample:
+        // {
+        //   "nin": "19060010001",
+        //   "givennames": "John",
+        //   "presentsurname": "Doe",
+        //   "dob": "2010-06-15T00:00:00",
+        //   "sex": "Male",
+        //   "nationality": "Seychelles",
+        //   ...
+        // }
+
+        $mapped = [
+            'identity_number' => $identityNumber,
+            'first_name'      => $raw[$mapFirst]     ?? '',
+            'last_name'       => $raw[$mapLast]      ?? '',
+            'date_of_birth'   => isset($raw[$mapDob]) ? substr($raw[$mapDob], 0, 10) : '',
+            'gender'          => $raw[$mapGender]    ?? '',
+            'nationality'     => $raw[$mapNationality] ?? ''
+        ];
+
+        // Additional optional fields you may want to return:
+        if (isset($raw['postaladdress1'])) {
+            $mapped['address'] = $raw['postaladdress1'];
+        }
+
+        if (isset($raw['district'])) {
+            $mapped['district'] = $raw['district'];
+        }
+
+        // Final output structure
+        return [
+            'data'  => [$mapped],
+            'total' => 1
+        ];
     }
 
     //POCOR-5673 starts

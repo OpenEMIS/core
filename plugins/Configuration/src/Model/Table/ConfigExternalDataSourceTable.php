@@ -66,18 +66,20 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 ->requirePresence('secret_code');
         } elseif ($source == 'Seychelles Civil Status') {
             return $validator
-//                ->requirePresence('username')
-//                ->requirePresence('password')
-                ->requirePresence('token_uri')
-                ->notEmptyString('token_uri')
-                ->requirePresence('api_url')
-                ->notEmptyString('api_url')
-                ->requirePresence('secret_code')
-                ->notEmptyString('secret_code')
-                ->requirePresence('grant_type')
-                ->notEmptyString('grant_type')
-                ->requirePresence('scope')
-                ->notEmptyString('scope');
+                ->requirePresence('client_id')->notEmptyString('client_id')
+                ->requirePresence('token_uri')->notEmptyString('token_uri')
+                ->requirePresence('api_url')->notEmptyString('api_url')
+                ->requirePresence('client_secret')
+                ->notEmptyString('client_secret', 'Please enter a secret', 'create')
+                // on UPDATE: allow blank so we can restore original
+                ->allowEmptyString('client_secret', null, 'update')
+                ->requirePresence('grant_type')->notEmptyString('grant_type')
+                ->requirePresence('scopes')->notEmptyString('scopes')
+                ->requirePresence('first_name_mapping')->notEmptyString('first_name_mapping')
+                ->requirePresence('last_name_mapping')->notEmptyString('last_name_mapping')
+                ->requirePresence('date_of_birth_mapping')->notEmptyString('date_of_birth_mapping')
+                ->requirePresence('gender_mapping')->notEmptyString('gender_mapping')
+                ->requirePresence('nationality_mapping')->notEmptyString('nationality_mapping');
         } elseif ($source == 'OpenEMIS Core') {
             // POCOR-9118 start: refactor validation
             // username, api_url, identity_type_id as before
@@ -249,19 +251,13 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 // POCOR-9118 end
             }
             if ($source == 'Seychelles Civil Status') {
-                if (isset($attributes['secret_code'])) {
-                    $attributes['secret_code'] = '*****';
+                if (isset($attributes['client_secret'])) {
+                    $attributes['client_secret'] = '*****';
                 }
-//                $attributes['identity_type_id'] = $this->getRelatedName('FieldOption.IdentityTypes', $attributes['identity_type_id']);
-                unset($attributes['first_name_mapping']);
                 unset($attributes['middle_name_mapping']);
                 unset($attributes['third_name_mapping']);
-                unset($attributes['last_name_mapping']);
-                unset($attributes['date_of_birth_mapping']);
                 unset($attributes['external_reference_mapping']);
                 unset($attributes['identity_number_mapping']);
-                unset($attributes['nationality_mapping']);
-                unset($attributes['gender_mapping']);
                 unset($attributes['identity_type_mapping']);
                 unset($attributes['address_mapping']);
                 unset($attributes['postal_mapping']);
@@ -466,22 +462,22 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 break;
             // POCOR-7981
             case 'Seychelles Civil Status': // POCOR-9481 start
-
-                $this->field('token_uri', ['type' => 'string', 'required' => 'required', 'attr' => ['value' => '', 'required' => 'required'], 'autocomplete' => 'off']);
+                $this->field('client_id', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
+                $this->field('token_uri', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
                 $this->field('api_url', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
-                $this->field('secret_code', ['type' => 'password', 'required' => 'required', 'attr' => ['value' => '', 'required' => 'required'], 'autocomplete' => 'off']);
+                $this->field('client_secret', ['type' => 'password', 'required' => 'required', 'attr' => ['value' => '', 'required' => 'required'], 'autocomplete' => 'off']);
                 $this->field('grant_type', ['type' => 'string', 'required' => 'required',  'attr' => ['required' => 'required']]);
-                $this->field('scope', ['type' => 'string', 'required' => 'required',  'attr' => ['required' => 'required']]);
-                $this->field('first_name_mapping', ['type' => 'hidden']);
+                $this->field('scopes', ['type' => 'string', 'required' => 'required',  'attr' => ['required' => 'required']]);
+                $this->field('first_name_mapping', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
                 $this->field('middle_name_mapping', ['type' => 'hidden']);
                 $this->field('third_name_mapping', ['type' => 'hidden']);
-                $this->field('last_name_mapping', ['type' => 'hidden']);
-                $this->field('date_of_birth_mapping', ['type' => 'hidden']);
+                $this->field('last_name_mapping', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
+                $this->field('date_of_birth_mapping', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
                 $this->field('external_reference_mapping', ['type' => 'hidden']);
-                $this->field('gender_mapping', ['type' => 'hidden']);
+                $this->field('gender_mapping', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
                 $this->field('identity_type_mapping', ['type' => 'hidden']);
                 $this->field('identity_number_mapping', ['type' => 'hidden']);
-                $this->field('nationality_mapping', ['type' => 'hidden']);
+                $this->field('nationality_mapping', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
                 $this->field('address_mapping', ['type' => 'hidden']);
                 $this->field('postal_mapping', ['type' => 'hidden']);
                 $this->field('user_endpoint_uri', ['type' => 'hidden']);
@@ -739,7 +735,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             'third_name_mapping', 'last_name_mapping', 'date_of_birth_mapping', 'external_reference_mapping',
             'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping',
             'address_mapping', 'postal_mapping', 'private_key', 'public_key', 'secret_code', 'application_id',
-            'gender_id_mapping', 'openemis_no_mapping'
+            'gender_id_mapping', 'openemis_no_mapping', 'scopes', 'client_secret', 'grant_type'
         ];
 
         foreach ($fields as $field) {
@@ -748,7 +744,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $currentValue = $existingRecords[$field] ?? null;
 
                 // Skip update if password or api_key is empty in entity but present in DB
-                if (in_array($field, ['password', 'api_key']) && empty($newValue) && !empty($currentValue)) {
+                if (in_array($field, ['password', 'api_key', 'client_secret']) && empty($newValue) && !empty($currentValue)) {
                     continue;
                 }
 
