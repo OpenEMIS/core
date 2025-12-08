@@ -545,7 +545,7 @@ class DirectoriesController extends AppController
             // Try to get the table instance directly
             return $locator->get($tableName);
         } catch (\Exception $e) {
-            Log::debug('Error: ' . $e->getMessage());
+            // Log::error('Error: ' . $e->getMessage()); // POCOR-9481
         }
 
         $parts = explode('.', $tableName);
@@ -1546,7 +1546,7 @@ class DirectoriesController extends AppController
         return $this->sendJsonResponse($resultArray);
     }
 
-    /**
+    /** // POCOR-9481
      * Convert gender string to OpenEMIS gender_id
      */
     private function matchGenderId(string $genderName): ?int
@@ -1622,7 +1622,7 @@ class DirectoriesController extends AppController
             return null;
         }
 
-        Log::debug("Created new nationality: {$nationalityName} → ID {$new->id}");
+//        Log::debug("Created new nationality: {$nationalityName} → ID {$new->id}");
 
         return (int)$new->id;
     }
@@ -2017,7 +2017,7 @@ class DirectoriesController extends AppController
     {
         $requestInput = $this->getRequestData();
         $params = $requestInput['params'] ?? $requestInput;
-//        Log::debug(print_r([__FUNCTION__ => $params], true));
+//        Log::debug(print_r([__FUNCTION__ => $params], true)); // POCOR-9481
         $firstName = $params['first_name'] ?? null;
         $lastName = $params['last_name'] ?? null;
         $openemisNo = $params['openemis_no'] ?? null;
@@ -2031,7 +2031,7 @@ class DirectoriesController extends AppController
 
         $ExternalAttributes = $this->getDynamicTableInstance('Configuration.ExternalDataSourceAttributes');
         $attributes = $ExternalAttributes
-            ->find('list', [
+            ->find('list', [ // POCOR-9481
                 'keyField' => 'attribute_field',
                 'valueField' => 'value'
             ])
@@ -2039,17 +2039,17 @@ class DirectoriesController extends AppController
                 'ConfigItems.type' => 'External Data Source - Identity',
                 $ExternalAttributes->aliasField('external_data_source_type') . ' = ConfigItems.label'
             ])
-            ->where('ConfigItems.label = "' . $searchType . '"')
+            ->where('ConfigItems.label = "' . $searchType . '"') // POCOR-9481
             ->toArray();
-        Log::debug(print_r([__FUNCTION__ => $attributes], true));
-        Log::debug(print_r([__FUNCTION__ => $searchType], true));
+//        Log::debug(print_r([__FUNCTION__ => $attributes], true));
+//        Log::debug(print_r([__FUNCTION__ => $searchType], true));
 
 
         $noData = json_encode(['data' => [], 'total' => 0]);
         try {
             if ($searchType === 'UNHCR') {
                 $response = $this->getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth);
-            } elseif ($searchType === 'Seychelles Civil Status') {
+            } elseif ($searchType === 'Seychelles Civil Status') { // POCOR-9481
                 $response = $this->getSeychellesData($attributes, $noData, $identityNumber, $dateOfBirth);
             } elseif ($searchType === 'OpenEMIS Core') {
 //                $response = ['data' => ['first_name' => 'Pablo']];
@@ -2146,7 +2146,7 @@ class DirectoriesController extends AppController
     private function getSeychellesData(array $attributes, string $noData, string $identityNumber, ?string $dateOfBirth = null): array
     {
         $responseData = json_decode($noData, true);
-        Log::debug(print_r([__FUNCTION__ . ' ATTR' => $attributes], true));
+//        Log::debug(print_r([__FUNCTION__ . ' ATTR' => $attributes], true));
 
         // Basic config
         $clientId  = $attributes['client_id'];
@@ -2239,7 +2239,7 @@ class DirectoriesController extends AppController
             $mapped['district'] = $raw['district'];
         }
 
-        Log::debug(print_r(['SeychellesMapped' => $mapped], true));
+//        Log::debug(print_r(['SeychellesMapped' => $mapped], true));
 
         return [
             'data'  => [$mapped],

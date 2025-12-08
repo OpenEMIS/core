@@ -64,7 +64,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 ->requirePresence('url')
                 ->requirePresence('application_id')
                 ->requirePresence('secret_code');
-        } elseif ($source == 'Seychelles Civil Status') {
+        } elseif ($source == 'Seychelles Civil Status') { // POCOR-9481
             return $validator
                 ->requirePresence('client_id')->notEmptyString('client_id')
                 ->requirePresence('token_uri')->notEmptyString('token_uri')
@@ -250,7 +250,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 unset($attributes['user_endpoint_uri']);
                 // POCOR-9118 end
             }
-            if ($source == 'Seychelles Civil Status') {
+            if ($source == 'Seychelles Civil Status') { // POCOR-9481
                 if (isset($attributes['client_secret'])) {
                     $attributes['client_secret'] = '*****';
                 }
@@ -460,7 +460,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $this->field('user_endpoint_uri', ['type' => 'hidden']);
 
                 break;
-            // POCOR-7981
+            // POCOR-9481
             case 'Seychelles Civil Status': // POCOR-9481 start
                 $this->field('client_id', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
                 $this->field('token_uri', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
@@ -735,7 +735,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             'third_name_mapping', 'last_name_mapping', 'date_of_birth_mapping', 'external_reference_mapping',
             'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping',
             'address_mapping', 'postal_mapping', 'private_key', 'public_key', 'secret_code', 'application_id',
-            'gender_id_mapping', 'openemis_no_mapping', 'scopes', 'client_secret', 'grant_type'
+            'gender_id_mapping', 'openemis_no_mapping', 'scopes', 'client_secret', 'grant_type' // POCOR-9481
         ];
 
         foreach ($fields as $field) {
@@ -744,7 +744,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $currentValue = $existingRecords[$field] ?? null;
 
                 // Skip update if password or api_key is empty in entity but present in DB
-                if (in_array($field, ['password', 'api_key', 'client_secret']) && empty($newValue) && !empty($currentValue)) {
+                if (in_array($field, ['password', 'api_key', 'client_secret']) && empty($newValue) && !empty($currentValue)) { // POCOR-9481
                     continue;
                 }
 

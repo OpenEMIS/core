@@ -404,7 +404,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                 if(scope.externalSearchSourceName === 'OpenEMIS Core') {
                     scope.basicFieldsRequired = false;
                 }
-                if(scope.externalSearchSourceName === 'Seychelles Civil Status') {
+                if(scope.externalSearchSourceName === 'Seychelles Civil Status') { // POCOR-9481
                     scope.basicFieldsRequired = false;
                 }
                 if(scope.externalSearchSourceName === 'UNHCR') {
@@ -1043,9 +1043,6 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         if (identity_type_name === 'UNHCR') {
             isSkipableForIdentity = false;
         }
-        if (identity_type_name === 'Seychelles Civil Status') {
-            isSkipableForIdentity = false;
-        }
 
         if (isOpenEmisNoHasError) {
             return ["OpenEMIS_ID", false];
@@ -1187,7 +1184,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                 getExternalSearchData(param)
                     .then(function (response) {
                         var gridData = response.data.data;
-                        console.log(gridData);
+                        // console.log(gridData);
                         if (!Array.isArray(gridData)) {
                             gridData = gridData ? [gridData] : [];
                         }
@@ -1211,7 +1208,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                                 data.third_name = scope.selectedUserData.third_name;
                                 data.preferred_name = scope.selectedUserData.preferred_name;
                                 data.date_of_birth = scope.selectedUserData.date_of_birth;
-                            } else if (scope.externalSearchSourceName === 'Seychelles Civil Status') {
+                            } else if (scope.externalSearchSourceName === 'Seychelles Civil Status') { // POCOR-9481
                                 // Seychelles returns simple fields (not nested objects)
                                 data.gender_id = data['gender_id'];
                                 data.gender = data['gender'];
@@ -1648,7 +1645,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         // if (checkVars.identity_number && !checkVars.user_id && !checkVars.isExternalSearchEnable && isInternalSearch) return true; // POCOR-8776
         if (isInternalSearch && !checkVars.isExternalSearchEnable && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;
         if (isExternalSearch && checkVars.externalSearchSourceName === 'UNHCR' && !checkVars.identity_number) return true;
-        if (isExternalSearch && checkVars.externalSearchSourceName === 'Seychelles Civil Status' && !checkVars.identity_number) return true;
+        if (isExternalSearch && checkVars.externalSearchSourceName === 'Seychelles Civil Status' && !checkVars.identity_number) return true; // POCOR-9481
         if (isExternalSearch && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;
 
         return false;
