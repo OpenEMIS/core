@@ -1187,6 +1187,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                 getExternalSearchData(param)
                     .then(function (response) {
                         var gridData = response.data.data;
+                        console.log(gridData);
                         if (!Array.isArray(gridData)) {
                             gridData = gridData ? [gridData] : [];
                         }
@@ -1211,20 +1212,18 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                                 data.preferred_name = scope.selectedUserData.preferred_name;
                                 data.date_of_birth = scope.selectedUserData.date_of_birth;
                             } else if (scope.externalSearchSourceName === 'Seychelles Civil Status') {
-                                scope.selectedUserData.identity_number = null;
-                                data.name = scope.selectedUserData.name;
-                                data.gender = scope.selectedUserData.gender.name;
-                                data.gender_id = scope.selectedUserData.gender_id;
-                                data.nationality_id = scope.selectedUserData.nationality_id;
-                                data.nationality = scope.selectedUserData.nationality_name;
+                                // Seychelles returns simple fields (not nested objects)
+                                data.gender_id = data['gender_id'];
+                                data.gender = data['gender'];
+                                data.first_name = data['first_name'];
+                                data.last_name = data['last_name'];
+                                data.name = data['full_name'];
+                                data.date_of_birth = data['date_of_birth'];
+                                data.nationality_id = data['nationality_id'];
+                                data.nationality = data['nationality'];
                                 data.identity_type = scope.selectedUserData.identity_type_name;
                                 data.identity_type_id = scope.selectedUserData.identity_type_id;
-                                data.first_name = scope.selectedUserData.first_name;
-                                data.last_name = scope.selectedUserData.last_name;
-                                data.middle_name = scope.selectedUserData.middle_name;
-                                data.third_name = scope.selectedUserData.third_name;
-                                data.preferred_name = scope.selectedUserData.preferred_name;
-                                data.date_of_birth = scope.selectedUserData.date_of_birth;
+
                             } else  if (scope.externalSearchSourceName === 'OpenEMIS Core') {
                                 if (Object.keys(data).length !== 0) {
                                     scope.selectedUserData.identity_number = null;

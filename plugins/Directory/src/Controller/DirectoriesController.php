@@ -1547,6 +1547,87 @@ class DirectoriesController extends AppController
     }
 
     /**
+     * Convert gender string to OpenEMIS gender_id
+     */
+    private function matchGenderId(string $genderName): ?int
+    {
+        if (!$genderName) {
+            return null;
+        }
+
+        $genderName = strtolower(trim($genderName));
+
+        // Load genders table
+        $GenderTable = $this->getDynamicTableInstance('User.Genders');
+
+        $genders = $GenderTable
+            ->find()
+            ->select(['id', 'name'])
+            ->toArray();
+
+        foreach ($genders as $g) {
+            if (strtolower($g['name']) === $genderName) {
+                return $g['id'];
+            }
+        }
+
+        // fallback: return null (OpenEMIS will handle)
+        return null;
+    }
+    /**
+     * Resolve nationality name to nationality_id.
+     * If nationality does not exist → create it.
+     * POCOR-9481
+     */
+    private function matchOrCreateNationalityId(?string $nationalityName): ?int
+    {
+        if (empty($nationalityName)) {
+            return null;
+        }
+
+        $nationalityName = trim($nationalityName);
+        if ($nationalityName === '') {
+            return null;
+        }
+
+        // Table instances
+        $NationalitiesTable = $this->getDynamicTableInstance('FieldOption.Nationalities');
+        $UserNationalitiesTable = $this->getDynamicTableInstance('user_nationalities');
+
+        // ------------------------------------------------------------
+        // 1. SEARCH for existing nationality (case-insensitive)
+        // ------------------------------------------------------------
+        $existing = $NationalitiesTable
+            ->find()
+            ->where(['LOWER(name) =' => strtolower($nationalityName)])
+            ->first();
+
+        if ($existing) {
+            return (int)$existing->id;
+        }
+
+        // ------------------------------------------------------------
+        // 2. CREATE new nationality
+        // ------------------------------------------------------------
+        $new = $NationalitiesTable->newEntity([
+            'name' => $nationalityName,
+            'visible' => 1,
+            'editable' => 1,
+            'created_user_id' => 1,
+            'created' => date('Y-m-d H:i:s')
+        ]);
+
+        if (!$NationalitiesTable->save($new)) {
+            Log::error("Failed to create nationality: {$nationalityName}");
+            return null;
+        }
+
+        Log::debug("Created new nationality: {$nationalityName} → ID {$new->id}");
+
+        return (int)$new->id;
+    }
+
+    /**
      * Gets the list of user types. POCOR-8231-C4
      *
      * @return \Cake\Http\Response The JSON response containing the list of user types
@@ -1936,6 +2017,7 @@ class DirectoriesController extends AppController
     {
         $requestInput = $this->getRequestData();
         $params = $requestInput['params'] ?? $requestInput;
+//        Log::debug(print_r([__FUNCTION__ => $params], true));
         $firstName = $params['first_name'] ?? null;
         $lastName = $params['last_name'] ?? null;
         $openemisNo = $params['openemis_no'] ?? null;
@@ -1948,7 +2030,7 @@ class DirectoriesController extends AppController
         $searchType = $params['search_type'] ?? '';
 
         $ExternalAttributes = $this->getDynamicTableInstance('Configuration.ExternalDataSourceAttributes');
-        $attributesQuery = $ExternalAttributes
+        $attributes = $ExternalAttributes
             ->find('list', [
                 'keyField' => 'attribute_field',
                 'valueField' => 'value'
@@ -1957,9 +2039,11 @@ class DirectoriesController extends AppController
                 'ConfigItems.type' => 'External Data Source - Identity',
                 $ExternalAttributes->aliasField('external_data_source_type') . ' = ConfigItems.label'
             ])
+            ->where('ConfigItems.label = "' . $searchType . '"')
             ->toArray();
+        Log::debug(print_r([__FUNCTION__ => $attributes], true));
+        Log::debug(print_r([__FUNCTION__ => $searchType], true));
 
-        $attributes = $attributesQuery;
 
         $noData = json_encode(['data' => [], 'total' => 0]);
         try {
@@ -2062,105 +2146,114 @@ class DirectoriesController extends AppController
     private function getSeychellesData(array $attributes, string $noData, string $identityNumber, ?string $dateOfBirth = null): array
     {
         $responseData = json_decode($noData, true);
+        Log::debug(print_r([__FUNCTION__ . ' ATTR' => $attributes], true));
+
+        // Basic config
+        $clientId  = $attributes['client_id'];
+        $secret    = $attributes['client_secret'];
+        $tokenUri  = rtrim($attributes['token_uri'], '/');
+        $apiUrl    = rtrim($attributes['api_url'], '/');
+        $grantType = $attributes['grant_type'];
+        $scopes    = $attributes['scopes'];
+
+        // Field mappings (normalized)
+        $mapFirst       = strtolower(trim($attributes['first_name_mapping']     ?? 'givennames'));
+        $mapLast        = strtolower(trim($attributes['last_name_mapping']      ?? 'presentsurname'));
+        $mapFull        = strtolower(trim($attributes['full_name_mapping']      ?? 'fullname'));
+        $mapDob         = strtolower(trim($attributes['date_of_birth_mapping']  ?? 'dob'));
+        $mapGender      = strtolower(trim($attributes['gender_mapping']         ?? 'sex'));
+        $mapNationality = strtolower(trim($attributes['nationality_mapping']    ?? 'nationality'));
 
         // ------------------------------------------------------------
-        // 1. Read configuration
-        // ------------------------------------------------------------
-        $clientId     = $attributes['client_id'];
-        $secret       = $attributes['secret_code'];
-        $tokenUri     = $attributes['token_uri'];
-        $apiUrl       = rtrim($attributes['api_url'], '/');
-        $grantType    = $attributes['grant_type'];
-        $scopes       = $attributes['scopes'];
-
-        // Mapping fields (configured in admin panel)
-        $mapFirst     = $attributes['first_name_mapping']     ?? 'givennames';
-        $mapLast      = $attributes['last_name_mapping']      ?? 'presentsurname';
-        $mapDob       = $attributes['date_of_birth_mapping']  ?? 'dob';
-        $mapGender    = $attributes['gender_mapping']         ?? 'sex';
-        $mapNationality = $attributes['nationality_mapping']  ?? 'nationality';
-
-        // ------------------------------------------------------------
-        // 2. REQUEST ACCESS TOKEN (client_credentials)
+        // TOKEN REQUEST
         // ------------------------------------------------------------
         $http = new \Cake\Http\Client();
 
         $tokenRequestBody = [
-            'grant_type'    => $grantType,      // "client_credentials"
+            'grant_type'    => $grantType,
             'client_id'     => $clientId,
             'client_secret' => $secret,
             'scope'         => $scopes
         ];
 
-        $tokenHeaders = [
-            'Content-Type' => 'application/x-www-form-urlencoded'
-        ];
+        $tokenResponse = $http->post($tokenUri, $tokenRequestBody, [
+            'headers' => ['Content-Type' => 'application/x-www-form-urlencoded']
+        ]);
 
-        $tokenResponse = $http->post($tokenUri, $tokenRequestBody, ['headers' => $tokenHeaders]);
         $decodedToken = $tokenResponse->getJson();
+//        Log::debug(print_r(['SeychellesTokenRaw' => $decodedToken], true));
 
         if (!$tokenResponse->isOk() || empty($decodedToken['access_token'])) {
-            return $responseData; // no data
+            return $responseData;
         }
 
         $accessToken = $decodedToken['access_token'];
 
         // ------------------------------------------------------------
-        // 3. CALL NIN LOOKUP
-        // Seychelles endpoint example:
-        // GET https://beta.gov.sc/NPDService/api/v1/NIN/NINExt/{identityNumber}
+        // FETCH USER DATA
         // ------------------------------------------------------------
-        $ninEndpoint = $apiUrl . "/NPDService/api/v1/NIN/NINExt/" . $identityNumber;
+        $ninEndpoint = $apiUrl . "/" . $identityNumber;
 
-        $headers = [
-            'Authorization' => 'Bearer ' . $accessToken,
-            'Accept'        => 'application/json'
-        ];
+        $userResponse = $http->get($ninEndpoint, [], [
+            'headers' => ['Authorization' => "Bearer {$accessToken}", 'Accept' => 'application/json']
+        ]);
 
-        $userResponse = $http->get($ninEndpoint, [], ['headers' => $headers]);
-        $raw = $userResponse->getJson();
+        $payload = $userResponse->getJson();
+//        Log::debug(print_r(['SeychellesUserRaw' => $payload], true));
 
-        if (!$userResponse->isOk() || empty($raw)) {
+        if (!$userResponse->isOk() || empty($payload['record'])) {
             return $responseData;
         }
 
-        // ------------------------------------------------------------
-        // 4. NORMALIZE DATA TO OPENEMIS FORMAT
-        // ------------------------------------------------------------
-        // raw sample:
-        // {
-        //   "nin": "19060010001",
-        //   "givennames": "John",
-        //   "presentsurname": "Doe",
-        //   "dob": "2010-06-15T00:00:00",
-        //   "sex": "Male",
-        //   "nationality": "Seychelles",
-        //   ...
-        // }
+        $raw = $this->normalizeKeys($payload['record']);
 
+        // ------------------------------------------------------------
+        // NORMALIZED RESULT
+        // ------------------------------------------------------------
         $mapped = [
             'identity_number' => $identityNumber,
-            'first_name'      => $raw[$mapFirst]     ?? '',
-            'last_name'       => $raw[$mapLast]      ?? '',
+            'first_name'      => $raw[$mapFirst] ?? '',
+            'last_name'       => $raw[$mapLast] ?? '',
+            'full_name'       => $raw[$mapFull] ?? '',
             'date_of_birth'   => isset($raw[$mapDob]) ? substr($raw[$mapDob], 0, 10) : '',
-            'gender'          => $raw[$mapGender]    ?? '',
+            'gender'          => $raw[$mapGender] ?? '',
             'nationality'     => $raw[$mapNationality] ?? ''
         ];
 
-        // Additional optional fields you may want to return:
+        // Generate full_name if missing
+        if (empty($mapped['full_name'])) {
+            $mapped['full_name'] = trim(($mapped['first_name'] ?? '') . ' ' . ($mapped['last_name'] ?? ''));
+        }
+
+        // Add gender_id
+        $mapped['gender_id'] = $this->matchGenderId($mapped['gender']);
+
+        // Add nationality_id
+        $mapped['nationality_id'] = $this->matchOrCreateNationalityId($mapped['nationality']);
+
+        // Optional extras
         if (isset($raw['postaladdress1'])) {
             $mapped['address'] = $raw['postaladdress1'];
         }
-
         if (isset($raw['district'])) {
             $mapped['district'] = $raw['district'];
         }
 
-        // Final output structure
+        Log::debug(print_r(['SeychellesMapped' => $mapped], true));
+
         return [
             'data'  => [$mapped],
             'total' => 1
         ];
+    }
+
+    private function normalizeKeys(array $arr): array
+    {
+        $normalized = [];
+        foreach ($arr as $key => $value) {
+            $normalized[strtolower($key)] = $value;
+        }
+        return $normalized;
     }
 
     //POCOR-5673 starts
