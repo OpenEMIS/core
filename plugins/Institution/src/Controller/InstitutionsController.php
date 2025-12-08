@@ -8680,14 +8680,14 @@ class InstitutionsController extends AppController
                 'name' => $configItemsTable->aliasField('name'),
             ])
             ->where([
-                $configItemsTable->aliasField('type = ')  . '"External Data Source - Identity"',
+                $configItemsTable->aliasField('type = ')  . '"External Data Source - Identity"', // POCOR-9481
                 $configItemsTable->aliasField('value = ') . 1,
                 $configItemsTable->aliasField('name !=') . '"OpenEMIS Core"',
             ])
             ->innerJoin(
                 ['Nationalities' => 'nationalities'],
                 [
-                    'Nationalities.id = '            . $nationalityId,
+                    'Nationalities.id = '            . $nationalityId, // POCOR-9481
                     'Nationalities.identity_type_id = ' . $identityTypeId,
                     'Nationalities.external_validation = ' . $configItemsTable->aliasField('id'),
                 ]
@@ -8695,7 +8695,7 @@ class InstitutionsController extends AppController
             ->disableHydration();
 
         $regularResults = $regularQuery->toArray();
-        $regularResultSql = $regularQuery->sql();
+//        $regularResultSql = $regularQuery->sql(); // POCOR-9481
 //        Log::debug(print_r([__FUNCTION__ => $regularResultSql,
 //            __LINE__ => $regularResults], true));
 

@@ -2390,6 +2390,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         if (identity_type_name == 'UNHCR') {
             isSkipableForIdentity = false;
         }
+        if (identity_type_name == 'Seychelles Civil Status') { // POCOR-9481
+            isSkipableForIdentity = false;
+        }
         if (isIdentityHasError && !isOpenEmisNoHasError) {
             return ['Identity', true];
         }

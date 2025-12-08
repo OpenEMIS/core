@@ -800,6 +800,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         if (identity_type_name == 'UNHCR') {
             isSkipableForIdentity = false;
         }
+
         if (isIdentityHasError) {
             return ['Identity', true]
         }
@@ -869,6 +870,10 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         // POCOR-8231 end
 
         if (step === 'external_search' && externalSearchSourceName === 'UNHCR' && !identity_number) {
+            return true;
+        }
+
+        if (step === 'external_search' && externalSearchSourceName === 'Seychelles Civil Status' && !identity_number) { // POCOR-9481
             return true;
         }
 
