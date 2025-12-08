@@ -1452,8 +1452,21 @@ class InstitutionsController extends AppController
     public function ScheduleTimetable($action = 'view')
     {
         $url = $_SERVER['REQUEST_URI'];
-        $startPos = strpos($url, '/Institution/Institutions/ScheduleTimetable/view/') + strlen('/Institution/Institutions/ScheduleTimetable/view/');
-        $encodedPart = substr($url, $startPos);
+        /*$startPos = strpos($url, '/Institution/Institutions/ScheduleTimetable/view/') + strlen('/Institution/Institutions/ScheduleTimetable/view/');
+        $encodedPart = substr($url, $startPos);*/
+        $viewNeedle = '/Institution/Institutions/ScheduleTimetable/view/';
+        $startPos = strpos($url, $viewNeedle);
+        if ($startPos !== false) {
+            $encodedPart = substr($url, $startPos + strlen($viewNeedle));
+        } else {
+            $editNeedle = '/Institution/Institutions/ScheduleTimetable/edit/';
+            $startPos = strpos($url, $editNeedle);
+            if ($startPos !== false) {
+                $encodedPart = substr($url, $startPos + strlen($editNeedle));
+            } else {
+                $encodedPart = $url;
+            }
+        }
 
         $timetableId = $this->getQueryString('timetable_id');
         $params = $this->getQueryString();
@@ -1794,50 +1807,6 @@ class InstitutionsController extends AppController
         } else {
             $_edit = false;
         }
-        //POCOR-9487[START]
-        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
-        $securityFunctionsData = $securityFunctions
-            ->find()
-            ->select([
-                'SecurityFunctions.id'
-            ])
-            ->where([
-                'SecurityFunctions.name' => 'Assessments',
-                'SecurityFunctions.controller' => 'Institutions',
-                'SecurityFunctions.module' => 'Institutions',
-                'SecurityFunctions.category' => 'Students'
-            ])
-            ->first();
-        $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['edit'];
-        if(!empty($permission_id)){
-            $securityRoleFunctions =  TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
-
-            $securityRoleFunctionsData = $securityRoleFunctions
-            ->find()
-            ->where([
-                'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
-                'SecurityRoleFunctions.security_role_id IN ' => $permission_id,
-            ])
-            ->first();
-            }
-        if(!empty($securityRoleFunctionsData)){
-            $SecurityRoleTable = TableRegistry::get('Security.SecurityRoles');
-            $SecurityRoleTableData = $SecurityRoleTable
-            ->find()
-            ->where([
-                $SecurityRoleTable->aliasField('id') => $securityRoleFunctionsData->security_role_id
-            ])
-            ->first();
-        }
-        if ($SecurityRoleTableData->code == 'PRINCIPAL') {
-            if($securityRoleFunctionsData->_edit == 1){
-                $_edit = true;
-            }
-            //$_edit = true;
-        }
-        //POCOR-9487['End']
-
-
         // end POCOR-3983
         $queryString = $this->request->getQuery('queryString');
         $this->set('_edit', $_edit);
