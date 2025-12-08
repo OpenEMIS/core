@@ -1454,6 +1454,7 @@ class InstitutionsController extends AppController
         $url = $_SERVER['REQUEST_URI'];
         /*$startPos = strpos($url, '/Institution/Institutions/ScheduleTimetable/view/') + strlen('/Institution/Institutions/ScheduleTimetable/view/');
         $encodedPart = substr($url, $startPos);*/
+        //POCOR-9483 start
         $viewNeedle = '/Institution/Institutions/ScheduleTimetable/view/';
         $startPos = strpos($url, $viewNeedle);
         if ($startPos !== false) {
@@ -1466,7 +1467,7 @@ class InstitutionsController extends AppController
             } else {
                 $encodedPart = $url;
             }
-        }
+        }//POCOR-9483 end
 
         $timetableId = $this->getQueryString('timetable_id');
         $params = $this->getQueryString();
