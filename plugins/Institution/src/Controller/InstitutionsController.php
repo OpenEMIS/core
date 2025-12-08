@@ -8090,7 +8090,7 @@ class InstitutionsController extends AppController
                         $institutionStudents->aliasField('student_id') => $userRecordId
                     ])
                     ->enableHydration(false)->first();
-           
+
             //Log::error($bodyData->sql());
 
 
@@ -8144,14 +8144,14 @@ class InstitutionsController extends AppController
     }
 
     /**
-     * Prepares the webhook body. 
+     * Prepares the webhook body.
      * POCOR-9393
      * @param array $student
      * @return array
      */
     private function prepareWebhookBody($student, array $studentCustomData = [])
     {
-        
+
         $body = [
             'id'            => $student['id'] ?? null,
             'student_id'    => $student['student_id'] ?? null,
@@ -8161,7 +8161,7 @@ class InstitutionsController extends AppController
             'middle_name'   => $student['middle_name'] ?? null,
             'third_name'    => $student['third_name'] ?? null,
             'last_name'     => $student['last_name'] ?? null,
-           'date_of_birth' => !empty($student['date_of_birth']) 
+           'date_of_birth' => !empty($student['date_of_birth'])
                                ? $student['date_of_birth']->format('Y-m-d') : null,
             'email'         => $student['email'] ?? null,
             'address'       => $student['address'] ?? null,
@@ -8660,7 +8660,7 @@ class InstitutionsController extends AppController
         $this->request->allowMethod(['post']);
         $data   = $this->request->getData();
         $params = $data['params'] ?? [];
-
+//        Log::debug(print_r([__FUNCTION__ => $params], true));
         $identityTypeId = (int)($params['identity_type_id'] ?? 0);
         $nationalityId  = (int)($params['nationality_id'] ?? 0);
 
@@ -8680,22 +8680,24 @@ class InstitutionsController extends AppController
                 'name' => $configItemsTable->aliasField('name'),
             ])
             ->where([
-                $configItemsTable->aliasField('type')  => 'External Data Source - Identity',
-                $configItemsTable->aliasField('value') => 1,
-                $configItemsTable->aliasField('name !=') => 'OpenEMIS Core',
+                $configItemsTable->aliasField('type = ')  . '"External Data Source - Identity"',
+                $configItemsTable->aliasField('value = ') . 1,
+                $configItemsTable->aliasField('name !=') . '"OpenEMIS Core"',
             ])
             ->innerJoin(
                 ['Nationalities' => 'nationalities'],
                 [
-                    'Nationalities.id ='            => $nationalityId,
-                    'Nationalities.identity_type_id =' => $identityTypeId,
-                    'Nationalities.external_validation ='
-                    => $configItemsTable->aliasField('id'),
+                    'Nationalities.id = '            . $nationalityId,
+                    'Nationalities.identity_type_id = ' . $identityTypeId,
+                    'Nationalities.external_validation = ' . $configItemsTable->aliasField('id'),
                 ]
             )
             ->disableHydration();
 
         $regularResults = $regularQuery->toArray();
+        $regularResultSql = $regularQuery->sql();
+//        Log::debug(print_r([__FUNCTION__ => $regularResultSql,
+//            __LINE__ => $regularResults], true));
 
         // 2) Check for “OpenEMIS Core” match via ExternalDataSourceAttributes
         $openEmisCoreItem = $configItemsTable->find()
@@ -10343,8 +10345,8 @@ class InstitutionsController extends AppController
         $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldValues');
         $fileRecord = $InstitutionCustomFieldValues->find()
                         ->where([
-                            'file IS NOT' => null, 
-                            'file_name IS NOT' => null, 
+                            'file IS NOT' => null,
+                            'file_name IS NOT' => null,
                             'institution_id' => $this->getInstitutionID(),
                         ])->first();
 
@@ -10361,7 +10363,7 @@ class InstitutionsController extends AppController
 
         return $this->response;
     }
-    
+
 }
 
 

@@ -123,7 +123,7 @@ class POCOR9481 extends AbstractMigration
 
         $attributes = [
             // API Credentials
-            ['api_url', 'api_url', 'https://beta.gov.sc/identityserverbeta/'],
+            ['api_url', 'api_url', 'https://beta.gov.sc/NPDService/api/v1/NIN/NINExt/'],
             ['client_id', 'client_id', 'OpenEMISClient'],
             ['client_secret', 'client_secret', 'password123'],
             ['token_uri', 'token_uri', 'https://beta.gov.sc/identityserverbeta/connect/token'],
