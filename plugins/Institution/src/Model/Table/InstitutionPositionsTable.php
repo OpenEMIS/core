@@ -94,7 +94,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 'rule' => 'checkNoSpaces',
                 'provider' => 'custom'
             ])
-           // ->requirePresence('shift_id')
+            ->requirePresence('staff_position_title_id') // POCOR-9415
             /*POCOR-5069 Starts
             ->add('staff_position_grade_id', 'custom', [
                 'rule' => function ($value, $context) {
@@ -195,29 +195,17 @@ class InstitutionPositionsTable extends ControllerActionTable
         return $validator;
     }
 
-    //POCOR-8143
+    //POCOR-9321
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        // Check if there are associated records in InstitutionStaff
-        $institutionStaffCount = $this->InstitutionStaff->find()
-            ->where(['institution_position_id' => $entity->id])
-            ->count();
+        // Check for related records in InstitutionStaff
+        if ($this->InstitutionStaff->exists(['institution_position_id' => $entity->id]) ||
+            $this->StaffTransferIn->exists(['new_institution_position_id' => $entity->id])) {
 
-        // Check if there are associated records in StaffTransferIn
-        $staffTransferInCount = $this->StaffTransferIn->find()
-            ->where(['new_institution_position_id' => $entity->id])
-            ->count();
-
-        // Check if any associated records exist
-        $associatedRecordsExist = ($institutionStaffCount > 0) || ($staffTransferInCount > 0);
-        //print_r($associatedRecordsExist);exit;
-        if ($associatedRecordsExist) {
             $message = __('Delete operation is not allowed as there are other information linked to this record.');
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-            //POCOR-8457 starts
-            if (isset($this->controller) && $this->controller->getRequest()) {
-                $url = $this->controller->getRequest()->referer();
-            }//POCOR-8457 ends
+            $url = $this->controller->getRequest()?->referer();
+
             $event->stopPropagation();
             return $this->controller->redirect($url);
         }
@@ -541,9 +529,14 @@ class InstitutionPositionsTable extends ControllerActionTable
                 ->combine('id', 'name_and_type') // combine() is another collection method
                 ->toArray(); // Also a collections library method
         }
-        $attr['options'] = $titles;
+        //POCOR-9225[START]
+        $attr['type'] = 'chosenSelect';
+        $attr['attr']['multiple'] = false;
+        $attr['select'] = false;
+        $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $titles;
         $attr['onChangeReload'] = true;
         return $attr;
+        //POCOR-9225[END]
     }
 
     /******************************************************************************************************************
@@ -569,7 +562,9 @@ class InstitutionPositionsTable extends ControllerActionTable
         //$this->fields['staff_position_grade_id']['sort'] = ['field' => 'StaffPositionGrades.order'];//PCOOR-5069
         $this->fields['assignee_id']['sort'] = ['field' => 'Assignees.first_name'];
         $this->setFieldOrder([
-            'position_no', 'staff_position_title_id',
+            'position_no',
+            'shift_id',
+            'staff_position_title_id',
             //'staff_position_grade_id'//PCOOR-5069
         ]);
 
@@ -838,11 +833,15 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
         $this->fields['current_staff_list']['visible'] = false;
         $this->fields['past_staff_list']['visible'] = false;
         $this->fields['institution_id']['visible'] = false;
+        $this->fields['staff_position_title_id']['required'] = true;
+        $this->fields['staff_position_title_id']['attr']['required'] = true;
 //        dd($this->fields);
         $this->setFieldOrder([
-            'position_no', 'staff_position_title_id',
-            //'staff_position_grade_id',POCOR-5069
+            'position_no',
             'shift_id',
+            'staff_position_title_id',
+            //'staff_position_grade_id',POCOR-5069
+
         ]);
     }
 
@@ -887,13 +886,14 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
         $this->setFieldOrder([
             //'staff_position_grade_id',POCOR-5069
             'position_no',
+            'shift_id', // POCOR-9415
             'staff_position_title_id',
             'staff_position_title_type',//POCOR-7758
             'staff_position_title_category',//POCOR-7758
             'grade',//POCOR-7758
             'staff_position_title_description',//POCOR-7758
             'modified_user_id', 'modified', 'created_user_id', 'created',
-            'current_staff_list', 'past_staff_list', 'shift_id'
+            'current_staff_list', 'past_staff_list',
         ]);
 
         $session = $this->Session;

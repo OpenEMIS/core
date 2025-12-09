@@ -12,10 +12,13 @@ use Illuminate\Support\Carbon;
 class CrudApiController extends Controller
 {
     protected $allowedResources = [
+        'department-staff' => \App\Models\Api5\DepartmentStaff::class, // POCOR_8030
+        'institution-departments' => \App\Models\Api5\InstitutionDepartments::class, // POCOR_8030
+        'institution-infrastructure-attachments' => \App\Models\InstitutionInfrastructureAttachments::class,
+        'infrastructure-attachment-types' => \App\Models\InfrastructureAttachmentTypes::class,
         'staff-leave-entitlements' => \App\Models\Api5\StaffLeaveEntitlements::class,
         'staff-leave-policies' => \App\Models\Api5\StaffLeavePolicies::class,
         'staff-leave-policy-types' => \App\Models\Api5\StaffLeavePolicyTypes::class,
-        'alerts-logs' => \App\Models\Api5\AlertsLogs::class,
         'workflows-filters' => \App\Models\Api5\WorkflowsFilters::class,
         'workflows' => \App\Models\Api5\Workflows::class,
         'workflow-transitions' => \App\Models\Api5\WorkflowTransitions::class,
@@ -726,7 +729,7 @@ class CrudApiController extends Controller
             Log::info("User not authorized for {$model}:{$action}"); // POCOR-9085
             return response()->json(['error' => 'Forbidden'], 403);
         }
-        // POCOR-8966 start
+        // POCOR-8966 end
 
 //        Log::info("User authorized for {$model}:{$action}");
 
@@ -859,6 +862,8 @@ class CrudApiController extends Controller
         if (is_string($model)) {
             $model = new $model;
         }
+        $this->decodeBlobFields($data); // Decode base64 to binary before update
+
         if (in_array('modified_user_id', $model->getFillable()) && in_array('modified', $model->getFillable())) {
             if (!isset($data['modified_user_id'])) {
                 $data['modified_user_id'] = $current_user_id;
@@ -1309,34 +1314,39 @@ class CrudApiController extends Controller
         return $query;
     }
 
-    /**
-     * Paginate the results of the query.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param int $limit
-     * @param int $page
-     * @return \Illuminate\Http\JsonResponse
-     */
     private function paginateResults($query, $limit, $page, $model, $segments)
     {
-
         if (count($segments) === 1 && $this->isValidIdentifier($segments[0])) {
             $record = $this->findRecord($model, $segments);
             if (!$record) {
                 return $this->errorResponse('Record not found', 404);
             }
+
+            // POCOR-9461: Apply afterFetchResults to single record if available
+            if (method_exists($model, 'afterFetchResults')) {
+                $record = $model::afterFetchResults(collect([$record]))->first();
+            }
+
             return $this->successResponse('Record retrieved successfully.', $record);
         }
 
         // Proceed with pagination if no single valid identifier is found
         try {
             $results = $query->paginate($limit, ['*'], 'page', $page);
+
+            // POCOR-9461: Apply afterFetchResults to the collection inside paginator
+            if (method_exists($model, 'afterFetchResults')) {
+                $updated = $model::afterFetchResults($results->getCollection());
+                $results->setCollection($updated);
+            }
+
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 404);
         }
 
         return $this->successResponse('Data retrieved successfully.', $results);
     }
+
 
 
     /**
@@ -1367,6 +1377,7 @@ class CrudApiController extends Controller
             }
             $records = [];
             foreach ($data as $recordData) {
+                $this->decodeBlobFields($recordData); //  Decode base64 to binary
                 if (in_array('created_user_id', $model->getFillable()) && in_array('created', $model->getFillable())) {
                     if (!isset($recordData['created_user_id'])) {
                         $recordData['created_user_id'] = $current_user_id;
@@ -1400,6 +1411,8 @@ class CrudApiController extends Controller
         if (is_string($model)) {
             $model = new $model;
         }
+        $this->decodeBlobFields($data); //  Decode base64 to binary
+
         if (in_array('created_user_id', $model->getFillable()) && in_array('created', $model->getFillable())) {
             if (!isset($data['created_user_id'])) {
                 $data['created_user_id'] = $current_user_id;
@@ -1489,6 +1502,7 @@ class CrudApiController extends Controller
         return response()->json(['error' => $message], $statusCode);
     }
 
+    // POCOR-9135 start
     /**
      * Return a JSON success response.
      *
@@ -1499,9 +1513,43 @@ class CrudApiController extends Controller
      */
     private function successResponse($message, $data, $statusCode = 200)
     {
-        return response()->json(['message' => $message, 'data' => $data], $statusCode);
+        $safeData = $this->sanitizeForJson($data);
+//        Log::info("Response data: " . print_r($safeData, true)); // POCOR-9135 // POCOR-9352
+        return response()->json(['message' => $message, 'data' => $safeData], $statusCode);
     }
 
+    private function sanitizeForJson($data)
+    {
+        // Handle Laravel model objects
+        if ($data instanceof \Illuminate\Database\Eloquent\Model) {
+            $data = $data->toArray(); // Extract attributes to array
+        }
+
+        // Handle paginator and collection
+        if ($data instanceof \Illuminate\Pagination\LengthAwarePaginator || $data instanceof \Illuminate\Support\Collection) {
+            $data = $data->toArray();
+        }
+
+        if (is_array($data)) {
+            // Is it a list or an associative array?
+            if (array_keys($data) === range(0, count($data) - 1)) {
+                foreach ($data as $index => $item) {
+                    $data[$index] = $this->sanitizeForJson($item);
+                }
+            } else {
+                foreach ($data as $key => $value) {
+                    $data[$key] = $this->sanitizeForJson($value);
+                }
+            }
+        } elseif (is_string($data)) {
+            if (!mb_check_encoding($data, 'UTF-8')) {
+                return base64_encode($data);
+            }
+        }
+
+        return $data;
+    }
+// POCOR-9135 end
 // POCOR-8966 end
 
 
@@ -1525,5 +1573,27 @@ class CrudApiController extends Controller
             return true;
         }
         return false;
+    }
+
+    private function decodeBlobFields(array &$data)
+    {
+
+        foreach ($data as $key => $value) {
+            // Detect *_content fields (e.g. document_content, photo_content)
+            if (is_string($key) && str_ends_with($key, '_content') && is_string($value)) {
+                $value = preg_replace('/^data:[^;]+;base64,/', '', $value);
+                if (strlen($value) > 40 && base64_decode($value, true) !== false) {
+                    if (preg_match('/^[A-Za-z0-9+\/=]+$/', $value) && strlen($value) % 4 === 0) {
+                        $decoded = base64_decode($value, true);
+                        if ($decoded !== false) {
+                            $data[$key] = $decoded;
+                        }
+                    }
+                }
+//                if (strlen($value) > 40 && base64_decode($value, true) === false) {
+//                    $data[$key] = "";
+//                }
+            }
+        }
     }
 }

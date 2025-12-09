@@ -27,6 +27,9 @@ use DateTime;
 use Cake\Http\ServerRequest;
 use Cake\Utility\Text;
 use Cake\ORM\Locator\TableLocator;
+use Cake\I18n\FrozenDate;
+use Cake\I18n\FrozenTime;
+use Cake\Collection\CollectionInterface;
 
 
 class StaffTable extends ControllerActionTable
@@ -68,6 +71,7 @@ class StaffTable extends ControllerActionTable
         $this->hasMany('StaffRelease', ['className' => 'Institution.StaffRelease', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         // $this->hasMany('Contacts', ['className' => 'User.Contacts',        'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('SecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'foreignKey' => 'secondary_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('DepartmentStaff', ['className' => 'Institution.DepartmentStaff', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Security.SecurityAccess');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -356,11 +360,11 @@ class StaffTable extends ControllerActionTable
         $query = $this->setStaffStatusID($query);
 
         if(!empty($this->request->getQuery('position'))) {
-            $query = $this->setPoitionID($query); 
+            $query = $this->setPoitionID($query);
         }
 
         $query = $query->distinct(['staff_id']); // remove duplicate staff record
-        //POCOR-8790 End 
+        //POCOR-8790 End
         return $query;
 
     }
@@ -1413,7 +1417,7 @@ class StaffTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {    
+    {
         $institutionPositionId = $entity->institution_position_id;
         $staffId = $entity->staff_id;
         $institutionId = $entity->institution_id;
@@ -1688,20 +1692,33 @@ class StaffTable extends ControllerActionTable
                 $institutionId = $this->paramsEncode(['id' => $entity->institution->id]);
                 $userId = $entity->_matchingData['Users']->id;
 
+                //POCOR-3128[START]
                 $icon = '<i class="fa fa-history"></i>';
+                // $url = [
+                //     'plugin' => 'Institution',
+                //     'institutionId' => $institutionId,
+                //     'controller' => 'StaffHistories',
+                //     'action' => 'index'
+                // ];
                 $url = [
                     'plugin' => 'Institution',
-                    'institutionId' => $institutionId,
-                    'controller' => 'StaffHistories',
-                    'action' => 'index'
+                    'institution_id' => $institutionId,
+                    //'controller' => 'StudentHistories',
+                    //'action' => 'index',
+                    'controller' => 'Institutions',//POCOR-8333
+                    'action' => 'StaffHistories',//POCOR-8333
+                    '0' => 'index',//POCOR-8333
+                    '1' => $encodedQueryString
                 ];
 
                 $buttons['history'] = $buttons['view'];
                 $buttons['history']['label'] = $icon . __('History');
                 $buttons['history']['url'] = $this->ControllerAction->setQueryString($url, [
                     'security_user_id' => $userId,
-                    'user_type' => 'Staff'
+                    'user_type' => 'Staff',
+                    'institution_id' => $entity->institution->id
                 ]);
+                //POCOR-3128[END]
             }
             // end POCOR-3125 history button permission
         }
@@ -2655,17 +2672,19 @@ class StaffTable extends ControllerActionTable
     }
 
     /*
-     * Function to check whether Teacher role user have 'Comments' view permission for my subject
-    * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
-    * @return boolean
+    * Function to get number of staff attendance for the given institution dashboard
+    *  (for highcharts)
+    * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>, Khindol Madraimov <khindol.madraimov@gmail.com>
+    * @return array
     * @ticket POCOR-8007
+    * @ticket POCOR-9111
     */
 
-    public function getNumberOfStaffByAttendanceType($params = [])
+    public function getNumberOfStaffByAttendanceType(array $params = [])
     {
-        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
-        Log::debug(print_r($conditions,true));
+        $conditions = $params['conditions'] ?? [];
         $_conditions = [];
+
         foreach ($conditions as $key => $value) {
             $_conditions[$this->getAlias() . '.' . $key] = $value;
         }
@@ -2673,140 +2692,134 @@ class StaffTable extends ControllerActionTable
         $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $currentYearId = $AcademicPeriod->getCurrent();
 
-        if (!empty($currentYearId)) {
-            $currentYear = $AcademicPeriod->get($currentYearId, ['fields' => 'name'])->name;
-        } else {
-            $currentYear = __('Not Defined');
+        $currentYear = $currentYearId
+            ? $AcademicPeriod->get($currentYearId, ['fields' => ['name']])->name
+            : __('Not Defined');
+
+        $institutionId = $conditions['institution_id'] ?? null;
+        if (!$institutionId) {
+            return $params; // No institution_id provided, nothing to process
         }
 
-        if (!empty($currentYearId)) {
-            $currentYear = $AcademicPeriod->get($currentYearId, ['fields' => 'name'])->name;
-        } else {
-            $currentYear = __('Not Defined');
-        }
-
-        $institutionStaff = TableRegistry::getTableLocator()->get('Institution.StaffAttendances');
-        /**POCOR-6900 starts - Modified complete query to get correct records of staff Present, Late and Absent as suggested by client*/
-        $where = [
-            $this->aliasField('institution_id') => $conditions['institution_id']
-        ];
-        if(isset($conditions['staff_id'])){
+        $where = [$this->aliasField('institution_id') => $institutionId];
+        if (!empty($conditions['staff_id'])) {
             $where[$this->aliasField('staff_id')] = $conditions['staff_id'];
         }
+
+//        $debug = false; // Set to true only for testing purposes
+//
+//        $currentDate = $debug
+//            ? FrozenDate::parse('2025-05-15') // Your test date
+//            : FrozenDate::today();
+
+        $currentDate = FrozenDate::today();
+
         $staffAttendances = $this->find()
             ->where($where)
             ->group([
                 $this->aliasField('institution_id'),
                 $this->aliasField('staff_id')
             ])
-            ->formatResults(function (ResultSetInterface $results) use ($conditions, $currentYearId) {
-                return $results->map(function ($row) use ($conditions, $currentYearId) {
+            ->formatResults(function (ResultSetInterface $results) use ($currentDate, $institutionId, $currentYearId) {
+                return $results->map(function ($row) use ($currentDate, $institutionId, $currentYearId) {
+
                     $staffId = $row->staff_id;
-                    $currentDate = date('Y-m-d');
-                    /**Getting staff present and late data*/
-                    $StaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
-                    //echo "<pre>"; print_r($StaffAttendances);die;
-                    $StaffAttendancesObj = $StaffAttendances->find()
-                        ->select(['time_in' => $StaffAttendances->aliasField('time_in')])
-                        ->where([
-                            $StaffAttendances->aliasField('staff_id') => $staffId,
-                            $StaffAttendances->aliasField('institution_id') => $conditions['institution_id'],
-                            $StaffAttendances->aliasField('date') => $currentDate,
-                            $StaffAttendances->aliasField('time_in IS NOT NULL'),
-                            $StaffAttendances->aliasField('time_out IS NOT NULL')
-                        ])->first();
 
-                    if (!empty($StaffAttendancesObj)) {
-                        $time = date("H:i:s", strtotime($StaffAttendancesObj->time_in));
-                        $StaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
-                        $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
-                        $staffShiftObj = $StaffShifts->find()
-                            ->where([$StaffShifts->aliasField('staff_id') => $staffId])
-                            ->toArray();
-                        if (!empty($staffShiftObj)) {
-                            //POCOR-6900
-                            foreach ($staffShiftObj as $key => $value) {
-                                $data[$key] = $InstitutionShifts->find('all')
-                                    ->select(['start_time' => 'MIN(InstitutionShifts.start_time)'])
-                                    ->where([$InstitutionShifts->aliasField('id') => $value->shift_id])
-                                    ->first();
-                            }
-
-                            $staffShiftTime = date("H:i:s", strtotime($data[$key]->start_time));
-                            if ($time > $staffShiftTime) {
-                                $row->late = 1;
-                            } else {
-                                $row->late = 0;
-                            }
-                        } else {
-                            $InstitutionShiftsObj = $InstitutionShifts->find()
-                                ->select(['start_time' => 'MIN(InstitutionShifts.start_time)'])
-                                ->where([
-                                    $InstitutionShifts->aliasField('institution_id') => $conditions['institution_id'],
-                                    $InstitutionShifts->aliasField('academic_period_id') => $currentYearId
-                                ])
-                                ->first();
-                            $InstitutionShiftTime = date("H:i:s", strtotime($InstitutionShiftsObj->start_time));
-                            if ($time > $InstitutionShiftTime) {
-                                $row->late = 1;
-                            } else {
-                                $row->late = 0;
-                            }
-                            //end of POCOR-6900
-                        }
-                    }
-                    if (isset($StaffAttendancesObj)) {
-                        $row->present = 1;
-                    } else {
-                        $row->present = 0;
-                    }
-                    /**Getting staff absent data*/
-                    $StaffLeave = TableRegistry::get('Institution.StaffLeave');
-                    $staffLeaveObj = $StaffLeave->find()
+                    $StaffAttendances = TableRegistry::getTableLocator()->get('Staff.InstitutionStaffAttendances');
+                    $attendance = $StaffAttendances->find()
+                        ->select(['time_in'])
                         ->where([
-                            $StaffLeave->aliasField('staff_id') => $staffId,
-                            $StaffLeave->aliasField('institution_id') => $conditions['institution_id'],
-                            $StaffLeave->aliasField('date_from <=') => $currentDate,
-                            $StaffLeave->aliasField('date_to >=') => $currentDate
-                        ]);
-                    if ($staffLeaveObj->count() > 0) {
-                        $row->absent = 1;
-                    } else {
-                        $row->absent = 0;
-                    }
+                            'staff_id' => $staffId,
+                            'institution_id' => $institutionId,
+                            'date' => $currentDate,
+                            'time_in IS NOT NULL',
+//                            'time_out IS NOT NULL'
+                        ])
+                        ->first();
+
+                    $row->present = $attendance ? 1 : 0;
+                    $row->late = 0;
+
+//                    if ($attendance) {
+//                        $staffTimeIn = FrozenTime::parse($attendance->time_in)->format('H:i:s');
+//
+//                        $StaffShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffShifts');
+//                        $InstitutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
+//
+//                        $shiftMappings = $StaffShifts->find()
+//                            ->where(['staff_id' => $staffId])
+//                            ->toArray();
+//
+//                        if (!empty($shiftMappings)) {
+//                            foreach ($shiftMappings as $shiftMap) {
+//                                $shift = $InstitutionShifts->get($shiftMap->shift_id);
+//                                $shiftStart = FrozenTime::parse($shift->start_time)->format('H:i:s');
+//
+//                                if ($staffTimeIn > $shiftStart) {
+//                                    $row->late = 1;
+//                                    break;
+//                                }
+//                            }
+//                        } else {
+//                            $defaultShift = $InstitutionShifts->find()
+//                                ->select(['start_time' => 'MIN(InstitutionShifts.start_time)'])
+//                                ->where([
+//                                    'institution_id' => $institutionId,
+//                                    'academic_period_id' => $currentYearId
+//                                ])
+//                                ->first();
+//
+//                            if ($defaultShift) {
+//                                $defaultStartTime = FrozenTime::parse($defaultShift->start_time)->format('H:i:s');
+//
+//                                if ($staffTimeIn > $defaultStartTime) {
+//                                    $row->late = 1;
+//                                }
+//                            }
+//                        }
+//                    }
+
+                    $StaffLeave = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
+                    $onLeave = $StaffLeave->find()
+                        ->where([
+                            'staff_id' => $staffId,
+                            'institution_id' => $institutionId,
+                            'date_from <=' => $currentDate,
+                            'date_to >=' => $currentDate
+                        ])
+                        ->count();
+
+                    $row->absent = $onLeave > 0 ? 1 : 0;
 
                     return $row;
                 });
             });
-        /**POCOR-6900 ends*/
-        $attendanceData = [];
-        $dataSet['Present'] = ['name' => __('Present'), 'data' => []];
-        $dataSet['Absent'] = ['name' => __('Absent'), 'data' => []];
-        $dataSet['Late'] = ['name' => __('Late'), 'data' => []];
 
-        $total_present = $total_absent = $total_late = 0;
+        $dataSet = [
+            'Present' => ['name' => __('Present'), 'data' => []],
+            'Absent'  => ['name' => __('Absent'),  'data' => []],
+            'Late'    => ['name' => __('Late'),    'data' => []],
+        ];
 
-        foreach ($staffAttendances as $key => $attendance) {
+        $totals = ['present' => 0, 'absent' => 0, 'late' => 0];
 
-            $total_present = $attendance->present + $total_present;
-            $total_absent = $attendance->absent + $total_absent;
-            $total_late = $attendance->late + $total_late;
+        foreach ($staffAttendances as $attendance) {
+            $totals['present'] += $attendance->present;
+            $totals['absent'] += $attendance->absent;
+            $totals['late']   += $attendance->late;
         }
-        //echo "<pre>"; print_r($total_late);die;
+
         if (!empty($currentYear)) {
-            $attendanceData[$currentYear] = $currentYear;
-            $dataSet['Present']['data'][$currentYear] = $total_present;
-            $dataSet['Absent']['data'][$currentYear] = $total_absent;
-            $dataSet['Late']['data'][$currentYear] = $total_late;
+            $dataSet['Present']['data'][$currentYear] = $totals['present'];
+            $dataSet['Absent']['data'][$currentYear]  = $totals['absent'];
+            $dataSet['Late']['data'][$currentYear]    = $totals['late'];
         }
 
-
-        // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
-        $params['options']['subtitle'] = array('text' => __('For Today'));
-        $params['options']['xAxis']['categories'] = array_values($attendanceData);
+        $params['options']['subtitle'] = ['text' => __('For Today')];
+        $params['options']['xAxis']['categories'] = [$currentYear];
         $params['dataSet'] = $dataSet;
-        return $params;
 
+        return $params;
     }
 
     // Functions that are migrated over
@@ -2993,11 +3006,12 @@ class StaffTable extends ControllerActionTable
 
     public function findSubjectStaffOptions(Query $query, array $options)
     {
-        $institutionId = $options['institution_id'];
-        $academicPeriodId = $options['academic_period_id'];
+        $institutionId     = $options['institution_id'];
+        $academicPeriodId  = $options['academic_period_id'] ?? null;
+        $type  = $options['type'] ?? 1;
 
-        return $query
-            ->find('all')
+        // Base query
+        $query = $query
             ->select([
                 $this->aliasField('id'),
                 'Users.id',
@@ -3008,30 +3022,157 @@ class StaffTable extends ControllerActionTable
                 'Users.last_name',
                 'Users.preferred_name'
             ])
-            ->find('byInstitution', ['Institutions.id' => $institutionId])
-            ->find('byPositions', ['Institutions.id' => $institutionId, 'type' => 1])
-            ->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+            ->find('byInstitution', [
+                'Institutions.id' => $institutionId
+            ])
             ->contain(['Users'])
             ->where([
                 $this->aliasField('institution_position_id'),
-                'OR' => [ //check teacher end date
-                    [$this->aliasField('end_date') . ' > ' => Time::now()],
+                'OR' => [
+                    [$this->aliasField('end_date') . ' >' => Time::now()],
                     [$this->aliasField('end_date') . ' IS NULL']
                 ]
             ])
-            ->order([
-                $this->Users->aliasField('first_name')
-            ])
+            ->order([$this->Users->aliasField('first_name')]);
+
+        // Only apply the AcademicPeriod finder if we actually have a period ID
+        if ($academicPeriodId !== null) {
+            $query = $query->find('AcademicPeriod', [
+                'academic_period_id' => $academicPeriodId
+            ]);
+        }
+
+        if ($type >= 0) {
+            $query = $query->find('byPositions', [
+                'Institutions.id' => $institutionId,
+                'type'            => $type
+            ]);
+        }
+
+        return $query
+            ->find('all') // you can drop this if your custom finder already starts from 'all'
             ->formatResults(function ($results) {
-                $returnArr = [];
-                foreach ($results as $result) {
-                    if ($result->has('user')) {
-                        $returnArr[] = ['id' => $result->user->id, 'name' => $result->user->name_with_id];
+                $return = [];
+                foreach ($results as $entity) {
+                    if ($entity->has('user')) {
+                        $return[] = [
+                            'id'   => $entity->user->id,
+                            'name' => $entity->user->name_with_id
+                        ];
                     }
                 }
-                return $returnArr;
+                return $return;
             });
     }
+
+    /**
+     * Find all staff in an institution who are NOT assigned to a given department or are managers.
+     *
+     * @param \Cake\ORM\Query $query
+     * @param array $options Must contain:
+     * - 'institution_id' (int): ID of the institution
+     * - 'department_id'  (int): ID of the department to exclude
+     * - 'target'  (string): 'unassigned' or 'manager' (default 'unassigned')
+     * @return \Cake\ORM\Query
+     */
+    public function findStaffForDepartment(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $departmentId  = $options['department_id'];
+        $target        = $options['target'] ?? 'unassigned';
+
+        $query = $query
+            ->where([
+                'Staff.institution_id' => $institutionId,
+                'OR' => [
+                    ['Staff.end_date >'   => Time::now()],
+                    ['Staff.end_date IS'  => null],
+                ],
+            ])
+            ->contain([
+                'Users.Genders',
+                'StaffStatuses'
+            ]);
+        switch ($target) {
+            case 'unassigned':
+                $query = $this->_filterUnassignedStaff($query, $departmentId);
+                break;
+            case 'manager':
+                $query = $this->_filterManagerStaff($query, $departmentId); // Assuming you'll implement this
+                break;
+            // Add more cases as needed
+        }
+
+        return $this->_formatStaffResults($query, $departmentId);
+    }
+
+    /**
+     * Applies filters for unassigned staff based on multiple assignment allowance.
+     *
+     * @param \Cake\ORM\Query $query
+     * @param int $departmentId
+     * @return \Cake\ORM\Query
+     */
+    protected function _filterUnassignedStaff(Query $query, int $departmentId): Query
+    {
+        // load the config once
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $allowMultiple = $ConfigItems->value('AssigningStafftoMultipleDepartments');
+        if ($allowMultiple == 'Disable') {
+            // filter out anyone in DepartmentStaff *at all*
+            $query = $query->notMatching('DepartmentStaff');
+        } else {
+            // only filter out those already in *this* department
+            $query = $query->notMatching('DepartmentStaff', function (Query $q) use ($departmentId) {
+                return $q->where([
+                    'DepartmentStaff.institution_department_id' => $departmentId
+                ]);
+            });
+        }
+        return $query;
+    }
+
+    /**
+     * Applies filters for manager staff (placeholder).
+     *
+     * @param \Cake\ORM\Query $query
+     * @param int $departmentId
+     * @return \Cake\ORM\Query
+     */
+    protected function _filterManagerStaff(Query $query, int $departmentId): Query
+    {
+        // Implement manager-specific filtering logic here
+        // For example:
+        // $query->where(['Staff.is_manager' => true]);
+        return $query;
+    }
+
+    /**
+     * Formats the staff query results.
+     *
+     * @param \Cake\ORM\Query $query
+     * @param int $departmentId
+     * @return \Cake\ORM\Query
+     */
+    protected function _formatStaffResults(Query $query, int $departmentId): Query
+    {
+        return $query->formatResults(function (CollectionInterface $results) use ($departmentId) {
+            return $results->map(function ($staff) use ($departmentId) {
+                return [
+                    'openemis_no'        => $staff->user->openemis_no,
+                    'name'               => $staff->user->name,
+                    'staff_status_name'  => $staff->staff_status->name,
+                    'gender_name'        => $staff->user->gender->name,
+                    'security_user_id'   => $staff->user->id,
+                    'encodedVar'         => base64_encode(json_encode([
+                        'institution_staff_id'       => $staff->id,
+                        'institution_department_id'  => $departmentId,
+                    ])),
+                ];
+            })->toList();
+        });
+    }
+
 
     public function findAllCommentsViewPermissions(Query $query, array $options)
     {
@@ -3335,9 +3476,9 @@ class StaffTable extends ControllerActionTable
                                         $institutionClassSubjectsTbl->aliasField('institution_subject_id') . ' = ' . $InstitutionSubjectStaff->aliasField('institution_subject_id')
                                     ])
                                     ->where([
-                                        
+
                                         $institutionClassSubjectsTbl->aliasField('institution_class_id') => $classId,
-                                        
+
                                     ])->first();
                             }
                             //POCOR-9028
@@ -3470,6 +3611,23 @@ class StaffTable extends ControllerActionTable
             $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
             $SecurityGroupTbl = TableRegistry::get('Security.UserGroups');
             $SecurityGroupUserTbl = TableRegistry::get('Security.SecurityGroupUsers');
+
+             //POCOR-9212[START] // Here is the logic change: instead of checking institution_id from the table SecurityGroupInstitutions
+             // check for the security_group_id
+             $groupUserRecords = $SecurityGroupUserTbl->find()
+                        ->matching('SecurityGroups')
+                        ->matching('SecurityRoles')
+                        ->where([$SecurityGroupUserTbl->aliasField('security_user_id') => $staffId])
+                        ->group([
+                            $SecurityGroupUserTbl->aliasField('security_group_id'),
+                            $SecurityGroupUserTbl->aliasField('security_role_id')
+                        ])
+                        ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name', 'security_group_id' => $SecurityGroupUserTbl->aliasField('security_group_id')])
+                        ->toArray();
+            $security_group_id = $groupUserRecords[0]['security_group_id'];
+            //POCOR-9212[END]
+
+
             $SecurityGroup = $SecurityGroupTbl->find()
                 ->select([
                     $SecurityGroupUserTbl->aliasField('security_group_id'),
@@ -3479,7 +3637,8 @@ class StaffTable extends ControllerActionTable
                 ->leftJoin(
                     [$SecurityGroupInstitutions->getAlias() => $SecurityGroupInstitutions->getTable()],
                     [
-                        $SecurityGroupInstitutions->aliasField('institution_id = ') . $SecurityGroupTbl->aliasField('id')
+                        // $SecurityGroupInstitutions->aliasField('institution_id = ') . $SecurityGroupTbl->aliasField('id')
+                        $SecurityGroupInstitutions->aliasField('security_group_id = ') . $SecurityGroupTbl->aliasField('id')  //POCOR-9212
                     ]
                 )
                 ->leftJoin(
@@ -3489,7 +3648,8 @@ class StaffTable extends ControllerActionTable
                     ]
                 )
                 ->where([
-                    $SecurityGroupTbl->aliasField('id') => $institutionId,
+                    // $SecurityGroupTbl->aliasField('id') => $institutionId,
+                    $SecurityGroupTbl->aliasField('id') => $security_group_id, //POCOR-9212
                     $SecurityGroupUserTbl->aliasField('security_user_id') => $staffId,
                 ])->enableHydration(false)->toArray();
             $RoleArr = [];
@@ -3514,7 +3674,7 @@ class StaffTable extends ControllerActionTable
                     }
                 }
             }
-            
+
             if ($count >= 1) {
                 $data = array('result' => 1);
                 echo json_encode($data, true);
@@ -3579,7 +3739,7 @@ class StaffTable extends ControllerActionTable
                         $SecurityRolesTable->aliasField('id IN') => $RoleArr
                     ])->enableHydration(false)->toArray();
             }
-            if (!empty($SecurityRolesData)) {   
+            if (!empty($SecurityRolesData)) {
                 foreach ($SecurityRolesData as $SecurityRolesvalue) {
                     $SecurityRolesNames[] = $SecurityRolesvalue['code'];
                 }
@@ -3780,7 +3940,7 @@ class StaffTable extends ControllerActionTable
                 'Institutions.postal_code',
                 'Institutions.contact_person',
                 'Institutions.telephone',
-                'Institutions.fax',
+//                'Institutions.fax',
                 'Institutions.email',
                 'Institutions.website',
                 'Users.id',
@@ -3844,37 +4004,46 @@ class StaffTable extends ControllerActionTable
         }
 
         $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+// commented for POCOR-9446
+//        $approvedLeaveStatuses = $this->getApprovedLeaveStatusIds(); // POCOR-9415 start
+
+        $conditions = [
+            $StaffLeaveTable->aliasField('institution_id') => $institutionId,
+            $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
+            $StaffLeaveTable->aliasField('staff_id') => $staffId,
+            $StaffLeaveTable->aliasField('full_day') => 1,
+            'OR' => [
+                [
+                    $StaffLeaveTable->aliasField('date_to <=') => $weekEndDate,
+                    $StaffLeaveTable->aliasField('date_from >=') => $weekStartDate,
+                ],
+                [
+                    $StaffLeaveTable->aliasField('date_to <=') => $weekEndDate,
+                    $StaffLeaveTable->aliasField('date_to >=') => $weekStartDate,
+                ],
+                [
+                    $StaffLeaveTable->aliasField('date_from <=') => $weekEndDate,
+                    $StaffLeaveTable->aliasField('date_from >=') => $weekStartDate,
+                ],
+                [
+                    $StaffLeaveTable->aliasField('date_from <=') => $weekStartDate,
+                    $StaffLeaveTable->aliasField('date_to >=') => $weekEndDate,
+                ]
+            ]
+        ];
+
+// Only add status_id if it's a valid integer commented for POCOR-9446
+//        if (!empty($approvedLeaveStatuses)) {
+//            $conditions[$StaffLeaveTable->aliasField('status_id IN')] = $approvedLeaveStatuses;
+//        }
+//        Log::write(print_r($conditions, true));
         $staffLeavesByWeekStartAndEnd = $StaffLeaveTable
             ->find()
             ->matching('StaffLeaveTypes')
-            ->where([
-                $StaffLeaveTable->aliasField('institution_id ') => $institutionId,
-                $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
-                $StaffLeaveTable->aliasField('staff_id') => $staffId,
-                $StaffLeaveTable->aliasField('full_day') => 1,
-                [
-                    'OR' => [
-                        [
-                            $StaffLeaveTable->aliasField("date_to <= '") . $weekEndDate . "'",
-                            $StaffLeaveTable->aliasField("date_from >= '") . $weekStartDate . "'"
-                        ],
-                        [
-                            $StaffLeaveTable->aliasField("date_to <= '") . $weekEndDate . "'",
-                            $StaffLeaveTable->aliasField("date_to >= '") . $weekStartDate . "'"
-                        ],
-                        [
-                            $StaffLeaveTable->aliasField("date_from <= '") . $weekEndDate . "'",
-                            $StaffLeaveTable->aliasField("date_from >= '") . $weekStartDate . "'"
-                        ],
-                        [
-                            $StaffLeaveTable->aliasField("date_from <= '") . $weekStartDate . "'",
-                            $StaffLeaveTable->aliasField("date_to >= '") . $weekEndDate . "'"
-                        ]
-                    ]
-                ]
-            ])
+            ->where($conditions)
             ->enableHydration(false)
             ->toArray();
+// POCOR-9415 end
 
         $query = $query
             ->select([
@@ -4157,35 +4326,44 @@ class StaffTable extends ControllerActionTable
      */
     private function getLeaveByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $archive = false)
     {
+
         $whereForLeaveTable = $this->setWhereForLeaveTable($weekStartDate, $weekEndDate, $archive);
+//        $approvedLeaveStatuses = $this->getApprovedLeaveStatusIds(); // POCOR-9415
+//        Log::debug(print_r($approvedLeaveStatuses,true));
+        if (!$archive) {
+            $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+        }else{
+            $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
+        }
+
+        $commonConditions = [
+            $StaffLeaveTable->aliasField('institution_id') => $institutionId,
+            $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
+            $whereForLeaveTable
+        ];
+
+// Add status_id only if it's valid
+//        if (!empty($approvedLeaveStatuses)) {
+//            $commonConditions[$StaffLeaveTable->aliasField('status_id IN')] = $approvedLeaveStatuses;
+//        }
+//        Log::debug(print_r($commonConditions, true));
         if (!$archive) {
             $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
             $allStaffLeaves = $StaffLeaveTable
                 ->find()
                 ->matching('StaffLeaveTypes')
-                // ->matching('Statuses')
-                ->where([
-                    $StaffLeaveTable->aliasField('institution_id ') => $institutionId,
-                    $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
-                    $whereForLeaveTable
-                ])
+                ->where($commonConditions)
                 ->enableHydration(false)
                 ->toArray();
-        }
-        if ($archive) {
+        } else {
             $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
             $allStaffLeaves = $StaffLeaveTable
                 ->find()
-//                ->matching('StaffLeaveTypes')
-//                // ->matching('Statuses')
-                ->where([
-                    $StaffLeaveTable->aliasField('institution_id ') => $institutionId,
-                    $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
-                    $whereForLeaveTable
-                ])
+                ->where($commonConditions)
                 ->enableHydration(false)
                 ->toArray();
         }
+// POCOR-9415 end
         $leaveByStaffIdRecords = Hash::combine($allStaffLeaves, '{n}.id', '{n}', '{n}.staff_id');
         return $leaveByStaffIdRecords;
     }
@@ -4199,6 +4377,7 @@ class StaffTable extends ControllerActionTable
 
     private function setWhereForLeaveTable($weekStartDate, $weekEndDate, $archive = false)
     {
+
         if (!$archive) {
             $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
         }
@@ -4320,7 +4499,9 @@ class StaffTable extends ControllerActionTable
                 $staffLeaveRecords = [];
 
                 if (!empty($row->_matchingData['Users']->photo_name)) {
-                    $row['photo_content'] = base64_encode(stream_get_contents($row->_matchingData['Users']->photo_content));
+                    if (!empty($row->_matchingData['Users']->photo_content)) {//POCOR-9189 starts
+                        $row['photo_content'] = base64_encode(stream_get_contents($row->_matchingData['Users']->photo_content));
+                    }//POCOR-9189 ends
                 }
 
                 if (array_key_exists($staffId, $attendanceByStaffIdRecords)) {
@@ -4347,8 +4528,10 @@ class StaffTable extends ControllerActionTable
                             $attendanceData = [
                                 'dateStr' => $dateStr,
                                 'date' => $this->formatDate($attendanceRecord['date']),
-                                'time_in' => $attendanceRecord['time_in'],//$this->formatTime($attendanceRecord['time_in']),
-                                'time_out' => $attendanceRecord['time_out'],//$this->formatTime($attendanceRecord['time_out']),
+//                                'time_in' => $attendanceRecord['time_in'],//$this->formatTime($attendanceRecord['time_in']),
+//                                'time_out' => $attendanceRecord['time_out'],//$this->formatTime($attendanceRecord['time_out']),
+                                'time_in' => $this->formatTime($attendanceRecord['time_in']), // POCOR-9415
+                                'time_out' => $this->formatTime($attendanceRecord['time_out']), // POCOR-9415
                                 'comment' => $attendanceRecord['comment'],
                                 'absence_type_id' => $attendanceRecord['absence_type_id'],
                                 'isNew' => false
@@ -4371,14 +4554,20 @@ class StaffTable extends ControllerActionTable
                     if ($dayId != -1) {
                         $row->date = $dateStr;
                     }
+                    // POCOR-9166 start
+                    $queryString = $this->getQueryString();
+                    $queryString['user_id'] = $staffId;
+                    $queryString['institution_id'] = $institution_id;
+                    $encodedQueryString = $this->paramsEncode($queryString);
                     $historyUrl = Router::url([
                         'plugin' => 'Staff',
                         'controller' => 'Staff',
                         'action' => 'InstitutionStaffAttendanceActivities',
-                        'index',
-                        '?' => ['user_id' => $staffId, 'institution_id' => $institution_id]
+                        '0' => 'index',
+                        '1' => $encodedQueryString
                        // 'user_id' => $staffId
                     ]);
+                    // POCOR-9166 end
                     $row->historyUrl = $historyUrl;
                 }
                 // gets all the staff leave
@@ -4479,7 +4668,7 @@ class StaffTable extends ControllerActionTable
             ->group([
                 $this->aliasField('staff_id')
             ])
-            ->formatResults($this->getFormattedStaffAttendanceArchivedRow($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $day_id));
+            ->formatResults($this->getFormattedStaffAttendanceArchivedRow($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId));
 
         return $query;
 
@@ -4512,6 +4701,8 @@ class StaffTable extends ControllerActionTable
                 $absenceTypes
             ) {
                 $staffId = $row->staff_id;
+                $institution_id = $row->institution_id; // POCOR-9166
+
                 $staffRecords = [];
                 $staffLeaveRecords = [];
 
@@ -4568,13 +4759,20 @@ class StaffTable extends ControllerActionTable
                     if ($day_id != -1) {
                         $row->date = $dateStr;
                     }
+                    // POCOR-9166 start
+                    $queryString = $this->getQueryString();
+                    $queryString['user_id'] = $staffId;
+                    $queryString['institution_id'] = $institution_id;
+                    $encodedQueryString = $this->paramsEncode($queryString);
                     $historyUrl = Router::url([
                         'plugin' => 'Staff',
                         'controller' => 'Staff',
                         'action' => 'InstitutionStaffAttendanceActivities',
-                        'index',
-                        'user_id' => $staffId
+                        '0' => 'index',
+                        '1' => $encodedQueryString
+                        // 'user_id' => $staffId
                     ]);
+                    // POCOR-9166 end
                     $row->historyUrl = $historyUrl;
                 }
                 // gets all the staff leave
@@ -4648,7 +4846,9 @@ class StaffTable extends ControllerActionTable
                     $row['user_avatar'] = null;
 
                     if (!empty($row->user->photo_name)) {
-                        $row['user_avatar'] = base64_encode(stream_get_contents($row->user->photo_content));
+                        if (!empty($row->user->photo_content)) {//POCOR-9189 starts
+                            $row['user_avatar'] = base64_encode(stream_get_contents($row->user->photo_content));
+                        }//POCOR-9189 ends
                     }
                     return $row;
                 });
@@ -4778,7 +4978,7 @@ class StaffTable extends ControllerActionTable
      * @param Query $query
      * @return Query
     */
-    private function setStaffStatusID(Query $query) 
+    private function setStaffStatusID(Query $query)
     {
         $staff_status_id = $this->request->getQuery('staff_status_id');
         if (!$staff_status_id) {
@@ -4794,7 +4994,7 @@ class StaffTable extends ControllerActionTable
      * @param Query $query
      * @return Query
     */
-    private function setPoitionID(Query $query) 
+    private function setPoitionID(Query $query)
     {
         $selectedPosition = $this->request->getQuery('position');
         $query->matching('Positions', function ($q) use ($selectedPosition) {
@@ -4803,5 +5003,45 @@ class StaffTable extends ControllerActionTable
         return $query;
     }
     //POCOR-8790 End
+
+//    /**
+//     * @return mixed
+//     * commented for POCOR-9446
+//     * POCOR-9415 refactured
+//     */
+//    private function getApprovedLeaveStatusIds(): array
+//    {
+//        $workflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+//        $workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+//
+//        $workflowAlias = $workflows->getAlias();
+//        $workflowStepsAlias = $workflowSteps->getAlias();
+//
+//        $query = $workflowSteps->find()
+//            ->select(["{$workflowStepsAlias}.id"])
+//            ->innerJoin(
+//                [$workflowAlias => $workflows->getTable()],
+//                ["{$workflowAlias}.id = {$workflowStepsAlias}.workflow_id"]
+//            )
+//            ->where(
+//                ["LOWER({$workflowAlias}.name) LIKE '%leave%'",
+//                    "{$workflowStepsAlias}.category = 3",
+//                    'OR' => [
+//                        "LOWER({$workflowStepsAlias}.name) = 'approved'",
+//                        "LOWER({$workflowStepsAlias}.name) = 'leave cancellation rejected'",
+//                        "LOWER({$workflowStepsAlias}.name) != 'rejected'"
+//                    ]
+//                ])
+//            ->enableHydration(false);
+//
+//        // Optional: log the generated SQL
+//        // Log::debug('Approved status query: ' . $query->sql($query->getValueBinder()));
+//
+//        return $query->extract('id')->toList() ?: [0];
+//    }
+
+
+
+
 
 }

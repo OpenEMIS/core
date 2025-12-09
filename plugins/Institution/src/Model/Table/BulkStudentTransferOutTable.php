@@ -44,7 +44,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                 'WorkflowModels.model' => $this->_modelAlias
             ])
             ->toArray();
-        //remove open status because we are not getting start_date, end_date, institution class 
+        //remove open status because we are not getting start_date, end_date, institution class
         $option = array();
         //POCOR-6362 starts
         foreach ($steplists as $klist => $vlist) {
@@ -107,7 +107,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
             'StudentTransferIn'=> function ($q) use ($superAdmin, $userId, $institutionId) {
                 $q->where(['StudentTransferIn.previous_institution_id' => $institutionId])
                     ->contain(['Users', 'Assignees', 'AcademicPeriods', 'EducationGrades', 'InstitutionClasses', 'Statuses','PreviousInstitutions']);
-                /**POCOR-6946 - "if" condition has been updated to fetch list of students*/ 
+                /**POCOR-6946 - "if" condition has been updated to fetch list of students*/
                 if ($this->AccessControl->check(['Institutions', 'StudentTransferOut', 'edit'])) {
                     return $q;
                 } else {
@@ -171,7 +171,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                 $attr['options'] = $this->_stepsOptions;
                 $attr['onChangeReload'] = 'changeStatus';
             break;
-            
+
             case 'reconfirm':
                 $selectedStatus = $this->_currentData['status'];
                 $attr['attr']['value'] = $this->_stepsOptions[$selectedStatus];
@@ -240,7 +240,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
             default:
                 break;
         }
-       
+
         return $attr;
     }
 
@@ -288,7 +288,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                     }else{
                         $assigneeOptions = [$this->Auth->user('id') => __('Auto Assign')];//POCOR-7080
                     }
-                    
+
                 }
                 $attr['type'] = 'select';
                 $attr['options'] = $assigneeOptions;
@@ -304,8 +304,8 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                     $assigneeOptions = 'Auto Assign'; //POCOR-6961
                     $attr['type'] = 'readonly';
                     $attr['value'] = '-1';
-                    $attr['attr']['value'] = $assigneeOptions; //POCOR-6961 
-                    break; 
+                    $attr['attr']['value'] = $assigneeOptions; //POCOR-6961
+                    break;
                 }else{
                     $assigneeOptions = $assigneeOptions;
                     $attr['type'] = 'readonly';
@@ -371,7 +371,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
             $this->Alert->warning('general.notExists');
             return $this->controller->redirect($url);
         }
-        
+
         if ($currentEntity && !empty($currentEntity)) {
             if ($this->request->is(['post', 'put'])) {
                 if ($currentData instanceOf ArrayObject) {
@@ -392,49 +392,55 @@ class BulkStudentTransferOutTable extends ControllerActionTable
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
         $getQueryString = $this->getQueryString(); //POCOR-8624
+
         $process = function ($model, $entity) use ($event, $data) {
-            // Removal of some fields that are not in use in the table validation
+            $data = $data->getArrayCopy();
             $errors = $entity->getErrors();
-            if (empty($errors)) {
-                $dataArray = $data->getArrayCopy();
-                if (array_key_exists($this->getAlias(), $dataArray)) {
-                    $selectedStudent = false;
-                    if (array_key_exists('students', $data[$this->getAlias()])) {
-                        foreach ($data[$this->getAlias()]['students'] as $key => $value) {
-                            if ($value['selected'] != 0) {
-                                $selectedStudent = true;
-                                break;
-                            }
-                        }
-                    }
-                    $encodedQueryParams = $this->request->getParam('pass')[1];
-                    if ($selectedStudent) {
-                        // redirects to confirmation page
-                        $url = [
-                            'plugin' => 'Institution',
-                            'controller' => 'Institutions',
-                            'action' => 'BulkStudentTransferOut',
-                                0 => 'reconfirm',
-                                1 => $encodedQueryParams //POCOR-8624
-                        ];
-                        $this->currentEntity = $entity;
-                        $session = $this->Session;
-                        $session->write($this->getRegistryAlias().'.confirm', $entity);
-                        $session->write($this->getRegistryAlias().'.confirmData', $data);
-                        $this->currentEvent = $event;
-                        $event->stopPropagation();
-                        return $this->controller->redirect($url);
-                    } else {
-                        $this->Alert->warning($this->getAlias().'.noStudentSelected', ['reset' => true]);
-                        return false;
+
+            if (!empty($errors)) {
+                return false;
+            }
+            //POCOR-7969  Start
+            $alias = $this->getAlias();
+
+            $selectedStudent = false;
+
+            if (!empty($data[$alias]['students']) && is_array($data[$alias]['students'])) {
+                foreach ($data[$alias]['students'] as $student) {
+                    if (!empty($student['selected'])) {
+                        $selectedStudent = true;
+                        break;
                     }
                 }
+            }
+            //POCOR-7969  END
+            $encodedQueryParams = $this->request->getParam('pass')[1];
+
+            if ($selectedStudent) {
+                $url = [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'BulkStudentTransferOut',
+                    0 => 'reconfirm',
+                    1 => $encodedQueryParams //POCOR-8624
+                ];
+
+                $this->currentEntity = $entity;
+                $session = $this->Session;
+                $session->write($this->getRegistryAlias() . '.confirm', $entity);
+                $session->write($this->getRegistryAlias() . '.confirmData', $data);
+                $this->currentEvent = $event;
+                $event->stopPropagation();
+                return $this->controller->redirect($url);
             } else {
+                $this->Alert->warning($alias . '.noStudentSelected', ['reset' => true]);
                 return false;
             }
         };
+
         return $process;
     }
+
     public function saveBulkStudentTransferOut(Entity $entity, ArrayObject $data)
     {
         $getQueryString = $this->getQueryString(); //POCOR-8624

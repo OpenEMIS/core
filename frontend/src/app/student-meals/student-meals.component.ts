@@ -302,12 +302,24 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
     this._row.forEach((item) => {
       const indexInArray2: any = this.findIndexInArray2(item.meal_received_id, item.user.openemis_no, item.meal_benefit_id);
       if (indexInArray2.index != -1 && indexInArray2.data == 'notNull') {
+        if (item.meal_received_id == 1) {
+          if (item.meal_benefit_id == null) {
+            item.meal_benefit_id = 1;
+          }
+        }
         this.callPostMealAPI(item);
         this.setDashboard();
       } else if (indexInArray2.index != -1 && indexInArray2.data == null) {
         item.meal_received_id = 1;
+        item.meal_benefit_id = 1;
         this.callPostMealAPI(item);
         this.setDashboard();
+      } else if (indexInArray2.index == -1 && indexInArray2.data == 'notNull') {
+        if (item.meal_received_id == 1) {
+          if (item.meal_benefit_id == null) {
+            item.meal_benefit_id = 1;
+          }
+        }
       }
     });
     this.oldRow = JSON.parse(JSON.stringify(this._row));
@@ -439,20 +451,20 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
   }
 
   callPostMealAPI(data: any) {
-
     let obj = {
       "institution_id": data?.institution_id,
       "institution_class_id": data?.institution_class_id,
       "academic_period_id": data?.academic_period_id,
       "date": this.academic_period_day,
       "student_id": data?.student_id,
-      "meal_programmes_id": data?.meal_program_id,
+      "meal_programmes_id": this.selected_meal_program,
       "meal_received_id": data?.meal_received_id,
-      "meal_benefit_id": data?.meal_benefit_id
+      "meal_benefit_id": data?.meal_benefit_id,
+      "institution_meal_student_id": data?.institution_meal_student_id
     }
     this.Rest.postWithToken('institutions/students/meal-benefits', obj).subscribe({
       next: (response: any) => {
-        console.log(response, "response");
+        // console.log(response, "response");
 
       },
       error: (error: any) => {
@@ -518,7 +530,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
         var decodedPassword = atob(password);
         // decodedPassword = decodedPassword.replace(/^"(.*)"$/, '$1');
         decodedPassword = decodedPassword.replace(/[\[\]"]/g, '');
-        console.log(decodedPassword,"decodedPassword");
+        // console.log(decodedPassword,"decodedPassword");
         if (userName && decodedPassword) {
           this.loginApi(userName, decodedPassword);
         } else {
@@ -536,7 +548,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
   setTheme() {
     this.Rest.getWithToken('themes').subscribe({
       next: (response: any) => {
-        console.log(response?.data[3].default_value, "response");
+        // console.log(response?.data[3].default_value, "response");
         let selectedThemeData = '';
         if (response?.data[3].value) {
           selectedThemeData = response?.data[3].value;
@@ -657,7 +669,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
           this.academic_Period = this.academicYear[0].key;
           this.academicPeriod[0].options = this.academicYear;
           this.getAcademicWeek(this.academic_Period);
-          this.getClassData()
+          this.getClassData();
         }
       },
       error: (error: any) => {
@@ -710,7 +722,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
     })
   }
 
-  getAcademicDay(id: any) {
+  getAcademicDay(id: any, status?: boolean) {
     this.academic_period_week = id;
     this.Rest.getWithToken('academic-periods/' + this.academic_Period + '/weeks/' + this.academic_period_week + '/days?institution_id=' + this.institution_id + '&school_closed_required=true').subscribe({
       next: (response: any) => {
@@ -739,7 +751,9 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
         newDay[0].options = this.academic_day;
         newDay[0].value = this.academic_period_day;
         this.day = [...newDay];
-        this.getClassData();
+        if(status) {
+          this.getMealStudent(this.selected_meal_program);
+        }
       },
       error: (error: any) => {
         if (error) {
@@ -767,6 +781,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
           this.selected_academic_class = this.academic_class[0]?.key;
           let classData = this.class;
           classData[0].options = this.academic_class;
+          classData[0].value = this.academic_class[0]?.key;
           this.class = [...classData];
           this.displayLoading = false;
           this.getMealProgramData();
@@ -791,7 +806,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
           if (response?.data?.data.length > 0) {
             response?.data?.data.forEach((element: any) => {
               let obj = {
-                key: element?.id,
+                key: element?.meal_programme_id,
                 value: element?.name
               }
               this.academic_meal.push(obj);
@@ -828,10 +843,10 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
 
     //This is static link
     // institutions/${this.institution_id}/meal-students?academic_period_id=33&day_id=2024-01-30&institution_class_id=591&meal_program_id=3
-    console.log(this.academic_Period, "academic_Period");
-    console.log(this.academic_period_day, "this.academic_period_day");
-    console.log(this.selected_academic_class, "this.selected_academic_class");
-    console.log(this.selected_meal_program, "selected_meal_program");
+    // console.log(this.academic_Period, "academic_Period");
+    // console.log(this.academic_period_day, "this.academic_period_day");
+    // console.log(this.selected_academic_class, "this.selected_academic_class");
+    // console.log(this.selected_meal_program, "selected_meal_program");
 
     if (this.academic_Period && this.academic_period_day && this.selected_academic_class && this.selected_meal_program) {
       this.Rest.getWithToken(`institutions/${this.institution_id}/meal-students?academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&institution_class_id=${this.selected_academic_class}&meal_program_id=${this.selected_meal_program}`).subscribe({
@@ -852,7 +867,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
 
             let importUrl = response?.data?.url?.import;
             this.mealImportUrl = importUrl.replace("cake_session_id", this.mealImportUrl);
-            console.log(this.mealImportUrl, "this.mealImportUrl 11");
+            // console.log(this.mealImportUrl, "this.mealImportUrl 11");
             let exportUrl = response?.data?.url?.export;
             this.mealExportUrl = exportUrl.replace("cake_session_id", this.mealImportUrl);
 
@@ -894,7 +909,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
               }
             }
 
-            console.log(this.mealImportUrl, "result", this.mealExportUrl);
+            // console.log(this.mealImportUrl, "result", this.mealExportUrl);
           } else {
             this._row = [];
             this.displayLoading = false;
@@ -954,25 +969,28 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
     window.open(this.mealHelpUrl, "_self");
   }
 
-  _submitEvent(event: any, type: any) {
+  async _submitEvent(event: any, type: any) {
     this.displayLoading = true;
     switch (type) {
       case 'academicPeriod': {
-        this.getAcademicWeek(event.target.value);
+        await this.getAcademicWeek(event.target.value);
         this.academicPeriod[0].value = event.target.value;
+        this.academic_Period = event.target.value;
+        this.getClassData();
         break;
       }
       case 'week': {
-        this.getAcademicDay(event.target.value);
+        this.getAcademicDay(event.target.value, true);
         this.week[0].value = event.target.value;
         break;
       }
       case 'day': {
-        this.getClassData();
+        // this.getClassData();
         this.day[0].value = event.target.value;
         this.academic_period_day = event.target.value;
-        this.getClassData();
-        this.getMealProgramData();
+        // this.getClassData();
+        // this.getMealProgramData();
+        this.getMealStudent(this.selected_meal_program);
         break;
       }
       case 'class': {

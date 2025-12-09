@@ -6,12 +6,23 @@ use Cake\ORM\TableRegistry;
 use DOMDocument;//POCOR-8529
 use DOMElement; //POCOR-9052
 use DOMXPath;//POCOR-8529
+use PhpOffice\PhpSpreadsheet\Spreadsheet; // POCOR-9336 start
+use PhpOffice\PhpSpreadsheet\Writer\Exception;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use Mpdf\MpdfException;
+use PhpOffice\PhpSpreadsheet\Style\Style;
+
+// POCOR-9171
 /*
     This trait is for ExcelReportBehavior.php
     To separate PDF logic
 */
 trait PdfReportTrait
 {
+
+    const PRINTER_MPDF = 1;
+    const PRINTER_LIBREOFFICE = 2;
+    const PRINTER_EXTERNAL = 3; // POCOR-9336 end
     private $currentWorksheet = null;
     private $currentWorksheetIndex = 0;
 
@@ -147,18 +158,26 @@ trait PdfReportTrait
 
         // Step 2: Convert dotted borders to solid in the <style> section
         $htmlHeader = $this->styleBorderToSolid($htmlHeader);
+        // POCOR-9210 start
+        // Remove old <meta charset> if it exists
+        $htmlHeader = preg_replace('/<meta\s+charset=["\']?[^"\'>]+["\']?\s*\/?>/i', '', $htmlHeader);
 
+// Remove bad font-family rules
+        $htmlHeader = preg_replace('/font-family\s*:\s*[^;"]+;?/i', '', $htmlHeader);
+
+// Inject correct UTF-8 meta and good font
+        $htmlHeader = preg_replace('/<head[^>]*>/i', '$0<meta charset="UTF-8">' .
+            '<style>{ font-family: "Arial Unicode MS", "DejaVu Sans", sans-serif !important; }</style>', $htmlHeader);
+        // POCOR-9210 end
         // Step 3: Normalize classes and inline styles including borders
+
         $processedBody = $this->processHtmlTable($cleanedBody, $htmlHeader);
-
-
 
         // Step 4: Remove page breaks that add an empty last page in PDF
         $updatedHeader = str_replace('page-break-after:always', '', $htmlHeader);
 
         // Combine everything back into the final processed HTML
         $finalHtml = $updatedHeader . $processedBody . $htmlFooter;
-
         return $finalHtml;
     }
 
@@ -330,6 +349,8 @@ trait PdfReportTrait
                 if ($cell->childNodes->length === 1 && $cell->firstChild->nodeType === XML_TEXT_NODE) {
                     $rawText = trim($cell->textContent);
 
+                    $rawText = "\xC2\xA0 " . trim($rawText) . " \xC2\xA0"; // POCOR-9171 start
+
                     if (mb_strlen($rawText) > 100) {
                         // Split long text into lines
                         $words = explode(' ', $rawText);
@@ -363,6 +384,12 @@ trait PdfReportTrait
                             'style',
                             $cell->getAttribute('style') . '; white-space: normal; word-break: break-word;'
                         );
+                    } else { // POCOR-9171 start
+                        $cell->nodeValue = ''; // Clear original
+                        $div = $dom->createElement('div');
+                        $div->setAttribute('style', 'margin-left: 5px !important; margin-right: 5px !important;');
+                        $div->appendChild($dom->createTextNode($rawText));
+                        $cell->appendChild($div);
                     }
                 }
 
@@ -497,7 +524,12 @@ trait PdfReportTrait
 
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
-        $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        // POCOR-9210 start
+        $utf8Wrapper = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><div id="wrap">';
+        $utf8Closer  = '</div></body></html>';
+        $wrappedHtml = $utf8Wrapper . $html . $utf8Closer;
+        $dom->loadHTML($wrappedHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        // POCOR-9210 end
         libxml_clear_errors();
 
         $this->inlineExcelStyles($dom, $headString);
@@ -616,221 +648,161 @@ trait PdfReportTrait
 
     private function savePDF($objSpreadsheet, $filepath, $student_id, $report_card_id)
     {
-        Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
+//        Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
         // Convert spreadsheet object into html
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
-
-        // This is to store to final processedHtml
-        $processedHtml = '';
-        $filePaths = [];
-        $basePath = $filepath;
-        //POCOR-6916 start
+        // POCOR-9336 start
         $reportCard = TableRegistry::get('ReportCard.ReportCards');
-        $configVal = $reportCard->find()->select(['pdf_no'=>$reportCard->aliasField('pdf_page_number')])->where([$reportCard->aliasField('id')=>$report_card_id])->first();
-        if(!empty($configVal)){ //POCOR-7096
-            $configValue =  $configVal['pdf_no'];
-            if($configValue == -1){
+        $configVal = $reportCard->find()->select(['pdf_no' => $reportCard->aliasField('pdf_page_number')])->where([$reportCard->aliasField('id') => $report_card_id])->first();
+        if (!empty($configVal)) { //POCOR-7096
+            $configValue = $configVal['pdf_no'];
+            if ($configValue == -1) {
                 $sheetCount = $objSpreadsheet->getSheetCount();
-            }else{
+            } else {
                 $sheetCount = $configValue;
             }
-        }else{
+        } else {
             $sheetCount = $objSpreadsheet->getSheetCount();
         }
         //POCOR-6916 end
-        for ($sheetIndex = 0; $sheetIndex < $sheetCount; $sheetIndex++) {
-            $sheetStatus = $objSpreadsheet->getSheet($sheetIndex)->getSheetState(); //POCOR-7077
-            if ($sheetStatus === 'visible') { // POCOR-7077
-                // Create new mPDF instance for the current sheet
-                $pdf = new \Mpdf\Mpdf([
-                    'mode' => 'utf-8',
-                    'format' => [400, 245] // Custom landscape format (POCOR-7750)
-                ]);
-                $pdf->autoScriptToLang = true;  // Automatically select language-specific fonts (POCOR-7264)
-                $pdf->autoLangToFont = true;    // Match language to font (POCOR-7264)
-
-                $outputPathBase = $basePath . '_' . $sheetIndex;
-
-                // Generate HTML from spreadsheet
-                $writer->setSheetIndex($sheetIndex);
-                $writer->save($outputPathBase);
-                $rawHtml = file_get_contents($outputPathBase, FILE_USE_INCLUDE_PATH);
-
-                // Clean and filter HTML content
-                $htmlCleaned = $this->processHtml($rawHtml, $sheetIndex);
-                $hiddenCssClasses = $this->extractHiddenClasses($htmlCleaned);         // POCOR-8529
-                $htmlFiltered = $this->removeHiddenElements($htmlCleaned, $hiddenCssClasses); // POCOR-8529
-
-                // Debug logs for visual inspection
-                $writeDebugPdf = function($html, $filename) use ($outputPathBase) {
-                    $zdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [400, 245]]);
-                    $zdf->SetDisplayMode('fullpage');
-                    $zdf->AddPage('L');
-                    $zdf->WriteHTML($html);
-                    $zdf->Output(LOGS . $filename, 'F');
-                    unset($zdf);
-                };
-// Write debug HTML files
-//                file_put_contents(LOGS . 'debug_before_cleaning.html', $rawHtml);
-//                file_put_contents(LOGS . 'debug_after_cleaning.html', $htmlCleaned);
-//                file_put_contents(LOGS . 'debug_after_filtering.html', $htmlFiltered);
-
-// Write debug PDF files
-//                $writeDebugPdf($rawHtml, 'debug_before_cleaning.pdf');
-//                $writeDebugPdf($htmlCleaned, 'debug_after_cleaning.pdf');
-//                $writeDebugPdf($htmlFiltered, 'debug_after_filtering.pdf');
-
-                // Generate PDF
-                $pdf->SetFontSize(1);
-                $pdf->SetDisplayMode('fullpage');
-                $pdf->AddPage('L');
-                $pdf->WriteHTML($htmlFiltered);
-
-                $finalPdfPath = $outputPathBase . '.pdf';
-                $pdf->Output($finalPdfPath, 'F');
-
-                $filePaths[] = $finalPdfPath;
-
-                unset($pdf);
-            }
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $printer = $ConfigItems->value('pdf_service');
+        switch ($printer) {
+            case self::PRINTER_MPDF:
+                $pdfContent = $this->printPdfViaMpdf($objSpreadsheet, $filepath, $sheetCount, $student_id);
+                break;
+            case self::PRINTER_LIBREOFFICE:
+                $pdfContent = $this->printPdfViaLibreOffice($objSpreadsheet, $filepath, $sheetCount);
+                break;
+            case self::PRINTER_EXTERNAL:
+                $pdfContent = $this->printPdfViaApi($objSpreadsheet, $filepath . '_sheet' . $student_id, $sheetCount);
+                break;
         }
-        // Merge all the pdf that belongs to one report
-        if(!empty($student_id)) {
-            $fileName = $this->getConfig('filename') . '_' . $student_id;
+
+        if (!empty($pdfContent)) {
+            $filename = $this->getConfig('filename') . '_' . (!empty($student_id) ? $student_id : date('Ymd\THis')) . '.txt';
+            $outputPath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $filename;
+            file_put_contents($outputPath, $pdfContent);
+            $outputPath = $filepath;
+            file_put_contents($outputPath, $pdfContent);
+//            Log::write('debug', "Saved PDF to: $outputPath");
         } else {
-            $fileName = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His');
+            Log::error("PDF content  is empty");
         }
 
-        Log::write('debug', '----------------------fileName---------------------: ');
-        Log::write('debug', $fileName);
 
-        $this->mergePDFFiles($filePaths, $fileName, $fileName);
-        // // Remove the temp file that is converted from excel object and its successfully converted to pdf
-        if ($this->getConfig('purge')) {
-            foreach ($filePaths as $filepath) {
-                // delete excel file after successfully converted to pdf
-                $this->deleteFile($filepath);
-            }
-        }
     }
 
     /**
-    * POCOR-6908
-    */
-    private function savePDFAssessment($objSpreadsheet, $filepath, $student_id,$paramVal)
+     * POCOR-6908
+     * @throws Exception
+     * @throws MpdfException
+     */
+    private function savePDFAssessment($objSpreadsheet, $filepath, $student_id): void
     {
 
-        Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
-        // Convert spreadsheet object into html
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
-
-        // This is to store to final processedHtml
-        $processedHtml = '';
-        $filePaths = [];
-        $basePath = $filepath;
-        for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
-            $mpdf = $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
-            $mpdf->autoScriptToLang = true; //POCOR-7264
-            $mpdf->autoLangToFont = true; //POCOR-7264
-            $filepath = $basePath.'_'.$sheetIndex;
-            $prefixName = 'AssessmentResults';
-            $date =  date("Ymd:HHmmss");
-            $namePdf = $prefixName.'_'.$date;
-            $writer->setSheetIndex($sheetIndex);
-            $writer->save($filepath);
-
-            // Read the html file and convert them into a variable
-            $file = file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
-
-            // Remove all the redundant rows and columns
-            $processedHtml = $this->processHtml($file, $sheetIndex);
-
-            // Save the processed html into a temp pdf
-            $mpdf->AddPage('L');
-
-            $mpdf->WriteHTML($processedHtml);
-            $filepathname = $namePdf.'.pdf';
-            $mpdf->Output($filepathname,'D');
-            $filePaths[] = $filepath;
-            unset($mdpf);// POCOR-6908 end
+//        Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $printer = $ConfigItems->value('pdf_service');
+        switch ($printer) {
+            case self::PRINTER_MPDF:
+                $pdfContent = $this->printAssessmentPdfViaMpdf($objSpreadsheet, $filepath, $student_id);
+                break;
+            case self::PRINTER_LIBREOFFICE:
+                $pdfContent = $this->printPdfViaLibreOffice($objSpreadsheet, $filepath);
+                break;
+            case self::PRINTER_EXTERNAL:
+                $pdfContent = $this->printPdfViaApi($objSpreadsheet, $filepath . '_sheet' . $student_id);
+                break;
         }
-        // Merge all the pdf that belongs to one report
-        if(!empty($student_id)) {
-            $fileName = $this->getCconfig('filename') . '_' . $student_id;
+
+        if (!empty($pdfContent)) {
+            $filename = $this->getConfig('filename') . '_' . (!empty($student_id) ? $student_id : date('Ymd\THis')) . '.txt';
+            $outputPath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $filename;
+            file_put_contents($outputPath, $pdfContent);
+//            Log::write('debug', "Saved PDF to: $outputPath");
+            $outputPath = $filepath;
+            file_put_contents($outputPath, $pdfContent);
+//            Log::write('debug', "Saved PDF to: $outputPath");
         } else {
-            $fileName = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His');
+            Log::error("PDF content  is empty");
         }
-
-        Log::write('debug', '----------------------fileName---------------------: ');
-        Log::write('debug', $fileName);
-
-        // $this->mergePDFFiles($filePaths, $fileName, $fileName); //V4
-        $this->mergePDFFilesAssessment($filePaths, $fileName, $fileName);
-        // // Remove the temp file that is converted from excel object and its successfully converted to pdf
-        if ($this->getConfig('purge')) {
-            foreach ($filePaths as $filepath) {
-                // delete excel file after successfully converted to pdf
-                $this->deleteFile($filepath);
-            }
-        }
+        // POCOR-9336 end
     }
 
     private function mergePDFFilesAssessment(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
     {
-       // $mpdf = new \Mpdf\Mpdf(array('utf-8', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
-       $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [400, 220]]); //POCOR-7090
-       $mpdf->SetTitle($title);
-       $mpdf->SetAuthor($author);
-       $mpdf->SetSubject($subject);
-       $mpdf->autoScriptToLang = true; //POCOR-7264
-       $mpdf->autoLangToFont = true; //POCOR-7264
-       if ($filenames) {
-           echo "<pre>";print_r($mpdf);die; //This is very unusual code need to debug again
-           $filesTotal = sizeof($filenames);
-           $mpdf->SetImportUse();
+        // $mpdf = new \Mpdf\Mpdf(array('utf-8', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
+        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [400, 220]]); //POCOR-7090
+        $mpdf->SetTitle($title);
+        $mpdf->SetAuthor($author);
+        $mpdf->SetSubject($subject);
+        $mpdf->autoScriptToLang = true; //POCOR-7264
+        $mpdf->autoLangToFont = true; //POCOR-7264
+        if ($filenames) {
+//           echo "<pre>";print_r($mpdf);die; //This is very unusual code need to debug again
+            $filesTotal = sizeof($filenames);
+            //$mpdf->SetImportUse(); //POCOR-9450
 
-           for ($i = 0; $i<count($filenames);$i++) {
-               $curFile = $filenames[$i];
-               if (file_exists($curFile)){
-                   $pageCount = $mpdf->SetSourceFile($curFile);
-                   for ($p = 1; $p <= $pageCount; $p++) {
-                       $tplId = $mpdf->ImportPage($p);
-                       $wh = $mpdf->getTemplateSize($tplId);
-                       if (($p==1)){
-                           $mpdf->state = 0;
-                           $mpdf->SetFontSize(1);
-                           $mpdf->SetDisplayMode('fullpage');
-                           $mpdf->AddPage('L');
+            for ($i = 0; $i < count($filenames); $i++) {
+                $curFile = $filenames[$i];
+                if (file_exists($curFile)) {
+                    $pageCount = $mpdf->SetSourceFile($curFile);
+                    for ($p = 1; $p <= $pageCount; $p++) {
+                        $tplId = $mpdf->ImportPage($p);
+                        $wh = $mpdf->getTemplateSize($tplId);
+                        if (($p == 1)) {
+                            $mpdf->state = 0;
+                            $mpdf->SetFontSize(1);
+                            $mpdf->SetDisplayMode('fullpage');
+                            $mpdf->AddPage('L');
 
-                           $mpdf->UseTemplate ($tplId);
-                       }
-                       else {
-                           $mpdf->state = 1;
-                           $mpdf->SetFontSize(1);
-                           $mpdf->SetDisplayMode('fullpage');
-                           $mpdf->AddPage('L');
+                            $mpdf->UseTemplate($tplId);
+                        } else {
+                            $mpdf->state = 1;
+                            $mpdf->SetFontSize(1);
+                            $mpdf->SetDisplayMode('fullpage');
+                            $mpdf->AddPage('L');
 
-                           $mpdf->UseTemplate($tplId);
-                       }
-                   }
-               }
-           }
-       }
+                            $mpdf->UseTemplate($tplId);
+                        }
+                    }
+                }
+            }
+        }
 
-       $file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile.'.pdf';
-       $pdf_file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
-       $content = $mpdf->Output($file_path, "S");
-       $fp = fopen($pdf_file_path . $outFile . ".txt","wb");
-       fwrite($fp,$content);
-       fclose($fp);
-       unset($mpdf);
+        $file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile . '.pdf';
+        $content = $mpdf->Output($file_path, \Mpdf\Output\Destination::STRING_RETURN); // POCOR-9336 end
+        unset($mpdf);
+        return $content; // POCOR-9336 end
     }
 
     private function mergePDFFiles(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
     {
         // $mpdf = new \Mpdf\Mpdf(array('utf-8', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
         //$mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [400, 220]]); //POCOR-7090
-        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [410, 280]]); //POCOR-8961
+                $tmpdf = new \Mpdf\Mpdf(['mode' => 'utf-8']); //POCOR-8961
+        $width = 297;
+        $height = 210;
+        if ($filenames) {
+            if (isset($filenames[0])) {
+                $curFile = $filenames[0];
+                if (file_exists($curFile)) {
+                    $tmpdf->SetSourceFile($curFile);
+                    $tplId = $tmpdf->ImportPage(1);
+                    $wh = $tmpdf->getTemplateSize($tplId);
+                    $orientation = trim($wh['orientation']) ?? 'L';
+                    $width = $wh['width'] ?? 297;
+                    $height = $wh['height'] ?? 210;
+                }
+            }
+        }
+        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8',
+            'format' => [$width,$height],
+//            'margin_left' => 40,
+//            'margin_right' => 10,
+//            'margin_top' => 30,
+//            'margin_bottom' => 30,
+        ]); //POCOR-8961
         $mpdf->SetTitle($title);
         $mpdf->SetAuthor($author);
         $mpdf->SetSubject($subject);
@@ -846,22 +818,33 @@ trait PdfReportTrait
                     $pageCount = $mpdf->SetSourceFile($curFile);
                     for ($p = 1; $p <= $pageCount; $p++) {
                         $tplId = $mpdf->ImportPage($p);
-                        $wh = $mpdf->getTemplateSize($tplId);
+                        $tplSize = $mpdf->getTemplateSize($tplId);
+//                        Log::debug(print_r($wh,true));
+                        $orientation = trim($wh['orientation']) ?? 'L';
+                        $tplWidth = $tplSize['width'];
+                        $tplHeight = $tplSize['height'];
+                        $pageWidth = $mpdf->w;
+                        $pageHeight = $mpdf->h;
+
+// Calculate center offsets
+                        $offsetX = ($pageWidth - $tplWidth) / 2;
+                        $offsetY = ($pageHeight - $tplHeight) / 2;
+
+// Add page with exact size if needed
+
                         if (($p==1)){
                             $mpdf->state = 0;
                             $mpdf->SetFontSize(1);
                             $mpdf->SetDisplayMode('fullpage');
-                            $mpdf->AddPage('L');
-
-                            $mpdf->UseTemplate ($tplId);
+                            $mpdf->AddPage($tplSize['orientation'], '', '', '', '', '', '', '', '', '', '', [$tplWidth, $tplHeight]);
+                            $mpdf->UseTemplate($tplId, $offsetX, $offsetY);
                         }
                         else {
                             $mpdf->state = 1;
                             $mpdf->SetFontSize(1);
                             $mpdf->SetDisplayMode('fullpage');
-                            $mpdf->AddPage('L');
-
-                            $mpdf->UseTemplate($tplId);
+                            $mpdf->AddPage($tplSize['orientation'], '', '', '', '', '', '', '', '', '', '', [$tplWidth, $tplHeight]);
+                            $mpdf->UseTemplate($tplId, $offsetX, $offsetY);
                         }
                     }
                 }
@@ -869,17 +852,18 @@ trait PdfReportTrait
         }
 
         $file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile.'.pdf';
-        $pdf_file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
-        $content = $mpdf->Output($file_path, "S");
-        $fp = fopen($pdf_file_path . $outFile . ".txt","wb");
-        fwrite($fp,$content);
-        fclose($fp);
+        $content = $mpdf->Output($file_path, \Mpdf\Output\Destination::STRING_RETURN); // POCOR-9336 end
         unset($mpdf);
+        return $content; // POCOR-9336 end
     }
     //POCOR-8529 start(to remove hidden columns from pdf)
     function extractHiddenClasses($html) {
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
+        // POCOR-9210 start
+        $utf8Header = '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">';
+        $html = $utf8Header . $html;
+        // POCOR-9210 end
         $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
         libxml_clear_errors();
 
@@ -906,6 +890,10 @@ trait PdfReportTrait
     function removeHiddenElements($html, $hiddenClasses) {
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
+        // POCOR-9210 start
+        $utf8Header = '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">';
+        $html = $utf8Header . $html;
+        // POCOR-9210 end
         $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
         libxml_clear_errors();
 
@@ -956,6 +944,499 @@ trait PdfReportTrait
         return '//' . implode('//', $xpathParts);
     }
     // POCOR-8529  end
+
+    // POCOR-9336 start
+    /**
+     * @param $objSpreadsheet
+     * @param $filepath
+     * @param $report_card_id
+     * @param $student_id
+     * @throws \Mpdf\MpdfException
+     */
+    private function printPdfViaMpdf($objSpreadsheet, $filepath, $sheetCount, $student_id)
+    {
+        $objSpreadsheet->getDefaultStyle()->getFont()->setName('Arial Unicode MS'); // POCOR-9210
+        ob_start(); // POCOR-9210
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
+
+        // This is to store to final processedHtml
+        $processedHtml = '';
+        $filePaths = [];
+        $basePath = $filepath;
+        for ($sheetIndex = 0; $sheetIndex < $sheetCount; $sheetIndex++) {
+            $sheetStatus = $objSpreadsheet->getSheet($sheetIndex)->getSheetState(); //POCOR-7077
+            // POCOR-9171 start
+            $pageSetup = $objSpreadsheet->getSheet($sheetIndex)->getPageSetup();
+
+            $orientation = $pageSetup->getOrientation();
+            $pageSizeP = [230, 350]; // A4 in mm
+            $pageSizeL = [350, 230]; // A4 in mm
+//            $fitToPage = $pageSetup->getFitToPage();     // true/false
+//            $fitToWidth = $pageSetup->getFitToWidth();   // integer
+//            $fitToHeight = $pageSetup->getFitToHeight(); // integer
+//            if ($pageSetup->getPaperSize() === PageSetup::PAPERSIZE_A4) {
+//                // If Excel used scaling (like 48%), adjust accordingly
+//                $scale = $pageSetup->getScale(); // 48
+//                if ($scale > 0 && $scale < 120) {
+//                    $pageSizeXP = [
+//                        round(210 * $scale / 100),
+//                        round(297 * $scale / 100)
+//                    ];
+//                    $pageSizeXL = [
+//                        round(297 * $scale / 100),
+//                        round(210 * $scale / 100)
+//                    ];
+//                    Log::debug(print_r([$pageSizeXP, $pageSizeXL],true));
+//                }
+//            }
+
+            if ($orientation === \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_PORTRAIT) {
+                $pageSize = $pageSizeP; // A4
+                $orientation = 'P';
+            } elseif ($orientation === \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE) {
+                $pageSize = $pageSizeL;
+                $orientation = 'L';
+            }
+            // POCOR-9171 end
+            if ($sheetStatus === 'visible') { // POCOR-7077
+                // Create new mPDF instance for the current sheet
+                $pdf = new \Mpdf\Mpdf([
+                    'mode' => 'UTF-8', // POCOR-9210
+                    'format' => $pageSize // Custom landscape format (POCOR-7750)
+                ]);
+                $pdf->autoScriptToLang = true;  // Automatically select language-specific fonts (POCOR-7264)
+                $pdf->autoLangToFont = true;    // Match language to font (POCOR-7264)
+
+                $outputPathBase = $basePath . '_' . $sheetIndex;
+
+                // Generate HTML from spreadsheet
+                $writer->setSheetIndex($sheetIndex);
+// POCOR-9210 start
+                $writer->save('php://output');
+                $rawHtml = ob_get_clean();
+// POCOR-9210 end
+//                $rawHtml = file_get_contents($outputPathBase, FILE_USE_INCLUDE_PATH);
+
+                // Clean and filter HTML content
+                $htmlCleaned = $this->processHtml($rawHtml, $sheetIndex);
+                $hiddenCssClasses = $this->extractHiddenClasses($htmlCleaned);         // POCOR-8529
+                $htmlFiltered = $this->removeHiddenElements($htmlCleaned, $hiddenCssClasses); // POCOR-8529
+
+                // Debug logs for visual inspection
+                $writeDebugPdf = function ($html, $filename) use ($outputPathBase) {
+                    $zdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [400, 245]]);
+                    $zdf->SetDisplayMode('real');
+                    $zdf->AddPage('L');
+                    $zdf->WriteHTML($html);
+                    $zdf->Output(LOGS . $filename, 'F');
+                    unset($zdf);
+                };
+// Write debug HTML files
+//                file_put_contents(LOGS . 'debug_before_cleaning.html', $rawHtml);
+//                file_put_contents(LOGS . 'debug_after_cleaning.html', $htmlCleaned);
+//                file_put_contents(LOGS . 'debug_after_filtering.html', $htmlFiltered);
+
+// Write debug PDF files
+//                $writeDebugPdf($rawHtml, 'debug_before_cleaning.pdf');
+//                $writeDebugPdf($htmlCleaned, 'debug_after_cleaning.pdf');
+//                $writeDebugPdf($htmlFiltered, 'debug_after_filtering.pdf');
+
+                // Generate PDF
+                $pdf->SetFontSize(1);
+                $pdf->SetFont('sans-serif');
+                $pdf->SetDisplayMode('fullpage');
+                $pdf->AddPage('L');
+                $pdf->WriteHTML($htmlFiltered);
+
+                $finalPdfPath = $outputPathBase . '.pdf';
+                $pdf->Output($finalPdfPath, 'F');
+
+                $filePaths[] = $finalPdfPath;
+
+                unset($pdf);
+            }
+        }
+        // Merge all the pdf that belongs to one report
+        if (!empty($student_id)) {
+            $fileName = $this->getConfig('filename') . '_' . $student_id;
+        } else {
+            $fileName = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His');
+        }
+
+//        Log::write('debug', '----------------------fileName---------------------: ');
+//        Log::write('debug', $fileName);
+
+        $mergedPDF = $this->mergePDFFiles($filePaths, $fileName, $fileName);
+        // // Remove the temp file that is converted from excel object and its successfully converted to pdf
+        if ($this->getConfig('purge')) {
+            foreach ($filePaths as $filepath) {
+                // delete excel file after successfully converted to pdf
+                $this->deleteFile($filepath);
+            }
+        }
+        return $mergedPDF;
+
+
+    }
+
+    /**
+     * Sends an XLSX spreadsheet to the PDF printer API and returns the resulting PDF content.
+     *
+     * @param Spreadsheet $objSpreadsheet
+     * @param string $baseFileName Base path without extension
+     * @return string|null PDF binary content or null on failure
+     * @throws GuzzleException
+     * @throws Exception
+     */
+    private function printPdfViaApi(Spreadsheet $objSpreadsheet, string $baseFileName, ?int $sheetCount = null): ?string
+    {
+//        Log::write('debug', 'ExcelReportBehavior >>> base filepath: ' . $baseFileName);
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $printer = $ConfigItems->value('pdf_service');
+
+        if ($printer != self::PRINTER_EXTERNAL) {
+            return null;
+        }
+
+        $attributes = TableRegistry::getTableLocator()
+            ->get('Configuration.ExternalDataSourceAttributes')
+            ->find('list', ['keyField' => 'attribute_field', 'valueField' => 'value'])
+            ->where(['external_data_source_type' => 'PDF Service'])
+            ->disableHydration()
+            ->toArray();
+//        Log::debug(print_r($attributes,true));
+        $authUser = $attributes['username'] ?? null;
+        $baseUrl = $attributes['api_url'] ?? null;
+        $authPass = $attributes['password'] ?? null;
+        $apiParams = $attributes['api_params'] ?? null;
+        $deleteOriginal = $attributes['delete_original'] ?? 1;
+        $sheetPath = $baseFileName . '.xlsx';
+        $pdfFile = basename($baseFileName) . '.pdf';
+        $pdfUrl = $baseUrl . '/check-pdf/' . $pdfFile . '?delete=true';
+//        $authUser = 'user';
+//        $authPass = 'password';
+        try {
+            if ($sheetCount !== null && $sheetCount < $objSpreadsheet->getSheetCount()) {
+                $limitedSpreadsheet = new Spreadsheet();
+                for ($i = 0; $i < $sheetCount; $i++) {
+                    $cloned = clone $objSpreadsheet->getSheet($i);
+                    if ($i === 0) {
+                        // Replace default first sheet
+                        $limitedSpreadsheet->removeSheetByIndex(0);
+                    }
+                    $limitedSpreadsheet->addSheet($cloned);
+                }
+                $objWriter = IOFactory::createWriter($limitedSpreadsheet, 'Xlsx');
+            } else {
+                $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+            }
+
+            $objWriter->save($sheetPath);
+
+            $client = new \GuzzleHttp\Client();
+            $multipart = [
+                [
+                    'name' => 'file',
+                    'contents' => fopen($sheetPath, 'r'),
+                    'filename' => basename($sheetPath)
+                ],
+            ];
+            if ($apiParams) {
+                $apiParams = json_encode(json_decode($apiParams, true)); // ensures valid JSON string
+                if ($apiParams) {
+                    $multipart[] = [
+                        'name' => 'lo_options',
+                        'contents' => $apiParams
+                    ];
+                }
+            }
+            if ($deleteOriginal) {
+                $multipart[] = [
+                    'name' => 'delete_original',
+                    'contents' => '1'
+                ];
+            }
+//            Log::debug(print_r($multipart,true));
+            $response = $client->post($baseUrl . '/queue-job', [
+                'auth' => [$authUser, $authPass],
+                'multipart' => $multipart
+            ]);
+
+            // Poll until ready
+            sleep(2);
+            $retries = 15;
+            while ($retries-- > 0) {
+                try {
+                    $res = $client->get($pdfUrl, [
+                        'auth' => [$authUser, $authPass]
+                    ]);
+
+                    if ($res->getStatusCode() === 200) {
+                        $finalPdf = $res->getBody()->getContents();
+                        return $finalPdf;
+                    }
+                } catch (\GuzzleHttp\Exception\ClientException $e) {
+                    // Probably 404 — PDF not ready yet
+                    Log::debug("PDF not ready yet: " . $e->getResponse()->getStatusCode());
+                } catch (\Exception $e) {
+                    Log::error("Unexpected error while polling PDF: " . $e->getMessage());
+                    break;
+                }
+
+                sleep(2);
+            }
+
+            throw new \Exception("PDF not ready after timeout.");
+        } catch (\Exception $e) {
+            Log::error("PDF conversion API error: " . $e->getMessage());
+
+        } finally {
+            // Cleanup
+            if (file_exists($sheetPath)) {
+                @unlink($sheetPath);
+//                Log::write('debug', "Deleted temp XLSX file: $sheetPath");
+            }
+        }
+
+        return null;
+    }
+
+    // POCOR-9303
+    private function printPdfViaLibreOffice(Spreadsheet $objSpreadsheet, string $baseFileName, ?int $sheetCount = null): ?string
+    {
+
+        $tempDir = TMP; // or "/tmp"
+        $baseFileName = basename($baseFileName, '.xlsx'); // safe name, no path
+//        putenv("HOME=$tempDir"); // Ensures LibreOffice has a writable HOME directory
+//        Log::debug($tempDir);
+        try {
+            $unique = uniqid('libo_', true);
+            // 1. Save XLSX
+            $xlsxPath       = $tempDir . $unique . '.xlsx';
+            $pdfExpectedPath = $tempDir . $unique . '.pdf';
+
+            $ss = $objSpreadsheet;
+
+            if ($sheetCount !== null) {
+                $total = $objSpreadsheet->getSheetCount();
+
+                // If $sheetCount <= 0, keep at least one sheet
+                $take = max(1, min($sheetCount, $total));
+
+                if ($take < $total) {
+                    $limited = new Spreadsheet();
+
+                    // Optional: copy document properties (nice-to-have)
+                    $limited->getProperties()
+                        ->setCreator($objSpreadsheet->getProperties()->getCreator())
+                        ->setLastModifiedBy($objSpreadsheet->getProperties()->getLastModifiedBy())
+                        ->setTitle($objSpreadsheet->getProperties()->getTitle())
+                        ->setSubject($objSpreadsheet->getProperties()->getSubject())
+                        ->setDescription($objSpreadsheet->getProperties()->getDescription())
+                        ->setKeywords($objSpreadsheet->getProperties()->getKeywords())
+                        ->setCategory($objSpreadsheet->getProperties()->getCategory());
+
+                    // Remove the default empty first sheet before adding externals
+                    $limited->removeSheetByIndex(0);
+
+                    // Import first N sheets with style/index remapping
+                    for ($i = 0; $i < $take; $i++) {
+                        $sheet = $objSpreadsheet->getSheet($i);
+                        $limited->addExternalSheet($sheet);
+                    }
+
+                    // Make sure the first sheet exists and is active
+                    $limited->setActiveSheetIndex(0);
+
+                    $ss = $limited;
+                }
+            }
+
+            /* --- Style normalization on the final workbook ($ss) --- */
+
+// Ensure at least one default cell style exists
+            if (count($ss->getCellXfCollection()) === 0) {
+                $ss->addCellXf(new Style());
+            }
+
+// Force any null xfIndex to the default (0)
+            foreach ($ss->getWorksheetIterator() as $sheet) {
+                // getCellCollection() may be lazy; iterating coordinates is fine
+                $cells = $sheet->getCellCollection();
+                foreach ($cells as $coord => $cell) {
+                    if ($cell->getXfIndex() === null) {
+                        $cell->setXfIndex(0);
+                    }
+                }
+            }
+
+// Reconcile internal indices
+            $ss->garbageCollect();
+
+// Write XLSX
+            $writer = IOFactory::createWriter($ss, 'Xlsx');
+// $writer->setPreCalculateFormulas(false); // enable if formula calc causes issues
+            $writer->save($xlsxPath);
+
+// (Optional) free memory if you’re going to build a PDF next
+            $ss->disconnectWorksheets();
+            unset($ss);
+
+            $attributes = TableRegistry::getTableLocator()
+                ->get('Configuration.ExternalDataSourceAttributes')
+                ->find('list', ['keyField' => 'attribute_field', 'valueField' => 'value'])
+                ->where(['external_data_source_type' => 'PDF Service'])
+                ->disableHydration()
+                ->toArray();
+            $apiParams = $attributes['api_params'] ?? null;
+            $convert_pdf = "pdf";
+            $javaAvailable = false;
+            exec("java -XshowSettings:properties -version 2>&1", $javaOutput, $javaCode);
+
+            foreach ($javaOutput as $line) {
+                if (stripos($line, 'java.runtime.name') !== false || stripos($line, 'Java(TM)') !== false) {
+                    $javaAvailable = true;
+                    break;
+                }
+            }
+
+            if ($javaAvailable && $apiParams) {
+                // Ensure proper JSON
+                $apiParams = json_encode(json_decode($apiParams, true));
+
+                if ($apiParams) {
+                    $convert_pdf = 'pdf:calc_pdf_Export:' . $apiParams;
+                }
+            }
+            // 2. Prepare command to run LibreOffice in headless mode
+            $escapeTempDir = escapeshellarg($tempDir);
+            $escapedSheet = escapeshellarg($xlsxPath);
+            $escapedOutputDir = escapeshellarg($tempDir);
+
+            $loCmd = "HOME=$escapeTempDir libreoffice --headless --convert-to $convert_pdf --outdir $escapedOutputDir $escapedSheet";
+
+            // You may parse and apply $apiParams if needed
+            // For example, if you want watermark, you may use unoconv with a custom template
+//            Log::debug("Running LibreOffice command: $loCmd");
+
+            exec($loCmd, $output, $returnCode);
+//            Log::debug("LibreOffice output: " . implode("\n", $output));
+            if ($returnCode !== 0 || !file_exists($pdfExpectedPath)) {
+                throw new \Exception("LibreOffice conversion failed with exit code $returnCode");
+            }
+
+            return file_get_contents($pdfExpectedPath);
+
+        } catch (\Exception $e) {
+            Log::error("LibreOffice PDF conversion error: " . $e->getMessage());
+            return null;
+        } finally {
+            // 3. Cleanup
+            if (file_exists($xlsxPath)) {
+                @unlink($xlsxPath);
+                Log::debug("Deleted XLSX: $xlsxPath");
+            }
+
+            if (file_exists($pdfExpectedPath)) {
+                @unlink($pdfExpectedPath);
+                Log::debug("Deleted PDF: $pdfExpectedPath");
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param $objSpreadsheet
+     * @param $filepath
+     * @param $student_id
+     * @throws \Mpdf\MpdfException
+     */
+    private function printAssessmentPdfViaMpdf($objSpreadsheet, $filepath, $student_id)
+    {
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
+
+        // This is to store to final processedHtml
+        $processedHtml = '';
+        $filePaths = [];
+        $basePath = $filepath;
+        for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
+            $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
+            $mpdf->autoScriptToLang = true; //POCOR-7264
+            $mpdf->autoLangToFont = true; //POCOR-7264
+            $filepath = $basePath . '_' . $sheetIndex;
+            $prefixName = 'AssessmentResults';
+            $date = date("Ymd:HHmmss");
+            $namePdf = $prefixName . '_' . $date;
+            $writer->setSheetIndex($sheetIndex);
+            $writer->save($filepath);
+
+            // Read the html file and convert them into a variable
+            $file = file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
+
+            // Remove all the redundant rows and columns
+            $processedHtml = $this->processHtml($file, $sheetIndex);
+
+            // Save the processed html into a temp pdf
+            $mpdf->AddPage('L');
+
+            //$mpdf->WriteHTML($processedHtml); //POCOR-9450
+
+            //POCOR-9450 -- START
+            // --- SAFE FIX: Write HTML in smaller chunks to prevent pcre.backtrack_limit crash ---
+            // Separate CSS <style> section from HTML body
+                preg_match('/<style.*?>(.*?)<\/style>/is', $processedHtml, $cssMatches);
+
+                $css = $cssMatches[1] ?? '';
+                $htmlWithoutCss = preg_replace('/<style.*?>.*?<\/style>/is', '', $processedHtml);
+
+                // First write CSS properly
+                if (!empty($css)) {
+                    $mpdf->WriteHTML($css, \Mpdf\HTMLParserMode::HEADER_CSS);
+                }
+
+                // Now write remaining HTML in chunks
+                $chunkSize = 100000; // 100 KB
+                $htmlLength = strlen($htmlWithoutCss);
+                $offset = 0;
+
+                while ($offset < $htmlLength) {
+                    $chunk = substr($htmlWithoutCss, $offset, $chunkSize);
+                    $mpdf->WriteHTML($chunk, \Mpdf\HTMLParserMode::HTML_BODY);
+                    $offset += $chunkSize;
+                }
+
+            // --- END FIX ---
+            //POCOR-9450 -- END
+
+             $filepathname = $filepath . '.pdf'; // full path for each sheet
+            // SAVE PDF TO DISK, not browser
+            $mpdf->Output($filepathname, \Mpdf\Output\Destination::FILE);
+            // store correct PDF path for merging
+            $filePaths[] = $filepathname;
+            unset($mpdf);// POCOR-6908 end
+        }
+        // Merge all the pdf that belongs to one report
+        if (!empty($student_id)) {
+            $fileName = $this->getConfig('filename') . '_' . $student_id;
+        } else {
+            $fileName = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His');
+        }
+
+//        Log::write('debug', '----------------------fileName---------------------: ');
+//        Log::write('debug', $fileName);
+
+        // $this->mergePDFFiles($filePaths, $fileName, $fileName); //V4
+        $result = $this->mergePDFFilesAssessment($filePaths, $fileName, $fileName);
+        // // Remove the temp file that is converted from excel object and its successfully converted to pdf
+        if ($this->getConfig('purge')) {
+            foreach ($filePaths as $filepath) {
+                // delete excel file after successfully converted to pdf
+                $this->deleteFile($filepath);
+            }
+        }
+        return $result;
+    }
 }
 
 ?>

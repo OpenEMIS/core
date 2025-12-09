@@ -2,14 +2,22 @@
 namespace CustomExcel\Model\Behavior;
 
 use Cake\Log\Log;
+use PhpOffice\PhpSpreadsheet\Spreadsheet; // POCOR-9336 start
+use PhpOffice\PhpSpreadsheet\Writer\Exception;
+use Cake\ORM\TableRegistry;
+use PhpOffice\PhpSpreadsheet\IOFactory; // POCOR-9336 end
+
 /**
  * This trait is for ExcelReportBehavior.php
  * To separate PDF logic
  * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
- * 
+ *
  */
 trait ClassPdfReportTrait
 {
+    const PRINTER_MPDF = 1; // POCOR-9336 start
+    const PRINTER_LIBREOFFICE = 2;
+    const PRINTER_EXTERNAL = 3; // POCOR-9336 end
     private $currentWorksheet = null;
     private $currentWorksheetIndex = 0;
 
@@ -319,53 +327,31 @@ trait ClassPdfReportTrait
     private function savePDF($objSpreadsheet, $filepath, $institution_id)
     {
         Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
+        // POCOR-9336 start
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $printer = $ConfigItems->value('pdf_service');
+        switch ($printer) {
+            case self::PRINTER_MPDF:
+                $pdfContent = $this->printPdfViaMpdf($objSpreadsheet, $filepath, $institution_id);
+                break;
+            case self::PRINTER_LIBREOFFICE:
+                $pdfContent = $this->printPdfViaLibreOffice($objSpreadsheet, $filepath, $institution_id);
+                break;
+            case self::PRINTER_EXTERNAL:
+                $pdfContent = $this->printPdfViaApi($objSpreadsheet, $filepath . '_sheet' . $institution_id);
+                break;
+        }
+
+        if (!empty($pdfContent)) {
+            $filename = $this->getConfig('filename') . '_' . (!empty($institution_id) ? $institution_id : date('Ymd\THis')) . '.txt';
+            $outputPath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $filename;
+            file_put_contents($outputPath, $pdfContent);
+            Log::write('debug', "Saved PDF to: $outputPath");
+        } else {
+            Log::error("PDF content  is empty");
+        }
         // Convert spreadsheet object into html
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
 
-        // This is to store to final processedHtml
-        $processedHtml = '';
-        $filePaths = [];
-        $basePath = $filepath;
-        for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
-            $mpdf = new \Mpdf\Mpdf();
-            $filepath = $basePath.'_'.$sheetIndex;
-            $writer->setSheetIndex($sheetIndex);
-            $writer->save($filepath);
-
-            // Read the html file and convert them into a variable
-            $file = file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
-
-            // Remove all the redundant rows and columns
-            $processedHtml = $this->processHtml($file, $sheetIndex);
-
-            // Save the processed html into a temp pdf
-            $mpdf->AddPage('L');
-
-            $mpdf->WriteHTML($processedHtml);
-            $filepath = $filepath.'.pdf';
-
-            $mpdf->Output($filepath,'F');
-            $filePaths[] = $filepath;
-            unset($mdpf);
-        }
-        // Merge all the pdf that belongs to one report
-		if(!empty($institution_id)) {
-			$fileName = $this->getConfig('filename') . '_' . $institution_id;
-		} else {
-			$fileName = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His');
-		}
-       
-        Log::write('debug', '----------------------fileName---------------------: ');
-        Log::write('debug', $fileName);
-
-        $this->mergePDFFiles($filePaths, $fileName, $fileName);
-        // // Remove the temp file that is converted from excel object and its successfully converted to pdf
-        if ($this->getConfig('purge')) {
-            foreach ($filePaths as $filepath) {
-                // delete excel file after successfully converted to pdf
-                $this->deleteFile($filepath);
-            }
-        }
     }
 
     private function mergePDFFiles(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
@@ -402,14 +388,256 @@ trait ClassPdfReportTrait
                 }
             }
         }
-		
+
         $file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile.'.pdf';
-        $pdf_file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
-        $content = $mpdf->Output($file_path, "S");
-		$fp = fopen($pdf_file_path . $outFile . ".txt","wb");
-		fwrite($fp,$content);
-		fclose($fp);
+        $content = $mpdf->Output($file_path, \Mpdf\Output\Destination::STRING_RETURN);
         unset($mpdf);
+        return $content;
+    }
+
+    /**
+     * @param $objSpreadsheet
+     * @param $filepath
+     * @param $institution_id
+     * @throws \Mpdf\MpdfException
+     */
+    private function printPdfViaMpdf($objSpreadsheet, $filepath, $institution_id)
+    { // POCOR-9336 end
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
+
+        // This is to store to final processedHtml
+        $processedHtml = '';
+        $filePaths = [];
+        $basePath = $filepath;
+        for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
+            $mpdf = new \Mpdf\Mpdf();
+            $filepath = $basePath . '_' . $sheetIndex;
+            $writer->setSheetIndex($sheetIndex);
+            $writer->save($filepath);
+
+            // Read the html file and convert them into a variable
+            $file = file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
+
+            // Remove all the redundant rows and columns
+            $processedHtml = $this->processHtml($file, $sheetIndex);
+
+            // Save the processed html into a temp pdf
+            $mpdf->AddPage('L');
+
+            $mpdf->WriteHTML($processedHtml);
+            $filepath = $filepath . '.pdf';
+
+            $mpdf->Output($filepath, 'F');
+            $filePaths[] = $filepath;
+            unset($mdpf);
+        }
+        // Merge all the pdf that belongs to one report
+        if (!empty($institution_id)) {
+            $fileName = $this->getConfig('filename') . '_' . $institution_id;
+        } else {
+            $fileName = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His');
+        }
+
+        Log::write('debug', '----------------------fileName---------------------: ');
+        Log::write('debug', $fileName);
+
+        $finalResult = $this->mergePDFFiles($filePaths, $fileName, $fileName); // POCOR-9336 start
+        // // Remove the temp file that is converted from excel object and its successfully converted to pdf
+        if ($this->getConfig('purge')) {
+            foreach ($filePaths as $filepath) {
+                // delete excel file after successfully converted to pdf
+                $this->deleteFile($filepath);
+            }
+        }
+        return $finalResult;
+    }
+    /**
+     * Sends an XLSX spreadsheet to the PDF printer API and returns the resulting PDF content.
+     *
+     * @param Spreadsheet $objSpreadsheet
+     * @param string $baseFileName Base path without extension
+     * @return string|null PDF binary content or null on failure
+     * @throws GuzzleException
+     * @throws Exception
+     */
+    private function printPdfViaApi(Spreadsheet $objSpreadsheet, string $baseFileName): ?string
+    {
+        Log::write('debug', 'ExcelReportBehavior >>> base filepath: ' . $baseFileName);
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $printer = $ConfigItems->value('pdf_service');
+
+        if ($printer != self::PRINTER_EXTERNAL) {
+            return null;
+        }
+
+        $attributes = TableRegistry::getTableLocator()
+            ->get('Configuration.ExternalDataSourceAttributes')
+            ->find('list', ['keyField' => 'attribute_field', 'valueField' => 'value'])
+            ->where(['external_data_source_type' => 'PDF Service'])
+            ->disableHydration()
+            ->toArray();
+//        Log::debug(print_r($attributes,true));
+        $authUser = $attributes['username'] ?? null;
+        $baseUrl = $attributes['api_url'] ?? null;
+        $authPass = $attributes['password'] ?? null;
+        $apiParams = $attributes['api_params'] ?? null;
+        $deleteOriginal = $attributes['delete_original'] ?? 1;
+        $sheetPath = $baseFileName . '.xlsx';
+        $pdfFile = basename($baseFileName) . '.pdf';
+        $pdfUrl = $baseUrl . '/check-pdf/' . $pdfFile. '?delete=true';
+//        $authUser = 'user';
+//        $authPass = 'password';
+        try {
+            $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+            $objWriter->save($sheetPath);
+
+            $client = new \GuzzleHttp\Client();
+            $multipart = [
+                [
+                    'name' => 'file',
+                    'contents' => fopen($sheetPath, 'r'),
+                    'filename' => basename($sheetPath)
+                ],
+            ];
+            if($apiParams){
+                $apiParams = json_encode(json_decode($apiParams, true)); // ensures valid JSON string
+                if ($apiParams) {
+                    $multipart[] = [
+                        'name' => 'lo_options',
+                        'contents' => $apiParams
+                    ];
+                }
+            }
+            if ($deleteOriginal) {
+                $multipart[] = [
+                    'name'     => 'delete_original',
+                    'contents' => '1'
+                ];
+            }
+//            Log::debug(print_r($multipart,true));
+            $response = $client->post($baseUrl . '/queue-job', [
+                'auth' => [$authUser, $authPass],
+                'multipart' => $multipart
+            ]);
+
+            // Poll until ready
+            sleep(2);
+            $retries = 15;
+            while ($retries-- > 0) {
+                try {
+                    $res = $client->get($pdfUrl, [
+                        'auth' => [$authUser, $authPass]
+                    ]);
+
+                    if ($res->getStatusCode() === 200) {
+                        $finalPdf = $res->getBody()->getContents();
+                        return $finalPdf;
+                    }
+                } catch (\GuzzleHttp\Exception\ClientException $e) {
+                    // Probably 404 — PDF not ready yet
+                    Log::debug("PDF not ready yet: " . $e->getResponse()->getStatusCode());
+                } catch (\Exception $e) {
+                    Log::error("Unexpected error while polling PDF: " . $e->getMessage());
+                    break;
+                }
+
+                sleep(2);
+            }
+
+            throw new \Exception("PDF not ready after timeout.");
+        } catch (\Exception $e) {
+            Log::error("PDF conversion API error: " . $e->getMessage());
+
+        } finally {
+            // Cleanup
+            if (file_exists($sheetPath)) {
+                @unlink($sheetPath);
+                Log::write('debug', "Deleted temp XLSX file: $sheetPath");
+            }
+        }
+
+        return null;
+    }
+
+    // POCOR-9303
+    private function printPdfViaLibreOffice(Spreadsheet $objSpreadsheet, string $baseFileName, ?string $studentId = null): ?string
+    {
+
+        $tempDir = TMP; // or "/tmp"
+        $baseFileName = basename($baseFileName, '.xlsx'); // safe name, no path
+//        putenv("HOME=$tempDir"); // Ensures LibreOffice has a writable HOME directory
+//        Log::debug($tempDir);
+        try {
+            // 1. Save XLSX
+            $xlsxPath = $tempDir . $baseFileName . '.xlsx';
+            $pdfExpectedPath = $tempDir . $baseFileName . '.pdf';
+
+            $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+            $objWriter->save($xlsxPath);
+
+            $attributes = TableRegistry::getTableLocator()
+                ->get('Configuration.ExternalDataSourceAttributes')
+                ->find('list', ['keyField' => 'attribute_field', 'valueField' => 'value'])
+                ->where(['external_data_source_type' => 'PDF Service'])
+                ->disableHydration()
+                ->toArray();
+            $apiParams = $attributes['api_params'] ?? null;
+            $convert_pdf = "pdf";
+            $javaAvailable = false;
+            exec("java -XshowSettings:properties -version 2>&1", $javaOutput, $javaCode);
+
+            foreach ($javaOutput as $line) {
+                if (stripos($line, 'java.runtime.name') !== false || stripos($line, 'Java(TM)') !== false) {
+                    $javaAvailable = true;
+                    break;
+                }
+            }
+
+            if ($javaAvailable && $apiParams) {
+                // Ensure proper JSON
+                $apiParams = json_encode(json_decode($apiParams, true));
+
+                if ($apiParams) {
+                    $convert_pdf = 'pdf:calc_pdf_Export:' . $apiParams;
+                }
+            }
+            // 2. Prepare command to run LibreOffice in headless mode
+            $escapeTempDir = escapeshellarg($tempDir);
+            $escapedSheet = escapeshellarg($xlsxPath);
+            $escapedOutputDir = escapeshellarg($tempDir);
+
+            $loCmd = "HOME=$escapeTempDir libreoffice --headless --convert-to $convert_pdf --outdir $escapedOutputDir $escapedSheet";
+
+            // You may parse and apply $apiParams if needed
+            // For example, if you want watermark, you may use unoconv with a custom template
+            Log::debug("Running LibreOffice command: $loCmd");
+
+            exec($loCmd, $output, $returnCode);
+//            Log::debug("LibreOffice output: " . implode("\n", $output));
+            if ($returnCode !== 0 || !file_exists($pdfExpectedPath)) {
+                throw new \Exception("LibreOffice conversion failed with exit code $returnCode");
+            }
+
+            return file_get_contents($pdfExpectedPath);
+
+        } catch (\Exception $e) {
+            Log::error("LibreOffice PDF conversion error: " . $e->getMessage());
+            return null;
+        } finally {
+            // 3. Cleanup
+            if (file_exists($xlsxPath)) {
+                @unlink($xlsxPath);
+                Log::debug("Deleted XLSX: $xlsxPath");
+            }
+
+            if (file_exists($pdfExpectedPath)) {
+                @unlink($pdfExpectedPath);
+                Log::debug("Deleted PDF: $pdfExpectedPath");
+            }
+        }
+
+        return null;
+        // POCOR-9336 end
     }
 }
 ?>

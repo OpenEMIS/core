@@ -70,7 +70,13 @@ class ImageBehavior extends Behavior
 
         if (is_resource($phpResourceFile)) {
             if ($base64Format) {
-                $model->controller->response->body(base64_encode(stream_get_contents($phpResourceFile)));
+                if ($model->controller->response) { //POCOR-9440 REMOVE ANNOING JS ERRORS
+                    try {
+                        $model->controller->response->body(base64_encode(stream_get_contents($phpResourceFile)));
+                    } catch (\Exception $exception) {
+                        Log::error($exception->getMessage());
+                    }
+                }
             } else {
                 if ($model->controller->response) { //POCOR-8080 REMOVE ANNOING JS ERRORS
                     $model->controller->response->type('jpg');

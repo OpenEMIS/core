@@ -202,9 +202,10 @@ class StaffPositionProfilesTable extends ControllerActionTable
             return $validator
             ->notEmpty('end_date')
             ->remove('start_date')
-            ->requirePresence('FTE')
+            ->requirePresence('FTE', 'This field cannot be left empty') //POCOR-9421
             ->requirePresence('staff_change_type_id')
             ->requirePresence('staff_type_id')
+            ->requirePresence('assignee_id', 'This field cannot be left empty') //POCOR-9421
 
             ->add('start_date', 'customCompare', [
                 'rule' => function ($value, $context) {
@@ -1227,7 +1228,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
             ->first();
             $startDate = $getStaffStartDateData->start_date;
 
-            $attr['value'] = $startDate->format('Y-m-d');
+            $attr['value'] = !empty($startDate) ? $startDate->format('Y-m-d') : null; //POCOR-9421
             $attr['attr']['value'] = $this->formatDate($startDate);
             $attr['type'] = 'hidden';
         }

@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\Utility\Inflector;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
 
 class RenderBehavior extends Behavior {
 	protected $fieldTypeCode;
@@ -66,7 +67,21 @@ class RenderBehavior extends Behavior {
 
     protected function processRelevancyDisabled($entity, $html, $fieldId, &$formHelper, $unlockFields) {
         // POCOR-9105 start
-        $entity_array = $entity->toArray();
+        // POCOR-9147 start
+        try {
+            // $entity_array = $entity->toArray();
+            $entity_array = $entity;
+        } catch (\Throwable $e) {
+            try {
+                $arrentity = $entity;
+                $arrentity->unsetProperty('_joinData'); // if exists
+                $arrentity->clean(); // resets dirty tracking, optional
+                $entity_array = $arrentity->extract($arrentity->visibleProperties());
+            } catch (\Throwable $e) {
+                $entity_array = [];
+            }
+        }
+        // POCOR-9147 end
         $survey_form_id = $entity_array['survey_form_id'];
         if($survey_form_id == null) {
             $survey_form_id = $entity->survey_form_id;
@@ -134,5 +149,88 @@ class RenderBehavior extends Behavior {
         }
 
         return null;
+    }
+
+    // POCOR-9332 start
+    protected function getMinFromParams(array $params = [])
+    {
+        $min = null;
+
+        // direct min_value
+        if (isset($params['min_value']) && is_numeric($params['min_value'])) {
+            $min = +$params['min_value'];
+        }
+
+        // range.lower overrides
+        if (isset($params['range']) && is_array($params['range']) &&
+            isset($params['range']['lower']) && is_numeric($params['range']['lower'])) {
+            $min = +$params['range']['lower'];
+        }
+
+        return $min;
+    }
+    // POCOR-9332 start
+    protected function getMaxFromParams(array $params = [])
+    {
+        $max = null;
+
+        // direct max_value
+        if (isset($params['max_value']) && is_numeric($params['max_value'])) {
+            $max = +$params['max_value'];
+        }
+
+        // range.upper overrides
+        if (isset($params['range']) && is_array($params['range']) &&
+            isset($params['range']['upper']) && is_numeric($params['range']['upper'])) {
+            $max = +$params['range']['upper'];
+        }
+
+        return $max;
+    }
+    
+    //POCOR-9407
+    protected function processValuesFile(Entity $entity, ArrayObject $data, ArrayObject $settings) 
+    {
+        $fieldKey   = $settings['fieldKey'];
+        $valueKey   = $settings['valueKey'];
+
+        $customValue = $settings['customValue'];
+        $fieldValues = $settings['fieldValues'];
+
+        $fieldId   = $customValue[$fieldKey] ?? null;
+        $fileName  = $customValue[$valueKey] ?? null;
+
+        $existingFileName = null;
+        $existingFile     = null;
+
+        // Check if entity already has file + file_name
+        if (!empty($entity->custom_field_values)) {
+            foreach ($entity->custom_field_values as $cf) {
+                if ($cf[$fieldKey] == $fieldId) {
+                    $existingFileName = $cf->file_name ?? null;
+                    $existingFile     = $cf->file ?? null;
+                    break;
+                }
+            }
+        }
+
+        if (empty($fileName) && empty($existingFileName)) {
+            // No new file AND no old file → delete
+            if (!empty($entity->id)) {
+                $settings['deleteFieldIds'][] = $fieldId;
+            }
+        } else {
+            // Preserve old values if no new file uploaded
+            if (empty(!$fileName) && !empty($existingFileName)) {
+                $customValue[$valueKey] = $existingFileName;
+            }
+            if (empty($customValue['file']) && !empty($existingFile)) {
+                $customValue['file'] = $existingFile;
+            }
+
+            $fieldValues[] = $customValue;
+        }
+
+        $settings['fieldValues'] = $fieldValues;
     }
 }

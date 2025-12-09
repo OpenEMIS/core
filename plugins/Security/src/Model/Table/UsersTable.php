@@ -624,7 +624,12 @@ class UsersTable extends ControllerActionTable
         return $tooltipMessage;
     }
 
-    /*POCOR-6380 starts : overwrite view button as it was taking null id after selecting specific columns in indexing*/
+     /**
+      * POCOR-6380 starts : overwrite view button as 
+      * it was taking null id after selecting specific columns in indexing*
+      * add change password button 
+      * POCOR-9370
+     **/
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
@@ -632,12 +637,221 @@ class UsersTable extends ControllerActionTable
         if (isset($buttons['view'])) {
             $buttons['view']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
         }
-
+         $currentUser = $this->Auth->user();   
+       if (!empty($currentUser['super_admin']) && $currentUser['super_admin'] == 1 && $entity->super_admin) {
+            $params = ['id' => $entity->id];
+            $manageUsersBtn = ['manage_users' => $buttons['edit']];
+            $manageUsersBtn['manage_users']['url'] = [
+                'plugin' => 'Security',
+                'controller' => 'Securities',
+                'action' => 'Accounts',
+                0 => 'edit',
+                1  => $this->ControllerAction->paramsEncode($params)
+            ];
+            $manageUsersBtn['manage_users']['label'] = '<i class="fa fa-key"></i>' . __('Change Password');
+            unset($buttons['view'], $buttons['remove'], $buttons['edit']);
+            $buttons = array_merge($manageUsersBtn, $buttons);
+        }
         return $buttons;
+
     }
-    /*POCOR-6380 ends*/
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $options)
+    {
+        if (!$this->isAdvancedSearchEnabled()) {
+            $event->stopPropagation();
+            return [];
+        } else {
+            $this->behaviors()->get('AdvanceSearch')->setConfig([
+                'showOnLoad' => 0,
+            ]);
+        }
+
+        $conditions = [];
+        $orders = [];
+
+        /**
+         * Only hide super_admin users if current login is NOT super_admin POCOR-9370
+         */
+        $currentUser = $this->Auth->user(); // or $this->Session->read('Auth.User') depending on your project
+        if (empty($currentUser['super_admin']) || $currentUser['super_admin'] != 1) {
+            $conditions[] = $this->aliasField('super_admin != 1');
+        }
+
+        if ($this->request->getQuery('sort') === null) {
+            $orders = [
+                $this->aliasField('first_name'),
+                $this->aliasField('last_name')
+            ];
+        }
+
+        $query->where($conditions)
+              ->order($orders);
+
+        if (!empty($this->request->getQueryParams())) {
+            $options['auto_search'] = true;
+        } else {
+            $options['auto_search'] = false;
+        }
+
+        $userType = $this->Session->read('Users.advanceSearch.belongsTo.user_type');
+        if ($userType == self::STAFF || $userType == self::STUDENT) {
+            $IdentityTypes = self::getDynamicTableInstance('FieldOption.IdentityTypes');
+            $UserIdentities = self::getDynamicTableInstance('User.Identities');
+            $ConfigItemTable = self::getDynamicTableInstance('Configuration.ConfigItems');
+
+            if ($userType == self::STAFF) {
+                $ConfigItem = $ConfigItemTable
+                    ->find()
+                    ->where([
+                        $ConfigItemTable->aliasField('code') => 'staff_identity_number',
+                        $ConfigItemTable->aliasField('value') => 1
+                    ])
+                    ->first();
+            } else if ($userType == self::STUDENT) {
+                $ConfigItem = $ConfigItemTable
+                    ->find()
+                    ->where([
+                        $ConfigItemTable->aliasField('code') => 'student_identity_number',
+                        $ConfigItemTable->aliasField('value') => 1
+                    ])
+                    ->first();
+            } else {
+                $ConfigItem = $ConfigItemTable
+                    ->find()
+                    ->where([
+                        $ConfigItemTable->aliasField('code') => 'directory_identity_number',
+                        $ConfigItemTable->aliasField('value') => 1
+                    ])
+                    ->first();
+            }
+
+            if (!empty($ConfigItem)) {
+                // value_selection
+                // get data from Identity Type table
+                $typesIdentity = $this->getIdentityTypeData($ConfigItem->value_selection);
+
+                if (!empty($typesIdentity)) {
+                    $query
+                        ->select([
+                            'identity_type' => $IdentityTypes->aliasField('name'),
+                            // for POCOR-6561 changed $typesIdentity->identity_type to $typesIdentity->id below
+                            $typesIdentity->id => $UserIdentities->aliasField('number')
+                        ])
+                        ->leftJoin(
+                            [$UserIdentities->getAlias() => $UserIdentities->getTable()],
+                            [
+                                $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('id'),
+                                $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id
+                            ]
+                        )
+                        ->leftJoin(
+                            [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
+                            [
+                                $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
+                                $IdentityTypes->aliasField('id = ') . $typesIdentity->id
+                            ]
+                        );
+                }
+            }
+        }
+
+        return $options;
+    }
+
+    /**
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName . POCOR-8231
+     * @return \Cake\ORM\Table
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+
+        try {
+            // Try to get the table instance directly
+            return $locator->get($tableName);
+        } catch (\Exception $e) {
+            Log::debug('Error: ' . $e->getMessage());
+        }
+
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
+    //POCOR-8341[START]
+    public function findEmailList(Query $query, array $options) {
+        $conditions = [
+            $this->aliasField('id') => $options['id']
+        ];
+
+        return $query
+                ->where($conditions);
+    }
+    //POCOR-8341[START]
+    public function findSystemUpdateEmailList(Query $query, array $options) {
+        $conditions = [
+            $this->aliasField('id') => $options['securityRoleId']
+        ];
+
+        return $query->where($conditions);
+    }
+
+    public function findRecipientList(Query $query, array $options)
+    {
+        $recipients = $options['recipients'] ?? null;
+
+        if (empty($recipients)) {
+            // No recipients: force to return no result
+            $conditions = [$this->aliasField('id') => -1];
+        } elseif (is_array($recipients)) {
+            // Non-empty array: use IN
+            $conditions = [$this->aliasField('id') . ' IN' => $recipients];
+        } else {
+            // Single numeric ID
+            $conditions = [$this->aliasField('id') => $recipients];
+        }
+
+        return $query->where($conditions);
+    }
+
+    /*POCOR-6380 ends*/
+
+    public function indexBeforeQuerybkp(Event $event, Query $query, ArrayObject $options)
     {
 
 
@@ -725,89 +939,34 @@ class UsersTable extends ControllerActionTable
                         );
                 }
             }
-        }
-//            POCOR-8446
-//        POCOR 8972 temporary solution removed
-    return $options;
+        } // POCOR-8446
+   
+
+        return $options;
     }
-    /**
-     * Get a dynamic table instance with all associations.
-     *
-     * @param string $tableName . POCOR-8231
-     * @return \Cake\ORM\Table
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
-     */
-    private static function getDynamicTableInstance(string $tableName): Table
+
+    /*POCOR-6380 starts : overwrite view button as it was taking null id after selecting specific columns in indexing*/
+    public function onUpdateActionButtonsbkp(Event $event, Entity $entity, array $buttons)
     {
-        // Parse plugin and table names if dot notation is used
-        // Create a TableLocator instance
-        $locator = TableRegistry::getTableLocator();
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        try {
-            // Try to get the table instance directly
-            return $locator->get($tableName);
-        } catch (\Exception $e) {
-            Log::debug('Error: ' . $e->getMessage());
+        if (isset($buttons['view'])) {
+            $buttons['view']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
         }
-
-        $parts = explode('.', $tableName);
-        $plugin = count($parts) > 1 ? $parts[0] : null;
-        $table = count($parts) > 1 ? $parts[1] : $parts[0];
-
-        // Convert the table name to camel case as expected by CakePHP conventions
-        $tableFullAlias = Inflector::camelize($tableName);
-        $tableAlias = Inflector::camelize($table);
-
-        // Create the fully qualified class name if a plugin is specified
-        if ($plugin) {
-            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
-        } else {
-            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
-        }
-
-        // Check if the table instance already exists
-        if (!$locator->exists($tableFullAlias)) {
-            // Check if the specific table class exists
-            if (!class_exists($className)) {
-                $className = Table::class; // Fallback to generic Table class
-            }
-
-            // Configure a new table instance
-            $locator->setConfig($tableAlias, [
-                'className' => $className,
-                'table' => $table,
-                'alias' => $tableAlias,
-            ]);
-        }
-
-        // Return the table instance
-        return $locator->get($tableFullAlias);
-    }
-
-    //POCOR-8341[START]
-    public function findEmailList(Query $query, array $options) {
-        $conditions = [
-            $this->aliasField('id') => $options['id']
+        $buttons['edit']['label'] = '<i class="fa fa-edit"></i> Change Password ';
+        $manageUsersBtn = ['manage_users' => $buttons['edit']];
+        $manageUsersBtn['manage_users']['url'] = [
+            'plugin' => 'Security',
+            'controller' => 'Securities',
+            'action' => 'Accounts',
+            0 => 'edit',
+            'id' => $entity->id,
         ];
+        $manageUsersBtn['manage_users']['label'] = '<i class="fa fa-key"></i>' . __('Change Password');
+        $buttons = array_merge($manageUsersBtn, $buttons);
+        return $buttons;
 
-        return $query
-                ->where($conditions);
-    }
-    //POCOR-8341[START]
-    public function findSystemUpdateEmailList(Query $query, array $options) {
-        $conditions = [
-            $this->aliasField('id') => $options['securityRoleId']
-        ];
-
-        return $query->where($conditions);
-    }
-
-    public function findStudentAdmissionEmailList(Query $query, array $options) {
-        $conditions = [
-            $this->aliasField('id') => $options['securityRoleId']
-        ];
         
-        return $query->where($conditions);
     }
 
 }

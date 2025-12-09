@@ -136,33 +136,38 @@ if (PHP_SAPI === 'cli') {
  * Set the full base URL.
  * This URL is used as the base of all absolute links.
  */
+
+// Read the configured fullBaseUrl (can be set in app_local.php)
 $fullBaseUrl = Configure::read('App.fullBaseUrl');
+
 if (!$fullBaseUrl) {
-    /*
-     * When using proxies or load balancers, SSL/TLS connections might
-     * get terminated before reaching the server. If you trust the proxy,
-     * you can enable `$trustProxy` to rely on the `X-Forwarded-Proto`
-     * header to determine whether to generate URLs using `https`.
-     *
-     * See also https://book.cakephp.org/4/en/controllers/request-response.html#trusting-proxy-headers
-     */
-    $trustProxy = false;
+    // POCOR-9127 start – Determine protocol and build URL dynamically
+    $trustProxy = env('TRUST_PROXY', false);
+    $https = env('HTTPS', false);
+    $httpXForwardedProto = env('HTTP_X_FORWARDED_PROTO', false);
 
-    $s = null;
-    if (env('HTTPS') || ($trustProxy && env('HTTP_X_FORWARDED_PROTO') === 'https')) {
+    $s = '';
+    if ($https) {
         $s = 's';
+    } elseif ($trustProxy && $httpXForwardedProto) {
+        $proto = strtolower(trim(explode(',', $httpXForwardedProto)[0]));
+        if ($proto === 'https') {
+            $s = 's';
+        }
     }
-    $s = 's';
 
-    $httpHost = env('HTTP_HOST');
-    if (isset($httpHost)) {
-        $fullBaseUrl = 'http' . $s . '://' . $httpHost;
-    }
-    unset($httpHost, $s);
+    $host = env('HTTP_HOST', 'localhost');
+    $fullBaseUrl = 'http' . $s . '://' . $host;
+    Configure::write('App.fullBaseUrl', $fullBaseUrl);
+    // POCOR-9127 end
+
+    unset($host, $s); // clean up
 }
+
 if ($fullBaseUrl) {
     Router::fullBaseUrl($fullBaseUrl);
 }
+
 unset($fullBaseUrl);
 
 Cache::setConfig(Configure::consume('Cache'));
@@ -222,3 +227,15 @@ TypeFactory::map('time', StringType::class);
 //Inflector::rules('plural', ['/^(inflect)or$/i' => '\1ables']);
 //Inflector::rules('irregular', ['red' => 'redlings']);
 //Inflector::rules('uninflected', ['dontinflectme']);
+
+//POCOR-9269 start
+$projectRoot = dirname(__DIR__);
+$logPath = $projectRoot . DIRECTORY_SEPARATOR . 'logs';
+
+if (!file_exists($logPath)) {
+    mkdir($logPath, 0777, true);
+}
+
+if (!is_writable($logPath)) {
+    chmod($logPath, 0777);
+} //POCOR-9269 end

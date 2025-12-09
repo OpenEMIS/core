@@ -30,8 +30,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     userCtrl.postRespone = null;
     userCtrl.translateFields = null;
     //contacts/nationalities/identities req/no
-    userCtrl.contactSkipped = true; // POCOR-7882
-    userCtrl.contactsRequired = ''; // POCOR-7882
+    userCtrl.contactSkipped = true; // POCOR-9101
+    userCtrl.contactsRequired = ''; // POCOR-9101
+    userCtrl.emailSkipped = false; // POCOR-9101
+    userCtrl.emailRequired = ''; // POCOR-9101
+    userCtrl.mobileSkipped = false; // POCOR-9101
+    userCtrl.mobileRequired = ''; // POCOR-9101
     userCtrl.identitySkipped = true; // POCOR-7882
     userCtrl.identitiesRequired = ''; // POCOR-7882
     userCtrl.nationalitySkipped = true; // POCOR-7882
@@ -227,8 +231,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                             userSvc.getStartDateFromAcademicPeriod({academic_period_id: academicPeriod}).then((response) => {
                                     const startDateRangeResponse = response;
                                     const {start_date, end_date} = startDateRangeResponse.data[0];
-                                    userCtrl.currentAcademicPeriodStartDate = userSvc.formatDate(start_date);
-                                    userCtrl.currentAcademicPeriodEndDate = userSvc.formatDate(end_date);
+                                userSvc.formatDate(start_date).then(function(formattedDate) {
+                                    userCtrl.currentAcademicPeriodStartDate = formattedDate;
+                                });
+                                userSvc.formatDate(end_date).then(function(formattedDate) {
+                                    userCtrl.currentAcademicPeriodEndDate = formattedDate;
+                                });
                                 }
                             );
                             break; // Exit the loop once the current period is found
@@ -239,9 +247,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
         function handleConfigItem(configCode, configValue) {
             switch (configCode) {
-                case "StudentContacts":
-                    userCtrl.contactSkipped = configValue === 2;
-                    userCtrl.contactsRequired = configValue === 1 ? 'required' : '';
+                case "student_email":
+                    userCtrl.emailSkipped = configValue === 2;
+                    userCtrl.emailRequired = configValue === 1 ? 'required' : '';
+                    break;
+                case "student_mobile":
+                    userCtrl.mobileSkipped = configValue === 2;
+                    userCtrl.mobileRequired = configValue === 1 ? 'required' : '';
                     break;
                 case "StudentIdentities":
                     userCtrl.identitySkipped = configValue === 2;
@@ -262,7 +274,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
 
         function getAddNewStudentConfig() {
-            const configCodes = ["StudentContacts", "StudentIdentities", "StudentNationalities"];
+            const configCodes = [
+                "student_email",
+                "student_mobile",
+                "StudentIdentities",
+                "StudentNationalities"];
 
             Promise.all(configCodes.map(code => userSvc.getConfigItemValue(code)))
                 .then(configValues => {
@@ -762,10 +778,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             userCtrl.getEducationGrades();
 
             const startDatePicker2 = angular.element(document.getElementById('Student_start_date'));
-            startDatePicker2.datepicker("setStartDate", userSvc.formatDate(start_date));
-            startDatePicker2.datepicker("setEndDate", userSvc.formatDate(end_date));
+            userSvc.formatDate(start_date).then(function(formattedDate) {
+                startDatePicker2.datepicker("setStartDate", formattedDate);
+            });
+            userSvc.formatDate(end_date).then(function(formattedDate) {
+                startDatePicker2.datepicker("setEndDate", formattedDate);
+                selectedUserData.endDate = formattedDate;
+            });
 
-            selectedUserData.endDate = userSvc.formatDate(end_date);
         } catch (error) {
             console.error(error);
         }
@@ -822,7 +842,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
         userCtrl.getClasses();
 
-        const formattedDateOfBirth = userSvc.formatDate(date_of_birth);
+        var formattedDateOfBirth = date_of_birth;
+        userSvc.formatDate(date_of_birth).then(function(formattedDate) {
+            formattedDateOfBirth = formattedDate;
+        });
 
         if (education_grade_id !== undefined && formattedDateOfBirth !== undefined && academic_period_id !== undefined) {
             const params = {
@@ -912,7 +935,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             switch (userCtrl.step) {
                 case 'internal_search': {
                     if (userCtrl.selectedUserData.date_of_birth) {
-                        userCtrl.selectedUserData.date_of_birth = userSvc.formatDate(userCtrl.selectedUserData.date_of_birth);
+                        userSvc.formatDate(userCtrl.selectedUserData.date_of_birth).then(function(formattedDate) {
+                            userCtrl.selectedUserData.date_of_birth = formattedDate;
+                        });
                     }
                     // userCtrl.selectedUserData.date_of_birth = userSvc.formatDate(userCtrl.selectedUserData.date_of_birth);
                     userCtrl.step = 'user_details';
@@ -1186,6 +1211,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         userCtrl.unsetAllErrors();
         let hasError = false;
         const userData = userCtrl.selectedUserData;
+        // POCOR-9427 start
+        const setError = (field, message) => {
+            userCtrl.error[field] = message;
+            hasError = true;
+        };
+        const user_exists = await checkUserAlreadyExistByIdentity();
+        if(!userCtrl.isInternalSearchSelected && user_exists){
+            // setError('identity_type_id', 'User already exist with this identity type');
+            setError('identity_number', 'User already exist with this identity');
+            // setError('nationality_id', 'User already exist with this nationality');
+        }
+        // POCOR-9427 end
         if (!userCtrl.nationalitySkipped &&
             userCtrl.nationalitiesRequired === 'required' &&
             !userData.nationality_id) {
@@ -1207,17 +1244,17 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             console.error('StudentController.error.identity_number');
             hasError = true;
         }
-        if (!userCtrl.contactSkipped &&
-            userCtrl.contactsRequired === 'required' &&
-            !userData.contact_type_id) {
-            userCtrl.error.contact_type_id = 'This field cannot be left empty';
+        if (!userCtrl.mobileSkipped &&
+            userCtrl.mobileRequired === 'required' &&
+            !userData.mobile_number) {
+            userCtrl.error.mobile_number = 'This field cannot be left empty';
             console.error('StudentController.error.contact_type_id');
             hasError = true;
         }
-        if (!userCtrl.contactSkipped &&
-            userCtrl.contactsRequired === 'required' &&
-            !userData.contact_value) {
-            userCtrl.error.contact_value = 'This field cannot be left empty';
+        if (!userCtrl.emailSkipped &&
+            userCtrl.emailRequired === 'required' &&
+            !userData.email) {
+            userCtrl.error.email = 'This field cannot be left empty';
             console.error('StudentController.error.contact_value');
             hasError = true;
         }
@@ -1361,6 +1398,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             nationality_name: userCtrl.selectedUserData.nationality_name,
             contact_type: userCtrl.selectedUserData.contact_type_id,
             contact_value: userCtrl.selectedUserData.contact_value,
+            email: userCtrl.selectedUserData.email,
+            mobile_number: userCtrl.selectedUserData.mobile_number,
             education_grade_id: userCtrl.selectedUserData.education_grade_id,
             academic_period_id: userCtrl.selectedUserData.academic_period_id,
             start_date: startDate,
@@ -1528,7 +1567,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             }
         }, function (error) {
             console.error(error);
+            userCtrl.message =  error.data.message || error.statusText || error.toString();
+            userCtrl.messageClass = 'alert-danger';
             UtilsSvc.isAppendLoader(false);
+            userCtrl.isConfirming = false;
         });
     }
 
@@ -1697,8 +1739,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             userSvc.getStartDateFromAcademicPeriod({academic_period_id: academicPeriod}).then((response) => {
                     const startDateRangeResponse = response;
                     const {start_date, end_date} = startDateRangeResponse.data[0];
-                    userCtrl.selectedUserData.startDate = userSvc.formatDate(start_date);
-                    userCtrl.selectedUserData.endDate = userSvc.formatDate(end_date);
+                    userSvc.formatDate(start_date).then(function (formattedDate) {
+                        userCtrl.selectedUserData.startDate = formattedDate;
+                    });
+                    userSvc.formatDate(end_date).then(function (formattedDate) {
+                        userCtrl.selectedUserData.endDate = formattedDate;
+                    });
                 }
             );
         } else {
@@ -1732,6 +1778,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         };
         userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
         userCtrl.selectedUserData.email = selectedData.email;
+        userCtrl.selectedUserData.mobile_number = selectedData.mobile_number;
         userCtrl.selectedUserData.contact_type_id = selectedData.contact_type_id; // POCOR-8012-n
         userCtrl.selectedUserData.contact_value = selectedData.contact_value; // POCOR-8012-n
         userCtrl.selectedUserData.identity_type_name = selectedData.identity_type;
@@ -1816,6 +1863,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 };
                 userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
                 userCtrl.selectedUserData.email = selectedData.email;
+                userCtrl.selectedUserData.mobile_number = selectedData.mobile_number;
                 userCtrl.selectedUserData.identity_type_name = selectedData.identity_type;
                 userCtrl.selectedUserData.identity_type_id = selectedData.identity_type_id;
                 userCtrl.selectedUserData.identity_number = selectedData.identity_number;
@@ -1874,6 +1922,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             };
             userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
             userCtrl.selectedUserData.email = selectedData.email;
+            userCtrl.selectedUserData.mobile_number = selectedData.mobile_number;
             userCtrl.selectedUserData.identity_type_name = selectedData.identity_type;
             userCtrl.selectedUserData.identity_type_id = selectedData.identity_type_id;
             userCtrl.selectedUserData.identity_number = selectedData.identity_number;
@@ -2257,7 +2306,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             userCtrl.message = '';
             userCtrl.isIdentityUserExist = false;
         }
-        /*  return result.data.user_exist === 1; */
+        return result.data.user_exist === 1;
     }
 
 

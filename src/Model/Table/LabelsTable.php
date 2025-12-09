@@ -23,16 +23,26 @@ class LabelsTable extends AppTable
         $label = Cache::read($keyFetch, $this->defaultConfig);
         // POCOR-9022 check if label is empty
         if (!$label) {
-            $entity = $this->find()
-                ->where([
-                    $this->aliasField('module') => $module,
-                    $this->aliasField('field') => $field
-                ])
-                ->first();
-            if (!empty($entity)) {
-                $label = $entity->name;
-                $keyValue = self::concatenateLabel($entity);
-                Cache::write($keyFetch, $keyValue, $this->defaultConfig);
+            if(!$field) {
+                $label = __('Not Set');
+            }
+            if(!$module) {
+                if (!empty($field)) { //POCOR-9307
+                  $label = __($field);
+                }
+            }
+            if (!empty($field) && !empty($module)) {
+                $entity = $this->find()
+                    ->where([
+                        $this->aliasField('module') => $module,
+                        $this->aliasField('field') => $field
+                    ])
+                    ->first();
+                if (!empty($entity)) {
+                    $label = $entity->name;
+                    $keyValue = self::concatenateLabel($entity);
+                    Cache::write($keyFetch, $keyValue, $this->defaultConfig);
+                }
             }
         }
         // POCOR-9022 end

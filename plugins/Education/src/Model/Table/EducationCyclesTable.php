@@ -61,6 +61,16 @@ class EducationCyclesTable extends ControllerActionTable
 		$query->where([$this->aliasField('education_level_id') => $entity->education_level_id]);
 	}
 
+	//POCOR-9365 -- start
+	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra) {
+        if ($this->hasAssociatedRecords($this, $entity, $extra)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        } 
+    }
+	//POCOR-9365 -- end
+
 	public function validationDefault(Validator $validator): Validator
 	{
 		$validator = parent::validationDefault($validator);

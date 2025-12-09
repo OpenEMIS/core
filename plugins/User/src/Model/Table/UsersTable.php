@@ -528,11 +528,11 @@ class UsersTable extends AppTable
             ->order([$this->aliasField('first_name') => $options['direction']]);
 
         // return $query
-        // 		->order([$this->aliasField('first_name') => $options['direction'],
-        // 				$this->aliasField('middle_name') => $options['direction'],
-        // 				$this->aliasField('third_name') => $options['direction'],
-        // 				$this->aliasField('last_name') => $options['direction']
-        // 			]);
+        //      ->order([$this->aliasField('first_name') => $options['direction'],
+        //              $this->aliasField('middle_name') => $options['direction'],
+        //              $this->aliasField('third_name') => $options['direction'],
+        //              $this->aliasField('last_name') => $options['direction']
+        //          ]);
     }
 
     public function findWithDefaultIdentityType(Query $query, array $options)
@@ -610,8 +610,50 @@ class UsersTable extends AppTable
         exit;
     }
 
+    /**
+     * POCOR-9364
+     * Ensure username is unique; if taken, append suffixes until unique.
+     * Keeps your current formatting rules intact (alnum/underscore OR email-ish).
+     */
+    public function ensureUniqueUsername(string $desired = ''): string
+    {
+        $base = $desired;
+        $suffix = 0;
+        while ($this->exists(['username' => $desired])) {
+            $suffix++;
+            $desired = $base . '_' . $suffix;
+        }
+        return $desired;
+    }
+
+    /**
+     * POCOR-9364
+     * Generate a unique openemis_no (moved from import class).
+     * Uses existing getUniqueOpenemisId() and the OpenemisTemps logic.
+     */
+    public function nextOpenEmisNo(): string
+    {
+        // == this is your current getNewOpenEmisNo(), moved in and renamed ==
+        $notUnique = true;
+        $val = $this->getUniqueOpenemisId();
+        while ($notUnique) {
+            $user = $this->find()
+                ->select(['id'])
+                ->where([$this->aliasField('openemis_no') => $val])
+                ->first();
+
+            if ($user) {
+                $val = $this->getUniqueOpenemisId();
+            } else {
+                $notUnique = false;
+            }
+        }
+        return $val;
+    }
+
     public function getUniqueOpenemisId($options = [])
     {
+        // POCOR-9364 to review
         $prefix = '';
 
         $prefix = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('openemis_id_prefix');
@@ -1090,10 +1132,11 @@ class UsersTable extends AppTable
         if ($entity->has('contact_error')) {
             return false;
         }
-        Log::debug(__FUNCTION__);
-        Log::debug(print_r(['errors' => $entity->getErrors(),
-            'options' => $options,
-            'event' => $event],true));
+        // POCOR-9101
+//        Log::debug(__FUNCTION__);
+//        Log::debug(print_r(['errors' => $entity->getErrors(),
+//            'options' => $options,
+//            'event' => $event],true));
         return true;
     }
 
@@ -1161,7 +1204,7 @@ class UsersTable extends AppTable
             $this->dispatchEventToModels('Model.Users.afterSave', [$entity], $this, $listeners);
 
         }
-        Log::debug(__FUNCTION__);
+//        Log::debug(__FUNCTION__); // POCOR-9101
     // POCOR-8683 end
 
     }

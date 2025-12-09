@@ -36,25 +36,47 @@ class RenderTableBehavior extends RenderBehavior {
         $cellAttr = [
             'type' => 'string'
         ];
+        $params = [];
         if ($customField->has('params') && !empty($customField->params)) {
             $params = json_decode($customField->params, true);
 
             if (isset($params['number'])) {
                 $valueColumn = 'number_value';
                 $cellAttr['type'] = 'number';
+
             } else if (isset($params['decimal'])) {
                 $valueColumn = 'decimal_value';
                 $cellAttr['type'] = 'number';
-
                 $cellAttr['min'] = 0;
-                $step = $this->getStepFromParams($params['decimal']);
-                if (!is_null($step)) {
-                    $cellAttr['step'] = $step;
-                }
             }
         }
         // end
+        // POCOR-9332 start
+        $typeCfg = [];
+        if (isset($params['number'])) {
+            $typeCfg = is_array($params['number']) ? $params['number'] : [];
+            $valueColumn = 'number_value';
+            $cellAttr['type'] = 'number';
+        } elseif (isset($params['decimal'])) {
+            $typeCfg = is_array($params['decimal']) ? $params['decimal'] : [];
+            $valueColumn = 'decimal_value';
+            $cellAttr['type'] = 'number';
+        }
 
+// Get min/max/step from params using helpers
+        $min = $this->getMinFromParams($typeCfg);
+        $max = $this->getMaxFromParams($typeCfg);
+        $step = $this->getStepFromParams($typeCfg);
+
+// sanity check
+        if ($min !== null && $max !== null && $min > $max) {
+            [$min, $max] = [$max, $min];
+        }
+
+        if ($min !== null) $cellAttr['min'] = (string)$min;
+        if ($max !== null) $cellAttr['max'] = (string)$max;
+        if ($step !== null) $cellAttr['step'] = (string)$step;
+        // POCOR-9332 end
         $cellErrors = $entity->getErrors('custom_table_cells');
         foreach ($customField->custom_table_rows as $rowKey => $rowObj) {
             $rowData = [];

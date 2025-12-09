@@ -61,7 +61,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             ])
             ->requirePresence('institutions', 'create')
             ->allowEmpty('postal_code')
-            ->allowEmpty('fax')
+           // ->allowEmpty('fax')
             ->add('postal_code', 'ruleCustomPostalCode', [
                 'rule' => ['validateCustomPattern', 'postal_code'],
                 'provider' => 'table',
@@ -146,7 +146,6 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->fields['postal_code']['visible'] = false;
         $this->fields['contact_person']['visible'] = false;
         $this->fields['telephone']['visible'] = false;
-        $this->fields['fax']['visible'] = false;
         $this->fields['email']['visible'] = false;
         $this->fields['website']['visible'] = false;
     }
@@ -336,7 +335,6 @@ class ExaminationCentresTable extends ControllerActionTable {
                     $this->fields['postal_code']['visible'] = true;
                     $this->fields['contact_person']['visible'] = true;
                     $this->fields['telephone']['visible'] = true;
-                    $this->fields['fax']['visible'] = true;
                     $this->fields['email']['visible'] = true;
                     $this->fields['website']['visible'] = true;
                 } else if ($entity->create_as == 'existing') {
@@ -353,7 +351,7 @@ class ExaminationCentresTable extends ControllerActionTable {
 
                 // field order
                 $this->setFieldOrder(['exam_centre_info_section', 'create_as',
-                    'institution_type', 'add_all_institutions', 'institutions', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'special_needs_section', 'special_need_type_id']);
+                    'institution_type', 'add_all_institutions', 'institutions', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone','email', 'website', 'special_needs_section', 'special_need_type_id']);
 
             } else if ($this->action == 'edit') {
                 $this->field('area_id', ['entity' => $entity, 'visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
@@ -363,7 +361,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $this->fields['postal_code']['visible'] = true;
                 $this->fields['contact_person']['visible'] = true;
                 $this->fields['telephone']['visible'] = true;
-                $this->fields['fax']['visible'] = true;
+              //  $this->fields['fax']['visible'] = true;
                 $this->fields['email']['visible'] = true;
                 $this->fields['website']['visible'] = true;
 
@@ -374,8 +372,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                     $this->fields['address']['attr']['disabled'] = 'disabled';
                     $this->fields['postal_code']['type'] = 'readonly';
                     $this->fields['contact_person']['type'] = 'readonly';
+                   // $this->fields['fax']['type'] = 'readonly';
                     $this->fields['telephone']['type'] = 'readonly';
-                    $this->fields['fax']['type'] = 'readonly';
                     $this->fields['email']['type'] = 'readonly';
                     $this->fields['website']['type'] = 'readonly';
                 }
@@ -385,7 +383,7 @@ class ExaminationCentresTable extends ControllerActionTable {
 
                 // field order
                 $this->setFieldOrder(['exam_centre_info_section', 'create_as',
-                    'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'special_needs_section', 'special_need_type_id']);
+                    'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'email', 'website', 'special_needs_section', 'special_need_type_id']);
             }
 
         } else if ($this->action == 'view') {
@@ -397,12 +395,11 @@ class ExaminationCentresTable extends ControllerActionTable {
             $this->fields['postal_code']['visible'] = true;
             $this->fields['contact_person']['visible'] = true;
             $this->fields['telephone']['visible'] = true;
-            $this->fields['fax']['visible'] = true;
             $this->fields['email']['visible'] = true;
             $this->fields['website']['visible'] = true;
 
             $this->setFieldOrder(['exam_centre_info_section', 'code', 'name',
-                'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'special_need_type_id']);
+                'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'email', 'website', 'special_need_type_id']);
         }
     }
 
@@ -725,7 +722,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                         $requestData['postal_code'] = $institutionRecord->postal_code;
                         $requestData['contact_person'] = $institutionRecord->contact_person;
                         $requestData['telephone'] = isset($institutionRecord->telephone) ? $institutionRecord->telephone : '';
-                        $requestData['fax'] = $institutionRecord->fax;
+                      //  $requestData['fax'] = $institutionRecord->fax;
                         $requestData['email'] = $institutionRecord->email;
                         $requestData['website'] = $institutionRecord->website;
                         $newEntity = $model->newEntity($requestData->getArrayCopy());
@@ -878,8 +875,6 @@ class ExaminationCentresTable extends ControllerActionTable {
             return __('Contact Person');
         }elseif ($field == 'telephone') {
             return __('Telephone');
-        }elseif ($field == 'fax') {
-            return __('Fax');
         }elseif ($field == 'email') {
             return __('Email');
         }elseif ($field == 'website') {

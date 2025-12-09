@@ -235,15 +235,18 @@ class CompetencyTemplatesTable extends ControllerActionTable
     }
 
     //Start:POCOR-7066
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+   public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $RecordAlready = $this->find()->where(['education_grade_id' => $entity->education_grade_id, 'academic_period_id' => $entity->academic_period_id])->first();
-        if (!empty($RecordAlready)) {
-            $entity->alreayexit = 1;
-            $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
-            return false;
-        } else {
-            $entity->alreayexit = 0;
+        $action = $this->request->getAttribute('params')['pass'][0];
+        if($action != 'edit'){ // POCOR-9377
+            $RecordAlready = $this->find()->where(['education_grade_id' => $entity->education_grade_id, 'academic_period_id' => $entity->academic_period_id])->first();
+            if (!empty($RecordAlready)) {
+                $entity->alreayexit = 1;
+                $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
+                return false;
+            } else {
+                $entity->alreayexit = 0;
+            }
         }
     }
 

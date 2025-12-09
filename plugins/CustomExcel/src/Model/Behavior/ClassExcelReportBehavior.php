@@ -21,6 +21,10 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use Cake\ORM\Table;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+
 /**
  *
  * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
@@ -332,51 +336,77 @@ class ClassExcelReportBehavior extends Behavior
         $objWorksheet->getCell($cellCoordinate)->setValue($cellValue);
     }
 
-    public function renderImage($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $imagePath, $attr, $extra)
-    {
-        $imageWidth = $attr['imageWidth'];
-        $imageMarginLeft = $attr['imageMarginLeft'];
-        $imageMarginTop = $attr['imageMarginTop'];
+    public function renderImage(
+        Spreadsheet $objSpreadsheet,
+        Worksheet $objWorksheet,
+                    $objCell,
+        string $cellCoordinate,
+        ?string $imagePath,
+        array $attr,
+        array|ArrayObject $extra = []
+    ): void {
+        $imageWidth      = (int)($attr['imageWidth']      ?? 120);
+        $imageMarginLeft = (int)($attr['imageMarginLeft'] ?? 0);
+        $imageMarginTop  = (int)($attr['imageMarginTop']  ?? 0);
 
-        $objDrawing = new MemoryDrawing();
-
-        if (!isset($extra['image_resource']) && $imagePath) {
-            switch ($attr['mime_type']) {
-                case 'image/png':
-                    $imageResource = imagecreatefrompng($imagePath);
-                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_PNG);
-                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_PNG);
-                    break;
-                case 'image/jpeg':
-                    $imageResource = imagecreatefromjpeg($imagePath);
-                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_JPEG);
-                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_JPEG);
-                    break;
-                case 'image/gif':
-                    $imageResource = imagecreatefromgif($imagePath);
-                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_GIF);
-                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_GIF);
-                    break;
-                default:
-                    $imageResource = '';
-                    break;
-            }
-            $extra['image_resource'] = $imageResource;
+        if (!$imagePath || !is_file($imagePath) || !is_readable($imagePath)) {
+            Log::warning('renderImage: missing or unreadable image: ' . (string)$imagePath);
+            return;
         }
 
-        if (isset($extra['image_resource'])) {
-            //retain transparency on png/gif file
-            imageAlphaBlending($extra['image_resource'], true);
-            imageSaveAlpha($extra['image_resource'], true);
-
-            $objDrawing->setImageResource($extra['image_resource']);
-            $objDrawing->setWidth($imageWidth);
-            $objDrawing->setCoordinates($cellCoordinate);
-            $objDrawing->setOffsetX($imageMarginLeft);
-            $objDrawing->setOffsetY($imageMarginTop);
-            $objDrawing->setWorksheet($objSpreadsheet->getActiveSheet());
-        }
+        $drawing = new Drawing();
+        $drawing->setPath($imagePath);                 // auto-detects type (png/jpg/gif)
+        $drawing->setCoordinates($cellCoordinate);
+        $drawing->setOffsetX($imageMarginLeft);
+        $drawing->setOffsetY($imageMarginTop);
+        $drawing->setWidth($imageWidth);               // keep aspect by default
+        $drawing->setWorksheet($objWorksheet);         // use the sheet we were given
     }
+//    public function renderImage($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $imagePath, $attr, $extra)
+//    {
+//        $imageWidth = $attr['imageWidth'];
+//        $imageMarginLeft = $attr['imageMarginLeft'];
+//        $imageMarginTop = $attr['imageMarginTop'];
+//
+//        $objDrawing = new MemoryDrawing();
+//
+//        if (!isset($extra['image_resource']) && $imagePath) {
+//            switch ($attr['mime_type']) {
+//                case 'image/png':
+//                    $imageResource = imagecreatefrompng($imagePath);
+//                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_PNG);
+//                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_PNG);
+//                    break;
+//                case 'image/jpeg':
+//                    $imageResource = imagecreatefromjpeg($imagePath);
+//                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_JPEG);
+//                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_JPEG);
+//                    break;
+//                case 'image/gif':
+//                    $imageResource = imagecreatefromgif($imagePath);
+//                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_GIF);
+//                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_GIF);
+//                    break;
+//                default:
+//                    $imageResource = '';
+//                    break;
+//            }
+//            $extra['image_resource'] = $imageResource;
+//        }
+//
+//        if (isset($extra['image_resource'])) {
+//            //retain transparency on png/gif file
+//            imageAlphaBlending($extra['image_resource'], true);
+//            imageSaveAlpha($extra['image_resource'], true);
+//
+//            $objDrawing->setImageResource($extra['image_resource']);
+//            $objDrawing->setWidth($imageWidth);
+//            $objDrawing->setCoordinates($cellCoordinate);
+//            $objDrawing->setOffsetX($imageMarginLeft);
+//            $objDrawing->setOffsetY($imageMarginTop);
+//            $objDrawing->setWorksheet($objSpreadsheet->getActiveSheet());
+//        }
+//    }
 
     public function saveFile($objSpreadsheet, $filepath, $format, $institution_id)
     {

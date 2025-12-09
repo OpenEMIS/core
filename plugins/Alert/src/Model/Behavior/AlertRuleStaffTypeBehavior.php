@@ -15,7 +15,7 @@ class AlertRuleStaffTypeBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'StaffType',
             'name' => 'Staff Type',
-            'method' => 'Email',
+            'method' => ['Email','SMS'], // POCOR-8286
             'threshold' => [
                 'value' => [
                     'type' => 'integer',
@@ -65,7 +65,7 @@ class AlertRuleStaffTypeBehavior extends AlertRuleBehavior
                 '${institution.postal_code}' => 'Institution postal code.',
                 '${institution.contact_person}' => 'Institution contact person.',
                 '${institution.telephone}' => 'Institution telephone number.',
-                '${institution.fax}' => 'Institution fax number.',
+               // '${institution.fax}' => 'Institution fax number.',
                 '${institution.email}' => 'Institution email.',
                 '${institution.website}' => 'Institution website.',
         ]
@@ -88,6 +88,8 @@ class AlertRuleStaffTypeBehavior extends AlertRuleBehavior
                         'message' => __('Value must be within 1 to 30')
                     ]
                 ]);
+                $model->setValidator('forSave', $validator); // POCOR-8286
+
             }
         }
     }

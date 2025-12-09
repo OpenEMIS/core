@@ -14,6 +14,8 @@ use Cake\I18n\I18n;
 use Cake\Http\Session;
 use Cake\Routing\Router;
 use Cake\ORM\Locator\TableLocator;
+use Cake\Chronos\Chronos;
+use Cake\Log\Log;
 
 
 class UserBehavior extends Behavior
@@ -93,6 +95,14 @@ class UserBehavior extends Behavior
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        // POCOR-9101 start
+        if(trim($entity->email) == ''){
+            $entity->email = null;
+        }
+        if(trim($entity->mobile_number) == ''){
+            $entity->mobile_number = null;
+        }
+        // POCOR-9101 end
         if ($entity->isNew()) {
             $entity->preferred_language = 'en';
         } else {
@@ -125,8 +135,8 @@ class UserBehavior extends Behavior
                 $this->_table->fields['last_login']['visible'] = false;
                 //POCOR-8660 start
                 $this->_table->fields['failed_logins']['visible'] = false;
-                $this->_table->fields['email']['visible'] =  false;
-                $this->_table->fields['mobile_number']['visible'] =  false;
+                $this->_table->fields['email']['visible'] =  true;
+                $this->_table->fields['mobile_number']['visible'] =  true;
                 //POCOR-8660 end
 
                 break;
@@ -180,9 +190,31 @@ class UserBehavior extends Behavior
             $this->_table->fields['last_name']['order'] = $i++;
             $this->_table->fields['preferred_name']['order'] = $i++;
             $this->_table->fields['gender_id']['order'] = $i++;
+            // POCOR-8286 date format start
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format');
+            $phpToDatepickerFormat = [
+                'd' => 'dd',
+                'j' => 'd',
+                'D' => 'D',        // Mon, Tue (short day)
+                'l' => 'DD',       // Monday, Tuesday (full day)
+                'm' => 'mm',
+                'n' => 'm',
+                'M' => 'M',        // Jan, Feb (short month)
+                'F' => 'MM',       // January, February (full month)
+                'y' => 'yy',       // 2-digit year
+                'Y' => 'yyyy'      // 4-digit year
+            ];
+
+            $datepickerFormat = preg_replace_callback('/[a-zA-Z]/', function ($matches) use ($phpToDatepickerFormat) {
+                return $phpToDatepickerFormat[$matches[0]] ?? $matches[0];
+            }, $systemDateFormat);
+            // POCOR-8286 date format end
             if ($this->isCAv4()) {
+
                 $this->_table->field('date_of_birth', [
                     'date_options' => [
+                        'format' => $datepickerFormat, // POCOR-8286
                         'endDate' => date('d-m-Y')
                     ],
                     'default_date' => false,
@@ -192,6 +224,7 @@ class UserBehavior extends Behavior
                     'date_of_birth',
                     [
                         'date_options' => [
+                            'format' => $datepickerFormat, // POCOR-8286
                             'endDate' => date('d-m-Y')
                         ],
                         'default_date' => false,
@@ -205,6 +238,7 @@ class UserBehavior extends Behavior
             //$this->_table->fields['identity_type_id']['order'] = $i++;
             //$this->_table->fields['identity_number']['order'] = $i++;
             $this->_table->fields['email']['order'] = $i++;
+            $this->_table->fields['mobile_number']['order'] = $i++;
 
             $this->_table->fields['address']['order'] = $i++;
             $this->_table->fields['postal_code']['order'] = $i++;
@@ -224,10 +258,12 @@ class UserBehavior extends Behavior
             // edit page, email = editable - POCOR-7124
             if ($this->_table->action == 'edit') {
                 if ($this->isCAv4()) {
-                    $this->_table->field('email', ['type' => 'string', 'after' => 'identity_number']);
+                    $this->_table->field('email', ['type' => 'string', 'after' => 'gender_id']);
+                    $this->_table->field('mobile_number', ['type' => 'string', 'after' => 'email']);
                     $this->_table->field('date_of_death', ['type' => 'date', 'after' => 'date_of_birth']); //POCOR-7982
                 } else {
-                    $this->_table->ControllerAction->field('email', ['type' => 'string', 'after' => 'identity_number']);  //POCOR-6833
+                    $this->_table->ControllerAction->field('email', ['type' => 'string', 'after' => 'gender_id']);  //POCOR-6833
+                    $this->_table->field('mobile_number', ['type' => 'string', 'after' => 'email']);
                     $this->_table->ControllerAction->field('date_of_death', ['type' => 'date', 'after' => 'date_of_birth']); //POCOR-7982
                 }
             }
@@ -245,9 +281,11 @@ class UserBehavior extends Behavior
             // add page, email = hidden
             if ($this->_table->action == 'add') {
                 if ($this->isCAv4()) {
-                    $this->_table->field('email', ['type' => 'hidden']);
+                    $this->_table->field('email', ['type' => 'string', 'label' => __('Mobile')]);
+                    $this->_table->field('mobile_number', ['type' => 'string', 'label' => __('Mobile')]);
                 } else {
-                    $this->_table->ControllerAction->field('email', ['type' => 'hidden']);
+                    $this->_table->ControllerAction->field('email', ['type' => 'string', 'label' => __('Email')]);
+                    $this->_table->ControllerAction->field('mobile_number', ['type' => 'string', 'label' => __('Mobile')]);
                 }
             }
 
@@ -256,7 +294,7 @@ class UserBehavior extends Behavior
                 if ($this->isCAv4()) {
                     $this->_table->field('information_section', ['type' => 'section', 'title' => __('Information'), 'before' => 'photo_content', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                     //POCOR-5668 add identity section starts
-                    $this->_table->field('identity_section', ['type' => 'section', 'title' => __('Identities / Nationalities'), 'after' => 'email', 'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]]);
+                    $this->_table->field('identity_section', ['type' => 'section', 'title' => __('Identities / Nationalities'), 'after' => 'mobile_number', 'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]]);
                     $security_users_id = '';
                     $model = $this->_table;
                     if ($this->_table->controller->getRequest()->getAttribute('params')['pass'][0] == 'view') {
@@ -287,7 +325,7 @@ class UserBehavior extends Behavior
                 } else {
                     $this->_table->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information'), 'before' => 'photo_content', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                     //POCOR-5668 add identity section starts
-                    $this->_table->field('identity_section', ['type' => 'section', 'title' => __('Identities / Nationalities'), 'after' => 'email', 'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]]);
+                    $this->_table->field('identity_section', ['type' => 'section', 'title' => __('Identities / Nationalities'), 'after' => 'mobile_number', 'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]]);
                     $security_users_id = '';
                     $model = $this->_table;
                     if ($this->_table->controller->getRequest()->getAttribute('params')['pass'][0] == 'view') {
@@ -623,7 +661,13 @@ class UserBehavior extends Behavior
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        return $this->_table->onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        if ($field == 'email') {
+            return __('Email');
+        } elseif ($field == 'mobile_number') {
+            return __('Mobile Number');
+        } else {
+            return $this->_table->onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
     public function getUniqueOpenemisId($options = [])
@@ -692,5 +736,18 @@ class UserBehavior extends Behavior
                 $data[$value] = trim($data[$value]);
             }
         }
+        // POCOR-8286 start
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format');
+        try {
+            $dob = $data['date_of_birth'] ?? null;
+            if ($dob) {
+                $date = Chronos::createFromFormat($systemDateFormat, $dob);
+                $data['date_of_birth'] = $date->format('Y-m-d');
+            }
+        } catch (\Exception $e) {
+            Log::warning("Invalid date: " . $data['date_of_birth'] . ' with format ' . $systemDateFormat);
+        }
+        // POCOR-8286 end
     }
 }

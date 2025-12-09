@@ -10,6 +10,7 @@ function AssessmentItemExemptionsSvc($http, $q, $filter, KdDataSvc) {
         init: init,
         getExemptStudents: getExemptStudents,
         setExemptStudents: setExemptStudents,
+        getStudentStatus: getStudentStatus,
         // getUnexemptStudents: getUnexemptStudents,
         translate: translate,
         saveStudents: saveStudents,
@@ -18,6 +19,7 @@ function AssessmentItemExemptionsSvc($http, $q, $filter, KdDataSvc) {
     var models = {
         InstitutionClasses: 'Institution.InstitutionClasses',
         InstitutionClassStudents: 'Institution.InstitutionClassStudents',
+        StudentStatuses: 'Student.StudentStatuses',
         AssessmentItemStudentExemptions: 'Institution.AssessmentItemStudentExemptions'
     };
 
@@ -49,7 +51,7 @@ function AssessmentItemExemptionsSvc($http, $q, $filter, KdDataSvc) {
         }
 
         var success = function(response, deferred) {
-            console.log('response', response);
+            // console.log('response', response); //POCOR-9197
             if (response.data && response.data.data) {
                 deferred.resolve(response.data.data);
             } else {
@@ -86,7 +88,26 @@ function AssessmentItemExemptionsSvc($http, $q, $filter, KdDataSvc) {
         return InstitutionClassStudents.find('exemptStudentsSave', options)
             .ajax({success: success, defer:true});
     }
-
+    
+    //POCOR-9428 start
+    function getStudentStatus() {
+        var success = function(response, deferred) {
+            if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
+                // Allowed status 
+                var allowedStatuses = ['CURRENT', 'TRANSFERRED', 'GRADUATED', 'PROMOTED'];
+                var filteredData = response.data.data.filter(function(item) {
+                    return allowedStatuses.includes(item.code);
+                });
+               // console.log('Filtered Data:', filteredData);
+                deferred.resolve({ data: { data: filteredData } });
+            } else {
+                deferred.resolve({ data: { data: [] } });
+            }
+        };
+        return StudentStatuses
+            .find('statusList')
+            .ajax({ success: success, defer: true });
+    } //POCOR-9428 end
 
     function saveStudents(data) {
 

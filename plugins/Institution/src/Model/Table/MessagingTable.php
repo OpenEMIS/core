@@ -15,12 +15,9 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
 use App\Model\Traits\MessagesTrait;
-use Cake\Core\Exception\Exception;
-use Cake\Auth\DefaultPasswordHasher;
-use Cake\Core\Configure;
-use Cake\Utility\Security;
-use Cake\Mailer\Email;
-use Cake\Http\Session;
+use Cake\Utility\Inflector; // POCOR-9274
+use Cake\Datasource\EntityInterface; // POCOR-9274
+
 /**
  * POCOR-7458 (to develop messaging functionality)
  * <author>megha.gupta@mail.valuecoders.com</author>
@@ -28,12 +25,18 @@ use Cake\Http\Session;
 class MessagingTable extends ControllerActionTable
 {
     use MessagesTrait;
+
     //recipient levels (hard coded)
     const INSTITUTION = 1;
     const PROGRAMME = 2;
-    const GRADE=3;
+    const GRADE = 3;
     const GRADE_CLASS = 4;
-    const SUBJECT=5;
+    const SUBJECT = 5;
+
+    const STUDENT_ROLE = 8; // POCOR-9274
+
+    const GUARDIAN_ROLE = 9; // POCOR-9274
+
     //status
     const DRAFT = 0;
     const SEND = 1;
@@ -43,6 +46,7 @@ class MessagingTable extends ControllerActionTable
     {
         $this->setTable('messaging');
         parent::initialize($config);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']); // POCOR-9274
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->hasMany('MessagingSecurityRoles', ['className' => 'Institution.MessagingSecurityRoles','foreignKey'=>"message_id"]);
         $this->hasMany('MessageRecipients', ['className' => 'Institution.MessageRecipients', 'foreignKey' => "message_id"]);
@@ -61,14 +65,26 @@ class MessagingTable extends ControllerActionTable
      public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
-        return  $validator
-                    ->add('security_role_id', 'custom', [
-                        'rule' => function($value, $context) {
-                            return (!empty($value['_ids']) && is_array($value['_ids']));
-                        },
-                        'message' => __('This field cannot be left empty')
-                    ]);
-    }
+        return  $validator // POCOR-8286 start
+            ->notEmptyArray('security_role_id')
+            ->notEmptyString('recipient_level_id')
+            ->notEmptyString('recipient_group_id')
+            ->add('security_role_id', 'custom', [
+                'rule' => function ($value, $context) {
+                    return (!empty($value['_ids']) && is_array($value['_ids']));
+                },
+                'message' => __('This field cannot be left empty')
+            ])
+            ->add('method', 'notEmptyString', [
+                'rule' => function ($value) {
+                    return !empty($value) && is_string($value);
+                },
+                'message' => __('This field cannot be left empty')
+            ])
+            ->notEmptyString('subject')
+            ->notEmptyArray('message');
+         // POCOR-8286 end
+     }
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('message');
@@ -78,7 +94,11 @@ class MessagingTable extends ControllerActionTable
         $this->field('created_user_id', ['visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]]);
         $this->field('recipient_level_id');
         $this->field('recipient_group_id');
-        $this->field('security_role_id',['required'=>true,'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]]);
+        $this->field('method', [ // POCOR-8286
+            'after' => 'recipient_group_id',
+//            'entity' => $entity,
+        ]);
+        $this->field('security_role_id',['visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]]);
         $this->field('subject',['sort'=>false]);
         $this->field('status', ['visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]]);
 
@@ -93,136 +113,347 @@ class MessagingTable extends ControllerActionTable
         $this->field('security_role_id', ['entity' => $entity, 'visible' => true]);
         $this->field('message');
         $this->field('recipient_level_id', ['entity' => $entity]);
-        $this->field('recipient_group_id', [['entity' => $entity]]);
+        $this->field('recipient_group_id', ['entity' => $entity]);
+        $this->field('method', ['entity' => $entity, // POCOR-8286
+            'after' => 'recipient_group_id',
+            'attr' => ['required' => true]
+        ]);
 
-        $this->fields['security_role_id']['required'] = true;
-        $this->setFieldOrder(['academic_period_id', 'recipient_level_id', 'recipient_group_id', 'security_role_id', 'subject', 'message']);
+        $this->setFieldOrder(['academic_period_id',
+            'recipient_level_id',
+            'recipient_group_id',
+            'security_role_id',
+            'method', // POCOR-8286
+            'subject', 'message']);
     }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
+        $this->getConnection()->begin();
 
-        $entity->institution_id = $this->getInstitutionID();
-        if ($this->request->getParam('pass')[0] == 'edit') {
-            //deleting messaging_security_role entries
-            $SecurityRoleData = $this->MessagingSecurityRoles->find()->where(['message_id' => $entity->id])->toArray();
-            if ($SecurityRoleData) {
-                foreach ($SecurityRoleData as $SecurityRoleEntity) {
-                    $deleteEntity =  $this->MessagingSecurityRoles->delete($SecurityRoleEntity);
-                }
+        try {
+            // Ensure institution ID is set
+            if (!$entity->institution_id) {
+                $entity->institution_id = $this->getInstitutionID();
             }
-            //deleting message_recipients entries
-            $MessageRecipientData = $this->MessageRecipients->find()->where(['message_id' => $entity->id])->toArray();
-            if ($MessageRecipientData) {
-                foreach ($MessageRecipientData as $MessageRecipientEntity) {
-                    $deleteRecipientEntity =  $this->MessageRecipients->delete($MessageRecipientEntity);
-                }
-            }
-        }
-        $security_role_data = [];
-        //saving messaging_security_roles entries
-        if (!empty($entity->security_role_id['_ids'])) {
-            foreach ($entity->security_role_id['_ids'] as $key => $value) {
-                $SecurityRolesData = ['message_id' => $entity->id, 'security_role_id' => $value];
-                $security_role_data[] = $value;
-                $SecurityRolesEntity = $this->MessagingSecurityRoles->newEntity($SecurityRolesData);
-                $result = $this->MessagingSecurityRoles->save($SecurityRolesEntity);
-                unset($SecurityRolesEntity);
-                unset($result);
-            }
-        }
-        $studentData = $this->getRecipientList($entity);
-        $student = 0;
-        $guardian = 0;
-        foreach ($security_role_data as $key => $value) {
-            $SecurityRoleName = TableRegistry::get('Security.SecurityRoles')->get($value)->name;
-            if (strtolower($SecurityRoleName) == "student") {
-                $student = 1;
-            } else if (strtolower($SecurityRoleName) == "guardian") {
-                $guardian = 1;
-            }
-            unset($SecurityRoleName);
-        }
 
-        //saving message_recipients entries
-        if (!empty($studentData)) {
-            foreach ($studentData as $key => $value) {
-                //echo "<pre>";print_r($value['student_email']);die;
-                if ($student) {
-                    if (!empty($value['student_email'])) {
-                        $RecipientEntity = ['message_id' => $entity->id, 'recipient_id' => $value['student_id']];
-                        $RecipientEntity = $this->MessageRecipients->newEntity($RecipientEntity);
-                        $saveData = $this->MessageRecipients->save($RecipientEntity);
-                        unset($RecipientEntity);
-                        unset($saveData);
-                    }
-                }
+            // POCOR-9274 start
 
-                if ($guardian) {
-                    if (!empty($value['guardian_email'])) {
-                        $RecipientEntity = ['message_id' => $entity->id, 'recipient_id' => $value['guardian_id']];
-                        $RecipientEntity = $this->MessageRecipients->newEntity($RecipientEntity);
-                        $saveData = $this->MessageRecipients->save($RecipientEntity);
-                        unset($RecipientEntity);
-                        unset($saveData);
-                    }
-                }
-            }
+            [$role_ids, $recipient_ids] = $this->getRoleRecipientList($entity);
+
+            // 1. Handle MessagingSecurityRoles sync
+            $this->syncMessagingSecurityRoles($entity->id, $role_ids ?? []);
+
+            // 3. Handle MessageRecipients sync
+            $this->syncMessageRecipients($entity->id, $recipient_ids);
+            // POCOR-9274 end
+            $this->getConnection()->commit();
+
+        } catch (\Exception $e) {
+            $this->getConnection()->rollback();
+            Log::error('Error in afterSave: ' . $e->getMessage());
+            throw $e;
         }
     }
+
+    private function getSecurityRolesFromEntity(Entity $entity): array
+    {
+        return TableRegistry::get('Security.SecurityRoles')
+            ->find()
+            ->where(['id IN' => $entity->security_role_id['_ids'] ?? []])
+            ->extract('id') // POCOR-9274
+            ->toArray();
+
+    }
+
+    private function getRecipientIdsByMethod(array $methods, array $roles, array $recipients): array
+    {
+        $ids = [];
+
+        foreach ($methods as $method) {
+            switch (strtolower($method)) {
+                case 'email':
+                    $ids = array_merge($ids, $this->getEmailRecipientIds($recipients, $roles));
+                    break;
+
+                case 'sms':
+                    $ids = array_merge($ids, $this->getSmsRecipientIds($recipients, $roles));
+                    break;
+
+                default:
+                    Log::warning("Unknown messaging method: $method");
+            }
+        }
+        $ids = array_unique($ids); // POCOR-9274
+        sort($ids); // POCOR-9274
+
+        return $ids; // POCOR-9274
+    }
+
+    private function getEmailRecipientIds(array $recipients, array $roles): array
+    {
+        $ids = [];
+
+        foreach ($recipients as $person) {
+            if (in_array('student', $roles) && !empty($person['student_email'])) {
+                $ids[] = $person['student_id'];
+            }
+
+            if (in_array('guardian', $roles) && !empty($person['guardian_email'])) {
+                $ids[] = $person['guardian_id'];
+            }
+        }
+
+        return $ids;
+    }
+
+    private function getSmsRecipientIds(array $recipients, array $roles): array
+    {
+        $ids = [];
+
+        foreach ($recipients as $person) {
+            if (in_array('student', $roles) && !empty($person['student_phone'])) {
+                $ids[] = $person['student_id'];
+            }
+
+            if (in_array('guardian', $roles) && !empty($person['guardian_phone'])) {
+                $ids[] = $person['guardian_id'];
+            }
+        }
+
+        return $ids;
+    }
+
+    private function syncMessagingSecurityRoles(int $messageId, array $newRoleIds): void
+    {
+        $existingRoleIds = $this->MessagingSecurityRoles
+            ->find()
+            ->where(['message_id' => $messageId])
+            ->extract('security_role_id')
+            ->toArray();
+
+        $toAdd = array_diff($newRoleIds, $existingRoleIds);
+        $toRemove = array_diff($existingRoleIds, $newRoleIds);
+
+        if ($toRemove) {
+            $this->MessagingSecurityRoles->deleteAll([
+                'message_id' => $messageId,
+                'security_role_id IN' => $toRemove
+            ]);
+        }
+        foreach ($toAdd as $roleId) {
+            $entity = $this->MessagingSecurityRoles->newEntity([
+                'message_id' => $messageId,
+                'security_role_id' => $roleId
+            ]);
+            $this->MessagingSecurityRoles->save($entity);
+        }
+    }
+
+    private function syncMessageRecipients(int $messageId, array $newRecipientIds): void
+    {
+        $existingIds = $this->MessageRecipients
+            ->find()
+            ->where(['message_id' => $messageId])
+            ->extract('recipient_id')
+            ->toArray();
+
+        $toAdd = array_diff($newRecipientIds, $existingIds);
+        $toRemove = array_diff($existingIds, $newRecipientIds);
+
+        if ($toRemove) {
+            $this->MessageRecipients->deleteAll([
+                'message_id' => $messageId,
+                'recipient_id IN' => $toRemove
+            ]);
+        }
+
+        foreach ($toAdd as $recipientId) {
+            $entity = $this->MessageRecipients->newEntity([
+                'message_id' => $messageId,
+                'recipient_id' => $recipientId
+            ]);
+            $this->MessageRecipients->save($entity);
+        }
+    }
+
     public function addEditOnsendMessage(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
     {
-
-        $entity->institution_id = $this->getInstitutionID();
+        // POCOR-8286 start
+        if (!$entity->institution_id) {
+            $entity->institution_id = $this->getInstitutionID();
+        }
+        if ($entity->status == 1) {
+            $this->Alert->warning('Message Already Sent', ['type' => 'string', 'reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('index'));
+        }
         $patchOptions['validate'] = true;
         $entity = $this->patchEntity($entity, $data->getArrayCopy(), $patchOptions->getArrayCopy());
-        $entity->recipient_group_id = $data['Messaging']['recipient_group_id'];
 
-        $AlertLogs = TableRegistry::get('Alert.AlertLogs');
-        $query = $this->getRecipientList($entity);
-        $SecurityRoles = [];
-
-        foreach ($entity->security_role_id['_ids'] as $key => $value) {
-            $SecurityRoles[] = strtolower(TableRegistry::get('Security.SecurityRoles')->get($value)->code);
-        }
-        //for sending email and inserting message logs
-        $emailList = [];
-        if (!empty($query)) {
-            foreach ($query as $key => $studentData) {
-                if (in_array("student", $SecurityRoles)) {
-                    if (!empty($studentData->student_email)) {
-                        $email = $studentData->student_email;
-                        $name = $studentData->student_first_name . " " . $studentData->student_last_name;
-                        $recipient = $name . ' <' . $email . '>';
-                        if (!in_array($recipient, $emailList)) {
-                            $emailList[] = $recipient;
-                        }
-                    }
-                }
-                if (in_array("guardian", $SecurityRoles)) {
-                    if (!empty($studentData->guardian_email)) {
-                        $email = $studentData->guardian_email;
-                        $name = $studentData->guardian_first_name . " " . $studentData->guardian_last_name;
-                        $recipient = $name . ' <' . $email . '>';
-                        if (!in_array($recipient, $emailList)) {
-                            $emailList[] = $recipient;
-                        }
-                    }
-                }
-            }
-        }
-        if (!empty($emailList)) {
-            foreach ($emailList as $key => $value) {
-                $emailSubject = $entity->subject;
-                $emailMessage = $entity->message;
-                $AlertLogs->insertAlertLog("Email", "Messaging", $value, $emailSubject, $emailMessage);
-            }
-        }
-        $entity->status = 1;
         $result = $this->save($entity);
-        $this->Alert->success('Messaging.email');
+
+        // POCOR-9274 start
+        $no_result = false;
+        if($entity->hasErrors()){
+            $no_result = true;
+        }
+        if ($no_result) {
+            $errors = $entity->getErrors(); // This includes any validation failures on save
+            $this->log('Save failed. Errors: ' . print_r($errors, true), 'error');
+            $this->Alert->error(__('Failed to send: Validation or Save Error.'), ['type' => 'string', 'reset' => true]);
+            $event->stopPropagation();
+            return false;
+        }
+
+        $methods = array_map('trim', explode(',', $entity->method));
+        $MessageRecipients = self::getDynamicTableInstance('message_recipients');
+        $recipients = $MessageRecipients
+            ->find('all')
+            ->where([$MessageRecipients->aliasField('message_id') => $entity->id])
+            ->select(['recipient_id' => $MessageRecipients->aliasField('recipient_id')])
+            ->disableHydration()
+            ->toArray();
+
+        if(empty($recipients)){
+            $this->Alert->error(__('Failed to send: No Recipients Found.'), ['type' => 'string', 'reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('index'));
+        }
+
+        $recipient_ids = array_unique(array_column($recipients, 'recipient_id'));;
+        sort($recipient_ids);
+
+        foreach ($methods as $method) {
+            switch (strtolower($method)) {
+                case 'email':
+                    $sending_email_result = $this->sendEmailMessages($entity, $recipient_ids);
+                    break;
+                case 'sms':
+                    $sending_sms_result = $this->sendSmsMessages($entity, $recipient_ids);
+                    break;
+                default:
+                    $this->log("Unknown method '$method'", 'error');
+            }
+        }
+        if ($sending_sms_result || $sending_email_result) {
+            $entity->status = 1;
+            $result = $this->save($entity);
+            $this->Alert->success('Messaging.email');
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('index'));
+        }
+        $this->Alert->error(__('Failed to send: No Recipients With Contacts Found.'), ['type' => 'string', 'reset' => true]);
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
+        // POCOR-9274 end
     }
+    // POCOR-8286 end
+
+    /**
+     * POCOR-9274
+     * @param EntityInterface $entity
+     * @param int[]           $recipientIds
+     * @return bool           True if we sent at least one email
+     */
+    private function sendEmailMessages(EntityInterface $entity, array $recipientIds): bool
+    {
+        $users = $this->fetchUsers(
+            $recipientIds,
+            ['id', 'first_name', 'last_name', 'email'],
+            'email'
+        );
+
+        if (empty($users)) {
+            return false;
+        }
+
+        // Format “First Last <email>” and de-dupe by email address
+        $emailList = [];
+        foreach ($users as $u) {
+            $emailList[$u['email']] = sprintf(
+                '%s %s <%s>',
+                $u['first_name'],
+                $u['last_name'],
+                $u['email']
+            );
+        }
+
+        $this->logAlerts('Email', array_values($emailList), $entity);
+
+        return true;
+    }
+
+    /**
+     * POCOR-9274
+     * @param EntityInterface $entity
+     * @param int[]           $recipientIds
+     * @return bool           True if we sent at least one SMS
+     */
+    private function sendSmsMessages(EntityInterface $entity, array $recipientIds): bool
+    {
+        $users = $this->fetchUsers(
+            $recipientIds,
+            ['id', 'mobile_number'],
+            'mobile_number'
+        );
+
+        if (empty($users)) {
+            return false;
+        }
+
+        // De-dupe numbers
+        $phoneList = array_unique(array_column($users, 'mobile_number'));
+
+        $this->logAlerts('SMS', $phoneList, $entity);
+
+        return true;
+    }
+
+    /**
+     * POCOR-9274
+     * Load a plain array of user records (disableHydration) filtered to non-null $contactField.
+     *
+     * @param int[]  $ids
+     * @param string[] $selectCols  e.g. ['id','first_name','email']
+     * @param string $contactField  the column that must be non-null
+     * @return array
+     */
+    private function fetchUsers(array $ids, array $selectCols, string $contactField): array
+    {
+        $tbl = self::getDynamicTableInstance('security_users');
+
+        return $tbl->find()
+            ->select($selectCols)
+            ->where([$tbl->aliasField('id') . ' IN' => $ids])
+            ->whereNotNull($tbl->aliasField($contactField))
+            ->enableHydration(false)
+            ->toArray();
+    }
+
+    /**
+     * POCOR-9274
+     * Insert one AlertLog per recipient.
+     *
+     * @param string           $type       'Email' or 'SMS'
+     * @param string[]         $recipients e.g. [ 'joe@example.com', ... ]
+     * @param EntityInterface  $entity     message entity with subject/message
+     * @return void
+     */
+    private function logAlerts(string $type, array $recipients, EntityInterface $entity): void
+    {
+        $logs = self::getDynamicTableInstance('Alert.AlertLogs');
+        foreach ($recipients as $to) {
+            $logs->insertAlertLog(
+                $type,
+                'Messaging',
+                $to,
+                $entity->subject,
+                $entity->message
+            );
+        }
+    }
+
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
 
@@ -254,11 +485,33 @@ class MessagingTable extends ControllerActionTable
             });
         });
     }
+
+    // POCOR-8286
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+//        if (isset($data['submit']) && $data['submit'] == 'save' || $data['submit'] == 'Send') {
+        // POCOR-8286 start
+        if (isset($data['method'])
+            && !empty($data['method'])
+            && isset($data['method']['_ids'])
+            && !empty($data['method']['_ids'])
+        ) {
+            $data['method'] = implode(',', array_map('trim', $data['method']['_ids']));
+        }
+//        }
+    }
     public function indexAfterAction(Event $event, Query $query)
     {
         $this->field('message', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => false]);
-        $this->setFieldOrder(['created','created_user_id','academic_period_id', 'recipient_level_id', 'recipient_group_id', 'security_role_id', 'subject', 'message']);
+        $this->setFieldOrder(['created',
+            'created_user_id',
+            'academic_period_id',
+            'recipient_level_id',
+            'recipient_group_id',
+            'security_role_id',
+            'method', // POCOR-8286
+            'subject', 'message']);
 
     }
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -277,6 +530,7 @@ class MessagingTable extends ControllerActionTable
             'order' => 3
         ];
     }
+
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         if (isset($extra['selectedAcademicPeriodOptions'])) {
@@ -291,7 +545,9 @@ class MessagingTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        if ($entity->status == "Sent" || $entity->status == "Send" || $entity->status == self::SEND) {
+        if ($entity->status == "Sent"
+            || $entity->status == "Send"
+            || $entity->status == self::SEND) {
             unset($buttons['edit']);
         }
         return $buttons;
@@ -322,9 +578,7 @@ class MessagingTable extends ControllerActionTable
     }
     public function onGetRecipientGroupId(Event $event, Entity $entity)
     {
-        $institution_id = $this->getInstitutionID();
-        $academicPeriodId = $entity->academic_period_id;
-        $option=$this->getRecipientGroupOptions($entity->recipient_level_id);
+        $option=$this->getRecipientGroupOptions($entity->recipient_level_id, $entity->institution_id); // POCOR-9274
         $result= $option[$entity->recipient_group_id];
         return $result;
     }
@@ -359,9 +613,9 @@ class MessagingTable extends ControllerActionTable
     {
 
         if ($entity->status == self::DRAFT) {
-            return "Draft";
+            return __("Draft"); // POCOR-8286
         } else if ($entity->status == self::SEND) {
-            return "Sent";
+            return __("Sent"); // POCOR-8286
         }
     }
     public function onGetSecurityRoleId(Event $event, Entity $entity)
@@ -429,40 +683,174 @@ class MessagingTable extends ControllerActionTable
         if (
             $action == 'add' || $action == 'edit'
         ) {
-            $recipient_level_id =$request->getData()['Messaging']['recipient_level_id'];
-            if($action == "edit"){
-                if(!empty($request->getAttribute('params')['pass'][1])){
-                    $entity = $this->get($this->paramsDecode($request->getAttribute('params')['pass'][1])['id']);
-                }else{
-                    $entity = $this->get($this->paramsDecode($this->request->getAttribute('params')['?']['queryString'])['id']);
-                }
+            // POCOR-9274 start
+            $alias = $this->getAlias();
+            $data = $request->getData($alias);
+            $entity = $attr['entity'] ?? [];
+            if(empty($entity)){
+            if (isset($data['recipient_level_id'])) {
+                $recipient_level_id = $data['recipient_level_id'];
+            }
+            if (isset($data['institution_id'])) {
+                $institution_id = $data['institution_id'];
+            }
+            }else{
+                $institution_id = $entity->institution_id;
                 $recipient_level_id = $entity->recipient_level_id;
             }
-            $attr['type'] = 'select';
-            $attr['select'] = true;
-            $data = $this->getRecipientGroupOptions($recipient_level_id);
-            $attr['options']=$data;
+            if(!$institution_id){
+                $institution_id = $this->getInstitutionID();
+            }
+
+            if ($recipient_level_id && $institution_id) {
+                $attr['type'] = 'select';
+                $attr['select'] = true;
+                $data = $this->getRecipientGroupOptions($recipient_level_id, $institution_id);
+                $attr['options'] = $data;
+            }
         }
+        // POCOR-9274 end
 
         return $attr;
     }
     public function onUpdateFieldSecurityRoleId(Event $event, array $attr, $action, ServerRequest $request)
     {
 
-        $entity = $attr['entity'];
+        // POCOR-9274 start
+        $alias = $this->getAlias();
+        $data = $request->getData($alias);
+        $entity = $attr['entity'] ?? [];
+        if(empty($entity)){
+            if (isset($data['recipient_level_id'])) {
+                $recipient_level_id = $data['recipient_level_id'];
+            }
+            if (isset($data['institution_id'])) {
+                $institution_id = $data['institution_id'];
+            }
+        }else{
+            $institution_id = $entity->institution_id;
+            $recipient_level_id = $entity->recipient_level_id;
+        }
+
+        if(empty($institution_id)){
+            $institution_id = $this->getInstitutionID();
+        }
+        if(empty($institution_id)){
+            return [];
+        }
+        if(empty($recipient_level_id)){
+            return [];
+        }
+        $securityRoleIds = self::getInstitutionSecurityRoleIds($institution_id, $recipient_level_id);
+        if(empty($securityRoleIds)){
+            return [];
+        }
+
         $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
         $options = $SecurityRoles->find('list', [
             'keyField' => 'id',
             'valueField' => 'name',
-        ])->where([
-            $SecurityRoles->aliasField('name IN') => ['Student', 'Guardian']
-        ])->toArray();
+        ])->where([$SecurityRoles->aliasField('id IN') => $securityRoleIds])
+            ->toArray();
         $attr['type'] = 'chosenSelect';
         $attr['attr']['multiple'] = true;
         $attr['options'] = $options;
         $attr['attr']['required'] = true;
         return $attr;
+        // POCOR-9274 end
     }
+
+    /**
+     * POCOR-9274
+     * @param $institution_id
+     * @return array
+     */
+    private static function getInstitutionSecurityRoleIds($institution_id, $recipient_level_id)
+    {
+        if(in_array($recipient_level_id, [
+            self::PROGRAMME,
+            self::GRADE])){
+            return [
+                self::STUDENT_ROLE,
+                self::GUARDIAN_ROLE
+            ];
+        }
+        $securityGroupInstitutions = self::getDynamicTableInstance('security_group_institutions');
+        $distinctResults = $securityGroupInstitutions
+            ->find('all')
+            ->innerJoin(['SecurityGroupUsers' => 'security_group_users'], [
+                [
+                    'SecurityGroupUsers.security_group_id = ' . $securityGroupInstitutions->aliasField('security_group_id'),
+                ]
+            ])
+            ->select(['security_role_id' => 'SecurityGroupUsers.security_role_id'])
+            ->distinct(['SecurityGroupUsers.security_role_id'])
+            ->where(['institution_id' => $institution_id])
+            ->disableHydration()
+            ->toArray();
+
+        $distinctResultsValues = array_column($distinctResults, 'security_role_id');
+
+        if (sizeof($distinctResultsValues) > 0) {
+            $distinctResultsValues[] =  self::GUARDIAN_ROLE;
+            $uniqu_array = array_unique($distinctResultsValues);
+        } else {
+            $uniqu_array = [0];
+        };
+        sort($uniqu_array);
+        return $uniqu_array;
+    }
+
+    /**
+     * POCOR-9162 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
+
     public function onUpdateFieldMessage(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['type'] = 'text';
@@ -479,17 +867,31 @@ class MessagingTable extends ControllerActionTable
         }
         return $attr;
     }
-    public function getRecipientGroupOptions($recipient_level_id){
 
-        $institution_id=$this->getInstitutionID();
+    /**
+     * POCOR-9274 start
+     * @param $recipient_level_id
+     * @param $institution_id
+     * @return array
+     */
+    public function getRecipientGroupOptions($recipient_level_id, $institution_id){
+
         $academicPeriodId =TableRegistry::get('AcademicPeriod.AcademicPeriods')->getCurrent();
-
+        $institutions = $this->Institutions;
+        if ($institution_id) {
+            try {
+                $institution = $institutions->get($institution_id);
+            } catch (\Exception $exception) {
+                Log::debug($exception->getMessage());
+            }
+            $institution_name = $institution->name;
+        }
         $option=[];
         switch ($recipient_level_id) {
             case self::INSTITUTION:
             case "Institution":
-                $option[$institution_id]= $this->Session->read('Institution.Institutions.name');
-                 break;
+                $option[$institution_id] = $institution_name; // POCOR-9274 end
+                break;
             case self::PROGRAMME:
             case "Programme":
                 $result= $this->getSelectOptions($institution_id, $academicPeriodId);
@@ -578,139 +980,265 @@ class MessagingTable extends ControllerActionTable
 
         return $selectedAcademicPeriod;
     }
-    //POCOR-8016::modify query Start
-    public function getRecipientList($entity)
+
+    // POCOR-8286
+    public function getMethods()
     {
-        $InstitutionSubjectStudent = TableRegistry::get('Institution.InstitutionSubjectStudents');
-        $InstitutionStudent = TableRegistry::get('Institution.InstitutionStudents');
-        $where = [];
+        $methods = ['Email', 'SMS'];
+//        if (!empty($feature)) {
+//            $alertTypeDetails = $this->getAlertTypeDetailsByFeature($feature);
+//            $method = $alertTypeDetails[$feature]['method'];
+//        }
 
-        if($entity->recipient_level_id == 1 || $entity->recipient_level_id == 2 || $entity->recipient_level_id == 3){
-            if ($entity->recipient_level_id == 1) {
-            } else if ($entity->recipient_level_id == 2) {
-                $where['EducationGrades.education_programme_id'] = $entity->recipient_group_id;
-            } else if ($entity->recipient_level_id == 3) {
-                $where['InstitutionStudents.education_grade_id'] = $entity->recipient_group_id;
+        return $methods;
+    }
+
+    // POCOR-8286
+    public function onUpdateFieldMethod(Event $event, array $attr, $action, ServerRequest $request)
+    {
+
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+            // POCOR-8286 start
+
+            $methods = $this->getMethods();
+
+            if (!is_array($methods)) {
+                $attr['type'] = 'readonly';
+            } else {
+                $attr['type'] = 'chosenSelect';
+                $attr['options'] = array_combine($methods, $methods);
+                $attr['required'] = true;
+
+                // NEW: parse the string into array
+                if (!empty($entity->method)) {
+                    $attr['value'] = explode(',', $entity->method);
+                    $attr['attr']['value'] = $attr['value'];
+                }
+
             }
+            // POCOR-8286 end
 
-            $query = $InstitutionStudent->find()
-                ->select([
-                    'student_openemis' => 'StudentInfo.openemis_no',
-                    'student_id' => 'InstitutionStudents.student_id',
-                    'student_email' => 'StudentInfo.email',
-                    'student_first_name' => 'StudentInfo.first_name',
-                    'student_last_name' => 'StudentInfo.last_name',
-                    'guardian_id' => 'StudentGuardians.guardian_id',
-                    'guardian_openemis' => 'GuardianInfo.openemis_no',
-                    'guardian_email' => 'GuardianInfo.email',
-                    'guardian_first_name' => 'GuardianInfo.first_name',
-                    'guardian_last_name' => 'GuardianInfo.last_name',
-                ])
-                ->innerJoin(
-                    ['EducationGrades' => 'education_grades'],
-                    ['EducationGrades.id = InstitutionStudents.education_grade_id']
-                )
-                ->innerJoin(
-                    ['StudentInfo' => 'security_users'],
-                    ['StudentInfo.id = InstitutionStudents.student_id']
-                )
-                ->innerJoin(
-                    ['AcademicPeriods' => 'academic_periods'],
-                    [
-                        'AcademicPeriods.id = InstitutionStudents.academic_period_id',
-                    ]
-                )
-                ->leftJoin(
-                    ['StudentGuardians' => 'student_guardians'],
-                    ['StudentGuardians.student_id = InstitutionStudents.student_id']
-                )
-                ->leftJoin(
-                    ['GuardianInfo' => 'security_users'],
-                    ['GuardianInfo.id = StudentGuardians.guardian_id']
-                )
-                ->where([
-                    'OR' => [
-                        [
-                            'CURRENT_DATE >= AcademicPeriods.start_date AND CURRENT_DATE <= AcademicPeriods.end_date',
-                            'InstitutionStudents.student_status_id' => 1,
-                        ],
-                        [
-                            'InstitutionStudents.student_status_id IN' => [1, 7, 6, 8],
-                        ],
-                    ],
-                    'InstitutionStudents.institution_id' => $entity->institution_id,
-                    'InstitutionStudents.academic_period_id' => $entity->academic_period_id,
-                    $where
-                ])
-                ->group('InstitutionStudents.student_id')
-                ->toArray();
+        }
 
-        }elseif($entity->recipient_level_id == 4 || $entity->recipient_level_id == 5 ){
-            if ($entity->recipient_level_id == 1) {
-            } else if ($entity->recipient_level_id == 2) {
-                $where['EducationGrades.education_programme_id'] = $entity->recipient_group_id;
-            } else if ($entity->recipient_level_id == 3) {
-                $where['InstitutionSubjectStudents.education_grade_id'] = $entity->recipient_group_id;
-            } else if ($entity->recipient_level_id == 4) {
-                $where['InstitutionSubjectStudents.institution_class_id'] = $entity->recipient_group_id;
-            } else if ($entity->recipient_level_id == 5) {
-                $recipientGroupData = explode("-", $entity->recipient_group_id);
-                $where['InstitutionSubjectStudents.institution_class_id'] = $recipientGroupData[0];
-                $where['InstitutionSubjectStudents.institution_subject_id'] = $recipientGroupData[1];
+        return $attr;
+    }
+
+    /**
+     * POCOR-9274
+     * @param $entity
+     * @return array
+     */
+    public function getRoleRecipientList($entity)
+    {
+        $role_ids = $this->getSecurityRolesFromEntity($entity);
+        $allRecipients = [];
+        foreach ($role_ids as $roleId) {
+            if (in_array($roleId, [self::STUDENT_ROLE, self::GUARDIAN_ROLE], true)) {
+                // students & guardians
+                $rows = $this->getStudentGuardianRecipients($entity);
+            } else {
+                // staff
+                $rows = $this->getStaffRecipients($entity, $roleId);
+
             }
-            $query = $InstitutionSubjectStudent->find()
+            // flatten
+            $allRecipients = array_merge($allRecipients, $rows);
+        }
+
+
+        $student_ids = array_column($allRecipients, 'student_id');
+        $security_user_ids = array_column($allRecipients, 'security_user_id');
+        $guardian_ids = array_column($allRecipients, 'guardian_id');
+
+        $recipient_ids = array_unique(array_merge($student_ids, $security_user_ids, $guardian_ids));
+        // otherwise assume staff
+        sort($recipient_ids);
+
+        return [$role_ids, $recipient_ids];
+    }
+
+    //POCOR-8016::modify query Start
+    // POCOR-8286 start
+    public function getStudentGuardianRecipients($entity)
+    {
+
+        // POCOR-9274 start
+        // POCOR-9274 start
+        $where = $this->buildStudentGuardianRecipientWhere($entity);
+
+        $isSubjectLevel = in_array($entity->recipient_level_id, [self::GRADE_CLASS, self::SUBJECT]);
+
+        $tableName = $isSubjectLevel ? 'Institution.InstitutionSubjectStudents'
+            : 'Institution.InstitutionStudents';
+        $Table = self::getDynamicTableInstance($tableName);
+        // POCOR-9274 end
+        $aliasPrefix = $isSubjectLevel ? 'InstitutionSubjectStudents' : 'InstitutionStudents';
+
+        $query = $Table->find()
             ->select([
-                'student_openemis' => 'StudentInfo.openemis_no',
-                'student_id' => 'InstitutionSubjectStudents.student_id',
-                'student_email' => 'StudentInfo.email',
-                'student_first_name' => 'StudentInfo.first_name',
-                'student_last_name' => 'StudentInfo.last_name',
+                'student_id' => $aliasPrefix . '.student_id',
                 'guardian_id' => 'StudentGuardians.guardian_id',
-                'guardian_openemis' => 'GuardianInfo.openemis_no',
-                'guardian_email' => 'GuardianInfo.email',
-                'guardian_first_name' => 'GuardianInfo.first_name',
-                'guardian_last_name' => 'GuardianInfo.last_name',
             ])
             ->innerJoin(
                 ['EducationGrades' => 'education_grades'],
-                ['EducationGrades.id = InstitutionSubjectStudents.education_grade_id']
-            )
-            ->innerJoin(
-                ['StudentInfo' => 'security_users'],
-                ['StudentInfo.id = InstitutionSubjectStudents.student_id']
-            )
-            ->innerJoin(
+                ['EducationGrades.id = ' . $aliasPrefix . '.education_grade_id']
+            )->innerJoin(
                 ['AcademicPeriods' => 'academic_periods'],
-                [
-                    'AcademicPeriods.id = InstitutionSubjectStudents.academic_period_id',
-                ]
+                ['AcademicPeriods.id = ' . $aliasPrefix . '.academic_period_id']
             )
             ->leftJoin(
                 ['StudentGuardians' => 'student_guardians'],
-                ['StudentGuardians.student_id = InstitutionSubjectStudents.student_id']
-            )
-            ->leftJoin(
-                ['GuardianInfo' => 'security_users'],
-                ['GuardianInfo.id = StudentGuardians.guardian_id']
+                ['StudentGuardians.student_id = ' . $aliasPrefix . '.student_id']
             )
             ->where([
                 'OR' => [
                     [
                         'CURRENT_DATE >= AcademicPeriods.start_date AND CURRENT_DATE <= AcademicPeriods.end_date',
-                        'InstitutionSubjectStudents.student_status_id' => 1,
+                        $aliasPrefix . '.student_status_id' => 1,
                     ],
                     [
-                        'InstitutionSubjectStudents.student_status_id IN' => [1, 7, 6, 8],
+                        $aliasPrefix . '.student_status_id IN' => [1, 6, 7, 8],
                     ],
                 ],
-                'InstitutionSubjectStudents.institution_id' => $entity->institution_id,
-                'InstitutionSubjectStudents.academic_period_id' => $entity->academic_period_id,
+                $aliasPrefix . '.institution_id' => $entity->institution_id,
+                $aliasPrefix . '.academic_period_id' => $entity->academic_period_id,
                 $where
             ])
-            ->group('InstitutionSubjectStudents.student_id')
+            ->group([$aliasPrefix . '.student_id', 'StudentGuardians.guardian_id'])
             ->toArray();
-        }
+        // POCOR-9274 end
         return $query;
+    }
+
+    /**
+     * // POCOR-9274 start
+     * @param $entity
+     * @param $roleId
+     * @return array
+     */
+    protected function getStaffRecipients($entity, $roleId)
+    {
+        switch ((int)$entity->recipient_level_id) {
+            case self::INSTITUTION:
+                return $this->recipientsByInstitutionStaff($entity, $roleId);
+//            case self::PROGRAMME: // Only students or guardians
+//            case self::GRADE:
+//                // aggregate all classes & subjects in that programme/grade
+//                return $this->recipientsByProgrammeOrGradeStaff($entity, $roleId);
+            case self::GRADE_CLASS:
+                return $this->recipientsByClassStaff($entity, $roleId);
+            case self::SUBJECT:
+                return $this->recipientsBySubjectStaff($entity, $roleId);
+            default:
+                return [];
+        }
+    }
+
+    protected function recipientsBySubjectStaff($e, $role_id)
+    {
+        $Subjects = self::getDynamicTableInstance('Institution.InstitutionSubjects');
+        $parts = explode('-', $e->recipient_group_id);
+        if (count($parts) === 2) {
+            $subject_id = $parts[1];
+        } else {
+            return [];
+        }
+        $SubjectStaff = self::getDynamicTableInstance('Institution.InstitutionSubjectStaff');
+        $staffQuery = $SubjectStaff->find('all')
+            ->select(['security_user_id' => $SubjectStaff->aliasField('staff_id')])
+            ->innerJoin([$Subjects->getAlias() => $Subjects->getTable()],
+                [$SubjectStaff->aliasField('institution_subject_id') . ' = ' . $Subjects->aliasField('id')])
+            ->innerJoin(['SGI' => 'security_group_institutions'],
+                ['SGI.institution_id = ' . $Subjects->aliasField('institution_id')])
+            ->innerJoin(['SGU' => 'security_group_users'],
+                ['SGI.security_group_id = SGU.security_group_id',
+                    'SGU.security_user_id = ' . $SubjectStaff->aliasField('staff_id')])
+            ->where([$SubjectStaff->aliasField('institution_subject_id = ') . $subject_id,
+                'SGU.security_role_id = ' . $role_id]);
+
+        $staff = $staffQuery->toArray();
+        return $staff;
+    }
+    protected function recipientsByClassStaff($e, $role_id)
+    {
+        // primary teacher
+        $Classes = self::getDynamicTableInstance('Institution.InstitutionClasses');
+        $primary = $Classes->find('all')
+            ->select(['security_user_id' => $Classes->aliasField('staff_id')])
+            ->innerJoin(['SGI' => 'security_group_institutions'],
+                ['SGI.institution_id = ' . $Classes->aliasField('institution_id')])
+            ->innerJoin(['SGU' => 'security_group_users'],
+                ['SGI.security_group_id = SGU.security_group_id',
+                    'SGU.security_user_id = ' . $Classes->aliasField('staff_id')])
+            ->where([$Classes->aliasField('id = ') . $e->recipient_group_id,
+                'SGU.security_role_id = ' . $role_id]);
+
+        // secondary teachers
+        $Secondary = self::getDynamicTableInstance('institution_classes_secondary_staff');
+        $secondary = $Secondary->find('all')
+            ->select(['security_user_id' => $Secondary->aliasField('secondary_staff_id')])
+            ->innerJoin([$Classes->getAlias() => $Classes->getTable()],
+                [$Secondary->aliasField('institution_class_id') . ' = ' . $Classes->aliasField('id')])
+            ->innerJoin(['SGI' => 'security_group_institutions'],
+                ['SGI.institution_id = ' . $Classes->aliasField('institution_id')])
+            ->innerJoin(['SGU' => 'security_group_users'],
+                ['SGI.security_group_id = SGU.security_group_id',
+                    'SGU.security_user_id = ' . $Secondary->aliasField('secondary_staff_id')])
+            ->where([$Secondary->aliasField('institution_class_id') => $e->recipient_group_id,
+                'SGU.security_role_id' => $role_id]);
+        return $primary->union($secondary)
+            ->toArray();
+    }
+
+    protected function recipientsByInstitutionStaff($e, $role_id)
+    {
+        $SGU = self::getDynamicTableInstance('security_group_users');
+        $result = $SGU->find('all')
+            ->select([
+                'security_user_id'    => $SGU->aliasField('security_user_id'),
+            ])
+            // ensure they belong to our institution
+            ->innerJoin(
+                ['SGI'=>'security_group_institutions'],
+                ['SGI.security_group_id = ' . $SGU->aliasField('security_group_id')]
+            )
+            ->where([
+                $SGU->aliasField('security_role_id') => $role_id,
+                'SGI.institution_id' => $e->institution_id,
+                ])
+            ->group([$SGU->aliasField('security_user_id')])
+            ->toArray();
+        return $result;
+    }
+
+    private function buildStudentGuardianRecipientWhere($entity): array
+    {
+        $where = [];
+
+        switch ((int) $entity->recipient_level_id) {
+            case self::PROGRAMME: // POCOR-9274
+                $where['EducationGrades.education_programme_id'] = $entity->recipient_group_id;
+                break;
+
+            case self::GRADE: // POCOR-9274
+                $where['InstitutionStudents.education_grade_id'] = $entity->recipient_group_id;
+                break;
+
+            case self::GRADE_CLASS: // POCOR-9274
+                $where['InstitutionSubjectStudents.institution_class_id'] = $entity->recipient_group_id;
+                break;
+
+            case self::SUBJECT: // POCOR-9274
+                $parts = explode('-', $entity->recipient_group_id);
+                if (count($parts) === 2) {
+                    $where['InstitutionSubjectStudents.institution_class_id'] = $parts[0];
+                    $where['InstitutionSubjectStudents.institution_subject_id'] = $parts[1];
+                }
+                break;
+        }
+
+        return $where;
     }
     //POCOR-8016::End
 }

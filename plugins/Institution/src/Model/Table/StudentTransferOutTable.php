@@ -14,6 +14,9 @@ use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
+use Cake\Controller\Component;
+use Cake\Datasource\ConnectionManager; // POCOR-9457
+use Cake\I18n\FrozenTime; // POCOR-9457
 
 
 class StudentTransferOutTable extends InstitutionStudentTransfersTable
@@ -110,7 +113,147 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
             // close other pending SENDING transfer applications (in same education system) if the student is successfully transferred in one school
             $this->rejectPendingTransferRequests($this->getRegistryAlias(), $student);
         }
+        // POCOR-9457 start
+        $statuses = self::getDynamicTableInstance('Student.StudentStatuses')
+            ->findCodeList();
+
+        if (
+            $student->get('student_status_id') == $statuses['TRANSFERRED'] &&
+            $student->isDirty('student_status_id')
+        ) {
+            $this->removeFromOldSecurityGroup(
+                $student->get('student_id'),
+                $student->get('institution_id') // old institution
+            );
+        }
     }
+
+    /**
+     * POCOR-9457
+     * @param $studentId
+     * @param $oldInstitutionId
+     * @return void
+     */
+    protected function removeFromOldSecurityGroup($studentId, $oldInstitutionId)
+    {
+        if (empty($studentId) || empty($oldInstitutionId)) {
+            Log::warning("Missing student ID or previous institution student ID.");
+            return;
+        }
+
+        // Get role and group for old institution
+        $studentRoleId = self::getStudentSecurityRoleId();
+        $oldGroupId = self::getInstitutionSecurityGroupId($oldInstitutionId);
+
+        $securityGroupUsersTbl = self::getDynamicTableInstance('security_group_users');
+
+        $deleted = $securityGroupUsersTbl->deleteAll([
+            'security_user_id' => $studentId,
+            'security_group_id' => $oldGroupId,
+            'security_role_id' => $studentRoleId
+        ]);
+
+        Log::info("Removed $deleted old security group record(s) for student $studentId in institution $oldInstitutionId.");
+    }
+
+    /**
+     * POCOR-9457
+     * @return int
+     */
+    private
+    static function getStudentSecurityRoleId(): int
+    {
+        $securityRolesTbl = self::getDynamicTableInstance('security_roles');
+        $securityRoles = $securityRolesTbl->find()
+            ->where([
+                $securityRolesTbl->aliasField('code') => 'STUDENT',
+            ])->first();
+        $student_role_id = $securityRoles->id;
+        return $student_role_id;
+    }
+
+    /**
+     * POCOR-9457
+     * @param $institution_id
+     * @return integer
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getInstitutionSecurityGroupId($institution_id)
+    {
+        $institutionTbl = self::getDynamicTableInstance('Institution.Institutions');
+        $securityGroupsTbl = self::getDynamicTableInstance('Security.SecurityGroups');
+        $securityGroupInstitutionsTbl = self::getDynamicTableInstance('Security.SecurityGroupInstitutions');
+
+        $institution = $institutionTbl->find()
+            ->where([$institutionTbl->aliasField('id') => $institution_id])
+            ->first();
+
+        if (empty($institution)) {
+            return null;
+        }
+
+        $security_group_id = $institution->security_group_id;
+
+        if ($securityGroupsTbl->exists(['id' => $security_group_id])) {
+            return $security_group_id;
+        }
+
+        // 1 Find a security group with only this institution
+        $subQuery = $securityGroupInstitutionsTbl->find()
+            ->select(['security_group_id' => $securityGroupInstitutionsTbl->aliasField('security_group_id')])
+            ->group($securityGroupInstitutionsTbl->aliasField('security_group_id'))
+            ->having(['COUNT(*) =' => 1])
+            ->matching('Institutions', function ($q) use ($institution_id) {
+                return $q->where(['Institutions.id' => $institution_id]);
+            })
+            ->first();
+
+        if (!empty($subQuery)) {
+            $new_group_id = $subQuery->security_group_id;
+
+            // Update institution to point to this valid group
+            $connection = ConnectionManager::get('default');
+            $updateQuery = 'UPDATE institutions SET security_group_id = ' . $new_group_id . ' WHERE id = ' . $institution_id;
+            $connection->execute($updateQuery);
+
+            return $new_group_id;
+        }
+
+        // 2 No group found — create new one (auto-incremented ID)
+        $newGroup = $securityGroupsTbl->newEntity([
+            'name' => 'Auto-Recovered Group for Institution ' . $institution_id,
+            'created_user_id' => 1,
+            'created' => new FrozenTime('now')
+        ]);
+
+        if (!$securityGroupsTbl->save($newGroup)) {
+            Log::error('Failed to create new security group: ' . print_r($newGroup->getErrors(), true));
+            return null;
+        }
+
+        $new_group_id = $newGroup->id;
+
+        // 3 Link new group to institution
+        $linkEntity = $securityGroupInstitutionsTbl->newEntity([
+            'security_group_id' => $new_group_id,
+            'institution_id' => $institution_id,
+            'created_user_id' => 1,
+            'created' => new FrozenTime('now')
+        ]);
+
+        if (!$securityGroupInstitutionsTbl->save($linkEntity)) {
+            Log::error('Failed to link institution to new group: ' . print_r($linkEntity->getErrors(), true));
+            return null;
+        }
+
+        // 4 Update institution to use new group ID
+        $connection = ConnectionManager::get('default');
+        $updateQuery = 'UPDATE institutions SET security_group_id = ' . $new_group_id . ' WHERE id = ' . $institution_id;
+        $connection->execute($updateQuery);
+
+        return $new_group_id;
+    }
+    // POCOR-9457 end
 
     // POCOR-3649
     public function associated(Event $event, ArrayObject $extra)
@@ -149,6 +292,26 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $entity = $this->newEntity();
         $this->controller->set('data', $entity);
         return $entity;
+    }
+
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    {
+        // Generate encoded query string once
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+        $studentsUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'Students',
+            0 => 'index',
+            1 => $encodedQueryString
+        ];
+        $previousTitle = Inflector::humanize(Inflector::underscore($this->getAlias()));
+
+        $Navigation->substituteCrumb($previousTitle, 'Students', $studentsUrl);
+        $Navigation->addCrumb($previousTitle);
+
     }
 
     public function onGetAssociatedRecordsElement(Event $event, $action, $entity, $attr, $options = [])
@@ -240,9 +403,6 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         /*if (isset($extra['toolbarButtons']['add'])) {
             unset($extra['toolbarButtons']['add']);
         }*/
-        $queryString = $this->getQueryString();
-        $queryString['id'] = 94;
-        $encodedQueryString = $this->paramsEncode($queryString);
 
         $this->field('start_date', ['type' => 'hidden']);
         $this->field('end_date', ['type' => 'hidden']);
@@ -256,41 +416,8 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $this->field('institution_id', ['type' => 'integer',
             'sort' => ['field' => 'Institutions.code']]);
         $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'institution_id', 'academic_period_id', 'education_grade_id', 'requested_date']);
+        $this->addStudentsExtraButtons($extra['toolbarButtons']); // POCOR-9155
 
-        // back button
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        $toolbarAttr = [
-            'class' => 'btn btn-xs btn-default',
-            'data-toggle' => 'tooltip',
-            'data-placement' => 'bottom',
-            'escape' => false
-        ];
-        $toolbarButtonsArray['back']['type'] = 'button';
-        $toolbarButtonsArray['back']['label'] = '<i class="fa kd-back"></i>';
-        $toolbarButtonsArray['back']['attr'] = $toolbarAttr;
-        $toolbarButtonsArray['back']['attr']['title'] = __('Back');
-        $toolbarButtonsArray['back']['url']['plugin'] = 'Institution';
-        $toolbarButtonsArray['back']['url']['controller'] = 'Institutions';
-        $toolbarButtonsArray['back']['url']['action'] = 'Students';
-        $toolbarButtonsArray['back']['url'][0] = 'index';
-        $toolbarButtonsArray['back']['url'][1] = $encodedQueryString;
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
-        // End
-
-        // Start bulk Student Transfer Out button POCOR-6028 start
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        $url = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'BulkStudentTransferOut',
-            'edit'
-        ];
-        $toolbarButtonsArray['bulkAdmission'] = $this->getButtonTemplate();
-        $toolbarButtonsArray['bulkAdmission']['label'] = '<i class="fa kd-transfer"></i>';
-        $toolbarButtonsArray['bulkAdmission']['attr']['title'] = __('Bulk Student Transfer Out');
-        $toolbarButtonsArray['bulkAdmission']['url'] = $url;
-        $toolbarButtonsArray['bulkAdmission']['url'][1] = $encodedQueryString;
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // End bulk Student Transfer Out button POCOR-6028 end
     }
 
@@ -1058,8 +1185,10 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     $StepsParams->aliasField('value') => $outgoingInstitution
                 ]);
             })
-            ->where([$this->aliasField('assignee_id') => $userId,
-                'Assignees.super_admin IS NOT' => 1])//POCOR-7102
+            ->where([
+                $this->aliasField('assignee_id') => $userId,
+                'Assignees.super_admin IS NOT' => 1
+            ])//POCOR-7102
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
                 return $results->map(function ($row) {
@@ -1258,5 +1387,117 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         return $recvInstitution;
     }
     //POCOR-8642 -- END
+
+    /**
+     * @param $toolbarButtons1
+     * @return void
+     */
+    private function addStudentsExtraButtons($toolbarButtons1): void // POCOR-9155
+    {
+// back button
+        // Generate encoded query string once
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+// Common button attributes
+        $baseBtnAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false,
+        ];
+
+// Add back button
+        $toolbarButtons = $toolbarButtons1->getArrayCopy();
+        $toolbarButtons['back'] = [
+            'type' => 'button',
+            'label' => '<i class="fa kd-back"></i>',
+            'attr' => array_merge($baseBtnAttr, ['title' => __('Back')]),
+            'url' => [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Students',
+                0 => 'index',
+                1 => $encodedQueryString
+            ]
+        ];
+
+// Define all extra toolbar buttons
+        $extraButtons = [
+            'add' => [
+                'permission' => ['Institutions', 'Students', 'add'],
+                'action' => 'Students',
+                'icon' => '<i class="fa fa-plus"></i>',
+                'title' => __('Add')
+            ],
+            'graduate' => [
+                'permission' => ['Institutions', 'Promotion', 'add'],
+                'action' => 'Promotion',
+                'icon' => '<i class="fa kd-graduate"></i>',
+                'title' => __('Promotion / Repeating / Graduation')
+            ],
+            'transfer' => [
+                'permission' => ['Institutions', 'Transfer', 'add'],
+                'action' => 'Transfer',
+                'icon' => '<i class="fa kd-transfer"></i>',
+                'title' => __('Transfer')
+            ],
+            'undo' => [
+                'permission' => ['Institutions', 'Undo', 'add'],
+                'action' => 'Undo',
+                'icon' => '<i class="fa kd-undo"></i>',
+                'title' => __('Undo')
+            ],
+        ];
+
+        $extraButtons['bulkTransferOut'] = [
+            'permission' => ['Institutions', 'Transfer', 'add'],
+            'action' => 'BulkStudentTransferOut',
+            'next_action' => 'edit',
+            'icon' => '<i class="fa kd-transfer"></i>',
+            'title' => __('Bulk Student Transfer Out')
+        ];
+
+        foreach ($extraButtons as $key => $config) {
+            if (!empty($config['external'])) {
+                $toolbarButtons[$key] = [
+                    'type' => 'link',
+                    'label' => $config['icon'],
+                    'attr' => array_merge($baseBtnAttr, [
+                        'title' => $config['title'],
+                        'target' => '_blank'
+                    ]),
+                    'url' => $config['url']
+                ];
+                continue;
+            }
+
+            if (!empty($config['permission']) &&
+                !$this->AccessControl->check($config['permission'])) {
+                continue;
+            }
+
+            $url = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => $config['action'],
+                0 => $config['next_action'] ?? 'add',
+                1 => $encodedQueryString
+            ];
+
+            if (!empty($config['extraParams'])) {
+                $url = array_merge($url, ['?' => $config['extraParams']]);
+            }
+
+            $toolbarButtons[$key] = [
+                'type' => 'button',
+                'label' => $config['icon'],
+                'attr' => array_merge($baseBtnAttr, ['title' => $config['title']]),
+                'url' => $url
+            ];
+        }
+
+        $toolbarButtons1->exchangeArray($toolbarButtons);
+    }
 
 }

@@ -24,10 +24,18 @@ trait ControllerActionV4Trait {
 		$model->Session =  $this->controller->getRequest()->getSession();
 
 		// Copy all component objects from Controller to Model
-		$components = $this->controller->components()->loaded();
-		foreach ($components as $component) {
-			$model->{$component} = $this->controller->{$component};
-		}
+        $registry = $this->controller->components();
+        foreach ($registry->loaded() as $name) {
+            // Skip legacy/removed components (e.g., Cookie in CakePHP 4)
+            if (in_array($name, ['Cookie'], true)) {
+                continue;
+            }
+
+            $instance = $registry->get($name); // <-- safe, no __get()
+            if ($instance !== null) {
+                $model->{$name} = $instance;
+            }
+        }
 	}
 
 	private function _render($model) {

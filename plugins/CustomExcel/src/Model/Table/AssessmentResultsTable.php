@@ -743,13 +743,15 @@ class AssessmentResultsTable extends AppTable
                 foreach ($assessmentPeriods as $assessment_period_id => $assessment_period) {
                     foreach ($student_ids as $student_id) {
                         if (!isset($sep[$student_id][$education_subject_id][$assessment_period_id])) {
-                            $missingMark = [
-                                'student_id' => $student_id,
-                                'assessment_id' => $assessment_id,
-                                'education_subject_id' => $education_subject_id,
-                                'assessment_period_id' => $assessment_period_id,
-                            ];
-                            $marks_exempts[] = $missingMark;
+                            //POCOR-9239 -- Commenting $missingMark code as it substituted 0 for missing values
+                            // $missingMark = [
+                            //     'student_id' => $student_id,
+                            //     'assessment_id' => $assessment_id,
+                            //     'education_subject_id' => $education_subject_id,
+                            //     'assessment_period_id' => $assessment_period_id,
+                            // ];
+                            // $marks_exempts[] = $missingMark;
+                            continue;
                         }
                     }
                 }
