@@ -14,34 +14,38 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'StudentAttendance', //POCOR-6584
         'name' => 'Student Absent',
-        'method' => 'Email',
+        'method' => ['Email','SMS'], // POCOR-8286
         'threshold' => [],
         'placeholder' => [
-            '${total_days}' => 'Total number of unexcused absence.',
-            '${threshold}' => 'Threshold value.',
-            '${user.openemis_no}' => 'Student OpenEMIS ID.',
-            '${user.first_name}' => 'Student first name.',
-            '${user.middle_name}' => 'Student middle name.',
-            '${user.third_name}' => 'Student third name.',
-            '${user.last_name}' => 'Student last name.',
-            '${user.preferred_name}' => 'Student preferred name.',
-            '${user.email}' => 'Student email.',
-            '${user.address}' => 'Student address.',
-            '${user.postal_code}' => 'Student postal code.',
-            '${user.date_of_birth}' => 'Student date of birth.',
-            '${user.identity_number}' => 'Student identity number.',
+            // POCOR-9391 start
+            '${total_times}' => 'Total number of absence.',
+            '${total_days}' => 'Total days of absence.',
+            '${threshold}' => 'Threshold (times) value.',
+            '${student.openemis_no}' => 'Student OpenEMIS ID.',
+            '${student.name}' => 'Student name.',
+            '${student.first_name}' => 'Student first name.',
+            '${student.middle_name}' => 'Student middle name.',
+            '${student.third_name}' => 'Student third name.',
+            '${student.last_name}' => 'Student last name.',
+            '${student.preferred_name}' => 'Student preferred name.',
+            '${student.email}' => 'Student email.',
+            '${student.address}' => 'Student address.',
+            '${student.postal_code}' => 'Student postal code.',
+            '${student.date_of_birth}' => 'Student date of birth.',
+            '${student.identity_number}' => 'Student identity number.',
             // '${user.photo_name}' => 'Student photo name.',
             // '${user.photo_content}' => 'Student photo content.',
-            '${user.main_identity_type.name}' => 'Student identity type.',
-            '${user.main_nationality.name}' => 'Student nationality.',
-            '${user.gender.name}' => 'Student gender.',
+            '${student.main_identity_type}' => 'Student identity type.',
+            '${student.main_nationality}' => 'Student nationality.',
+            '${student.gender}' => 'Student gender.',
+            // POCOR-9391 end
             '${institution.name}' => 'Institution name.',
             '${institution.code}' => 'Institution code.',
             '${institution.address}' => 'Institution address.',
             '${institution.postal_code}' => 'Institution postal code.',
             '${institution.contact_person}' => 'Institution contact person.',
             '${institution.telephone}' => 'Institution telephone number.',
-            '${institution.fax}' => 'Institution fax number.',
+//            '${institution.fax}' => 'Institution fax number.',
             '${institution.email}' => 'Institution email.',
             '${institution.website}' => 'Institution website.',
         ]
@@ -50,10 +54,12 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
     public function initialize(array $config): void
     {
         parent::initialize($config);
+
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
+
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
@@ -63,6 +69,8 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
                         'rule' => ['range', 1, 30]
                     ]
                 ]);
+                $model->setValidator('forSave', $validator); // POCOR-8286
+
             }
         }
     }
@@ -70,6 +78,7 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
     public function onStudentAttendanceSetupFields(Event $event, Entity $entity)
     { ////echo "heey";die;
         $this->onAlertRuleSetupFields($event, $entity);
+
     }
 
     public function onUpdateFieldStudentAttendanceThreshold(Event $event, array $attr, $action, ServerRequest $request)

@@ -37,12 +37,22 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdDataSvc) {
     };
 
     function translate(data) {
-        KdDataSvc.init({translation: 'translate'});
+        KdDataSvc.init({ translation: 'translate' });
+
         var success = function(response, deferred) {
-            var translated = response.data.translated;
-            deferred.resolve(translated);
+            deferred.resolve(response.data.translated);
         };
-        return translation.translate(data, {success:success, defer: true});
+
+        var error = function(response, deferred) {
+            // couldn’t translate, so just return the original payload
+            deferred.resolve(data);
+        };
+
+        return translation.translate(data, {
+            success: success,
+            error:   error,
+            defer:   true
+        });
     }
 
     function getInstitutionSubjectDetails(institutionSubjectId) {
@@ -57,8 +67,6 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdDataSvc) {
 
     function getUnassignedStudent(institutionSubjectId, academicPeriodId, educationGradeId, institutionClassIds) {
         var success = function(response, deferred) {
-            console.log('getUnassignedStudent');
-            console.log(response);
             deferred.resolve(response.data.data);
         };
 
@@ -83,11 +91,12 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdDataSvc) {
         return InstitutionStaff.find('subjectStaffOptions', {institution_id: institutionId, academic_period_id: academicPeriodId}).ajax({success: success, defer: true});
     }
 
-    function getRoomsOptions(academicPeriodId, institutionSubjectId) {
+    function getRoomsOptions(institutionSubjectId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
-        return Rooms.find('subjectRoomOptions', {academic_period_id: academicPeriodId, institution_subject_id: institutionSubjectId}).ajax({success: success, defer: true});
+        return Rooms.find('subjectRoomOptions', {institution_subject_id: institutionSubjectId})
+            .ajax({success: success, defer: true});
     }
 
     function getClassOptions(institutionId, academicPeriodId, educationGradeId, institutionSubjectId) {
@@ -106,19 +115,28 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdDataSvc) {
     function getConfigItemValue(code) {
         var success = function(response, deferred) {
             var results = response.data.data;
-
             if (angular.isObject(results) && results.length > 0) {
-                var configItemValue = (results[0].value.length > 0) ? results[0].value : results[0].default_value;
-                deferred.resolve(configItemValue);
+                var value = results[0].value;
+                var defaultValue = results[0].default_value;
+
+                // Use default if value is empty, null, or undefined
+                var configItemValue = (value !== undefined && value !== null && value !== "") ? value : defaultValue;
+
+                // Optionally cast to number
+                deferred.resolve(Number(configItemValue));
             } else {
                 deferred.reject('There is no ' + code + ' configured');
             }
         };
 
         return ConfigItemsTable
-            .where({code: code})
-            .ajax({success: success, defer: true});
-    };
+            .where({ code: code })
+            .ajax({
+                success: success,
+                defer: true
+            });
+    }
+
 
     function saveInstitutionSubject(data) {
         return InstitutionSubjects.edit(data);

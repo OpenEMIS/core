@@ -124,19 +124,19 @@ class StudentPromotionTable extends AppTable
         // all $this->ControllerAction->field() MUST set at addAfterAction
         $this->ControllerAction->field('from_academic_period_id', [
             'attr' => [
-                'label' => $this->getMessage($this->aliasField('fromAcademicPeriod'))
+                'label' => __('From Academic Period') // POCOR-9399
             ],
             'entity' => $entity
         ]);
         $this->ControllerAction->field('next_academic_period_id', [
             'attr' => [
-                'label' => $this->getMessage($this->aliasField('toAcademicPeriod'))
+                'label' => __('To Academic Period') // POCOR-9399
             ],
             'entity' => $entity
         ]);
         $this->ControllerAction->field('grade_to_promote', [
             'attr' => [
-                'label' => $this->getMessage($this->aliasField('fromGrade'))
+                'label' => __('From Grade') // POCOR-9399
             ],
             'entity' => $entity
         ]);
@@ -145,20 +145,20 @@ class StudentPromotionTable extends AppTable
         ]);
         $this->ControllerAction->field('student_status_id', [
             'attr' => [
-                'label' => $this->getMessage($this->aliasField('status'))
+                'label' => __('Status') // POCOR-9399
             ],
             'entity' => $entity
         ]);
         $this->ControllerAction->field('education_grade_id', [
             'attr' => [
-                'label' => $this->getMessage($this->aliasField('toGrade'))
+                'label' => __('To Grade') // POCOR-9399
             ],
             'entity' => $entity
         ]);
 
         $this->ControllerAction->field('next_class', [
             'attr' => [
-                'label' => 'Next Class'
+                'label' => __('Next Class') // POCOR-9399
             ],
             'entity' => $entity
         ]);
@@ -1091,6 +1091,7 @@ class StudentPromotionTable extends AppTable
         //$this->validator()->remove('education_grade_id', 'required');
 
         $process = function ($model, $entity) use ($event, $data) {
+            $data = $data->getArrayCopy();
             // Removal of some fields that are not in use in the table validation
             $errors = $entity->getErrors();
             $studentStatus = $data[$this->getAlias()]['student_status_id'];
@@ -1167,6 +1168,7 @@ class StudentPromotionTable extends AppTable
     {
         //$params = $this->ControllerAction->getQueryString();
         //$institutionId = $this->ControllerAction->getQueryString('institution_id');
+        $data = $data->getArrayCopy();
         $params = $this->getQueryString();
         $institutionId = $this->getQueryString('institution_id');
         $encodedQueryParams = $this->ControllerAction->paramsEncode($params);

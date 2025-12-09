@@ -266,9 +266,16 @@ class ReportCardStatusesTable extends ControllerActionTable
             ])
             ->first();
         $timeZone = $ConfigItem->zonevalue;
+        // POCOR-9336 start
         if (empty($timeZone)) {
             $this->Alert->warning('ReportCardStatuses.timezone');
+            $timeZone = 'GMT';
         }
+        try {
+            $dateTimeZone = new \DateTimeZone($timeZone);
+        } catch (\Exception $e) {
+            $timeZone = 'GMT';
+        } // POCOR-9336 start
         //POCOR-7581 end
         date_default_timezone_set($timeZone);//POCOR-7067 Ends
         //Start:POCOR-6785 need to convert this custom query to cake query
@@ -285,6 +292,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             $now = new DateTime();
             $currentDateTime = $now->format('Y-m-d H:i:s');
             $c_timestap = strtotime($currentDateTime);
+
             $modifiedDate = $entity->modified->timezone($timeZone)->format('Y-m-d H:i:s');
             //POCOR-6841 starts
             if ($entity->status == 2) {
@@ -430,7 +438,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     "  ",
                     $UsersTable->aliasfield('last_name') => 'literal']),
                 'openemis_no' => $UsersTable->aliasField('openemis_no'),
-                'report_card_status' => $this->StudentsReportCards->aliasField('status'),
+                'report_card_status' => $this->StudentsReportCards->aliasField('status'), //POCOR-9411
                 'report_card_started_on' => $this->StudentsReportCards->aliasField('started_on'),
                 'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on'),
                 'email_status_id' => $this->ReportCardEmailProcesses->aliasField('status'),
@@ -466,7 +474,17 @@ class ReportCardStatusesTable extends ControllerActionTable
                     //$this->ReportCardEmailProcesses->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),//POCOR-8508
                     $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $selectedReportCard
                 ]
-            )
+            )//POCOR-9228[START]
+            ->leftJoin([$this->ReportCardProcesses->getAlias() => $this->ReportCardProcesses->getTable()],
+                [
+                    $this->ReportCardProcesses->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $this->ReportCardProcesses->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $this->ReportCardProcesses->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $this->ReportCardProcesses->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                    //$this->ReportCardProcesses->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),//POCOR-8508
+                    $this->ReportCardProcesses->aliasField('report_card_id = ') . $selectedReportCard
+                ]
+            )//POCOR-9228[END]
             ->where($where)
             ->all();
 
@@ -1056,11 +1074,36 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     private function mergePDFFiles(Array $filenames, $outFile = '', $title = '', $author = '', $subject = '')
     {
-        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [400, 220]]);
+        // POCOR-9221 start
+        $tmpdf = new \Mpdf\Mpdf(['mode' => 'utf-8']); //POCOR-8961
+        $width = 297;
+        $height = 210;
+        if ($filenames) {
+            if (isset($filenames[0])) {
+                $curFile = $filenames[0];
+                if (file_exists($curFile)) {
+                    $tmpdf->SetSourceFile($curFile);
+                    $tplId = $tmpdf->ImportPage(1);
+                    $wh = $tmpdf->getTemplateSize($tplId);
+                    $orientation = trim($wh['orientation']) ?? 'L';
+                    $width = $wh['width'] ?? 297;
+                    $height = $wh['height'] ?? 210;
+                }
+            }
+        }
+        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8',
+            'format' => [$width,$height],
+//            'margin_left' => 40,
+//            'margin_right' => 10,
+//            'margin_top' => 30,
+//            'margin_bottom' => 30,
+        ]); //POCOR-8961
         $mpdf->SetTitle($title);
         $mpdf->SetAuthor($author);
         $mpdf->SetSubject($subject);
-
+        $mpdf->autoScriptToLang = true; //POCOR-7264
+        $mpdf->autoLangToFont = true; //POCOR-7264
+        // POCOR-9221 end
 
         if ($filenames) {
             $filesTotal = sizeof($filenames);
@@ -1070,20 +1113,23 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $curFile = $filenames[$i];
                 if (file_exists($curFile)) {
                     $pageCount = $mpdf->SetSourceFile($curFile);
+
                     for ($p = 1; $p <= $pageCount; $p++) {
                         $tplId = $mpdf->ImportPage($p);
-                        $wh = $mpdf->getTemplateSize($tplId);
-                        if (($p == 1)) {
-                            $mpdf->state = 0;
-                            $mpdf->AddPage('L');
-
-                            $mpdf->UseTemplate($tplId);
+                        // POCOR-9221 start
+                        $tplSize = $mpdf->getTemplateSize($tplId);
+//                        Log::debug(print_r($tplSize, true));
+                        // Determine orientation based on width vs. height
+                        if(isset($tplSize['orientation'])) {
+                            $orientation = $tplSize['orientation'];
                         } else {
-                            $mpdf->state = 1;
-                            $mpdf->AddPage('L');
-
-                            $mpdf->UseTemplate($tplId);
+                            $orientation = ($tplSize['w'] > $tplSize['h']) ? 'L' : 'P';
                         }
+                        // Add a page with the original size and orientation
+                        $mpdf->AddPage($orientation, '', '', '', '', $tplSize['width'], $tplSize['height']);
+                        // POCOR-9221 end
+                        // Always use the template ID
+                        $mpdf->UseTemplate($tplId);
                     }
                 }
             }
@@ -1175,7 +1221,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             ->order(['report_card_id' => 'DESC']);
     }
 
-    public function onGetStatus(Event $event, Entity $entity)
+    /*public function onGetStatus(Event $event, Entity $entity)
     {
         if ($entity->has('report_card_status')) {
             $value = $this->statusOptions[$entity->report_card_status];
@@ -1183,6 +1229,69 @@ class ReportCardStatusesTable extends ControllerActionTable
             $value = $this->statusOptions[self::NEW_REPORT];
         }
         return $value;
+    }*/
+
+    //POCOR-9411
+    private function determineReportCardStatus(array $conditions)
+    {
+        $ProcessesTable = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
+        $InstitutionTable = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
+
+        $process = $ProcessesTable->find()
+            ->select(['status'])
+            ->where($conditions)
+            ->enableHydration(false)
+            ->first();
+
+        $institution = $InstitutionTable->find()
+            ->select(['status'])
+            ->where($conditions)
+            ->enableHydration(false)
+            ->first();
+
+        $processStatus = isset($process['status']) ? (int)$process['status'] : null;
+        $institutionStatus = isset($institution['status']) ? (int)$institution['status'] : null;
+
+        // Priority 1: Institution = 4 (Published) → always use
+        if ($institutionStatus === 4) {
+            return 4;
+        }
+
+        // Priority 2: Otherwise → use process status (even if -1)
+        if ($processStatus !== null) {
+            return $processStatus;
+        }
+
+        // Priority 3:  institution status
+        if ($institutionStatus !== null) {
+            return $institutionStatus;
+        }
+
+        return self::NEW_REPORT;
+    }
+
+    //POCOR-9411
+    public function onGetStatus(Event $event, Entity $entity)
+    {
+        if ($this->action === 'index') {
+            $conditions = [
+                'report_card_id IS'      => $entity->report_card_id,
+                'student_id'          => $entity->student_id,
+                'institution_id IS'      => $this->getInstitutionID(),
+                'academic_period_id IS'  => $entity->academic_period_id,
+                'education_grade_id IS'  => $entity->education_grade_id,
+            ];
+            $finalStatus = $this->determineReportCardStatus($conditions);
+            return $this->statusOptions[$finalStatus] ?? $this->statusOptions[self::NEW_REPORT];
+
+        }else{
+            if ($entity->has('report_card_status')) {
+            $value = $this->statusOptions[$entity->report_card_status];
+            } else {
+                $value = $this->statusOptions[self::NEW_REPORT];
+            }
+            return $value;
+        }
     }
 
     public function onGetStartedOn(Event $event, Entity $entity)
@@ -1201,6 +1310,11 @@ class ReportCardStatusesTable extends ControllerActionTable
             ])
             ->first();
         $timZone = $ConfigItem->zonevalue;
+        try { // POCOR-9336 start
+            $dateTimeZone = new \DateTimeZone($timZone);
+        } catch (\Exception $e) {
+            $timZone = 'GMT';
+        } // POCOR-9336 end
         $value = '';
         if ($timZone) {//POCOR-7581
             if ($entity->has('report_card_started_on')) {
@@ -1475,7 +1589,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $zip->addFromString($file->file_name, $content);
                     unset($content); // Free up memory
                 }
-            }            
+            }
             $zip->close();
             header("Pragma: public", true);
             header("Expires: 0"); // set expiration time
@@ -2421,7 +2535,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     private function addGenerateButton(array $buttons, $params)
     {
         $params['institution_id'] = $this->getInstitutionID();
-        $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+        $generateAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
         $reportCardId = $this->request->getQuery('report_card_id');
         $isAdmin = $this->AccessControl->isAdmin();
         if (!$isAdmin) {
@@ -2445,7 +2559,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             if ($canGenerateAnyDate) {
                 $buttons['generate'] = [
                     'label' => '<i class="fa fa-refresh"></i>' . __('Generate'),
-                    'attr' => $indexAttr,
+                    'attr' => $generateAttr,
                     'url' => $generateUrl,
                 ];
             }
@@ -2488,14 +2602,14 @@ class ReportCardStatusesTable extends ControllerActionTable
                         && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                         $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>' . __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => $generateUrl
                         ];
                     } else {
-                        $indexAttr['title'] = $this->getMessage('ReportCardStatuses.date_closed');
+                        $generateAttr['title'] = $this->getMessage('ReportCardStatuses.date_closed');
                         $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>' . __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => 'javascript:void(0)'
                         ];
                     }

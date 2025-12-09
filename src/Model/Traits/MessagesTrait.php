@@ -145,7 +145,7 @@ trait MessagesTrait
             'contactInstitution' => [
                     'telephone' => 'Telephone cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
                     'fax' => 'Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
-                    'both' => 'Telephone & Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution'
+                    'both' => 'Telephone cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution'
             ],
             'dateCheck' =>'Please enter effective date.', //POCOR-7769
             'dodmsg' => 'Date of Death cannot be earlier then Date of Birth' //POCOR-7982
@@ -784,7 +784,8 @@ trait MessagesTrait
             'noGrades' => 'No Grades',
             'noClassSubjectSelected' => 'Please select Subject and Textbook before adding record',
             'noTextbookStatusCondition' => 'Please define Textbook Status and Condition before proceed',
-            'noTextbookStudent' => 'Please add physical textbook to be added'
+            'noTextbookStudent' => 'Please add physical textbook to be added',
+            'noStudentSelected' => 'Please select student'
         ],
         'InstitutionTextbooks' => [
             'noTextbooks' => 'No Textbooks',
@@ -2648,11 +2649,13 @@ trait MessagesTrait
         ],
         'CopyData' => [
             'updatedRecord' => 'This record has been updated successfully.',
-            'genralerror' => 'To and from academic period can not be same.',
-            'alreadyexist' => 'There are existing data in the selected To Academic Period.',
-            'nodataexist' => 'Data does not exist for seleceted from academic period.',
+            'toandfromacademicperiods' => 'To and from academic period can not be same.', // POCOR-9354
+            'alreadyexist' => 'There is existing data in the Selected To Academic Period.',
+            'educationsystemalreadyexist' => 'Education System already exists in the Selected To Academic Period.', // POCOR-9354
+            'nodataexist' => 'Data does not exist for Selected from Academic Period.',
             'invalidDate' => 'From academic period cannot be greater than to academic period.',
-            'nodataexisteducationsystem' => 'Data does not exist in education system for seleceted to academic period.'
+            'educationsystemnotexist' => 'Education System does not exist in the Selected to Academic period.', // POCOR-9354
+            'nodataexisteducationsystem2' => 'Education System does not exist in the Selected to Academic period (2).'
         ],
         'UserNationalities' => [
             'ValidateNumberSuccess' => 'Identity number validate successfully.',

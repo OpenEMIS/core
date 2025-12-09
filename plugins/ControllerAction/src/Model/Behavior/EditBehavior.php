@@ -31,6 +31,7 @@ class EditBehavior extends Behavior
         }// end
         // POCOR-8543 START
 
+
         $request = $model->request;
         $editAccess = $this->getEditAccess($request, $model);
         if (!$editAccess) {
@@ -74,7 +75,11 @@ class EditBehavior extends Behavior
                 $ids = $model->ControllerAction->getQueryString($primaryKey);
             }
         }
-
+        //POCOR-9402 START bulk process edits for workflow_steps
+        if ($model->getTable() === 'workflow_steps' && preg_match('/^Bulk.*/', $model->getAlias())) {
+            $ids['id'] = 1;
+        }
+        // POCOR-9402 END
         $idKeys = $model->getIdKeys($model, $ids);
 
         $entity = false;
@@ -135,6 +140,14 @@ class EditBehavior extends Behavior
                         }
                     }
                     $process = function ($model, $entity) {
+                        // POCOR-9101 start // don't save changes to main contacts?
+                        if ($entity->get('email') === '') {
+                            $entity->unset('email');
+                        }
+                        if ($entity->get('mobile_number') === '') {
+                            $entity->unset('mobile_number');
+                        }
+                        // POCOR-9101 end
                         return $model->save($entity);
                     };
 

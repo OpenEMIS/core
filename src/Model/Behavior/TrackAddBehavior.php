@@ -90,7 +90,7 @@ class TrackAddBehavior extends Behavior
                 $statement->closeCursor();
             }
         } catch (Exception $e) {
-            Log::write('error', $this->_table->alias() . ' -> ' . __METHOD__ . ': ' . $e->getMessage());
+            Log::write('error', $this->_table->getAlias() . ' -> ' . __METHOD__ . ': ' . $e->getMessage()); // POCOR-9423
         }
     }
 

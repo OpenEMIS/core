@@ -469,7 +469,10 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
     public function generate(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-
+//        Log::debug(print_r([$params['student_id'],
+//            $params['academic_period_id'],
+//            $params['institution_id'],
+//            $params['education_grade_id']],true));
         if ($params) {
             self::addGpaReportCards($params['student_id'],
                 $params['academic_period_id'],
@@ -1034,7 +1037,17 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             ->toArray();
         $gpaIds = array_column($nameOption, 'id');
         $gpaGPAs = [];
-        foreach ($gpaIds as $gpaId) {
+        foreach ($gpaIds as $gpaId) { // POCOR-9177 FIRST CALCULATE ALL GPA
+//            Log::debug('GPA ID: ' . $gpaId);
+            $newGPA = ReportCardGpaTable::insertGpaPerStudentPerGpa( // POCOR-9162
+                $institutionId,
+                $studentId,
+                $academicPeriodId,
+                $educationGradeId,
+                $gpaId);
+            $gpaGPAs[] = $newGPA;
+        }
+        foreach ($gpaIds as $gpaId) { // POCOR-9177 THEN CALCULATE ALL CUM_GPA
 //            Log::debug('GPA ID: ' . $gpaId);
             $newGPA = self::insertCumulativeGpaPerStudentPerGpa( // POCOR-9162
                 $institutionId,
@@ -1044,6 +1057,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 $gpaId);
             $gpaGPAs[] = $newGPA;
         }
+//        Log::debug(print_r($gpaGPAs, true));
         return $gpaGPAs;
         // POCOR-9162 middle
 ////        $selectedAcademicPeriodId = $selectedAcademicPeriodId;
@@ -1662,15 +1676,22 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 'education_grades_gpa_id' => $educationGradeGpaId,
             ])
             ->first();
+        // POCOR-9177 start: make it less
+        $new = false;
         if ($existing) {
-            $existing = $gpaTable->patchEntity($existing, [
-                'gpa' => $gpa,
-                'cumulative_gpa' => $cum_gpa,
-                'modified_user_id' => $userId,
-                'modified' => FrozenTime::now()
-            ]);
+//            Log::debug(print_r([$gpa, $cum_gpa, $existing], true));
+            if ($existing->gpa != $gpa || $existing->cumulative_gpa != $cum_gpa) {
+                $new = true;
+                $existing   = $gpaTable->patchEntity($existing, [
+                    'gpa' => $gpa,
+                    'cumulative_gpa' => $cum_gpa,
+                    'modified_user_id' => $userId,
+                    'modified' => FrozenTime::now()
+                ]);
+            }
         } else {
-            $existing = $gpaTable->newEntity([
+            $new = true;
+                $existing = $gpaTable->newEntity([
                 'student_id' => $studentId,
                 'institution_id' => $institutionId,
                 'academic_period_id' => $academicPeriodId,
@@ -1682,16 +1703,21 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 'created' => FrozenTime::now()
             ]);
         }
-        $conn = $gpaTable->getConnection();
-        $conn->begin();
 
-        if ($gpaTable->save($existing)) {
-            $conn->commit();
-            return $existing; // or whatever
-        } else {
-            $conn->rollback();
-            throw new \Exception("Failed to save GPA record.");
+        if ($new) {
+            $conn = $gpaTable->getConnection();
+            $conn->begin();
+            if ($gpaTable->save($existing)) {
+                $conn->commit();
+                return $existing; // or whatever
+            } else {
+                $conn->rollback();
+                throw new \Exception("Failed to save GPA record.");
+            }
+        }else{
+            return $existing;
         }
+        // POCOR-9177 end
     }
 
     /**
@@ -1705,6 +1731,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
      * @param int $educationGradeGpaId
      * @return float GPA value (0.00 if no result)
      */
+    //POCOR-9226 -- Removed the institution_id conditions from query for CGPA calculations.
     private static function getCumulativeGpaForStudentGpa(
         int $institutionId,
         int $studentId,
@@ -1860,7 +1887,6 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                         INNER JOIN institution_classes ON institution_classes.id = assessment_item_student_exemptions.institution_class_id
                         WHERE
                             institution_classes.academic_period_id = $academicPeriodId
-                            AND institution_classes.institution_id = $institutionId
                             AND assessment_item_student_exemptions.student_id = $studentId
                         GROUP BY
                             assessment_item_student_exemptions.education_subject_id,
@@ -1872,7 +1898,6 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                         exemption_info.academic_period_id = institution_subject_students.academic_period_id AND exemption_info.institution_id = institution_subject_students.institution_id AND exemption_info.education_grade_id = institution_subject_students.education_grade_id AND exemption_info.student_id = institution_subject_students.student_id AND exemption_info.education_subject_id = institution_subject_students.education_subject_id AND exemption_info.academic_term = term_info.academic_term
                 WHERE institution_subject_students.academic_period_id = $academicPeriodId
                 AND institution_subject_students.student_id = $studentId
-                AND institution_subject_students.institution_id = $institutionId
                 AND exemption_info.academic_period_id IS NULL
                 GROUP BY  institution_subject_students.academic_period_id
                         ,institution_subject_students.education_grade_id
@@ -1900,14 +1925,12 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         LEFT JOIN
         (
             SELECT students_gpa.student_id
-                ,students_gpa.institution_id
                 ,current_academic_period.academic_period_id
                 ,MAX(students_gpa.education_grade_id) education_grade_id
                 ,ROUND(AVG(IFNULL(students_gpa.gpa, 0)), 2) cum_gpa_per_student
             FROM
             (
-                SELECT institution_students_gpa.institution_id
-                    ,institution_students_gpa.academic_period_id
+                SELECT institution_students_gpa.academic_period_id
                     ,institution_students_gpa.education_grade_id
                     ,education_grades.code education_grades_code
                     ,institution_students_gpa.student_id
@@ -1962,12 +1985,10 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             AND last_year_grades.main_education_grade_id = current_academic_period.education_grade_id
             AND last_year_grades.education_grade_code = students_gpa.education_grades_code
             GROUP BY students_gpa.student_id
-                ,students_gpa.institution_id
                 ,current_academic_period.academic_period_id
         ) cum_gpa
         ON cum_gpa.academic_period_id = main_q.academic_period_id
         AND cum_gpa.education_grade_id = main_q.education_grade_id
-        AND cum_gpa.institution_id = main_q.institution_id
         AND cum_gpa.student_id = main_q.student_id
         LEFT JOIN institution_students_gpa
         ON institution_students_gpa.student_id = main_q.student_id
@@ -1982,18 +2003,10 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             ,ind_gpa.education_grades_gpa_id;
         ";
 
-
         $result = $connection->execute($sql)->fetch('assoc');
-//        Log::debug('GPA SQL: ' . $sql);
-//        Log::debug('GPA Result: ' . print_r($result,true));
-//        Log::debug('GPA: ' . $result['gpa'] ?? 0.00);
-//        Log::debug('GPA ID: ' . $educationGradeGpaId);
-//        Log::debug('Student ID: ' . $studentId);
-//        Log::debug('Institution ID: ' . $institutionId);
-//        Log::debug('Academic Period ID: ' . $academicPeriodId);
-//        Log::debug('Education Grade ID: ' . $educationGradeId);
         return $result['cum_gpa'] ?? 0.00;
     }
+
     /**
      * @param array $buttons
      * @param $params
@@ -2002,7 +2015,10 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
     private function addGenerateButton(array $buttons, $params)
     {
         $params['institution_id'] = $this->getInstitutionID();
-        $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+        $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false,
+            'target' => '_blank'];
+        $generateAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+
         $educationGradeId = $this->request->getQuery('education_grade_id');
         $isAdmin = $this->AccessControl->isAdmin();
         if (!$isAdmin) {
@@ -2049,7 +2065,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             if ($canGenerateAnyDate) {
                 $buttons['generate'] = [
                     'label' => '<i class="fa fa-refresh"></i>' . __('Generate'),
-                    'attr' => $indexAttr,
+                    'attr' => $generateAttr,
                     'url' => $generateUrl,
                 ];
             }
@@ -2089,14 +2105,14 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                         && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                         $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>' . __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => $generateUrl
                         ];
                     } else {
-                        $indexAttr['title'] = $this->getMessage('ReportCardStatuses.date_closed');
+                        $generateAttr['title'] = $this->getMessage('ReportCardStatuses.date_closed');
                         $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>' . __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => 'javascript:void(0)'
                         ];
                     }

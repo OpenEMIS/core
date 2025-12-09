@@ -1,4 +1,5 @@
 <?php
+
 namespace Meal\Model\Table;
 
 use Cake\ORM\Query;
@@ -29,9 +30,9 @@ use AllowDynamicProperties; // POCOR-8988
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('MealProgrammeTypes', ['className' => 'Meal.MealProgrammeTypes','foreignKey' => 'type']);
-        $this->belongsTo('MealTargetTypes', ['className' => 'Meal.MealTargetTypes','foreignKey' => 'targeting']);
-        $this->belongsTo('MealImplementers', ['className' => 'Meal.MealImplementers','foreignKey' => 'implementer']);
+        $this->belongsTo('MealProgrammeTypes', ['className' => 'Meal.MealProgrammeTypes', 'foreignKey' => 'type']);
+        $this->belongsTo('MealTargetTypes', ['className' => 'Meal.MealTargetTypes', 'foreignKey' => 'targeting']);
+        $this->belongsTo('MealImplementers', ['className' => 'Meal.MealImplementers', 'foreignKey' => 'implementer']);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StudentMeals' => ['index', 'view']
         ]);
@@ -43,9 +44,13 @@ use AllowDynamicProperties; // POCOR-8988
             'through' => 'Meal.MealNutritionalRecords',
             'dependent' => true
         ]);
-       $this->hasMany('MealFoodRecords',
-           ['className' => 'Meal.MealFoodRecords',
-               'foreignKey' => 'meal_programmes_id']); //POCOR-7363
+        $this->hasMany(
+            'MealFoodRecords',
+            [
+                'className' => 'Meal.MealFoodRecords',
+                'foreignKey' => 'meal_programmes_id'
+            ]
+        ); //POCOR-7363
 
         // $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         // $this->addBehavior('Area.Areapicker');
@@ -63,8 +68,8 @@ use AllowDynamicProperties; // POCOR-8988
         $extra['elements']['control'] = [
             'name' => 'Institution.MealProgramme/controls',
             'data' => [
-                'periodOptions'=> $academicPeriodOptions,
-                'selectedPeriod'=> $extra['selectedAcademicPeriodOptions']
+                'periodOptions' => $academicPeriodOptions,
+                'selectedPeriod' => $extra['selectedAcademicPeriodOptions']
             ],
             'order' => 3
         ];
@@ -72,10 +77,10 @@ use AllowDynamicProperties; // POCOR-8988
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 
-        $this->field('academic_period_id',['visible' => false]);
-        $this->field('area_id',['visible' => false]);
+        $this->field('academic_period_id', ['visible' => false]);
+        $this->field('area_id', ['visible' => false]);
         // $this->field('area_level_id',['visible' => false]); //POCOR-6920
-        $this->field('institution_id',['visible' => false]);
+        $this->field('institution_id', ['visible' => false]);
         $this->field('code');
         $this->field('name');
         $this->field('type');
@@ -83,29 +88,29 @@ use AllowDynamicProperties; // POCOR-8988
         $this->field('start_date');
         $this->field('end_date');
         $this->field('amount');
-        $this->field('meal_nutritions',['visible' => false]);
-        $this->field('food_type_id',['visible' => false]);//POCOR-7363
-        $this->field('implementer',['visible' => false]);
+        $this->field('meal_nutritions', ['visible' => false]);
+        $this->field('food_type_id', ['visible' => false]); //POCOR-7363
+        $this->field('implementer', ['visible' => false]);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Meals Programme','Meals');
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Administration', 'Meals Programme', 'Meals');
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
 
     }
 
@@ -113,9 +118,9 @@ use AllowDynamicProperties; // POCOR-8988
     {
         if (isset($extra['selectedAcademicPeriodOptions'])) {
             $query->where([
-                        $this->aliasField('academic_period_id') =>
-                            $extra['selectedAcademicPeriodOptions']
-                    ], [], true); //this parameter will remove all where before this and replace it with new where.
+                $this->aliasField('academic_period_id') =>
+                $extra['selectedAcademicPeriodOptions']
+            ], [], true); //this parameter will remove all where before this and replace it with new where.
         }
     }
 
@@ -123,13 +128,13 @@ use AllowDynamicProperties; // POCOR-8988
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $typeOptions = $this->MealNutritions->find('list')->toArray();
-        $foodTable= TableRegistry::get('Meal.FoodTypes');//POCOR_7363
-        $foodTypeOptions = $foodTable->find('list')->toArray();//POCOR-7363
+        $foodTable = TableRegistry::get('Meal.FoodTypes'); //POCOR_7363
+        $foodTypeOptions = $foodTable->find('list')->toArray(); //POCOR-7363
         // $AreaLevelsOptions = $this->AreaLevels->find('list')->toArray(); //POCOR-6920
-        $this->field('academic_period_id',['select' => false]);
+        $this->field('academic_period_id', ['select' => false]);
         $this->field('code');
         $this->field('name');
-        $this->field('type',['select' => false]);
+        $this->field('type', ['select' => false]);
         $this->field('targeting');
         $this->field('start_date');
         $this->field('end_date');
@@ -149,11 +154,12 @@ use AllowDynamicProperties; // POCOR-8988
             ],
             'options' =>  $foodTypeOptions
         ]);
-          //POCOR-7363 end
+        //POCOR-7363 end
         $this->field('implementer');
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    {
         if ($action == 'add') {
             list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
 
@@ -198,9 +204,9 @@ use AllowDynamicProperties; // POCOR-8988
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
 
-         $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
+        $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
 
-         return compact('levelOptions', 'selectedLevel');
+        return compact('levelOptions', 'selectedLevel');
     }
 
     // public function onUpdateFieldTargeting(Event $event, array $attr, $action, Request $request)
@@ -220,10 +226,9 @@ use AllowDynamicProperties; // POCOR-8988
         if (!empty($querystringMeal)) {
             $list = $this
                 ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                 ->where([ $this->aliasField('academic_period_id') => $querystringMeal ])
+                ->where([$this->aliasField('academic_period_id') => $querystringMeal])
                 ->toArray();
-        }
-        else{
+        } else {
             $list = $this
                 ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                 ->toArray();
@@ -240,9 +245,9 @@ use AllowDynamicProperties; // POCOR-8988
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
 
-         $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
+        $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
 
-         return compact('levelOptions', 'selectedLevel');
+        return compact('levelOptions', 'selectedLevel');
     }
 
     // public function onUpdateFieldMealNutritions(Event $event, array $attr, $action, Request $request)
@@ -256,15 +261,15 @@ use AllowDynamicProperties; // POCOR-8988
         return $attr;
     }
 
-     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-       //POCOR-7363 start
+        //POCOR-7363 start
         $query->contain(['MealFoodRecords']);
-         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $arr =[];
-                foreach($row->meal_food_records as $key=> $food){
-                    $arr[$key] = ['id'=>$food['food_type_id']];
+                $arr = [];
+                foreach ($row->meal_food_records as $key => $food) {
+                    $arr[$key] = ['id' => $food['food_type_id']];
                 }
                 $row['food_type_id'] = $arr;
 
@@ -276,11 +281,11 @@ use AllowDynamicProperties; // POCOR-8988
         $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
         $MealsProgrammeId = $this->paramsDecode($this->request->getParam('pass')[1]);
         $MealInstitutionProgrammesData = $MealInstitutionProgrammes
-                            ->find()
-                            ->contain(['Institutions'])
-                            ->where([$MealInstitutionProgrammes->aliasField('meal_programme_id')=>$MealsProgrammeId['id']])
-                            ->toArray();
-        if(!empty($MealInstitutionProgrammesData)){
+            ->find()
+            ->contain(['Institutions'])
+            ->where([$MealInstitutionProgrammes->aliasField('meal_programme_id') => $MealsProgrammeId['id']])
+            ->toArray();
+        if (!empty($MealInstitutionProgrammesData)) {
             $query->contain([
                 'MealNutritions'
             ]);
@@ -289,22 +294,22 @@ use AllowDynamicProperties; // POCOR-8988
                 return $results->map(function ($row) {
                     $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
                     $MealInstitutionProgrammesData = $MealInstitutionProgrammes
-                                ->find()
-                                ->contain(['Institutions'])
-                                ->where([$MealInstitutionProgrammes->aliasField('meal_programme_id')=>$row->id])
-                                ->all();
+                        ->find()
+                        ->contain(['Institutions'])
+                        ->where([$MealInstitutionProgrammes->aliasField('meal_programme_id') => $row->id])
+                        ->all();
 
                     $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
-                    foreach($MealInstitutionProgrammesData AS $institutionData){
+                    foreach ($MealInstitutionProgrammesData as $institutionData) {
                         $institutionArr[] = $institutionData->institution_id;
                     }
-                    if(!empty($institutionArr)){
+                    if (!empty($institutionArr)) {
                         $Institutions = TableRegistry::get('Institution.Institutions');
                         $InstitutionsResult = $Institutions
                             ->find()
                             ->where(['id IN' => $institutionArr])
                             ->all();
-                        foreach($InstitutionsResult AS $InstitutionsResultData){
+                        foreach ($InstitutionsResult as $InstitutionsResultData) {
                             $InstitutionsData[] =  $InstitutionsResultData;
                         }
                         $row['institution_id'] = $InstitutionsResult;
@@ -314,60 +319,63 @@ use AllowDynamicProperties; // POCOR-8988
                             ->select([$MealInstitutionProgrammes->aliasField('area_id')])
                             ->where(['meal_programme_id' => $row->id])
                             ->all();
-                        if(!empty($AreaResult)){
-                            foreach($AreaResult AS $AreaData){
+                        if (!empty($AreaResult)) {
+                            foreach ($AreaResult as $AreaData) {
                                 $areaArr[] = $AreaData->area_id;
                             }
                             $Areas = TableRegistry::get('Area.Areas');
-                            if($areaArr[0] == -1){
+                            if ($areaArr[0] == -1) {
                                 $AreasResult = $Areas
-                                ->find()
-                                ->all();
-                            }else{
+                                    ->find()
+                                    ->all();
+                            } else {
                                 $AreasResult = $Areas
-                                ->find()
-                                ->where(['id IN' => $areaArr])
-                                ->all();
+                                    ->find()
+                                    ->where(['id IN' => $areaArr])
+                                    ->all();
                             }
-                            foreach($AreasResult AS $AreaResultData){
+                            foreach ($AreasResult as $AreaResultData) {
                                 $AreaDataVal[] =  $AreaResultData;
                             }
                             $row['area_id'] = $AreaDataVal;
                         }
                     }
-                    return $row ;
+                    return $row;
                 });
             });
-        }else{
+        } else {
             // echo "Hell";die;
             $query->contain([
                 'MealNutritions'
             ]);
-            return $query ;
+            return $query;
         }
 
         //END : POCOR-6608
     }
 
-    public function viewAfterAction(Event $event, Entity $entity) {
+    public function viewAfterAction(Event $event, Entity $entity)
+    {
 
         $this->setupFields($entity);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {   $this->fields['id']['type'] = 'hidden';
+    {
+        $this->fields['id']['type'] = 'hidden';
         $this->setupFields($entity);
     }
 
 
-    private function setupFields(Entity $entity = null) {
+    private function setupFields(Entity $entity = null)
+    {
 
         $attr = [];
         if (!is_null($entity)) {
             $attr['attr'] = ['entity' => $entity];
         }
 
-        $this->field('academic_period_id',['select' => false]);
+        $this->field('academic_period_id', ['select' => false]);
         $this->field('code');
         $this->field('name');
         $this->field('targeting');
@@ -381,17 +389,23 @@ use AllowDynamicProperties; // POCOR-8988
             'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]
         ]);
         // POCOR-8988 start
-        $this->field('area_id',
-            ['attr' => ['entity' => $entity],
+        $this->field(
+            'area_id',
+            [
+                'attr' => ['entity' => $entity],
                 'entity' => $entity,
-                'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false]);
+                'type' => 'areapicker',
+                'source_model' => 'Area.Areas',
+                'displayCountry' => false
+            ]
+        );
         $this->field('institution_id', [
             'attr' => ['entity' => $entity],
-                'entity' => $entity,
+            'entity' => $entity,
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true],
-            ]);
+        ]);
         // POCOR-8988 end
-        $this->field('type',['select' => false]);
+        $this->field('type', ['select' => false]);
         $this->field('meal_nutritions', [
             'type' => 'chosenSelect',
             'attr' => [
@@ -410,7 +424,6 @@ use AllowDynamicProperties; // POCOR-8988
         ]);
         //POCOR-7363 end
         $this->field('implementer');
-
     }
 
     public function getNutritionalOptions()
@@ -421,9 +434,9 @@ use AllowDynamicProperties; // POCOR-8988
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
 
-         $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
+        $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
 
-         return compact('levelOptions', 'selectedLevel');
+        return compact('levelOptions', 'selectedLevel');
     }
 
     // public function onUpdateFieldImplementer(Event $event, array $attr, $action, Request $request)
@@ -446,9 +459,9 @@ use AllowDynamicProperties; // POCOR-8988
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
 
-         $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
+        $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
 
-         return compact('levelOptions', 'selectedLevel');
+        return compact('levelOptions', 'selectedLevel');
     }
 
     public function getAcademicPeriodOptions($querystringPeriod)
@@ -471,7 +484,6 @@ use AllowDynamicProperties; // POCOR-8988
 
         if ($this->action == 'index') {
             $selectedAcademicPeriod = $request->getQuery('period') ?? $this->AcademicPeriods->getCurrent();
-
         }
         if ($this->action == 'add') {
             $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
@@ -488,7 +500,8 @@ use AllowDynamicProperties; // POCOR-8988
         $list = $MealProgramme
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->innerJoin(
-                [$MealInstitutionProgrammes->getAlias() => $MealInstitutionProgrammes->getTable()], [
+                [$MealInstitutionProgrammes->getAlias() => $MealInstitutionProgrammes->getTable()],
+                [
                     $MealProgramme->aliasField('id = ') . $MealInstitutionProgrammes->aliasField('meal_programme_id')
                 ]
             )
@@ -500,16 +513,19 @@ use AllowDynamicProperties; // POCOR-8988
         return $list;
     }
 
-    public function findMealInstitutionProgrammes(Query $query, array $options){
+    public function findMealInstitutionProgrammes(Query $query, array $options)
+    {
         $institutionId = $options['institution_id'];
         return $query
-        ->where([
-            $this->aliasField('institution_id') => $institutionId])
-        ->orWhere([
-            $this->aliasField('institution_id') => 0 ]);
+            ->where([
+                $this->aliasField('institution_id') => $institutionId
+            ])
+            ->orWhere([
+                $this->aliasField('institution_id') => 0
+            ]);
     }
 
-     public function onGetAreaId(Event $event, Entity $entity)
+    public function onGetAreaId(Event $event, Entity $entity)
     {
         $areaName = ''; // POCOR-8988
         if ($this->action == 'index') {
@@ -523,9 +539,9 @@ use AllowDynamicProperties; // POCOR-8988
             try {
                 if ($areaId > 0) {
                     $path = $this->Areas
-                    ->find('path', ['for' => $areaId])
-                    ->contain('AreaLevels')
-                    ->toArray();
+                        ->find('path', ['for' => $areaId])
+                        ->contain('AreaLevels')
+                        ->toArray();
 
                     foreach ($path as $value) {
                         if ($value['area_level']['level'] == $areaLevel) {
@@ -555,13 +571,13 @@ use AllowDynamicProperties; // POCOR-8988
                 return __('End Date');
             case 'modified_user_id':
                 return __('Modified By');
-             case 'modified':
+            case 'modified':
                 return __('Modified');
-             case 'created_user_id':
+            case 'created_user_id':
                 return __('Created By');
-             case 'created':
+            case 'created':
                 return __('Created On');
-             case 'code':
+            case 'code':
                 return __('Code');
             case 'academic_period_id':
                 return __('Academic Period');
@@ -594,20 +610,20 @@ use AllowDynamicProperties; // POCOR-8988
             ->where(['meal_programme_id' => $entity->id])
             ->all();
 
-        foreach($result AS $AreaData){
+        foreach ($result as $AreaData) {
             $areaArr[] = $AreaData->area_id;
         }
         $Areas = TableRegistry::get('Area.Areas');
-        if(!empty($areaArr)){
+        if (!empty($areaArr)) {
             $AreasResult = $Areas
-            ->find('list')
-            ->where(['id IN' => $areaArr])
-            ->toArray();
-            foreach($AreasResult AS $AreaResultData){
+                ->find('list')
+                ->where(['id IN' => $areaArr])
+                ->toArray();
+            foreach ($AreasResult as $AreaResultData) {
                 $AreaDataVal[] =  $AreaResultData;
             }
         }
-        return (!empty($AreaDataVal))? implode(', ', $AreaDataVal): 'All area';
+        return (!empty($AreaDataVal)) ? implode(', ', $AreaDataVal) : 'All area';
     }
 
     public function onGetInstitutionId(Event $event, Entity $entity)
@@ -625,20 +641,20 @@ use AllowDynamicProperties; // POCOR-8988
             ->select([$MealInstitutionProgrammes->aliasField('institution_id')])
             ->where(['meal_programme_id' => $entity->id])
             ->all();
-        foreach($result AS $institutionData){
+        foreach ($result as $institutionData) {
             $institutionArr[] = $institutionData->institution_id;
         }
-        if(!empty($institutionArr)){
+        if (!empty($institutionArr)) {
             $Institutions = TableRegistry::get('Institution.Institutions');
             $InstitutionsResult = $Institutions
                 ->find('list')
                 ->where(['id IN' => $institutionArr])
                 ->toArray();
-            foreach($InstitutionsResult AS $InstitutionsResultData){
+            foreach ($InstitutionsResult as $InstitutionsResultData) {
                 $InstitutionsData[] =  $InstitutionsResultData;
             }
         }
-        return (!empty($InstitutionsData))? implode(', ', $InstitutionsData): ' ';
+        return (!empty($InstitutionsData)) ? implode(', ', $InstitutionsData) : ' ';
         // END: POCOR-6608
     }
 
@@ -681,7 +697,7 @@ use AllowDynamicProperties; // POCOR-8988
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-//        dd($entity);
+        //        dd($entity);
         $this->updateMealInstitutionRecords($entity);
         $this->updateMealFoodRecords($entity);
     }
@@ -781,12 +797,16 @@ use AllowDynamicProperties; // POCOR-8988
             return;
         }
         $record_id = $entity->id;
-        if(empty($record_id)){
+        if (empty($record_id)) {
             return;
         }
 
         $MealFoodRecordsTable = TableRegistry::getTableLocator()->get('Meal.MealFoodRecords');
-        $newFoodTypeIds = array_map('intval', $entity->food_type_id['_ids'] ?? []);
+
+        $newFoodTypeIds = is_array($entity->food_type_id['_ids'] ?? null)
+            ? array_map('intval', $entity->food_type_id['_ids'])
+            : []; //POCOR-9180
+
 
         // Fetch existing food type records for this meal programme
         $existingFoodRecords = $MealFoodRecordsTable->find()
@@ -883,9 +903,9 @@ use AllowDynamicProperties; // POCOR-8988
         // Get all descendant areas
         $allAreas = [];
         $this->getDescendantAreas($areaIdArray, $Areas, $allAreas);
-//        dd([$areaIdArray, $allAreas]);
+        //        dd([$areaIdArray, $allAreas]);
         $allAreas = array_merge($areaIdArray, $allAreas);
-        if(in_array(-1, $allAreas)){
+        if (in_array(-1, $allAreas)) {
             $allAreas = [];
         }
         $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
@@ -908,7 +928,7 @@ use AllowDynamicProperties; // POCOR-8988
             $InstitutionsTable->aliasField('code') => 'ASC',
             $InstitutionsTable->aliasField('name') => 'ASC'
         ])->toArray();
-        if(count($options) > 0){
+        if (count($options) > 0) {
             $options = [-1 => __('All Institutions')] + $options;
         }
         return $options;
@@ -920,7 +940,7 @@ use AllowDynamicProperties; // POCOR-8988
     private function getSelectedAreasIds(ServerRequest $request, $MealsProgrammeId = null): array
     {
         $areaIds = $request->getData('MealProgrammes.area_id._ids') ?? [];
-        if(empty($areaIds)){
+        if (empty($areaIds)) {
             $areaIds = [];
         }
         // Fetch present area IDs if editing
@@ -950,7 +970,7 @@ use AllowDynamicProperties; // POCOR-8988
     {
         $institutionIds = $request->getData('MealProgrammes.institution_id._ids') ?? [];
 
-        if(empty($institutionIds)){
+        if (empty($institutionIds)) {
             $institutionIds = [];
         }
         // Fetch present institution IDs if editing
@@ -966,21 +986,19 @@ use AllowDynamicProperties; // POCOR-8988
             $institutionIds = array_merge($institutionIds, $presentInstitutionIds);
 
             $institutionIds = array_intersect($institutionIds, array_keys($institutionOptions));
-
-
         }
         if (empty($institutionIds)) {
             return [];
         }
-        if(in_array("-1", $institutionIds)){
+        if (in_array("-1", $institutionIds)) {
             $institutionIds = array_keys($institutionOptions);
             unset($institutionIds[array_search("-1", $institutionIds)]);
         }
-//        dd($institutionIds);
+        //        dd($institutionIds);
         return array_unique((array) $institutionIds);
     }
 
-  /**
+    /**
      * Retrieves selected areas for multi-select.
      */
     private function getSelectedAreas(ServerRequest $request)
@@ -1032,7 +1050,7 @@ use AllowDynamicProperties; // POCOR-8988
      */
     private function getDescendantAreas(array $parentIds, $Areas, array &$allChildAreas)
     {
-        if(empty($parentIds)) {
+        if (empty($parentIds)) {
             $allChildAreas = [];
             return;
         }
@@ -1046,7 +1064,6 @@ use AllowDynamicProperties; // POCOR-8988
         if (!empty($childAreas)) {
             $allChildAreas = array_merge($allChildAreas, $childAreas);
             $this->getDescendantAreas($childAreas, $Areas, $allChildAreas);
-
         }
     }
 
@@ -1059,13 +1076,14 @@ use AllowDynamicProperties; // POCOR-8988
     */
 
     public function getMealInstitutionProgrammes($options)
-     {
+    {
         $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
         $MealProgramme = TableRegistry::get('Meal.MealProgrammes');
         $list = $MealProgramme
-             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+            ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->innerJoin(
-                [$MealInstitutionProgrammes->getAlias() => $MealInstitutionProgrammes->getTable()], [
+                [$MealInstitutionProgrammes->getAlias() => $MealInstitutionProgrammes->getTable()],
+                [
                     $MealProgramme->aliasField('id = ') . $MealInstitutionProgrammes->aliasField('meal_programme_id')
                 ]
             )
@@ -1073,9 +1091,9 @@ use AllowDynamicProperties; // POCOR-8988
                 $MealProgramme->aliasField('academic_period_id') => $options['academid_period_id'],
                 $MealInstitutionProgrammes->aliasField('institution_id') => $options['institution_id']
             ])
-             ->toArray();
-         return $list;
-     }
+            ->toArray();
+        return $list;
+    }
 
     /*
     * Delete data from `institution_meal_programmes` which is related to `meal_programmes` table
@@ -1086,11 +1104,11 @@ use AllowDynamicProperties; // POCOR-8988
     {
         $MealInstitutionProgrammes = TableRegistry::get('Institution.InstitutionDistributions');
         $InstitutionProgrammes = $MealInstitutionProgrammes
-                ->find('all')->select(['id'])
-                ->where([
-                    $MealInstitutionProgrammes->aliasField('meal_programmes_id') => $entity->id
-                ])->toArray();
-        if(!empty($InstitutionProgrammes)){
+            ->find('all')->select(['id'])
+            ->where([
+                $MealInstitutionProgrammes->aliasField('meal_programmes_id') => $entity->id
+            ])->toArray();
+        if (!empty($InstitutionProgrammes)) {
             foreach ($InstitutionProgrammes as $key => $Programmes) {
                 $MealInstitutionProgrammes->delete($Programmes);
             }
@@ -1098,11 +1116,11 @@ use AllowDynamicProperties; // POCOR-8988
         //POCOR-7363 start
         $MealFoodTable = TableRegistry::get('Meal.MealFoodRecords');
         $MealFoodRecords =  $MealFoodTable
-                ->find('all')->select(['id'])
-                ->where([
-                    $MealFoodTable->aliasField('meal_programmes_id') => $entity->id
-                ])->toArray();
-        if(!empty($MealFoodRecords)){
+            ->find('all')->select(['id'])
+            ->where([
+                $MealFoodTable->aliasField('meal_programmes_id') => $entity->id
+            ])->toArray();
+        if (!empty($MealFoodRecords)) {
             foreach ($MealFoodRecords as $key => $mealFood) {
                 $MealFoodTable->delete($mealFood);
             }
@@ -1110,20 +1128,18 @@ use AllowDynamicProperties; // POCOR-8988
     }
     public function onGetFoodTypeId(Event $event, Entity $entity)
     {
-        $table=TableRegistry::get('Meal.FoodTypes');
+        $table = TableRegistry::get('Meal.FoodTypes');
         $obj = [];
         if ($entity->has('food_type_id')) {
 
             foreach ($entity->food_type_id as $role) {
-               $res= $table->find('list')->where(['id'=>$role['id']])->first();
-               $obj[] = $res;
+                $res = $table->find('list')->where(['id' => $role['id']])->first();
+                $obj[] = $res;
             }
         }
 
         $values = !empty($obj) ? implode(', ', $obj) : __('No Excluded Security Roles ');
         return $values;
-
-    }//POCOR-7363 end
+    } //POCOR-7363 end
 
 }
-

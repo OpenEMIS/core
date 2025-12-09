@@ -508,15 +508,76 @@ class StaffPositionTitlesTable extends ControllerActionTable
      * @author Prajakta K
      * @ticket POCOR-8093
      */
-	public function getPrincipalRoleId()
+	// public function getPrincipalRoleId()
+    // {
+    //     $principalData = $this->find()
+    //         ->select([$this->getPrimaryKey()])
+    //         ->where([$this->aliasField('name') => 'Principal'])
+    //         ->first();
+
+    //     return (!empty($principalData))? $principalData->id: null;
+    // }
+
+
+	/**
+     * Get the code of Staff according to Position
+     * @usage  Used to fetch principal and vice principal code
+     * @author Ehteram
+     * @ticket POCOR-9208
+	 * Reason to update this code; Principal may have diffrent name in some ENV 
+     */
+	public function getPrincipalRoleId_old()
     {
         $principalData = $this->find()
             ->select([$this->getPrimaryKey()])
             ->where([$this->aliasField('name') => 'Principal'])
             ->first();
+		if(empty($principalData)){
+			$principalData = $this->find()
+				->select([$this->getPrimaryKey()])
+				->where([$this->aliasField('name') => 'Deputy Principal - Non-Teaching'])
+				->first();
+		}
+		if(empty($principalData)){
+			$principalData = $this->find()
+            ->select([$this->getPrimaryKey()])
+			->where([$this->aliasField('name') => 'Deputy Principal - Teaching'])
+            ->first();
+		}
+
+		if(empty($principalData)){
+			$principalData = $this->find()
+            ->select([$this->getPrimaryKey()])
+			->where([$this->aliasField('name') => 'Principal - teaching'])
+            ->first();
+		}
 
         return (!empty($principalData))? $principalData->id: null;
     }
+
+	/**
+     * @usage  Used to fetch principal code based on security role id and name
+      * @author Prajakta
+     * @ticket POCOR-9413
+	 * @ticket POCOR-9442
+	 * Reason to update this code: Principal may have diffrent name in some ENV and also security role id is mandatory to fetch correct principal role
+     */
+	public function getPrincipalRoleId($staffRoleId = null)
+	{
+		$query = $this->find()
+			->select([$this->getPrimaryKey()])
+			->where(function ($exp, $q) {
+				return $exp->like($this->aliasField('name'), '%Principal%');
+			});
+
+		if (!empty($staffRoleId)) {
+			$query->andWhere([$this->aliasField('security_role_id') => $staffRoleId]);
+		}
+
+		$principalData = $query->all();
+
+		return !empty($principalData) ? $principalData->extract('id')->toList() : [];
+	}
 
 	public function getDeputyPrincipalRoleId()
     {

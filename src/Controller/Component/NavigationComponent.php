@@ -133,7 +133,17 @@ class NavigationComponent extends Component
         $this->request = $request;
         $session = $request->getSession();
         $authUserId = $session->read('Auth.User.id');
-        if (isset($authUserId)) {
+        //POCOR-9429 start
+        $userRoleIdArray = $this->getUserRoleIdArray($authUserId);
+        
+        if(!$this->AccessControl->isAdmin() && (empty($userRoleIdArray)||$userRoleIdArray[0]==0)) { //POCOR-9429 
+           $navigations = [];
+           $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigationForUsersWithoutSecurityRoles());
+           $navigations = $this->appendNavigation('Profiles.Personal', $navigations, $this->getProfileNavigationForUsersWithoutSecurityRoles());
+           return $navigations;
+        }
+        elseif (isset($authUserId)) {
+        //POCOR-9429 start
             // POCOR-8989 end
             //$navigations = $this->getNavigation();
             $navigations = $this->getMainNavigation();
@@ -722,7 +732,7 @@ class NavigationComponent extends Component
                     'Institutions.Staff',
                     'Institutions.StaffTransferIn',
                     'Institutions.StaffTransferOut',
-                    'StaffHistories.index'
+                    'Institutions.StaffHistories.index' // POCOR-3128
                 ]
             ],
 
@@ -877,6 +887,7 @@ class NavigationComponent extends Component
             'Institutions.ExaminationResults.index' => [
                 'title' => 'Results',
                 'parent' => 'Institutions.Examinations',
+                'selected' => ['Institutions.ExaminationResults'],
             ],
 
             'Institutions.ReportCards' => [
@@ -904,6 +915,11 @@ class NavigationComponent extends Component
                     'Institutions.Positions',
                     'Institutions.ImportInstitutionPositions'
                 ],
+            ],
+            'Institutions.Departments.index' => [ //POCOR-8030
+                'title' => 'Departments',
+                'parent' => 'Institutions.Appointment',
+                'selected' => ['Institutions.Departments'],
             ],
             'Institutions.StaffDuties.index' => [
                 'title' => 'Duties',
@@ -977,6 +993,19 @@ class NavigationComponent extends Component
                     'Institutions.InstitutionRooms'
                 ]
             ],
+            //POCOR-5208 Start
+            'Institutions.InfrastructureAttachments.index' => [
+                'title' => 'Attachments',
+                'parent' => 'Infrastructures',
+                'selected' => [
+                    'Institutions.InfrastructureAttachments.index',
+                    'Institutions.InfrastructureAttachments.view',
+                    'Institutions.InfrastructureAttachments.add',
+                    'Institutions.InfrastructureAttachments.edit',
+                    'Institutions.InfrastructureAttachments.delete'
+                ]
+            ],
+            //POCOR-5208 End
 
             // POCOR-6150 start
             'Institutions.InfrastructureNeeds.index' => [
@@ -1141,7 +1170,7 @@ class NavigationComponent extends Component
             ],
 
             'Institutions.Survey' => [
-                'title' => $label,//POCOR-9033
+                'title' => $label, //POCOR-9033
                 'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
@@ -1166,8 +1195,10 @@ class NavigationComponent extends Component
             'Institutions.VisitRequests.index' => [
                 'title' => 'Visits',
                 'parent' => 'Institutions.Institutions.index',
-                'selected' => ['Institutions.VisitRequests',
-                    'Institutions.Visits']
+                'selected' => [
+                    'Institutions.VisitRequests',
+                    'Institutions.Visits'
+                ]
             ],
             // POCOR-9059[END]
             'Institutions.Transport' => [
@@ -1441,7 +1472,7 @@ class NavigationComponent extends Component
                     'Students.SpecialNeedsDiagnostics'
                 ]
             ],
-            
+
             // POCOR-9059[START]
             // 'Student.Students.StudentVisitRequests.index' => [
             //     'title' => 'Visits',
@@ -1757,7 +1788,7 @@ class NavigationComponent extends Component
     {
         $session = $this->getController()->getRequest()->getSession();
         $institutionId = $this->getInstitutionID(); // POCOR-9081
-//        $institutionId = $session->read('Institution.Institutions.id');
+        //        $institutionId = $session->read('Institution.Institutions.id');
 
         if (!empty($institutionId)) {
             //$Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
@@ -1971,6 +2002,7 @@ class NavigationComponent extends Component
                     'Directories.StaffClasses',
                     'Directories.StaffSubjects',
                     'Directories.StaffLeave',
+                    'Directories.StaffEntitlement', // POCOR-9287
                     'Directories.ArchivedStaffLeave',
                     'Directories.HistoricalStaffLeave',
                     'Directories.StaffAttendances',
@@ -2301,7 +2333,64 @@ class NavigationComponent extends Component
         }
         return $navigation;
     }
+     //POCOR-9429 start
+    public function getProfileNavigationForUsersWithoutSecurityRoles()
+    {
 
+        
+        $session = $this->getController()->getRequest()->getSession();
+        $userID = $session->read('Auth.User.id');
+        $params = [
+            'id' => $userID,
+            'user_id' => $userID
+        ];
+        $profileUserId = $this->controller->paramsEncode($params);
+
+        $PersonalNavigation = [
+            'Profiles.Personal' => [
+                'title' => 'Personal',
+                'icon' => '<span><i class="fa kd-role"></i></span>',
+                'params' => [
+                    'plugin' => 'Profile',
+                    'action' => 'Personal',
+                    0 => 'view',
+                    $profileUserId
+                ]
+            ]
+        ];
+        $navigation = [
+            'Profiles.PersonalDashboard.view' => [
+                'title' => 'Dashboard',
+                'parent' => 'Profiles.Personal',
+                'params' => [
+                    'plugin' =>
+                    'Profile',
+                    'action' => 'PersonalDashboard',
+                    'selected' => ['Profiles.PersonalDashboard.view']
+                ],
+            ],
+            'Profiles.Profiles.view' => [
+                'title' => 'General',
+                'parent' => 'Profiles.Personal',
+                'params' => [
+                    'plugin' => 'Profile',
+                    'action' => 'Personal'
+                ],
+                'selected' => [
+                    'Profiles.Personal.view',
+                    'Profiles.Personal.pull',
+                ] 
+            ],
+        ];
+        foreach ($navigation as &$n) {
+            if (isset($n['params'])) {
+                $n['params'][] = $profileUserId;
+            }
+        }
+        $navigation = array_merge($PersonalNavigation, $navigation);
+        return $navigation;
+    }
+    //POCOR-9429 end
     public function getProfileStaffNavigation()
     {
         $navigation = [
@@ -2630,7 +2719,12 @@ class NavigationComponent extends Component
                 'title' => 'Custom',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
-            ]
+            ], //POCOR-9267 Starts
+            'Reports.Meals' => [
+                'title' => 'Meals',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ] //POCOR-9267 Ends
         ];
         return $navigation;
     }
@@ -2834,13 +2928,15 @@ class NavigationComponent extends Component
                         'Configurations.Authentication',
                         'Configurations.AuthSystemAuthentications',
                         'Configurations.CustomValidation',
+                        'Configurations.StaffReleases',//POCOR-9455
+                        'Configurations.StaffTransfers',//POCOR-9455
                         'Configurations.AdministrativeBoundaries',
                         'Configurations.Theme' => [
                             'title' => 'Themes',
                             'parent' => 'Themes',
-                            'selected' => ['Notices.Notices']
+                            // 'selected' => ['Notices.Notices']
                         ]
-                    ]
+                    ],
                 ],
                 // Start POCOR-5188
                 'Manuals.Institutions' => [
@@ -2857,12 +2953,12 @@ class NavigationComponent extends Component
                     ]
                 ],
                 // End POCOR-5188
-
+                /*
                 'Notices.index' => [
                     'title' => 'Notices',
                     'parent' => 'SystemSetup',
                     'selected' => ['Notices.Notices']
-                ],
+                ],*/
                 'Risks.Risks' => [
                     'title' => 'Risks',
                     'parent' => 'SystemSetup',
@@ -3032,14 +3128,11 @@ class NavigationComponent extends Component
                             'parent' => 'SystemSetup',
                             'link' => false
                         ],
-                        'Credentials.index' => [
+                        'Credentials.Credentials.index' => [ //POCOR-9256
                             'title' => 'Credentials',
                             'parent' => 'API',
                             'selected' => [
-                                'Credentials.view',
-                                'Credentials.add',
-                                'Credentials.edit',
-                                'Credentials.delete'
+                                'Credentials.Credentials'
                             ]
                         ],
                     ];
@@ -3134,16 +3227,13 @@ class NavigationComponent extends Component
                     //     'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
                     // ],
                     //POCOR-7312[END]
-                    'Credentials.index' => [
+                    'Credentials.Credentials.index' => [ //POCOR-9256
                         'title' => 'Credentials',
                         'parent' => 'API',
                         'selected' => [
-                            'Credentials.view',
-                            'Credentials.add',
-                            'Credentials.edit',
-                            'Credentials.delete'
-                        ]
-                    ],
+                            'Credentials.Credentials'
+                        ],
+                    ]
                 ];
             }
         } else {
@@ -3231,14 +3321,11 @@ class NavigationComponent extends Component
                     //     'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
                     // ],
                     //POCOR-7312[END]
-                    'Credentials.Credentials' => [
+                    'Credentials.Credentials.index' => [ //POCOR-9256
                         'title' => 'Credentials',
                         'parent' => 'API',
                         'selected' => [
-                            'Credentials.view',
-                            'Credentials.add',
-                            'Credentials.edit',
-                            'Credentials.delete'
+                            'Credentials.Credentials'
                         ]
                     ],
                 ];
@@ -3717,6 +3804,12 @@ class NavigationComponent extends Component
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.Logs']
                     ],
+                    'Alerts.Notices' => [
+                        'title' => 'Notices',
+                        'parent' => 'Administration.Communications',
+                        'params' => ['plugin' => 'Alert'],
+                        'selected' => ['Alerts.Notices']
+                    ],
                 ];
             }
         } else {
@@ -3745,6 +3838,12 @@ class NavigationComponent extends Component
                     'parent' => 'Administration.Communications',
                     'params' => ['plugin' => 'Alert'],
                     'selected' => ['Alerts.Logs']
+                ],
+                'Alerts.Notices' => [
+                    'title' => 'Notices',
+                    'parent' => 'Administration.Communications',
+                    'params' => ['plugin' => 'Alert'],
+                    'selected' => ['Alerts.Notices']
                 ],
             ];
         }
@@ -4280,6 +4379,8 @@ class NavigationComponent extends Component
                             'Scholarships.Applications.index',
                             'UsersDirectory.index',
                             'UsersDirectory.view',
+                            'Scholarships.UsersDirectory.index',//POCOR-9435
+                            'Scholarships.UsersDirectory.view',//POCOR-9435
                             'Scholarships.Identities.index',
                             'Scholarships.Identities.view',
                             'Scholarships.Nationalities.index',
@@ -4348,15 +4449,17 @@ class NavigationComponent extends Component
                     'title' => 'Applications',
                     'parent' => 'Administration.Scholarships',
                     'params' => ['plugin' => 'Scholarship'],
-                    'selected' => [
-                        'Scholarships.Applications.index',
-                        'UsersDirectory.index',
-                        'UsersDirectory.view',
-                        'Scholarships.Identities.index',
-                        'Scholarships.Identities.view',
-                        'Scholarships.Nationalities.index',
-                        'Scholarships.Nationalities.view',
-                        'Scholarships.Contacts.index',
+                        'selected' => [
+                            'Scholarships.Applications.index',
+                            'UsersDirectory.index',
+                            'UsersDirectory.view',
+                            'Scholarships.UsersDirectory.index', //POCOR-9435
+                            'Scholarships.UsersDirectory.view', //POCOR-9435
+                            'Scholarships.Identities.index',
+                            'Scholarships.Identities.view',
+                            'Scholarships.Nationalities.index',
+                            'Scholarships.Nationalities.view',
+                            'Scholarships.Contacts.index',
                         'Scholarships.Contacts.view',
                         'Scholarships.Guardians.index',
                         'Scholarships.Guardians.view',
@@ -4720,7 +4823,7 @@ class NavigationComponent extends Component
         $roles = [];
         $restrictedTo = [];
         $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
-        //    dd($event->getResult());
+      //  dd($event->getResult());
         // POCOR-8527 start fix roles for navs
         if ($event->getResult()) {
             $result = $event->getResult();
@@ -4753,13 +4856,27 @@ class NavigationComponent extends Component
                     $params = ['plugin' => 'Systems'];
                     $url = $this->getLink($key, $params);
                 }
+                //POCOR-9429
+                if($url['controller'] == 'Profiles' || $url['action'] == 'Personal'){
+                   continue;
+                }
                 // POCOR-8128 end
                 // Ensure $url is an array and has necessary keys
                 if (!is_array($url) || !isset($url['controller'], $url['action'], $url['plugin'])) {
                     // Log or handle the case where $url is not as expected
                     // Example: Log error and continue or skip this navigation item
-                    unset($navigations[$key]);
-                    continue;
+                    //POCOR-9256 start
+                    $allowedRoutes = [
+                        ['Labels', 'Labels'],
+                        ['Credentials', 'Credentials'],
+                    ];
+
+                    if (!in_array([$url['controller'], $url['action']], $allowedRoutes)) {
+                        unset($navigations[$key]);
+                        continue;
+                    }
+                    //POCOR-9256 end
+
                 }
 
                 // Check if $restrictedTo is an array
@@ -5107,6 +5224,7 @@ class NavigationComponent extends Component
             'StaffClasses',
             'StaffSubjects',
             'StaffLeave',
+            'StaffEntitlement', // POCOR-9287
             'StaffAttendances',
             'StaffBehaviours',
             'StaffAppraisals',

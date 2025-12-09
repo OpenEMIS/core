@@ -14,14 +14,14 @@ class RuleStudentUnmarkedAttendancesBehavior extends RuleBehavior
 {
     protected $_defaultConfig = [
         'feature' => 'StudentUnmarkedAttendances',
-        'rule' => [            
-            'days_unmarked' => [                
+        'rule' => [
+            'days_unmarked' => [
                 'type' => 'string',
                 'attr' => [
                     'required' => true
                 ]
             ],
-            'security_role_id' => [                
+            'security_role_id' => [
                 'type' => 'select',
                 'after' => 'days_unmarked',
                 'lookupModel' => 'Security.SecurityRoles',
@@ -42,13 +42,14 @@ class RuleStudentUnmarkedAttendancesBehavior extends RuleBehavior
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->rule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
-                $validator = $model->validator();                
+                $validator = $model->getValidator();
                 $validator->add('days_unmarked', 'notBlank', ['rule' => 'notBlank']);
                 $validator->requirePresence('days_unmarked');
                 $validator->add('days_unmarked', 'notWholeNumber', [
                     'rule' => ['naturalNumber', false],
                     'message' => __('Please enter a valid number more than 0.')
                 ]);
+                $model->setValidator('forSave', $validator);
             }
         }
     }

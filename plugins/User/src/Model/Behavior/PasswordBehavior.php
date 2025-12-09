@@ -40,7 +40,8 @@ class PasswordBehavior extends Behavior {
         $passwordHasNumber = $ConfigItems->value('password_has_number');
         $passwordHasNonAlpha = $ConfigItems->value('password_has_non_alpha');
 
-        $validator->setProvider('custom', $this);
+        //$validator->setProvider('custom', $this);
+        $validator->setProvider('custom', $event->getSubject());//POCOR-9271
         //POCOR-8609
 
         $validator = $validator

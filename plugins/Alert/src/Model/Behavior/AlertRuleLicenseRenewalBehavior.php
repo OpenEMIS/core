@@ -14,7 +14,7 @@ class AlertRuleLicenseRenewalBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'LicenseRenewal',
         'name' => 'License Renewal',
-        'method' => 'Email',
+        'method' => ['Email','SMS'], // POCOR-8286
         'threshold' => [
             'value' => [
                 'type' => 'integer',
@@ -97,7 +97,7 @@ class AlertRuleLicenseRenewalBehavior extends AlertRuleBehavior
             '${institution.postal_code}' => 'Institution postal code.',
             '${institution.contact_person}' => 'Institution contact person.',
             '${institution.telephone}' => 'Institution telephone number.',
-            '${institution.fax}' => 'Institution fax number.',
+//            '${institution.fax}' => 'Institution fax number.',
             '${institution.email}' => 'Institution email.',
             '${institution.website}' => 'Institution website.',
         ]

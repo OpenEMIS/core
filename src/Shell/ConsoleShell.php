@@ -66,7 +66,7 @@ class ConsoleShell extends Shell
     public function getOptionParser(): ConsoleOptionParser
     {
         $parser = new ConsoleOptionParser('console');
-        $parser->description(
+        $parser->setDescription( // POCOR-9296-printer
             'This shell provides a REPL that you can use to interact ' .
             'with your application in an interactive fashion. You can use ' .
             'it to run adhoc queries with your models, or experiment ' .

@@ -1,0 +1,55 @@
+#######################################################################
+# docker-compose.yaml
+#
+# Description     : Defines the multi container service to build and run the OpenEMIS
+#                   Core container using custom Dockerfile
+#
+# Created         : 2025-06-04
+# Version         : 4.28.0
+#
+# Requirements    : Docker Desktop 4.15.0+
+#
+# Usage           : docker compose up --build -d
+#
+# Notes           : - Builds the Angular app and serves  via PHP-Apache
+#                 : - App is available at http://localhost:3000
+#
+#######################################################################
+
+services:
+  openemis-core-webserver:
+    build: . # Specifies the context of build and default Dockerfile is used to build the container
+    container_name: openemis-core   # Specifies the name of container for easier reference
+    restart: always   #  Automatically restart the container if it stops or host reboots
+    ports:
+    - "3000:80"   # Maps the Port 3000 on host to Port 80 on container(Apache Default Port)
+    depends_on:
+    - openemis-core-database    # Specifies the container dependency for start up order
+    environment:
+    - DB_HOST=openemis-core-database    # Specifies the DB_Host as DB container
+    volumes:
+      # - openemis-core-config:/var/www/html/core/config/app_local.php    # Volume mounting for config
+      # - openemis-core-config:/var/www/html/api/.env
+      - openemis-core-config:/config
+    networks:
+      - openemis-network    # Specifies the network
+  openemis-core-database:
+    image: mysql:8.1    # Uses the MySQL 8.1 for spinning up container
+    container_name: openemis-core-database     # Specifies the container name for easier reference
+    restart: always      # Automatically restart the container if it stops or host reboots
+    entrypoint: sh -c "chmod 644 /etc/my.cnf && exec docker-entrypoint.sh mysqld"     # Specifies the custom entrypoint for container which before running the mysql, modifies the permission
+    environment:
+      - MYSQL_ROOT_PASSWORD=root # Specifies the MySQL root password
+    volumes:
+      - openemis-core-database:/var/lib/mysql   # Volume mounting the db data
+      - ./docker-config/mysql/my.cnf:/etc/my.cnf    # Bind mounting the mysql config file
+    networks:
+      - openemis-network    # Specifies the network
+volumes:
+# Persistent storage to prevent data loss when container is restarted or removed
+  openemis-core-database:
+  openemis-core-config:
+networks:
+# Custom bridge network for inter container communication and this ensures that container can resolve by container name
+  openemis-network:
+    driver: bridge

@@ -1,4 +1,5 @@
 <?php
+
 namespace Report\Model\Table;
 
 use ArrayObject;
@@ -10,9 +11,11 @@ use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
-class InstitutionStudentsTable extends AppTable  {
-     private $_dynamicFieldName = 'custom_field_data';
-    public function initialize(array $config):void {
+class InstitutionStudentsTable extends AppTable
+{
+    private $_dynamicFieldName = 'custom_field_data';
+    public function initialize(array $config): void
+    {
         $this->setTable('institution_students');
         parent::initialize($config);
 
@@ -28,11 +31,12 @@ class InstitutionStudentsTable extends AppTable  {
             'autoFields' => false
         ]);
         $this->addBehavior('Report.InstitutionSecurity');
-        $this->addBehavior('Report.AreaList');//POCOR-7794
+        $this->addBehavior('Report.AreaList'); //POCOR-7794
         $this->statuses = $this->StudentStatuses->findCodeList();
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
         $sheets[] = [
             'name' => $this->getAlias(),
             'table' => $this,
@@ -49,12 +53,17 @@ class InstitutionStudentsTable extends AppTable  {
     //     }
     // }
 
-    public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
         // Setting request data and modifying fetch condition
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $educationProgrammeId = $requestData->education_programme_id;
         $statusId = $requestData->status;
+        //POCOR-8416[START]
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $statuses = $StudentStatuses->findCodeList();
+        //POCOR-8416[END]
         $educationlevelId = $requestData->education_level_id;
 
         $Class = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
@@ -64,43 +73,51 @@ class InstitutionStudentsTable extends AppTable  {
         $UserIdentities = TableRegistry::getTableLocator()->get('User.UserIdentities');
         $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $institution_id = $requestData->institution_id;
-        $areaLevelId = $requestData->area_level_id;//POCOR-7794
+        $areaLevelId = $requestData->area_level_id; //POCOR-7794
         $areaId = $requestData->area_education_id;
         $grades = [];
         if ($academicPeriodId != 0) {
             $query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
         }
-        /**POCOR-6919 starts - modified query to fetch result on the basis of selected education programme*/ 
+        /**POCOR-6919 starts - modified query to fetch result on the basis of selected education programme*/
         if ($educationProgrammeId != 0) {
             $gradesObj = $this->EducationGrades
-                        ->find()
-                        ->select(['grade_id' => $this->EducationGrades->aliasField('id')])
-                        ->where([$this->EducationGrades->aliasField('education_programme_id') => $educationProgrammeId])
-                        ->toArray();
+                ->find()
+                ->select(['grade_id' => $this->EducationGrades->aliasField('id')])
+                ->where([$this->EducationGrades->aliasField('education_programme_id') => $educationProgrammeId])
+                ->toArray();
             if (!empty($gradesObj)) {
-               foreach ($gradesObj as $grade) {
-                $grades[] = $grade->grade_id;
-               }
+                foreach ($gradesObj as $grade) {
+                    $grades[] = $grade->grade_id;
+                }
             }
             $query->where([$this->aliasField('education_grade_id IN') => $grades]);
         }
-        /**POCOR-6919 ends*/ 
+        /**POCOR-6919 ends*/
+
+        //POCOR-8416[START]
         if ($statusId != 0) {
-            $query->where([$this->aliasField('student_status_id') => $statusId]);
+            if ($statusId != -1) {
+                $query->where([$this->aliasField('student_status_id') => $statusId]);
+            } else {
+                $query->where([$this->aliasField('student_status_id IN') => [$statuses['GRADUATED'], $statuses['PROMOTED'], $statuses['CURRENT'], $statuses['REPEATED'], $statuses['TRANSFERRED'], $statuses['WITHDRAWN']]]);
+            }
         }
+        //POCOR-8416[END]
         if ($institution_id != 0) {
             $query->where([$this->aliasField('institution_id') => $institution_id]);
         }
         //POCOR-7794 start
         $areaList = [];
-        if ($areaLevelId > 1 && $areaId > 1
+        if (
+            $areaLevelId > 1 && $areaId > 1
         ) {
             $areaList = $this->getAreaList($areaLevelId, $areaId);
         } elseif ($areaLevelId > 1) {
 
-            $areaList = $this->getAreaList($areaLevelId,0);
+            $areaList = $this->getAreaList($areaLevelId, 0);
         } elseif ($areaId > 1) {
-            $areaList = $this->getAreaList(0,$areaId);
+            $areaList = $this->getAreaList(0, $areaId);
         }
         if (!empty($areaList)) {
             $query->where(['Institutions.area_id IN' => $areaList]);
@@ -109,15 +126,15 @@ class InstitutionStudentsTable extends AppTable  {
         /**POCOR-6919 starts - modified query to fetch result on the basis of selected education level*/
         if ($educationlevelId > 0) {
             $gradesArr = $this->EducationGrades
-                        ->find()
-                        ->contain(['EducationProgrammes.EducationCycles.EducationLevels'])
-                        ->select(['grade_id' => $this->EducationGrades->aliasField('id')])
-                        ->where(['EducationLevels.id' => $educationlevelId])
-                        ->toArray();
+                ->find()
+                ->contain(['EducationProgrammes.EducationCycles.EducationLevels'])
+                ->select(['grade_id' => $this->EducationGrades->aliasField('id')])
+                ->where(['EducationLevels.id' => $educationlevelId])
+                ->toArray();
             if (!empty($gradesArr)) {
-               foreach ($gradesArr as $grade) {
-                $grades[] = $grade->grade_id;
-               }
+                foreach ($gradesArr as $grade) {
+                    $grades[] = $grade->grade_id;
+                }
             }
             $query->where([$this->aliasField('education_grade_id IN') => $grades]);
         }
@@ -209,7 +226,7 @@ class InstitutionStudentsTable extends AppTable  {
                         'area_administrative_code' => 'AreaAdministratives.code',
                         'area_administrative_name' => 'AreaAdministratives.name'
                     ]
-                ],//POCOR-5388 starts
+                ], //POCOR-5388 starts
                 'Institutions.Localities' => [
                     'fields' => [
                         'locality_name' => 'Localities.name'
@@ -219,7 +236,7 @@ class InstitutionStudentsTable extends AppTable  {
                     'fields' => [
                         'sector_name' => 'Sectors.name'
                     ]
-                ],//POCOR-5388 ends
+                ], //POCOR-5388 ends
                 'StudentStatuses' => [
                     'fields' => [
                         'StudentStatuses.name'
@@ -254,8 +271,8 @@ class InstitutionStudentsTable extends AppTable  {
                 $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
             ])
             ->leftJoin(['StudentExtracurriculars' => 'student_extracurriculars'], [
-                    'StudentExtracurriculars.security_user_id = '.$this->aliasField('student_id')
-                ])
+                'StudentExtracurriculars.security_user_id = ' . $this->aliasField('student_id')
+            ])
             ->leftJoin([$InstitutionStudentRisks->getAlias() => $InstitutionStudentRisks->getTable()], [
                 $InstitutionStudentRisks->aliasField('student_id = ') . $this->aliasField('student_id')
             ])
@@ -265,7 +282,7 @@ class InstitutionStudentsTable extends AppTable  {
             ->leftJoin([$IdentityType->getAlias() => $IdentityType->getTable()], [
                 $IdentityType->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
             ])
-            ->group([$this->aliasField('student_id')])
+            ->group([$this->aliasField('student_id'), $this->aliasField('student_status_id')]) // POCOR-8416 Added $this->aliasField('student_status_id') for all status
             ->order([$this->aliasField('education_grade_id')])
             ->formatResults(function (ResultSetInterface $results) use ($statusOptions, $statusId) {
                 return $results->map(function ($row) use ($statusOptions, $statusId) {
@@ -282,16 +299,16 @@ class InstitutionStudentsTable extends AppTable  {
                             $approvedStatuses = $StudentTransfers->getStudentTransferWorkflowStatuses('APPROVED');
 
                             $query = $StudentTransfers->find()
-                                    ->contain(['StudentTransferReasons', 'Institutions.Areas', 'Institutions.AreaAdministratives'])
-                                    ->where([
-                                        $StudentTransfers->aliasField('student_id') => $studentId,
-                                        $StudentTransfers->aliasField('previous_institution_id') => $institutionId,
-                                        $StudentTransfers->aliasField('previous_education_grade_id') => $educationGradeId,
-                                        $StudentTransfers->aliasField('previous_academic_period_id') => $academicPeriodId,
-                                        $StudentTransfers->aliasField('status_id IN ') => $approvedStatuses
-                                    ])
-                                    ->first();
-                            
+                                ->contain(['StudentTransferReasons', 'Institutions.Areas', 'Institutions.AreaAdministratives'])
+                                ->where([
+                                    $StudentTransfers->aliasField('student_id') => $studentId,
+                                    $StudentTransfers->aliasField('previous_institution_id') => $institutionId,
+                                    $StudentTransfers->aliasField('previous_education_grade_id') => $educationGradeId,
+                                    $StudentTransfers->aliasField('previous_academic_period_id') => $academicPeriodId,
+                                    $StudentTransfers->aliasField('status_id IN ') => $approvedStatuses
+                                ])
+                                ->first();
+
                             if (!empty($query)) {
                                 $row['transfer_institution'] = $query->institution->code_name;
                                 $row['transfer_institution_area_name'] = $query->institution->area->name;
@@ -318,7 +335,7 @@ class InstitutionStudentsTable extends AppTable  {
                                     $StudentWithdraw->aliasField('status_id IN') => $approvedStatuses
                                 ])
                                 ->first();
-                            
+
                             if (!empty($studentWithdrawEntity)) {
                                 $row['withdraw_comment'] = $studentWithdrawEntity->comment;
                                 $row['withdraw_reason'] = $studentWithdrawEntity->student_withdraw_reason->name;
@@ -347,93 +364,95 @@ class InstitutionStudentsTable extends AppTable  {
                     $InstitutionStudents = TableRegistry::getTableLocator()->get('InstitutionStudents');
 
                     $InstitutionStudentsCurrentData = $InstitutionStudents
-                    ->find()
-                    ->select([
-                        'InstitutionStudents.id', 'InstitutionStudents.student_status_id', 'InstitutionStudents.previous_institution_student_id'
-                    ])
-                    ->where([
-                        $InstitutionStudents->aliasField('student_id') => $row->student_id
-                    ])
-                    ->order([$InstitutionStudents->aliasField('InstitutionStudents.student_status_id') => 'DESC'])
-                    ->first();
-                    if($row->student_status->name == "Enrolled"){
-                        if(($InstitutionStudentsCurrentData->student_status_id == 8)){
+                        ->find()
+                        ->select([
+                            'InstitutionStudents.id',
+                            'InstitutionStudents.student_status_id',
+                            'InstitutionStudents.previous_institution_student_id'
+                        ])
+                        ->where([
+                            $InstitutionStudents->aliasField('student_id') => $row->student_id
+                        ])
+                        ->order([$InstitutionStudents->aliasField('InstitutionStudents.student_status_id') => 'DESC'])
+                        ->first();
+                    if ($row->student_status->name == "Enrolled") {
+                        if (($InstitutionStudentsCurrentData->student_status_id == 8)) {
                             $student_status = "Enrolled (Repeater)";
-                        }else{
+                        } else {
                             $student_status = $row->student_status->name;
                         }
-                    }else{
-                            $student_status = $row->student_status->name;
+                    } else {
+                        $student_status = $row->student_status->name;
                     }
-                              
+
                     $row['student_status'] = $student_status;
                     return $row;
                 });
             });
-     $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 // POCOR-6338 starts
-                
+
                 $Users = TableRegistry::getTableLocator()->get('Security.Users');
-                $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');      
+                $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
                 // POCOR-6129 custome fields code
                 $Guardians = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues');
                 $studentCustomFieldOptions = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldOptions');
                 $studentCustomFields = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFields');
                 $guardianData = $Guardians->find()
-                ->select([
-                    'id'                             => $Guardians->aliasField('id'),
-                    'student_id'                     => $Guardians->aliasField('student_id'),
-                    'student_custom_field_id'        => $Guardians->aliasField('student_custom_field_id'),
-                    'text_value'                     => $Guardians->aliasField('text_value'),
-                    'number_value'                   => $Guardians->aliasField('number_value'),
-                    'decimal_value'                  => $Guardians->aliasField('decimal_value'),
-                    'textarea_value'                 => $Guardians->aliasField('textarea_value'),
-                    'date_value'                     => $Guardians->aliasField('date_value'),
-                    'time_value'                     => $Guardians->aliasField('time_value'),
-                    'checkbox_value_text'            => 'studentCustomFieldOptions.name',
-                    'question_name'                  => 'studentCustomField.name',
-                    'field_type'                     => 'studentCustomField.field_type',
-                    'field_description'              => 'studentCustomField.description',
-                    'question_field_type'            => 'studentCustomField.field_type',
-                ])->leftJoin(
-                    ['studentCustomField' => 'student_custom_fields'],
-                    [
-                        'studentCustomField.id = '.$Guardians->aliasField('student_custom_field_id')
-                    ]
-                )->leftJoin(
-                    ['studentCustomFieldOptions' => 'student_custom_field_options'],
-                    [
-                        'studentCustomFieldOptions.id = '.$Guardians->aliasField('number_value')
-                    ]
-                )
-                ->where([
-                    $Guardians->aliasField('student_id') => $row->student_id,
-                ])->toArray();
+                    ->select([
+                        'id'                             => $Guardians->aliasField('id'),
+                        'student_id'                     => $Guardians->aliasField('student_id'),
+                        'student_custom_field_id'        => $Guardians->aliasField('student_custom_field_id'),
+                        'text_value'                     => $Guardians->aliasField('text_value'),
+                        'number_value'                   => $Guardians->aliasField('number_value'),
+                        'decimal_value'                  => $Guardians->aliasField('decimal_value'),
+                        'textarea_value'                 => $Guardians->aliasField('textarea_value'),
+                        'date_value'                     => $Guardians->aliasField('date_value'),
+                        'time_value'                     => $Guardians->aliasField('time_value'),
+                        'checkbox_value_text'            => 'studentCustomFieldOptions.name',
+                        'question_name'                  => 'studentCustomField.name',
+                        'field_type'                     => 'studentCustomField.field_type',
+                        'field_description'              => 'studentCustomField.description',
+                        'question_field_type'            => 'studentCustomField.field_type',
+                    ])->leftJoin(
+                        ['studentCustomField' => 'student_custom_fields'],
+                        [
+                            'studentCustomField.id = ' . $Guardians->aliasField('student_custom_field_id')
+                        ]
+                    )->leftJoin(
+                        ['studentCustomFieldOptions' => 'student_custom_field_options'],
+                        [
+                            'studentCustomFieldOptions.id = ' . $Guardians->aliasField('number_value')
+                        ]
+                    )
+                    ->where([
+                        $Guardians->aliasField('student_id') => $row->student_id,
+                    ])->toArray();
                 $existingCheckboxValue = '';
                 foreach ($guardianData as $guadionRow) {
                     $fieldType = $guadionRow->field_type;
                     if ($fieldType == 'TEXT') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->text_value;
+                        $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = $guadionRow->text_value;
                     } else if ($fieldType == 'CHECKBOX') {
-                        $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id], ',') .','. $guadionRow->checkbox_value_text;
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = trim($existingCheckboxValue, ',');
+                        $existingCheckboxValue = trim($row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id], ',') . ',' . $guadionRow->checkbox_value_text;
+                        $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = trim($existingCheckboxValue, ',');
                     } else if ($fieldType == 'NUMBER') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->number_value;
+                        $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = $guadionRow->number_value;
                     } else if ($fieldType == 'DECIMAL') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->decimal_value;
+                        $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = $guadionRow->decimal_value;
                     } else if ($fieldType == 'TEXTAREA') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->textarea_value;
+                        $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = $guadionRow->textarea_value;
                     } else if ($fieldType == 'DROPDOWN') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->checkbox_value_text;
+                        $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = $guadionRow->checkbox_value_text;
                     } else if ($fieldType == 'DATE') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
+                        $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
                     } else if ($fieldType == 'TIME') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = date('h:i A', strtotime($guadionRow->time_value));
+                        $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = date('h:i A', strtotime($guadionRow->time_value));
                     } else if ($fieldType == 'COORDINATES') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->text_value;
+                        $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = $guadionRow->text_value;
                     } else if ($fieldType == 'NOTE') {
-                        $row[$this->_dynamicFieldName.'_'.$guadionRow->student_custom_field_id] = $guadionRow->field_description;
+                        $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = $guadionRow->field_description;
                     }
                 }
                 // POCOR-6129 custome fields code
@@ -441,11 +460,10 @@ class InstitutionStudentsTable extends AppTable  {
                 return $row;
             });
         });
-
-     
     }
 
-    public function onExcelRenderAge(Event $event, Entity $entity, $attr) {
+    public function onExcelRenderAge(Event $event, Entity $entity, $attr)
+    {
         $age = '';
         if ($entity->has('date_of_birth') && !empty($entity->date_of_birth)) {
             $dateOfBirth = $entity->date_of_birth->format('Y-m-d');
@@ -455,167 +473,202 @@ class InstitutionStudentsTable extends AppTable  {
         return $age;
     }
     //POCOR-8768 starts
-    public function onExcelRenderDateOfBirth(Event $event, Entity $entity, $attr) {
-        $dateOfBirth= '';
+    public function onExcelRenderDateOfBirth(Event $event, Entity $entity, $attr)
+    {
+        $dateOfBirth = '';
         if ($entity->has('date_of_birth') && !empty($entity->date_of_birth)) {
-          $dateOfBirth = $entity->date_of_birth->format('d/m/Y');
+            $dateOfBirth = $entity->date_of_birth->format('d/m/Y');
         }
         return $dateOfBirth;
     }
     //POCOR-8768 ends
-    public function onExcelRenderOpenemisNo(Event $event, Entity $entity, $attr) {
+    //POCOR-9302 start
+    public function onExcelGetStartDate(Event $event, Entity $entity)
+    {
+
+        $startDate = '';
+        if ($entity->has('start_date') && !empty($entity->start_date)) {
+            $startDate = $entity->start_date->format('Y-m-d');
+        }
+        return $startDate;
+    }
+    //POCOR-9302 end
+    public function onExcelGetEndDate(Event $event, Entity $entity)
+    {
+
+        $endDate = '';
+        if ($entity->has('end_date') && !empty($entity->end_date)) {
+            $endDate = $entity->end_date->format('Y-m-d');
+        }
+        return $endDate;
+    }
+
+    public function onExcelRenderOpenemisNo(Event $event, Entity $entity, $attr)
+    {
         $student_id = $entity->student_id;
         $StudentGuardians = TableRegistry::getTableLocator()->get('Student.StudentGuardians');
         $GuardianRelations = TableRegistry::getTableLocator()->get('Student.GuardianRelations');
         $MotherUser = TableRegistry::getTableLocator()->get('Security.Users');
         $FatherUser = TableRegistry::getTableLocator()->get('Security.Users');
         $GuardianUser = TableRegistry::getTableLocator()->get('Security.Users');
-         $StudentGuardiansData = $StudentGuardians
-                                ->find()
-                                ->where([
-                                    $StudentGuardians->aliasField('student_id') => $student_id])
-                                ->toArray();
+        $StudentGuardiansData = $StudentGuardians
+            ->find()
+            ->where([
+                $StudentGuardians->aliasField('student_id') => $student_id
+            ])
+            ->toArray();
         foreach ($StudentGuardiansData as $data) {
             $GuardianRelationsData = $GuardianRelations
-                                     ->find()
-                                     ->where([$GuardianRelations->aliasField('id') => $data->guardian_relation_id])
-                                     ->toArray();
+                ->find()
+                ->where([$GuardianRelations->aliasField('id') => $data->guardian_relation_id])
+                ->toArray();
 
             if ($GuardianRelationsData[0]->name == 'Mother') {
                 $MotherData = $MotherUser
-                                ->find()
-                                ->where([ $MotherUser->aliasField('id') => $data->guardian_id])
-                                ->toArray();
+                    ->find()
+                    ->where([$MotherUser->aliasField('id') => $data->guardian_id])
+                    ->toArray();
                 $entity->MotherData = $MotherData;
             } else if ($GuardianRelationsData[0]->name == 'Father') {
                 $FatherData = $FatherUser
-                                ->find()
-                                ->where([ $FatherUser->aliasField('id') => $data->guardian_id])
-                                ->toArray();
+                    ->find()
+                    ->where([$FatherUser->aliasField('id') => $data->guardian_id])
+                    ->toArray();
                 $entity->FatherData = $FatherData;
-            }  else {
+            } else {
                 $GuardianData = $GuardianUser
-                                ->find()
-                                ->where([ $GuardianUser->aliasField('id') => $data->guardian_id])
-                                ->toArray();
+                    ->find()
+                    ->where([$GuardianUser->aliasField('id') => $data->guardian_id])
+                    ->toArray();
                 $entity->GuardianData = $GuardianData;
-            } 
+            }
         }
 
         return $entity->openemis_no;
     }
 
 
-    public function onExcelRenderMotherOpenemisNo(Event $event, Entity $entity, $attr) {
+    public function onExcelRenderMotherOpenemisNo(Event $event, Entity $entity, $attr)
+    {
         $entity->mother_openemis_no = '';
         if (!empty($entity->MotherData[0])) {
-        $entity->mother_openemis_no = $entity->MotherData[0]->openemis_no;
+            $entity->mother_openemis_no = $entity->MotherData[0]->openemis_no;
         }
 
         return $entity->mother_openemis_no;
     }
 
-    public function onExcelRenderMotherName(Event $event, Entity $entity, $attr) {
+    public function onExcelRenderMotherName(Event $event, Entity $entity, $attr)
+    {
         $entity->mother_name = '';
         if (!empty($entity->MotherData[0])) {
-        $entity->mother_name = $entity->MotherData[0]->first_name.' '.$entity->MotherData[0]->last_name;
-        } 
+            $entity->mother_name = $entity->MotherData[0]->first_name . ' ' . $entity->MotherData[0]->last_name;
+        }
 
         return $entity->mother_name;
     }
 
-    public function onExcelRenderMotherContact(Event $event, Entity $entity, $attr) {
+    public function onExcelRenderMotherContact(Event $event, Entity $entity, $attr)
+    {
         $UserContacts = TableRegistry::getTableLocator()->get('User.Contacts');
         $entity->mother_contact = '';
         if (!empty($entity->MotherData[0])) {
             $motherContactData = $UserContacts
-                                    ->find()
-                                    ->where([
-                                       $UserContacts->aliasField('security_user_id') => $entity->MotherData[0]->id  
-                                    ])
-                                    ->toArray();
+                ->find()
+                ->where([
+                    $UserContacts->aliasField('security_user_id') => $entity->MotherData[0]->id
+                ])
+                ->toArray();
             if (!empty($motherContactData[0])) {
                 $entity->mother_contact = $motherContactData[0]->value;
             }
-        } 
+        }
 
         return $entity->mother_contact;
     }
 
-    public function onExcelRenderFatherOpenemisNo(Event $event, Entity $entity, $attr) {
+    public function onExcelRenderFatherOpenemisNo(Event $event, Entity $entity, $attr)
+    {
         $entity->father_openemis_no = '';
-         if (!empty($entity->FatherData[0])) {
-        $entity->father_openemis_no = $entity->FatherData[0]->openemis_no;
+        if (!empty($entity->FatherData[0])) {
+            $entity->father_openemis_no = $entity->FatherData[0]->openemis_no;
         }
 
         return $entity->father_openemis_no;
     }
 
-    public function onExcelRenderFatherName(Event $event, Entity $entity, $attr) {
+    public function onExcelRenderFatherName(Event $event, Entity $entity, $attr)
+    {
         $entity->father_name = '';
         if (!empty($entity->FatherData[0])) {
-        $entity->father_name = $entity->FatherData[0]->first_name.' '.$entity->FatherData[0]->last_name;
-                }
+            $entity->father_name = $entity->FatherData[0]->first_name . ' ' . $entity->FatherData[0]->last_name;
+        }
 
         return $entity->father_name;
     }
 
-    public function onExcelRenderFatherContact(Event $event, Entity $entity, $attr) {
+    public function onExcelRenderFatherContact(Event $event, Entity $entity, $attr)
+    {
         $UserContacts = TableRegistry::getTableLocator()->get('User.Contacts');
         $entity->father_contact = '';
         if (!empty($entity->FatherData[0])) {
             $fatherContactData = $UserContacts
-                                    ->find()
-                                    ->where([
-                                       $UserContacts->aliasField('security_user_id') => $entity->FatherData[0]->id  
-                                    ])
-                                    ->toArray();
+                ->find()
+                ->where([
+                    $UserContacts->aliasField('security_user_id') => $entity->FatherData[0]->id
+                ])
+                ->toArray();
             if (!empty($fatherContactData[0])) {
                 $entity->father_contact = $fatherContactData[0]->value;
             }
-        } 
+        }
 
         return $entity->father_contact;
     }
 
-    public function onExcelRenderGuardianOpenemisNo(Event $event, Entity $entity, $attr) {
+    public function onExcelRenderGuardianOpenemisNo(Event $event, Entity $entity, $attr)
+    {
         $entity->guardian_openemis_no = '';
-         if (!empty($entity->GuardianData[0])) {
-        $entity->guardian_openemis_no = $entity->GuardianData[0]->openemis_no;
+        if (!empty($entity->GuardianData[0])) {
+            $entity->guardian_openemis_no = $entity->GuardianData[0]->openemis_no;
         }
 
         return $entity->guardian_openemis_no;
     }
 
-    public function onExcelRenderGuardianName(Event $event, Entity $entity, $attr) {
+    public function onExcelRenderGuardianName(Event $event, Entity $entity, $attr)
+    {
         $entity->guardian_name = '';
         if (!empty($entity->GuardianData[0])) {
-        $entity->guardian_name = $entity->GuardianData[0]->first_name.' '.$entity->GuardianData[0]->last_name;
-                }
+            $entity->guardian_name = $entity->GuardianData[0]->first_name . ' ' . $entity->GuardianData[0]->last_name;
+        }
 
         return $entity->guardian_name;
     }
 
-    public function onExcelRenderGuardianGender(Event $event, Entity $entity, $attr) {
+    public function onExcelRenderGuardianGender(Event $event, Entity $entity, $attr)
+    {
         $Genders = TableRegistry::getTableLocator()->get('User.Genders');
         $entity->guardian_gender = '';
-         if (!empty($entity->GuardianData[0])) {
-        $gender = $Genders
-                  ->find()
-                  ->where([
-                    $Genders->aliasField('id') => $entity->GuardianData[0]->gender_id])
-                  ->toArray();
-        $entity->guardian_gender = $gender[0]->name;
+        if (!empty($entity->GuardianData[0])) {
+            $gender = $Genders
+                ->find()
+                ->where([
+                    $Genders->aliasField('id') => $entity->GuardianData[0]->gender_id
+                ])
+                ->toArray();
+            $entity->guardian_gender = $gender[0]->name;
         }
 
         return $entity->guardian_gender;
     }
 
-    public function onExcelRenderGuardianDateOfBirth(Event $event, Entity $entity, $attr) {
+    public function onExcelRenderGuardianDateOfBirth(Event $event, Entity $entity, $attr)
+    {
         $entity->guardian_date_of_birth = '';
         if (!empty($entity->GuardianData[0])) {
-        $entity->guardian_date_of_birth = $entity->GuardianData[0]->date_of_birth->format('F d, Y');
-                }
+            $entity->guardian_date_of_birth = $entity->GuardianData[0]->date_of_birth->format('F d, Y');
+        }
 
         return $entity->guardian_date_of_birth;
     }
@@ -638,7 +691,8 @@ class InstitutionStudentsTable extends AppTable  {
         return implode(', ', array_values($return));
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
 
         $requestData = json_decode($settings['process']['params']);
         $statusId = $requestData->status;
@@ -646,19 +700,27 @@ class InstitutionStudentsTable extends AppTable  {
         // To update to this code when upgrade server to PHP 5.5 and above
         // unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
 
+
         foreach ($fields as $key => $field) {
+
             if ($field['field'] == 'institution_id') {
                 unset($fields[$key]);
                 // break;
-            } 
+            }
+            //POCOR-9302
+            if ($field['field'] == 'start_date' || $field['field'] == 'end_date') {
+                $fields[$key]['type'] = 'string';
+            }
         }
-        
+
+
         $PrimaryField[] = [
             'key' => 'Institutions.code',
             'field' => 'code',
             'type' => 'string',
             'label' => __('Institution Code')
         ];
+
 
         if ($statusId == $this->statuses['TRANSFERRED']) {
             $PrimaryField[] = [
@@ -740,8 +802,6 @@ class InstitutionStudentsTable extends AppTable  {
                 'type' => 'string',
                 'label' => __('Area Administrative Transferred From')
             ];
-
-
         } else {
             $PrimaryField[] = [
                 'key' => 'Institutions.area_code',
@@ -817,25 +877,25 @@ class InstitutionStudentsTable extends AppTable  {
             'field' => 'date_of_birth',
             'type' => 'date_of_birth',
             'label' => __('Date Of Birth')
-        ]; 
+        ];
 
         $extraField[] = [
             'key' => 'Age',
             'field' => 'age',
             'type' => 'age',
             'label' => __('Age')
-        ]; 
-       
+        ];
+
         $studentData = array();
         $remove = ['student_status_id', 'student_id'];
 
-        for ($i=0 ;$i<count($fields); $i++) {
+        for ($i = 0; $i < count($fields); $i++) {
             if (($fields[$i]['field'] == 'student_status_id') || ($fields[$i]['field'] == 'student_id')) {
                 unset($fields[$i]);
             }
         }
-        
-        $newFields = array_merge($PrimaryField, $fields->getArrayCopy(),$extraField);        
+
+        $newFields = array_merge($PrimaryField, $fields->getArrayCopy(), $extraField);
 
         $enrolledExtraField[] = [
             'key' => 'MainNationalities.name',
@@ -870,7 +930,6 @@ class InstitutionStudentsTable extends AppTable  {
 
             $outputFields = array_merge($newFields, $withdrawExtraField);
             $fields->exchangeArray($outputFields);
-
         } else if ($statusId == $this->statuses['TRANSFERRED']) {
             $transferExtraField[] = [
                 'key' => 'StudentTransfer.comment',
@@ -923,10 +982,9 @@ class InstitutionStudentsTable extends AppTable  {
 
             $outputFields = array_merge($newFields, $transferExtraField);
             $fields->exchangeArray($outputFields);
-
         } else {
             $fields->exchangeArray($newFields);
-        } 
+        }
 
         $DataField[] = [
             'key' => 'IdentityType.name',
@@ -1038,20 +1096,20 @@ class InstitutionStudentsTable extends AppTable  {
             'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
             'custom_field' => $InfrastructureCustomFields->aliasfield('name')
         ])->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
-       
-        if(!empty($customFieldData)) {
-            foreach($customFieldData as $data) {
+
+        if (!empty($customFieldData)) {
+            foreach ($customFieldData as $data) {
                 $custom_field_id = $data->custom_field_id;
                 $custom_field = $data->custom_field;
                 $DataField[] = [
                     'key' => '',
-                    'field' => $this->_dynamicFieldName.'_'.$custom_field_id,
+                    'field' => $this->_dynamicFieldName . '_' . $custom_field_id,
                     'type' => 'string',
                     'label' => __($custom_field)
                 ];
             }
         }
-        $fields_new = array_merge($fields->getArrayCopy(),$DataField);
+        $fields_new = array_merge($fields->getArrayCopy(), $DataField);
         $fields->exchangeArray($fields_new);
     }
 }

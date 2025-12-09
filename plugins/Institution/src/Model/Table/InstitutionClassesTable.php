@@ -69,6 +69,11 @@ class InstitutionClassesTable extends ControllerActionTable
             'foreignKey' => 'institution_class_id',
             'targetForeignKey' => 'institution_subject_id'
         ]);
+        //POCOR-9267 Starts
+        $this->hasMany('InstitutionClassGrades', [
+            'className' => 'Institution.InstitutionClassGrades',
+            'foreignKey' => 'institution_class_id',
+        ]);//POCOR-9267 Ends
 
         /**
          * Shortcuts
@@ -280,7 +285,7 @@ class InstitutionClassesTable extends ControllerActionTable
         } else if ($field == 'staff_id') {
             $teacher = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field' => 'staff_id'])->first();
             if ($teacher != null) {
-                $teacher =  $teacher->name; //add this name from Adminsitration > System Setup > Labels
+                $teacher =  $teacher->field_name; //add this name from Adminsitration > System Setup > Labels
             }
             return  __((string)$teacher);
         } else if ($field == 'name') {

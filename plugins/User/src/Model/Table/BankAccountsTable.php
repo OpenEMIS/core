@@ -33,6 +33,7 @@ class BankAccountsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->fields['active']['type'] = 'select';
+        $this->field('security_user_id', ['type' => 'hidden']);
         $this->fields['active']['options'] = $this->getSelectOptions('general.yesno');
 
         // Start POCOR-5188
@@ -123,6 +124,19 @@ class BankAccountsTable extends ControllerActionTable
 
         $this->setFieldOrder(['bank_name', 'bank_branch_id', 'account_name', 'account_number', 'active']);
     }
+
+    //POCOR-9300[START]
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $paramsQuery = base64_decode($this->request->getParam('pass')[1]);
+        $jsonEndPosition = strpos($paramsQuery, '}') + 1;
+        $jsonData = substr($paramsQuery, 0, $jsonEndPosition);
+        $paramsQuery = json_decode($jsonData, true);
+        $staff_id = $paramsQuery['staff_id'];
+        $this->request = $this->request->withData('BankAccounts.security_user_id', $staff_id);
+        $entity->security_user_id = $staff_id;
+    }
+    //POCOR-9300[END]
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {

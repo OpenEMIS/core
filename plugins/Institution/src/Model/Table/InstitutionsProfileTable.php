@@ -104,7 +104,13 @@ class InstitutionsProfileTable extends ControllerActionTable
         $academicPeriodId = $this->request->getQuery('academic_period_id');
         if (!is_null($reportCardId) && $this->ReportCards->exists([$this->ReportCards->getPrimaryKey() => $reportCardId])) {
 
-            $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+            $indexAttr = ['role' => 'menuitem',
+                'tabindex' => '-1',
+                'escape' => false,
+                'target' => '_blank'];
+            $generateAttr = ['role' => 'menuitem',
+                'tabindex' => '-1',
+                'escape' => false];
             $params = [
                 'report_card_id' => $reportCardId,
                 'institution_id' => $entity->id,
@@ -165,14 +171,14 @@ class InstitutionsProfileTable extends ControllerActionTable
                     && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                             $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => $generateUrl
                             ];
                 } else {
-                    $indexAttr['title'] = $this->getMessage('Profiles.date_closed');
+                    $generateAttr['title'] = $this->getMessage('Profiles.date_closed');
                     $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
-                            'attr' => $indexAttr,
+                            'attr' => $generateAttr,
                             'url' => 'javascript:void(0)'
                             ];
                 }
@@ -595,6 +601,7 @@ class InstitutionsProfileTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
+            exit(); // POCOR-9165
         } else {
             $event->stopPropagation();
             $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
@@ -643,6 +650,7 @@ class InstitutionsProfileTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
+            exit(); // POCOR-9165
         } else {
             $event->stopPropagation();
             $this->Alert->warning('ReportCardStatuses.noFilesToDownload');

@@ -27,6 +27,11 @@ use Cake\Event\EventInterface;
 use Cake\Auth\DefaultPasswordHasher;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Cake\I18n\Time;
+use Cake\Datasource\ConnectionManager;
+use Cake\I18n\FrozenTime;
+use Cake\Datasource\EntityInterface;
+use Cake\Http\Exception\NotFoundException;
+use Cake\Filesystem\File;
 
 //POCOR-5672
 
@@ -128,8 +133,9 @@ class InstitutionsController extends AppController
         'InstitutionExaminationsUndoRegistration',
         'InstitutionExaminationStudents',
 
-        // positions
+        // appointments
         'InstitutionPositions',
+        'InstitutionDepartments',
 
         // finance
         'InstitutionBankAccounts',
@@ -282,6 +288,18 @@ class InstitutionsController extends AppController
                             'kd-angular-multi-select',
                             'institutionadd.associations.ctrl',
                             'institutionadd.associations.svc'
+                        ]);
+                    }
+                }
+                break;
+            case 'Departments':
+                if (isset($this->request->getParam('pass')[0])) {
+                    if ($this->request->getParam('pass')[0] == 'edit') {
+                        $this->Angular->addModules([
+                            'alert.svc',
+                            'kd-angular-multi-select',
+                            'institution.departments.ctrl',
+                            'institution.departments.svc'
                         ]);
                     }
                 }
@@ -507,6 +525,61 @@ class InstitutionsController extends AppController
     public function Positions()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']);
+    }
+
+    public function Departments($subaction = 'index', $encodedParams = null)
+    {
+        if ($subaction == 'edit') {
+            $params = $this->ControllerAction->paramsDecode($encodedParams);
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+            $departmentId = $params['id'];
+
+            $viewUrl = $this->ControllerAction->url('view');
+            $viewUrl['action'] = 'Departments';
+            $viewUrl['0'] = 'view';
+            $viewUrl['1'] = $encodedParams;
+
+            $institutionParamsEncode = $this->ControllerAction->paramsEncode([
+                'id' => $institutionId,
+                'institution_id' => $institutionId,
+            ]);
+            $indexUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Departments',
+                '0' => 'index',
+                '1' => $institutionParamsEncode
+            ];
+
+            $alertUrl = [
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
+                'action' => 'setAlert',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+
+            $this->set('alertUrl', $alertUrl);
+            $this->set('viewUrl', $viewUrl);
+            $this->set('indexUrl', $indexUrl);
+            $this->set('institutionId', $institutionId);
+
+            // Start POCOR-7466
+            $activeInstitution = $this->Institutions->get($institutionId);
+            $institutionName = $activeInstitution->name;
+            $this->Navigation->addCrumb(__('Departments'),
+                ['plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'Departments',
+                    '0' => 'index',
+                    '1' => $institutionParamsEncode]);
+            $header = __($institutionName);
+            $this->set('contentHeader', $header . ' - ' . __('Departments'));
+            // END POCOR-7466
+
+            $this->render('institution_departments_edit');
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionDepartments']);
+        }
     }
 
     public function StaffDuties()
@@ -1353,6 +1426,12 @@ class InstitutionsController extends AppController
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Needs'));
                 $this->set('contentHeader', $header);
+            }  else if ($this->request->getParam('action') == 'InfrastructureAttachments') {
+                //$institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Attachments');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
+                $this->Navigation->addCrumb(__('Attachments'));
+                $this->set('contentHeader', $header);
             }
 
             // POCOR-6150 end
@@ -1410,7 +1489,7 @@ class InstitutionsController extends AppController
 
         $user = $this->getRequest()->getSession()->read('sbn');
         $pass = $this->getRequest()->getSession()->read('nbn');
-        // $pass = $this->paramsEncode($pass);
+        $pass = $this->paramsEncode([$pass]);
         $institutionName = $this->Institutions->get($institutionId)->name;
 
         $this->set('encodedPart', $encodedPart);
@@ -1715,6 +1794,50 @@ class InstitutionsController extends AppController
         } else {
             $_edit = false;
         }
+        //POCOR-9487[START]
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $securityFunctionsData = $securityFunctions
+            ->find()
+            ->select([
+                'SecurityFunctions.id'
+            ])
+            ->where([
+                'SecurityFunctions.name' => 'Assessments',
+                'SecurityFunctions.controller' => 'Institutions',
+                'SecurityFunctions.module' => 'Institutions',
+                'SecurityFunctions.category' => 'Students'
+            ])
+            ->first();
+        $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['edit'];
+        if(!empty($permission_id)){
+            $securityRoleFunctions =  TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+
+            $securityRoleFunctionsData = $securityRoleFunctions
+            ->find()
+            ->where([
+                'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+                'SecurityRoleFunctions.security_role_id IN ' => $permission_id,
+            ])
+            ->first();
+            }
+        if(!empty($securityRoleFunctionsData)){
+            $SecurityRoleTable = TableRegistry::get('Security.SecurityRoles');
+            $SecurityRoleTableData = $SecurityRoleTable
+            ->find()
+            ->where([
+                $SecurityRoleTable->aliasField('id') => $securityRoleFunctionsData->security_role_id
+            ])
+            ->first();
+        }
+        if ($SecurityRoleTableData->code == 'PRINCIPAL') {
+            if($securityRoleFunctionsData->_edit == 1){
+                $_edit = true;
+            }
+            //$_edit = true;
+        }
+        //POCOR-9487['End']
+
+
         // end POCOR-3983
         $queryString = $this->request->getQuery('queryString');
         $this->set('_edit', $_edit);
@@ -1840,8 +1963,24 @@ class InstitutionsController extends AppController
 
             // View-related settings
             $this->set('ngController', 'AssessmentItemExemptionsCtrl as AssessmentItemExemptionsController');
-            $backUrl = $this->referer();
+            // POCOR-9248 start
+            $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+            $backUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Results',
+                '1' => $encodedQueryString,
+                '?' => ['queryString' => $encodedQueryString]
+            ];
+            // POCOR-9248 end
             $this->set('backUrl', $backUrl);
+            $alertUrl = [
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
+                'action' => 'setAlert',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institution_id])
+            ];
+            $this->set('alertUrl', $alertUrl);
             $this->Navigation->addCrumb(__('Assessments'), ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Assessments', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institution_id])]);
             $this->Navigation->addCrumb(__('Results'), $backUrl);
             $this->render('assessment_item_exemptions_edit');
@@ -2248,60 +2387,115 @@ class InstitutionsController extends AppController
         }
     }
 
-    public function Subjects($subaction = 'index', $institutionSubjectId = null)
+    // POCOR-9243 start
+    public function Subjects($subaction = 'index', $encodedId = null)
     {
-        if ($subaction == 'edit') {
-            $session = $this->request->getSession();
-            $institutionSubjectId = $this->ControllerAction->paramsDecode($institutionSubjectId);
-            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
-            if (!$this->AccessControl->isAdmin() && $institutionId) {
-                $userId = $this->Auth->user('id');
-                $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-                $AccessControl = $this->AccessControl;
-                $action = 'edit';
-                if (!$AccessControl->check(['Institutions', 'AllSubjects', $action], $roles)) {
-                    if ($AccessControl->check(['Institutions', 'Subjects', $action], $roles)) {
-                        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
-                        $subjectRecord = $InstitutionSubjects->get($institutionSubjectId, ['contain' => ['Teachers']])->toArray();
-                        if (in_array($userId, array_column($subjectRecord['teachers']), 'id')) {
-                            $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
-                            return $this->redirect($url);
-                        }
-                    } else {
-                        $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
-                        return $this->redirect($url);
-                    }
-                }
-            }
-            $viewUrl = $this->ControllerAction->url('view');
-            $viewUrl['action'] = 'Subjects';
-            $viewUrl[0] = 'view';
-            //$viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $institutionSubjectId, 'institution_id' => $institutionId]);
-            $viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $institutionSubjectId['institution_subject_id'], 'institution_id' => $institutionId, 'institution_subject_id' => $institutionSubjectId['institution_subject_id']]);//POCOR-8324
-            $indexUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'Subjects',
-                'index',//POCOR-8324
-                //'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
-                $this->ControllerAction->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId])//POCOR-8324
-            ];
-            $alertUrl = [
-                'plugin' => 'Configuration',
-                'controller' => 'Configurations',
-                'action' => 'setAlert',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
-            ];
-            $this->set('alertUrl', $alertUrl);
-            $this->set('viewUrl', $viewUrl);
-            $this->set('indexUrl', $indexUrl);
-            $this->set('institutionSubjectId', $institutionSubjectId['id']);
-            $this->set('institutionId', $institutionId);
-            $this->render('institution_subjects_edit');
-        } else {
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSubjects']);
+        // ─── INDEX CASE ─────────────────────────────────────────────────────────
+        if ($subaction !== 'edit') {
+            $this->ControllerAction->process([
+                'alias'     => __FUNCTION__,
+                'className' => 'Institution.InstitutionSubjects',
+            ]);
+            return;
         }
+
+        // ─── EDIT CASE ──────────────────────────────────────────────────────────
+
+        // 1) Decode the incoming subject ID
+        $decoded = $this->ControllerAction->paramsDecode($encodedId);
+        $subjectId = is_array($decoded) && isset($decoded['id'])
+            ? (int)$decoded['id']
+            : (int)$decoded;
+
+        // 2) Determine current institution
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+// URL for “Back to Subjects” in InstitutionsController
+        $indexUrl = [
+            'plugin'     => 'Institution',
+            'controller' => 'Institutions',
+            'action'     => 'Subjects',
+            0 => 'index',
+            1            => $this->ControllerAction->paramsEncode([
+                'id'             => $institutionId,
+                'institution_id'=> $institutionId,
+            ]),
+        ];
+        // 3) Authorization checks
+        $isAdmin = $this->AccessControl->isAdmin();
+        $userId  = $this->Auth->user('id');
+        $roles   = TableRegistry::getTableLocator()
+            ->get('Institution.Institutions')
+            ->getInstitutionRoles($userId, $institutionId);
+
+        $canEditAll   = $this->AccessControl->check(
+            ['Institutions', 'AllSubjects', 'edit'],
+            $roles
+        );
+        $canEditOwn   = $this->AccessControl->check(
+            ['Institutions', 'Subjects', 'edit'],
+            $roles
+        );
+
+        // If not admin or “edit all,” enforce finer-grained rules
+        if (! $isAdmin && $institutionId && ! $canEditAll) {
+            if ($canEditOwn) {
+                // Teacher can only edit if assigned to this subject
+                $subject = TableRegistry::getTableLocator()
+                    ->get('Institution.InstitutionSubjects')
+                    ->get($subjectId, ['contain' => ['Teachers']]);
+
+                $teacherIds = array_column($subject->teachers, 'id');
+
+                if (!in_array($userId, $teacherIds, true)) {
+                    // redirect back to subject list
+                    return $this->redirect($indexUrl);
+                }
+            } else {
+                // No edit permission at all: go back to institution’s Subjects list
+                return $this->redirect($indexUrl);
+            }
+        }
+
+        // ─── PREPARE VIEW VARIABLES ─────────────────────────────────────────────
+
+        // URL for “View” button
+        $viewUrl = [
+            'plugin'     => 'Institution',
+            'controller' => 'Institutions',
+            'action'     => 'Subjects',
+            0            => 'view',
+            1            => $this->ControllerAction->paramsEncode([
+                'id'                     => $subjectId,
+                'institution_id'         => $institutionId,
+                'institution_subject_id' => $subjectId,
+            ]),
+        ];
+
+        // URL for setting alerts
+        $alertUrl = [
+            'plugin'       => 'Configuration',
+            'controller'   => 'Configurations',
+            'action'       => 'setAlert',
+            0            => $this->ControllerAction->paramsEncode([
+                'id'             => $institutionId,
+                'institution_id'=> $institutionId,
+            ]),
+        ];
+
+        // Pass data to the view
+        $this->set(compact(
+            'viewUrl',
+            'indexUrl',
+            'alertUrl',
+            'subjectId',
+            'institutionId'
+        ));
+
+        // 4) Render the edit template
+        $this->render('institution_subjects_edit');
     }
+    // POCOR-9243 end
+
 
     public function Students($pass = 'index')
     {
@@ -2962,6 +3156,31 @@ class InstitutionsController extends AppController
                     '0' => 'view',
                     '1' => $encodedQueryString]);
         }//POCOR-8333 ends
+        // if ($action == 'StaffHistories') {
+        //     $queryString = $this->getQueryString();
+        //     $staffId = $queryString['security_user_id'] ?? $queryString['student_id'];
+        //     $Students = TableRegistry::getTableLocator()->get('Security.Users');
+        //     $activeStaff = $Students->get($staffId);
+        //     $staffName = $activeStaff->name;
+        //     $queryString = $this->getQueryString();
+        //     $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+        //     $this->Navigation->addCrumb('Students',
+        //         ['plugin' => $this->getPlugin(),
+        //             'controller' => 'Institutions',
+        //             'action' => 'Staff',
+        //             '0' => 'index',
+        //             '1' => $encodedQueryString]);
+
+        //     $queryString['id'] = $staffId;
+        //     $queryString['security_user_id'] = $staffId;
+        //     $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+        //     $this->Navigation->addCrumb($staffName,
+        //         ['plugin' => $this->getPlugin(),
+        //             'controller' => 'Institutions',
+        //             'action' => 'StaffUser',
+        //             '0' => 'view',
+        //             '1' => $encodedQueryString]);
+        // }
         $this->set('contentHeader', $header);
     }
 
@@ -3611,7 +3830,9 @@ class InstitutionsController extends AppController
             $highChartDatas[] = $InstitutionStudents->getHighChart('student_attendance', $params);
 
             $params = [
-                'conditions' => ['institution_id' => $institutionID, 'staff_status_id' => $assignedStatus]
+                'conditions' => [
+                    'institution_id' => $institutionID,
+                    'staff_status_id' => $assignedStatus]
             ];
             $highChartDatas[] = $InstitutionStaff->getHighChart('staff_attendance', $params);
 
@@ -6577,7 +6798,6 @@ class InstitutionsController extends AppController
      */
     public function saveStudentData()
     {
-
         if($this->savingStudentData > 0) {
             self::debug('>0');
             return;
@@ -6599,22 +6819,24 @@ class InstitutionsController extends AppController
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
         }
         $securityUserResult = $this->saveSecurityUser($studentData);
-        if ($securityUserResult) {
+        if ($securityUserResult instanceof \Cake\ORM\Entity || $securityUserResult instanceof EntityInterface) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
             $this->handleIdentities($requestData, $userRecordId, $userId);
             $this->handleContacts($requestData, $userRecordId, $userId);
             $this->handleCustomFields('student', $requestData, $userRecordId, $userId);
             //if ($requestData['student_admission_status_value'] == 0 || strtolower($requestData['student_admission_status']) == "enrolled") {//POCOR-8434
-                $saved_student = $this->handleStudentInstitutionData($requestData, $userRecordId, $userId) ?? $securityUserResult; // POCOR-8776
+            $saved_student = $this->handleStudentInstitutionData($requestData, $userRecordId, $userId) ?? $securityUserResult; // POCOR-8776
             //}//POCOR-8434
             $this->triggerWebhooks($userRecordId, $requestData);
 //            Log::debug(print_r($studentData,true));
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId, 'saved_student' => $saved_student], 200);
+        } elseif ($securityUserResult instanceof Response) { // POCOR-9011
+            return $securityUserResult;
         } else {
 //            Log::debug(print_r($studentData,true));
-            return $this->sendJsonResponse(['message' => 'Failed to save user Webhooks.'], 500);
-            }
+            return $this->sendJsonResponse(['message' => 'Failed to save user ' . json_encode(print_r($securityUserResult,true)) ], 500);
+        }
     }
 
     /**
@@ -6646,7 +6868,7 @@ class InstitutionsController extends AppController
             return $this->sendJsonResponse(['message' => 'success', 'staff' => $result], 200);
         }
         $securityUserResult = $this->saveSecurityUser($staffData);
-        if ($securityUserResult) {
+        if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
             $this->handleIdentities($requestData, $userRecordId, $userId);
@@ -6658,9 +6880,11 @@ class InstitutionsController extends AppController
 //            Log::debug(print_r($staff,true)); // POCOR-8532
 //            Log::debug(print_r($staffData,true)); // POCOR-8532
             return $this->sendJsonResponse(['message' => 'success', 'staff' => $staff->toArray()], 200);
+        } elseif ($securityUserResult instanceof Response) { // POCOR-9011
+            return $securityUserResult;
         } else {
 //            Log::debug(print_r($staffData,true));
-            return $this->sendJsonResponse(['message' => 'Failed to save user Webhooks.'], 500);
+            return $this->sendJsonResponse(['message' => 'Failed to save user.'], 500);
         }
     }
 
@@ -6695,7 +6919,10 @@ class InstitutionsController extends AppController
             'photo_name' => $requestData['photo_name'] ?? null,
             'photo_content' => isset($requestData['photo_base_64']) ? base64_decode($requestData['photo_base_64']) : null,
             'created_user_id' => $userId,
-            'created' => date('Y-m-d H:i:s')
+            'created' => date('Y-m-d H:i:s'), // POCOR-9011
+            'email' => $requestData['email'] ?? null, // POCOR-9011
+            'mobile_number' => $requestData['mobile_number'] ?? null, // POCOR-9011
+
         ];
         if ($is_student) {
             $userData['is_student'] = 1;
@@ -6713,32 +6940,94 @@ class InstitutionsController extends AppController
      * Saves a security user. POCOR-8231
      *
      * @param array $userData
-     * @return \Cake\Datasource\EntityInterface|false
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private function saveSecurityUser($userData)
+    /**
+     * Save or update a Security User by openemis_no.
+     * Returns the saved Entity on success, or a JSON Response on failure.
+     *
+     * @return \Cake\Datasource\EntityInterface|\Cake\Http\Response
+     */
+    private function saveSecurityUser(array $userData): \Cake\Datasource\EntityInterface|Response
     {
-        $securityUsers = self::getDynamicTableInstance('User.Users');//POCOR-8706
-        $checkStudentExist = $securityUsers->find()->where(['openemis_no' => $userData['openemis_no']])->first();
-//        self::debug($userData);
-        if ($checkStudentExist) {
-            $userData['id'] = $checkStudentExist->id;
-            unset($userData['username'], $userData['password']);
-            $entity = $securityUsers->patchEntity($checkStudentExist, $userData);
-        } else {
-            $entity = $securityUsers->newEntity($userData);
+        $securityUsers = self::getDynamicTableInstance('User.Users'); // POCOR-8706
+        if($userData['mobile_number'] == ''){
+            unset($userData['mobile_number']);
         }
-        //POCOR-8706(attached behaviour to reflect users in moodle created from directory)
-        $securityUsers->addBehavior('User.MoodleCreateUser');
+        if($userData['email'] == ''){
+            unset($userData['email']);
+        }
+        // Find existing by openemis_no
+        $existing = $securityUsers->find()
+            ->where(['openemis_no' => $userData['openemis_no'] ?? null])
+            ->first();
+
+        if ($existing) {
+            // Prevent accidental username/password overwrite during update
+            $userData['id'] = $existing->id;
+            unset($userData['username'], $userData['password']);
+            $entity = $securityUsers->patchEntity($existing, $userData);
+        } else {
+            // POCOR-9181 [START]
+            try {
+                $entity = $securityUsers->newEntity($userData);
+            } catch (\Throwable $e) {
+                Log::error(__FUNCTION__ . ': newEntity failed: ' . $e->getMessage());
+                return $this->sendJsonResponse(
+                    ['message' => 'Failed to create user', 'detail' => $e->getMessage()],
+                    500
+                );
+            }
+            // POCOR-9181 [END]
+        }
+
+        // Validation errors from patch/new stage
+        if ($entity->hasErrors()) {
+            return $this->sendJsonResponse(
+                ['message' => 'Validation failed', 'errors' => $entity->getErrors()],
+                422
+            );
+        }
+
+        // Attach behavior once (avoid duplicate add on multiple calls)
+        $behaviors = $securityUsers->behaviors();
+        if (!$behaviors->has('MoodleCreateUser')) {
+            $securityUsers->addBehavior('User.MoodleCreateUser');
+        }
 
         try {
-            return $securityUsers->save($entity);
-        } catch (\Exception $e) {
-            Log::debug(__FUNCTION__);
+            $saved = $securityUsers->save($entity, ['atomic' => false]);
 
-            Log::debug('Error: ' . $e->getMessage());
-//            Log::debug($entity);
-            return false;
+            if ($saved === false) {
+                // buildRules or persistence failed without throwing
+                return $this->sendJsonResponse(
+                    ['message' => 'Failed to save user', 'errors' => $entity->getErrors()],
+                    400
+                );
+            }
+
+            // Success: return the persisted entity (same instance, PK set/updated)
+            return $saved;
+
+        } catch (\Throwable $e) {
+            Log::error(__FUNCTION__ . ': save failed: ' . $e->getMessage());
+
+            $msg = $e->getMessage();
+            // POCOR-9011 start — keep your duplicate parsing
+            if (str_contains($msg, 'Duplicate entry')) {
+                if (str_contains($msg, 'email')) {
+                    return $this->sendJsonResponse(['message' => 'Duplicate email'], 400);
+                }
+                if (str_contains($msg, 'mobile')) {
+                    return $this->sendJsonResponse(['message' => 'Duplicate mobile number'], 400);
+                }
+            }
+            // POCOR-9011 end
+
+            return $this->sendJsonResponse(
+                ['message' => 'Failed to save moodle user', 'detail' => $msg],
+                500
+            );
         }
     }
 
@@ -7190,9 +7479,29 @@ class InstitutionsController extends AppController
                         'created_user_id' => $userId,
                         'created' => date('Y-m-d H:i:s')
                     ];
-                    //save in institution_student_admission table
-                    $entityAdmissionData = $institutionStudentAdmission->newEntity($entityAdmissionData);
-                    $InstitutionAdmissionResult = $institutionStudentAdmission->save($entityAdmissionData);
+                    // POCOR-9323: start save in institution_student_admission table
+                    $entityAdmission = $institutionStudentAdmission->newEntity($entityAdmissionData);
+
+// Check validation errors before attempting save
+                    $errors = method_exists($entityAdmission, 'getErrors')
+                        ? $entityAdmission->getErrors()
+                        : $entityAdmission->errors(); // CakePHP <3.4
+
+                    if (!empty($errors)) {
+                        Log::debug('Admission validation failed; skipping candidate number gen.');
+                        // optionally Log::debug(print_r($errors, true));
+                        return;
+                    }
+
+// Try save
+                    $admissionSaved = $institutionStudentAdmission->save($entityAdmission);
+
+                    if (!$admissionSaved) {
+                        Log::debug('Admission save failed; skipping candidate number gen.');
+                        return;
+                    }
+
+                    // POCOR-9323: end
                     unset($entityAdmissionData);//POCOR-7716
                     unset($InstitutionAdmissionResult);//POCOR-7716
                 }
@@ -7275,6 +7584,7 @@ class InstitutionsController extends AppController
 
         return $saved_student;
     }
+
 
     /**
      * POCOR-7146
@@ -7443,7 +7753,7 @@ class InstitutionsController extends AppController
                 $TransfersTbl->aliasField('institution_id'),
                 $TransfersTbl->aliasField('previous_institution_id')
             ])
-            ->leftJoin([$TransfersTbl->alias() => $TransfersTbl->table()],
+            ->leftJoin([$TransfersTbl->getAlias() => $TransfersTbl->getTable()],
                 [
                     $TransfersTbl->aliasField('student_id') . '=' . $student_id,
                     $TransfersTbl->aliasField('institution_id') => $institution_id
@@ -7686,59 +7996,232 @@ class InstitutionsController extends AppController
     }
 
     /**
-     * Triggers webhooks for a user. POCOR-8231. Temporarily Disabled
+     * Triggers webhooks for a user. POCOR-9393
      *
      * @param int $userRecordId
      * @param array $requestData
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private function triggerWebhooks($userRecordId, array $requestData)
     {
-        return; // @todo
         $institutionStudents = self::getDynamicTableInstance('Institution.Students');
-        $bodyData = $institutionStudents->find('all', [
-            'contain' => [
-                'Institutions',
-                'EducationGrades',
-                'AcademicPeriods',
-                'StudentStatuses',
-                'Users',
-                'Users.Genders',
-                'Users.MainNationalities',
-                'Users.Identities.IdentityTypes',
-                'Users.AddressAreas',
-                'Users.BirthplaceAreas',
-                'Users.Contacts.ContactTypes'
-            ]
-        ])->where([
-            $institutionStudents->aliasField('student_id') => $userRecordId
-        ])->toArray();
+        $InstitutionClasses = self::getDynamicTableInstance('Institution.InstitutionClasses');
+        $userNationalities = self::getDynamicTableInstance('User.UserNationalities');
+        $nationalities = self::getDynamicTableInstance('FieldOption.Nationalities');
+        $identities = self::getDynamicTableInstance('User.Identities');
+        $IdentityTypes = self::getDynamicTableInstance('FieldOption.IdentityTypes');
+        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+
+        $bodyData = $institutionStudents->find()
+                    ->select([
+                        'id'         => $institutionStudents->aliasField('id'),
+                        'student_id' => $institutionStudents->aliasField('student_id'),
+                        // user info
+                        'username'    => 'Users.username',
+                        'openemis_no' => 'Users.openemis_no',
+                        'first_name'  => 'Users.first_name',
+                        'middle_name' => 'Users.middle_name',
+                        'third_name'  => 'Users.third_name',
+                        'last_name'   => 'Users.last_name',
+                        'date_of_birth' => 'Users.date_of_birth',
+                        'email'       => 'Users.email',
+                        'address'     => 'Users.address',
+                        'postal_code' => 'Users.postal_code',
+
+                        // institution & status
+                        'institution'     => 'Institutions.name',
+                        'student_status'  => 'StudentStatuses.name',
+                        'academic_period' => 'AcademicPeriods.name',
+                        'education_grade' => 'EducationGrades.name',
+                        'institution_class' => $InstitutionClasses->aliasField('name'),
+                        'institution_class_id' => $InstitutionClasses->aliasField('id'),
+
+                        // demographics
+                        'gender'         => 'Genders.name',
+                        'address_area'   => 'AddressAreas.name',
+                        'birthplace_area'=> 'BirthplaceAreas.name',
+                        'mobile_number'        => 'Users.mobile_number',
+                        'nationality'    => $nationalities->aliasField('name'),
+                        'user_identities_number'    => $identities->aliasField('number'),
+                        'identity_types'    => $IdentityTypes->aliasField('name'),
+                    ])
+                    ->contain([
+                        'Institutions',
+                        'EducationGrades',
+                        'AcademicPeriods',
+                        'StudentStatuses',
+                        'Users' => [
+                            'Genders',
+                            'MainNationalities',
+                            'AddressAreas',
+                            'BirthplaceAreas',
+                        ]
+                    ])
+                    ->leftJoin(
+                    [$InstitutionClassStudents->getAlias() => $InstitutionClassStudents->getTable()],
+                    [
+                        $InstitutionClassStudents->aliasField('student_id') . ' = ' . $institutionStudents->aliasField('student_id'),
+                    ])
+                    ->leftJoin(
+                    [$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()],
+                    [
+                        $InstitutionClasses->aliasField('id') . ' = ' . $InstitutionClassStudents->aliasField('institution_class_id'),
+                    ])
+                    ->leftJoin(
+                        [$userNationalities->getAlias() => $userNationalities->getTable()],
+                        [
+                            $userNationalities->aliasField('security_user_id') . ' = ' . $institutionStudents->aliasField('student_id'),
+                        ])
+                    ->leftJoin(
+                        [$nationalities->getAlias() => $nationalities->getTable()],
+                        [
+                            $nationalities->aliasField('id') . ' = ' . $userNationalities->aliasField('nationality_id'),
+                        ])
+                    ->leftJoin(
+                        [$identities->getAlias() => $identities->getTable()],
+                        [
+                            $identities->aliasField('security_user_id') . ' = ' . $institutionStudents->aliasField('student_id'),
+                        ])
+                    ->leftJoin(
+                        [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
+                        [
+                            $IdentityTypes->aliasField('id') . ' = ' . $identities->aliasField('identity_type_id'),
+                        ])
+                    ->where([
+                        $institutionStudents->aliasField('student_id') => $userRecordId
+                    ])
+                    ->enableHydration(false)->first();
+           
+            //Log::error($bodyData->sql());
+
+
+        //Fetch student custom fields
+        $studentCustomFieldValues = self::getDynamicTableInstance('student_custom_field_values');
+        $studentCustomFieldOptions = self::getDynamicTableInstance('student_custom_field_options');
+
+        $studentCustomData = $studentCustomFieldValues->find()
+            ->select([
+                'id' => $studentCustomFieldValues->aliasField('id'),
+                'custom_id' => 'studentCustomField.id',
+                'student_id' => $studentCustomFieldValues->aliasField('student_id'),
+                'student_custom_field_id' => $studentCustomFieldValues->aliasField('student_custom_field_id'),
+                'text_value' => $studentCustomFieldValues->aliasField('text_value'),
+                'number_value' => $studentCustomFieldValues->aliasField('number_value'),
+                'decimal_value' => $studentCustomFieldValues->aliasField('decimal_value'),
+                'textarea_value' => $studentCustomFieldValues->aliasField('textarea_value'),
+                'date_value' => $studentCustomFieldValues->aliasField('date_value'),
+                'time_value' => $studentCustomFieldValues->aliasField('time_value'),
+                'option_value_text' => $studentCustomFieldOptions->aliasField('name'),
+                'name' => 'studentCustomField.name',
+                'field_type' => 'studentCustomField.field_type',
+            ])
+            ->leftJoin(
+                ['studentCustomField' => 'student_custom_fields'],
+                ['studentCustomField.id = ' . $studentCustomFieldValues->aliasField('student_custom_field_id')]
+            )
+            ->leftJoin(
+                [$studentCustomFieldOptions->getAlias() => $studentCustomFieldOptions->getTable()],
+                [
+                    $studentCustomFieldOptions->aliasField('student_custom_field_id') . ' = ' . $studentCustomFieldValues->aliasField('student_custom_field_id'),
+                    $studentCustomFieldOptions->aliasField('id') . ' = ' . $studentCustomFieldValues->aliasField('number_value')
+                ]
+            )
+            ->where([
+                $studentCustomFieldValues->aliasField('student_id') => $userRecordId,
+            ])
+            ->enableHydration(false)
+            ->toArray();
 
         if (!empty($bodyData)) {
-            foreach ($bodyData as $value) {
-                $body = $this->prepareWebhookBody($value);
-                $webhooks = self::getDynamicTableInstance('Webhook.Webhooks');
-                if (!empty($requestData['student_id'])) {
-                    $webhooks->triggerShell('student_update', ['username' => ''], $body);
-                } else {
-                    $webhooks->triggerShell('student_create', ['username' => ''], $body);
-                }
+            $body = $this->prepareWebhookBody($bodyData, $studentCustomData);
+
+            $webhooks = self::getDynamicTableInstance('Webhook.Webhooks');
+            if (!empty($requestData['student_id'])) {
+                $webhooks->triggerShell('student_update', ['username' => ''], $body);
+            } else {
+                $webhooks->triggerShell('student_create', ['username' => ''], $body);
             }
         }
     }
 
     /**
-     * Prepares the webhook body. returns empty string yet
-     * POCOR-8231
+     * Prepares the webhook body. 
+     * POCOR-9393
      * @param array $student
      * @return array
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private function prepareWebhookBody($student)
+    private function prepareWebhookBody($student, array $studentCustomData = [])
     {
-        return "";
-        // Logic to prepare webhook body
-        // ...
+        
+        $body = [
+            'id'            => $student['id'] ?? null,
+            'student_id'    => $student['student_id'] ?? null,
+            'username'      => $student['username'] ?? null,
+            'openemis_no'   => $student['openemis_no'] ?? null,
+            'first_name'    => $student['first_name'] ?? null,
+            'middle_name'   => $student['middle_name'] ?? null,
+            'third_name'    => $student['third_name'] ?? null,
+            'last_name'     => $student['last_name'] ?? null,
+           'date_of_birth' => !empty($student['date_of_birth']) 
+                               ? $student['date_of_birth']->format('Y-m-d') : null,
+            'email'         => $student['email'] ?? null,
+            'address'       => $student['address'] ?? null,
+            'postal_code'   => $student['postal_code'] ?? null,
+            'mobile_number'   => $student['mobile_number'] ?? null,
+            'institution'     => $student['institution'] ?? null,
+            'student_status'          => $student['student_status'] ?? null,
+            'academic_period' => $student['academic_period'] ?? null,
+            'education_grade' => $student['education_grade'] ?? null,
+            'institution_class' => $student['institution_class'] ?? null,
+            'institution_class_id' => $student['institution_class_id'] ?? null,
+            'gender'          => $student['gender'] ?? null,
+            'address_area'    => $student['address_area'] ?? null,
+            'birthplace_area' => $student['birthplace_area'] ?? null,
+            'nationality'     => $student['nationality'] ?? null,
+            'user_identities_number'  => $student['user_identities_number'] ?? null,
+            'identity_types'     => $student['identity_types'] ?? null,
+        ];
+
+        // Attach custom fields if available
+        $customFields = [];
+        if (!empty($studentCustomData)) {
+            $count = 0;
+            foreach ($studentCustomData as $val) {
+                $fieldType = $val['field_type'] ?? '';
+                $entry = [
+                    'id'   => $val['custom_id'] ?? '',
+                    'name' => $val['name'] ?? '',
+                ];
+
+                if ($fieldType === 'TEXT') {
+                    $entry['text_value'] = $val['text_value'] ?? '';
+                } elseif ($fieldType === 'CHECKBOX') {
+                    $entry['checkbox_value'] = $val['option_value_text'] ?? '';
+                } elseif ($fieldType === 'NUMBER') {
+                    $entry['number_value'] = $val['number_value'] ?? '';
+                } elseif ($fieldType === 'DECIMAL') {
+                    $entry['decimal_value'] = $val['decimal_value'] ?? '';
+                } elseif ($fieldType === 'TEXTAREA') {
+                    $entry['textarea_value'] = $val['textarea_value'] ?? '';
+                } elseif ($fieldType === 'DROPDOWN') {
+                    $entry['dropdown_value'] = $val['option_value_text'] ?? '';
+                } elseif ($fieldType === 'DATE') {
+                    $entry['date_value'] = !empty($val['date_value'])
+                        ? date('Y-m-d', strtotime($val['date_value']))
+                        : '';
+                } elseif ($fieldType === 'TIME') {
+                    $entry['time_value'] = !empty($val['time_value'])
+                        ? date('h:i A', strtotime($val['time_value']))
+                        : '';
+                } elseif ($fieldType === 'COORDINATES') {
+                    $entry['coordinate_value'] = $val['text_value'] ?? '';
+                }
+
+                $customFields['custom_field'][$count] = $entry;
+                $count++;
+            }
+        }
+
+        return array_merge($body, $customFields);
     }
 
     /**
@@ -7925,7 +8408,7 @@ class InstitutionsController extends AppController
 //        Log::debug(print_r($userData, true));
         $securityUserResult = $this->saveSecurityUser($userData);
 //        Log::debug(print_r($securityUserResult, true));
-        if ($securityUserResult) {
+        if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $r1 = $this->handleNationalities($requestData, $userRecordId, $userId);
             $r2 = $this->handleIdentities($requestData, $userRecordId, $userId);
@@ -7942,9 +8425,11 @@ class InstitutionsController extends AppController
 //            Log::debug('handleGuardians');
 //            Log::debug(print_r($r4, true));
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
+        } elseif ($securityUserResult instanceof Response) { // POCOR-9011
+            return $securityUserResult;
         } else {
 //            Log::debug(print_r($userData,true));
-            return $this->sendJsonResponse(['message' => 'Failed to save user Guardian.'], 500);
+            return $this->sendJsonResponse(['message' => 'Failed to save user.'], 500);
         }
     }
 
@@ -7973,7 +8458,7 @@ class InstitutionsController extends AppController
 //        Log::debug(print_r($userData, true));
         $securityUserResult = $this->saveSecurityUser($userData);
 //        Log::debug(print_r($securityUserResult, true));
-        if ($securityUserResult) {
+        if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $r1 = $this->handleNationalities($requestData, $userRecordId, $userId);
             $r2 = $this->handleIdentities($requestData, $userRecordId, $userId);
@@ -7990,9 +8475,11 @@ class InstitutionsController extends AppController
 //            Log::debug('handleCustomFields');
 //            Log::debug(print_r($r5, true));
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
+        } elseif ($securityUserResult instanceof Response) { // POCOR-9011
+            return $securityUserResult;
         } else {
 //            Log::debug(print_r($userData,true));
-            return $this->sendJsonResponse(['message' => 'Failed to save user Other.'], 500);
+            return $this->sendJsonResponse(['message' => 'Failed to save user.'], 500);
         }
     }
 
@@ -8166,50 +8653,103 @@ class InstitutionsController extends AppController
     /**
      * Change for hiding/showing external search. POCOR-8231
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *     POCOR-9118 refactored for OpenEMIS Core search
      */
-    public function checkConfigurationForExternalSearch()
+    public function checkConfigurationForExternalSearch(): Response
     {
         $this->request->allowMethod(['post']);
+        $data   = $this->request->getData();
+        $params = $data['params'] ?? [];
 
-        $requestData = $this->request->getData();
-        $requestParams = $requestData['params'] ?? [];
+        $identityTypeId = (int)($params['identity_type_id'] ?? 0);
+        $nationalityId  = (int)($params['nationality_id'] ?? 0);
 
-        $identity_type_id = $requestParams['identity_type_id'] ?? 0;
-        $nationality_id = $requestParams['nationality_id'] ?? 0;
-
-        if (!$identity_type_id || !$nationality_id) {
-            return $this->sendJsonResponse([["value" => 'None', "showExternalSearch" => false]]);
+        if (!$identityTypeId || !$nationalityId) {
+            return $this->sendJsonResponse([
+                ['value' => 'None', 'showExternalSearch' => false]
+            ]);
         }
 
-        $configItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $configItemsResultQuery = $configItems
-            ->find('all')
-            ->select(['id' => $configItems->aliasField('id'),
-                'name' => $configItems->aliasField('name')])
-            ->innerJoin(['Nationalities' => 'nationalities'], [
-                'Nationalities.id = ' . $nationality_id,
-                'Nationalities.identity_type_id = ' . $identity_type_id,
-                'Nationalities.external_validation = ' . $configItems->aliasField('id')
+        $configItemsTable = TableRegistry::getTableLocator()
+            ->get('Configuration.ConfigItems');
+
+        // 1) Fetch non–“OpenEMIS Core” data sources
+        $regularQuery = $configItemsTable->find()
+            ->select([
+                'id'   => $configItemsTable->aliasField('id'),
+                'name' => $configItemsTable->aliasField('name'),
             ])
             ->where([
-                $configItems->aliasField('type = "External Data Source - Identity"'),
-                $configItems->aliasField('value = 1')
+                $configItemsTable->aliasField('type')  => 'External Data Source - Identity',
+                $configItemsTable->aliasField('value') => 1,
+                $configItemsTable->aliasField('name !=') => 'OpenEMIS Core',
             ])
+            ->innerJoin(
+                ['Nationalities' => 'nationalities'],
+                [
+                    'Nationalities.id ='            => $nationalityId,
+                    'Nationalities.identity_type_id =' => $identityTypeId,
+                    'Nationalities.external_validation ='
+                    => $configItemsTable->aliasField('id'),
+                ]
+            )
             ->disableHydration();
 
-        $configItemsResult = $configItemsResultQuery->toArray();
+        $regularResults = $regularQuery->toArray();
 
+        // 2) Check for “OpenEMIS Core” match via ExternalDataSourceAttributes
+        $openEmisCoreItem = $configItemsTable->find()
+            ->select(['name'])
+            ->where([
+                'type'  => 'External Data Source - Identity',
+                'value' => 1,
+                'name'  => 'OpenEMIS Core',
+            ])
+            ->first();
 
-        $resultArray = array_map(function ($result) {
-            return ["value" => $result['name'], "showExternalSearch" => true];
-        }, $configItemsResult);
+        $coreResults = [];
+        if ($openEmisCoreItem) {
+            $edaTable = TableRegistry::getTableLocator()
+                ->get('Configuration.ExternalDataSourceAttributes');
 
+            $match = $edaTable->find()
+                ->select(['value'])
+                ->where([
+                    'external_data_source_type' => 'OpenEMIS Core',
+                    'attribute_field'           => 'identity_type_id',
+                    'value'                     => $identityTypeId,
+                ])
+                ->first();
+
+            if ($match) {
+                $coreResults[] = [
+                    'name' => $openEmisCoreItem->name
+                ];
+            }
+        }
+
+        // 3) Map both sets into the unified result format
+        $results = array_merge($regularResults, $coreResults);
+        $resultArray = [];
+
+        foreach ($results as $row) {
+            $resultArray[] = [
+                'value'              => $row['name'],
+                'showExternalSearch' => true
+            ];
+        }
+
+        // 4) Fallback if nothing matched
         if (empty($resultArray)) {
-            $resultArray[] = ["value" => 'None', "showExternalSearch" => false];
+            $resultArray[] = [
+                'value'              => 'None',
+                'showExternalSearch' => false
+            ];
         }
 
         return $this->sendJsonResponse($resultArray);
     }
+
 
     public
     function checkUserAge()
@@ -9451,6 +9991,13 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserHistories']);
     }//POCOR -8333 ends
 
+    //POCOR -8333 starts
+    public
+    function StaffHistories()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserHistories']);
+    }//POCOR -8333 ends
+
     public function History()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionHistories']);
@@ -9769,6 +10316,52 @@ class InstitutionsController extends AppController
             $this->render('scanned_data');
     }
 
+    //POCOR-5208
+    public function InfrastructureAttachments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureAttachments']);
+    }
+
+    /**
+     * POCOR-9407
+     * Download an attached file for an institution custom field value.
+     *
+     * Looks up the file by `institution_id` and ensures both `file` (BLOB)
+     * and `file_name` exist in the record. If found, it streams the file
+     * back to the browser as a downloadable attachment.
+     * @return \Cake\Http\Response The file download response.
+     * @throws \Cake\Http\Exception\NotFoundException If no file or record is found.
+     */
+    public function downloadFile($id = null)
+    {
+        $this->autoRender = false;
+        if (empty($id)) {
+            throw new NotFoundException(__('Invalid file'));
+        }
+
+        // Load your custom field values table
+        $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldValues');
+        $fileRecord = $InstitutionCustomFieldValues->find()
+                        ->where([
+                            'file IS NOT' => null, 
+                            'file_name IS NOT' => null, 
+                            'institution_id' => $this->getInstitutionID(),
+                        ])->first();
+
+        if (empty($fileRecord) || empty($fileRecord->file_name) || empty($fileRecord->file)) {
+            throw new NotFoundException(__('File not found'));
+        }
+
+        $fileName = $fileRecord->file_name;
+        $fileResource = $fileRecord->file;
+        $this->response = $this->response
+            ->withType(mime_content_type($fileResource))
+            ->withHeader('Content-Disposition', 'attachment; filename="' . $fileName . '"')
+            ->withStringBody(stream_get_contents($fileResource));
+
+        return $this->response;
+    }
+    
 }
 
 

@@ -114,6 +114,7 @@ class AssessmentItemResultsTable extends AppTable
                             $assessmentItemResults->aliasField('assessment_period_id') => $entity->assessment_period_id,
                             $assessmentItemResults->aliasField('assessment_id') => $entity->assessment_id,
                             $assessmentItemResults->aliasField('education_subject_id') => $entity->education_subject_id,
+                            $assessmentItemResults->aliasField('institution_classes_id') => $entity->institution_classes_id,//POCOR-9184
                         ])
                         ->order([ //POCOR-7580-KHINDOL
                             $assessmentItemResults->aliasField('created') => 'DESC',
@@ -297,9 +298,9 @@ class AssessmentItemResultsTable extends AppTable
             ])
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
-                $this->aliasField('assessment_id') => $assessmentId,
-                $this->aliasField('education_subject_id') => $subjectId,
-                $this->aliasField('student_id') => $studentId,
+                $this->aliasField('assessment_id IS') => $assessmentId,
+                $this->aliasField('education_subject_id IS') => $subjectId,
+                $this->aliasField('student_id IS') => $studentId,
             ])
             ->group([$this->aliasField('assessment_period_id')])
             ->disableHydration();
@@ -449,6 +450,56 @@ class AssessmentItemResultsTable extends AppTable
                 }
             }
         }
+    }
+
+    /**
+     * Evaluates the grading type and determines the appropriate grading option for a given assessment mark.
+     *
+     * This method checks the grading type (MARKS, GRADES, DURATION) associated with the assessment item
+     * and matches the mark against the defined grading options. It sets the `assessment_grading_option_id`
+     * and attaches the related `assessment_grading_option` and `assessment_grading_type` entities to the provided entity.
+     *
+     * POCOR-9143: Ensures grading logic is applied consistently across all assessments.
+     *
+     * @param \Cake\ORM\Entity $entity Entity containing `marks`, `assessment_id`, `assessment_period_id`, and `education_subject_id`
+     * @return \Cake\ORM\Entity The updated entity with `assessment_grading_option`, `assessment_grading_option_id`, and `assessment_grading_type` set
+     *
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function evaluateGradingForMarks(Entity $entity): Entity
+    {
+        $educationSubjectId = $entity->education_subject_id;
+        $assessmentId = $entity->assessment_id;
+        $assessmentPeriodId = $entity->assessment_period_id;
+
+        $AssessmentItemsGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentItemsGradingTypes');
+        $assessmentItemsGradingTypeEntity = $AssessmentItemsGradingTypes
+            ->find()
+            ->contain('AssessmentGradingTypes.GradingOptions')
+            ->where([
+                $AssessmentItemsGradingTypes->aliasField('education_subject_id') => $educationSubjectId,
+                $AssessmentItemsGradingTypes->aliasField('assessment_id') => $assessmentId,
+                $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $assessmentPeriodId
+            ])
+            ->first();
+
+        if ($assessmentItemsGradingTypeEntity?->assessment_grading_type) {
+            $gradingType = $assessmentItemsGradingTypeEntity->assessment_grading_type;
+            $entity->set('assessment_grading_type', $gradingType);
+
+            if (in_array($gradingType->result_type, ['MARKS', 'DURATION']) &&
+                !empty($gradingType->grading_options)) {
+                foreach ($gradingType->grading_options as $gradingOptionObj) {
+                    if ($entity->marks >= $gradingOptionObj->min && $entity->marks <= $gradingOptionObj->max) {
+                        $entity->set('assessment_grading_option', $gradingOptionObj);
+                        $entity->set('assessment_grading_option_id', $gradingOptionObj->id);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return $entity;
     }
 
     public function getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId, $institutionClassesId, $assessmentPeriodId, $institutionId)
@@ -943,7 +994,7 @@ class AssessmentItemResultsTable extends AppTable
                 'education_subject_id' => 'assessment_items.education_subject_id',
                 'assessment_period_id' => $exemptions_table->aliasField('assessment_period_id'),
                 'assessment_id' => $exemptions_table->aliasField('assessment_id'),
-                'type' => $exemptions_table->aliasField('type')//POCOR-9042 
+                'type' => $exemptions_table->aliasField('type')//POCOR-9042
             ])
             ->innerJoin(['assessment_items' => 'assessment_items'],
                 [$exemptions_table->aliasField('assessment_id') . ' = assessment_items.assessment_id AND ' .
@@ -1161,6 +1212,102 @@ class AssessmentItemResultsTable extends AppTable
 
         // Return the table instance
         return $locator->get($tableFullAlias, $options);
+    }
+
+   public function getAssessmentItemResultsReport($academicPeriodId, $assessmentIds = null, $subjectIds = null, $studentIds = null, $classIds = null): array
+    {
+        $SubjectStudents = self::getDynamicTableInstance('institution_subject_students');
+        $ClassStudents = self::getDynamicTableInstance('institution_class_students');
+
+        // Step 1: Fetch raw results with class_id
+        $query = $this->find('all')
+            ->select([
+                'grade_name' => 'AssessmentGradingOptions.name',
+                'grade_code' => 'AssessmentGradingOptions.code',
+                $this->aliasField('student_id'),
+                $this->aliasField('assessment_period_id'),
+                $this->aliasField('academic_period_id'),
+                $this->aliasField('education_subject_id'),
+                $this->aliasField('education_grade_id'),
+                $this->aliasField('assessment_id'),
+                'institution_class_id' => $ClassStudents->aliasField('institution_class_id')
+            ])
+            ->contain(['AssessmentGradingOptions'])
+            ->innerJoin([$SubjectStudents->getAlias() => $SubjectStudents->getTable()], [
+                $SubjectStudents->aliasField('student_id') . ' = ' . $this->aliasField('student_id'),
+                $SubjectStudents->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id'),
+                $SubjectStudents->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id'),
+                $SubjectStudents->aliasField('education_grade_id') . ' = ' . $this->aliasField('education_grade_id'),
+                $SubjectStudents->aliasField('education_subject_id') . ' = ' . $this->aliasField('education_subject_id')
+            ])
+            ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->getTable()], [
+                $ClassStudents->aliasField('student_id') . ' = ' . $this->aliasField('student_id'),
+                $ClassStudents->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id') // ✅ Ensures same period
+            ])
+            ->where([
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ])
+            ->disableHydration();
+
+        if (!empty($assessmentIds)) {
+            $query->where([$this->aliasField('assessment_id') . ' IN' => $assessmentIds]);
+        }
+
+        if (!empty($subjectIds)) {
+            $query->where([$this->aliasField('education_subject_id') . ' IN' => $subjectIds]);
+        }
+
+        if (!empty($studentIds)) {
+            $query->where([$this->aliasField('student_id') . ' IN' => $studentIds]);
+        }
+
+        $results = $query->toArray(); // ✅ Now we fetch results
+
+        // Step 2: Preload marks per class
+        $marksPerClass = [];
+
+        foreach ($classIds as $classId) {
+            $marks = self::getMarksForClass([
+                "academic_period_id" => $academicPeriodId,
+                "class_id" => $classId
+            ]);
+            if (!is_array($marks)) {
+                $marks = [];
+            }
+
+            $marksWithSimpleMarks = self::getMarksWithSimpleMarks($marks);
+            $marksPerStudent = self::getMarksPerStudentPerSubjectArray($marksWithSimpleMarks);
+            $marksPerClass[$classId] = $marksPerStudent;
+        }
+
+        // Step 3: Process result rows
+        $returnArray = [];
+
+        foreach ($results as $result) {
+            $studentId = $result['student_id'];
+            $subjectId = $result['education_subject_id'];
+            $assessmentPeriodId = $result['assessment_period_id'];
+            $classId = $result['institution_class_id'];
+
+            if (empty($classId)) {
+                continue; // Skip if classId is not present
+            }
+
+            $marks = $marksPerClass[$classId][$studentId][$subjectId][$assessmentPeriodId] ?? [];
+
+            $totalMarks = array_sum(array_column($marks, 'simple_mark'));
+            $result['marks'] = round($totalMarks, 2);
+
+            $returnArray[$studentId][$subjectId][$assessmentPeriodId] = [
+                'marks' => $result['marks'],
+                'grade_name' => $result['grade_name'],
+                'grade_code' => $result['grade_code'],
+                'assessments' => $marks // ✅ Include assessments here
+            ];
+        }
+
+
+        return $returnArray;
     }
 
 }

@@ -33,11 +33,17 @@ class InstitutionCustomFormsTable extends CustomFormsTable {
 	}
 
 	public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, ServerRequest $request) {
-		
+		$selectedModuleId = $this->request->getQuery('module');
+		$plugin_name = $this->request->getAttribute('params')['plugin'];
+		if($plugin_name == 'InstitutionCustomField'){
+            if(empty($selectedModuleId)){
+                $selectedModuleId = $this->request->getData()['InstitutionCustomForms']['custom_module_id'];
+            }
+        }
 		$module = $this->CustomModules
 			->find()
 			->where([$this->CustomModules->aliasField('code') . ' IN' => ['Institution', 'Institution > Classes'],
-				           $this->CustomModules->aliasField('id')=>$request->getQuery('module')])
+				           $this->CustomModules->aliasField('id')=>$selectedModuleId])
 			->first();//POCOR-8538
 		$selectedModule = $module->id;
 		$request->getQuery['module'] = $selectedModule;

@@ -168,8 +168,45 @@ class ReportCardsTable extends ControllerActionTable
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
+        //POCOR-9284 start
+        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $EducationGrades=TableRegistry::get('Education.EducationGrades');
+        $EducationGradeOptions = [];
+        $educationGradeList = [];
+        $EducationGradeOptions = $EducationGrades
+                            ->find('list')
+                            ->select([
+                                'education_grade_id' => $EducationGrades->aliasField('id'),
+                                'education_grade' => $EducationGrades->aliasField('name')
+                            ])
+                            ->InnerJoin([$InstitutionGrades->getAlias() => $InstitutionGrades->getTable()], [
+                                $EducationGrades->aliasField('id') . ' = ' . $InstitutionGrades->aliasField('education_grade_id')
+                            ])
+                            ->where([
+                                $InstitutionGrades->aliasField('academic_period_id') => $selectedAcademicPeriod
+                            ])
+                            ->enableHydration(false)
+                            ->order([$EducationGrades->aliasField('id') => 'DESC'])
+                            ->toArray();
 
+        $EducationGradeOptionsKey = [];
+        $EducationGradeOptionsList=$EducationGradeOptions;
+        $list=[];
+        if(!empty($EducationGradeOptions)){
+            foreach($EducationGradeOptions AS $key => $value){
+                $EducationGradeOptionsKey[$key] = $key ;
+
+            }
+        }
+
+        $EducationGradeOptions = ['-1' => __('All Education Grades')] + $EducationGradeOptions;
+        $selectedEducationGrade = !is_null($this->request->getQuery('education_grade_id')) ? $this->request->getQuery('education_grade_id') : -1;
+      //  $EducationGradeOptions = array_unique($EducationGradeOptions);
+        $this->controller->set(compact('EducationGradeOptions', 'selectedEducationGrade'));
         $extra['elements']['controls'] = ['name' => 'ReportCard.controls', 'data' => [], 'options' => [], 'order' => 1];
+        if(!empty($selectedEducationGrade) && $selectedEducationGrade != -1){
+            $where[$this->aliasField('education_grade_id')] = $selectedEducationGrade;
+        } //POCOR-9284 end
         $query->where($where);
     }
 
@@ -185,6 +222,7 @@ class ReportCardsTable extends ControllerActionTable
         $this->field('principal_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
         $this->field('homeroom_teacher_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
         $this->field('teacher_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
+        $this->field('overall_result', ['options' => $this->getSelectOptions('general.overallresult')]);
 
     }
 
@@ -276,7 +314,7 @@ class ReportCardsTable extends ControllerActionTable
     {
         $this->setupFields($entity);
         $this->field('education_programme_id', ['type' => 'select']);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date','excluded_security_roles', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date','excluded_security_roles', 'education_programme_id', 'education_grade_id', 'overall_result', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
@@ -300,7 +338,7 @@ class ReportCardsTable extends ControllerActionTable
         $this->fields['code']['type'] = 'readonly';
        // $this->fields['name']['type'] = 'readonly';
         $this->field('education_programme_id', ['entity' => $entity]);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'overall_result', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
     }
 
     public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, ServerRequest $request)
@@ -374,7 +412,7 @@ class ReportCardsTable extends ControllerActionTable
         if ($action == 'add') {
 
             $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
+            $academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
 
             $programmeOptions = $EducationProgrammes
                 ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
@@ -473,6 +511,12 @@ class ReportCardsTable extends ControllerActionTable
             $attr['options'] = $options;
             $attr['onChangeReload'] = 'changeTeacherCommentsRequired';
         }
+        return $attr;
+    }
+
+    public function onUpdateFieldTotalMark(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        $attr['options'] = $this->getSelectOptions('general.yesno');
         return $attr;
     }
 
