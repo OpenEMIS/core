@@ -38,7 +38,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
          */
 
         $closureFunction = function ($model, $entity) {
-            $errors = $entity->errors();
+            $errors = $entity->getErrors();
             if (!empty($errors)) {
                 // set error message for php file upload errors
                 $fileError = Hash::get($entity->invalid(), 'select_file.error');

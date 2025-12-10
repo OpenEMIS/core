@@ -140,7 +140,7 @@ class ImportOutcomeResultsTable extends AppTable
 
             $userId = $this->Auth->user('id');
             $AccessControl = $this->AccessControl;
-            $classId = $this->request->getQuery('class') !== null ? $this->request->getQuery('class') : 'default_value';
+            $classId = $request->getData()[$this->getAlias()]['class'] !== null ? $request->getData()[$this->getAlias()]['class'] : 'default_value';
             $OutcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
             $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
             $allowedEducationSubjectList = $InstitutionSubjects
@@ -449,12 +449,12 @@ class ImportOutcomeResultsTable extends AppTable
             $academicPeriodId = !is_null($request->getData('ImportOutcomeResults')['academic_period']) ? $request->getData('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
 
             $outcomePeriodOptions = [];
-            if (!is_null($request->getQuery('outcome_template'))) {
+            if (!is_null($request->getData('ImportOutcomeResults')['outcome_template'])) {
                 $outcomePeriodOptions = $this->OutcomePeriods
                     ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                     ->where([
-                        $this->OutcomePeriods->aliasField('academic_period_id') => $academicPeriodId,
-                        $this->OutcomePeriods->aliasField('outcome_template_id ') => $request->getQuery('outcome_template')
+                        $this->OutcomePeriods->aliasField('academic_period_id IS') => $academicPeriodId,
+                        $this->OutcomePeriods->aliasField('outcome_template_id IS') => $request->getData('ImportOutcomeResults')['outcome_template']
                     ])
                     ->toArray();
             }
