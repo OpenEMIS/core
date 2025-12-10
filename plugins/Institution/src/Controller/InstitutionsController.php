@@ -1820,7 +1820,7 @@ class InstitutionsController extends AppController
                 'SecurityRoleFunctions.security_role_id IN ' => $permission_id,
             ])
             ->toArray();
-        }
+        
         $roleIds = array_map(function($entity) {
                   return $entity->security_role_id;
                   }, $securityRoleFunctionsData);
@@ -1853,6 +1853,7 @@ class InstitutionsController extends AppController
         }
         if($hasPrincipal == 1 &&  $isEditable == 1){
             $_edit = true;
+        }
         }
         //POCOR-9491
         

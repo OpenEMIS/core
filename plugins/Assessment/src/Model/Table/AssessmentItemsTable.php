@@ -282,7 +282,7 @@ class AssessmentItemsTable extends AppTable
                 'SecurityRoleFunctions.security_role_id IN' => $permission_id,
             ])
             ->toArray();
-        }
+        
 
         $roleIds = array_map(function($entity) {
         return $entity->security_role_id;
@@ -318,6 +318,7 @@ class AssessmentItemsTable extends AppTable
         }
         if($hasPrincipal == 1 &&  $isEditable == 1){
             $isPrinciple = 1;
+        }
         }
         //POCOR-9491
         
