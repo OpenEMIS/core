@@ -9,6 +9,11 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
 use Import\Model\Behavior\ImportBehavior;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
+use PhpOffice\PhpSpreadsheet\Exception;
 
 class ImportResultBehavior extends ImportBehavior
 {
@@ -20,7 +25,17 @@ class ImportResultBehavior extends ImportBehavior
                 $downloadUrl[0] = 'template';
                 if ($buttons['add']['url']['action'] == 'ImportInstitutionSurveys') {
                     $downloadUrl[1] = $buttons['add']['url'][1];
+                } else if ($buttons['add']['url']['action'] == 'ImportOutcomeResults') {
+                    $data = $this->_table->request->getData('ImportOutcomeResults');
+                    unset($data['id']);
+                    unset($data['select_file']);
+                    $data['institution_id'] = $this->institutionId;
+                    $downloadUrl[1] = $this->_table->paramsEncode($data);
+                } else {
+
+                    $downloadUrl[1] = $buttons['add']['url'][1];
                 }
+//                dd($downloadUrl);
                 $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='" . Router::url($downloadUrl) . "'");
                 break;
         }
@@ -38,7 +53,8 @@ class ImportResultBehavior extends ImportBehavior
                 $back[0] = 'add';
             };
 
-            if (!array_key_exists($back['action'], $this->_table->ControllerAction->models)) {
+            $models = $this->_table->ControllerAction->models;
+            if (!isset($models[$back['action']])) {
                 $back['action'] = str_replace('Institution', '', $back['action']);
             }
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $back);
@@ -80,19 +96,22 @@ class ImportResultBehavior extends ImportBehavior
                 $this->_table->Alert->ok($message, ['type' => 'string', 'reset' => true]);
             }
             // define data as empty entity so that the view file will not throw an undefined notice
-            $this->_table->controller->set('data', $this->_table->newEntity());
+            $this->_table->controller->set('data', $this->_table->newEntity([]));
             $this->_table->ControllerAction->renderView('/ControllerAction/view');
         } else {
             return $this->_table->controller->redirect($this->_table->ControllerAction->url('add'));
         }
+        return $this->_table->controller->redirect($this->_table->ControllerAction->url('add'));
     }
 
     /******************************************************************************************************************
      **
      ** Import Functions
      **
-     ******************************************************************************************************************/
-    public function beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $title = ''): void
+     *****************************************************************************************************************
+     * @throws Exception
+     */
+    public function beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $defaultTitle = ''): void
     {
         //set the image
         $activeSheet = $objPHPExcel->getActiveSheet();
@@ -100,12 +119,12 @@ class ImportResultBehavior extends ImportBehavior
         if (function_exists('imagecreatefromjpeg')) {
             //POCOR-7477-HINDOL - in case that imagecreatefromjpeg is not available
             $gdImage = imagecreatefromjpeg(ROOT . DS . 'plugins' . DS . 'Import' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.jpg');
-            $objDrawing = new \PHPExcel_Worksheet_MemoryDrawing();
+            $objDrawing = new MemoryDrawing();
             $objDrawing->setName('OpenEMIS Logo');
             $objDrawing->setDescription('OpenEMIS Logo');
             $objDrawing->setImageResource($gdImage);
-            $objDrawing->setRenderingFunction(\PHPExcel_Worksheet_MemoryDrawing::RENDERING_JPEG);
-            $objDrawing->setMimeType(\PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_DEFAULT);
+            $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_JPEG);
+            $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_DEFAULT);
             $objDrawing->setHeight(100);
             $objDrawing->setCoordinates('A1');
             $objDrawing->setWorksheet($activeSheet);
@@ -140,14 +159,14 @@ class ImportResultBehavior extends ImportBehavior
         $activeSheet->getStyle("A1:" . $headerLastAlpha . "1")->getFont()->setBold(true)->setSize(16);
         $style = [
             'alignment' => [
-                'horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
-                'vertical' => \PHPExcel_Style_Alignment::VERTICAL_CENTER
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER
             ]
         ];
         $activeSheet->getStyle("A1:" . $headerLastAlpha . $lastRowToAlign)->applyFromArray($style)->getFont()->setBold(true);
         $activeSheet->getStyle("A" . $applyFillFontSetting['s'] . ":" . $headerLastAlpha . $applyFillFontSetting['e'])->getFont()->setBold(true)->getColor()->setARGB('FFFFFF');
-        $activeSheet->getStyle("A" . $applyFillFontSetting['s'] . ":" . $headerLastAlpha . $applyFillFontSetting['e'])->getFill()->setFillType(\PHPExcel_Style_Fill::FILL_SOLID)->getStartColor()->setARGB('6699CC'); // OpenEMIS Core product color
-        $activeSheet->getStyle("A" . $applyCellBorder['s'] . ":" . $headerLastAlpha . $applyCellBorder['e'])->getBorders()->getAllBorders()->setBorderStyle(\PHPExcel_Style_Border::BORDER_THIN);
+        $activeSheet->getStyle("A" . $applyFillFontSetting['s'] . ":" . $headerLastAlpha . $applyFillFontSetting['e'])->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('6699CC'); // OpenEMIS Core product color
+        $activeSheet->getStyle("A" . $applyCellBorder['s'] . ":" . $headerLastAlpha . $applyCellBorder['e'])->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
     }
 
     public function setResultDataTemplate($objPHPExcel, $dataSheetName, $header, $type)
