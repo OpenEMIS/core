@@ -539,6 +539,9 @@ class HtmlFieldHelper extends Helper
 					// '.$imageDefault.'
 					// </div>
 					// </div>';
+                if (is_resource($src)) { // POCOR-9488
+                    $src = base64_encode(stream_get_contents($src));
+                }
                 $src = is_string($src) ? $src : ""; // POCOR-9488
                 $value = (base64_decode($src, true)) ? '<div class="table-thumb"
                     data-load-image=true
