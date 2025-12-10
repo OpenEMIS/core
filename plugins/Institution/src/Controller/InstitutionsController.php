@@ -1808,33 +1808,81 @@ class InstitutionsController extends AppController
                 'SecurityFunctions.category' => 'Students'
             ])
             ->first();
-        $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['edit'];
+        //POCOR-9491
+        $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['index'];
         if(!empty($permission_id)){
             $securityRoleFunctions =  TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
 
             $securityRoleFunctionsData = $securityRoleFunctions
-            ->find()
+            ->find('all')
             ->where([
                 'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
                 'SecurityRoleFunctions.security_role_id IN ' => $permission_id,
             ])
-            ->first();
-            }
-        if(!empty($securityRoleFunctionsData)){
+            ->toArray();
+        }
+        $roleIds = array_map(function($entity) {
+                  return $entity->security_role_id;
+                  }, $securityRoleFunctionsData);
+        if(!empty($roleIds)){
             $SecurityRoleTable = TableRegistry::get('Security.SecurityRoles');
             $SecurityRoleTableData = $SecurityRoleTable
-            ->find()
+            ->find('all')
             ->where([
-                $SecurityRoleTable->aliasField('id') => $securityRoleFunctionsData->security_role_id
+                $SecurityRoleTable->aliasField('id IN ') => $roleIds
             ])
-            ->first();
+            ->toArray();
         }
-        if ($SecurityRoleTableData->code == 'PRINCIPAL') {
-            if($securityRoleFunctionsData->_edit == 1){
-                $_edit = true;
+        $hasPrincipal = 0;
+        $isEditable = 0;
+
+        foreach ($SecurityRoleTableData as $role) {
+            if ($role->code === 'PRINCIPAL') {
+                $hasPrincipal = 1;
+                $securityRoleFunctionsData1 = $securityRoleFunctions
+                ->find()
+                ->where([
+                'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+                'SecurityRoleFunctions.security_role_id' => $role->id,
+                ])
+                ->first();
+                if($securityRoleFunctionsData1->_edit == 1){
+                    $isEditable = 1;
+                }
             }
-            //$_edit = true;
         }
+        if($hasPrincipal == 1 &&  $isEditable == 1){
+            $_edit = true;
+        }
+        //POCOR-9491
+        
+        //POCOR-9487
+        // $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['edit'];
+        // if(!empty($permission_id)){
+        //     $securityRoleFunctions =  TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+
+        //     $securityRoleFunctionsData = $securityRoleFunctions
+        //     ->find()
+        //     ->where([
+        //         'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+        //         'SecurityRoleFunctions.security_role_id IN ' => $permission_id,
+        //     ])
+        //     ->first();
+        //     }
+        // if(!empty($securityRoleFunctionsData)){
+        //     $SecurityRoleTable = TableRegistry::get('Security.SecurityRoles');
+        //     $SecurityRoleTableData = $SecurityRoleTable
+        //     ->find()
+        //     ->where([
+        //         $SecurityRoleTable->aliasField('id') => $securityRoleFunctionsData->security_role_id
+        //     ])
+        //     ->first();
+        // }
+        // if ($SecurityRoleTableData->code == 'PRINCIPAL') {
+        //     if($securityRoleFunctionsData->_edit == 1){
+        //         $_edit = true;
+        //     }
+        // }
         //POCOR-9487['End']
 
 
