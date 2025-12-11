@@ -234,8 +234,8 @@ class ReportCardGpaTable extends ControllerActionTable
         $where = [
             $this->aliasField('institution_id') => $institutionId,
             $this->aliasField('academic_period_id') => $academicPeriodId,
-            $this->aliasField('education_grade_id') => $educationGradeId,
-            $this->aliasField('student_status_id NOT IN') => 3
+            $this->aliasField('education_grade_id') => $educationGradeId
+           // $this->aliasField('student_status_id NOT IN') => 3
         ];
 
 
@@ -253,13 +253,12 @@ class ReportCardGpaTable extends ControllerActionTable
             $leftJoin[] = $GpaTable->aliasField('education_grades_gpa_id') . ' = ' . $gpaId;
         }
         if($gpaId > 0){
-            $orWhere = function ($exp) use ($InstitutionStudents, $EducationGradesGpa) {
-                return $exp->or_([
-                    $InstitutionStudents->aliasField('start_date') . ' <= ' . $EducationGradesGpa->aliasField('start_date'),
+            $where[] = function($exp) use ($InstitutionStudents, $EducationGradesGpa, $gpaId) {
+                return $exp->and_([
                     $InstitutionStudents->aliasField('start_date') . ' <= ' . $EducationGradesGpa->aliasField('end_date'),
+                    $InstitutionStudents->aliasField('end_date') . ' >= ' . $EducationGradesGpa->aliasField('start_date')
                 ]);
             };
-            $where = array_merge($where, array($orWhere));
         }
 
         // Final query build
@@ -288,8 +287,14 @@ class ReportCardGpaTable extends ControllerActionTable
                 $leftJoin
             )
             //POCOR-9389[START]
-            ->leftJoin([$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],
-                    [$InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id')])
+            // ->leftJoin([$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],
+            //         [$InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id')])
+            ->leftJoin([$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()], [
+                    $InstitutionStudents->aliasField('student_id') . ' = ' . $this->aliasField('student_id'),
+                    $InstitutionStudents->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id'),
+                    $InstitutionStudents->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id'),
+                    $InstitutionStudents->aliasField('education_grade_id') . ' = ' . $this->aliasField('education_grade_id'),
+                ])
             ->leftJoin([$EducationGradesGpa->getAlias() => $EducationGradesGpa->getTable()],
                     [$EducationGradesGpa->aliasField('id = ') . $gpaId])
             //POCOR-9389[END]
@@ -571,7 +576,56 @@ class ReportCardGpaTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public static function addGpaReportCards($studentId, // POCOR-9162
+    public static function addGpaReportCards($studentId, $academicPeriodId, $institutionId, $educationGradeId): array
+    {
+        // First get the student's enrollment period
+        $institutionStudents = self::getDynamicTableInstance('Institution.InstitutionStudents');
+        $enrollment = $institutionStudents->find()
+            ->where([
+                $institutionStudents->aliasField('student_id') => $studentId,
+                $institutionStudents->aliasField('institution_id') => $institutionId,
+                $institutionStudents->aliasField('academic_period_id') => $academicPeriodId,
+                $institutionStudents->aliasField('education_grade_id') => $educationGradeId,
+            ])
+            ->first();
+
+        if (!$enrollment) {
+            return []; // No enrollment found
+        }
+
+        // Fetch GPA IDs that match overlap with enrollment
+        $gpaGrades = self::getDynamicTableInstance('Gpa.GpaSystem');
+        $gpaResults = $gpaGrades->find()
+            ->select(['id'])
+            ->where([
+                $gpaGrades->aliasField('education_grade_id') => $educationGradeId,
+                $gpaGrades->aliasField('academic_period_id') => $academicPeriodId,
+                // Overlap condition: GPA term starts before or on enrollment end AND GPA term ends after or on enrollment start
+                $gpaGrades->aliasField('start_date <=') => $enrollment->end_date,
+                $gpaGrades->aliasField('end_date >=') => $enrollment->start_date,
+                // GPA term ends within enrollment
+                $gpaGrades->aliasField('end_date <=') => $enrollment->end_date,
+            ])
+            ->toArray();
+
+        $gpaIds = array_column($gpaResults, 'id');
+
+        $gpaGPAs = [];
+        foreach ($gpaIds as $gpaId) {
+            $newGPA = self::insertGpaPerStudentPerGpa(
+                $institutionId,
+                $studentId,
+                $academicPeriodId,
+                $educationGradeId,
+                $gpaId
+            );
+            $gpaGPAs[] = $newGPA;
+        }
+
+        return $gpaGPAs;
+    }
+
+    public static function addGpaReportCardsOriginal($studentId, // POCOR-9162
                                        $academicPeriodId,
                                        $institutionId,
                                        $educationGradeId): array
@@ -968,7 +1022,7 @@ class ReportCardGpaTable extends ControllerActionTable
                         CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date
                     ),
                     institution_students.student_status_id = 1,
-                    institution_students.student_status_id IN(1, 7, 6, 8)
+                    institution_students.student_status_id IN(1, 3, 7, 6, 8)
                 )
         ) main_q
         INNER JOIN(
