@@ -40,6 +40,14 @@ class TrackDeleteBehavior extends Behavior
             $DeletedRecords = TableRegistry::getTableLocator()->get('DeletedRecords');
             $source = $entity->getSource();
             $entityTable = TableRegistry::getTableLocator()->get($source);
+            if($source == 'Assessment.AssessmentItemResults') { //POCOR-9477 start
+                $oldMarks = $entity->get('_old_marks');
+                $oldOption = $entity->get('_old_grade_option');
+                $entity->marks = $oldMarks;
+                $entity->assessment_grading_option_id = $oldOption;
+                
+            } //POCOR-9477 end
+
             $entityData = $entity->toArray();
             $session = new Session();
             if (is_null($session->read('Auth.User.id'))) {
