@@ -91,7 +91,18 @@ class LeaveTable extends ControllerActionTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $StaffLeave = TableRegistry::get('Institution.StaffLeave');
+        //POCOR-9496 start
+        $entity->staff_id = $this->Auth->User('id');
+        if (!empty($entity->id)) {
+            $getAssigneeId = $this->find()
+                ->where(['id' => $entity->id])
+                ->first()
+                ->assignee_id ?? null;
+            $entity->assignee_id = $getAssigneeId;
+        } //POCOR-9496 end
+
         $entity = $StaffLeave->getNumberOfDays($entity);
+
         if (!$entity) {
             // Error message to tell that leave period applied has overlapped exisiting leave records.
             $this->Alert->error('AlertRules.StaffLeave.leavePeriodOverlap', ['reset' => true]);
@@ -159,11 +170,15 @@ class LeaveTable extends ControllerActionTable
         $selectedAction = 'Staff'.$this->getAlias();
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $selectedAction);
+        $this->field('staff_id',['type'=>'hidden']);
+        $this->field('start_time',['type'=>'hidden']);
+        $this->field('end_time',['type'=>'hidden']);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('staff_leave_type_id');
+        $this->field('staff_id',['type'=>'hidden']);
         $this->field('start_time', ['entity' => $entity]);
         $this->field('end_time', ['entity' => $entity]);
         $this->field('institution_id', ['entity' => $entity]);
