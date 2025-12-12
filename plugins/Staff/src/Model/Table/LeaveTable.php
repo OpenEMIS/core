@@ -515,7 +515,8 @@ class LeaveTable extends ControllerActionTable
     public function onGetAssigneeId(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
-            return $entity->assignee->name;
+            $name = $entity->assignee->name ?? null;
+            return (!empty($name) && $name !== '0' && $name !== 0) ? $name : '-';
         } elseif ($this->action == 'index') {
             $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'assignee');
             return isset($rowEntity->name) ? $rowEntity->name : '-';
