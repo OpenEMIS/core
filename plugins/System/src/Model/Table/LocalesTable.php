@@ -7,12 +7,16 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\Utility\Inflector;
+use Cake\Http\ServerRequest;
+use App\Model\Traits\OptionsTrait;
 
 class LocalesTable extends ControllerActionTable
 {
-    private $fieldsOrder = ['created', 'message'];
+    use OptionsTrait;
+    private $fieldsOrder = ['iso','name','editable','created'];
     public function initialize(array $config): void
     {
+
        parent::initialize($config);
        $this->toggle('view', true);
        $this->toggle('edit', true);
@@ -38,12 +42,19 @@ class LocalesTable extends ControllerActionTable
     {
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
         $this->controller->set('contentHeader', $header);
+        $this->field('editable', ['type' => 'select']);
     }
-
+    public function onUpdateFieldEditable(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        $attr['options'] = $this->getSelectOptions('general.yesno');
+        return $attr;
+    }
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('created', ['visible' => true, 'sort' => true]);
-        $this->field('message', ['sort' => true]);
+        $this->field('message', ['visible' => false, 'type' =>'hidden']);
+        $this->field('direction', ['visible' => false, 'type' =>'hidden']);
+        $this->field('editable', ['type' => 'select']);
 
     }
 
@@ -70,6 +81,7 @@ class LocalesTable extends ControllerActionTable
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
+        $this->field('direction', ['visible' => false, 'type' =>'hidden']);
         $this->setfieldOrder($this->fieldsOrder);
     }
 }
