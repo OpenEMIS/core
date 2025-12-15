@@ -237,6 +237,119 @@ class AssessmentItemsTable extends AppTable
         $EducationSubject = TableRegistry::get('Education.EducationSubjects');
         $Assessments = TableRegistry::get('Assessment.Assessments');
         $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+        $isHomeRoomTeacherOrSecondaryTeacher = 0;
+
+        //POCOR-9487[START]
+        //Check for Homeroom/Secondary teacher
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
+        $InstitutionClassesData = $InstitutionClasses->find()
+                                ->where([$InstitutionClasses->aliasField('id') => $class_id,
+                                    $InstitutionClasses->aliasField('staff_id') => $logged_in_user_id
+                                    ])
+                                ->toArray();
+
+        $InstitutionClassesSecondaryStaffData = $InstitutionClassesSecondaryStaff->find()
+                                ->where([$InstitutionClassesSecondaryStaff->aliasField('institution_class_id') => $class_id,
+                                    $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $logged_in_user_id
+                                    ])
+                                ->toArray();
+        if(!empty($InstitutionClassesData) || !empty($InstitutionClassesSecondaryStaffData)){
+            $isHomeRoomTeacherOrSecondaryTeacher = 1;
+        }
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $securityFunctionsData = $securityFunctions
+            ->find()
+            ->select([
+                'SecurityFunctions.id'
+            ])
+            ->where([
+                'SecurityFunctions.name' => 'Assessments',
+                'SecurityFunctions.controller' => 'Institutions',
+                'SecurityFunctions.module' => 'Institutions',
+                'SecurityFunctions.category' => 'Students'
+            ])
+            ->first();
+        //POCOR-9491
+        $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['index'];
+        if(!empty($permission_id)){
+            $securityRoleFunctions =  TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+
+            $securityRoleFunctionsData = $securityRoleFunctions
+            ->find('all')
+            ->where([
+                'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+                'SecurityRoleFunctions.security_role_id IN' => $permission_id,
+            ])
+            ->toArray();
+        
+
+        $roleIds = array_map(function($entity) {
+        return $entity->security_role_id;
+        }, $securityRoleFunctionsData);
+
+        if(!empty($roleIds)){
+            $SecurityRoleTable = TableRegistry::get('Security.SecurityRoles');
+            $SecurityRoleTableData = $SecurityRoleTable
+            ->find('all')
+            ->where([
+                $SecurityRoleTable->aliasField('id IN ') => $roleIds
+            ])
+            ->toArray();
+        }
+
+        $hasPrincipal = 0;
+        $isEditable = 0;
+
+        foreach ($SecurityRoleTableData as $role) {
+            if ($role->code === 'PRINCIPAL') {
+                $hasPrincipal = 1;
+                $securityRoleFunctionsData1 = $securityRoleFunctions
+                ->find()
+                ->where([
+                'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+                'SecurityRoleFunctions.security_role_id' => $role->id,
+                ])
+                ->first();
+                if($securityRoleFunctionsData1->_edit == 1){
+                    $isEditable = 1;
+                }
+            }
+        }
+        if($hasPrincipal == 1 &&  $isEditable == 1){
+            $isPrinciple = 1;
+        }
+        }
+        //POCOR-9491
+        
+        // $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['edit'];
+        // if(!empty($permission_id)){
+        //     $securityRoleFunctions =  TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+
+        //     $securityRoleFunctionsData = $securityRoleFunctions
+        //     ->find()
+        //     ->where([
+        //         'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+        //         'SecurityRoleFunctions.security_role_id IN' => $permission_id,
+        //     ])
+        //     ->first();
+        //     }
+        // if(!empty($securityRoleFunctionsData)){
+        //     $SecurityRoleTable = TableRegistry::get('Security.SecurityRoles');
+        //     $SecurityRoleTableData = $SecurityRoleTable
+        //     ->find()
+        //     ->where([
+        //         $SecurityRoleTable->aliasField('id') => $securityRoleFunctionsData->security_role_id
+        //     ])
+        //     ->first();
+        // }
+        // if ($SecurityRoleTableData->code == 'PRINCIPAL') {
+        //     if($securityRoleFunctionsData->_edit == 1){
+        //         $isPrinciple = 1;
+        //     }
+        // }
+        //POCOR-9487[END]
+
         $query
             ->select([
                 $this->aliasField('education_subject_id'),
@@ -288,13 +401,17 @@ class AssessmentItemsTable extends AppTable
                 $InstitutionSubjectStaff,
                 $logged_in_user_id,
                 $super_admin,
-                $institution_id
+                $institution_id,
+                $isHomeRoomTeacherOrSecondaryTeacher,
+                $isPrinciple
             ) {
                 return $results->map(function ($row) use (
                     $InstitutionSubjectStaff,
                     $logged_in_user_id,
                     $super_admin,
-                    $institution_id
+                    $institution_id,
+                    $isHomeRoomTeacherOrSecondaryTeacher,
+                    $isPrinciple
                 ) {
                     $row['education_subject_id'] = $row->education_subject_id;
                     $row['id'] = $row->id;
@@ -332,6 +449,26 @@ class AssessmentItemsTable extends AppTable
                     $SecurityRoleFunTable = TableRegistry::get('Security.SecurityRoleFunctions');
                     $SecurityRoleTable = TableRegistry::get('Security.SecurityRoles');
                     $SecurityGroupTable=TableRegistry::get('Security.UserGroups');
+
+                    //POCOR-9487[START]
+                    //Get the dynamic value of security function
+                    $permissionModule = ['Assessments'];
+                    $categories = ['Students'];
+                    $SecurityFunctionsTbl = TableRegistry::get('Security.SecurityFunctions');
+                    $SecurityFunctions = $SecurityFunctionsTbl->find()
+                        ->select([$SecurityFunctionsTbl->aliasField('id')])
+                        ->where([
+                            $SecurityFunctionsTbl->aliasField('name IN') => $permissionModule,
+                            $SecurityFunctionsTbl->aliasField('category IN') => $categories,
+                        ])->enableHydration(false)->toArray();
+                    $funArr = [];
+                    if (!empty($SecurityFunctions)) {
+                        foreach ($SecurityFunctions as $funkey => $funval) {
+                            $funArr[$funkey] = $funval['id'];
+                        }
+                    }
+                    //POCOR-9487[END]
+
                     $securityGroupUserData = $SecurityGroupUsersTable->find('all')
                             ->select([$SecurityGroupUsersTable->aliasField('security_role_id'),
                                     'edit' => $SecurityRoleFunTable->aliasField('_edit'),
@@ -350,7 +487,7 @@ class AssessmentItemsTable extends AppTable
                                 [
                                     $SecurityRoleFunTable->aliasField('security_role_id = ') .
                                     $SecurityGroupUsersTable->aliasField('security_role_id'),
-                                    $SecurityRoleFunTable->aliasField('security_function_id') => 1015,
+                                    $SecurityRoleFunTable->aliasField('security_function_id IN') => $funArr,
                                     // $SecurityRoleFunTable->aliasField('_edit') => '1'
                                 ]
                             )
@@ -375,11 +512,27 @@ class AssessmentItemsTable extends AppTable
                     //POCOR-7551 end
 //                    $this->log($securityGroupUserEditAccessCount, 'debug');
                     if ($securityGroupUserEditAccessCount > 0) {
-                                $row['is_editable'] = 1;
-                                return (array) $row;
-                            } else {
-                                $row['is_editable'] = 0;
-                            }
+                        //POCOR-9487[START]
+                         if($isHomeRoomTeacherOrSecondaryTeacher == 1){
+                            $row['is_editable'] = 1;
+                            return (array) $row;
+                         }
+
+                         else if($isPrinciple == 1){
+                            $row['is_editable'] = 1;
+                            return (array) $row;
+                        }else{
+                            $row['is_editable'] = '';
+                            return (array) $row;
+                        }
+                        //POCOR-9487[END]
+                    } else {
+                        if($isPrinciple == 1){
+                             $row['is_editable'] = 1;
+                        }else{
+                            $row['is_editable'] = 0;
+                        }
+                    }
                     //POCOR-7541 end
                     return (array) $row;
                 });
