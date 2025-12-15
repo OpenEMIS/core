@@ -65,7 +65,13 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		$validator->setProvider('custom', $this);
 		return $validator
 			->requirePresence('position_grades')
-		    ->allowEmpty('file_content')//POCOR-7758
+		    ->allowEmptyString('file_content')//POCOR-7758
+            ->requirePresence('security_role_id') // POCOR-9508-start
+            ->notEmptyString('security_role_id')
+            ->requirePresence('staff_leave_policy_id')
+            ->notEmptyString('staff_leave_policy_id')
+            ->requirePresence('staff_position_categories_id')
+            ->notEmptyString('staff_position_categories_id') // POCOR-9508-end
 			->add('position_grades', 'ruleCheckPositionGrades', [
 				'rule' => ['checkPositionGrades'],
 				'provider' => 'table',
@@ -524,7 +530,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
      * @usage  Used to fetch principal and vice principal code
      * @author Ehteram
      * @ticket POCOR-9208
-	 * Reason to update this code; Principal may have diffrent name in some ENV 
+	 * Reason to update this code; Principal may have diffrent name in some ENV
      */
 	public function getPrincipalRoleId_old()
     {
