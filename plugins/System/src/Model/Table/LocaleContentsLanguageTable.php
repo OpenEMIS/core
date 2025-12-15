@@ -121,7 +121,7 @@ class LocaleContentsLanguageTable extends ControllerActionTable
                 ->select(['name'])
                 ->where(['iso' => $field])
                 ->first();
-                
+
             return $Locale ? $Locale->name : '';
         }
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
@@ -160,14 +160,16 @@ class LocaleContentsLanguageTable extends ControllerActionTable
                     $translationsData = $localeContentTranslationsTable->find()
                     ->where(['locale_content_id' => $localeContentId, 'locale_id' => $locale->id])
                     ->first();
-                    $this->field($fieldName, ['visible' => true,'attr' => ['value'=> $translationsData->translation],]);
+                    $this->field($fieldName, ['visible' => true, // POCOR-9503 start
+                        'attr' => ['value'=> $translationsData->translation],
+                        'value' => $translationsData->translation]); // POCOR-9503 end
                     $this->setFieldOrder(['en', $fieldName]);
                 } else if($locale->iso == 'en') {
                     $this->field($fieldName, ['type' => 'readOnly']);
                 }
             }
         }
-       
+
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
@@ -192,7 +194,7 @@ class LocaleContentsLanguageTable extends ControllerActionTable
 		return $LocalesId;
 	}
 
-    public function saveLocaleContentTranslationsTable($entity, $iso) 
+    public function saveLocaleContentTranslationsTable($entity, $iso)
     {
         $localesId = $this->localesData($iso);
         $localeContentTranslationsTable = TableRegistry::getTableLocator()->get('LocaleContentTranslations');
@@ -207,7 +209,7 @@ class LocaleContentsLanguageTable extends ControllerActionTable
             } else {
                 $translationsData->translation = $entity->$iso;
             }
-       
+
         $localeContentTranslationsTable->save($translationsData);
     }
     //POCOR-8479 End
