@@ -9,6 +9,7 @@ use Cake\ORM\Query;
 use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
+use Cake\ORM\ResultSet; // POCOR-9503 start
 
 class LocaleContentsLanguageTable extends ControllerActionTable
 {
@@ -144,10 +145,38 @@ class LocaleContentsLanguageTable extends ControllerActionTable
 
     }
 
+    // // POCOR-9503 start
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+        $localeOptions = $this->Localization->getOptions();
+        $selectedOption = $this->queryString('translations_id', $localeOptions);
+        $locale = TableRegistry::getTableLocator()->get('System.Locales')
+            ->find()
+            ->select(['iso', 'name','id'])
+            ->where(['iso' => $selectedOption])
+            ->first();
+
+        foreach ($data as $entity) {
+
+            $localeContentId = $entity->id;
+            if ($locale->iso != 'en') {
+                $localeContentTranslationsTable = TableRegistry::getTableLocator()->get('LocaleContentTranslations');
+                $translationsData = $localeContentTranslationsTable->find()
+                    ->where(['locale_content_id' => $localeContentId, 'locale_id' => $locale->id])
+                    ->first();
+                $entity->{$selectedOption} = $translationsData->translation; // POCOR-9503 end
+
+            }
+
+        }
+
+    }
     //POCOR-8479 Start
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        if($this->action == 'edit' || $this->action == 'view') {
+
+        if($this->action == 'edit'
+            || $this->action == 'view') {
             $locales = TableRegistry::getTableLocator()->get('System.Locales')
             ->find()
             ->select(['iso', 'name','id'])
