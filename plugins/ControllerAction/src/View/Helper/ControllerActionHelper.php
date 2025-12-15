@@ -616,6 +616,7 @@ class ControllerActionHelper extends Helper
 
                 $associatedFound = false;
                 if ($event->getResult() || is_int($event->getResult())) {
+
                     $data->{$_field} = $event->getResult();
                 } elseif ($this->endsWith($_field, '_id')) {
                     $associatedObject = '';
@@ -630,6 +631,14 @@ class ControllerActionHelper extends Helper
                         $value = $data->{$associatedObject}->name;
                         $associatedFound = true;
                     }
+                }else{ // POCOR-9503 start
+                    if(isset($_fieldAttr['value'])){
+                        $data->{$_field} = $_fieldAttr['value'];
+                    }
+                    if(isset($_fieldAttr['attr']['value'])){
+                        $data->{$_field} = $_fieldAttr['attr']['value'];
+                    }
+                    // POCOR-9503 end
                 }
 
                 if (!$associatedFound) {
