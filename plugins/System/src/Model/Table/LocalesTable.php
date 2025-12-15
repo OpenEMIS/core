@@ -7,13 +7,13 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\Utility\Inflector;
-use Cake\Http\ServerRequest;
-use App\Model\Traits\OptionsTrait;
+use Cake\Http\ServerRequest; // POCOR-9504
+use App\Model\Traits\OptionsTrait; // POCOR-9504
 
 class LocalesTable extends ControllerActionTable
 {
-    use OptionsTrait;
-    private $fieldsOrder = ['iso','name','editable','created'];
+    use OptionsTrait; // POCOR-9504
+    private $fieldsOrder = ['iso','name','editable','created']; // POCOR-9504
     public function initialize(array $config): void
     {
 
@@ -42,8 +42,10 @@ class LocalesTable extends ControllerActionTable
     {
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
         $this->controller->set('contentHeader', $header);
-        $this->field('editable', ['type' => 'select']);
+        $this->field('editable', ['type' => 'select']); // POCOR-9504
     }
+
+    // POCOR-9504
     public function onUpdateFieldEditable(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = $this->getSelectOptions('general.yesno');
@@ -52,9 +54,9 @@ class LocalesTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('created', ['visible' => true, 'sort' => true]);
-        $this->field('message', ['visible' => false, 'type' =>'hidden']);
-        $this->field('direction', ['visible' => false, 'type' =>'hidden']);
-        $this->field('editable', ['type' => 'select']);
+        $this->field('message', ['visible' => false, 'type' =>'hidden']); // POCOR-9504
+        $this->field('direction', ['visible' => false, 'type' =>'hidden']); // POCOR-9504
+        $this->field('editable', ['type' => 'select']); // POCOR-9504
 
     }
 
@@ -81,7 +83,7 @@ class LocalesTable extends ControllerActionTable
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        $this->field('direction', ['visible' => false, 'type' =>'hidden']);
+        $this->field('direction', ['visible' => false, 'type' =>'hidden']); // POCOR-9504
         $this->setfieldOrder($this->fieldsOrder);
     }
 }
