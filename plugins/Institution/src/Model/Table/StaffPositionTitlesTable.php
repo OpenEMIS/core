@@ -72,12 +72,13 @@ class StaffPositionTitlesTable extends ControllerActionTable
             ->notEmptyString('staff_leave_policy_id')
             ->requirePresence('staff_position_categories_id')
             ->notEmptyString('staff_position_categories_id') // POCOR-9508-end
-			->add('position_grades', 'ruleCheckPositionGrades', [
+			->add('position_grade_selection', 'ruleCheckPositionGrades', [
 				'rule' => ['checkPositionGrades'],
 				'provider' => 'table',
 				'on' => function ($context) {
 				//trigger validation only when position grade selection is set to 1	 and edit operation
-				return ($context['data']['position_grade_selection'] == self::SELECT_POSITION_GRADES  && !$context['newRecord']);
+				return ($context['data']['position_grade_selection'] == self::SELECT_POSITION_GRADES
+                    && !$context['newRecord']);
 			}
 		]);
 	}
@@ -142,7 +143,8 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		$requestDataArray = $requestData->getArrayCopy();
 
 		if (array_key_exists($this->getAlias(), $requestDataArray)) {
-			if (isset($requestDataArray[$this->getAlias()]['position_grades']['_ids']) && empty($requestDataArray[$this->getAlias()]['position_grades']['_ids'])) {
+			if (isset($requestDataArray[$this->getAlias()]['position_grades']['_ids'])
+                && empty($requestDataArray[$this->getAlias()]['position_grades']['_ids'])) {
 				$requestDataArray[$this->getAlias()]['position_grades'] = [];
 			}
 		}
