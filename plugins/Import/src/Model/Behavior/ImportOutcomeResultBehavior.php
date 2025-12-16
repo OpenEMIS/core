@@ -50,7 +50,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 if (!empty($fileError)) {
                     $errorMessage = $model->getMessage("fileUpload.$fileError");
                     if ($errorMessage != '[Message Not Found]') {
-                        $entity->errors('select_file', $errorMessage, true);
+                        $entity->getErrors('select_file', $errorMessage, true);
                     }
                 }
 
@@ -73,10 +73,10 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             $dataPassed = [];
             $extra = new ArrayObject(['lookup' => [], 'entityValidate' => true]);
 
-            $activeModel = TableRegistry::get($this->config('plugin') . '.' . $this->config('model'));
+            $activeModel = TableRegistry::get($this->getConfig('plugin') . '.' . $this->getConfig('model'));
             $activeModel->addBehavior('DefaultValidation');
 
-            $maxRows = $this->config('max_rows');
+            $maxRows = $this->getConfig('max_rows');
             $maxRows = $maxRows + 2;
             $sheet = $objPHPExcel->getSheet(0);
             $highestRow = $sheet->getHighestRow();
