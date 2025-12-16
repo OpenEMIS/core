@@ -50,15 +50,15 @@ $this->start('panelBody');
 
 <?= $this->element('Examination.Examinations/controls'); ?>
 
-<div ng-init="">
-    <div class="scrolltabs sticky-content">
-        <scrollable-tabset show-tooltips="false" show-drop-down="false">
-            <uib-tabset justified="true">
-                <uib-tab heading="{{subject.code + ' - ' + subject.name}}" ng-repeat="subject in ExaminationsResultsController.subjects" ng-click="ExaminationsResultsController.onChangeSubject(ExaminationsResultsController.academicPeriodId,ExaminationsResultsController.examinationId,subject)">
-                </uib-tab>
-            </uib-tabset>
-            <div class="tabs-divider"></div>
-        </scrollable-tabset>
+    <div ng-init="">
+        <div class="scrolltabs sticky-content">
+            <scrollable-tabset show-tooltips="false" show-drop-down="false">
+                <uib-tabset justified="true">
+                    <uib-tab heading="{{subject.code + ' - ' + subject.name}}" ng-repeat="subject in ExaminationsResultsController.subjects" ng-click="ExaminationsResultsController.onChangeSubject(ExaminationsResultsController.examinationId,subject)">
+                    </uib-tab>
+                </uib-tabset>
+                <div class="tabs-divider"></div>
+            </scrollable-tabset>
 
         <div id="examination-result-table" class="table-wrapper">
             <div ng-if="ExaminationsResultsController.gridOptions" kd-ag-grid="ExaminationsResultsController.gridOptions" has-tabs="true" class="ag-height-fixed"></div>

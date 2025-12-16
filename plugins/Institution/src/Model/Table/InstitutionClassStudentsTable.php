@@ -1648,11 +1648,12 @@ class InstitutionClassStudentsTable extends AppTable
     //POCOR-9289 -- Updated function to include logic to display only selected subject (one) regardless of marks
     public function findExemptStudents(Query $query, array $options): Query
     {
+        
         // Extract the parameters from the options array
         $assessment_item_id = preg_replace("/[^a-fA-F0-9\-]/", "", $options['assessment_item_id']);  // Still using assessment_item_id for reference
         $assessment_period_id = intval($options['assessment_period_id']);
         $institution_class_id = intval($options['institution_class_id']);
-
+        $studentStatusId = intval($options['studentstatus_id']); //POCOR-9428
         // Prepare period IDs & names
         $assessment_period_names_string = null;
         $assessment_period_ids = [];
@@ -1691,7 +1692,8 @@ class InstitutionClassStudentsTable extends AppTable
 //        Log::debug(print_r([$assessment_item_id, $assessment_period_id, $institution_class_id], true));
         $where = [
             'institution_classes.id = ' . $institution_class_id,
-            'student_statuses.code NOT IN ("TRANSFERRED", "WITHDRAWN", "GRADUATED", "PROMOTED", "REPEATED")',
+            'student_statuses.code NOT IN ("WITHDRAWN", "REPEATED")',
+            $this->aliasField('student_status_id') => $studentStatusId //POCOR-9428
         ];
 
         // Building the query

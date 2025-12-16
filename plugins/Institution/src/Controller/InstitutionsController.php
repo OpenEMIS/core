@@ -30,6 +30,8 @@ use Cake\I18n\Time;
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\FrozenTime;
 use Cake\Datasource\EntityInterface;
+use Cake\Http\Exception\NotFoundException;
+use Cake\Filesystem\File;
 
 //POCOR-5672
 
@@ -1792,6 +1794,99 @@ class InstitutionsController extends AppController
         } else {
             $_edit = false;
         }
+        //POCOR-9487[START]
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $securityFunctionsData = $securityFunctions
+            ->find()
+            ->select([
+                'SecurityFunctions.id'
+            ])
+            ->where([
+                'SecurityFunctions.name' => 'Assessments',
+                'SecurityFunctions.controller' => 'Institutions',
+                'SecurityFunctions.module' => 'Institutions',
+                'SecurityFunctions.category' => 'Students'
+            ])
+            ->first();
+        //POCOR-9491
+        $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['index'];
+        if(!empty($permission_id)){
+            $securityRoleFunctions =  TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+
+            $securityRoleFunctionsData = $securityRoleFunctions
+            ->find('all')
+            ->where([
+                'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+                'SecurityRoleFunctions.security_role_id IN ' => $permission_id,
+            ])
+            ->toArray();
+        
+        $roleIds = array_map(function($entity) {
+                  return $entity->security_role_id;
+                  }, $securityRoleFunctionsData);
+        if(!empty($roleIds)){
+            $SecurityRoleTable = TableRegistry::get('Security.SecurityRoles');
+            $SecurityRoleTableData = $SecurityRoleTable
+            ->find('all')
+            ->where([
+                $SecurityRoleTable->aliasField('id IN ') => $roleIds
+            ])
+            ->toArray();
+        }
+        $hasPrincipal = 0;
+        $isEditable = 0;
+
+        foreach ($SecurityRoleTableData as $role) {
+            if ($role->code === 'PRINCIPAL') {
+                $hasPrincipal = 1;
+                $securityRoleFunctionsData1 = $securityRoleFunctions
+                ->find()
+                ->where([
+                'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+                'SecurityRoleFunctions.security_role_id' => $role->id,
+                ])
+                ->first();
+                if($securityRoleFunctionsData1->_edit == 1){
+                    $isEditable = 1;
+                }
+            }
+        }
+        if($hasPrincipal == 1 &&  $isEditable == 1){
+            $_edit = true;
+        }
+        }
+        //POCOR-9491
+        
+        //POCOR-9487
+        // $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['edit'];
+        // if(!empty($permission_id)){
+        //     $securityRoleFunctions =  TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+
+        //     $securityRoleFunctionsData = $securityRoleFunctions
+        //     ->find()
+        //     ->where([
+        //         'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+        //         'SecurityRoleFunctions.security_role_id IN ' => $permission_id,
+        //     ])
+        //     ->first();
+        //     }
+        // if(!empty($securityRoleFunctionsData)){
+        //     $SecurityRoleTable = TableRegistry::get('Security.SecurityRoles');
+        //     $SecurityRoleTableData = $SecurityRoleTable
+        //     ->find()
+        //     ->where([
+        //         $SecurityRoleTable->aliasField('id') => $securityRoleFunctionsData->security_role_id
+        //     ])
+        //     ->first();
+        // }
+        // if ($SecurityRoleTableData->code == 'PRINCIPAL') {
+        //     if($securityRoleFunctionsData->_edit == 1){
+        //         $_edit = true;
+        //     }
+        // }
+        //POCOR-9487['End']
+
+
         // end POCOR-3983
         $queryString = $this->request->getQuery('queryString');
         $this->set('_edit', $_edit);
@@ -10276,6 +10371,46 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureAttachments']);
     }
 
+    /**
+     * POCOR-9407
+     * Download an attached file for an institution custom field value.
+     *
+     * Looks up the file by `institution_id` and ensures both `file` (BLOB)
+     * and `file_name` exist in the record. If found, it streams the file
+     * back to the browser as a downloadable attachment.
+     * @return \Cake\Http\Response The file download response.
+     * @throws \Cake\Http\Exception\NotFoundException If no file or record is found.
+     */
+    public function downloadFile($id = null)
+    {
+        $this->autoRender = false;
+        if (empty($id)) {
+            throw new NotFoundException(__('Invalid file'));
+        }
+
+        // Load your custom field values table
+        $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldValues');
+        $fileRecord = $InstitutionCustomFieldValues->find()
+                        ->where([
+                            'file IS NOT' => null, 
+                            'file_name IS NOT' => null, 
+                            'institution_id' => $this->getInstitutionID(),
+                        ])->first();
+
+        if (empty($fileRecord) || empty($fileRecord->file_name) || empty($fileRecord->file)) {
+            throw new NotFoundException(__('File not found'));
+        }
+
+        $fileName = $fileRecord->file_name;
+        $fileResource = $fileRecord->file;
+        $this->response = $this->response
+            ->withType(mime_content_type($fileResource))
+            ->withHeader('Content-Disposition', 'attachment; filename="' . $fileName . '"')
+            ->withStringBody(stream_get_contents($fileResource));
+
+        return $this->response;
+    }
+    
 }
 
 

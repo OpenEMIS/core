@@ -355,6 +355,7 @@ class InstitutionsTable extends ControllerActionTable
                 // 'message' => 'Code has to be unique'
             ])
             ->allowEmpty('email')
+            ->notEmpty('institution_locality_id') //POCOR-9407
             ->add('email', [
                 'ruleValidEmail' => [
                     'rule' => 'checkEmailFormat',
@@ -383,6 +384,7 @@ class InstitutionsTable extends ControllerActionTable
             // ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
             //     'rule' => ['checkConfiguredArea']
             // ])
+            ->notEmpty('institution_provider_id', 'Provider is required') //POCOR-9452
             ->add('institution_provider_id', 'ruleLinkedSector', [
                 'rule' => 'checkLinkedSector',
                 'provider' => 'table'
@@ -1926,6 +1928,7 @@ class InstitutionsTable extends ControllerActionTable
 
         $attr['options'] = $providerOptions;
         $attr['empty'] = true;
+        $attr['onChangeReload'] = true;
         return $attr;
     }
 
@@ -2735,4 +2738,10 @@ class InstitutionsTable extends ControllerActionTable
         }
     }
     //POCOR-7971 ::end
+
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        //echo "<pre>"; print_r($query->toArray); die;
+      //  return $query;
+    }
 }

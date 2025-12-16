@@ -68,7 +68,7 @@ class InstitutionGradesTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra) {
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         $this->institutionId = $this->getInstitutionID();
-        $this->field('start_date', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>false],'onChangeReload' => true,'sort' => ['field' => $this->aliasField('start_date')]]);
+        $this->field('start_date', ['visible' => ['index'=>true, 'view'=>true, 'edit'=>true],'sort' => ['field' => $this->aliasField('start_date')]]);//POCOR-9438
         $this->field('end_date', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>false],'onChangeReload' => true,'sort' => ['field' => $this->aliasField('end_date')]]);
         $this->field('academic_period_id', ['visible' => ['index'=>false, 'view'=>false, 'add'=>true, 'edit'=>true],'onChangeReload' => true,'sort' => ['field' => $this->aliasField('end_date')]]);
 
@@ -189,7 +189,7 @@ class InstitutionGradesTable extends ControllerActionTable
     ** add action methods
     **
     ******************************************************************************************************************/
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    public function addBeforeSaveorg(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         $errors = $entity->getErrors();
         $process = function($model, $entity) use ($data, $errors) {
@@ -244,6 +244,7 @@ class InstitutionGradesTable extends ControllerActionTable
                                 }
                                 $grade['start_date'] = $start_date;
                             }
+
 
                             $grade['institution_id'] = $entity->institution_id;
                             if ($entity->has('end_date')) {
@@ -458,16 +459,120 @@ class InstitutionGradesTable extends ControllerActionTable
         }
     }
 
+    //POCOR-9438 New change for start_date validation in add action along with subjects saving
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+        $errors = $entity->getErrors();
+
+        $process = function($model, $entity) use ($data, $errors) {
+
+            if (empty($errors) || count($errors) == 1) {
+
+                if ($data->offsetExists('grades')) {
+                    $gradeIsSelected = false;
+                    $error = true;
+                    $gradeEntities = [];
+                    $gradeSubjectEntities = [];
+
+                    if (!empty($data['grades']['education_grade_id']) && $data['grades']['education_grade_id'] != 0) {
+                        $error = false;
+                        $gradeIsSelected = true;
+
+                        $grade = [
+                            'education_grade_id' => $data['grades']['education_grade_id'],
+                            'programme' => $entity->programme,
+                            'academic_period_id' => $entity->academic_period_id,
+                            'institution_id' => $entity->institution_id,
+                            'start_date' => $entity->start_date ?? null,
+                            'end_date' => $entity->end_date ?? null
+                        ];
+
+                        $gradeEntities[] = $this->newEntity($grade);
+
+                        if ($gradeEntities[0]->getErrors()) {
+                            $error = true;
+                        }
+                    }
+
+                    if ($error && $gradeIsSelected) {
+                        $model->Alert->error($this->aliasField('failedSavingGrades'));
+                        return false;
+                    } elseif (!$gradeIsSelected) {
+                        $model->Alert->error($this->aliasField('noGradeSelected'));
+                        return false;
+                    } else {
+                        foreach ($gradeEntities as $grade) {
+                            $entity->education_grade_id = $grade->education_grade_id;
+                            $result = $this->save($grade);
+                            $lastInsertId = $result['id'];
+
+                            if (!empty($data['grades']['education_grade_subject_id'])) {
+                                $gradeSubjectEntities = array_filter($data['grades']['education_grade_subject_id'], function($v) {
+                                    return !empty($v) && $v > 0;
+                                });
+
+                                if (!empty($gradeSubjectEntities)) {
+                                    $institutionProgramGradeSubject = TableRegistry::getTableLocator()->get('Institution.InstitutionProgramGradeSubjects');
+
+                                    foreach ($gradeSubjectEntities as $gradeSubjectId) {
+                                        $gradeSubject = $institutionProgramGradeSubject->newEntity([
+                                            'institution_grade_id' => $lastInsertId,
+                                            'education_grade_subject_id' => $gradeSubjectId,
+                                            'education_grade_id' => $data['grades']['education_grade_id'],
+                                            'institution_id' => $entity->institution_id
+                                        ]);
+
+                                        $institutionProgramGradeSubject->save($gradeSubject);
+                                    }
+                                }
+                            }
+                        }
+
+                        return true;
+                    }
+
+                } else {
+                    $model->Alert->error($this->aliasField('noGradeSelected'));
+                    return false;
+                }
+            } else {
+                $model->Alert->error($this->aliasField('noGradeSelected'));
+                return false;
+            }
+        };
+
+        if (empty($errors) || count($errors) == 1) {
+            $educationGradeId = ($data['grades']['education_grade_id'] == '') ? 0 : $data['grades']['education_grade_id'];
+            $existingGradeCount = $this->find()
+            ->contain([$this->EducationGrades->getAlias()])
+            ->where([
+                $this->EducationGrades->aliasField('education_programme_id') => $entity->programme,
+                $this->aliasField('education_grade_id') => $educationGradeId,
+                $this->aliasField('institution_id') => $entity->institution_id
+            ])
+            ->count();
+
+
+            if ($existingGradeCount) {
+                $this->Alert->warning($this->aliasField('gradesAlreadyAdded'));
+                $event->stopPropagation();
+                return $this->controller->redirect($this->url('index'));
+            } else {
+                return $process;
+            }
+        }
+    }
+
+
     public function editBeforeSave(Event $event, Entity $entity,
         ArrayObject $data,
         ArrayObject $extra
     )
     {
             // POCOR 5001
-
-        if (count($data['grades']['education_grade_subject_id']) > 0
-    ) {
-            $gradeSubjectEntities = $data['grades']['education_grade_subject_id'];
+    //POCOR-9438 -- If condition updated    
+    if (!empty($data['grades']['education_grade_subject_id']) && is_array($data['grades']['education_grade_subject_id'])) {
+        $gradeSubjectEntities = $data['grades']['education_grade_subject_id'];
         $createdUserId = $this->Session->read('Auth.User.id');
         $institutionClassGradesData = TableRegistry::get('Institution.InstitutionClassGrades')
         ->find()->select([

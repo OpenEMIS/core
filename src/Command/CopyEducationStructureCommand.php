@@ -8,18 +8,11 @@ use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\Locator\LocatorAwareTrait;
-use Cake\Utility\Text;
-use Cake\ORM\Table;
-use Cake\ORM\TableRegistry;
-use Cake\Utility\Inflector;
 
 // POCOR-9354
-class EducationStructureCopyCommand extends \Cake\Command\Command
+class CopyEducationStructureCommand extends CopyCommandBase
 {
     use LocatorAwareTrait;
-
-    /** @var \Cake\Database\Connection */
-    private $conn;
 
     // Tables
     private $AcademicPeriods;
@@ -31,78 +24,42 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
     private $EducationGrades;
     private $EducationGradesSubjects;
 
-    // Options
-    private bool $dryRun = false;
-    private bool $verbose = true;
-
     public static function defaultName(): string
     {
-        // Run as: bin/cake education:copy-structure FROM_PERIOD_ID TO_PERIOD_ID USER_ID
-        return 'education:copy-structure';
+        // Run as: bin/cake copy:education-structure FROM_PERIOD_ID TO_PERIOD_ID USER_ID
+        return 'copy:education-structure';
     }
 
     public function buildOptionParser(ConsoleOptionParser $parser): ConsoleOptionParser
     {
-        $parser
-            ->setDescription('Copy education structure (systems, levels, cycles, programmes, grades, grade-subjects) from one academic period to another.')
-            ->addArgument('from', [
-                'help' => 'Source academic_period_id',
-                'required' => true,
-            ])
-            ->addArgument('to', [
-                'help' => 'Target academic_period_id',
-                'required' => true,
-            ])
-            ->addArgument('userId', [
-                'help' => 'User ID to stamp as created_user_id for new rows (like the Shell third arg)',
-                'required' => true,
-            ])
-            ->addOption('dry-run', [
-                'help' => 'Validate and log without writing changes',
-                'boolean' => true,
-                'default' => false,
-            ])
-            ->addOption('quiet', [
-                'help' => 'Reduce console output',
-                'boolean' => true,
-                'default' => false,
-            ]);
-
-        return $parser;
+        $parser->setDescription('Copy education structure...');
+        return $this->addStandardOptions($parser);
     }
 
     public function execute(Arguments $args, ConsoleIo $io): ?int
     {
         ini_set('memory_limit', '2G');
 
-        $fromId = (int)$args->getArgument('from');
-        $toId   = (int)$args->getArgument('to');
-        $userId = (int)$args->getArgument('userId');
-        $io->out("$fromId, $toId, $userId");
-        $this->dryRun  = (bool)$args->getOption('dry-run');
-        $dryRun = $this->dryRun;
-        $this->verbose = !$args->getOption('quiet');
-        $verbose = $this->verbose;
-        $io->out("$dryRun, $verbose");
+        $this->initializeFromInput($args, $io);
 
-        $this->conn = ConnectionManager::get('default');
-        $this->conn->getDriver()->enableAutoQuoting(true);
+        $this->conn = $this->getConnection();
 
-        $t = $this->getTableLocator();
-        $this->AcademicPeriods                  = self::getDynamicTableInstance('academic_periods');
-        $this->EducationSystems                 = self::getDynamicTableInstance('education_systems');
-        $this->EducationLevels                  = self::getDynamicTableInstance('education_levels');
-        $this->EducationCycles                  = self::getDynamicTableInstance('education_cycles');
-        $this->EducationProgrammes              = self::getDynamicTableInstance('education_programmes');
-        $this->EducationProgrammesNextProgrammes= self::getDynamicTableInstance('education_programmes_next_programmes');
-        $this->EducationGrades                  = self::getDynamicTableInstance('education_grades');
-        $this->EducationGradesSubjects          = self::getDynamicTableInstance('education_grades_subjects');
+//        $this->AcademicPeriods                  = $this->getDynamicTableInstance('academic_periods');
+        $this->EducationSystems                 = $this->getDynamicTableInstance('education_systems');
+        $this->EducationLevels                  = $this->getDynamicTableInstance('education_levels');
+        $this->EducationCycles                  = $this->getDynamicTableInstance('education_cycles');
+        $this->EducationProgrammes              = $this->getDynamicTableInstance('education_programmes');
+        $this->EducationProgrammesNextProgrammes= $this->getDynamicTableInstance('education_programmes_next_programmes');
+        $this->EducationGrades                  = $this->getDynamicTableInstance('education_grades');
+        $this->EducationGradesSubjects          = $this->getDynamicTableInstance('education_grades_subjects');
 
-        $io->out('Start Education Structure Copy');
-
+        $this->logMsg('Start Copy Education Structure');
+        $fromId = $this->fromId;
+        $toId = $this->toId;
+        $userId = $this->userId;
         // Validate periods + get names for suffix-swap
-        $fromAp = $this->AcademicPeriods->find()->select(['id', 'name'])->where(['id' => $fromId])->firstOrFail();
-        $toAp   = $this->AcademicPeriods->find()->select(['id', 'name'])->where(['id' => $toId])->firstOrFail();
+        $fromAp = $this->fromAcademicPeriod;
+        $toAp   = $this->toAcademicPeriod;
 
         // Check destination has no systems yet (same as your shell)
         $existsTo = $this->EducationSystems->find()->where(['academic_period_id' => $toId])->count();
@@ -116,7 +73,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
             $this->copyProcess($fromId, $toId, $userId, (string)$fromAp->name, (string)$toAp->name, $io);
 
             if ($this->dryRun) {
-                $io->out('<info>Dry-run: rolling back.</info>');
+                $this->logMsg('<info>Dry-run: rolling back.</info>');
                 $this->conn->rollback();
             } else {
                 $this->conn->commit();
@@ -128,7 +85,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
             return static::CODE_ERROR;
         }
 
-        $io->out('End Education Structure Copy');
+        $this->logMsg('End Education Structure Copy');
         return static::CODE_SUCCESS;
     }
 
@@ -152,7 +109,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
         foreach ($systems as $sys) {
             // If a name ends with " <fromApName>", rewrite it to " <toApName>"
             $newSystemName = $this->swapNameTail((string)$sys->name, $fromApName, $toApName);
-            $io->out('Start Education Structure Copy To ' . $newSystemName);
+            $this->logMsg('Start Education Structure Copy To ' . $newSystemName);
 
             // Avoid duplicates in TO: same system name for that TO period
             $existing = $this->EducationSystems->find()
@@ -163,7 +120,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
 
             if ($existing) {
                 $newSystemId = (int)$existing->id;
-                $this->v($io, "System exists: {$newSystemName} (id={$newSystemId})");
+                $this->logMsg("System exists: {$newSystemName} (id={$newSystemId})");
             } else {
                 $entity = $this->EducationSystems->newEntity([
                     'name'               => $newSystemName,
@@ -173,10 +130,9 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                     'created_user_id'    => $sys->created_user_id ?? $userId,
                     'created'            => $sys->created ?? $now,
                 ]);
-//                $this->v($io, "System to create: " . print_r($entity, true));
                 $this->saveOrThrow($this->EducationSystems, $entity, 'education_systems');
                 $newSystemId = (int)$entity->id;
-                $this->v($io, "System +: {$newSystemName} (id={$newSystemId})");
+                $this->logMsg("System +: {$newSystemName} (id={$newSystemId})");
             }
 
             // 2) Levels under this system
@@ -198,7 +154,6 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
                     'created_user_id'          => $userId,
                     'created'                  => $now,
                 ]);
-//                $this->v($io, "Level to create: " . print_r($lvlEntity, true));
 
                 $this->saveOrThrow($this->EducationLevels, $lvlEntity, 'education_levels');
                 $newLevelId = (int)$lvlEntity->id;
@@ -373,7 +328,7 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
         }
         //POCOR-9356 -- END
 
-        $this->v($io, 'Copy complete.');
+        $this->logMsg('Copy complete.');
     }
 
     /**
@@ -391,24 +346,6 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
         return $name;
     }
 
-    private function saveOrThrow($Table, $entity, string $label): void
-    {
-        if ($this->dryRun) {
-            // No write, just log the intent
-            return;
-        }
-        if (!$Table->save($entity)) {
-            $errors = json_encode($entity->getErrors(), JSON_UNESCAPED_UNICODE);
-            throw new \RuntimeException("Failed to save {$label}: {$errors}");
-        }
-    }
-
-    private function v(ConsoleIo $io, string $msg): void
-    {
-        if ($this->verbose) {
-            $io->out($msg);
-        }
-    }
 
     private function uuid(): string
     {
@@ -417,45 +354,5 @@ class EducationStructureCopyCommand extends \Cake\Command\Command
         $data[8] = chr((ord($data[8]) & 0x3f) | 0x80);
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
-    private static function getDynamicTableInstance(string $tableName): Table
-    {
-        // Parse plugin and table names if dot notation is used
-        $locator = TableRegistry::getTableLocator();
-        try {
-            return $locator->get($tableName);
-        } catch (\Exception $exception) {
 
-        }
-        $parts = explode('.', $tableName);
-        $plugin = count($parts) > 1 ? $parts[0] : null;
-        $table = count($parts) > 1 ? $parts[1] : $parts[0];
-
-        // Convert the table name to camel case as expected by CakePHP conventions
-        $tableFullAlias = Inflector::camelize($tableName);
-        $tableAlias = Inflector::camelize($table);
-
-        // Create the fully qualified class name if a plugin is specified
-        if ($plugin) {
-            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
-        } else {
-            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
-        }
-        // Check if the table instance already exists
-        if (!$locator->exists($tableFullAlias)) {
-            // Check if the specific table class exists
-            if (!class_exists($className)) {
-                $className = Table::class; // Fallback to generic Table class
-            }
-
-            // Configure a new table instance
-            $locator->setConfig($tableAlias, [
-                'className' => $className,
-                'table' => $table,
-                'alias' => $tableAlias,
-            ]);
-        }
-
-        // Return the table instance
-        return $locator->get($tableFullAlias);
-    }
 }

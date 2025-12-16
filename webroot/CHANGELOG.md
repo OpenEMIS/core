@@ -1,3 +1,87 @@
+### [4.48.7] - 2025-12-11
+- Bug Fixed: Institutions>Performance>GPA: Student GPA should show up against the right school.
+- Bug Fixed: Institutions> Import Institution: User sees 404 error message for leaving document field empty and clicking on save
+- Bug Fixed: Administration>Communication>Alert: Student attendance alert is not working
+- Bug Fixed: Institutions > Performances > Assessments > Edit : Permission to Edit Assessments and All Classes/Subjects given yet user is not able to edit Assessments
+- Bug Fixed: Administration > Profiles > Institutions > Profile: Report is stuck in progress
+- Bug Fixed: Directory>Advanced Search : Advance Search for Staff in Directory gives 404 Error
+- Bug Fixed: Report>Institutions>Students: Report should show Nevis related
+- Bug Fixed: Institutions>Performance>Assessments: When marks are removed, the marks in the deleted_record table is showing null instead of the actual marks
+
+### [4.48.6] - 2025-12-05
+- Bug Fixed: Institutions>Performance>Assessments: When user is not a homeroom/secondary/subject teacher, edit assessment button should be hidden
+- Bug Fixed: Institutions>Performance>Report Cards: System returns a Missing Placeholder message on the report card instead of showing a blank field.
+
+### [4.48.5] - 2025-12-03
+- Bug Fixed: Institution>Performance>Assessment: The list of subjects seen in Academic Subjects does not reflect exactly on the Performance >Assessments page
+- Bug Fixed: Institutions>Students>Performance>GPA: GPA is calculating wrongly for grade 6 and grade 11
+- Bug Fixed: Institutions>Performance>Report Cards: Excel and pdf are not working properly in libreoffice
+- Bug Fixed: Administration>Scholarships>Applications: The User gets and error page when attempting to add a Scholarship application.
+- Bug Fixed: Directory: Directory section listing is not displaying the photos
+- Bug Fixed: Administration>Data Management>Copy: it is not reflecting in the Administration>Performance>Competencies when copying is done
+- Bug Fixed: Directory>Import: Class name should not be mandatory
+
+### [4.48.4] - 2025-11-28
+- Bug Fixed: Institutions>Performance>Assessments>PDF: Upon clicking PDF button, user is getting 404 error
+- Bug Fixed: Institutions>Attendance>Staff: Users can enter attendance for staff
+- Bug Fixed: Institution>Student>List>Counselling: The list of names that appear in the Requester list is of Students.
+
+### [4.48.3] - 2025-11-26
+- Bug Fixed: Institutions>Staff>Add: User is unable to add positions to existing staff
+- Bug Fixed: Directory: User is getting 404 when login
+- Bug Fixed: Institutions>Infrastructure>Overview: User getting 404 error 
+- Bug Fixed: Institutions>Students>Academic>Curriculars>Add: Institution curriculars showing empty
+
+### [4.48.2] - 2025-11-21
+- Bug Fixed: Institutions>Staff>Add: User is unable to add positions to existing staff
+- Bug Fixed: Institutions>Add Institution: Upon Leaving Provider Field empty,user is getting 404 error
+
+### [4.48.1] - 2025-11-14
+- Bug Fixed: Administrations > System setup > System configuration: On selecting the options Staff Releases and/or Staff Transfers, the page refreshes and goes back to the default option on the dropdown.
+- Bug Fixed: Institutions>Students>Transfer: Student transferred from school A to school B is showing system groups of both schools
+- Bug Fixed: Institution classes api is not showing total students correctly
+- Bug Fixed: Docker build for the Angular frontend not functional
+
+### [4.48.0] - 2025-11-07
+- Implemented: Develop deleted records audit report
+- Implemented: Develop programme filter for performance report
+- Bug Fixed: Institutions>Add>Staff: Unable to add staff
+- Bug Fixed: Institutions > Survey > Form > Import : Develop an Import selection page for Survey
+- Bug Fixed: Directory>Search User:Clicking on a record is taking user to the wrong Institution
+- Bug Fixed: Institutions>Attendance>Staff: It should not check based on staff leave workflow name
+- Bug Fixed: Reports>Institutions>Add: The report generated for one Area level shows Institutions from All Area Levels
+- Bug Fixed: Administrations > Examinations > Results : Rows are missing after switching in between tabs
+
+### [4.47.0] - 2025-10-29
+- Implemented: Develop changes to rename Institution Curriculars to Curriculars
+- Bug Fixed: Institution>Attendance>Staff: Assigned Staff not showing up against Attendance>Staff
+- Bug Fixed: Institutions>Students>Withdraw: Creates a migration script for student withdraw and adds delete
+- Bug Fixed: Adminstration>Security>Users: Users who have permissions cannot access the credentials
+- Bug Fixed: Institutions>Academic>Programmes: Adds Start date to the page
+
+### [4.46.0] - 2025-10-21
+- Implemented: Develop a status field in Exempt/Unassign page
+- Bug Fixed: Institution > Attendances > Students : SQLSTATE[40001]: Serialization failure: 1213 Deadlock found when trying to get lock; try restarting transaction
+
+### [4.45.0] - 2025-10-16
+- Implemented: Develop institution students audit report
+- Bug Fixed: Institutions>Students>Withdraw: Unable to withdraw student.
+- Bug Fixed: Institutions > Classes > List Page: System does not show the Homeroom Teacher assigned to the class
+- Bug Fixed: Institutions>Attendance>Staff: Staff is not showing attendance marked
+- Bug Fixed: Security Users API V5: Users should be able to post images
+- Bug Fixed: Directory>Students>Add: Nationalities and identity number are mandatory but not shown as mandatory
+
+### [4.44.0] - 2025-10-10
+- Implemented: Develop changes to the Staff License Report
+- Implemented: Develop institution staff audit report
+- Bug Fixed: Directory>Import: User is getting 404 when importing
+- Bug Fixed: Instituitons>Survey>Form
+- Bug Fixed: Institution>Staff>Career>Positions Tab>Edit: Error 404 seen on clicking save when mandatory fields is not entered
+- Bug Fixed: Institutions>General>Overview >Edit: File is not showing in interface when uploaded
+- Bug Fixed: Institutions>Attendance>Students: Edit button should not appear when period or subject is not selected
+- Bug Fixed: Institutions > Performance > Report Cards: Principal placeholder is not displaying correctly
+- Bug Fixed: Administration>Survey>Forms: Filter should not include Institution>Staff, Institution>Students and Institutions>Repeaters
+
 ### [4.43.3] - 2025-10-07
 - Bug Fixed: Institutions>Attendance>Students: Attendance not updated correctly
 

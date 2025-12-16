@@ -126,12 +126,24 @@ $this->start('panelBody');
                     ng-options="option.id as option.name for option in $ctrl.excempttype"
                     ng-model="$ctrl.excempttype_id"
                     ng-change="$ctrl.onExcemptTypeChange();$ctrl.checkAndLoadStudents();"
-                    ng-disabled="!$ctrl.actionEnabled"
-            >
+                    ng-disabled="!$ctrl.actionEnabled">
                 <option value=""><?= __('-- Select --') ?></option>
             </select>
         </div>
     </div>
+    <!--//POCOR-9428 student status start--->
+    <div class="input select required">
+        <label><?= __('Student Status') ?></label>
+        <div class="input-select-wrapper">
+             <select name="type" id="studentStatuses"
+        ng-options="option.id as option.name for option in $ctrl.studentStatuses"
+        ng-model="$ctrl.studentstatus_id"
+        ng-change="$ctrl.onStudentStatusChange($ctrl.studentstatus_id);$ctrl.checkAndLoadStudents();">
+        <option value=""><?= __('-- Select --') ?></option>
+    </select>
+        </div>
+    </div> <!--//POCOR-9428 student status end--->
+
     <!--//POCOR-9042 add Action ends--->
     <div class="input select">
         <label><?= __('Students') ?></label>
