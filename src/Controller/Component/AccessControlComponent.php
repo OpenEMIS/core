@@ -253,13 +253,19 @@ class AccessControlComponent extends Component
         $controller = $request->getParam('controller');
         $action = $request->getParam('action');
         $params = $request->getParam('pass');
-
         // Handle special case: Profiles/Personal/view for user without roles
         //POCOR-9429
         if ($controller === 'Profiles' && $action === 'Personal' && $params[0] === 'view' && empty($roleIds)) {
                return true;
           
         }
+
+        //POCOR-9493 URL has only controller. if permission is given,the edit page is redirected.
+        if ($controller === 'Configurations' && $action === 'edit') {
+               return true;
+        } //POCOR-9493 end
+        
+
         //POCOR-9429 end
         //POCOR-8379 Starts use if condition only
         if($this->getController()->getRequest()->getParam('controller') != 'GuardianNavs'){
