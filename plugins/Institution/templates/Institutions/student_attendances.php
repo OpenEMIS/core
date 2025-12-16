@@ -26,7 +26,7 @@ $this->start('toolbar');
         data-placement="bottom"
         data-container="body"
         title="<?= __('Edit'); ?>"
-        ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && !$ctrl.closedPeriod && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1"
+        ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedAttendanceBy != '-1' && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && !$ctrl.closedPeriod && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1"
         ng-click="$ctrl.onEditClick()">
         <i class="fa kd-edit"></i>
     </button>
@@ -43,7 +43,7 @@ $this->start('toolbar');
 <?php endif; ?>
 <?php /******POCOR-8745--End*********/ ?>
 <?php if ($_edit) : ?>
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('No Scheduled Class'); ?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1" ng-click="$ctrl.onNoScheduledClick()">
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('No Scheduled Class'); ?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedAttendanceBy != '-1' && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1" ng-click="$ctrl.onNoScheduledClick()">
         <i class="kd-null"></i>
     </button>
 <?php endif; ?>
@@ -52,7 +52,7 @@ $session = $this->getRequest()->getSession();
 $superAdmin = $session->read('Auth.User.super_admin');
 $is_connection_is_online = $session->read('is_connection_stablished');
 ?>
-<!-- <?php //if(($is_connection_is_online == 1 && $is_button_accesible == 1)) :  
+<!-- <?php //if(($is_connection_is_online == 1 && $is_button_accesible == 1)) :
         ?> -->
 <?php if ($archiveUrl) : ?>
     <a href="<?= $archiveUrl ?>" ng-show="$ctrl.action == 'view'">
@@ -62,7 +62,7 @@ $is_connection_is_online = $session->read('is_connection_stablished');
     </a>
     </button>
 <?php endif; ?>
-<?php //endif; 
+<?php //endif;
 ?>
 <?php /*************** Start POCOR-5188 */ ?>
 <?php
@@ -372,7 +372,7 @@ $panelHeader = $this->fetch('panelHeader');
                     <h5><?= __('Attendance By') ?>: </h5>
                     <div class="input-select-wrapper">
                         <select name="attendance_by" ng-disabled="$ctrl.action=='edit' || $ctrl.isMarkableAttendance==true" ng-model="$ctrl.selectedAttendanceBy" ng-options="option.id as option.name for option in $ctrl.attendanceByOptions" ng-change="$ctrl.changeAttendanceBy();">
-                            <option value="">Select Attendance By</option>
+                            <option value="-1"><?= __('Attendance By') ?></option>
                         </select>
                     </div>
 

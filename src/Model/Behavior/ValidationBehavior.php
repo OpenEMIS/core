@@ -1538,7 +1538,7 @@ class ValidationBehavior extends Behavior
         $todayDate = new Date();
         $todayDate = $todayDate->format('Y-m-d');
 
-        if (empty($endDate)) {
+        /*if (empty($endDate)) {
             // current position has no end date
             $dateCondition['OR'][] = 'end_date IS NULL';
             $dateCondition['OR'][] = [
@@ -1546,7 +1546,7 @@ class ValidationBehavior extends Behavior
                 "end_date >= '" . $startDate . "'",
                 "end_date >= '" . $todayDate . "'" //to exclude staff which assignment has been ended.
             ];
-        } else {
+        }else {
             // current position HAS end date
             $dateCondition['OR'][] = [
                 'end_date IS NULL',
@@ -1558,8 +1558,52 @@ class ValidationBehavior extends Behavior
             $dateCondition['OR']['OR'][] = ['start_date' . ' <= ' => $startDate, 'end_date' . ' >= ' => $endDate];
 
             $dateCondition['AND'] = ['end_date >= ' => $todayDate]; //to exclude staff which assignment has been ended.
-        }
+        }*/
 
+        //POCOR-9421 start
+        if (empty($endDate)) {
+            $dateCondition['OR'][] = ['end_date IS' => null];
+
+            $dateSubCondition = [['end_date IS NOT' => null]];
+
+            if (!empty($startDate)) {
+                $dateSubCondition[] = ['end_date >=' => $startDate];
+            } else {
+                // If startDate is null, use IS NOT NULL instead of invalid comparison
+                $dateSubCondition[] = ['end_date IS NOT' => null];
+            }
+
+            $dateSubCondition[] = ['end_date >=' => $todayDate];
+            $dateCondition['OR'][] = $dateSubCondition;
+        } else {
+            $dateCondition['OR'][] = [
+                ['end_date IS' => null],
+                ['start_date <=' => $endDate]
+            ];
+            $dateCondition['OR']['OR'] = [];
+            
+            // Add comparisons only if date exist
+            if (!empty($startDate) && !empty($endDate)) {
+                $dateCondition['OR']['OR'][] = [
+                    'start_date >=' => $startDate,
+                    'start_date <=' => $endDate
+                ];
+                $dateCondition['OR']['OR'][] = [
+                    'end_date >=' => $startDate,
+                    'end_date <=' => $endDate
+                ];
+                $dateCondition['OR']['OR'][] = [
+                    'start_date <=' => $startDate,
+                    'end_date >=' => $endDate
+                ];
+            } elseif (empty($startDate) && !empty($endDate)) {
+                $dateCondition['OR']['OR'][] = ['end_date <=' => $endDate];
+            } elseif (!empty($startDate) && empty($endDate)) {
+                $dateCondition['OR']['OR'][] = ['start_date >=' => $startDate];
+            }
+
+            $dateCondition['AND'] = ['end_date >=' => $todayDate]; // exclude finished staff
+        } //POCOR-9421 end
         $identicalPositionHolders->where($dateCondition);
 
         $FTEused = 0;
@@ -1569,9 +1613,10 @@ class ValidationBehavior extends Behavior
                 $FTEused += $value->FTE;
             }
         }
-
-        $validationResult = (($FTEused+$globalData['data']['FTE']) <= 1);
-
+        //POCOR-9421 start
+        $FTEused = (float)$FTEused;
+        $globalFTE = (float)$globalData['data']['FTE'];
+        $validationResult = (($FTEused + $globalFTE) <= 1); //POCOR-9421 end
         return $validationResult;
     }
 
@@ -2069,7 +2114,7 @@ class ValidationBehavior extends Behavior
         return true;
     }
     //POCOR-8487[START]
-    public static function validateContactNumberPattern($field, $code, array $globalData)
+    /*public static function validateContactNumberPattern($field, $code, array $globalData)
     {
         $pattern = '';
         $model = $globalData['providers']['table'];
@@ -2079,9 +2124,42 @@ class ValidationBehavior extends Behavior
             return $model->getMessage('general.custom_validation_pattern');
         }
         return true;
+    }*/
+
+    //POCOR-9460
+    public static function validateContactNumberPattern($field, $code, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        // Load regex from DB 
+        $valuePattern = $ConfigItems->value($code);
+        $fallbackRegex = '/^[0-9+\-\s]{7,20}$/';
+        if (empty($valuePattern)) {
+            return preg_match($fallbackRegex, $field)
+                ? true
+                : $model->getMessage('general.custom_validation_pattern');
+        }
+        $cleanPattern = preg_replace('/^\/|\/[a-z]*$/i', '', $valuePattern);
+
+        // Re-wrap pattern into clean PHP regex
+        $finalRegex = '/' . $cleanPattern . '/';
+
+        if (@preg_match($finalRegex, null) === false) {
+            return preg_match($fallbackRegex, $field)
+                ? true
+                : $model->getMessage('general.custom_validation_pattern');
+        }
+        if (!preg_match($finalRegex, $field)) {
+            // Try fallback before showing error
+            return preg_match($fallbackRegex, $field)
+                ? true
+                : $model->getMessage('general.custom_validation_pattern');
+        }
+
+        return true;
     }
 
-    public static function validateMobileNumberPattern($field, $code, array $globalData)
+    /*public static function validateMobileNumberPattern($field, $code, array $globalData)
     {
         $pattern = '';
         $model = $globalData['providers']['table'];
@@ -2090,6 +2168,38 @@ class ValidationBehavior extends Behavior
         if (!empty($valuePattern) && !preg_match($valuePattern, $field)) {
             return $model->getMessage('general.custom_validation_pattern');
         }
+        return true;
+    }*/
+
+    //POCOR-9460
+    public static function validateMobileNumberPattern($field, $code, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $valuePattern = $ConfigItems->value($code);
+
+        $fallbackRegex = '/^[0-9]{8,15}$/';
+
+        if (empty($valuePattern)) {
+            return preg_match($fallbackRegex, $field) ? true : $model->getMessage('general.custom_validation_pattern');
+        }
+        $cleanPattern = preg_replace('/^\/|\/[a-z]*$/i', '', $valuePattern);
+
+        // Wrap cleaned pattern into PHP-valid delimiters
+        $finalRegex = '/' . $cleanPattern . '/';
+
+        // Validate if regex is valid
+        if (@preg_match($finalRegex, null) === false) {
+            //invalid regex → fallback
+            return preg_match($fallbackRegex, $field) ? true : $model->getMessage('general.custom_validation_pattern');
+        }
+
+        // Apply config_item table validation
+        if (!preg_match($finalRegex, $field)) {
+            // custom validation regex failed, try fallback
+            return preg_match($fallbackRegex, $field) ? true : $model->getMessage('general.custom_validation_pattern');
+        }
+
         return true;
     }
 

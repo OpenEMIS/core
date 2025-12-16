@@ -13,7 +13,6 @@ use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Cake\Validation\Validator;
-
 use Directory\Model\Table\DirectoriesTable as UserTypeOption;
 
 class AuditsTable extends AppTable
@@ -42,14 +41,16 @@ class AuditsTable extends AppTable
                                 'Report.AuditInstitutions',
                                 'Report.AuditUsers',
                                 'Report.AuditSecuritiesRolesPermissions', // POCOR-499
-                                'Report.AuditSecuritiesGroupUserRoles' // POCOR-499
+                                'Report.AuditSecuritiesGroupUserRoles', // POCOR-499
+                                'Report.AuditDeletedRecords',//POCOR-9381
+                                'Report.AuditInstitutionStudents', // POCOR-9382
+                                'Report.AuditInstitutionStaff' // POCOR-9383
                             ]);         
                         }
                         return true;
                     }
                 ],
-            ]);
-
+            ])->notEmptyString('report_start_date', 'Start Date is required');
         return $validator;
     }
 
@@ -57,11 +58,12 @@ class AuditsTable extends AppTable
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
-        $this->ControllerAction->field('format');
         $this->ControllerAction->field('user_type', ['type' => 'hidden']);
-        $this->ControllerAction->field('report_start_date', ['type' => 'hidden']);
-        $this->ControllerAction->field('report_end_date', ['type' => 'hidden']);
+        $this->ControllerAction->field('reference_table', ['type' => 'hidden']); //POCOR-9381
+        $this->ControllerAction->field('report_start_date', ['type' => 'date']);
+        $this->ControllerAction->field('report_end_date', ['type' => 'date']);
         $this->ControllerAction->field('sort_by', ['type' => 'hidden']);
+        $this->ControllerAction->field('format');
     }
     //POCOR-6637::START
     public function addAfterAction(Event $event, Entity $entity)
@@ -103,11 +105,16 @@ class AuditsTable extends AppTable
                 case 'Report.AuditSecuritiesGroupUserRoles': 
                     // $fieldsOrder[] = 'user_type';
                     $fieldsOrder[] = 'report_start_date';
+                    $fieldsOrder[] = 'report_end_date';  
+                    $fieldsOrder[] = 'format';
+                    break; //END POCOR-499
+                case 'Report.AuditDeletedRecords':  //POCOR-9381
+                    $fieldsOrder[] = 'reference_table';
+                    $fieldsOrder[] = 'report_start_date';
                     $fieldsOrder[] = 'report_end_date';
                     $fieldsOrder[] = 'format';
                     break;
-
-                // End POCOR-499
+                // End POCOR-9381
                 default:
                     break;
             }
@@ -153,8 +160,6 @@ class AuditsTable extends AppTable
                     UserTypeOption::STAFF => __('Staff'),
                     UserTypeOption::GUARDIAN => __('Guardian')
                 ];
-        
-
                 $attr['options'] = $userTypeOptions;
                 $attr['type'] = 'select';
                 $attr['select'] = false;
@@ -191,7 +196,7 @@ class AuditsTable extends AppTable
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
             // Start POCOR-499
-            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles', 'Report.AuditUsers', 'Report.AuditLogins','Report.AuditLastLogins', 'Report.AuditInstitutions'])) {
+            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles', 'Report.AuditUsers', 'Report.AuditLogins','Report.AuditLastLogins', 'Report.AuditInstitutions', 'AuditInstitutionStaff', 'Report.AuditInstitutionStudents, Report.AuditDeletedRecords'])) {
                 $attr['type'] = 'date';
             }
             return $attr;
@@ -203,7 +208,7 @@ class AuditsTable extends AppTable
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
             // Start POCOR-499
-            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles','Report.AuditUsers', 'Report.AuditLogins','Report.AuditLastLogins', 'Report.AuditInstitutions'])) {
+            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles','Report.AuditUsers', 'Report.AuditLogins','Report.AuditLastLogins', 'Report.AuditInstitutions','Report.AuditInstitutionStudents', 'Report.AuditInstitutionStaff, Report.AuditDeletedRecords'])) {
                 $attr['type'] = 'date';
                 $attr['value'] = Time::now();
             }
@@ -232,15 +237,46 @@ class AuditsTable extends AppTable
             case 'academic_period_id':
                 return __('Academic Period');
             case 'report_start_date':
-                return __('Start Date');
+                return '<span style="color:#CC5C5C; margin-right:3px; margin-left:-9px;">*</span>' . __('Start Date'); //POCOR-9381
             case 'report_end_date':
                 return __('End Date');
             case 'sort_by':
                 return __('Sort by');
             case 'user_type':
                 return __('User Type');
+            case 'reference_table':
+                return __('Reference Table');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    //POCOR-9381
+    public function onUpdateFieldReferenceTable(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
+            if ($feature === 'Report.AuditDeletedRecords') {
+                $deletetable = TableRegistry::getTableLocator()->get('DeletedRecords');
+                // Fetch distinct reference_table values
+                $getRecord = $deletetable->find()
+                    ->select(['reference_table'])
+                    ->distinct(['reference_table'])
+                    ->order(['reference_table' => 'ASC'])
+                    ->all()
+                    ->combine('reference_table', 'reference_table')
+                    ->toArray();
+                if(empty($getRecord)){
+                    $getRecord = [];
+                }
+                $attr['type'] = 'chosenSelect';
+                $attr['onChangeReload'] = true;
+                $attr['attr']['multiple'] = false;
+                $attr['options'] = $getRecord;
+                $attr['attr']['required'] = true;
+            }
+            return $attr;
+        }
+
     }
 }

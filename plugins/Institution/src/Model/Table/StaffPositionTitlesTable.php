@@ -526,7 +526,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
      * @ticket POCOR-9208
 	 * Reason to update this code; Principal may have diffrent name in some ENV 
      */
-	public function getPrincipalRoleId()
+	public function getPrincipalRoleId_old()
     {
         $principalData = $this->find()
             ->select([$this->getPrimaryKey()])
@@ -554,6 +554,30 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
         return (!empty($principalData))? $principalData->id: null;
     }
+
+	/**
+     * @usage  Used to fetch principal code based on security role id and name
+      * @author Prajakta
+     * @ticket POCOR-9413
+	 * @ticket POCOR-9442
+	 * Reason to update this code: Principal may have diffrent name in some ENV and also security role id is mandatory to fetch correct principal role
+     */
+	public function getPrincipalRoleId($staffRoleId = null)
+	{
+		$query = $this->find()
+			->select([$this->getPrimaryKey()])
+			->where(function ($exp, $q) {
+				return $exp->like($this->aliasField('name'), '%Principal%');
+			});
+
+		if (!empty($staffRoleId)) {
+			$query->andWhere([$this->aliasField('security_role_id') => $staffRoleId]);
+		}
+
+		$principalData = $query->all();
+
+		return !empty($principalData) ? $principalData->extract('id')->toList() : [];
+	}
 
 	public function getDeputyPrincipalRoleId()
     {
