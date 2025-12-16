@@ -260,12 +260,6 @@ class AccessControlComponent extends Component
           
         }
 
-        //POCOR-9493 URL has only controller. if permission is given,the edit page is redirected.
-        if ($controller === 'Configurations' && $action === 'edit') {
-               return true;
-        } //POCOR-9493 end
-        
-
         //POCOR-9429 end
         //POCOR-8379 Starts use if condition only
         if($this->getController()->getRequest()->getParam('controller') != 'GuardianNavs'){
@@ -419,6 +413,42 @@ class AccessControlComponent extends Component
                 }
             }
             //POCOR-9198 -- END
+
+            // POCOR-9493 START
+            if ($controller === 'Configurations' && $action === 'edit') {
+                $userId = $this->Auth->user('id');
+                $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+                $SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
+
+                $roleIds = $GroupRoles->find()
+                    ->where([$GroupRoles->aliasField('security_user_id') => $userId])
+                    ->group([$GroupRoles->aliasField('security_role_id')])
+                    ->select(['security_role_id' => $GroupRoles->aliasField('security_role_id')])
+                    ->extract('security_role_id')
+                    ->toArray();
+
+                $functions = $SecurityRoleFunctions->find()
+                    ->contain(['SecurityFunctions'])
+                    ->where([
+                        $SecurityRoleFunctions->aliasField('security_role_id') . ' IN' => $roleIds,
+                        'SecurityFunctions.controller' => $controller,
+                        'SecurityFunctions.category' => 'System Configurations',
+                        'SecurityFunctions.name' => 'Configurations'
+                    ])
+                    ->all();
+
+                $canEdit = false;
+
+                foreach ($functions as $function) {
+                    if ((int)$function->_edit === 1) {
+                        $canEdit = true;
+                        break;
+                    }
+                }
+
+                return $canEdit;
+            }
+            // POCOR-9493 END
 
         }
 
