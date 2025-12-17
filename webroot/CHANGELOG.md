@@ -1,3 +1,6 @@
+### [4.48.9] - 2025-12-17
+- Bug Fixed: Administration>Performance>Report Cards: GPA is showing 0.00 for another term
+
 ### [4.48.8] - 2025-12-16
 - Bug Fixed: Administration>Performance>Report Cards: GPA for another term is generated
 
