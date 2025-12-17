@@ -251,7 +251,12 @@ class AppTable extends Table
         return $this->formatDateTime($timeObject);
     }
 
-
+    /**
+     * For calling from view files
+     * @param  Time   $dateObject [description]
+     * @return [type]             [description]
+     * POCOR-9415, POCOR-9510 more error-save
+     */
     public function formatDateTime($dateInput): string
     {
         $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
