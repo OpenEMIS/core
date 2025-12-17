@@ -1407,11 +1407,22 @@ class WorkflowCaseBehavior extends Behavior
         }
 
         ksort($fieldOrder);
-        array_push($fieldOrder, 'status_id');
-        array_push($fieldOrder, 'assignee_id');//POCOR-7613
-        array_push($fieldOrder, 'institution_id');//POCOR-7613
-        array_push($fieldOrder, 'created');//POCOR-7613
-        array_push($fieldOrder, 'modified'); //POCOR-7613
+        // POCOR-9514
+        $fieldOrder = array_values(array_diff(
+            $fieldOrder,
+            ['status_id', 'assignee_id', 'institution_id', 'created', 'modified']
+        ));
+        $fieldOrder = array_merge(
+            ['status_id'],          // always first
+            $fieldOrder,            // existing fields
+            [
+                'assignee_id',      // POCOR-7613
+                'institution_id',   // POCOR-7613
+                'created',          // POCOR-7613
+                'modified',         // POCOR-7613
+            ]
+        );
+        // POCOR-9514
         if ($this->isCAv4()) {
             $this->_table->setFieldOrder($fieldOrder);
         } else {

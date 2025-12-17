@@ -880,7 +880,7 @@ class InstitutionCasesTable extends ControllerActionTable
     public function indexAfterAction(Event $event, $data)
     {
         $this->field('case_number', ['visible' => true]);
-        $this->field('status_id', ['visible' => true, 'after' => 'created']);
+        $this->field('status_id', ['visible' => true, 'after' => 'created', 'sort' => true]);
         $this->field('modified', ['visible' => true]);
         $this->fields['modified']['sort'] = false;
         $this->field('description', ['visible' => false]);
@@ -892,9 +892,8 @@ class InstitutionCasesTable extends ControllerActionTable
         }
 
         $this->fields['created']['sort'] = false;
-        $this->fields['status_id']['sort'] = true;
         $this->setFieldOrder([
-            'case_number', 'created', 'modified', 'title', 'status_id'
+            'status_id', 'case_number', 'created', 'modified', 'title'
         ]);
     }
 
