@@ -251,40 +251,50 @@ class AppTable extends Table
         return $this->formatDateTime($timeObject);
     }
 
-    /**
-     * For calling from view files
-     * @param  Time   $dateObject [description]
-     * @return [type]             [description]
-     * POCOR-9415 more error-save
-     */
+
     public function formatDateTime($dateInput): string
     {
         $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
         $dateFormat = $ConfigItem->value('date_format') ?: 'Y-m-d';
         $timeFormat = $ConfigItem->value('time_format') ?: 'H:i:s';
-        $format = $dateFormat . ' - ' . $timeFormat;
 
-        $value = '';
+        $displayFormat = $dateFormat . ' - ' . $timeFormat;
+        $inputFormat   = $displayFormat;
 
         try {
-            // Normalize input to FrozenTime
-            if (is_string($dateInput)) {
-                $date = new FrozenTime($dateInput);
-            } elseif ($dateInput instanceof \DateTimeInterface) {
-                $date = FrozenTime::instance($dateInput);
-            } else {
-                throw new \InvalidArgumentException('Invalid date input format');
+            // Case 1: Already a DateTime object
+            if ($dateInput instanceof \DateTimeInterface) {
+                return FrozenTime::instance($dateInput)->format($displayFormat);
             }
 
-            $value = $date->format($format);
-        } catch (\Exception $e) {
-            Log::error('formatDateTime error: ' . $e->getMessage() . print_r($dateInput, true));
-            $value = ''; // fallback empty value
+            // Case 2: String input
+            if (is_string($dateInput) && trim($dateInput) !== '') {
+
+                // Try parsing EXACT expected format first
+                $date = FrozenTime::createFromFormat(
+                    $inputFormat,
+                    $dateInput
+                );
+
+                if ($date !== false) {
+                    return $date->format($displayFormat);
+                }
+
+                // Fallback: try ISO / DB formats
+                return (new FrozenTime($dateInput))->format($displayFormat);
+            }
+
+        } catch (\Throwable $e) {
+            Log::error(
+                'formatDateTime error: ' . $e->getMessage(),
+                ['input' => $dateInput]
+            );
         }
 
-        return $value;
+        return '';
     }
+
 
     // Not using $extra parameter to be backward compatible with restfulv1
     public function onRestfulRenderDatetime(Event $event, $entity, $property)
