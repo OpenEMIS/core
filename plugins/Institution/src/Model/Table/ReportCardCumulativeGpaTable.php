@@ -1017,8 +1017,108 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
 
     }
 
+    public static function addGpaReportCards(
+    $checkgpaStudent, // POCOR-9162
+    $selectedAcademicPeriodId,
+    $institutionId,
+    $educationGradeId
+): array {
+
+    // ---- keep original parameter mapping ----
+    $studentId        = $checkgpaStudent;
+    $academicPeriodId = $selectedAcademicPeriodId;
+
+    /**
+     * 1. Fetch student enrollment (required anchor)
+     */
+    $institutionStudents = self::getDynamicTableInstance('Institution.InstitutionStudents');
+    $enrollment = $institutionStudents->find()
+        ->where([
+            $institutionStudents->aliasField('student_id')        => $studentId,
+            $institutionStudents->aliasField('institution_id')    => $institutionId,
+            $institutionStudents->aliasField('academic_period_id')=> $academicPeriodId,
+            $institutionStudents->aliasField('education_grade_id')=> $educationGradeId,
+        ])
+        ->first();
+
+    if (!$enrollment) {
+        return [];
+    }
+
+    /**
+     * 2. Fetch GPA terms overlapping enrollment
+     */
+    $gpaGrades = self::getDynamicTableInstance('Gpa.GpaSystem');
+
+    $gpaResults = $gpaGrades->find()
+        ->select(['id', 'start_date', 'end_date'])
+        ->where([
+            $gpaGrades->aliasField('academic_period_id') => $academicPeriodId,
+            $gpaGrades->aliasField('education_grade_id') => $educationGradeId,
+
+            // Enrollment overlap logic
+            $gpaGrades->aliasField('start_date <=') => $enrollment->end_date,
+            $gpaGrades->aliasField('end_date >=')   => $enrollment->start_date,
+            $gpaGrades->aliasField('end_date <=')   => $enrollment->end_date,
+        ])
+        ->orderAsc($gpaGrades->aliasField('start_date'))
+        ->toArray();
+
+    if (empty($gpaResults)) {
+        return [];
+    }
+
+    /**
+     * 3. Keep ONLY earliest GPA term
+     *    (prevents future GPA & cumulative GPA generation)
+     */
+    $firstTermStart = $gpaResults[0]->start_date;
+    $gpaIds = [];
+
+    foreach ($gpaResults as $gpa) {
+        if ($gpa->start_date === $firstTermStart) {
+            $gpaIds[] = $gpa->id;
+        }
+    }
+
+    if (empty($gpaIds)) {
+        return [];
+    }
+
+    /**
+     * 4. Phase 1 — ensure individual GPA exists
+     */
+    $results = [];
+
+    foreach ($gpaIds as $gpaId) {
+        $results[] = ReportCardGpaTable::insertGpaPerStudentPerGpa(
+            $institutionId,
+            $studentId,
+            $academicPeriodId,
+            $educationGradeId,
+            $gpaId
+        );
+    }
+
+    /**
+     * 5. Phase 2 — calculate cumulative GPA
+     */
+    foreach ($gpaIds as $gpaId) {
+        $results[] = self::insertCumulativeGpaPerStudentPerGpa(
+            $institutionId,
+            $studentId,
+            $academicPeriodId,
+            $educationGradeId,
+            $gpaId
+        );
+    }
+
+    return $results;
+}
+
+
     //New add Cumulative GPA for student with $educationGradeId -- POCOR-8962
-    public static function addGpaReportCards($checkgpaStudent, // POCOR-9162
+    public static function addGpaReportCardsOriginal($checkgpaStudent, // POCOR-9162
                                              $selectedAcademicPeriodId,
                                              $institutionId,
                                              $educationGradeId): array
