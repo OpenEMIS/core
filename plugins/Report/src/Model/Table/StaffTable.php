@@ -646,13 +646,13 @@ class StaffTable extends AppTable  {
         $newFields[] = [
             'key' => 'birth_date',
             'field' => 'birth_date',
-            'type' => 'string',
+            'type' => 'string', // POCOR-9510
             'label' => __('Date of Birth')
         ];
         $newFields[] = [
             'key' => 'death_date',
             'field' => 'death_date',
-            'type' => 'string',
+            'type' => 'string', // POCOR-9510
             'label' => __('Date of death')
         ];
         $newFields[] = [
@@ -1084,6 +1084,8 @@ class StaffTable extends AppTable  {
             ->range('upper_tolerance', [0, 99999999], $this->getMessage('StaffRequirements.upperTolerance'));
     }
     //POCOR-5185[end]
+
+    // POCOR-9510 start
     public function onExcelGetBirthDate(Event $event, Entity $entity) {
         if (!empty($entity->birth_date)) {
             return $this->formatDate($entity->birth_date);
@@ -1091,6 +1093,7 @@ class StaffTable extends AppTable  {
             return '';
         }
     }
+
     public function onExcelGetDeathDate(Event $event, Entity $entity) {
         if (!empty($entity->death_date)) {
             return $this->formatDate($entity->death_date);
@@ -1098,6 +1101,8 @@ class StaffTable extends AppTable  {
             return '';
         }
     }
+
+    // POCOR-9510 end
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
