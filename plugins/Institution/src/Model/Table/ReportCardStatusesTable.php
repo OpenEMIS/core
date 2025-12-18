@@ -1056,7 +1056,18 @@ class ReportCardStatusesTable extends ControllerActionTable
             foreach ($files as $file) {
                 $filename = 'ReportCards' . '_' . date('Ymd') . '_' . $counter . '.pdf';
                 $filepath = $path . $filename;
-                $pdfBinary = $this->getFile($file->file_content_pdf);
+                $pdfBinary = null;
+                try {
+                    $pdfBinary = $this->getFile($file->file_content_pdf);
+                } catch (\Throwable $e) {
+                    Log::error(sprintf(
+                        'PDF decode failed for report_card_id=%s: %s',
+                        $file->id ?? 'unknown',
+                        $e->getMessage()
+                    ));
+                    continue; // skip this PDF, do NOT break the whole download
+                }
+
 
 // --- PDF sanity checks ---
                 if (empty($pdfBinary) || strlen($pdfBinary) < 100) {
@@ -1086,74 +1097,101 @@ class ReportCardStatusesTable extends ControllerActionTable
     }
 
 
-    private function mergePDFFiles(Array $filenames, $outFile = '', $title = '', $author = '', $subject = '')
-    {
-        // POCOR-9221 start
-        $tmpdf = new \Mpdf\Mpdf(['mode' => 'utf-8']); //POCOR-8961
-        $width = 297;
+    private function mergePDFFiles(
+        Array $filenames,
+              $outFile = '',
+              $title = '',
+              $author = '',
+              $subject = ''
+    ) {
+        // Detect base page size from first valid PDF
+        $width  = 297;
         $height = 210;
-        if ($filenames) {
-            if (isset($filenames[0])) {
-                $curFile = $filenames[0];
-                if (file_exists($curFile)) {
-                    $tmpdf->SetSourceFile($curFile);
-                    $tplId = $tmpdf->ImportPage(1);
-                    $wh = $tmpdf->getTemplateSize($tplId);
-                    $orientation = trim($wh['orientation']) ?? 'L';
-                    $width = $wh['width'] ?? 297;
-                    $height = $wh['height'] ?? 210;
-                }
+
+        try {
+            $probe = new \Mpdf\Mpdf(['mode' => 'utf-8']);
+            if (!empty($filenames[0]) && file_exists($filenames[0])) {
+                $probe->SetSourceFile($filenames[0]);
+                $tplId = $probe->ImportPage(1);
+                $wh = $probe->getTemplateSize($tplId);
+                $width  = $wh['width']  ?? 297;
+                $height = $wh['height'] ?? 210;
             }
+        } catch (\Throwable $e) {
+            Log::warning('PDF probe failed, using default size: ' . $e->getMessage());
         }
-        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8',
-            'format' => [$width,$height],
-//            'margin_left' => 40,
-//            'margin_right' => 10,
-//            'margin_top' => 30,
-//            'margin_bottom' => 30,
-        ]); //POCOR-8961
+
+        $mpdf = new \Mpdf\Mpdf([
+            'mode'   => 'utf-8',
+            'format' => [$width, $height],
+        ]);
+
         $mpdf->SetTitle($title);
         $mpdf->SetAuthor($author);
         $mpdf->SetSubject($subject);
-        $mpdf->autoScriptToLang = true; //POCOR-7264
-        $mpdf->autoLangToFont = true; //POCOR-7264
-        // POCOR-9221 end
+        $mpdf->autoScriptToLang = true;
+        $mpdf->autoLangToFont   = true;
 
-        if ($filenames) {
-            $filesTotal = sizeof($filenames);
-            // $mpdf->SetImportUse();
+        $mergedCount = 0;
 
-            for ($i = 0; $i < count($filenames); $i++) {
-                $curFile = $filenames[$i];
-                if (file_exists($curFile)) {
-                    $pageCount = $mpdf->SetSourceFile($curFile);
-
-                    for ($p = 1; $p <= $pageCount; $p++) {
-                        $tplId = $mpdf->ImportPage($p);
-                        // POCOR-9221 start
-                        $tplSize = $mpdf->getTemplateSize($tplId);
-//                        Log::debug(print_r($tplSize, true));
-                        // Determine orientation based on width vs. height
-                        if(isset($tplSize['orientation'])) {
-                            $orientation = $tplSize['orientation'];
-                        } else {
-                            $orientation = ($tplSize['w'] > $tplSize['h']) ? 'L' : 'P';
-                        }
-                        // Add a page with the original size and orientation
-                        $mpdf->AddPage($orientation, '', '', '', '', $tplSize['width'], $tplSize['height']);
-                        // POCOR-9221 end
-                        // Always use the template ID
-                        $mpdf->UseTemplate($tplId);
-                    }
-                }
+        foreach ($filenames as $curFile) {
+            if (!file_exists($curFile)) {
+                Log::warning("PDF missing, skipped: $curFile");
+                continue;
             }
-            foreach ($filenames as $filepath) {
-                unlink($filepath);
+
+            try {
+                $pageCount = $mpdf->SetSourceFile($curFile);
+
+                for ($p = 1; $p <= $pageCount; $p++) {
+                    $tplId = $mpdf->ImportPage($p);
+                    $tplSize = $mpdf->getTemplateSize($tplId);
+
+                    $orientation = $tplSize['orientation']
+                        ?? (($tplSize['width'] > $tplSize['height']) ? 'L' : 'P');
+
+                    $mpdf->AddPage(
+                        $orientation,
+                        '',
+                        '',
+                        '',
+                        '',
+                        $tplSize['width'],
+                        $tplSize['height']
+                    );
+
+                    $mpdf->UseTemplate($tplId);
+                }
+
+                $mergedCount++;
+
+            } catch (\Throwable $e) {
+                Log::warning(
+                    sprintf(
+                        'Skipping broken PDF (%s): %s',
+                        basename($curFile),
+                        $e->getMessage()
+                    )
+                );
+                continue;
             }
         }
 
-        $mpdf->Output('mergedPDFReport.pdf', "D");
+        // Cleanup temp files
+        foreach ($filenames as $filepath) {
+            @unlink($filepath);
+        }
+
+        if ($mergedCount === 0) {
+            throw new \RuntimeException('No valid PDFs to merge');
+        }
+
+        $mpdf->Output(
+            $outFile ?: 'mergedPDFReport.pdf',
+            'D'
+        );
     }
+
 
     // End POCOR-7320
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
