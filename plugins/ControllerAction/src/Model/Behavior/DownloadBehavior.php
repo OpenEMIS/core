@@ -38,7 +38,7 @@ class DownloadBehavior extends Behavior
         'xlsx'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'zip'   => 'application/zip'
     ];
-
+	
     public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
@@ -58,46 +58,38 @@ class DownloadBehavior extends Behavior
 			$fileNameData = explode(".",$fileName);
 			$fileName = $fileNameData[0].'.pdf';
 			$pathInfo['extension'] = 'pdf';
-            try {
-                $file = $this->getFile($data->file_content_pdf);
-                $fileType = 'image/jpg';
-                if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
-                    $fileType = $this->fileTypes[$pathInfo['extension']];
-                }
-
-                // echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
-
-                header("Pragma: public", true);
-                header("Expires: 0"); // set expiration time
-                header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-                header("Content-Type: application/force-download");
-                header("Content-Type: application/octet-stream");
-                header("Content-Type: " . $fileType);
-                header('Content-Disposition: attachment; filename="' . $fileName . '"');
-
-                echo $file;
-            } catch (\Throwable $e) {
-                Log::error(sprintf(
-                    'PDF decode failed for report_card_id=%s: %s',
-                    $file->id ?? 'unknown',
-                    $e->getMessage()
-                ));
-
+            $file = $this->getFile($data->file_content_pdf);
+            $fileType = 'image/jpg';
+            if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
+                $fileType = $this->fileTypes[$pathInfo['extension']];
             }
+
+            // echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
+
+            header("Pragma: public", true);
+            header("Expires: 0"); // set expiration time
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+            header("Content-Type: application/force-download");
+            header("Content-Type: application/octet-stream");
+            header("Content-Type: " . $fileType);
+            header('Content-Disposition: attachment; filename="' . $fileName . '"');
+
+            echo $file;
+            
         }
         exit();
     }
-
+	
 	 public function download(Event $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
         $controllerName = $model->controller->getName();
         $ids = $model->paramsDecode($model->paramsPass(0));
-        if( $model->controller->getName() == 'Directories' || $model->controller->getName() == 'Profiles') {
+        if( $model->controller->getName() == 'Directories' || $model->controller->getName() == 'Profiles') { 
             $ids =[];
             $params = $model->paramsDecode($model->paramsPass(0));
             $ids['id'] = $params['id'];
-        }
+        } 
         if ($model->exists($ids)) {
             $data = $model->get($ids);
             $fileName = $data->{$this->getConfig('name')};
