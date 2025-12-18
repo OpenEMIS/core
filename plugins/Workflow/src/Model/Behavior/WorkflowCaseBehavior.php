@@ -1407,7 +1407,7 @@ class WorkflowCaseBehavior extends Behavior
         }
 
         ksort($fieldOrder);
-        // POCOR-9514
+        // POCOR-9514 start
         $fieldOrder = array_values(array_diff(
             $fieldOrder,
             ['status_id', 'assignee_id', 'institution_id', 'created', 'modified']
@@ -1422,7 +1422,7 @@ class WorkflowCaseBehavior extends Behavior
                 'modified',         // POCOR-7613
             ]
         );
-        // POCOR-9514
+        // POCOR-9514 end
         if ($this->isCAv4()) {
             $this->_table->setFieldOrder($fieldOrder);
         } else {
