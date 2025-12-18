@@ -1056,9 +1056,23 @@ class ReportCardStatusesTable extends ControllerActionTable
             foreach ($files as $file) {
                 $filename = 'ReportCards' . '_' . date('Ymd') . '_' . $counter . '.pdf';
                 $filepath = $path . $filename;
-                file_put_contents($filepath, $this->getFile($file->file_content_pdf));
+                $pdfBinary = $this->getFile($file->file_content_pdf);
+
+// --- PDF sanity checks ---
+                if (empty($pdfBinary) || strlen($pdfBinary) < 100) {
+                    // skip broken/empty PDF
+                    continue;
+                }
+
+//                if (strncmp($pdfBinary, '%PDF', 4) !== 0) {
+//                    // not a valid PDF header
+//                    continue;
+//                }
+// -------------------------
+
+                file_put_contents($filepath, $pdfBinary);
                 $filePaths[] = $path . $filename;
-                $counter++;
+
             }
             if (!empty($filePaths)) {
                 $this->mergePDFFiles($filePaths);
