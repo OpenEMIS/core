@@ -575,8 +575,91 @@ class ReportCardGpaTable extends ControllerActionTable
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
+    
+    public static function addGpaReportCards(
+        $studentId,
+        $academicPeriodId,
+        $institutionId,
+        $educationGradeId
+    ): array {
+        /**
+         * 1. Fetch student's enrollment
+         */
+        $institutionStudents = self::getDynamicTableInstance('Institution.InstitutionStudents');
+        $enrollment = $institutionStudents->find()
+            ->where([
+                $institutionStudents->aliasField('student_id') => $studentId,
+                $institutionStudents->aliasField('institution_id') => $institutionId,
+                $institutionStudents->aliasField('academic_period_id') => $academicPeriodId,
+                $institutionStudents->aliasField('education_grade_id') => $educationGradeId,
+            ])
+            ->first();
 
-    public static function addGpaReportCards($studentId, $academicPeriodId, $institutionId, $educationGradeId): array
+        if (!$enrollment) {
+            return [];
+        }
+
+        /**
+         * 2. Fetch GPA terms overlapping the enrollment
+         */
+        $gpaGrades = self::getDynamicTableInstance('Gpa.GpaSystem');
+        $gpaResults = $gpaGrades->find()
+            ->select(['id', 'start_date'])
+            ->where([
+                $gpaGrades->aliasField('education_grade_id') => $educationGradeId,
+                $gpaGrades->aliasField('academic_period_id') => $academicPeriodId,
+
+                // Enrollment overlap logic
+                $gpaGrades->aliasField('start_date <=') => $enrollment->end_date,
+                $gpaGrades->aliasField('end_date >=')   => $enrollment->start_date,
+                $gpaGrades->aliasField('end_date <=')   => $enrollment->end_date,
+            ])
+            ->orderAsc($gpaGrades->aliasField('start_date'))
+            ->toArray();
+
+        if (empty($gpaResults)) {
+            return [];
+        }
+
+        /**
+         * 3. Filter out future GPA terms
+         *    Rule:
+         *    - Use earliest GPA start_date as the valid cutoff
+         *    - Prevents future-term GPA generation
+         *    - Still allows regeneration for past terms
+         */
+        $gpaIds = [];
+        $firstTermStart = $gpaResults[0]->start_date;
+
+        foreach ($gpaResults as $gpa) {
+            if ($gpa->start_date == $firstTermStart) {
+                $gpaIds[] = $gpa->id;
+            }
+        }
+
+        // Optional but recommended guard
+        $gpaIds = array_values($gpaIds);
+
+        /**
+         * 4. Generate GPA per valid GPA term
+         */
+        $gpaGPAs = [];
+        foreach ($gpaIds as $gpaId) {
+            $newGPA = self::insertGpaPerStudentPerGpa(
+                $institutionId,
+                $studentId,
+                $academicPeriodId,
+                $educationGradeId,
+                $gpaId
+            );
+            $gpaGPAs[] = $newGPA;
+        }
+
+        return $gpaGPAs;
+    }
+
+
+    public static function addGpaReportCardsWorking($studentId, $academicPeriodId, $institutionId, $educationGradeId): array
     {
         // First get the student's enrollment period
         $institutionStudents = self::getDynamicTableInstance('Institution.InstitutionStudents');

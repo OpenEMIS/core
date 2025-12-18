@@ -1,3 +1,9 @@
+### [4.48.9] - 2025-12-17
+- Bug Fixed: Administration>Performance>Report Cards: GPA is showing 0.00 for another term
+
+### [4.48.8] - 2025-12-16
+- Bug Fixed: Administration>Performance>Report Cards: GPA for another term is generated
+
 ### [4.48.7] - 2025-12-11
 - Bug Fixed: Institutions>Performance>GPA: Student GPA should show up against the right school.
 - Bug Fixed: Institutions> Import Institution: User sees 404 error message for leaving document field empty and clicking on save
