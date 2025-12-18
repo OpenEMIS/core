@@ -1072,6 +1072,18 @@ class ReportCardStatusesTable extends ControllerActionTable
 // --- PDF sanity checks ---
                 if (empty($pdfBinary) || strlen($pdfBinary) < 100) {
                     // skip broken/empty PDF
+                    try {
+                        $this->StudentsReportCards->updateAll(
+                            ['file_content_pdf' => null],
+                            ['id' => $file->id]
+                        );
+                    } catch (\Throwable $dbEx) {
+                        Log::error(sprintf(
+                            'Failed to clear PDF blob for report_card_id=%s: %s',
+                            $file->id ?? 'unknown',
+                            $dbEx->getMessage()
+                        ));
+                    }
                     continue;
                 }
 
