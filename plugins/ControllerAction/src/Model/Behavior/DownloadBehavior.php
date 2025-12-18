@@ -52,60 +52,32 @@ class DownloadBehavior extends Behavior
         $model = $this->_table;
         $ids = $model->paramsDecode($model->paramsPass(0));
 
-        if (!$model->exists($ids)) {
-            $this->Alert->warning('File not found');
-            return $this->controller->redirect($this->referer());
-        }
-
-        try {
+        if ($model->exists($ids)) {
             $data = $model->get($ids);
-
-            $fileName = $data->{$this->getConfig('name')} ?? 'document.pdf';
-            $fileName = pathinfo($fileName, PATHINFO_FILENAME) . '.pdf';
-
-            if (empty($data->file_content_pdf)) {
-                throw new \RuntimeException('PDF blob is empty');
-            }
-
+			$fileName = $data->{$this->getConfig('name')};
+			$fileNameData = explode(".",$fileName);
+			$fileName = $fileNameData[0].'.pdf';
+			$pathInfo['extension'] = 'pdf';
             $file = $this->getFile($data->file_content_pdf);
-
-            // Basic PDF validation
-            if (empty($file) || strpos($file, '%PDF') !== 0) {
-                throw new \RuntimeException('Invalid PDF binary');
+            $fileType = 'image/jpg';
+            if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
+                $fileType = $this->fileTypes[$pathInfo['extension']];
             }
 
-            // Correct headers (ONLY ONCE)
-            header('Pragma: public');
-            header('Expires: 0');
-            header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-            header('Content-Type: application/pdf');
+            // echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
+
+            header("Pragma: public", true);
+            header("Expires: 0"); // set expiration time
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+            header("Content-Type: application/force-download");
+            header("Content-Type: application/octet-stream");
+            header("Content-Type: " . $fileType);
             header('Content-Disposition: attachment; filename="' . $fileName . '"');
-            header('Content-Length: ' . strlen($file));
 
             echo $file;
-            exit();
 
-        } catch (\Throwable $e) {
-
-            Log::warning(sprintf(
-                'PDF download failed (id=%s): %s',
-                is_array($ids) ? json_encode($ids) : $ids,
-                $e->getMessage()
-            ));
-
-            // IMPORTANT: clear broken PDF to allow regeneration later
-            try {
-                $model->updateAll(
-                    ['file_content_pdf' => null],
-                    $ids
-                );
-            } catch (\Throwable $dbEx) {
-                Log::error('Failed to clear broken PDF blob: ' . $dbEx->getMessage());
-            }
-
-            $this->Alert->warning('The PDF is temporarily unavailable and will be regenerated.');
-            return $this->controller->redirect($this->referer());
         }
+        exit();
     }
 
 	 public function download(Event $mainEvent, ArrayObject $extra)
