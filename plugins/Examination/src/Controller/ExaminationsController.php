@@ -86,15 +86,23 @@ class ExaminationsController extends AppController
     public function Results() //POCOR-7510
     {
         $this->set('_edit', $this->AccessControl->check(['Examinations', 'Results', 'edit']));
-        $syncUserConfigured = TableRegistry::getTableLocator()->get('Configuration.ConfigExternalDataSourceExam')->getOpenemisExamConfiguration();
-
-        if ($syncUserConfigured) {
+        
+        // Check if external data source for exams is properly configured
+        $configTable = TableRegistry::getTableLocator()->get('Configuration.ConfigExternalDataSourceExam');
+        $hasSyncConfig = $configTable->isExternalDataSourceConfigured();
+        
+        // Only show sync button if configuration exists and user has permission
+        if ($hasSyncConfig) {
             $examinationId = $this->request->getQuery('examination_id');
             if (($this->AccessControl->check(['Examinations', 'syncResultFromExam', 'execute']) || $this->AccessControl->isAdmin())
                 && !empty($examinationId) && $examinationId != -1
             ) {
                 $this->set('_sync', true);
+            } else {
+                $this->set('_sync', false);
             }
+        } else {
+            $this->set('_sync', false);
         }
 
         $this->set('ngController', 'ExaminationsResultsCtrl as ExaminationsResultsController');

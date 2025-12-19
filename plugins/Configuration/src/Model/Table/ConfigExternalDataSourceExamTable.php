@@ -595,5 +595,28 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         }
         return $data;
     }
+
+    /**
+     * Checks if the external data source for exams is properly configured.
+     * This method validates that all required configuration fields are present and valid.
+     * 
+     * @return bool True if configuration is valid, false otherwise
+     */
+    public function isExternalDataSourceConfigured(): bool
+    {
+        $config = $this->getOpenemisExamConfiguration();
+        
+        // Check if all required fields are present and not empty
+        if (empty($config['url']) || empty($config['username']) || empty($config['password'])) {
+            return false;
+        }
+        
+        // Validate URL format
+        if (!filter_var($config['url'], FILTER_VALIDATE_URL)) {
+            return false;
+        }
+        
+        return true;
+    }
     //POCOR-7509 end
 }
