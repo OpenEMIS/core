@@ -34,6 +34,14 @@ class AssessmentItemResultsTable extends AppTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods']);
+        $this->belongsTo('ModifiedUser', [
+            'className' => 'Security.Users',
+            'foreignKey' => 'modified_user_id'
+        ]);
+        $this->belongsTo('CreatedUser', [
+            'className' => 'Security.Users',
+            'foreignKey' => 'created_user_id'
+        ]);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Results' => ['index', 'add'],
             'OpenEMIS_Classroom' => ['add', 'edit', 'delete']
@@ -42,6 +50,7 @@ class AssessmentItemResultsTable extends AppTable
             $this->addBehavior('Risk.Risks');
         }
         $this->addBehavior('Import.ImportLink');
+
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -1306,6 +1315,114 @@ class AssessmentItemResultsTable extends AppTable
             ];
         }
 
+
+        return $returnArray;
+    }
+
+    //POCOR-9444
+    public function auditAssessmentItemResultsReport($academicPeriodId, $assessmentIds = null, $subjectIds = null, $studentIds = null, $classIds = null): array
+    {
+        $SubjectStudents = self::getDynamicTableInstance('institution_subject_students');
+        $ClassStudents = self::getDynamicTableInstance('institution_class_students');
+
+        //Fetch raw results with class_id
+        $query = $this->find('all')
+            ->select([
+                'grading_option_name' => 'AssessmentGradingOptions.name',
+                'grading_option_code' => 'AssessmentGradingOptions.code',
+                'assessment_name' => 'Assessments.name',
+                'assessment_period_name' => 'AssessmentPeriods.name',
+                $this->aliasField('student_id'),
+                $this->aliasField('assessment_period_id'),
+                $this->aliasField('academic_period_id'),
+                $this->aliasField('education_subject_id'),
+                $this->aliasField('education_grade_id'),
+                $this->aliasField('assessment_id'),
+                'institution_class_id' => $ClassStudents->aliasField('institution_class_id')
+            ])
+            ->contain(['AssessmentGradingOptions','AssessmentPeriods','Assessments'])
+            ->innerJoin([$SubjectStudents->getAlias() => $SubjectStudents->getTable()], [
+                $SubjectStudents->aliasField('student_id') . ' = ' . $this->aliasField('student_id'),
+                $SubjectStudents->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id'),
+                $SubjectStudents->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id'),
+                $SubjectStudents->aliasField('education_grade_id') . ' = ' . $this->aliasField('education_grade_id'),
+                $SubjectStudents->aliasField('education_subject_id') . ' = ' . $this->aliasField('education_subject_id')
+            ])
+            ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->getTable()], [
+                $ClassStudents->aliasField('student_id') . ' = ' . $this->aliasField('student_id'),
+                $ClassStudents->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id')
+            ])->disableHydration();
+
+        if (!empty($assessmentIds)) {
+            $query->where([$this->aliasField('assessment_id') . ' IN' => $assessmentIds]);
+        }
+
+        if (!empty($subjectIds)) {
+            $query->where([$this->aliasField('education_subject_id') . ' IN' => $subjectIds]);
+        }
+
+        if (!empty($studentIds)) {
+            $query->where([$this->aliasField('student_id') . ' IN' => $studentIds]);
+        }
+
+        $results = $query->toArray();
+        $marksPerClass = [];
+
+        foreach ($results as $row) {
+            $classId = $row['institution_class_id'];
+            $academicPeriodIdRow = $row['academic_period_id'];
+
+            if (!$classId || !$academicPeriodIdRow) {
+                continue;
+            }
+
+            if (isset($marksPerClass[$academicPeriodIdRow][$classId])) {
+                continue;
+            }
+
+            $marks = self::getMarksForClass([
+                'academic_period_id' => $academicPeriodIdRow, 
+                'class_id' => $classId
+            ]);
+
+            if (!is_array($marks)) {
+                $marks = [];
+            }
+
+            $marksWithSimpleMarks = self::getMarksWithSimpleMarks($marks);
+            $marksPerStudent = self::getMarksPerStudentPerSubjectArray($marksWithSimpleMarks);
+
+            $marksPerClass[$academicPeriodIdRow][$classId] = $marksPerStudent;
+        }
+
+
+        //Process result rows
+        $returnArray = [];
+        foreach ($results as $result)
+        {
+            $studentId = $result['student_id'];
+            $subjectId = $result['education_subject_id'];
+            $assessmentPeriodId = $result['assessment_period_id'];
+            $classId = $result['institution_class_id'];
+            $academicPeriodIdRow = $result['academic_period_id'];
+
+            if (empty($classId) || empty($academicPeriodIdRow)) {
+                continue;
+            }
+
+            $marks =
+                $marksPerClass[$academicPeriodIdRow][$classId][$studentId][$subjectId][$assessmentPeriodId]
+                ?? [];
+
+            $totalMarks = array_sum(array_column($marks, 'simple_mark'));
+
+            $returnArray[$studentId][$subjectId][$assessmentPeriodId] = [
+                'marks' => round($totalMarks, 2),
+                'grade_name' => $result['grade_name'],
+                'grade_code' => $result['grade_code'],
+                'assessments' => $marks
+            ];
+        }
 
         return $returnArray;
     }
