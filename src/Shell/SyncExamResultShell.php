@@ -50,6 +50,7 @@ class SyncExamResultShell extends Shell
     public function main()
     {
         $tempFile = $this->args[0];
+        $this->log('=================== SYNC EXAM RESULT SHELL STARTED ===================', 'info');
         $this->log('Received tempFile argument: ' . $tempFile, 'info');
 
         $this->out('Received parameters: ' . json_encode($this->args));
@@ -57,18 +58,28 @@ class SyncExamResultShell extends Shell
 
         // Fix: Accept both JSON with/without quotes around keys and values
         $paramsRaw = $this->args[1];
-        // Remove outer braces and split by commas
-        $paramsArr = [];
-        $paramsStr = trim($paramsRaw, '{} ');
-        foreach (explode(',', $paramsStr) as $pair) {
-            if (strpos($pair, ':') !== false) {
-                list($key, $value) = explode(':', $pair, 2);
-                $key = trim($key, " \t\n\r\0\x0B\"'");
-                $value = trim($value, " \t\n\r\0\x0B\"'");
-                $paramsArr[$key] = $value;
+        $params = [];
+        
+        // Try JSON decode first
+        $jsonDecoded = json_decode($paramsRaw, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($jsonDecoded)) {
+            $params = $jsonDecoded;
+        } else {
+            // Fallback to manual parsing for malformed JSON
+            $paramsStr = trim($paramsRaw, '{} ');
+            if (!empty($paramsStr)) {
+                foreach (explode(',', $paramsStr) as $pair) {
+                    if (strpos($pair, ':') !== false) {
+                        list($key, $value) = explode(':', $pair, 2);
+                        $key = trim($key, " \t\n\r\0\x0B\"'");
+                        $value = trim($value, " \t\n\r\0\x0B\"'");
+                        if (!empty($key)) {
+                            $params[$key] = $value;
+                        }
+                    }
+                }
             }
         }
-        $params = $paramsArr;
 
         $this->out('Received parameters: ' . json_encode($params));
         $this->log('Decoded parameters: ' . json_encode($params), 'info');
@@ -78,11 +89,13 @@ class SyncExamResultShell extends Shell
 
         if (!file_exists($tempFile)) {
             $this->err("Temporary file not found: $tempFile");
+            $this->log("ERROR: Temporary file not found: $tempFile", 'error');
             return false;
         }
         $this->out('Academic Period ID: ' . json_encode($academicPeriodId));
 
         $this->out('Starting sync process with params: ' . json_encode($params));
+        $this->log('Starting sync process with params: ' . json_encode($params), 'info');
 
         try {
             // Read the temporary file
@@ -90,10 +103,12 @@ class SyncExamResultShell extends Shell
 
             if (!isset($responseData['data']) || empty($responseData['data'])) {
                 $this->err("No data found in the temporary file");
+                $this->log("ERROR: No data found in temporary file", 'error');
                 return false;
             }
 
             $data = $responseData['data'];
+            $this->log('Processing ' . count($data) . ' candidate records', 'info');
 
             // Begin transaction
             $connection = ConnectionManager::get('default');
@@ -137,16 +152,30 @@ class SyncExamResultShell extends Shell
                         // Process each subject/option grade
                         foreach ($candidateData['final_grade'] ?? [] as $gradeData) {
                             try {
+                                // Validate grade data structure
+                                if (empty($gradeData) || !is_array($gradeData)) {
+                                    $this->warn("Invalid grade data structure for candidate: $openemisNo");
+                                    $gradesFailed++;
+                                    continue;
+                                }
+
                                 $optionCode = $gradeData['examination_option_code'] ?? null;
                                 $optionName = $gradeData['examination_option_name'] ?? null;
                                 $gradingCode = $gradeData['examination_grading_options_code'] ?? null;
                                 $mark = $gradeData['mark'] ?? null;
 
+                                // Validate required fields
+                                if (empty($optionCode)) {
+                                    $this->warn("Missing examination option code for candidate: $openemisNo");
+                                    $gradesFailed++;
+                                    continue;
+                                }
+
                                 // Get subject ID
                                 $subjectId = $this->getExaminationSubjectId($optionCode);
 
                                 if (!$subjectId) {
-                                    $this->warn("Unable to find examination subject with code: $optionCode");
+                                    $this->warn("Unable to find examination subject with code: $optionCode for candidate: $openemisNo");
                                     $gradesFailed++;
                                     continue;
                                 }
@@ -155,6 +184,17 @@ class SyncExamResultShell extends Shell
                                 $gradingOptionId = null;
                                 if ($gradingCode) {
                                     $gradingOptionId = $this->getGradingOptionId($gradingCode, $examinationId, $subjectId);
+                                    if (!$gradingOptionId) {
+                                        $this->warn("Unable to find grading option with code: $gradingCode for subject: $optionCode");
+                                        // Continue without grading option if mark is available
+                                    }
+                                }
+
+                                // Validate that we have either a mark or grading option
+                                if ($mark === null && $gradingOptionId === null) {
+                                    $this->warn("No mark or grading option found for candidate: $openemisNo, subject: $optionCode");
+                                    $gradesFailed++;
+                                    continue;
                                 }
 
                                 // Process the grade
@@ -169,11 +209,14 @@ class SyncExamResultShell extends Shell
 
                                 if ($result) {
                                     $gradesProcessed++;
+                                    $this->out("Successfully processed grade for student $openemisNo, subject $optionCode, mark: $mark");
                                 } else {
                                     $gradesFailed++;
+                                    $this->warn("Failed to process grade for student $openemisNo, subject $optionCode");
                                 }
                             } catch (\Exception $e) {
-                                $this->err("Error processing grade: " . $e->getMessage());
+                                $this->err("Error processing grade for candidate $openemisNo, subject $optionCode: " . $e->getMessage());
+                                $this->err("Grade data: " . json_encode($gradeData));
                                 $gradesFailed++;
                             }
                         }
@@ -193,20 +236,45 @@ class SyncExamResultShell extends Shell
 
                 // Commit transaction
                 $connection->commit();
-
+                
                 $this->success("Sync completed: $success successful, $failed failed out of $totalCandidates candidates");
+                $this->log("Sync completed successfully: $success successful, $failed failed out of $totalCandidates candidates", 'info');
 
                 // Clean up temporary file
-                unlink($tempFile);
+                if (file_exists($tempFile)) {
+                    unlink($tempFile);
+                    $this->log("Temporary file cleaned up: $tempFile", 'info');
+                }
 
+                $this->log('=================== SYNC EXAM RESULT SHELL COMPLETED ===================', 'info');
                 return true;
             } catch (\Exception $e) {
                 $connection->rollback();
                 $this->err("Error during processing: " . $e->getMessage());
+                $this->log("ERROR during processing: " . $e->getMessage(), 'error');
+                $this->log("Exception trace: " . $e->getTraceAsString(), 'error');
+                
+                // Clean up temporary file even on error
+                if (file_exists($tempFile)) {
+                    unlink($tempFile);
+                    $this->log("Temporary file cleaned up after error: $tempFile", 'info');
+                }
+                
+                $this->log('=================== SYNC EXAM RESULT SHELL FAILED ===================', 'error');
                 return false;
             }
         } catch (\Exception $e) {
             $this->err("Error: " . $e->getMessage());
+            $this->log("FATAL ERROR: " . $e->getMessage(), 'error');
+            $this->log("Exception trace: " . $e->getTraceAsString(), 'error');
+            
+            // Clean up temporary file even on fatal error
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
+                $this->log("Temporary file cleaned up after fatal error: $tempFile", 'info');
+            }
+            
+            $this->log('=================== SYNC EXAM RESULT SHELL FATAL ERROR ===================', 'error');
             return false;
         }
     }
@@ -214,6 +282,14 @@ class SyncExamResultShell extends Shell
     private function getStudentId($openemisNo)
     {
         if (!$openemisNo) {
+            $this->warn("Empty OpenEMIS number provided");
+            return null;
+        }
+
+        // Clean and validate the OpenEMIS number
+        $openemisNo = trim($openemisNo);
+        if (empty($openemisNo)) {
+            $this->warn("Invalid OpenEMIS number after trimming: '$openemisNo'");
             return null;
         }
 
@@ -221,12 +297,24 @@ class SyncExamResultShell extends Shell
             ->where(['openemis_no' => $openemisNo])
             ->first();
 
-        return $student ? $student->id : null;
+        if (!$student) {
+            $this->warn("Student not found with OpenEMIS number: $openemisNo");
+            return null;
+        }
+
+        return $student->id;
     }
 
     private function getExaminationId($examinationCode)
     {
         if (!$examinationCode) {
+            $this->warn("Empty examination code provided");
+            return null;
+        }
+
+        $examinationCode = trim($examinationCode);
+        if (empty($examinationCode)) {
+            $this->warn("Invalid examination code after trimming: '$examinationCode'");
             return null;
         }
 
@@ -234,12 +322,24 @@ class SyncExamResultShell extends Shell
             ->where(['code' => $examinationCode])
             ->first();
 
-        return $examination ? $examination->id : null;
+        if (!$examination) {
+            $this->warn("Examination not found with code: $examinationCode");
+            return null;
+        }
+
+        return $examination->id;
     }
 
     private function getExaminationCentreId($examinationCentreCode)
     {
         if (!$examinationCentreCode) {
+            $this->warn("Empty examination centre code provided");
+            return null;
+        }
+
+        $examinationCentreCode = trim($examinationCentreCode);
+        if (empty($examinationCentreCode)) {
+            $this->warn("Invalid examination centre code after trimming: '$examinationCentreCode'");
             return null;
         }
 
@@ -247,7 +347,12 @@ class SyncExamResultShell extends Shell
             ->where(['code' => $examinationCentreCode])
             ->first();
 
-        return $examinationCentre ? $examinationCentre->id : null;
+        if (!$examinationCentre) {
+            $this->warn("Examination centre not found with code: $examinationCentreCode");
+            return null;
+        }
+
+        return $examinationCentre->id;
     }
 
     private function getAcademicPeriodId($academicYear)
@@ -315,51 +420,76 @@ class SyncExamResultShell extends Shell
             return false;
         }
 
+        // Validate data types and values
+        if (!is_numeric($studentId) || !is_numeric($examinationId) || !is_numeric($examinationCentreId) || !is_numeric($optionId)) {
+            $this->warn("Invalid ID format - IDs must be numeric");
+            return false;
+        }
+
+        // Validate mark - should be numeric or null
+        if ($mark !== null && !is_numeric($mark)) {
+            $this->warn("Invalid mark format - mark must be numeric or null: " . $mark);
+            return false;
+        }
+
         // Check if a record already exists
         $existingResult = $this->ExaminationStudentSubjectResults->find()
             ->where([
-                'student_id' => $studentId,
-                'examination_id' => $examinationId,
-                'examination_centre_id' => $examinationCentreId,
-                'examination_subject_id' => $optionId,
+                'student_id' => (int)$studentId,
+                'examination_id' => (int)$examinationId,
+                'examination_centre_id' => (int)$examinationCentreId,
+                'examination_subject_id' => (int)$optionId,
             ])
             ->first();
 
         $data = [
-            'student_id' => $studentId,
-            'examination_id' => $examinationId,
-            'examination_centre_id' => $examinationCentreId,
-            'examination_subject_id' => $optionId,
-            'marks' => $mark
+            'student_id' => (int)$studentId,
+            'examination_id' => (int)$examinationId,
+            'examination_centre_id' => (int)$examinationCentreId,
+            'examination_subject_id' => (int)$optionId,
+            'marks' => $mark !== null ? (float)$mark : null
         ];
 
-        if ($gradingOptionId) {
-            $data['examination_grading_option_id'] = $gradingOptionId;
+        if ($gradingOptionId && is_numeric($gradingOptionId)) {
+            $data['examination_grading_option_id'] = (int)$gradingOptionId;
         }
 
         $data['academic_period_id'] = $this->getAcademicPeriodIdFromExamination($examinationId);
         $data['education_subject_id'] = $this->getEducationSubjectIdFromExaminationSubject($optionId);
         $data['institution_id'] = $this->getInstitutionIdFromStudent($studentId);
 
+        // Validate required foreign keys
+        if (!$data['academic_period_id'] || !$data['education_subject_id'] || !$data['institution_id']) {
+            $this->warn("Missing required foreign key data - Academic Period ID: {$data['academic_period_id']}, Education Subject ID: {$data['education_subject_id']}, Institution ID: {$data['institution_id']}");
+            return false;
+        }
+
         if ($existingResult) {
             // Update existing record
-            $existingResult = $this->ExaminationStudentSubjectResults->patchEntity($existingResult, $data);
             $this->out("Updating existing grade for student $studentId, option $optionId");
+            $existingResult = $this->ExaminationStudentSubjectResults->patchEntity($existingResult, $data);
         } else {
             // Create new record
-            // Add a unique id when creating a new entity
-            $data['id'] = bin2hex(random_bytes(32));
-            $existingResult = $this->ExaminationStudentSubjectResults->newEntity($data);
             $this->out("Creating new grade for student $studentId, option $optionId");
+            // Generate a unique UUID for new records
+            $data['id'] = $this->generateUniqueId();
+            $existingResult = $this->ExaminationStudentSubjectResults->newEntity($data);
+        }
+
+        // Validate entity before saving
+        if ($existingResult->hasErrors()) {
+            $this->err("Entity validation failed: " . json_encode($existingResult->getErrors()));
+            return false;
         }
 
         $result = $this->ExaminationStudentSubjectResults->save($existingResult);
 
         if (!$result) {
-            $this->err("Failed to save grade: " . json_encode($existingResult->getErrors()));
+            $this->err("Failed to save grade for student $studentId, option $optionId: " . json_encode($existingResult->getErrors()));
             return false;
         }
 
+        $this->out("Successfully saved grade for student $studentId, option $optionId");
         return true;
     }
 
@@ -417,5 +547,19 @@ class SyncExamResultShell extends Shell
             ->first();
 
         return $institutionStudent ? $institutionStudent->institution_id : null;
+    }
+
+    /**
+     * Generate a unique ID for new records.
+     * 
+     * @return string
+     */
+    private function generateUniqueId(): string
+    {
+        // Generate a proper UUID v4
+        $data = random_bytes(16);
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40); // set version to 0100
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80); // set bits 6-7 to 10
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 }
