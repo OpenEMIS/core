@@ -61,6 +61,8 @@ export const appRoutes: Routes = [
   { path: 'Institution/Institutions/Classes', component: ClassesComponent },
   { path: 'Institution/Institutions/Subjects', component: SubjectsComponent },
   { path: `Institution/Institutions/ScheduleTimetable/view/${setEncodedId()}`, component: StudentTimetableComponent },
+  { path: `Institution/Institutions/${setEncodedId()}/ScheduleTimetable/edit`, component: StudentTimetableComponent },
+  { path: `Institution/Institutions/ScheduleTimetable/edit/${setEncodedId()}`, component: StudentTimetableComponent },
   { path: `Institution/Institutions/Scanned/index/${setEncodedId()}`, component: ScannedStudentComponent },
   { path: 'Institution/Institutions/Scanned/list', component: StudentListComponent }
 ];

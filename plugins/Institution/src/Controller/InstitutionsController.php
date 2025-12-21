@@ -1452,8 +1452,22 @@ class InstitutionsController extends AppController
     public function ScheduleTimetable($action = 'view')
     {
         $url = $_SERVER['REQUEST_URI'];
-        $startPos = strpos($url, '/Institution/Institutions/ScheduleTimetable/view/') + strlen('/Institution/Institutions/ScheduleTimetable/view/');
-        $encodedPart = substr($url, $startPos);
+        /*$startPos = strpos($url, '/Institution/Institutions/ScheduleTimetable/view/') + strlen('/Institution/Institutions/ScheduleTimetable/view/');
+        $encodedPart = substr($url, $startPos);*/
+        //POCOR-9483 start
+        $viewNeedle = '/Institution/Institutions/ScheduleTimetable/view/';
+        $startPos = strpos($url, $viewNeedle);
+        if ($startPos !== false) {
+            $encodedPart = substr($url, $startPos + strlen($viewNeedle));
+        } else {
+            $editNeedle = '/Institution/Institutions/ScheduleTimetable/edit/';
+            $startPos = strpos($url, $editNeedle);
+            if ($startPos !== false) {
+                $encodedPart = substr($url, $startPos + strlen($editNeedle));
+            } else {
+                $encodedPart = $url;
+            }
+        }//POCOR-9483 end
 
         $timetableId = $this->getQueryString('timetable_id');
         $params = $this->getQueryString();
