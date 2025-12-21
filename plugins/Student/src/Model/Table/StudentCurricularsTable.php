@@ -93,12 +93,13 @@ class StudentCurricularsTable extends ControllerActionTable
                 'category' => $InstitutionCurriculars->aliasField('category'),
             ])
             // POCOR-8028 query made more strict
-            ->LeftJoin([$InstitutionCurriculars->getAlias() => $InstitutionCurriculars->getTable()],
+            ->InnerJoin([$InstitutionCurriculars->getAlias() => $InstitutionCurriculars->getTable()],
                 [$InstitutionCurriculars->aliasField('id') . ' = ' . $this->aliasField('institution_curricular_id')
                 ])
-            ->LeftJoin([$curricular_types->getAlias() => $curricular_types->getTable()],
+            ->InnerJoin([$curricular_types->getAlias() => $curricular_types->getTable()],
                 [$curricular_types->aliasField('id') . ' = ' . $InstitutionCurriculars->aliasField('curricular_type_id')
                 ])
+
             ->where($where);
 
         $this->field('student_id', ['visible' => false]);
