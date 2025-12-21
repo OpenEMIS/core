@@ -216,6 +216,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function onUpdateFieldCurricularTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
+        // POCOR-9522
         $entity= $attr['entity'];
         $category = 0;
         if($entity->category){
@@ -235,11 +236,8 @@ class InstitutionCurricularsTable extends ControllerActionTable
             $attr['options'] = ['' => '-- ' . __('Select Type') . ' --'] + $getCurricularsType;
             $attr['onChangeReload'] = false;
         } elseif($action == 'edit'){
-//            $typeId = $this->InstitutionCurriculars->get($curriculardecode)->curricular_type_id;
-//            $CurricularTypesName = $CurricularTypes->find('list')->where(['id'=>$curricular_type_id])->first();
             $attr['type'] = 'readonly';
             $attr['value'] = $curricular_type_id;
-//            $attr['attr']['value'] = $CurricularTypesName;
         }
         return $attr;
     }
@@ -297,6 +295,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        // POCOR-9522
         $this->field('curricular_type_id', ['type' => 'select',
             'required' => true,
             'entity' => $entity]);
