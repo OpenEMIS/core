@@ -280,6 +280,8 @@ class ControllerActionHelper extends Helper
         // For XSS
         $this->escapeHtmlSpecialCharacters($entity);
         $count = 0;
+
+
         foreach ($fields as $field => $attr) {
             $model = $attr['model'];
             $value = $entity->{$field};
@@ -319,9 +321,19 @@ class ControllerActionHelper extends Helper
                     $associatedFound = true;
                 }
             }
+
             if (!$associatedFound) {
                 $value = $this->HtmlField->render($type, 'index', $entity, $attr);
             }
+            // POCOR-9503 start
+            if (empty($value)) {
+                if (isset($attr['value'])) {
+                    $value = $attr['value'];
+                } elseif (isset($attr['attr']['value'])) {
+                    $value = $attr['attr']['value'];
+                }
+            }
+            // POCOR-9503 end
 
             if (!empty($search)) {
                 if (in_array($field, $searchableFields)) {
@@ -336,6 +348,7 @@ class ControllerActionHelper extends Helper
 
             }
         }
+
 
         $model = TableRegistry::getTableLocator()->get($entity->getSource());
         $primaryKeys = $model->getPrimaryKey();
@@ -607,7 +620,13 @@ class ControllerActionHelper extends Helper
                     //     $_fieldAttr['labelClass'] = $cloneLabel['class'];
                     // }
                 }
-
+                // POCOR-9503 start
+                if(isset($_fieldAttr['value'])){
+                    $data->{$_field} = $_fieldAttr['value'];
+                }elseif (isset($_fieldAttr['attr']['value'])){
+                    $data->{$_field} = $_fieldAttr['attr']['value'];
+                }
+                // POCOR-9503 end
                 // attach event for index columns
                 $method = 'onGet' . Inflector::camelize($_field);
                 $eventKey = 'ControllerAction.Model.' . $method;
@@ -616,6 +635,7 @@ class ControllerActionHelper extends Helper
 
                 $associatedFound = false;
                 if ($event->getResult() || is_int($event->getResult())) {
+
                     $data->{$_field} = $event->getResult();
                 } elseif ($this->endsWith($_field, '_id')) {
                     $associatedObject = '';
