@@ -42,6 +42,28 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     }
 
+    public function validationDefault(Validator $validator): Validator
+    {
+//       POCOR-9522
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+        $validator->requirePresence('curricular_type_id')
+            ->notEmptyString('curricular_type_id');
+        $validator->requirePresence('name')
+            ->notEmptyString('name')
+            ->add('name', [
+                'unique' => [
+                    'rule' => ['validateUnique', ['scope' => ['name', 'institution_id']]],
+                    'provider' => 'table',
+                    'message' => __('This name already exists in the institution')
+                ]
+            ]);
+        $validator->requirePresence('category')
+            ->notEmptyString('category');
+
+        return $validator;
+    }
+
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $sortable = !is_null($this->request->getQuery('sort')) ? true : false;
@@ -94,8 +116,8 @@ class InstitutionCurricularsTable extends ControllerActionTable
     {
         $this->field('total_male_students', ['visible' => false]);
         $this->field('total_female_students', ['visible' => false]);
-        $this->field('curricular_type_id', ['type' => 'select']);
-        $this->field('category', ['type' => 'select']);
+        $this->field('curricular_type_id', ['type' => 'select', 'required' => true]);
+        $this->field('category', ['type' => 'select', 'required' => true]);
         $this->field('staff_id', ['type' => 'select', 'visible' => false]);
         $this->setFieldOrder([
             'name',
@@ -180,7 +202,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
             $attr['type'] = 'chosenSelect';
             $attr['attr']['multiple'] = false;
             $attr['select'] = false;
-            $attr['options'] = ['id' => '-- ' . __('Select Category') . ' --'] + $categories;
+            $attr['options'] = ['' => '-- ' . __('Select Category') . ' --'] + $categories;
             $attr['onChangeReload'] = 'changeStatus';
         } elseif ($action == 'edit') {
             $attr['type'] = 'readonly';
@@ -194,31 +216,30 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function onUpdateFieldCurricularTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $categoryId = $this->request->getData()[$this->getAlias()]['category'];
-        if($categoryId == null){
-            $categoryId = $categoryData ? 0 : 1;
+        $entity= $attr['entity'];
+        $category = 0;
+        if($entity->category){
+            $category = 1;
         }
+        if($entity->curricular_type_id){
+            $curricular_type_id = $entity->curricular_type_id;
+        }
+
         $CurricularTypes = TableRegistry::get('FieldOption.CurricularTypes');
         $this->InstitutionCurriculars = TableRegistry::get('Institution.InstitutionCurriculars');
-        $getCurricularsType = $CurricularTypes->find('list')->where(['category'=>$categoryId])->toArray();
+        $getCurricularsType = $CurricularTypes->find('list')->where(['category'=>$category])->toArray();
         if ($action == 'add') {
             $attr['type'] = 'chosenSelect';
             $attr['attr']['multiple'] = false;
             $attr['select'] = false;
-            $attr['options'] = ['id' => '-- ' . __('Select Type') . ' --'] + $getCurricularsType;
+            $attr['options'] = ['' => '-- ' . __('Select Type') . ' --'] + $getCurricularsType;
             $attr['onChangeReload'] = false;
         } elseif($action == 'edit'){
-            $paramPass = $this->request->getParam('pass');
-            $ids = !is_null($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : 0;
-            $curricularId = $ids['id'];
-            // $entity->institution_curricular_id =  $curricularId;
-            // $curriculardecode = $entity->institution_curricular_id;
-            $curriculardecode = $curricularId;
-            $tyepId = $this->InstitutionCurriculars->get($curriculardecode)->curricular_type_id;
-            $CurricularTypesName = $CurricularTypes->find('list')->where(['id'=>$tyepId])->first();
+//            $typeId = $this->InstitutionCurriculars->get($curriculardecode)->curricular_type_id;
+//            $CurricularTypesName = $CurricularTypes->find('list')->where(['id'=>$curricular_type_id])->first();
             $attr['type'] = 'readonly';
-            $attr['value'] = $typeId;
-            $attr['attr']['value'] = $CurricularTypesName;
+            $attr['value'] = $curricular_type_id;
+//            $attr['attr']['value'] = $CurricularTypesName;
         }
         return $attr;
     }
@@ -276,8 +297,9 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-
-        $this->field('curricular_type_id', ['type' => 'select', 'entity' => $entity]);
+        $this->field('curricular_type_id', ['type' => 'select',
+            'required' => true,
+            'entity' => $entity]);
     }
 
     public function onGetCategory(Event $event, Entity $entity)
