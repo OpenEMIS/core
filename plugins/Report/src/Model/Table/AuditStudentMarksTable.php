@@ -241,7 +241,6 @@ class AuditStudentMarksTable extends AppTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $originalField)
     {
-      
         $requestData = json_decode($settings['process']['params']);
         $startDate = $requestData->report_start_date ?? null;
         $endDate   = $requestData->report_end_date ?? null;
