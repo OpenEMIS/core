@@ -807,14 +807,30 @@ class ReportCardsTable extends AppTable
             $StaffPositionTitles = self::getDynamicTableInstance('Institution.StaffPositionTitles'); // POCOR-9162
             $staffPosnIds = $StaffPositionTitles->getPrincipalRoleId($staffRoleId); //POCOR-9413
             $staff = self::getInstitutionSecurityStaff($institutionId, $staffPosnIds); //POCOR-9442 - now returns array
+
+            //POCOR-9498[START]
+            // if (!empty($staff)) {
+            //     $staff->principal = $staff->user->name;
+            //     $staff->principal_gender = $staff->gender;
+            //     //POCOR-9413 -- if preferred name is empty then return '-'
+            //     if (empty($staff->user->preferred_name)) {
+            //         $staff->user->preferred_name = '-';
+            //     }
+            // }
             if (!empty($staff)) {
-                $staff->principal = $staff->user->name;
-                $staff->principal_gender = $staff->gender;
-                //POCOR-9413 -- if preferred name is empty then return '-'
-                if (empty($staff->user->preferred_name)) {
-                    $staff->user->preferred_name = '-';
+                if (!empty($staff->user)) {
+
+                    $staff->principal = $staff->user->name ?? '-';
+                    $staff->principal_gender = $staff->gender ?? '-';
+                    if (empty($staff->user->preferred_name)) {
+                        $staff->user->preferred_name = '-';
+                    }
+                } else {
+                    $staff->principal = '-';
+                    $staff->principal_gender = '-';
                 }
             }
+            //POCOR-9498[END]
             return $staff;
         }
     }
@@ -2864,21 +2880,44 @@ class ReportCardsTable extends AppTable
          $entity = $staffQuery
              ->first();
 
-         // POCOR-7033[START]
-         if (!empty($entity)) {
-             if ($entity->user->gender_id == '1') {
-                 $entity->user->gender_id = "Male";
-                 $entity->gender = "Male";
-             } else {
-                 $entity->user->gender_id = "Female";
-                 $entity->gender = "Male";
-             }
-             $username = $entity->user->name;
-             if(empty($username) || $username = ""){
-                 $entity->user->name = $entity->user->first_name . ' ' . $entity->user->last_name;
-             }
-         }
+        //POCOR-9498[START]
+        // POCOR-7033[START]
+        //  if (!empty($entity)) {
+        //      if ($entity->user->gender_id == '1') {
+        //          $entity->user->gender_id = "Male";
+        //          $entity->gender = "Male";
+        //      } else {
+        //          $entity->user->gender_id = "Female";
+        //          $entity->gender = "Male";
+        //      }
+        //      $username = $entity->user->name;
+        //      if(empty($username) || $username = ""){
+        //          $entity->user->name = $entity->user->first_name . ' ' . $entity->user->last_name;
+        //      }
+        //  }
+
+        if (!empty($entity)) {
+            if (!empty($entity->user)) {
+
+                if ($entity->user->gender_id == '1') {
+                    $entity->user->gender_id = "Male";
+                    $entity->gender = "Male";
+                } else {
+                    $entity->user->gender_id = "Female";
+                    $entity->gender = "Female";
+                }
+                $username = $entity->user->name;
+
+                if (empty($username) || $username == "") {
+                    $entity->user->name = trim($entity->user->first_name . ' ' . $entity->user->last_name);
+                }
+
+            } else {
+                // Optional: log
+            }
+        }
          // POCOR-7033[END]
+         //POCOR-9498[END]
          return $entity;
     }
 
