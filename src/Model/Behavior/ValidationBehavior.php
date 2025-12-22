@@ -2114,7 +2114,7 @@ class ValidationBehavior extends Behavior
         return true;
     }
     //POCOR-8487[START]
-    public static function validateContactNumberPattern($field, $code, array $globalData)
+    /*public static function validateContactNumberPattern($field, $code, array $globalData)
     {
         $pattern = '';
         $model = $globalData['providers']['table'];
@@ -2124,9 +2124,42 @@ class ValidationBehavior extends Behavior
             return $model->getMessage('general.custom_validation_pattern');
         }
         return true;
+    }*/
+
+    //POCOR-9460
+    public static function validateContactNumberPattern($field, $code, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        // Load regex from DB 
+        $valuePattern = $ConfigItems->value($code);
+        $fallbackRegex = '/^[0-9+\-\s]{7,20}$/';
+        if (empty($valuePattern)) {
+            return preg_match($fallbackRegex, $field)
+                ? true
+                : $model->getMessage('general.custom_validation_pattern');
+        }
+        $cleanPattern = preg_replace('/^\/|\/[a-z]*$/i', '', $valuePattern);
+
+        // Re-wrap pattern into clean PHP regex
+        $finalRegex = '/' . $cleanPattern . '/';
+
+        if (@preg_match($finalRegex, null) === false) {
+            return preg_match($fallbackRegex, $field)
+                ? true
+                : $model->getMessage('general.custom_validation_pattern');
+        }
+        if (!preg_match($finalRegex, $field)) {
+            // Try fallback before showing error
+            return preg_match($fallbackRegex, $field)
+                ? true
+                : $model->getMessage('general.custom_validation_pattern');
+        }
+
+        return true;
     }
 
-    public static function validateMobileNumberPattern($field, $code, array $globalData)
+    /*public static function validateMobileNumberPattern($field, $code, array $globalData)
     {
         $pattern = '';
         $model = $globalData['providers']['table'];
@@ -2135,6 +2168,38 @@ class ValidationBehavior extends Behavior
         if (!empty($valuePattern) && !preg_match($valuePattern, $field)) {
             return $model->getMessage('general.custom_validation_pattern');
         }
+        return true;
+    }*/
+
+    //POCOR-9460
+    public static function validateMobileNumberPattern($field, $code, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $valuePattern = $ConfigItems->value($code);
+
+        $fallbackRegex = '/^[0-9]{8,15}$/';
+
+        if (empty($valuePattern)) {
+            return preg_match($fallbackRegex, $field) ? true : $model->getMessage('general.custom_validation_pattern');
+        }
+        $cleanPattern = preg_replace('/^\/|\/[a-z]*$/i', '', $valuePattern);
+
+        // Wrap cleaned pattern into PHP-valid delimiters
+        $finalRegex = '/' . $cleanPattern . '/';
+
+        // Validate if regex is valid
+        if (@preg_match($finalRegex, null) === false) {
+            //invalid regex → fallback
+            return preg_match($fallbackRegex, $field) ? true : $model->getMessage('general.custom_validation_pattern');
+        }
+
+        // Apply config_item table validation
+        if (!preg_match($finalRegex, $field)) {
+            // custom validation regex failed, try fallback
+            return preg_match($fallbackRegex, $field) ? true : $model->getMessage('general.custom_validation_pattern');
+        }
+
         return true;
     }
 

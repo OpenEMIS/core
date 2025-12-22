@@ -1,3 +1,19 @@
+### [4.48.9] - 2025-12-17
+- Bug Fixed: Administration>Performance>Report Cards: GPA is showing 0.00 for another term
+
+### [4.48.8] - 2025-12-16
+- Bug Fixed: Administration>Performance>Report Cards: GPA for another term is generated
+
+### [4.48.7] - 2025-12-11
+- Bug Fixed: Institutions>Performance>GPA: Student GPA should show up against the right school.
+- Bug Fixed: Institutions> Import Institution: User sees 404 error message for leaving document field empty and clicking on save
+- Bug Fixed: Administration>Communication>Alert: Student attendance alert is not working
+- Bug Fixed: Institutions > Performances > Assessments > Edit : Permission to Edit Assessments and All Classes/Subjects given yet user is not able to edit Assessments
+- Bug Fixed: Administration > Profiles > Institutions > Profile: Report is stuck in progress
+- Bug Fixed: Directory>Advanced Search : Advance Search for Staff in Directory gives 404 Error
+- Bug Fixed: Report>Institutions>Students: Report should show Nevis related
+- Bug Fixed: Institutions>Performance>Assessments: When marks are removed, the marks in the deleted_record table is showing null instead of the actual marks
+
 ### [4.48.6] - 2025-12-05
 - Bug Fixed: Institutions>Performance>Assessments: When user is not a homeroom/secondary/subject teacher, edit assessment button should be hidden
 - Bug Fixed: Institutions>Performance>Report Cards: System returns a Missing Placeholder message on the report card instead of showing a blank field.
