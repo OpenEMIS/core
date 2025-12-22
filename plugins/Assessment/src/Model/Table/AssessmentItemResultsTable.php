@@ -1351,7 +1351,10 @@ class AssessmentItemResultsTable extends AppTable
             ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->getTable()], [
                 $ClassStudents->aliasField('student_id') . ' = ' . $this->aliasField('student_id'),
                 $ClassStudents->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id')
-            ])->disableHydration();
+            ])->where([
+                $this->aliasField('academic_period_id IN') => $academicPeriodId
+            ])
+            ->disableHydration();
 
         if (!empty($assessmentIds)) {
             $query->where([$this->aliasField('assessment_id') . ' IN' => $assessmentIds]);
@@ -1363,6 +1366,9 @@ class AssessmentItemResultsTable extends AppTable
 
         if (!empty($studentIds)) {
             $query->where([$this->aliasField('student_id') . ' IN' => $studentIds]);
+        }
+        if (!empty($classIds)) {
+            $query->where([$this->aliasField('institution_classes_id') . ' IN' => $classIds]);
         }
 
         $results = $query->toArray();
@@ -1416,7 +1422,7 @@ class AssessmentItemResultsTable extends AppTable
 
             $totalMarks = array_sum(array_column($marks, 'simple_mark'));
 
-            $returnArray[$studentId][$subjectId][$assessmentPeriodId] = [
+            $returnArray[$studentId][$academicPeriodIdRow][$subjectId][$assessmentPeriodId] = [
                 'marks' => round($totalMarks, 2),
                 'grade_name' => $result['grade_name'],
                 'grade_code' => $result['grade_code'],

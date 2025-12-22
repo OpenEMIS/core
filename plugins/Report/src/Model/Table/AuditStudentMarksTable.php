@@ -108,7 +108,6 @@ class AuditStudentMarksTable extends AppTable
             return;
         }
 
-        //$studentIds        = array_column($students, 'student_id');
         $assessmentIds     = array_unique(array_column($students, 'assessment_id'));
         $classIds          = array_unique(array_column($students, 'institution_classes_id'));
 
@@ -138,7 +137,7 @@ class AuditStudentMarksTable extends AppTable
 
        
         $allResults = $AssessmentItemResults->auditAssessmentItemResultsReport(
-            null,
+            $academicPeriodIds,
             $assessmentIds,
             $subjectIds,
             $studentIds,
@@ -483,7 +482,7 @@ class AuditStudentMarksTable extends AppTable
         $assessmentId = $attr['assessmentId'];
         $studentId = $entity->student_id;
         // Pull from preloaded assessment item results
-        $result = $this->assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId] ?? null;
+        $result = $this->assessmentItemResults[$studentId][$academicPeriodId][$subjectId][$assessmentPeriodId] ?? null;
         if (empty($result)) {
             return '';
         }
