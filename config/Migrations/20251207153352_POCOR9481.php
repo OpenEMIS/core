@@ -11,6 +11,8 @@ class POCOR9481 extends AbstractMigration
 //    private $seychellesNationalityID = 0;
     public function up()
     {
+
+
         $this->backupTables();
 
         $this->insertNewExternalDataSourceAttributes();
@@ -123,14 +125,6 @@ class POCOR9481 extends AbstractMigration
 
         $attributes = [
             // API Credentials
-            ['api_url', 'api_url', 'https://beta.gov.sc/NPDService/api/v1/NIN/NINExt/'],
-            ['client_id', 'client_id', 'OpenEMISClient'],
-            ['client_secret', 'client_secret', 'password123'],
-            ['token_uri', 'token_uri', 'https://beta.gov.sc/identityserverbeta/connect/token'],
-            ['grant_type', 'grant_type', 'client_credentials'],
-            ['scopes', 'scopes', 'npd.level2'],
-            ['first_name_mapping', 'first_name_mapping', 'givenNames'],
-            ['last_name_mapping', 'last_name_mapping', 'presentSurname'],
             ['date_of_birth_mapping', 'date_of_birth_mapping', 'dob'],
             ['gender_mapping', 'gender_mapping', 'sex'],
             ['nationality_mapping', 'nationality_mapping', 'nationality'],
