@@ -85,7 +85,24 @@ class AssessmentsTable extends AppTable
         if (!empty($institutionId) && $institutionId > 1) {
             $conditions[$this->aliasField('institution_id')] = $institutionId;
         }
-
+        
+        $educationSubjectId = $requestData->education_subject_id ?? null;
+        if(!empty($educationSubjectId)){
+            $educationSubjectIds = [];
+            if (is_array($educationSubjectId)) {
+                    foreach ($educationSubjectId as $item) {
+                        if (is_object($item) && isset($item->_ids) && is_array($item->_ids)) {
+                            $educationSubjectIds = array_merge($educationSubjectIds, $item->_ids);
+                        } elseif (!is_array($item)) {
+                            $educationSubjectIds[] = $item;
+                        }
+                    }
+            } elseif (is_object($educationSubjectId) && isset($educationSubjectId->_ids)) {
+                $educationSubjectIds = $educationSubjectId->_ids;
+            } elseif (!empty($educationSubjectId)) {
+                $educationSubjectIds = [$educationSubjectId];
+            }
+        }
         $students = $this->find()->select(['student_id', 'institution_class_id'])
             ->where($conditions)
             ->distinct(['student_id', 'institution_class_id'])
@@ -129,24 +146,28 @@ class AssessmentsTable extends AppTable
 
         $assessmentIds = $assessments->extract('id')->toArray();
         $assessmentSubjectsMap = [];
-        $subjectIds = []; // collect all unique subject IDs 
+        if(empty($educationSubjectId)){
+            $subjectIds = []; // collect all unique subject IDs 
 
-        $AssessmentItemsTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentItems');
+            $AssessmentItemsTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentItems');
 
-        foreach ($assessmentIds as $assessmentId) {
-            $subjects = $AssessmentItemsTable->find()
-                ->distinct(['education_subject_id'])
-                ->where(['assessment_id' => $assessmentId])
-                ->enableHydration(false)
-                ->all()
-                ->extract('education_subject_id')
-                ->toArray();
+            foreach ($assessmentIds as $assessmentId) {
+                $subjects = $AssessmentItemsTable->find()
+                    ->distinct(['education_subject_id'])
+                    ->where(['assessment_id' => $assessmentId])
+                    ->enableHydration(false)
+                    ->all()
+                    ->extract('education_subject_id')
+                    ->toArray();
 
-            $assessmentSubjectsMap[$assessmentId] = $subjects;
-            $subjectIds = array_merge($subjectIds, $subjects);
+                $assessmentSubjectsMap[$assessmentId] = $subjects;
+                $subjectIds = array_merge($subjectIds, $subjects);
+            }
+
+            $subjectIds = array_unique($subjectIds); // final list to pass
+        }else{
+            $subjectIds = $educationSubjectIds;
         }
-
-        $subjectIds = array_unique($subjectIds); // final list to pass
 
         $AssessmentItemResultsTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
 
@@ -216,6 +237,26 @@ class AssessmentsTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         $institutionId = $requestData->institution_id ?? null;
         $academicPeriodId = $requestData->academic_period_id;
+        $assessmentPeriodId = $requestData->assessment_period_id;
+        $academicTerm = $requestData->academic_term;
+        //POCOR-9484 start
+        $educationSubjectId = $requestData->education_subject_id ?? null;
+        if(!empty($educationSubjectId)){ 
+            $educationSubjectIds = [];
+            if (is_array($educationSubjectId)) {
+                    foreach ($educationSubjectId as $item) {
+                        if (is_object($item) && isset($item->_ids) && is_array($item->_ids)) {
+                            $educationSubjectIds = array_merge($educationSubjectIds, $item->_ids);
+                        } elseif (!is_array($item)) {
+                            $educationSubjectIds[] = $item;
+                        }
+                    }
+            } elseif (is_object($educationSubjectId) && isset($educationSubjectId->_ids)) {
+                $educationSubjectIds = $educationSubjectId->_ids;
+            } elseif (!empty($educationSubjectId)) {
+                $educationSubjectIds = [$educationSubjectId];
+            }
+        } //POCOR-9484 end
 
         $fields = new ArrayObject();
         $fields[] = [
@@ -327,9 +368,19 @@ class AssessmentsTable extends AppTable
         // 1. Fetch all assessment periods for all assessments
         $assessmentIds = $assessments->extract('id')->toArray();
         $assessmentPeriodsMap = [];
+        //POCOR-9484
+        $checkCondition = [];
+
+        if($assessmentPeriodId > 0){
+            $checkCondition[$AssessmentPeriodsTable->aliasField('id')] = $assessmentPeriodId;
+        }
+        if($academicTerm > 0){
+            $checkCondition[$AssessmentPeriodsTable->aliasField('academic_term')] = $academicTerm;
+        }
+        $checkCondition[$AssessmentPeriodsTable->aliasField('assessment_id IN')] = $assessmentIds;
         if (!empty($assessmentIds)) {
             $assessmentPeriodsRecords = $AssessmentPeriodsTable->find()
-                ->where(['assessment_id IN' => $assessmentIds])
+                ->where($checkCondition)
                 ->order([$AssessmentPeriodsTable->aliasField('assessment_id')])
                 ->all();
 
@@ -338,10 +389,34 @@ class AssessmentsTable extends AppTable
             }
         }
 
-        // 2. Fetch all subjects for all assessments
+        // 2. Fetch  subjects for assessments
         $assessmentSubjectsMap = [];
-        foreach ($assessmentIds as $assessmentId) {
-            $assessmentSubjectsMap[$assessmentId] = $AssessmentItemsTable->getSubjects($assessmentId);
+        $educationSubjectIds = $educationSubjectIds ?? [];
+        //POCOR-9484
+        if (!empty($educationSubjectIds)) {
+            foreach ($assessmentIds as $assessmentId) {
+                $assessmentSubjectsMap[$assessmentId] =
+                    $AssessmentItemsTable
+                        ->find()
+                        ->innerJoinWith('EducationSubjects')
+                        ->where([
+                            'AssessmentItems.assessment_id' => $assessmentId,
+                            'AssessmentItems.education_subject_id IN' => $educationSubjectIds
+                        ])
+                        ->select([
+                            'assessment_item_id' => 'AssessmentItems.id',
+                            'education_subject_name' => 'EducationSubjects.name',
+                            'subject_id' => 'AssessmentItems.education_subject_id',
+                            'subject_weight' => 'AssessmentItems.weight',
+                        ])
+                        ->enableHydration(false)
+                        ->toArray();
+            }
+        } else {
+            foreach ($assessmentIds as $assessmentId) {
+                $assessmentSubjectsMap[$assessmentId] =
+                    $AssessmentItemsTable->getSubjects($assessmentId);
+            }
         }
 
         // 3. Fetch all grading types for all assessments
