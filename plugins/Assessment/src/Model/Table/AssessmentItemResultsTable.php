@@ -1228,7 +1228,7 @@ class AssessmentItemResultsTable extends AppTable
             ])
             ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->getTable()], [
                 $ClassStudents->aliasField('student_id') . ' = ' . $this->aliasField('student_id'),
-                $ClassStudents->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id') // ✅ Ensures same period
+                $ClassStudents->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id') // Ensures same period
             ])
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId
