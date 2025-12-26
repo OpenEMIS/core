@@ -1247,7 +1247,7 @@ class AssessmentItemResultsTable extends AppTable
             $query->where([$this->aliasField('student_id') . ' IN' => $studentIds]);
         }
 
-        $results = $query->toArray(); // ✅ Now we fetch results
+        $results = $query->toArray(); //Now we fetch results
 
         // Step 2: Preload marks per class
         $marksPerClass = [];
@@ -1288,7 +1288,7 @@ class AssessmentItemResultsTable extends AppTable
                 'marks' => $result['marks'],
                 'grade_name' => $result['grade_name'],
                 'grade_code' => $result['grade_code'],
-                'assessments' => $marks // ✅ Include assessments here
+                'assessments' => $marks //Include assessments here
             ];
         }
 
