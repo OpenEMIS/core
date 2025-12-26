@@ -725,7 +725,7 @@ class PerformanceTable extends AppTable
     {
         $requestData = $request->getData();
         if (
-            isset($requestData['Performance']['feature']) ||
+            isset($requestData['Performance']['feature']) &&
             $requestData['Performance']['feature'] == 'Report.Assessments'
         ) {
             $academicPeriodId   = $request->getData($this->aliasField('academic_period_id'));
