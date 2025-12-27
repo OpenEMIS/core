@@ -2201,11 +2201,12 @@ class DirectoriesController extends AppController
         $payload = $userResponse->getJson();
 //        Log::debug(print_r(['SeychellesUserRaw' => $payload], true));
 
-        if (!$userResponse->isOk() || empty($payload['record'])) {
+        $record = $payload['record'] ?? $payload;
+        if (!$userResponse->isOk() || empty($record)) {
             return $responseData;
         }
 
-        $raw = $this->normalizeKeys($payload['record']);
+        $raw = $this->normalizeKeys($record);
 
         // ------------------------------------------------------------
         // NORMALIZED RESULT
