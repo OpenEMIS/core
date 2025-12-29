@@ -211,7 +211,7 @@ class OpenEmisBehavior extends Behavior
         $extra['config']['form'] = ['class' => ''];
     }
 
-    public function viewAfterAction(Event $event, Entity|bool $entity, ArrayObject $extra)
+    public function viewAfterAction(Event $event, Entity|bool $entity, ArrayObject $extra=NULL)
     {
         if (!$entity) {
             $this->_table->Alert->warning('general.notExists');
