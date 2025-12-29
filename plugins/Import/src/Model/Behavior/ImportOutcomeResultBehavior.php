@@ -416,11 +416,14 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         $activeSheet->setCellValue("A2", $name);
         $activeSheet->setCellValue("B2", "Outcome -->");
 
-        //headerRow3
+        //POCOR-9158 headerRow3
+        $lastRowToAlign = (int)($lastRowToAlign ?? 3);
         foreach ($header as $key => $value) {
-            $alpha = $this->getExcelColumnAlpha($key);
-            $activeSheet->setCellValue($alpha . 3, $value);
-        }
+            $alpha = $this->getExcelColumnAlpha((int)$key + 1);
+            $cell  = $alpha . $lastRowToAlign;
+
+            $activeSheet->setCellValue($cell, $value);
+        } //POCOR-9158
 
         // POCOR- 7987:start
         $outcomeTemplatesTable = TableRegistry::get('Outcome.OutcomeTemplates');
