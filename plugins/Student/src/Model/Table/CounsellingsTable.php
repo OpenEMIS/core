@@ -154,6 +154,12 @@ class CounsellingsTable extends ControllerActionTable
         $this->field('student_id', ['type' => 'hidden', 'value'=> $studentId]);
 
         $this->setFieldOrder(['date', 'counselor_id', 'guidance_type_id', 'requester_id', 'guidance_utilized', 'description', 'intervention', 'comment', 'file_name', 'file_content']);
+      
+        $this->field('requester_search', [
+            'type' => 'element',
+            'element' => 'requester_search',
+            'visible' => ['add'=>true, 'edit'=>true],
+        ]); //POCOR-9523
     }
 
     /**
@@ -165,22 +171,39 @@ class CounsellingsTable extends ControllerActionTable
      */
     public function getRequesterOptions($studentId)
     {
-        $UserData = TableRegistry::get('User.Users');
+        $UserData   = TableRegistry::get('User.Users');
+        $identities = TableRegistry::get('User.Identities');//POCOR-9523
+
         $listUser = $UserData->find()
-                    ->select(['id', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name'])
-                    ->where([
-                        'status' => 1,
-                        'id !=' => $studentId,
-                    ])
-                    ->andWhere([
-                        'OR' => [
-                            'is_student' => 1,
-                            'is_staff' => 1,
-                            'is_guardian' => 1
-                        ]
-                    ])
-                    ->enableHydration(false)
-                    ->toArray();
+            ->select([
+                $UserData->aliasField('id'),
+                $UserData->aliasField('openemis_no'),
+                $UserData->aliasField('first_name'),
+                $UserData->aliasField('middle_name'),
+                $UserData->aliasField('third_name'),
+                $UserData->aliasField('last_name'),
+                'identities_number' => $identities->aliasField('number')
+            ])
+            ->innerJoin(
+                [$identities->getAlias() => $identities->getTable()],
+                [
+                    $identities->aliasField('security_user_id') . ' = ' . $UserData->aliasField('id')
+                ]
+            )
+            ->where([
+                $UserData->aliasField('status') => 1,
+                $UserData->aliasField('id !=') => $studentId,
+            ])
+            ->andWhere([
+                'OR' => [
+                    $UserData->aliasField('is_student') => 1,
+                    $UserData->aliasField('is_staff') => 1,
+                    $UserData->aliasField('is_guardian') => 1
+                ]
+            ])
+            ->enableHydration(false)
+            ->toArray();
+
         $data = [];
 
         foreach ($listUser as $r) {
@@ -192,13 +215,15 @@ class CounsellingsTable extends ControllerActionTable
             );
 
             $fullName = preg_replace('/\s+/', ' ', $fullName);
+            // POCOR-9523 include identities number in display 
+            $data[$r['id']] =
+            $r['openemis_no'] . ' - ' .
+            $fullName .
+            (!empty($r['identities_number']) ? ' '.'ID ' . $r['identities_number'] . ' ' : ''); 
 
-            $data[$r['id']] = $r['openemis_no'] . ' - ' . $fullName;
         }
-
         return $data;
     }
-
 
     //POCOR-9459
     public function onUpdateFieldRequesterId(Event $event, array $attr, $action, ServerRequest $request)
