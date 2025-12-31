@@ -65,13 +65,20 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		$validator->setProvider('custom', $this);
 		return $validator
 			->requirePresence('position_grades')
-		    ->allowEmpty('file_content')//POCOR-7758
-			->add('position_grades', 'ruleCheckPositionGrades', [
+		    ->allowEmptyString('file_content')//POCOR-7758
+            ->requirePresence('security_role_id') // POCOR-9508-start
+            ->notEmptyString('security_role_id')
+            ->requirePresence('staff_leave_policy_id')
+            ->notEmptyString('staff_leave_policy_id')
+            ->requirePresence('staff_position_categories_id')
+            ->notEmptyString('staff_position_categories_id') // POCOR-9508-end
+			->add('position_grade_selection', 'ruleCheckPositionGrades', [
 				'rule' => ['checkPositionGrades'],
 				'provider' => 'table',
 				'on' => function ($context) {
 				//trigger validation only when position grade selection is set to 1	 and edit operation
-				return ($context['data']['position_grade_selection'] == self::SELECT_POSITION_GRADES  && !$context['newRecord']);
+				return ($context['data']['position_grade_selection'] == self::SELECT_POSITION_GRADES
+                    && !$context['newRecord']);
 			}
 		]);
 	}
@@ -136,23 +143,29 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		$requestDataArray = $requestData->getArrayCopy();
 
 		if (array_key_exists($this->getAlias(), $requestDataArray)) {
-			if (isset($requestDataArray[$this->getAlias()]['position_grades']['_ids']) && empty($requestDataArray[$this->getAlias()]['position_grades']['_ids'])) {
+			if (isset($requestDataArray[$this->getAlias()]['position_grades']['_ids'])
+                && empty($requestDataArray[$this->getAlias()]['position_grades']['_ids'])) {
 				$requestDataArray[$this->getAlias()]['position_grades'] = [];
 			}
 		}
 	}
 
 
-	public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
-	{
-		$isSelectAll = $this->checkIsSelectAll($entity);
+    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    {
+//        Log::debug('[editOnInitialize] Entity ID: ' . $entity->id);
 
-		if ($isSelectAll) {
-			$entity->position_grade_selection = self::SELECT_ALL_POSITION_GRADES;
-		} else {
-			$entity->position_grade_selection = self::SELECT_POSITION_GRADES;
-		}
-	}
+        $isSelectAll = $this->checkIsSelectAll($entity);
+//        Log::debug('[editOnInitialize] checkIsSelectAll = ' . json_encode($isSelectAll));
+
+        if ($isSelectAll) {
+            $entity->position_grade_selection = self::SELECT_ALL_POSITION_GRADES;
+//            Log::debug('[editOnInitialize] Setting position_grade_selection = SELECT_ALL');
+        } else {
+            $entity->position_grade_selection = self::SELECT_POSITION_GRADES;
+//            Log::debug('[editOnInitialize] Setting position_grade_selection = SELECT_POSITION');
+        }
+    }
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 
@@ -358,25 +371,45 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		}
 	}
 
-	private function setAllPositionGrades($entity)
-	{
-		if ($entity->has('position_grade_selection') && $entity->position_grade_selection == self::SELECT_ALL_POSITION_GRADES) {
-			$StaffPositionTitlesGrades = TableRegistry::get('Institution.StaffPositionTitlesGrades');
-			$entityId = $entity->id;
+    private function setAllPositionGrades(Entity $entity): void
+    {
+//        Log::debug('[setAllPositionGrades] Entity ID: ' . $entity->id);
+//        Log::debug('[setAllPositionGrades] position_grade_selection: ' . json_encode($entity->position_grade_selection ?? null));
 
-			$data = [
-				'staff_position_title_id' => $entityId,
-				'staff_position_grade_id' => self::SELECT_ALL_POSITION_GRADES
-			];
+        if (
+            $entity->has('position_grade_selection') &&
+            $entity->position_grade_selection == self::SELECT_ALL_POSITION_GRADES
+        ) {
+            $StaffPositionTitlesGrades = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitlesGrades');
+            $entityId = $entity->id;
 
-			$staffPositionTitlesGradesEntity = $StaffPositionTitlesGrades->newEntity($data);
+//            Log::debug('[setAllPositionGrades] Deleting all existing grades for this title');
+            $StaffPositionTitlesGrades->deleteAll([
+                'staff_position_title_id' => $entityId
+            ]);
 
-			if ($StaffPositionTitlesGrades->save($staffPositionTitlesGradesEntity)) {
-			} else {
-				$StaffPositionTitlesGrades->log($staffPositionTitlesGradesEntity->errors(), 'debug');
-			}
-		}
-	}
+            $data = [
+                'staff_position_title_id' => $entityId,
+                'staff_position_grade_id' => self::SELECT_ALL_POSITION_GRADES
+            ];
+
+//            Log::debug('[setAllPositionGrades] Inserting SELECT_ALL row: ' . json_encode($data));
+
+            $newEntity = $StaffPositionTitlesGrades->newEntity($data);
+
+            if (!$StaffPositionTitlesGrades->save($newEntity)) {
+                Log::debug('[setAllPositionGrades] Save failed: ' . json_encode($newEntity->getErrors()));
+            }
+//            else {
+//                Log::debug('[setAllPositionGrades] SELECT_ALL row saved successfully.');
+//            }
+        }
+//        else {
+//            Log::debug('[setAllPositionGrades] Skipped — position_grade_selection is not SELECT_ALL');
+//        }
+    }
+
+
 
     public function checkIsSelectAll($entity)
     {
@@ -524,7 +557,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
      * @usage  Used to fetch principal and vice principal code
      * @author Ehteram
      * @ticket POCOR-9208
-	 * Reason to update this code; Principal may have diffrent name in some ENV 
+	 * Reason to update this code; Principal may have diffrent name in some ENV
      */
 	public function getPrincipalRoleId_old()
     {
@@ -590,11 +623,52 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	}
 
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
+//        Log::debug('[beforeSave] Entity ID: ' . $entity->id);
+//        Log::debug('[beforeSave] Incoming position_grades: ' . json_encode($entity->position_grades ?? null));
+//        Log::debug('[beforeSave] position_grade_selection: ' . json_encode($entity->position_grade_selection ?? null));
+
+        $grades = $entity->position_grades ?? [];
+
+        // Normalize: extract IDs from entities or arrays
+        $selectedGradeIds = array_map(function ($grade) {
+            return is_array($grade) ? ($grade['id'] ?? null) : ($grade->id ?? null);
+        }, $grades);
+
+        $selectedGradeIds = array_filter($selectedGradeIds); // Remove nulls
+
+//        Log::debug('[beforeSave] Extracted grade IDs: ' . json_encode($selectedGradeIds));
+
+        $hasSelectAll = in_array(self::SELECT_ALL_POSITION_GRADES, $selectedGradeIds);
+        $hasSomeRealGrades = !empty($selectedGradeIds) && !$hasSelectAll;
+
+        $StaffPositionTitlesGrades = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitlesGrades');
+
+        // Remove -1 if some real grades are selected
+        if ($hasSomeRealGrades) {
+//            Log::debug('[beforeSave] Real grades selected — removing -1 if it exists');
+            $StaffPositionTitlesGrades->deleteAll([
+                'staff_position_title_id' => $entity->id,
+                'staff_position_grade_id' => self::SELECT_ALL_POSITION_GRADES
+            ]);
+        }
+
+        // Remove all real grades if SELECT_ALL is selected
+        if ($hasSelectAll) {
+//            Log::debug('[beforeSave] SELECT_ALL selected — removing all other grades for this title');
+            $StaffPositionTitlesGrades->deleteAll([
+                'staff_position_title_id' => $entity->id,
+                'staff_position_grade_id !=' => self::SELECT_ALL_POSITION_GRADES
+            ]);
+
+            // Overwrite incoming to only keep -1 (if needed)
+            $entity->position_grades = [['id' => self::SELECT_ALL_POSITION_GRADES]];
+        }
     }
+
 
     public function beforeDelete(Event $event, Entity $entity)
     {
