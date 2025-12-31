@@ -1,12 +1,12 @@
 ### [4.49.0] - 2025-12-31
-- Implemented: Administration>System Setup>Field Options: Unable to save with specific position grade
 - Implemented: Develop External Data Source - Identity (Seychelles)
+- Implemented: Develop changes to the cases list page column order
+- Bug Fixed: Administration>System Setup>Field Options: Unable to save with specific position grade
 - Bug Fixed: Institutions>Academic>Schedule>Timetables>List>Add: Start scheduling is showing blank page
 - Bug Fixed: Administration>Performance>Outcomes: Academic Period is not changing
 - Bug Fixed: Administration>System Setup>Localization>Translations: The translation string added in does not show up against the actual element after saving.
 - Bug Fixed: Administration>System Setup>Localization>Translations: Editable should be a dropdown
 - Bug Fixed: Reports>Staff>Add: Date of Birth is empty in generated staff reports
-- Bug Fixed: Develop changes to the cases list page column order
 - Bug Fixed: Reports > Performance > Assessments Report: Implement an Institution Type Filter
 - Bug Fixed: Administration>Examinations>Centres: User is getting 404 when adding linked institutions
 - Bug Fixed: Personal>Staff>Career>Leave: Staff is unable to apply for leave(Required Staff Field which was not present in Core/v3)
