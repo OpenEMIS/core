@@ -184,7 +184,7 @@ class CounsellingsTable extends ControllerActionTable
                 $UserData->aliasField('last_name'),
                 'identities_number' => $identities->aliasField('number')
             ])
-            ->innerJoin(
+            ->leftJoin(
                 [$identities->getAlias() => $identities->getTable()],
                 [
                     $identities->aliasField('security_user_id') . ' = ' . $UserData->aliasField('id')
