@@ -19,6 +19,9 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+
 
 class ImportOutcomeResultBehavior extends ImportResultBehavior
 {
@@ -42,11 +45,11 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         /**
          */
 
-        $closureFunction = function ($model, $entity) {
+         return function ($model, $entity) {
             $errors = $entity->getErrors();
             if (!empty($errors)) {
                 // set error message for php file upload errors
-                $fileError = Hash::get($entity->invalid(), 'select_file.error');
+                $fileError = Hash::get($entity->getInvalid(), 'select_file.error');
                 if (!empty($fileError)) {
                     $errorMessage = $model->getMessage("fileUpload.$fileError");
                     if ($errorMessage != '[Message Not Found]') {
@@ -56,14 +59,15 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
 
                 return false;
             }
-
             $systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
 
             $fileObj = $entity->select_file;
-            $uploadedName = $fileObj['name'];
-            $uploaded = $fileObj['tmp_name'];
-            $inputFileType = PHPExcel_IOFactory::identify($uploaded);
-            $objReader = PHPExcel_IOFactory::createReader($inputFileType);
+            //$uploadedName = $fileObj['name'];
+           // $uploaded = $fileObj['tmp_name'];
+            $uploadedName = $fileObj->getClientFilename();   // instead of ['name']
+            $uploaded     = $fileObj->getStream()->getMetadata('uri'); // instead of ['tmp_name']
+            $inputFileType = IOFactory::identify($uploaded); 
+            $objReader = IOFactory::createReader($inputFileType);
             $objPHPExcel = $objReader->load($uploaded);
 
             $totalImported = 0;
@@ -86,13 +90,13 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             }
 
             $educationSubjectsTable = TableRegistry::get('Education.EducationSubjects');
-            $data = $this->_table->getQueryString();
-            dd([__FUNCTION__ => $data]);
+            $data = $this->_table->request->getData()['ImportOutcomeResults'];
+            $getQueryString = $this->_table->getQueryString();
             $template = $data['outcome_template'];
-            $education_subject_id = $data['education_subject_id'];
+            $education_subject_id = $data['education_subject'];
             $classId = $data['class'];
             $outcome_period_id = $data['outcome_period'];
-            $institution_id = $data['institution_id'];
+            $institution_id = $getQueryString['institution_id'];
             $academic_period_id = $data['academic_period'];
             $subjectName = $educationSubjectsTable->get($education_subject_id)->name;
 
@@ -142,20 +146,41 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             foreach ($aryOutcomeCriteria as $key => $value) {
                 $headerCriteriaId[] = $value->id;
             }
-
             $institutionOutcomeSubjectCommentsTable = TableRegistry::get('Institution.InstitutionOutcomeSubjectComments');
 
-            if (!$this->checkCorrectTemplate(2, $headerCriteriaId, $sheet, $totalColumns, 1)) {
-                $entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
-
+            if (!$this->checkCorrectTemplate(
+                3,
+                $headerCriteriaId,
+                $sheet,
+                3 + count($headerCriteriaId) - 1,
+                1 // ✅ correct row
+            )) {
+                $entity->setErrors([
+                    'select_file' => [
+                        '_error' => $this->getExcelLabel('Import', 'wrong_template')
+                    ]
+                ]);
                 return false;
             }
 
-            if (!$this->checkCorrectTemplate(0, $header, $sheet, 1, 2)) {
-                $entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
 
+
+            /*if (!$this->checkCorrectTemplate(
+    0,
+    ['OpenEMIS ID', 'Student Name'],
+    $sheet,
+    1,
+    3
+)) {
+                $entity->setErrors([
+                    'select_file' => [
+                        '_error' => $this->getExcelLabel('Import', 'wrong_template')
+                    ]
+                ]);
                 return false;
-            }
+            }*/
+
+
 
             $numberOfStudents = count($arrayStudent);
             for ($row = 4; $row < $numberOfStudents + 4; $row++) {
@@ -168,7 +193,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 $User = $UsersTable->find()
                     ->select(['id'])
                     ->where([
-                        $UsersTable->aliasField('openemis_no') => $studentOpenEmisId
+                        $UsersTable->aliasField('openemis_no IS') => $studentOpenEmisId
                     ])
                     ->first();
 
@@ -220,21 +245,46 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
 
                     $tempRow = $tempRow->getArrayCopy();
                     if (!isset($tempRow['entity'])) {
-                        $tableEntity = $activeModel->newEntity();
+                        $tableEntity = $activeModel->newEmptyEntity();
                     } else {
                         $tableEntity = $tempRow['entity'];
                         unset($tempRow['entity']);
                     }
 
-                    if ($extra['entityValidate'] == true) {
+                    /*if ($extra['entityValidate'] == true) {
                         // added for POCOR-4577 import staff leave for workflow related record to save the transition record
                         $tempRow['action_type'] = 'imported';
                         $activeModel->patchEntity($tableEntity, $tempRow,
                             [ 'validate' => false] //POCOR-7977
                         );
+                    }*/
+
+                    if ($extra['entityValidate'] === true) {
+
+                        //  COMPLETE COMPOSITE PRIMARY KEY (MANDATORY)
+                        $tempRow['student_id']           = $User->id;
+                        $tempRow['outcome_template_id']  = $template;
+                        $tempRow['outcome_period_id']    = $outcome_period_id;
+                        $tempRow['education_grade_id']   = $educationGradeId;
+                        $tempRow['education_subject_id'] = $education_subject_id;
+                        $tempRow['academic_period_id']   = $academic_period_id;
+                        $tempRow['institution_id']       = $institution_id;
+
+                        // from _extractRecord()
+                        // $tempRow['outcome_criteria_id']
+                        // $tempRow['outcome_grading_option_id']
+
+                        $tempRow['action_type'] = 'imported';
+
+                        $activeModel->patchEntity(
+                            $tableEntity,
+                            $tempRow,
+                            ['validate' => false]
+                        );
                     }
 
-                    $errors = $tableEntity->errors();
+
+                    $errors = $tableEntity->getErrors();
 //                    if ($errors) { //POCOR-7977
 //                        $model->log('@ImportOutcomeBehavior line ' . __LINE__, 'debug');
 //                        $model->log($errors, 'debug');
@@ -243,7 +293,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
 
                     // to-do: saving of entity into table with composite primary keys (Exam Results) give wrong isNew value
                     $isNew = $tableEntity->isNew();
-
+                    //echo "<pre>"; print_r($tableEntity); die;
                     if ($extra['entityValidate'] == true) {
                         // POCOR-4258 - shifted saving model before updating errors to implement try-catch to catch database errors
                         try {
@@ -280,7 +330,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                         if (!empty($errors)) {
                             foreach ($errors as $field => $arr) {
                                 if (in_array($field, $columns)) {
-                                    $fieldName = $this->getExcelLabel($activeModel->registryAlias(), $field);
+                                    $fieldName = $this->getExcelLabel($activeModel->getRegistryAlias(), $field);
                                     $rowCodeError .= '<li>' . $fieldName . ' => ' . $arr[key($arr)] . '</li>';
                                     $rowCodeErrorForExcel[] = $fieldName . ' => ' . $arr[key($arr)];
                                 } else {
@@ -288,13 +338,13 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                                         $rowCodeError .= '<li>' . $arr[key($arr)] . '</li>';
                                         $rowCodeErrorForExcel[] = $arr[key($arr)];
                                     }
-                                    $model->log('@ImportOutcomeBehavior line ' . __LINE__ . ': ' . $activeModel->registryAlias() . ' -> ' . $field . ' => ' . $arr[key($arr)], 'info'); //POCOR-7977
+                                    $model->log('@ImportOutcomeBehavior line ' . __LINE__ . ': ' . $activeModel->getRegistryAlias() . ' -> ' . $field . ' => ' . $arr[key($arr)], 'info'); //POCOR-7977
                                 }
                             }
                         }
                         if (!empty($rowInvalidCodeCols)) {
                             foreach ($rowInvalidCodeCols as $field => $errMessage) {
-                                $fieldName = $this->getExcelLabel($activeModel->registryAlias(), $field);
+                                $fieldName = $this->getExcelLabel($activeModel->getRegistryAlias(), $field);
                                 if (!isset($errors[$field])) {
                                     $rowCodeError .= '<li>' . $fieldName . ' => ' . $errMessage . '</li>';
                                     $rowCodeErrorForExcel[] = $fieldName . ' => ' . $errMessage;
@@ -307,24 +357,31 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                             'errorForExcel' => implode("\n", $rowCodeErrorForExcel),
                             'data' => $originalRow
                         ];
-
                         continue;
                     } else {
                         $clonedEntity = clone $tableEntity;
-                        $clonedEntity->virtualProperties([]);
-
-                        $columns = array("outcome_criteria_id", "student_id", "outcome_grading_option_id");
-                        $tempPassedRecord = [
-                            'row_number' => $row,
-                            'data' => $this->_getReorderedEntityArray($clonedEntity, $columns, $originalRow, $systemDateFormat)
+                        $columns = [
+                            'outcome_criteria_id',
+                            'student_id',
+                            'outcome_grading_option_id'
                         ];
 
-                        $tempPassedRecord = new ArrayObject($tempPassedRecord);
+                        $tempPassedRecord = [
+                            'row_number' => $row,
+                            'data' => $this->_getReorderedEntityArray(
+                                $clonedEntity,
+                                $columns,
+                                $originalRow,
+                                $systemDateFormat
+                            )
+                        ];
 
-                        $dataPassed[] = $tempPassedRecord->getArrayCopy();
+                        $dataPassed[] = $tempPassedRecord;
+
                     }
 
                 }
+                //echo "<pre>"; print_r($params); die;
             }
 
             $resultHeader = array('Outcome Criteria Id', 'OpenEMIS ID', 'Outcome Grading Option');
@@ -342,11 +399,17 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 'executionTime' => (microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"])
             ];
             $session->write($this->sessionKey, $completedData);
+            $url = $this->_table->ControllerAction->url('results'); //POCOR-8343
+            $request = $this->_table->request;
+            if(empty($this->institutionId) && isset($request->getParam('pass')[1])) {
+                $queryString = $this->_table->paramsDecode($request->getParam('pass')[1]);
+                $this->institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : $this->institutionId ;
+            }
+            $url[1] =  $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
 
-            return $model->controller->redirect($this->_table->ControllerAction->url('results'));
+            return $model->controller->redirect($url);
         };
 
-        return $closureFunction;
     }
 
 
@@ -372,10 +435,17 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
 
         $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $headerRow3, '');
 
-        $this->setCodesDataTemplate($objPHPExcel);
+        //$this->setCodesDataTemplate($objPHPExcel);
+        //POCOR-9158 start
+        $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+        $drawing->setName('OpenEMIS');
+        $drawing->setPath(WWW_ROOT . 'img/openemis_logo.png');
+        $drawing->setHeight(100);
+        $drawing->setCoordinates('A1');
+        $drawing->setWorksheet($objPHPExcel->getActiveSheet());
+        //POCOR-9158 end
 
         $objPHPExcel->setActiveSheetIndex(0);
-//        $objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
         $objWriter = new Xlsx($objPHPExcel);;
         try {
             $objWriter->save($excelPath);
@@ -396,23 +466,22 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
 
     public function setImportDataTemplate($objPHPExcel, $dataSheetName, $header, $type)
     {
-        parent::setImportDataTemplate($objPHPExcel, $dataSheetName, $header, $type);
+
         $objPHPExcel->setActiveSheetIndex(0);
         $activeSheet = $objPHPExcel->getActiveSheet();
-
-        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, __(Inflector::humanize(Inflector::tableize($this->_table->getAlias()))) . ' ' . $dataSheetName);
-
+        $passParams = $this->_table->request->getParam('pass');
+        $encodedQueryString = $passParams[1] ?? null;
+        $data = $this->_table->paramsDecode($encodedQueryString);
+       
         $educationSubjectsTable = TableRegistry::get('Education.EducationSubjects');
-        $data = $this->_table->getQueryString();
-//        dd($data);
         $template = $data['outcome_template'];
-        $education_subject_id = $data['education_subject'];
+        //$education_subject_id = $data['education_subject'];
+        $education_subject_id = 60;
         $classId = $data['class'];
         $outcome_period_id = $data['outcome_period'];
         $institution_id = $data['institution_id'];
         $academic_period_id = $data['academic_period'];
         $name = $educationSubjectsTable->get($education_subject_id)->name;
-
         $activeSheet->setCellValue("A2", $name);
         $activeSheet->setCellValue("B2", "Outcome -->");
 
@@ -431,7 +500,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
 
         $educationGradeId = $outcomeTemplatesTable->find()
             ->where([
-                $outcomeTemplatesTable->aliasField('id') => $template,
+                $outcomeTemplatesTable->aliasField('id IS') => $template,
             ])
             ->extract('education_grade_id')
             ->first();
@@ -440,7 +509,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         $arrayOutcomeCriterias = $outcomeCriteriasTable->find()
             ->where([
                 $outcomeCriteriasTable->aliasField('education_subject_id') => $education_subject_id,
-                $outcomeCriteriasTable->aliasField('outcome_template_id') => $template
+                $outcomeCriteriasTable->aliasField('outcome_template_id IS') => $template
             ])
             ->toArray();
 
@@ -474,7 +543,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
 
 
         foreach ($arrayOutcomeCriterias as $key => $value) {
-            $column = $key + 2; // This will be 2 (C), 3 (D), 4 (E), etc.
+            $column = $key + 3; // This will be 2 (C), 3 (D), 4 (E), etc.
             $alpha = $this->getExcelColumnAlpha($column);
 
             $activeSheet->setCellValue($alpha . 1, $value->id);
@@ -520,61 +589,128 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         }
 
         // After the loop, apply the suggested row height to the entire row if needed
-//        if ($suggestedRowHeight > 15) {
-//            $activeSheet->getRowDimension(2)->setRowHeight($suggestedRowHeight);
-//        }
-//        $activeSheet->getRowDimension(1)->setRowHeight(80);
-//        $activeSheet->getRowDimension(2)->setRowHeight($suggestedRowHeight);
+       if ($suggestedRowHeight > 15) {
+           $activeSheet->getRowDimension(2)->setRowHeight($suggestedRowHeight);
+       }
+       $activeSheet->getRowDimension(1)->setRowHeight(80);
+       $activeSheet->getRowDimension(2)->setRowHeight($suggestedRowHeight);
 
-//        $institutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-//        $studentStatusesTable = TableRegistry::get('Student.StudentStatuses');
-//        $arrayStudent = $institutionClassStudentsTable->find()
-//            ->select([
-//                $institutionClassStudentsTable->Users->aliasField('openemis_no'),
-//                $institutionClassStudentsTable->Users->aliasField('first_name'),
-//                $institutionClassStudentsTable->Users->aliasField('middle_name'),
-//                $institutionClassStudentsTable->Users->aliasField('third_name'),
-//                $institutionClassStudentsTable->Users->aliasField('last_name'),
-//                $institutionClassStudentsTable->Users->aliasField('preferred_name'),
-//            ])
-//            ->matching('Users')
-//            ->matching('InstitutionClasses')
-//            ->matching('EducationGrades')
-//            ->matching($studentStatusesTable->getAlias(), function ($q) use ($studentStatusesTable) {
-//                return $q->where([$studentStatusesTable->aliasField('code') => 'CURRENT']);
-//            })
-//            ->where([
-//                $institutionClassStudentsTable->aliasField('institution_class_id') => $classId,
-//                $institutionClassStudentsTable->aliasField('education_grade_id') => $educationGradeId // POCOR- 7987
-//            ])
-//            ->order([
-//                $institutionClassStudentsTable->Users->aliasField('first_name'),
-//                $institutionClassStudentsTable->Users->aliasField('last_name')
-//            ])
-//            ->toArray();
-//
-//        $i = 4;
-//        foreach ($arrayStudent as $key => $value) {
-//            $activeSheet->setCellValue('A' . $i, $value->_matchingData['Users']->openemis_no);
-//            $activeSheet->setCellValue('B' . $i, $value->_matchingData['Users']->name);
-//            $i++;
-//            $activeSheet->getColumnDimension('A')->setAutoSize(true);
-//            $activeSheet->getColumnDimension('B')->setAutoSize(true);
-//
-//        }
-        // -1 to start from A, +2 is for education subject and outcome-->, -1+2=+1
+       $institutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+       $studentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+       $arrayStudent = $institutionClassStudentsTable->find()
+           ->select([
+               $institutionClassStudentsTable->Users->aliasField('openemis_no'),
+               $institutionClassStudentsTable->Users->aliasField('first_name'),
+               $institutionClassStudentsTable->Users->aliasField('middle_name'),
+               $institutionClassStudentsTable->Users->aliasField('third_name'),
+               $institutionClassStudentsTable->Users->aliasField('last_name'),
+               $institutionClassStudentsTable->Users->aliasField('preferred_name'),
+           ])
+           ->matching('Users')
+           ->matching('InstitutionClasses')
+           ->matching('EducationGrades')
+           ->matching($studentStatusesTable->getAlias(), function ($q) use ($studentStatusesTable) {
+               return $q->where([$studentStatusesTable->aliasField('code') => 'CURRENT']);
+           })
+           ->where([
+               $institutionClassStudentsTable->aliasField('institution_class_id IS') => $classId,
+               $institutionClassStudentsTable->aliasField('education_grade_id IS') => $educationGradeId //POCOR-7987
+           ])
+           ->order([
+               $institutionClassStudentsTable->Users->aliasField('first_name'),
+               $institutionClassStudentsTable->Users->aliasField('last_name')
+           ])
+           ->toArray();
+
+        $i = 4;
+        foreach ($arrayStudent as $key => $value) {
+           $activeSheet->setCellValue('A' . $i, $value->_matchingData['Users']->openemis_no);
+           $activeSheet->setCellValue('B' . $i, $value->_matchingData['Users']->name);
+           $i++;
+           $activeSheet->getColumnDimension('A')->setAutoSize(true);
+           $activeSheet->getColumnDimension('B')->setAutoSize(true);
+
+       }
+
+        // POCOR-9158 start ADD OUTCOME GRADING OPTION DROPDOWNS
+
+        $outcomeGradingOptionsTable = TableRegistry::get('Outcome.OutcomeGradingOptions');
+
+        $gradingOptions = $outcomeGradingOptionsTable->find()->toArray();
+
+        // Create / use a hidden reference sheet
+        $referenceSheet = $objPHPExcel->getSheetByName('References');
+        if (!$referenceSheet) {
+            $referenceSheet = $objPHPExcel->createSheet();
+            $referenceSheet->setTitle('References');
+        }
+
+        // Fill grading options
+        $row = 1;
+        foreach ($gradingOptions as $option) {
+            $referenceSheet->setCellValue('A' . $row, $option->name);
+            $row++;
+        }
+
+        // Hide reference sheet
+        $referenceSheet->setSheetState(
+            \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet::SHEETSTATE_HIDDEN
+        );
+
+        // Apply dropdown to each outcome criteria column
+        $startRow = 4;
+        $endRow   = count($arrayStudent) + 3;
+
+        foreach ($arrayOutcomeCriterias as $key => $criteria) {
+
+            // Criteria start from column C (index 3)
+            $columnIndex = $key + 3;
+            $alpha = $this->getExcelColumnAlpha($columnIndex);
+
+            for ($row = $startRow; $row <= $endRow; $row++) {
+
+                $validation = $activeSheet
+                    ->getCell($alpha . $row)
+                    ->getDataValidation();
+
+                $validation->setType(DataValidation::TYPE_LIST);
+                $validation->setAllowBlank(true);
+                $validation->setShowDropDown(true);
+                $validation->setFormula1(
+                    "='References'!\$A\$1:\$A\$" . count($gradingOptions)
+                );
+            }
+        }        //POCOR-9158 end
+
+      //  -1 to start from A, +2 is for education subject and outcome-->, -1+2=+1
         $arrayLastAlpha = $this->getExcelColumnAlpha(count($arrayOutcomeCriterias) + 1);
-        $activeSheet->mergeCells('C3:' . $arrayLastAlpha . '3');
+        //$activeSheet->mergeCells('C3:' . $arrayLastAlpha . '3');
+        $startAlpha = $this->getExcelColumnAlpha(3);
+
+// last criteria column
+$endAlpha = $this->getExcelColumnAlpha(count($arrayOutcomeCriterias) + 1);
+
+// convert to numeric indexes
+$startIndex = Coordinate::columnIndexFromString($startAlpha);
+$endIndex   = Coordinate::columnIndexFromString($endAlpha);
+
+// prevent invalid reverse range
+if ($endIndex >= $startIndex) {
+    $activeSheet->mergeCells($startAlpha . '3:' . $endAlpha . '3');
+}
+
         // -1 to start from A, +2 is for education subject and outcome-->, +1 comment after criteria name, -1+2+1=+2
         $countCriterias = count($arrayOutcomeCriterias);
-        $Comment = $this->getExcelColumnAlpha($countCriterias + 2);
+       // echo "<pre>"; print_r($countCriterias); die;
+        $Comment = $this->getExcelColumnAlpha($countCriterias + 3);
         $activeSheet->setCellValue($Comment . '3', __("Comment"));
         $activeSheet->getColumnDimension($Comment)->setAutoSize(true);
 
     }
 
-    public function __setCodesDataTemplate($objPHPExcel)
+    public function setCodesDataTemplate($objPHPExcel)
     {
+        
         $sheetName = __('References');
         $objPHPExcel->createSheet(1);
         $objPHPExcel->setActiveSheetIndex(1); // Activate the new sheet
@@ -692,7 +828,9 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             // based on the data in the *current* sheet (index 1, 'References')
             if (count($modelData) > 1 && !isset($modelArr['noDropDownList'])) {
                 $lookupColumn = $firstColumn + intval($modelArr['lookupColumn']) - 1;
-                $alpha = $this->getExcelColumnAlpha($columnOrder); // This 'alpha' is tricky. It determines the column on sheet 0.
+                //$alpha = $this->getExcelColumnAlpha($columnOrder); // This 'alpha' is tricky. It determines the column on sheet 0.
+
+                $alpha = $this->getExcelColumnAlpha($columnOrder + 3);
                 $lookupColumnAlpha = $this->getExcelColumnAlpha($lookupColumn); // Column on sheet 1 for dropdown source
                 ($this->isCustomText()) ? $lookupStart = 4 : $lookupStart = 3; // Starting row for dropdown list on sheet 1
 
@@ -750,7 +888,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
         $outcomeGradingTypeId = $outcomeCriteriasTable->find()
             ->where([
-                $outcomeCriteriasTable->aliasField('id') => $outcomeIdValue,
+                $outcomeCriteriasTable->aliasField('id IS') => $outcomeIdValue,
             ])
             ->extract('outcome_grading_type_id')
             ->first();
@@ -760,7 +898,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         $User = $usersTable->find()
             ->select(['id'])
             ->where([
-                $usersTable->aliasField('openemis_no') => $studentValue
+                $usersTable->aliasField('openemis_no IS') => $studentValue
             ])
             ->first();
 
@@ -769,8 +907,8 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         $Grading = $outcomeGradingOptionsTable->find()
             ->select(['id'])
             ->where([
-                $outcomeGradingOptionsTable->aliasField('name') => $gradeValue,
-                $outcomeGradingOptionsTable->aliasField('outcome_grading_type_id') => $outcomeGradingTypeId
+                $outcomeGradingOptionsTable->aliasField('name IS') => $gradeValue,
+                $outcomeGradingOptionsTable->aliasField('outcome_grading_type_id IS') => $outcomeGradingTypeId
             ])
             ->first();
 
@@ -789,7 +927,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
 
         if ($rowPass) {
             $rowPassEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportModelSpecificValidation'), 'onImportModelSpecificValidation', [$references, $tempRow, $originalRow, $rowInvalidCodeCols]);
-            $rowPass = $rowPassEvent->result;
+            $rowPass = $rowPassEvent->getResult();
         }
 
 

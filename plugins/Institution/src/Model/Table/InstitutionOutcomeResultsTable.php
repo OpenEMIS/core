@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\Datasource\ConnectionManager;
 
 class InstitutionOutcomeResultsTable extends AppTable
 {
@@ -73,7 +74,6 @@ class InstitutionOutcomeResultsTable extends AppTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //POCOT-7480-HINDOL
-
         $gradingOption = empty($entity->outcome_grading_option_id) ? -1 : $entity->outcome_grading_option_id;
 
         if ($entity->isNew() && $gradingOption <= 0) {

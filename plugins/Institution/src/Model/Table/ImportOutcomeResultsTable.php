@@ -55,7 +55,7 @@ class ImportOutcomeResultsTable extends AppTable
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
         $request = $this->request;
-        if (empty($request->getQuery('education_subject'))) {
+        if (empty($request->getData()['ImportOutcomeResults']['education_subject'])) {
             unset($buttons[0]);
             unset($buttons[1]);
         }
@@ -425,7 +425,7 @@ class ImportOutcomeResultsTable extends AppTable
             } else {
                 $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
                 $educationGrades = $InstitutionGrades->find()
-                    ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
+                    ->where([$InstitutionGrades->aliasField('institution_id IS') => $institutionId])
                     ->extract('education_grade_id')
                     ->toArray();
             }
@@ -482,6 +482,7 @@ class ImportOutcomeResultsTable extends AppTable
         $tempRow['outcome_template_id'] = $requestData['outcome_template'];
         $tempRow['outcome_period_id'] = $requestData['outcome_period'];
         $tempRow['institution_class_id'] = $requestData['class'];
+        $tempRow['education_subject_id'] = $requestData['education_subject'];
         $tempRow['institution_id'] = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
 
         $outcomeCriteriaEntity = $this->OutcomeCriterias->find()
