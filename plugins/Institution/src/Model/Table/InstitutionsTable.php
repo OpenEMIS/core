@@ -356,6 +356,8 @@ class InstitutionsTable extends ControllerActionTable
             ])
             ->allowEmpty('email')
             ->notEmpty('institution_locality_id') //POCOR-9407
+            ->notEmpty('institution_gender_id', 'Institution Gender is required') //POCOR-9469
+            ->notEmpty('institution_type_id', 'Institution Type is required') //POCOR-9469
             ->add('email', [
                 'ruleValidEmail' => [
                     'rule' => 'checkEmailFormat',
@@ -1439,7 +1441,6 @@ class InstitutionsTable extends ControllerActionTable
             }
         }
         $extra['formButtons'] = false;
-
     }
 
     public function getNumberOfInstitutionsByModel($params = [])
