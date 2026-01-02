@@ -1,3 +1,11 @@
+### [4.50.0] - 2026-01-02
+- Implemented: Develop sync button functions to get students examination results from OpenEMIS Exams to OpenEMIS Core
+- Bug Fixed: Institutions>Add Institution: Upon Leaving Gender drop down as unselected, User is getting SQL State error[23000] | Upon Leaving Institution drop down as unselected, User is getting SQL State error[23000]
+- Bug Fixed: Administration>System Setup>Labels: Modification of any label should take effect in the corresponding module immediately
+- Bug Fixed: Institutions>Performance>Report Cards: Merge and download pdf is getting 404 error
+- Bug Fixed: Administration> System Setup> Manuals : Updation of the Entire Manuals section required.
+- Bug Fixed: Directory>Advanced Search : Searching by contact number shows 404 Error screen
+
 ### [4.49.0] - 2025-12-31
 - Implemented: Develop External Data Source - Identity (Seychelles)
 - Implemented: Develop changes to the cases list page column order
