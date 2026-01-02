@@ -1817,6 +1817,9 @@ class InstitutionsTable extends ControllerActionTable
                 $extra['toolbarButtons'][$key] = $button;
             }
         }
+        // POCOR-9519 start
+        $this->addManualButton($extra);
+        // POCOR-9519 end
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -1870,6 +1873,7 @@ class InstitutionsTable extends ControllerActionTable
         //Start:POCOR-6660
         $this->field('latitude', ['type' => 'hidden']);
         $this->field('longitude', ['type' => 'hidden']);
+
         //End:POCOR-6660
     }
 
@@ -1897,6 +1901,7 @@ class InstitutionsTable extends ControllerActionTable
             'contact_section',
             'contact_person', 'telephone', 'email', 'website',
         ]);
+        $this->addManualButton($extra); // POCOR-9519
     }
 
     public function onUpdateFieldInstitutionProviderId(Event $event, array $attr, $action, ServerRequest $request)
@@ -2744,5 +2749,30 @@ class InstitutionsTable extends ControllerActionTable
     {
         //echo "<pre>"; print_r($query->toArray); die;
       //  return $query;
+    }
+
+    /**
+     * @param ArrayObject|array $extra
+     * @return void
+     */
+    private function addManualButton(ArrayObject|array $extra): void
+    {
+        $is_manual_exist = $this->getManualUrl('Institutions', 'Institution', 'General');
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
+
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
     }
 }
