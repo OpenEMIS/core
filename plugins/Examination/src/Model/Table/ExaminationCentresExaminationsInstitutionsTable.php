@@ -86,7 +86,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         $this->setFieldOrder(['linked_institution', 'examination_id']);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Exam Centre Linked Institutions','Examinations');       
+		$is_manual_exist = $this->getManualUrl('Administration','Exam Centre Linked Institutions','Examinations');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -162,22 +162,27 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('academic_period_id');
+//        $this->field('academic_period_id'); // POCOR-9515
         $this->field('institutions');
         $this->field('examination_centre_id');
         $this->field('examination_id');
-        $this->setFieldOrder(['academic_period_id', 'examination_centre_id', 'examination_id', 'institutions']);
+        $this->setFieldOrder([
+//            'academic_period_id', // POCOR-9515
+            'examination_centre_id', 'examination_id', 'institutions']);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
-    {
-        $examCentre = $this->ExaminationCentres->get($this->examCentreId, ['contain' => ['AcademicPeriods']]);
-        $academicPeriodId = $examCentre->academic_period->name;
 
-        $attr['type'] = 'readonly';
-        $attr['attr']['value'] = $academicPeriodId;
-        return $attr;
-    }
+// POCOR-9515 commented
+//
+//    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+//    {
+//        $examCentre = $this->ExaminationCentres->get($this->examCentreId, ['contain' => ['AcademicPeriods']]);
+//        $academicPeriodId = $examCentre->academic_period->name;
+//
+//        $attr['type'] = 'readonly';
+//        $attr['attr']['value'] = $academicPeriodId;
+//        return $attr;
+//    }
 
     public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, ServerRequest $request)
     {

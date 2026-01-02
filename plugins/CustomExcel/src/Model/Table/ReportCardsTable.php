@@ -768,8 +768,30 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseInstitutions(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id'])) {
+
             $Institutions = self::getDynamicTableInstance('Institution.Institutions'); // POCOR-9162
-            $entity = $Institutions->get($params['institution_id'], ['contain' => ['Providers', 'Areas', 'AreaAdministratives']]);
+
+            $entity = $Institutions->get(
+                $params['institution_id'],
+                [
+                    'contain' => [
+                        'Providers',
+                        'Areas',
+                        'AreaAdministratives'
+                    ]
+                ]
+            );
+
+            // Set fax to empty (as you already do)
+            $entity->fax = '';
+
+            // Safe read: use AreaAdministratives.name if present
+            if (!empty($entity->area_administrative) && !empty($entity->area_administrative->name)) {
+                $entity->address_area = $entity->area_administrative->name;
+            } else {
+                $entity->address_area = '';
+            }
+
             return $entity;
         }
     }
@@ -785,14 +807,30 @@ class ReportCardsTable extends AppTable
             $StaffPositionTitles = self::getDynamicTableInstance('Institution.StaffPositionTitles'); // POCOR-9162
             $staffPosnIds = $StaffPositionTitles->getPrincipalRoleId($staffRoleId); //POCOR-9413
             $staff = self::getInstitutionSecurityStaff($institutionId, $staffPosnIds); //POCOR-9442 - now returns array
+
+            //POCOR-9498[START]
+            // if (!empty($staff)) {
+            //     $staff->principal = $staff->user->name;
+            //     $staff->principal_gender = $staff->gender;
+            //     //POCOR-9413 -- if preferred name is empty then return '-'
+            //     if (empty($staff->user->preferred_name)) {
+            //         $staff->user->preferred_name = '-';
+            //     }
+            // }
             if (!empty($staff)) {
-                $staff->principal = $staff->user->name;
-                $staff->principal_gender = $staff->gender;
-                //POCOR-9413 -- if preferred name is empty then return '-'
-                if (empty($staff->user->preferred_name)) {
-                    $staff->user->preferred_name = '-';
+                if (!empty($staff->user)) {
+
+                    $staff->principal = $staff->user->name ?? '-';
+                    $staff->principal_gender = $staff->gender ?? '-';
+                    if (empty($staff->user->preferred_name)) {
+                        $staff->user->preferred_name = '-';
+                    }
+                } else {
+                    $staff->principal = '-';
+                    $staff->principal_gender = '-';
                 }
             }
+            //POCOR-9498[END]
             return $staff;
         }
     }
@@ -1047,7 +1085,12 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionStudentAbsences(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
+//        Log::debug(print_r($params, true));
+        if (isset($params['institution_class_id'])
+            && isset($params['institution_id'])
+            && isset($params['student_id'])
+            && isset($extra['report_card_start_date'])
+            && isset($extra['report_card_end_date'])) {
 
             //POCOR-7040
             $startDate = $extra['report_card_start_date']->format('Y-m-d');
@@ -1351,9 +1394,9 @@ class ReportCardsTable extends AppTable
             ,attend_info.student_id");
             //POCOR-8902 end
             $getData = $sqlQuery->fetchAll('assoc');
-            $results['EXCUSED']['number_of_days'] = $getData[0]['excused_absence_counter'];
-            $results['UNEXCUSED']['number_of_days'] = $getData[0]['unexcused_absence_counter'];
-            $results['LATE']['number_of_days'] = $getData[0]['late_absence_counter'];
+            $results['EXCUSED']['number_of_days'] = $getData[0]['excused_absence_counter'] ?? 0;
+            $results['UNEXCUSED']['number_of_days'] = $getData[0]['unexcused_absence_counter'] ?? 0;
+            $results['LATE']['number_of_days'] = $getData[0]['late_absence_counter'] ?? 0;
             //POCOR-8017::end
             $results['TOTAL_ABSENCE']['number_of_days'] = count($total_count_arr);
             return $results;
@@ -1612,24 +1655,44 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseStudentCompetencyItemComments(Event $event, array $params, ArrayObject $extra)
-    {
-        if (isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
-            $CompetencyItemComments = self::getDynamicTableInstance('Institution.InstitutionCompetencyItemComments'); // POCOR-9162
+    public function onExcelTemplateInitialiseStudentCompetencyItemComments(
+        Event $event,
+        array $params,
+        ArrayObject $extra
+    ) {
+        if (
+            !empty($extra['competency_templates_ids']) &&
+            !empty($extra['competency_periods_ids']) &&
+            !empty($params['student_id']) &&
+            !empty($params['institution_id']) &&
+            !empty($params['academic_period_id'])
+        ) {
+            $Table = self::getDynamicTableInstance('Institution.InstitutionCompetencyItemComments');
 
-            $entity = $CompetencyItemComments->find()
+            $rows = $Table->find()
                 ->where([
-                    $CompetencyItemComments->aliasField('competency_template_id IN ') => $extra['competency_templates_ids'],
-                    $CompetencyItemComments->aliasField('competency_period_id IN ') => $extra['competency_periods_ids'],
-                    $CompetencyItemComments->aliasField('student_id') => $params['student_id'],
-                    $CompetencyItemComments->aliasField('institution_id') => $params['institution_id'],
-                    $CompetencyItemComments->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $Table->aliasField('competency_template_id IN') => $extra['competency_templates_ids'],
+                    $Table->aliasField('competency_period_id IN')   => $extra['competency_periods_ids'],
+                    $Table->aliasField('student_id')                => $params['student_id'],
+                    $Table->aliasField('institution_id')            => $params['institution_id'],
+                    $Table->aliasField('academic_period_id')        => $params['academic_period_id'],
                 ])
                 ->toArray();
 
-            return $entity;
+            // ----------------------------------------
+            // SAFETY MODE: create structured empty rows
+            // ----------------------------------------
+            if (empty($rows)) {
+                $rows = $this->buildEmptyCommentsRows($extra, $Table, $params);
+            }
+
+            return $rows;
         }
+
+        return [];
     }
+
+
 
     public function onExcelTemplateInitialiseCompetencyCriteriasWithResults(Event $event, array $params, ArrayObject $extra)
     {
@@ -1685,6 +1748,58 @@ class ReportCardsTable extends AppTable
             return $entity;
         }
     }
+
+    private function buildEmptyCommentsRows(ArrayObject $extra, $Table, array $params)
+    {
+        $result = [];
+
+        $templateIds = (array)$extra['competency_templates_ids'];
+        $periodIds   = (array)$extra['competency_periods_ids'];
+
+        // Optional: competency items & criteria (if available in vars)
+        $items = $extra['vars']['CompetencyItems']['id'] ?? [];
+        $criterias = $extra['vars']['CompetencyCriterias']['id'] ?? [];
+
+        foreach ($templateIds as $templateId) {
+            foreach ($periodIds as $periodId) {
+
+                foreach ($items as $itemId) {
+
+                    // If there are no criteria — still return one entity
+                    if (empty($criterias)) {
+                        $result[] = $Table->newEntity([
+                            'competency_template_id' => $templateId,
+                            'competency_period_id'   => $periodId,
+                            'competency_item_id'     => $itemId,
+                            'competency_criteria_id' => null,
+                            'student_id'             => $params['student_id'],
+                            'institution_id'         => $params['institution_id'],
+                            'academic_period_id'     => $params['academic_period_id'],
+                            'comments'               => ""
+                        ]);
+                    } else {
+                        foreach ($criterias as $criteriaId) {
+                            $result[] = $Table->newEntity([
+                                'competency_template_id' => $templateId,
+                                'competency_period_id'   => $periodId,
+                                'competency_item_id'     => $itemId,
+                                'competency_criteria_id' => $criteriaId,
+                                'student_id'             => $params['student_id'],
+                                'institution_id'         => $params['institution_id'],
+                                'academic_period_id'     => $params['academic_period_id'],
+                                'comments'               => ""
+                            ]);
+                        }
+                    }
+
+                }
+
+            }
+        }
+
+        return $result;
+    }
+
 
     public function onExcelTemplateInitialiseStudentCompetencyResults(Event $event, array $params, ArrayObject $extra)
     {
@@ -2765,21 +2880,44 @@ class ReportCardsTable extends AppTable
          $entity = $staffQuery
              ->first();
 
-         // POCOR-7033[START]
-         if (!empty($entity)) {
-             if ($entity->user->gender_id == '1') {
-                 $entity->user->gender_id = "Male";
-                 $entity->gender = "Male";
-             } else {
-                 $entity->user->gender_id = "Female";
-                 $entity->gender = "Male";
-             }
-             $username = $entity->user->name;
-             if(empty($username) || $username = ""){
-                 $entity->user->name = $entity->user->first_name . ' ' . $entity->user->last_name;
-             }
-         }
+        //POCOR-9498[START]
+        // POCOR-7033[START]
+        //  if (!empty($entity)) {
+        //      if ($entity->user->gender_id == '1') {
+        //          $entity->user->gender_id = "Male";
+        //          $entity->gender = "Male";
+        //      } else {
+        //          $entity->user->gender_id = "Female";
+        //          $entity->gender = "Male";
+        //      }
+        //      $username = $entity->user->name;
+        //      if(empty($username) || $username = ""){
+        //          $entity->user->name = $entity->user->first_name . ' ' . $entity->user->last_name;
+        //      }
+        //  }
+
+        if (!empty($entity)) {
+            if (!empty($entity->user)) {
+
+                if ($entity->user->gender_id == '1') {
+                    $entity->user->gender_id = "Male";
+                    $entity->gender = "Male";
+                } else {
+                    $entity->user->gender_id = "Female";
+                    $entity->gender = "Female";
+                }
+                $username = $entity->user->name;
+
+                if (empty($username) || $username == "") {
+                    $entity->user->name = trim($entity->user->first_name . ' ' . $entity->user->last_name);
+                }
+
+            } else {
+                // Optional: log
+            }
+        }
          // POCOR-7033[END]
+         //POCOR-9498[END]
          return $entity;
     }
 
