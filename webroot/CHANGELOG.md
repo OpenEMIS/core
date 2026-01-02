@@ -1,4 +1,53 @@
-### [4.48.2] - 2025-11-21
+### [4.49.0] - 2025-12-31
+- Implemented: Develop External Data Source - Identity (Seychelles)
+- Implemented: Develop changes to the cases list page column order
+- Bug Fixed: Administration>System Setup>Field Options: Unable to save with specific position grade
+- Bug Fixed: Institutions>Academic>Schedule>Timetables>List>Add: Start scheduling is showing blank page
+- Bug Fixed: Administration>Performance>Outcomes: Academic Period is not changing
+- Bug Fixed: Administration>System Setup>Localization>Translations: The translation string added in does not show up against the actual element after saving.
+- Bug Fixed: Administration>System Setup>Localization>Translations: Editable should be a dropdown
+- Bug Fixed: Reports>Staff>Add: Date of Birth is empty in generated staff reports
+- Bug Fixed: Reports > Performance > Assessments Report: Implement an Institution Type Filter
+- Bug Fixed: Administration>Examinations>Centres: User is getting 404 when adding linked institutions
+- Bug Fixed: Personal>Staff>Career>Leave: Staff is unable to apply for leave(Required Staff Field which was not present in Core/v3)
+- Bug Fixed: Administration>Security>Roles: User has permissions for System Configurations is unable to edit
+- Bug Fixed: Institutions>Academic>Curriculars: Activity does not show up on the Student's Academic record.
+
+### [4.48.9] - 2025-12-17
+- Bug Fixed: Administration>Performance>Report Cards: GPA is showing 0.00 for another term
+
+### [4.48.8] - 2025-12-16
+- Bug Fixed: Administration>Performance>Report Cards: GPA for another term is generated
+
+### [4.48.7] - 2025-12-11
+- Bug Fixed: Institutions>Performance>GPA: Student GPA should show up against the right school.
+- Bug Fixed: Institutions> Import Institution: User sees 404 error message for leaving document field empty and clicking on save
+- Bug Fixed: Administration>Communication>Alert: Student attendance alert is not working
+- Bug Fixed: Institutions > Performances > Assessments > Edit : Permission to Edit Assessments and All Classes/Subjects given yet user is not able to edit Assessments
+- Bug Fixed: Administration > Profiles > Institutions > Profile: Report is stuck in progress
+- Bug Fixed: Directory>Advanced Search : Advance Search for Staff in Directory gives 404 Error
+- Bug Fixed: Report>Institutions>Students: Report should show Nevis related
+- Bug Fixed: Institutions>Performance>Assessments: When marks are removed, the marks in the deleted_record table is showing null instead of the actual marks
+
+### [4.48.6] - 2025-12-05
+- Bug Fixed: Institutions>Performance>Assessments: When user is not a homeroom/secondary/subject teacher, edit assessment button should be hidden
+- Bug Fixed: Institutions>Performance>Report Cards: System returns a Missing Placeholder message on the report card instead of showing a blank field.
+
+### [4.48.5] - 2025-12-03
+- Bug Fixed: Institution>Performance>Assessment: The list of subjects seen in Academic Subjects does not reflect exactly on the Performance >Assessments page
+- Bug Fixed: Institutions>Students>Performance>GPA: GPA is calculating wrongly for grade 6 and grade 11
+- Bug Fixed: Institutions>Performance>Report Cards: Excel and pdf are not working properly in libreoffice
+- Bug Fixed: Administration>Scholarships>Applications: The User gets and error page when attempting to add a Scholarship application.
+- Bug Fixed: Directory: Directory section listing is not displaying the photos
+- Bug Fixed: Administration>Data Management>Copy: it is not reflecting in the Administration>Performance>Competencies when copying is done
+- Bug Fixed: Directory>Import: Class name should not be mandatory
+
+### [4.48.4] - 2025-11-28
+- Bug Fixed: Institutions>Performance>Assessments>PDF: Upon clicking PDF button, user is getting 404 error
+- Bug Fixed: Institutions>Attendance>Staff: Users can enter attendance for staff
+- Bug Fixed: Institution>Student>List>Counselling: The list of names that appear in the Requester list is of Students.
+
+### [4.48.3] - 2025-11-26
 - Bug Fixed: Institutions>Staff>Add: User is unable to add positions to existing staff
 - Bug Fixed: Directory: User is getting 404 when login
 - Bug Fixed: Institutions>Infrastructure>Overview: User getting 404 error 
