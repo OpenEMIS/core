@@ -14,6 +14,8 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
 use PhpOffice\PhpSpreadsheet\Exception;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ImportResultBehavior extends ImportBehavior
 {
@@ -70,9 +72,10 @@ class ImportResultBehavior extends ImportBehavior
      **
      ******************************************************************************************************************/
 
-    public function results()
+    public function resultsbkp()
     {
-        $session = $this->_table->getRequest()->getSession();
+        $controller = $this->_table->ControllerAction->getController();
+        $session    = $controller->getRequest()->getSession();
         if ($session->check($this->sessionKey)) {
             $completedData = $session->read($this->sessionKey);
             $this->_table->ControllerAction->field('select_file', ['visible' => false]);
@@ -98,6 +101,7 @@ class ImportResultBehavior extends ImportBehavior
             // define data as empty entity so that the view file will not throw an undefined notice
             $this->_table->controller->set('data', $this->_table->newEntity([]));
             $this->_table->ControllerAction->renderView('/ControllerAction/view');
+            return ;
         } else {
             return $this->_table->controller->redirect($this->_table->ControllerAction->url('add'));
         }
