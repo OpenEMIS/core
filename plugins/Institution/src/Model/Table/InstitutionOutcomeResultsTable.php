@@ -130,4 +130,35 @@ class InstitutionOutcomeResultsTable extends AppTable
             })
             ->toArray();
     }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $toolbarButtons = $extra['toolbarButtons'];
+        $session = $this->request->getSession();
+        $paramInstitutionId = $this->request->getAttribute('param')['institutionId'];
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $institutionId = !empty($paramInstitutionId) ? $this->ControllerAction->paramsDecode($paramInstitutionId)['id'] : $getInstitutionId;
+
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        if ($this->action == 'index') {
+            $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+            $toolbarButtons['back']['attr'] = [
+                'title' => __('Back'),
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false
+            ];
+            $toolbarButtons['back']['url'] = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'StudentOutcomes',
+                0 => 'index',
+                1 => $encodedQueryString
+                //'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+            ];
+
+        }
+    }
 }
