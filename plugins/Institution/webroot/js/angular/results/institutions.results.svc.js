@@ -591,7 +591,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         'oe-cell-highlight': function (params) {
                             var field = params.colDef.field;
                             const exempt = params.node.data[field];
-                            console.log(field);
+                            // console.log(field);
                             //POCOR-7550 start
                             if(exempt === 'EXEMPT' && exempt === 'UNASSIGN'){//POCOR-9042 add 'UNASSIGN' condition
                                 return 0;
