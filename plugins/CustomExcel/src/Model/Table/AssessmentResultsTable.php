@@ -706,6 +706,7 @@ class AssessmentResultsTable extends AppTable
             $uniqueCombinations[] = $combination;
             $student_ids[] = $mark['student_id'];
         }
+        // POCOR-7586 start
         if(!is_array($uniqueCombinations)){
             $uniqueCombinations = [];
         }
@@ -718,6 +719,7 @@ class AssessmentResultsTable extends AppTable
         if(!is_array($student_ids)){
             $student_ids = [];
         }
+        // POCOR-7586 end
         $uniqueCombinations = array_unique($uniqueCombinations, SORT_REGULAR);
         $assessment_period_ids = array_unique($assessment_period_ids, SORT_REGULAR);
         $education_subject_ids = array_unique($education_subject_ids, SORT_REGULAR);

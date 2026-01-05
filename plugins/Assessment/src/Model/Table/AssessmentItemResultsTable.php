@@ -817,8 +817,8 @@ class AssessmentItemResultsTable extends AppTable
         }
         $id = -1;
         $options = ["student_id" => $student_id,
-//            "institution_id" => $institution_id,
-//            "institution_class_id" => $institution_class_id,
+            "institution_id" => $institution_id,
+            "institution_class_id" => $institution_class_id,
             "academic_period_id" => $academic_period_id,
             "education_grade_id" => $education_grade_id,
             "education_subject_id" => $education_subject_id,
@@ -906,8 +906,8 @@ class AssessmentItemResultsTable extends AppTable
             'assessment_id' => $assessmentId,
             'assessment_period_id' => $assessmentPeriodId,
             'assessment_grading_option_id' => $assessmentGradingOptionId,
-            'institution_id' => $institutionId,
-            'institution_classes_id' => $institutionClassesId
+//            'institution_id' => $institutionId,
+//            'institution_classes_id' => $institutionClassesId
         ]);
 
         $institutionClassStudentsWhere = self::buildInstitutionClassStudentsWhere($academicPeriodId, $educationGradeId, $institutionId, $institutionClassesId);
@@ -939,61 +939,91 @@ class AssessmentItemResultsTable extends AppTable
     }
 
     /** //POCOR-8224
+     * // POCOR-7586 refactured to include prev school
      * @param $options
      * @return array
      */
     public static function getLastExemptions($options): array
     {
-//        $institution_class_id = self::getFromArray($options, 'institution_class_id'); //568
+        $institution_class_id = self::getFromArray($options, 'institution_class_id');
+        $institution_id = self::getFromArray($options, 'institution_id');
+        $academic_period_id = self::getFromArray($options, 'academic_period_id');
+
         $assessment_id = self::getFromArray($options, 'assessment_id');
-        $education_subject_id = self::getFromArray($options, 'education_subject_id'); //60
+        $education_subject_id = self::getFromArray($options, 'education_subject_id');
         $student_id = self::getFromArray($options, 'student_id');
         $assessment_period_id = self::getFromArray($options, 'assessment_period_id');
 
         $exemptions_table = self::getDynamicTableInstance('assessment_item_student_exemptions');
 
-        // Initialize an empty array for the WHERE conditions
         $where = [];
 
-        // Add conditions only if the corresponding variables are set and greater than zero
         if ($education_subject_id > 0) {
-            $where[] = 'assessment_items.education_subject_id = ' . $education_subject_id;
+            $where[] = 'assessment_items.education_subject_id = ' . (int)$education_subject_id;
         }
 
         if ($assessment_id > 0) {
-            $where[] = 'assessment_items.assessment_id = ' . $assessment_id;
+            $where[] = 'assessment_items.assessment_id = ' . (int)$assessment_id;
         }
 
-//        if ($institution_class_id > 0) {
-//            $where[] = 'institution_class_students.institution_class_id = ' . $institution_class_id;
-//        }
+        if ($assessment_period_id > 0) {
+            $where[] = $exemptions_table->aliasField('assessment_period_id') . ' = ' . (int)$assessment_period_id;
+        }
+
+        // Get students from current class/institution
+        $studentIds = [];
 
         if ($student_id > 0) {
-            $where[] = 'institution_class_students.student_id = ' . $student_id;
-        }
-        if ($assessment_period_id > 0) {
-            $where[] = $exemptions_table->aliasField('assessment_period_id = ') . $assessment_period_id;
+            $studentIds = [$student_id];
+        } elseif ($institution_class_id > 0 || $institution_id > 0) {
+            $studentIds = self::getStudentIdsByClassOrInstitution($institution_id, $institution_class_id, $academic_period_id);
         }
 
+        if (!empty($studentIds)) {
+            $where[] = $exemptions_table->aliasField('student_id') . ' IN (' . implode(',', array_map('intval', $studentIds)) . ')';
+        } else {
+            return []; // No students to fetch exemptions for
+        }
+
+        // Query without filtering exemptions by class/grade/institution
         $exemptions_array = $exemptions_table->find('all')
             ->select([
                 'student_id' => $exemptions_table->aliasField('student_id'),
                 'education_subject_id' => 'assessment_items.education_subject_id',
                 'assessment_period_id' => $exemptions_table->aliasField('assessment_period_id'),
                 'assessment_id' => $exemptions_table->aliasField('assessment_id'),
-                'type' => $exemptions_table->aliasField('type')//POCOR-9042
+                'type' => $exemptions_table->aliasField('type')
             ])
             ->innerJoin(['assessment_items' => 'assessment_items'],
                 [$exemptions_table->aliasField('assessment_id') . ' = assessment_items.assessment_id AND ' .
                     $exemptions_table->aliasField('education_subject_id') . ' = assessment_items.education_subject_id'])
-            ->innerJoin(['institution_class_students' => 'institution_class_students'],
-                [$exemptions_table->aliasField('student_id') . ' = institution_class_students.student_id AND ' .
-                    $exemptions_table->aliasField('institution_class_id') . ' = institution_class_students.institution_class_id AND ' .
-                    $exemptions_table->aliasField('education_grade_id') . ' = institution_class_students.education_grade_id'])
             ->where($where)
-            ->disableHydration();
-        $exemptions_array = $exemptions_array->toArray();
+            ->disableHydration()
+            ->toArray();
+
         return $exemptions_array;
+    }
+
+    // POCOR-7586
+    private static function getStudentIdsByClassOrInstitution($institutionId, $institutionClassId, $academicPeriodId)
+    {
+        $connection = ConnectionManager::get('default');
+        $params = [];
+
+        $where = ['academic_period_id = :period'];
+        $params['period'] = $academicPeriodId;
+
+        if ($institutionClassId > 0) {
+            $where[] = 'institution_class_id = :class';
+            $params['class'] = $institutionClassId;
+        } elseif ($institutionId > 0) {
+            $where[] = 'institution_id = :institution';
+            $params['institution'] = $institutionId;
+        }
+
+        $sql = 'SELECT student_id FROM institution_class_students WHERE ' . implode(' AND ', $where);
+        $rows = $connection->execute($sql, $params)->fetchAll('assoc');
+        return array_column($rows, 'student_id');
     }
 
     /**
