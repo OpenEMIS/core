@@ -2439,11 +2439,21 @@ class InstitutionsController extends AppController
                 'action' => 'setAlert',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
+            //POCOR-9526 start
+            $LabelTable = TableRegistry::get('Labels');
+            $secondarystaff = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field_name' => 'Secondary Teacher'])->first();
+            $secondarystaffName = $secondarystaff ?  (string)$secondarystaff->name : $secondarystaff->field_name;
+
+            $homeRoomTeacher = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field_name' => 'Home Room Teacher'])->first();
+            $homeRoomTeacherName = !empty($homeRoomTeacher->code. ' '.$homeRoomTeacher->name)? (string)$homeRoomTeacher->code. ' '.$homeRoomTeacher->name : $homeRoomTeacher->field_name;
+            //POCOR-9526 end
             $this->set('alertUrl', $alertUrl);
             $this->set('viewUrl', $viewUrl);
             $this->set('indexUrl', $indexUrl);
             $this->set('classId', $classId['id']);
             $this->set('institutionId', $institutionId);
+            $this->set('secondarystaffName', $secondarystaffName); //POCOR-9526
+            $this->set('homeRoomTeacherName', $homeRoomTeacherName); // POCOR-9526
             $this->render('institution_classes_edit');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']);
