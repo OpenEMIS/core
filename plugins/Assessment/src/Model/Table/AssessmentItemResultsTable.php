@@ -817,8 +817,8 @@ class AssessmentItemResultsTable extends AppTable
         }
         $id = -1;
         $options = ["student_id" => $student_id,
-            "institution_id" => $institution_id,
-            "institution_class_id" => $institution_class_id,
+//            "institution_id" => $institution_id,
+//            "institution_class_id" => $institution_class_id,
             "academic_period_id" => $academic_period_id,
             "education_grade_id" => $education_grade_id,
             "education_subject_id" => $education_subject_id,
@@ -944,7 +944,7 @@ class AssessmentItemResultsTable extends AppTable
      */
     public static function getLastExemptions($options): array
     {
-        $institution_class_id = self::getFromArray($options, 'institution_class_id'); //568
+//        $institution_class_id = self::getFromArray($options, 'institution_class_id'); //568
         $assessment_id = self::getFromArray($options, 'assessment_id');
         $education_subject_id = self::getFromArray($options, 'education_subject_id'); //60
         $student_id = self::getFromArray($options, 'student_id');
@@ -964,9 +964,9 @@ class AssessmentItemResultsTable extends AppTable
             $where[] = 'assessment_items.assessment_id = ' . $assessment_id;
         }
 
-        if ($institution_class_id > 0) {
-            $where[] = 'institution_class_students.institution_class_id = ' . $institution_class_id;
-        }
+//        if ($institution_class_id > 0) {
+//            $where[] = 'institution_class_students.institution_class_id = ' . $institution_class_id;
+//        }
 
         if ($student_id > 0) {
             $where[] = 'institution_class_students.student_id = ' . $student_id;

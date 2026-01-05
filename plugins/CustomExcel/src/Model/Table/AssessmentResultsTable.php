@@ -706,6 +706,18 @@ class AssessmentResultsTable extends AppTable
             $uniqueCombinations[] = $combination;
             $student_ids[] = $mark['student_id'];
         }
+        if(!is_array($uniqueCombinations)){
+            $uniqueCombinations = [];
+        }
+        if(!is_array($assessment_period_ids)){
+            $assessment_period_ids = [];
+        }
+        if(!is_array($education_subject_ids)){
+            $education_subject_ids = [];
+        }
+        if(!is_array($student_ids)){
+            $student_ids = [];
+        }
         $uniqueCombinations = array_unique($uniqueCombinations, SORT_REGULAR);
         $assessment_period_ids = array_unique($assessment_period_ids, SORT_REGULAR);
         $education_subject_ids = array_unique($education_subject_ids, SORT_REGULAR);
@@ -904,7 +916,7 @@ class AssessmentResultsTable extends AppTable
                                     $totalMarksPerStudent[$assessmentI]['marks'] = 'EXEMPT';
                                     $totalMarksPerStudent[$assessmentI]['academic_term_total_marks'] = 'EXEMPT';
                                     $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = 'EXEMPT';
-                                }                                
+                                }
                             }
 //                            $totalMarksPerStudent[$assessmentI][$markkey] = $markval;
                             $assessmentI++;
