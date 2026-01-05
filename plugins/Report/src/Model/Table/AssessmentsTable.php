@@ -70,6 +70,7 @@ class AssessmentsTable extends AppTable
         $institutionId = $requestData->institution_id ?? null;
         $areaId = $requestData->area_education_id ?? null;
         $academicPeriodId = $requestData->academic_period_id ?? null;
+        $institutionType = $requestData->institution_type ?? null; //POCOR-9451
         $gradeId = $requestData->education_grade_id ?? null;
         $superAdmin = $requestData->super_admin ?? false;
         $userId = $requestData->user_id ?? null;
@@ -162,7 +163,7 @@ class AssessmentsTable extends AppTable
 
         $query
             ->contain([
-                'InstitutionClasses.Institutions',
+                'InstitutionClasses.Institutions.Types',//POCOR-9451,
                 'AcademicPeriods',
                 'EducationGrades',
                 'Users.BirthplaceAreas',
@@ -182,6 +183,7 @@ class AssessmentsTable extends AppTable
             ->select([
                 'code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
+                'institution_type_name' => 'Types.name', //POCOR-9451
                 'institution_id' => 'Institutions.id',
                 'openemis_number' => 'Users.openemis_no',
                 'birth_place_area' => 'BirthplaceAreas.name',
@@ -242,6 +244,13 @@ class AssessmentsTable extends AppTable
             'field' => 'institution_name',
             'type' => 'string',
             'label' => __('Institutions Name'),
+        ];
+        //POCOR-9451
+        $fields[] = [
+            'key' => 'Types.name',
+            'field' => 'institution_type_name',
+            'type' => 'string',
+            'label' => __('Institution Type'),
         ];
 
         $fields[] = [

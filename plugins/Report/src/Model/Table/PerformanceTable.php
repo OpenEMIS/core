@@ -66,6 +66,7 @@ class PerformanceTable extends AppTable
         $validator = $this->validationDefault($validator);
         $validator = $validator
             ->notEmpty('academic_period_id')
+            ->notEmpty('institution_type_id') //POCOR-9451
             ->notEmpty('institution_id')
             ->notEmpty('education_grade_id')
             ->notEmpty('area_level_id')
@@ -106,6 +107,7 @@ class PerformanceTable extends AppTable
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
+        $this->ControllerAction->field('institution_type_id', ['type' => 'hidden', 'attr' => ['required' => true]]);//POCOR-9451
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('education_programme_id', ['type' => 'hidden', 'attr' => ['required' => true]]); //POCOR-9443
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
@@ -135,6 +137,7 @@ class PerformanceTable extends AppTable
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['label'=>'Area Name','required' => true]]); //POCOR-7415
+        $this->ControllerAction->field('institution_type_id', ['type' => 'hidden', 'attr' => ['required' => true]]);//POCOR-9451
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
          $this->ControllerAction->field('education_programme_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
@@ -241,7 +244,35 @@ class PerformanceTable extends AppTable
         }
         return $attr;
     }
-
+    //POCOR-9451 start
+    /**
+     * Fetching Institution Type's options list.
+     *
+     * @param  \Cake\Network\Request  $request
+     * @return attr
+     */
+    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if (isset($this->request->getData($this->getAlias())['feature']) && $this->request->getData($this->getAlias())['feature'] == 'Report.Assessments') {
+            $InstitutionTypes = TableRegistry::getTableLocator()->get('Institution.Types');
+            
+            $institutionTypeOptions = $InstitutionTypes
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'name'
+                ])
+                ->order([$InstitutionTypes->aliasField('name') => 'ASC'])
+                ->toArray();
+            
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['options'] = ['' => '-- ' . __('Select') . ' --', 0 => __('All Institution Types')] + $institutionTypeOptions;
+            $attr['onChangeReload'] = true;
+        }
+        
+        return $attr;
+    }
+    //POCOR-9451 end
     /**
      * Fetching Institution's options list based on area id.
      *
@@ -255,6 +286,12 @@ class PerformanceTable extends AppTable
             if ($areaId > 0) {
                 $condition[$this->Institutions->aliasField('area_id')] = $areaId;
             }
+            //POCOR-9451 start
+            $institutionTypeId = $request->getData($this->getAlias())['institution_type_id'];
+            if ($institutionTypeId > 0) {
+                $condition[$this->Institutions->aliasField('institution_type_id')] = $institutionTypeId;
+            }
+            //POCOR-9451 end
             $institutionQuery = $this->Institutions
                             ->find('list', [
                                 'keyField' => 'id',
