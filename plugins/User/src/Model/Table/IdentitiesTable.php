@@ -312,10 +312,11 @@ class IdentitiesTable extends ControllerActionTable
                     $validator->setProvider('custom', $this);
                     $validator
                         ->add('issue_date', 'ruleCompareDate', [
-                            'rule' => ['compareDate', 'expiry_date', false]
+                            'rule' => ['compareDate', 'expiry_date', false],
+                            'on' => 'create',
                         ])
-                        ->add('expiry_date', [
-                        ])
+                        ->allowEmptyDate('issue_date')
+                        ->allowEmptyDate('expiry_date')
                         ->add('identity_type_id', 'ruleCustomIdentityType', [
                             'rule' => ['validateCustomIdentityType'],
                             'provider' => 'table',
@@ -335,9 +336,67 @@ class IdentitiesTable extends ControllerActionTable
                         ->notEmpty('nationality_id');//POCOR-5987 ends
                 }
             }
+        }elseif(!empty($requestData['Identities'])){ //POCOR-9404
+            $validator = parent::validationDefault($validator);
+            $validator->setProvider('custom', $this);
+            return $validator
+                ->add('issue_date', 'ruleCompareDate', [
+                    'rule' => ['compareDate', 'expiry_date', false]
+                ])
+                ->add('expiry_date', [
+                ])
+                ->add('identity_type_id', 'ruleCustomIdentityType', [
+                    'rule' => ['validateCustomIdentityType'],
+                    'provider' => 'table',
+                ])
+                ->add('number', 'ruleCustomIdentityNumber', [
+                    'rule' => ['validateCustomIdentityNumber'],
+                    'provider' => 'table',
+                    'last' => true
+                ])
+                ->add('number', [
+                    'ruleUnique' => [
+                        'rule' => ['validateUnique', ['scope' => 'identity_type_id']],
+                        'provider' => 'table'
+                    ]
+                ])
+                //POCOR-5987 starts
+            ->notEmpty('nationality_id');
+        //POCOR-5987 ends
+
         }
 
         return $validator;
+    }
+
+    public function validationDefaultbkp(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+        return $validator
+            ->add('issue_date', 'ruleCompareDate', [
+                'rule' => ['compareDate', 'expiry_date', false]
+            ])
+            ->add('expiry_date', [
+            ])
+            ->add('identity_type_id', 'ruleCustomIdentityType', [
+                'rule' => ['validateCustomIdentityType'],
+                'provider' => 'table',
+            ])
+            ->add('number', 'ruleCustomIdentityNumber', [
+                'rule' => ['validateCustomIdentityNumber'],
+                'provider' => 'table',
+                'last' => true
+            ])
+            ->add('number', [
+                'ruleUnique' => [
+                    'rule' => ['validateUnique', ['scope' => 'identity_type_id']],
+                    'provider' => 'table'
+                ]
+            ])
+            //POCOR-5987 starts
+            ->notEmpty('nationality_id');
+        //POCOR-5987 ends
     }
 
 
