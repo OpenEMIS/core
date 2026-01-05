@@ -866,7 +866,7 @@ if ($endIndex >= $startIndex) {
      * @param ArrayObject $rowInvalidCodeCols for holding error messages found on option field columns
      * @return boolean                          returns whether the row being checked pass option field columns check
      */
-    protected function _extractRecord($references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols, ArrayObject $extra)
+    protected function _extractRecordbkp($references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols, ArrayObject $extra)
     {
         $numberColumn = $references['numberColumn'];
         $sheet = $references['sheet'];
@@ -933,4 +933,158 @@ if ($endIndex >= $startIndex) {
 
         return $rowPass;
     }
+    protected function _extractRecord(
+    $references,
+    ArrayObject $tempRow,
+    ArrayObject $originalRow,
+    ArrayObject $rowInvalidCodeCols,
+    ArrayObject $extra
+) {
+        // Skip header rows (logo + description + column header)
+if ($row < 4) {
+    $extra['entityValidate'] = false;
+    return false;
+}
+
+    $sheet       = $references['sheet'];
+    $row         = (int)$references['row'];
+    $column      = (int)$references['numberColumn'];
+    $criteriaMap = $references['outcomeCriteriaMap'];
+
+    $rowPass = true;
+
+    /* -------------------------------------------------
+     * 1. READ STUDENT OPENEMIS ID (Column A, Row 4+)
+     * ------------------------------------------------- */
+  // Skip header rows
+
+
+// Read OpenEMIS ID (Column A)
+$cell = $sheet->getCellByColumnAndRow(0, $row);
+$value = $cell->getValue();
+
+if ($value instanceof \PhpOffice\PhpSpreadsheet\RichText\RichText) {
+    $value = $value->getPlainText();
+}
+
+$studentValue = trim((string)$value);
+echo "<pre>"; print_r($studentValue);die;
+if ($studentValue === '') {
+    $rowInvalidCodeCols['student_id'] = __('Student OpenEMIS ID missing');
+    $extra['entityValidate'] = false;
+    return false;
+}
+
+
+if ($value instanceof \PhpOffice\PhpSpreadsheet\RichText\RichText) {
+    $value = $value->getPlainText();
+}
+
+$studentValue = trim((string)$value);
+
+    if ($studentValue === '') {
+        $rowInvalidCodeCols['student_id'] = __('Student OpenEMIS ID missing');
+        $extra['entityValidate'] = false;
+        return false;
+    }
+
+    /* -------------------------------------------------
+     * 2. MAP OUTCOME CRITERIA ID FROM COLUMN
+     * ------------------------------------------------- */
+    $outcomeCriteriaId = $criteriaMap[$column] ?? null;
+
+    if (!$outcomeCriteriaId) {
+        $rowInvalidCodeCols['outcome_criteria_id'] = __('Invalid outcome column');
+        $extra['entityValidate'] = false;
+        return false;
+    }
+
+    /* -------------------------------------------------
+     * 3. READ GRADE VALUE (Good / Very Good / etc.)
+     * ------------------------------------------------- */
+    $gradeValue = trim((string)$sheet
+        ->getCellByColumnAndRow($column, $row)
+        ->getValue()
+    );
+
+    if ($gradeValue === '') {
+        // Empty cell = skip silently
+        $extra['entityValidate'] = false;
+        return false;
+    }
+
+    /* -------------------------------------------------
+     * 4. FIND USER BY OPENEMIS ID
+     * ------------------------------------------------- */
+    $UsersTable = TableRegistry::get('User.Users');
+
+    $User = $UsersTable->find()
+        ->select(['id'])
+        ->where([
+            $UsersTable->aliasField('openemis_no') => $studentValue
+        ])
+        ->first();
+
+    if (!$User) {
+        $rowInvalidCodeCols['student_id'] = __('Student not found');
+        $extra['entityValidate'] = false;
+        return false;
+    }
+
+    /* -------------------------------------------------
+     * 5. FIND OUTCOME GRADING TYPE
+     * ------------------------------------------------- */
+    $OutcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
+
+    $outcomeGradingTypeId = $OutcomeCriteriasTable->find()
+        ->select(['outcome_grading_type_id'])
+        ->where([
+            $OutcomeCriteriasTable->aliasField('id') => $outcomeCriteriaId
+        ])
+        ->first()
+        ->outcome_grading_type_id ?? null;
+
+    if (!$outcomeGradingTypeId) {
+        $rowInvalidCodeCols['outcome_grading_type_id'] = __('Invalid grading type');
+        $extra['entityValidate'] = false;
+        return false;
+    }
+
+    /* -------------------------------------------------
+     * 6. FIND GRADING OPTION (Good / Very Good etc.)
+     * ------------------------------------------------- */
+    $OutcomeGradingOptionsTable = TableRegistry::get('Outcome.OutcomeGradingOptions');
+
+    $Grading = $OutcomeGradingOptionsTable->find()
+        ->select(['id'])
+        ->where([
+            $OutcomeGradingOptionsTable->aliasField('name') => $gradeValue,
+            $OutcomeGradingOptionsTable->aliasField('outcome_grading_type_id') => $outcomeGradingTypeId
+        ])
+        ->first();
+
+    if (!$Grading) {
+        $rowInvalidCodeCols['outcome_grading_option_id'] = __('Wrong Grade Option');
+        $extra['entityValidate'] = false;
+        return false;
+    }
+
+    /* -------------------------------------------------
+     * 7. BUILD ROW FOR SAVE
+     * ------------------------------------------------- */
+    $tempRow['student_id'] = $User->id;
+    $tempRow['outcome_criteria_id'] = $outcomeCriteriaId;
+    $tempRow['outcome_grading_option_id'] = $Grading->id;
+
+    /* -------------------------------------------------
+     * 8. FOR RESULT FILE (PASSED / FAILED)
+     * ------------------------------------------------- */
+    $originalRow[] = $outcomeCriteriaId;
+    $originalRow[] = $studentValue;
+    $originalRow[] = $gradeValue;
+
+    return true;
+}
+
+    
 }
