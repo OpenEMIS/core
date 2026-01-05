@@ -82,8 +82,8 @@ class WebhookCommand extends Command
 
                 $decodedResponse = $tokenResponse->getJson();
 
-//                $io->out("Response Code: " .$tokenResponse->getStatusCode());
-//                $io->out(print_r($tokenResponse->getJson(), true));
+                $io->out("Response Code: " .$tokenResponse->getStatusCode());
+                $io->out(print_r($tokenResponse->getJson(), true));
                 if ($tokenResponse->isOk() && isset($decodedResponse['data']['token'])) {
                     $token = $decodedResponse['data']['token'];
                     $headers['Authorization'] = 'Bearer ' . $token;
@@ -109,15 +109,23 @@ class WebhookCommand extends Command
                 // optionally allow self signed certs (some clients respect this)
                 $options['ssl_allow_self_signed'] = true;
             }
+//            $debugPayload = [
+//                'url'    => $url,
+//                'method' => $method,
+//                'body'   => $body,
+//                'options'=> $options,
+//            ];
+//            $io->out(json_encode($debugPayload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
             $response = $http->$method($url, $body, $options);
-//            $io->out(print_r([$host => $url, $body, $options], true));
+
 
 //            $io->out(print_r($response, true));
 
             $status = $response->getStatusCode();
 
             $io->out("Response Code: " .$status);
-//            $io->out(print_r($response->getJson(), true));
+            $io->out(print_r($response->getJson(), true));
 
             if (in_array($status, [200, 201, 202, 204])) {
                 // the third CLI arg is usually the body param

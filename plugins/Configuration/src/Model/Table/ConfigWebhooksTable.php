@@ -30,7 +30,10 @@ class ConfigWebhooksTable extends ControllerActionTable
     ];
     const string OPEN_EMIS_EXAMS = 'OpenEMIS Exams';
     const string OPEN_EMIS_CORE = 'OpenEMIS Core';
-    const array EXCLUDED_FIELDS = ['password', 'security_group_id', 'super_admin', '_condent'];
+    const array EXCLUDED_FIELDS = ['password',
+//        'security_group_id',
+        'super_admin',
+        '_content'];
     private $eventKeyOptions = [
         'logout' => 'Logout',
         'institutions_create' => 'Institution Create',
@@ -673,15 +676,15 @@ class ConfigWebhooksTable extends ControllerActionTable
             ],
             'institution_delete' => [
                 'code' => 'institution_delete',
-                'label' => 'Institution Class Delete',
+                'label' => 'Institution Delete',
                 'model' => 'Institution.Institutions',
                 'excluded' => self::EXCLUDED_FIELDS,
                 'placeholders' => $deleted_fields
             ],
             'institution_update' => [
                 'code' => 'institution_update',
-                'label' => 'Institution Class Update',
-                'model' => 'Institution.InstitutionClasses',
+                'label' => 'Institution Update',
+                'model' => 'Institution.Institutions',
                 'excluded' => self::EXCLUDED_FIELDS,
                 'placeholders' => ['classification_name']
             ],
