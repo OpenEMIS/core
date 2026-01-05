@@ -10,20 +10,20 @@ use Cake\ORM\TableRegistry;
 
 class AdvancedContactNumberSearchBehavior extends Behavior {
 	protected $_defaultgetConfig = [
-		'associatedKey' => '',
+		'associatedKey' => 'id',
 	];
 
 	public function initialize(array $getConfig): void {
 		$associatedKey = $this->getConfig('associatedKey');
 		if (empty($associatedKey)) {
-			$this->getConfig('associatedKey', $this->_table->aliasField('id'));
+			$this->setConfig('associatedKey', $this->_table->aliasField('id')); // POCOR-9500
 		}
 	}
-	
-	public function onBuildQuery(Event $event, Query $query, $advancedSearchHasMany) 
+
+	public function onBuildQuery(Event $event, Query $query, $advancedSearchHasMany)
 	{
 		$search = $advancedSearchHasMany['contact_number'];
-		
+
 		if (strlen($search) > 0) {
 			$searchString = '%' . $search . '%';
 			$query->join([
@@ -67,7 +67,7 @@ class AdvancedContactNumberSearchBehavior extends Behavior {
 				$Contacts->aliasField('security_user_id') => $userId
 			])
 			->toArray();
-		
+
 		if (!empty($studentContacts)) {
 			foreach ($studentContacts as $key => $value) {
 				$value = $value->value.'<br/>';
