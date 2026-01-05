@@ -2442,10 +2442,26 @@ class InstitutionsController extends AppController
             //POCOR-9526 start
             $LabelTable = TableRegistry::get('Labels');
             $secondarystaff = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field_name' => 'Secondary Teacher'])->first();
-            $secondarystaffName = $secondarystaff ?  (string)$secondarystaff->name : $secondarystaff->field_name;
+            if (!empty($secondarystaff)) {
+                $secondarystaffName = !empty($secondarystaff->name)
+                    ? (string)$secondarystaff->name
+                    : (string)$secondarystaff->field_name;
+            } else {
+                $secondarystaffName = 'Secondary Teacher';
+            }
 
             $homeRoomTeacher = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field_name' => 'Home Room Teacher'])->first();
-            $homeRoomTeacherName = !empty($homeRoomTeacher->code. ' '.$homeRoomTeacher->name)? (string)$homeRoomTeacher->code. ' '.$homeRoomTeacher->name : $homeRoomTeacher->field_name;
+            if (!empty($homeRoomTeacher)) {
+                if (!empty($homeRoomTeacher->code) && !empty($homeRoomTeacher->name)) {
+                    $homeRoomTeacherName = $homeRoomTeacher->code . ' ' . $homeRoomTeacher->name;
+                } elseif (!empty($homeRoomTeacher->name)) {
+                    $homeRoomTeacherName = $homeRoomTeacher->name;
+                } else {
+                    $homeRoomTeacherName = $homeRoomTeacher->field_name;
+                }
+            } else {
+                $homeRoomTeacherName = 'Home Room Teacher';
+            }
             //POCOR-9526 end
             $this->set('alertUrl', $alertUrl);
             $this->set('viewUrl', $viewUrl);
