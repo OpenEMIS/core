@@ -311,7 +311,7 @@ class ReportListBehavior extends Behavior {
 		// $name = $event->result;
 		// End Event
 
-		$filters = [];
+		/*$filters = [];
 		foreach ($fields as $key => $obj) {
 			if (in_array($obj['type'], ['select', 'chosenSelect']) && !in_array($key, ['feature', 'format'])) {
 				$selectedOption = $data[$alias][$key];
@@ -333,7 +333,54 @@ class ReportListBehavior extends Behavior {
 					}
 				}
 			}
-		}
+		}*/
+		//POCOR-9484 start A few lines of code are updated below.The multiselect dropdown was not working previously in above code.
+		$filters = [];
+		foreach ($fields as $key => $obj) {
+
+		    if (
+		        !isset($obj['type']) ||
+		        !in_array($obj['type'], ['select', 'chosenSelect']) ||
+		        in_array($key, ['feature', 'format'])
+		    ) {
+		        continue;
+		    }
+
+		    $selectedOption = $data[$alias][$key] ?? null;
+
+		    // Normalize selected value
+		    $selectedValues = is_array($selectedOption)
+		        ? $selectedOption
+		        : [$selectedOption];
+
+		    // Ensure options exist and are valid
+		    if (empty($obj['options']) || !is_array($obj['options'])) {
+		        continue;
+		    }
+
+		    foreach ($selectedValues as $opt) {
+
+		        //Prevent illegal offset type for multiselect dropdown
+		        if (!is_scalar($opt)) {
+		            continue;
+		        }
+
+		        if (!array_key_exists($opt, $obj['options'])) {
+		            continue;
+		        }
+
+		        $value = $obj['options'][$opt];
+
+		        // Handle structured options
+		        if (is_array($value)) {
+		            $value = $value['text'] ?? '';
+		        }
+
+		        if (!empty($value)) {
+		            $filters[] = __(trim($value));
+		        }
+		    }
+		} //POCOR-9484 end
 
 		//Check if there exists start and end report date filter, if yes, print out the start and end date.
 		if(isset($data[$alias]['report_start_date']) && isset($data[$alias]['report_end_date']) && $data[$alias]['report_start_date'] != 0 && $data[$alias]['report_end_date'] != 0) {
