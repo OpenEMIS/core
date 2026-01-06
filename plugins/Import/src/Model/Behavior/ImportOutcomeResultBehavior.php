@@ -34,271 +34,227 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
      * @param ArrayObject $data Event object
      * @return Response             Response object
      */
+
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
-        /**
-         * currently, extending the max execution time for individual scripts from the default of 30 seconds to 180 seconds
-         * to avoid server timed out issue.
-         * to be reviewed...
-         */
         ini_set('max_execution_time', 180);
-        /**
-         */
 
-         return function ($model, $entity) {
-            $errors = $entity->getErrors();
-            if (!empty($errors)) {
-                // set error message for php file upload errors
-                $fileError = Hash::get($entity->getInvalid(), 'select_file.error');
-                if (!empty($fileError)) {
-                    $errorMessage = $model->getMessage("fileUpload.$fileError");
-                    if ($errorMessage != '[Message Not Found]') {
-                        $entity->getErrors('select_file', $errorMessage, true);
-                    }
-                }
+        return function ($model, $entity) {
 
-                return false;
-            }
-            $systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
-
-            $fileObj = $entity->select_file;
-            //$uploadedName = $fileObj['name'];
-           // $uploaded = $fileObj['tmp_name'];
-            $uploadedName = $fileObj->getClientFilename();   // instead of ['name']
-            $uploaded     = $fileObj->getStream()->getMetadata('uri'); // instead of ['tmp_name']
-            $inputFileType = IOFactory::identify($uploaded); 
-            $objReader = IOFactory::createReader($inputFileType);
-            $objPHPExcel = $objReader->load($uploaded);
-
+            /* ===========================
+             *  COUNTERS & RESULTS
+             * =========================== */
             $totalImported = 0;
-            $totalUpdated = 0;
-            $importedUniqueCodes = new ArrayObject;
-            $dataFailed = [];
-            $dataPassed = [];
-            $extra = new ArrayObject(['lookup' => [], 'entityValidate' => true]);
+            $totalUpdated  = 0;
+            $dataFailed    = [];
+            $dataPassed    = [];
+            $rowTracker    = []; // per Excel row tracking
 
-            $activeModel = TableRegistry::get($this->getConfig('plugin') . '.' . $this->getConfig('model'));
-            $activeModel->addBehavior('DefaultValidation');
-
-            $maxRows = $this->getConfig('max_rows');
-            $maxRows = $maxRows + 2;
-            $sheet = $objPHPExcel->getSheet(0);
-            $highestRow = $sheet->getHighestRow();
-            if ($highestRow > $maxRows) {
-                $entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')], true);
+            /* ===========================
+             *  BASIC VALIDATION
+             * =========================== */
+            if (!empty($entity->getErrors())) {
                 return false;
             }
 
-            $educationSubjectsTable = TableRegistry::get('Education.EducationSubjects');
-            $data = $this->_table->request->getData()['ImportOutcomeResults'];
-            $getQueryString = $this->_table->getQueryString();
-            $template = $data['outcome_template'];
-            $education_subject_id = $data['education_subject'];
-            $classId = $data['class'];
-            $outcome_period_id = $data['outcome_period'];
-            $institution_id = $getQueryString['institution_id'];
-            $academic_period_id = $data['academic_period'];
-            $subjectName = $educationSubjectsTable->get($education_subject_id)->name;
+            /* ===========================
+             *  LOAD EXCEL
+             * =========================== */
+            $fileObj = $entity->select_file;
+            $uploadedName = $fileObj->getClientFilename();
+            $uploaded     = $fileObj->getStream()->getMetadata('uri');
 
-            // check correct template
-            $header = array($subjectName, 'Outcome -->');
-            // POCOR- 7987 moved up
-            $outcomeTemplatesTable = TableRegistry::get('Outcome.OutcomeTemplates');
-            // calculate outcome criterias
+            $inputFileType = IOFactory::identify($uploaded);
+            $objReader     = IOFactory::createReader($inputFileType);
+            $objPHPExcel   = $objReader->load($uploaded);
+            $sheet         = $objPHPExcel->getSheet(0);
+
+            /* ===========================
+             *  REQUEST DATA
+             * =========================== */
+            $requestData = $this->_table->request->getData()['ImportOutcomeResults'];
+            $queryString = $this->_table->getQueryString();
+
+            $template             = $requestData['outcome_template'];
+            $education_subject_id = $requestData['education_subject'];
+            $outcome_period_id    = $requestData['outcome_period'];
+            $academic_period_id   = $requestData['academic_period'];
+            $institution_id       = $queryString['institution_id'];
 
 
+            /* ===========================
+             *  LOAD TABLES
+             * =========================== */
+            $activeModel = TableRegistry::get(
+                $this->getConfig('plugin') . '.' . $this->getConfig('model')
+            );
+
+            $UsersTable               = TableRegistry::get('User.Users');
+            $outcomeTemplatesTable    = TableRegistry::get('Outcome.OutcomeTemplates');
+            $outcomeCriteriasTable    = TableRegistry::get('Outcome.OutcomeCriterias');
+            $commentsTable            = TableRegistry::get('Institution.InstitutionOutcomeSubjectComments');
+
+            /* ===========================
+             *  EDUCATION GRADE
+             * =========================== */
             $educationGradeId = $outcomeTemplatesTable->find()
-                ->where([
-                    $outcomeTemplatesTable->aliasField('id') => $template,
-                ])
+                ->where(['id' => $template])
                 ->extract('education_grade_id')
                 ->first();
 
-            //calculate number of student
-            $institutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-            $studentStatusesTable = TableRegistry::get('Student.StudentStatuses');
-            $arrayStudent = $institutionClassStudentsTable->find()
-                ->matching('Users')
-                ->matching('InstitutionClasses')
-                ->matching('EducationGrades')
-                ->matching($studentStatusesTable->getAlias(), function ($q) use ($studentStatusesTable) {
-                    return $q->where([$studentStatusesTable->aliasField('code') => 'CURRENT']);
-                })
+            /* ===========================
+             *  OUTCOME CRITERIA
+             * =========================== */
+            $criteriaList = $outcomeCriteriasTable->find()
                 ->where([
-                    $institutionClassStudentsTable->aliasField('institution_class_id') => $classId,
-                    $institutionClassStudentsTable->aliasField('education_grade_id') => $educationGradeId // POCOR- 7987
+                    'education_subject_id' => $education_subject_id,
+                    'outcome_template_id'  => $template
                 ])
                 ->toArray();
 
-            $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
-            $aryOutcomeCriteria = $outcomeCriteriasTable->find()
-                ->where([
-                    $outcomeCriteriasTable->aliasField('education_subject_id') => $education_subject_id,
-                    $outcomeCriteriasTable->aliasField('outcome_template_id') => $template
-                ])
-                ->toArray();
-            $totalCriteria = count($aryOutcomeCriteria);
-            $totalColumns = $totalCriteria + 1;
+            $totalCriteria = count($criteriaList);
 
-            //comment will be last after outcomecriterias
-            $commentColumn = $totalColumns + 1;
+            /* ===========================
+             *  COLUMN MAPPING
+             * =========================== */
+            $openemisColumn  = 1; // Column A (OpenEMIS ID)
+            $firstGradeCol   = 3; // Column C
+            $commentColumn   = $firstGradeCol + $totalCriteria;
 
-            foreach ($aryOutcomeCriteria as $key => $value) {
-                $headerCriteriaId[] = $value->id;
-            }
-            $institutionOutcomeSubjectCommentsTable = TableRegistry::get('Institution.InstitutionOutcomeSubjectComments');
+            /* ===========================
+             *  ROW LOOP
+             * =========================== */
+            $highestRow = $sheet->getHighestRow();
 
-            if (!$this->checkCorrectTemplate(
-                3,
-                $headerCriteriaId,
-                $sheet,
-                3 + count($headerCriteriaId) - 1,
-                1 // ✅ correct row
-            )) {
-                $entity->setErrors([
-                    'select_file' => [
-                        '_error' => $this->getExcelLabel('Import', 'wrong_template')
-                    ]
-                ]);
-                return false;
-            }
+            for ($row = 4; $row <= $highestRow; $row++) {
 
+                $rowTracker[$row] = [
+                    'success' => false,
+                    'errors'  => []
+                ];
 
+                /* ---------------------------
+                 * STUDENT
+                 * --------------------------- */
+                $studentOpenEmisId = trim((string)
+                    $sheet->getCellByColumnAndRow($openemisColumn, $row)->getCalculatedValue()
+                );
 
-            /*if (!$this->checkCorrectTemplate(
-    0,
-    ['OpenEMIS ID', 'Student Name'],
-    $sheet,
-    1,
-    3
-)) {
-                $entity->setErrors([
-                    'select_file' => [
-                        '_error' => $this->getExcelLabel('Import', 'wrong_template')
-                    ]
-                ]);
-                return false;
-            }*/
-
-
-
-            $numberOfStudents = count($arrayStudent);
-            for ($row = 4; $row < $numberOfStudents + 4; $row++) {
-
-                // do the save for the comment
-                $student = $sheet->getCellByColumnAndRow(0, $row);
-                $studentOpenEmisId = $student->getValue();
-                $UsersTable = TableRegistry::get('User.Users');
+                if ($studentOpenEmisId === '') {
+                    continue;
+                }
 
                 $User = $UsersTable->find()
                     ->select(['id'])
-                    ->where([
-                        $UsersTable->aliasField('openemis_no IS') => $studentOpenEmisId
-                    ])
+                    ->where(['openemis_no' => $studentOpenEmisId])
                     ->first();
 
-                $comment = $sheet->getCellByColumnAndRow($commentColumn, $row)->getValue();
+                if (!$User) {
+                    $rowTracker[$row]['errors'][] = 'Student not found';
+                    continue;
+                }
 
-                if (!empty($comment)) {
-                    $institutionOutcomeSubjectCommentsData = $institutionOutcomeSubjectCommentsTable->newEntity([
-                        'comments' => $comment,
-                        'student_id' => $User->id,
-                        'outcome_template_id' => $template,
-                        'outcome_period_id' => $outcome_period_id,
-                        'education_grade_id' => $educationGradeId,
+                /* ---------------------------
+                 * COMMENT (DELETE + INSERT)
+                 * --------------------------- */
+                $comment = trim((string)
+                    $sheet->getCellByColumnAndRow($commentColumn, $row)->getCalculatedValue()
+                );
+
+                if ($comment !== '') {
+
+                    $commentsTable->deleteAll([
+                        'student_id'           => $User->id,
+                        'outcome_template_id'  => $template,
+                        'outcome_period_id'    => $outcome_period_id,
+                        'education_grade_id'   => $educationGradeId,
                         'education_subject_id' => $education_subject_id,
-                        'institution_id' => $institution_id,
-                        'academic_period_id' => $academic_period_id
+                        'institution_id'       => $institution_id,
+                        'academic_period_id'   => $academic_period_id,
                     ]);
 
-                    $institutionOutcomeSubjectCommentsTable->save($institutionOutcomeSubjectCommentsData);
+                    $commentsTable->save(
+                        $commentsTable->newEntity([
+                            'comments'             => $comment,
+                            'student_id'           => $User->id,
+                            'outcome_template_id'  => $template,
+                            'outcome_period_id'    => $outcome_period_id,
+                            'education_grade_id'   => $educationGradeId,
+                            'education_subject_id' => $education_subject_id,
+                            'institution_id'       => $institution_id,
+                            'academic_period_id'   => $academic_period_id,
+                        ])
+                    );
                 }
-                // end of save comment
 
-                for ($column = 2; $column <= $totalColumns; $column++) {
-                    $cell = $sheet->getCellByColumnAndRow($column, $row);
-                    $gradeValue = $cell->getValue();
+                /* ---------------------------
+                 *      GRADES
+                 * --------------------------- */
+                $rowHasNew    = false;
+                $rowHasUpdate = false;
 
-                    // if there is no any data, just skip
-                    if (empty($gradeValue)) {
+                for ($i = 0; $i < $totalCriteria; $i++) {
+
+                    $column = $firstGradeCol + $i;
+
+                    $gradeValue = trim((string)
+                        $sheet->getCellByColumnAndRow($column, $row)->getCalculatedValue()
+                    );
+
+                    if ($gradeValue === '') {
                         continue;
                     }
 
-                    $tempRow = new ArrayObject;
+                    $tempRow            = new ArrayObject;
+                    $originalRow        = new ArrayObject;
                     $rowInvalidCodeCols = new ArrayObject;
+                    $extra              = new ArrayObject(['entityValidate' => true]);
 
-                    // for each columns
-                    $references = [
-                        'commentColumn' => $commentColumn,
-                        'numberColumn' => $column,
-                        'sheet' => $sheet,
-                        'totalColumns' => $totalCriteria,
-                        'row' => $row,
-                        'activeModel' => $activeModel,
-                        'systemDateFormat' => $systemDateFormat,
+                    $this->_extractRecord(
+                        [
+                            'numberColumn' => $column,
+                            'sheet'        => $sheet,
+                            'row'          => $row,
+                            'activeModel'  => $activeModel
+                        ],
+                        $tempRow,
+                        $originalRow,
+                        $rowInvalidCodeCols,
+                        $extra
+                    );
+
+                    if (!$extra['entityValidate']) {
+                        $rowTracker[$row]['errors'][] =
+                            'Invalid grade: ' . $gradeValue;
+                        continue;
+                    }
+
+                    $entityData = $tempRow->getArrayCopy() + [
+                        'student_id'           => $User->id,
+                        'outcome_template_id'  => $template,
+                        'outcome_period_id'    => $outcome_period_id,
+                        'education_grade_id'   => $educationGradeId,
+                        'education_subject_id' => $education_subject_id,
+                        'institution_id'       => $institution_id,
+                        'academic_period_id'   => $academic_period_id,
                     ];
 
-                    $originalRow = new ArrayObject;
-                    $checkCustomColumn = new ArrayObject;
-                    $extra['entityValidate'] = true;
-                    $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols, $extra);
+                    $gradeEntity = $activeModel->newEntity($entityData, ['validate' => false]);
 
-                    $tempRow = $tempRow->getArrayCopy();
-                    if (!isset($tempRow['entity'])) {
-                        $tableEntity = $activeModel->newEmptyEntity();
-                    } else {
-                        $tableEntity = $tempRow['entity'];
-                        unset($tempRow['entity']);
-                    }
+                    $isNew = $gradeEntity->isNew();
 
-                    /*if ($extra['entityValidate'] == true) {
-                        // added for POCOR-4577 import staff leave for workflow related record to save the transition record
-                        $tempRow['action_type'] = 'imported';
-                        $activeModel->patchEntity($tableEntity, $tempRow,
-                            [ 'validate' => false] //POCOR-7977
-                        );
-                    }*/
-
-                    if ($extra['entityValidate'] === true) {
-
-                        //  COMPLETE COMPOSITE PRIMARY KEY (MANDATORY)
-                        $tempRow['student_id']           = $User->id;
-                        $tempRow['outcome_template_id']  = $template;
-                        $tempRow['outcome_period_id']    = $outcome_period_id;
-                        $tempRow['education_grade_id']   = $educationGradeId;
-                        $tempRow['education_subject_id'] = $education_subject_id;
-                        $tempRow['academic_period_id']   = $academic_period_id;
-                        $tempRow['institution_id']       = $institution_id;
-
-                        // from _extractRecord()
-                        // $tempRow['outcome_criteria_id']
-                        // $tempRow['outcome_grading_option_id']
-
-                        $tempRow['action_type'] = 'imported';
-
-                        $activeModel->patchEntity(
-                            $tableEntity,
-                            $tempRow,
-                            ['validate' => false]
-                        );
-                    }
-
-
-                    $errors = $tableEntity->getErrors();
-//                    if ($errors) { //POCOR-7977
-//                        $model->log('@ImportOutcomeBehavior line ' . __LINE__, 'debug');
-//                        $model->log($errors, 'debug');
-//                    }
-                    $rowInvalidCodeCols = $rowInvalidCodeCols->getArrayCopy();
-
-                    // to-do: saving of entity into table with composite primary keys (Exam Results) give wrong isNew value
-                    $isNew = $tableEntity->isNew();
-                    //echo "<pre>"; print_r($tableEntity); die;
-                    if ($extra['entityValidate'] == true) {
-                        // POCOR-4258 - shifted saving model before updating errors to implement try-catch to catch database errors
-                        try {
-                            $newEntity = $activeModel->save($tableEntity);
-                        } catch (Exception $e) {
+                    try {
+                            if ($activeModel->save($gradeEntity)) {
+                                $rowTracker[$row]['success'] = true;
+                                if ($isNew) {
+                                    $rowHasNew = true;
+                                } else {
+                                    $rowHasUpdate = true;
+                                }
+                            } else {
+                                $rowTracker[$row]['errors'][] = 'Failed to save grade';
+                            }
+                        }catch (Exception $e) {
                             $newEntity = false;
                             $message = $e->getMessage();
                             $matches = '';
@@ -309,109 +265,76 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                                 $errorRow = 'row' . $row;
                             }
                             $rowInvalidCodeCols[$errorRow] = $message;
-//                            if ($errors) { //POCOR-7977
-//                                $model->log('@ImportOutcomeBehavior line ' . __LINE__, 'debug');
-//                                $model->log($message, 'debug');
-//                            }
                         }
+                }
 
-                        if ($newEntity) {
-                            if ($isNew) {
-                                $totalImported++;
-                            } else {
-                                $totalUpdated++;
-                            }
-                        }
-                    }
+                /* ---------------------------
+                 * ROW LEVEL COUNTING (IMPORTANT)
+                 * --------------------------- */
+                if ($rowHasUpdate) {
+                    $totalUpdated++;
+                } elseif ($rowHasNew) {
+                    $totalImported++;
+                }
 
-                    if (!empty($rowInvalidCodeCols) || $errors) { // row contains error or record is a duplicate based on unique key(s)
-                        $rowCodeError = '';
-                        $rowCodeErrorForExcel = [];
-                        if (!empty($errors)) {
-                            foreach ($errors as $field => $arr) {
-                                if (in_array($field, $columns)) {
-                                    $fieldName = $this->getExcelLabel($activeModel->getRegistryAlias(), $field);
-                                    $rowCodeError .= '<li>' . $fieldName . ' => ' . $arr[key($arr)] . '</li>';
-                                    $rowCodeErrorForExcel[] = $fieldName . ' => ' . $arr[key($arr)];
-                                } else {
-                                    if (in_array($field, ['student_name', 'staff_name'])) {
-                                        $rowCodeError .= '<li>' . $arr[key($arr)] . '</li>';
-                                        $rowCodeErrorForExcel[] = $arr[key($arr)];
-                                    }
-                                    $model->log('@ImportOutcomeBehavior line ' . __LINE__ . ': ' . $activeModel->getRegistryAlias() . ' -> ' . $field . ' => ' . $arr[key($arr)], 'info'); //POCOR-7977
-                                }
-                            }
-                        }
-                        if (!empty($rowInvalidCodeCols)) {
-                            foreach ($rowInvalidCodeCols as $field => $errMessage) {
-                                $fieldName = $this->getExcelLabel($activeModel->getRegistryAlias(), $field);
-                                if (!isset($errors[$field])) {
-                                    $rowCodeError .= '<li>' . $fieldName . ' => ' . $errMessage . '</li>';
-                                    $rowCodeErrorForExcel[] = $fieldName . ' => ' . $errMessage;
-                                }
-                            }
-                        }
-                        $dataFailed[] = [
-                            'row_number' => $row,
-                            'error' => '<ul>' . $rowCodeError . '</ul>',
-                            'errorForExcel' => implode("\n", $rowCodeErrorForExcel),
-                            'data' => $originalRow
-                        ];
-                        continue;
-                    } else {
-                        $clonedEntity = clone $tableEntity;
-                        $columns = [
-                            'outcome_criteria_id',
-                            'student_id',
-                            'outcome_grading_option_id'
-                        ];
+                /* ---------------------------
+                 * FINAL ROW RESULT
+                 * --------------------------- */
+                if ($rowTracker[$row]['success']) {
+                    $dataPassed[] = [
+                        'row_number' => (int)$row,
+                        'data' => new ArrayObject([
+                            'openemis_no' => $studentOpenEmisId
+                        ])
+                    ];
 
-                        $tempPassedRecord = [
-                            'row_number' => $row,
-                            'data' => $this->_getReorderedEntityArray(
-                                $clonedEntity,
-                                $columns,
-                                $originalRow,
-                                $systemDateFormat
-                            )
-                        ];
+                } else {
+                    $dataFailed[] = [
+                    'row_number'    => (int)$row,
+                    'error'         => '<ul>' . $rowCodeError . '</ul>',
+                    'errorForExcel' => is_array($rowCodeErrorForExcel)
+                        ? implode("\n", $rowCodeErrorForExcel)
+                        : (string)$rowCodeErrorForExcel,
+                    'data'          => ($originalRow instanceof ArrayObject)
+                        ? $originalRow
+                        : new ArrayObject((array)$originalRow)
+                ];
 
-                        $dataPassed[] = $tempPassedRecord;
 
-                    }
 
                 }
-                //echo "<pre>"; print_r($params); die;
             }
 
-            $resultHeader = array('Outcome Criteria Id', 'OpenEMIS ID', 'Outcome Grading Option');
+            /* ===========================
+             *  STORE RESULT & REDIRECT
+             * =========================== */
+            $resultHeader = ['Row Number','OpenEMIS ID'];
+            $systemDateFormat = TableRegistry::get('Configuration.ConfigItems')
+                ->value('date_format');
 
             $session = $this->_table->Session;
-            $completedData = [
-                'uploadedName' => $uploadedName,
-                'dataFailed' => $dataFailed,
-                'totalImported' => $totalImported,
-                'totalUpdated' => $totalUpdated,
-                'totalRows' => count($dataFailed) + $totalImported + $totalUpdated,
-                'header' => $resultHeader,
-                'failedExcelFile' => $this->_generateDownloadableFile($dataFailed, 'failed', $resultHeader, $systemDateFormat),
-                'passedExcelFile' => $this->_generateDownloadableFile($dataPassed, 'passed', $resultHeader, $systemDateFormat),
-                'executionTime' => (microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"])
-            ];
-            $session->write($this->sessionKey, $completedData);
-            $url = $this->_table->ControllerAction->url('results'); //POCOR-8343
-            $request = $this->_table->request;
-            if(empty($this->institutionId) && isset($request->getParam('pass')[1])) {
-                $queryString = $this->_table->paramsDecode($request->getParam('pass')[1]);
-                $this->institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : $this->institutionId ;
-            }
-            $url[1] =  $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
 
-            return $model->controller->redirect($url);
+            $session->write($this->sessionKey, [
+                'uploadedName'     => $uploadedName,
+                'dataFailed'       => $dataFailed,
+                'totalImported'    => $totalImported,
+                'totalUpdated'     => $totalUpdated,
+                'totalRows'        => count($rowTracker),
+                'executionTime'    => (microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"])
+            ]);
+
+
+             $url = $this->_table->ControllerAction->url('results'); //POCOR-8343
+                $request = $this->_table->request;
+                if(empty($this->institutionId) && isset($request->getParam('pass')[1])) {
+                    $queryString = $this->_table->paramsDecode($request->getParam('pass')[1]);
+                    $this->institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : $this->institutionId ;
+                }
+                $url[1] =  $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
+
+                return $model->controller->redirect($url);
         };
-
     }
-
 
     /******************************************************************************************************************
      **
@@ -858,6 +781,528 @@ if ($endIndex >= $startIndex) {
         }
     }
 
+    //POCOR-9158
+    protected function _extractRecord($references,ArrayObject $tempRow,ArrayObject $originalRow,ArrayObject $rowInvalidCodeCols,ArrayObject $extra)
+    {
+        $sheet            = $references['sheet'];
+        $row              = $references['row'];
+        $numberColumn     = $references['numberColumn']; // starts from 1 (C = 3)
+        $rowPass          = true;
+
+        /**
+         * =========================
+         * 1. STUDENT (Column A)
+         * =========================
+         */
+        $studentValue = trim((string) $sheet
+            ->getCellByColumnAndRow(1, $row)
+            ->getFormattedValue()
+        );
+
+        if ($studentValue === '') {
+            $rowInvalidCodeCols['student_id'] = __('Student OpenEMIS ID missing');
+            $extra['entityValidate'] = false;
+            return false;
+        }
+
+        /**
+         * =========================
+         * 2. OUTCOME CRITERIA ID (Row 1)
+         * =========================
+         */
+        $outcomeIdValue = (int) trim((string) $sheet
+            ->getCellByColumnAndRow($numberColumn, 1)
+            ->getValue()
+        );
+
+        if ($outcomeIdValue <= 0) {
+            $rowInvalidCodeCols['outcome_criteria_id'] = __('Invalid Outcome Criteria');
+            $extra['entityValidate'] = false;
+            return false;
+        }
+
+        /**
+         * =========================
+         * 3. GRADE VALUE (Student Row)
+         * =========================
+         */
+        $gradeValue = trim((string) $sheet
+            ->getCellByColumnAndRow($numberColumn, $row)
+            ->getFormattedValue()
+        );
+
+        /**
+         * =========================
+         * 4. FIND USER
+         * =========================
+         */
+        $usersTable = TableRegistry::get('User.Users');
+
+        $User = $usersTable->find()
+            ->select(['id'])
+            ->where([
+                $usersTable->aliasField('openemis_no') => $studentValue
+            ])
+            ->first();
+
+        if (empty($User)) {
+            $rowInvalidCodeCols['student_id'] = __('Student not found');
+            $extra['entityValidate'] = false;
+            return false;
+        }
+
+        /**
+         * =========================
+         * 5. OUTCOME GRADING TYPE
+         * =========================
+         */
+        $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
+
+        $outcomeGradingTypeId = $outcomeCriteriasTable->find()
+            ->where([
+                $outcomeCriteriasTable->aliasField('id') => $outcomeIdValue
+            ])
+            ->select(['outcome_grading_type_id'])
+            ->first()
+            ->outcome_grading_type_id ?? null;
+
+        /**
+         * =========================
+         * 6. FIND GRADING OPTION
+         * =========================
+         */
+        $outcomeGradingOptionsTable = TableRegistry::get('Outcome.OutcomeGradingOptions');
+
+        $Grading = $outcomeGradingOptionsTable->find()
+            ->select(['id'])
+            ->where([
+                $outcomeGradingOptionsTable->aliasField('name') => $gradeValue,
+                $outcomeGradingOptionsTable->aliasField('outcome_grading_type_id') => $outcomeGradingTypeId
+            ])
+            ->first();
+
+        if (empty($Grading)) {
+            $rowInvalidCodeCols['outcome_grading_option_id'] = __('Wrong Grade Option');
+            $extra['entityValidate'] = false;
+            return false;
+        }
+
+        /**
+         * =========================
+         * 7. MAP DATA
+         * =========================
+         */
+        $tempRow['outcome_criteria_id']        = $outcomeIdValue;
+        $tempRow['student_id']                 = $User->id;
+        $tempRow['outcome_grading_option_id']  = $Grading->id;
+
+        $originalRow[] = $outcomeIdValue;
+        $originalRow[] = $studentValue;
+        $originalRow[] = $gradeValue;
+
+        return $rowPass;
+    }
+
+    public function addBeforeSavebkp(Event $event, Entity $entity, ArrayObject $data)
+    {
+        /**
+         * currently, extending the max execution time for individual scripts from the default of 30 seconds to 180 seconds
+         * to avoid server timed out issue.
+         * to be reviewed...
+         */
+        ini_set('max_execution_time', 180);
+        /**
+         */
+
+         return function ($model, $entity) {
+            $errors = $entity->getErrors();
+            if (!empty($errors)) {
+                // set error message for php file upload errors
+                $fileError = Hash::get($entity->getInvalid(), 'select_file.error');
+                if (!empty($fileError)) {
+                    $errorMessage = $model->getMessage("fileUpload.$fileError");
+                    if ($errorMessage != '[Message Not Found]') {
+                        $entity->getErrors('select_file', $errorMessage, true);
+                    }
+                }
+
+                return false;
+            }
+            $systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
+
+            $fileObj = $entity->select_file;
+            //$uploadedName = $fileObj['name'];
+           // $uploaded = $fileObj['tmp_name'];
+            $uploadedName = $fileObj->getClientFilename();   // instead of ['name']
+            $uploaded     = $fileObj->getStream()->getMetadata('uri'); // instead of ['tmp_name']
+            $inputFileType = IOFactory::identify($uploaded); 
+            $objReader = IOFactory::createReader($inputFileType);
+            $objPHPExcel = $objReader->load($uploaded);
+
+            $totalImported = 0;
+            $totalUpdated = 0;
+            $importedUniqueCodes = new ArrayObject;
+            $dataFailed = [];
+            $dataPassed = [];
+            $extra = new ArrayObject(['lookup' => [], 'entityValidate' => true]);
+
+            $activeModel = TableRegistry::get($this->getConfig('plugin') . '.' . $this->getConfig('model'));
+            $activeModel->addBehavior('DefaultValidation');
+
+            $maxRows = $this->getConfig('max_rows');
+            $maxRows = $maxRows + 2;
+            $sheet = $objPHPExcel->getSheet(0);
+            $highestRow = $sheet->getHighestRow();
+            if ($highestRow > $maxRows) {
+                $entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')], true);
+                return false;
+            }
+
+            $educationSubjectsTable = TableRegistry::get('Education.EducationSubjects');
+            $data = $this->_table->request->getData()['ImportOutcomeResults'];
+            $getQueryString = $this->_table->getQueryString();
+            $template = $data['outcome_template'];
+            $education_subject_id = $data['education_subject'];
+            $classId = $data['class'];
+            $outcome_period_id = $data['outcome_period'];
+            $institution_id = $getQueryString['institution_id'];
+            $academic_period_id = $data['academic_period'];
+            $subjectName = $educationSubjectsTable->get($education_subject_id)->name;
+
+            // check correct template
+            $header = array($subjectName, 'Outcome -->');
+            // POCOR- 7987 moved up
+            $outcomeTemplatesTable = TableRegistry::get('Outcome.OutcomeTemplates');
+            // calculate outcome criterias
+
+
+            $educationGradeId = $outcomeTemplatesTable->find()
+                ->where([
+                    $outcomeTemplatesTable->aliasField('id') => $template,
+                ])
+                ->extract('education_grade_id')
+                ->first();
+
+            //calculate number of student
+            $institutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+            $studentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+            $arrayStudent = $institutionClassStudentsTable->find()
+                ->matching('Users')
+                ->matching('InstitutionClasses')
+                ->matching('EducationGrades')
+                ->matching($studentStatusesTable->getAlias(), function ($q) use ($studentStatusesTable) {
+                    return $q->where([$studentStatusesTable->aliasField('code') => 'CURRENT']);
+                })
+                ->where([
+                    $institutionClassStudentsTable->aliasField('institution_class_id') => $classId,
+                    $institutionClassStudentsTable->aliasField('education_grade_id') => $educationGradeId // POCOR- 7987
+                ])
+                ->toArray();
+
+            $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
+            $aryOutcomeCriteria = $outcomeCriteriasTable->find()
+                ->where([
+                    $outcomeCriteriasTable->aliasField('education_subject_id') => $education_subject_id,
+                    $outcomeCriteriasTable->aliasField('outcome_template_id') => $template
+                ])
+                ->toArray();
+            $totalCriteria = count($aryOutcomeCriteria);
+            $totalColumns = $totalCriteria + 1;
+
+            //comment will be last after outcomecriterias
+            $commentColumn = $totalColumns + 1;
+
+            foreach ($aryOutcomeCriteria as $key => $value) {
+                $headerCriteriaId[] = $value->id;
+            }
+            $institutionOutcomeSubjectCommentsTable = TableRegistry::get('Institution.InstitutionOutcomeSubjectComments');
+
+            if (!$this->checkCorrectTemplate(
+                3,
+                $headerCriteriaId,
+                $sheet,
+                3 + count($headerCriteriaId) - 1,
+                1 // ✅ correct row
+            )) {
+                $entity->setErrors([
+                    'select_file' => [
+                        '_error' => $this->getExcelLabel('Import', 'wrong_template')
+                    ]
+                ]);
+                return false;
+            }
+
+            /*if (!$this->checkCorrectTemplate(
+                    0,
+                    ['OpenEMIS ID', 'Student Name'],
+                    $sheet,
+                    1,
+                    3
+                )) {
+                $entity->setErrors([
+                    'select_file' => [
+                        '_error' => $this->getExcelLabel('Import', 'wrong_template')
+                    ]
+                ]);
+                return false;
+            }*/
+
+            $numberOfStudents = count($arrayStudent);
+            for ($row = 4; $row < $numberOfStudents + 4; $row++) {
+
+                // do the save for the comment
+                //$student = $sheet->getCellByColumnAndRow(0, $row);
+               // $studentOpenEmisId = $student->getValue();
+                $studentOpenEmisId = trim((string)
+                        $sheet->getCellByColumnAndRow(1, $row)->getCalculatedValue()
+                    );
+
+                $UsersTable = TableRegistry::get('User.Users');
+
+                $User = $UsersTable->find()
+                    ->select(['id'])
+                    ->where([
+                        $UsersTable->aliasField('openemis_no IS') => $studentOpenEmisId
+                    ])
+                    ->first();
+                $institutionOutcomeSubjectCommentsTable =
+                    TableRegistry::get('Institution.InstitutionOutcomeSubjectComments');
+
+                $comment = trim((string) $sheet
+                    ->getCellByColumnAndRow($commentColumn, $row)
+                    ->getCalculatedValue()
+                );
+                
+                if ($comment !== '') {
+
+                    // 1️⃣ Delete existing comment (if any)
+                    $institutionOutcomeSubjectCommentsTable->deleteAll([
+                        'student_id' => $User->id,
+                        'outcome_template_id' => $template,
+                        'outcome_period_id' => $outcome_period_id,
+                        'education_grade_id' => $educationGradeId,
+                        'education_subject_id' => $education_subject_id,
+                        'institution_id' => $institution_id,
+                        'academic_period_id' => $academic_period_id,
+                    ]);
+
+                    // 2️⃣ Insert fresh comment
+                    $commentEntity = $institutionOutcomeSubjectCommentsTable->newEntity([
+                        'comments' => $comment,
+                        'student_id' => $User->id,
+                        'outcome_template_id' => $template,
+                        'outcome_period_id' => $outcome_period_id,
+                        'education_grade_id' => $educationGradeId,
+                        'education_subject_id' => $education_subject_id,
+                        'institution_id' => $institution_id,
+                        'academic_period_id' => $academic_period_id,
+                        //'created_user_id' => $this->getCurrentUserId(),
+                       // 'created' => FrozenTime::now(),
+                    ]);
+
+                    $institutionOutcomeSubjectCommentsTable->save($commentEntity);
+                }
+
+                // end of save comment
+
+                for ($column = 2; $column <= $totalColumns; $column++) {
+                    $cell = $sheet->getCellByColumnAndRow($column, $row);
+                    $gradeValue = $cell->getValue();
+
+                    // if there is no any data, just skip
+                    if (empty($gradeValue)) {
+                        continue;
+                    }
+
+                    $tempRow = new ArrayObject;
+                    $rowInvalidCodeCols = new ArrayObject;
+
+                    // for each columns
+                    $references = [
+                        'commentColumn' => $commentColumn,
+                        'numberColumn' => $column,
+                        'sheet' => $sheet,
+                        'totalColumns' => $totalCriteria,
+                        'row' => $row,
+                        'activeModel' => $activeModel,
+                        'systemDateFormat' => $systemDateFormat,
+                    ];
+
+                    $originalRow = new ArrayObject;
+                    $checkCustomColumn = new ArrayObject;
+                    $extra['entityValidate'] = true;
+                    $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols, $extra);
+
+                    $tempRow = $tempRow->getArrayCopy();
+                    if (!isset($tempRow['entity'])) {
+                        $tableEntity = $activeModel->newEmptyEntity();
+                    } else {
+                        $tableEntity = $tempRow['entity'];
+                        unset($tempRow['entity']);
+                    }
+
+                    /*if ($extra['entityValidate'] == true) {
+                        // added for POCOR-4577 import staff leave for workflow related record to save the transition record
+                        $tempRow['action_type'] = 'imported';
+                        $activeModel->patchEntity($tableEntity, $tempRow,
+                            [ 'validate' => false] //POCOR-7977
+                        );
+                    }*/
+
+                    if ($extra['entityValidate'] === true) {
+
+                        //  COMPLETE COMPOSITE PRIMARY KEY (MANDATORY)
+                        $tempRow['student_id']           = $User->id;
+                        $tempRow['outcome_template_id']  = $template;
+                        $tempRow['outcome_period_id']    = $outcome_period_id;
+                        $tempRow['education_grade_id']   = $educationGradeId;
+                        $tempRow['education_subject_id'] = $education_subject_id;
+                        $tempRow['academic_period_id']   = $academic_period_id;
+                        $tempRow['institution_id']       = $institution_id;
+
+                        // from _extractRecord()
+                        // $tempRow['outcome_criteria_id']
+                        // $tempRow['outcome_grading_option_id']
+
+                        $tempRow['action_type'] = 'imported';
+
+                        $activeModel->patchEntity(
+                            $tableEntity,
+                            $tempRow,
+                            ['validate' => false]
+                        );
+                    }
+
+
+                    $errors = $tableEntity->getErrors();
+//                    if ($errors) { //POCOR-7977
+//                        $model->log('@ImportOutcomeBehavior line ' . __LINE__, 'debug');
+//                        $model->log($errors, 'debug');
+//                    }
+                    $rowInvalidCodeCols = $rowInvalidCodeCols->getArrayCopy();
+
+                    // to-do: saving of entity into table with composite primary keys (Exam Results) give wrong isNew value
+                    $isNew = $tableEntity->isNew();
+                    //echo "<pre>"; print_r($tableEntity); die;
+                    if ($extra['entityValidate'] == true) {
+                        // POCOR-4258 - shifted saving model before updating errors to implement try-catch to catch database errors
+                        try {
+                            $newEntity = $activeModel->save($tableEntity);
+                        } catch (Exception $e) {
+                            $newEntity = false;
+                            $message = $e->getMessage();
+                            $matches = '';
+                            // regex to find values in 2 quotes without the quotes
+                            if (preg_match("/(?<=\')(.*?)+(?=\')/", $message, $matches)) {
+                                $errorRow = $matches[0];
+                            } else {
+                                $errorRow = 'row' . $row;
+                            }
+                            $rowInvalidCodeCols[$errorRow] = $message;
+//                            if ($errors) { //POCOR-7977
+//                                $model->log('@ImportOutcomeBehavior line ' . __LINE__, 'debug');
+//                                $model->log($message, 'debug');
+//                            }
+                        }
+
+                        if ($newEntity) {
+                            if ($isNew) {
+                                $totalImported++;
+                            } else {
+                                $totalUpdated++;
+                            }
+                        }
+                    }
+
+                    if (!empty($rowInvalidCodeCols) || $errors) { // row contains error or record is a duplicate based on unique key(s)
+                        $rowCodeError = '';
+                        $rowCodeErrorForExcel = [];
+                        if (!empty($errors)) {
+                            foreach ($errors as $field => $arr) {
+                                if (in_array($field, $columns)) {
+                                    $fieldName = $this->getExcelLabel($activeModel->getRegistryAlias(), $field);
+                                    $rowCodeError .= '<li>' . $fieldName . ' => ' . $arr[key($arr)] . '</li>';
+                                    $rowCodeErrorForExcel[] = $fieldName . ' => ' . $arr[key($arr)];
+                                } else {
+                                    if (in_array($field, ['student_name', 'staff_name'])) {
+                                        $rowCodeError .= '<li>' . $arr[key($arr)] . '</li>';
+                                        $rowCodeErrorForExcel[] = $arr[key($arr)];
+                                    }
+                                    $model->log('@ImportOutcomeBehavior line ' . __LINE__ . ': ' . $activeModel->getRegistryAlias() . ' -> ' . $field . ' => ' . $arr[key($arr)], 'info'); //POCOR-7977
+                                }
+                            }
+                        }
+                        if (!empty($rowInvalidCodeCols)) {
+                            foreach ($rowInvalidCodeCols as $field => $errMessage) {
+                                $fieldName = $this->getExcelLabel($activeModel->getRegistryAlias(), $field);
+                                if (!isset($errors[$field])) {
+                                    $rowCodeError .= '<li>' . $fieldName . ' => ' . $errMessage . '</li>';
+                                    $rowCodeErrorForExcel[] = $fieldName . ' => ' . $errMessage;
+                                }
+                            }
+                        }
+                        $dataFailed[] = [
+                            'row_number' => $row,
+                            'error' => '<ul>' . $rowCodeError . '</ul>',
+                            'errorForExcel' => implode("\n", $rowCodeErrorForExcel),
+                            'data' => $originalRow
+                        ];
+                        continue;
+                    } else {
+                        $clonedEntity = clone $tableEntity;
+                        $columns = [
+                            'outcome_criteria_id',
+                            'student_id',
+                            'outcome_grading_option_id'
+                        ];
+
+                        $tempPassedRecord = [
+                            'row_number' => $row,
+                            'data' => $this->_getReorderedEntityArray(
+                                $clonedEntity,
+                                $columns,
+                                $originalRow,
+                                $systemDateFormat
+                            )
+                        ];
+
+                        $dataPassed[] = $tempPassedRecord;
+
+                    }
+
+                }
+                //echo "<pre>"; print_r($params); die;
+            }
+
+            $resultHeader = array('Outcome Criteria Id', 'OpenEMIS ID', 'Outcome Grading Option');
+
+            $session = $this->_table->Session;
+            $completedData = [
+                'uploadedName' => $uploadedName,
+                'dataFailed' => $dataFailed,
+                'totalImported' => $totalImported,
+                'totalUpdated' => $totalUpdated,
+                'totalRows' => count($dataFailed) + $totalImported + $totalUpdated,
+                'header' => $resultHeader,
+                'failedExcelFile' => $this->_generateDownloadableFile($dataFailed, 'failed', $resultHeader, $systemDateFormat),
+                'passedExcelFile' => $this->_generateDownloadableFile($dataPassed, 'passed', $resultHeader, $systemDateFormat),
+                'executionTime' => (microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"])
+            ];
+            $session->write($this->sessionKey, $completedData);
+            $url = $this->_table->ControllerAction->url('results'); //POCOR-8343
+            $request = $this->_table->request;
+            if(empty($this->institutionId) && isset($request->getParam('pass')[1])) {
+                $queryString = $this->_table->paramsDecode($request->getParam('pass')[1]);
+                $this->institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : $this->institutionId ;
+            }
+            $url[1] =  $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
+
+            return $model->controller->redirect($url);
+        };
+
+    }
+
+
     /**
      * Extract the values in every column
      * @param array $references the variables/arrays in this array are for references
@@ -933,158 +1378,6 @@ if ($endIndex >= $startIndex) {
 
         return $rowPass;
     }
-    protected function _extractRecord(
-    $references,
-    ArrayObject $tempRow,
-    ArrayObject $originalRow,
-    ArrayObject $rowInvalidCodeCols,
-    ArrayObject $extra
-) {
-        // Skip header rows (logo + description + column header)
-if ($row < 4) {
-    $extra['entityValidate'] = false;
-    return false;
-}
-
-    $sheet       = $references['sheet'];
-    $row         = (int)$references['row'];
-    $column      = (int)$references['numberColumn'];
-    $criteriaMap = $references['outcomeCriteriaMap'];
-
-    $rowPass = true;
-
-    /* -------------------------------------------------
-     * 1. READ STUDENT OPENEMIS ID (Column A, Row 4+)
-     * ------------------------------------------------- */
-  // Skip header rows
-
-
-// Read OpenEMIS ID (Column A)
-$cell = $sheet->getCellByColumnAndRow(0, $row);
-$value = $cell->getValue();
-
-if ($value instanceof \PhpOffice\PhpSpreadsheet\RichText\RichText) {
-    $value = $value->getPlainText();
-}
-
-$studentValue = trim((string)$value);
-echo "<pre>"; print_r($studentValue);die;
-if ($studentValue === '') {
-    $rowInvalidCodeCols['student_id'] = __('Student OpenEMIS ID missing');
-    $extra['entityValidate'] = false;
-    return false;
-}
-
-
-if ($value instanceof \PhpOffice\PhpSpreadsheet\RichText\RichText) {
-    $value = $value->getPlainText();
-}
-
-$studentValue = trim((string)$value);
-
-    if ($studentValue === '') {
-        $rowInvalidCodeCols['student_id'] = __('Student OpenEMIS ID missing');
-        $extra['entityValidate'] = false;
-        return false;
-    }
-
-    /* -------------------------------------------------
-     * 2. MAP OUTCOME CRITERIA ID FROM COLUMN
-     * ------------------------------------------------- */
-    $outcomeCriteriaId = $criteriaMap[$column] ?? null;
-
-    if (!$outcomeCriteriaId) {
-        $rowInvalidCodeCols['outcome_criteria_id'] = __('Invalid outcome column');
-        $extra['entityValidate'] = false;
-        return false;
-    }
-
-    /* -------------------------------------------------
-     * 3. READ GRADE VALUE (Good / Very Good / etc.)
-     * ------------------------------------------------- */
-    $gradeValue = trim((string)$sheet
-        ->getCellByColumnAndRow($column, $row)
-        ->getValue()
-    );
-
-    if ($gradeValue === '') {
-        // Empty cell = skip silently
-        $extra['entityValidate'] = false;
-        return false;
-    }
-
-    /* -------------------------------------------------
-     * 4. FIND USER BY OPENEMIS ID
-     * ------------------------------------------------- */
-    $UsersTable = TableRegistry::get('User.Users');
-
-    $User = $UsersTable->find()
-        ->select(['id'])
-        ->where([
-            $UsersTable->aliasField('openemis_no') => $studentValue
-        ])
-        ->first();
-
-    if (!$User) {
-        $rowInvalidCodeCols['student_id'] = __('Student not found');
-        $extra['entityValidate'] = false;
-        return false;
-    }
-
-    /* -------------------------------------------------
-     * 5. FIND OUTCOME GRADING TYPE
-     * ------------------------------------------------- */
-    $OutcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
-
-    $outcomeGradingTypeId = $OutcomeCriteriasTable->find()
-        ->select(['outcome_grading_type_id'])
-        ->where([
-            $OutcomeCriteriasTable->aliasField('id') => $outcomeCriteriaId
-        ])
-        ->first()
-        ->outcome_grading_type_id ?? null;
-
-    if (!$outcomeGradingTypeId) {
-        $rowInvalidCodeCols['outcome_grading_type_id'] = __('Invalid grading type');
-        $extra['entityValidate'] = false;
-        return false;
-    }
-
-    /* -------------------------------------------------
-     * 6. FIND GRADING OPTION (Good / Very Good etc.)
-     * ------------------------------------------------- */
-    $OutcomeGradingOptionsTable = TableRegistry::get('Outcome.OutcomeGradingOptions');
-
-    $Grading = $OutcomeGradingOptionsTable->find()
-        ->select(['id'])
-        ->where([
-            $OutcomeGradingOptionsTable->aliasField('name') => $gradeValue,
-            $OutcomeGradingOptionsTable->aliasField('outcome_grading_type_id') => $outcomeGradingTypeId
-        ])
-        ->first();
-
-    if (!$Grading) {
-        $rowInvalidCodeCols['outcome_grading_option_id'] = __('Wrong Grade Option');
-        $extra['entityValidate'] = false;
-        return false;
-    }
-
-    /* -------------------------------------------------
-     * 7. BUILD ROW FOR SAVE
-     * ------------------------------------------------- */
-    $tempRow['student_id'] = $User->id;
-    $tempRow['outcome_criteria_id'] = $outcomeCriteriaId;
-    $tempRow['outcome_grading_option_id'] = $Grading->id;
-
-    /* -------------------------------------------------
-     * 8. FOR RESULT FILE (PASSED / FAILED)
-     * ------------------------------------------------- */
-    $originalRow[] = $outcomeCriteriaId;
-    $originalRow[] = $studentValue;
-    $originalRow[] = $gradeValue;
-
-    return true;
-}
 
     
 }
