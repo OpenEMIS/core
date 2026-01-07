@@ -37,13 +37,25 @@ class ImportResultBehavior extends ImportBehavior
 
                     $downloadUrl[1] = $buttons['add']['url'][1];
                 }
-//                dd($downloadUrl);
                 $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='" . Router::url($downloadUrl) . "'");
                 break;
         }
 
         //back button
         if (!empty($this->getConfig('backUrl'))) {
+            //POCOR-9158 start
+            if($buttons['add']['url']['action'] == 'ImportOutcomeResults'){
+                $pass = $this->_table->request->getParam('pass');
+                $encodedParams = $pass[1] ?? null;
+                $toolbarButtons['back']['url'] = array_merge(
+                    $toolbarButtons['back']['url'],
+                    $this->getConfig('backUrl'),
+                    [
+                        '0' => 'index',
+                        $encodedParams
+                    ]
+                );
+            } //POCOR-9158 end
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
         } elseif ($this->institutionId && $toolbarButtons['back']['url']['plugin'] == 'Institution') {
             $back = [];
@@ -72,10 +84,9 @@ class ImportResultBehavior extends ImportBehavior
      **
      ******************************************************************************************************************/
 
-    public function resultsbkp()
+    public function results()
     {
-        $controller = $this->_table->ControllerAction->getController();
-        $session    = $controller->getRequest()->getSession();
+        $session = $this->_table->request->getSession();
         if ($session->check($this->sessionKey)) {
             $completedData = $session->read($this->sessionKey);
             $this->_table->ControllerAction->field('select_file', ['visible' => false]);
