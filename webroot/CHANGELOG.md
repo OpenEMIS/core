@@ -1,3 +1,26 @@
+### [4.50.0] - 2026-01-02
+- Implemented: Develop sync button functions to get students examination results from OpenEMIS Exams to OpenEMIS Core
+- Bug Fixed: Institutions>Add Institution: Upon Leaving Gender drop down as unselected, User is getting SQL State error[23000] | Upon Leaving Institution drop down as unselected, User is getting SQL State error[23000]
+- Bug Fixed: Administration>System Setup>Labels: Modification of any label should take effect in the corresponding module immediately
+- Bug Fixed: Institutions>Performance>Report Cards: Merge and download pdf is getting 404 error
+- Bug Fixed: Administration> System Setup> Manuals : Updation of the Entire Manuals section required.
+- Bug Fixed: Directory>Advanced Search : Searching by contact number shows 404 Error screen
+
+### [4.49.0] - 2025-12-31
+- Implemented: Develop External Data Source - Identity (Seychelles)
+- Implemented: Develop changes to the cases list page column order
+- Bug Fixed: Administration>System Setup>Field Options: Unable to save with specific position grade
+- Bug Fixed: Institutions>Academic>Schedule>Timetables>List>Add: Start scheduling is showing blank page
+- Bug Fixed: Administration>Performance>Outcomes: Academic Period is not changing
+- Bug Fixed: Administration>System Setup>Localization>Translations: The translation string added in does not show up against the actual element after saving.
+- Bug Fixed: Administration>System Setup>Localization>Translations: Editable should be a dropdown
+- Bug Fixed: Reports>Staff>Add: Date of Birth is empty in generated staff reports
+- Bug Fixed: Reports > Performance > Assessments Report: Implement an Institution Type Filter
+- Bug Fixed: Administration>Examinations>Centres: User is getting 404 when adding linked institutions
+- Bug Fixed: Personal>Staff>Career>Leave: Staff is unable to apply for leave(Required Staff Field which was not present in Core/v3)
+- Bug Fixed: Administration>Security>Roles: User has permissions for System Configurations is unable to edit
+- Bug Fixed: Institutions>Academic>Curriculars: Activity does not show up on the Student's Academic record.
+
 ### [4.48.9] - 2025-12-17
 - Bug Fixed: Administration>Performance>Report Cards: GPA is showing 0.00 for another term
 

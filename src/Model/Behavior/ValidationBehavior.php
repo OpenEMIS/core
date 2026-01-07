@@ -13,6 +13,7 @@ use Cake\Validation\Validation;
 use Cake\Validation\Validator;
 use DateTime;
 use Cake\Routing\Router;
+use Cake\Log\Log;
 
 class ValidationBehavior extends Behavior
 {
@@ -1581,7 +1582,7 @@ class ValidationBehavior extends Behavior
                 ['start_date <=' => $endDate]
             ];
             $dateCondition['OR']['OR'] = [];
-            
+
             // Add comparisons only if date exist
             if (!empty($startDate) && !empty($endDate)) {
                 $dateCondition['OR']['OR'][] = [
@@ -2131,7 +2132,7 @@ class ValidationBehavior extends Behavior
     {
         $model = $globalData['providers']['table'];
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        // Load regex from DB 
+        // Load regex from DB
         $valuePattern = $ConfigItems->value($code);
         $fallbackRegex = '/^[0-9+\-\s]{7,20}$/';
         if (empty($valuePattern)) {
@@ -3070,31 +3071,58 @@ class ValidationBehavior extends Behavior
         $InstitutionPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
         $StaffPositionGrades = TableRegistry::getTableLocator()->get('Institution.StaffPositionGrades');
 
-        $institutionPositionGrades = $InstitutionPositions->find()
-            //->distinct('staff_position_grade_id') //POCOR-7839
-            ->where([
-                $InstitutionPositions->aliasField('staff_position_title_id') => $globalData['data']['id']
-            ])
+        $positionTitleId = $globalData['data']['id'];
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+
+        $institutionPositionGrades = $InstitutionStaff->find()
+            ->distinct(['InstitutionStaff.staff_position_grade_id'])
+            ->select(['InstitutionStaff.staff_position_grade_id'])
+            ->innerJoinWith('Positions', function ($q) use ($positionTitleId) {
+                return $q->where(['Positions.staff_position_title_id' => $positionTitleId]);
+            })
+            ->where(['InstitutionStaff.staff_position_grade_id IS NOT' => null])
             ->extract('staff_position_grade_id')
             ->toArray();
 
-        if(!empty($institutionPositionGrades)) {  // not empty means position title in use & there's associated grade
-            $postPositionGrades = $globalData['data']['position_grades']['_ids'];
-            if (array_intersect($institutionPositionGrades, $postPositionGrades) == $institutionPositionGrades) {
-                return true;
-            } else {
-                $arr = array_diff($institutionPositionGrades, $postPositionGrades);
-                $results = $StaffPositionGrades->find()
-                    ->where([$StaffPositionGrades->aliasField('id IN ') => $arr])
-                    ->extract('name')
-                    ->toArray();
+//        Log::debug('[checkPositionGrades] Title ID: ' . $positionTitleId);
+//        Log::debug('[checkPositionGrades] Grades currently in use: ' . json_encode($institutionPositionGrades));
 
-                $errorMsg = $model->getMessage('FieldOption.StaffPositionTitles.position_grades.ruleCheckPositionGrades', ['sprintf' => [implode(", ", $results)]]);
+        if (!empty($institutionPositionGrades)) {
+            $postPositionGrades = $globalData['data']['position_grades']['_ids'] ?? [];
 
-                return $errorMsg;
+//            Log::debug('[checkPositionGrades] Grades submitted from form: ' . json_encode($postPositionGrades));
+
+            // If no grades were submitted at all, and some are in use — prevent save
+            if (empty($postPositionGrades)) {
+//                Log::debug('[checkPositionGrades] No grades submitted, but grades are in use — blocking.');
+                return __('Please Select At Least One Position Grade Or All Position Grades');
             }
+
+            $removedGrades = array_diff($institutionPositionGrades, $postPositionGrades);
+
+//            Log::debug('[checkPositionGrades] Removed grades: ' . json_encode($removedGrades));
+
+            if (empty($removedGrades)) {
+//                Log::debug('[checkPositionGrades] All grades in use are still selected — OK.');
+                return true;
+            }
+
+            $results = $StaffPositionGrades->find()
+                ->where([$StaffPositionGrades->aliasField('id IN') => $removedGrades])
+                ->extract('name')
+                ->toArray();
+
+//            Log::debug('[checkPositionGrades] Blocking removal of grades: ' . json_encode($results));
+
+            $errorMsg = $model->getMessage(
+                'FieldOption.StaffPositionTitles.position_grades.ruleCheckPositionGrades',
+                ['sprintf' => [implode(", ", $results)]]
+            );
+
+            return $errorMsg;
         }
 
+//        Log::debug('[checkPositionGrades] No grades currently in use — allowing update.');
         return true;
     }
 
