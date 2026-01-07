@@ -283,25 +283,21 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 if ($rowTracker[$row]['success']) {
                     $dataPassed[] = [
                         'row_number' => (int)$row,
-                        'data' => new ArrayObject([
-                            'openemis_no' => $studentOpenEmisId
-                        ])
+                        'data' => [
+                            $studentOpenEmisId
+                        ]
                     ];
-
                 } else {
                     $dataFailed[] = [
-                    'row_number'    => (int)$row,
-                    'error'         => '<ul>' . $rowCodeError . '</ul>',
-                    'errorForExcel' => is_array($rowCodeErrorForExcel)
-                        ? implode("\n", $rowCodeErrorForExcel)
-                        : (string)$rowCodeErrorForExcel,
-                    'data'          => ($originalRow instanceof ArrayObject)
-                        ? $originalRow
-                        : new ArrayObject((array)$originalRow)
-                ];
-
-
-
+                        'row_number'    => (int)$row,
+                        'error'         => '<ul>' . 'Outcome grade ID could not be assigned. Please verify the OpenEMIS ID and grading value in the Excel file.' . '</ul>',
+                        'errorForExcel' => is_array($rowCodeErrorForExcel)
+                            ? implode("\n", $rowCodeErrorForExcel)
+                            : (string)$rowCodeErrorForExcel,
+                        'data' => new ArrayObject([
+                            $studentOpenEmisId
+                        ])
+                    ];
                 }
             }
 
@@ -312,6 +308,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             $systemDateFormat = TableRegistry::get('Configuration.ConfigItems')
                 ->value('date_format');
 
+            $resultHeader = array('OpenEMIS ID');
             $session = $this->_table->Session;
 
             $session->write($this->sessionKey, [
@@ -320,19 +317,22 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 'totalImported'    => $totalImported,
                 'totalUpdated'     => $totalUpdated,
                 'totalRows'        => count($rowTracker),
+                'header' => $resultHeader,
+                'passedExcelFile' => $this->_generateDownloadableFile($dataPassed, 'passed', $resultHeader, $systemDateFormat),
+                'failedExcelFile' => $this->_generateDownloadableFile($dataFailed, 'failed', $resultHeader, $systemDateFormat),
                 'executionTime'    => (microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"])
             ]);
 
 
-             $url = $this->_table->ControllerAction->url('results'); //POCOR-8343
-                $request = $this->_table->request;
-                if(empty($this->institutionId) && isset($request->getParam('pass')[1])) {
-                    $queryString = $this->_table->paramsDecode($request->getParam('pass')[1]);
-                    $this->institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : $this->institutionId ;
-                }
-                $url[1] =  $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
+            $url = $this->_table->ControllerAction->url('results'); //POCOR-8343
+            $request = $this->_table->request;
+            if(empty($this->institutionId) && isset($request->getParam('pass')[1])) {
+                $queryString = $this->_table->paramsDecode($request->getParam('pass')[1]);
+                $this->institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : $this->institutionId ;
+            }
+            $url[1] =  $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
 
-                return $model->controller->redirect($url);
+            return $model->controller->redirect($url);
         };
     }
 
@@ -389,7 +389,6 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
 
     public function setImportDataTemplate($objPHPExcel, $dataSheetName, $header, $type)
     {
-
         $objPHPExcel->setActiveSheetIndex(0);
         $activeSheet = $objPHPExcel->getActiveSheet();
         $passParams = $this->_table->request->getParam('pass');
@@ -420,7 +419,6 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         // POCOR- 7987:start
         $outcomeTemplatesTable = TableRegistry::get('Outcome.OutcomeTemplates');
         // calculate outcome criterias
-
         $educationGradeId = $outcomeTemplatesTable->find()
             ->where([
                 $outcomeTemplatesTable->aliasField('id IS') => $template,
@@ -439,18 +437,18 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         // Initialize suggestedRowHeight *before* the loop, ideally to a reasonable default
         $defaultRowHeight = $activeSheet->getRowDimension(2)->getRowHeight();
 
-// If the defaultRowHeight is -1 (auto-height) or not explicitly set,
-// initialize suggestedRowHeight to a sensible default like 15 points.
+        // If the defaultRowHeight is -1 (auto-height) or not explicitly set,
+        // initialize suggestedRowHeight to a sensible default like 15 points.
         if ($defaultRowHeight === -1 || $defaultRowHeight === null) {
             $suggestedRowHeight = 15; // A common default height in points
         } else {
             $suggestedRowHeight = $defaultRowHeight;
         }
 
-// --- Get the source style from Column A (assuming A2 for the header row) ---
+        // --- Get the source style from Column A (assuming A2 for the header row) ---
         $sourceStyle = $activeSheet->getStyle('A2');
 
-// Extract specific style properties
+        // Extract specific style properties
         $sourceFill = $sourceStyle->getFill();
         $sourceFont = $sourceStyle->getFont();
         $sourceAlignment = $sourceStyle->getAlignment(); // <--- Get the Alignment object
@@ -460,10 +458,9 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         $sourceFontSize = $sourceFont->getSize();
         $sourceFontBold = $sourceFont->getBold();
 
-// Extract alignment properties
+        // Extract alignment properties
         $sourceHorizontalAlignment = $sourceAlignment->getHorizontal(); // <--- Get horizontal alignment
         $sourceVerticalAlignment = $sourceAlignment->getVertical();     // <--- Get vertical alignment
-
 
         foreach ($arrayOutcomeCriterias as $key => $value) {
             $column = $key + 3; // This will be 2 (C), 3 (D), 4 (E), etc.
@@ -506,7 +503,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             }
         }
 
-// --- Apply the maximum calculated row height to the entire row AFTER the loop ---
+        // --- Apply the maximum calculated row height to the entire row AFTER the loop ---
         if ($suggestedRowHeight > $activeSheet->getRowDimension(2)->getRowHeight()) { // Only apply if it's actually larger than default
             $activeSheet->getRowDimension(2)->setRowHeight($suggestedRowHeight);
         }
@@ -605,26 +602,24 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             }
         }        //POCOR-9158 end
 
-      //  -1 to start from A, +2 is for education subject and outcome-->, -1+2=+1
+        //  -1 to start from A, +2 is for education subject and outcome-->, -1+2=+1
         $arrayLastAlpha = $this->getExcelColumnAlpha(count($arrayOutcomeCriterias) + 1);
         //$activeSheet->mergeCells('C3:' . $arrayLastAlpha . '3');
         $startAlpha = $this->getExcelColumnAlpha(3);
 
-// last criteria column
-$endAlpha = $this->getExcelColumnAlpha(count($arrayOutcomeCriterias) + 1);
+        // last criteria column
+        $endAlpha = $this->getExcelColumnAlpha(count($arrayOutcomeCriterias) + 1);
 
-// convert to numeric indexes
-$startIndex = Coordinate::columnIndexFromString($startAlpha);
-$endIndex   = Coordinate::columnIndexFromString($endAlpha);
+        // convert to numeric indexes
+        $startIndex = Coordinate::columnIndexFromString($startAlpha);
+        $endIndex   = Coordinate::columnIndexFromString($endAlpha);
 
-// prevent invalid reverse range
-if ($endIndex >= $startIndex) {
-    $activeSheet->mergeCells($startAlpha . '3:' . $endAlpha . '3');
-}
-
+        // prevent invalid reverse range
+        if ($endIndex >= $startIndex) {
+            $activeSheet->mergeCells($startAlpha . '3:' . $endAlpha . '3');
+        }
         // -1 to start from A, +2 is for education subject and outcome-->, +1 comment after criteria name, -1+2+1=+2
         $countCriterias = count($arrayOutcomeCriterias);
-       // echo "<pre>"; print_r($countCriterias); die;
         $Comment = $this->getExcelColumnAlpha($countCriterias + 3);
         $activeSheet->setCellValue($Comment . '3', __("Comment"));
         $activeSheet->getColumnDimension($Comment)->setAutoSize(true);
@@ -786,7 +781,7 @@ if ($endIndex >= $startIndex) {
     {
         $sheet            = $references['sheet'];
         $row              = $references['row'];
-        $numberColumn     = $references['numberColumn']; // starts from 1 (C = 3)
+        $numberColumn     = $references['numberColumn']; 
         $rowPass          = true;
 
         /**
