@@ -9,6 +9,7 @@ use Cake\ORM\Query;
 use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
+use Cake\ORM\ResultSet; // POCOR-9503 start
 
 class LocaleContentsLanguageTable extends ControllerActionTable
 {
@@ -121,7 +122,7 @@ class LocaleContentsLanguageTable extends ControllerActionTable
                 ->select(['name'])
                 ->where(['iso' => $field])
                 ->first();
-                
+
             return $Locale ? $Locale->name : '';
         }
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
@@ -144,10 +145,38 @@ class LocaleContentsLanguageTable extends ControllerActionTable
 
     }
 
+    // // POCOR-9503 start
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+        $localeOptions = $this->Localization->getOptions();
+        $selectedOption = $this->queryString('translations_id', $localeOptions);
+        $locale = TableRegistry::getTableLocator()->get('System.Locales')
+            ->find()
+            ->select(['iso', 'name','id'])
+            ->where(['iso' => $selectedOption])
+            ->first();
+
+        foreach ($data as $entity) {
+
+            $localeContentId = $entity->id;
+            if ($locale->iso != 'en') {
+                $localeContentTranslationsTable = TableRegistry::getTableLocator()->get('LocaleContentTranslations');
+                $translationsData = $localeContentTranslationsTable->find()
+                    ->where(['locale_content_id' => $localeContentId, 'locale_id' => $locale->id])
+                    ->first();
+                $entity->{$selectedOption} = $translationsData->translation; // POCOR-9503 end
+
+            }
+
+        }
+
+    }
     //POCOR-8479 Start
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        if($this->action == 'edit' || $this->action == 'view') {
+
+        if($this->action == 'edit'
+            || $this->action == 'view') {
             $locales = TableRegistry::getTableLocator()->get('System.Locales')
             ->find()
             ->select(['iso', 'name','id'])
@@ -160,14 +189,16 @@ class LocaleContentsLanguageTable extends ControllerActionTable
                     $translationsData = $localeContentTranslationsTable->find()
                     ->where(['locale_content_id' => $localeContentId, 'locale_id' => $locale->id])
                     ->first();
-                    $this->field($fieldName, ['visible' => true,'attr' => ['value'=> $translationsData->translation],]);
+                    $this->field($fieldName, ['visible' => true, // POCOR-9503 start
+                        'attr' => ['value'=> $translationsData->translation],
+                        'value' => $translationsData->translation]); // POCOR-9503 end
                     $this->setFieldOrder(['en', $fieldName]);
                 } else if($locale->iso == 'en') {
                     $this->field($fieldName, ['type' => 'readOnly']);
                 }
             }
         }
-       
+
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
@@ -192,7 +223,7 @@ class LocaleContentsLanguageTable extends ControllerActionTable
 		return $LocalesId;
 	}
 
-    public function saveLocaleContentTranslationsTable($entity, $iso) 
+    public function saveLocaleContentTranslationsTable($entity, $iso)
     {
         $localesId = $this->localesData($iso);
         $localeContentTranslationsTable = TableRegistry::getTableLocator()->get('LocaleContentTranslations');
@@ -207,7 +238,7 @@ class LocaleContentsLanguageTable extends ControllerActionTable
             } else {
                 $translationsData->translation = $entity->$iso;
             }
-       
+
         $localeContentTranslationsTable->save($translationsData);
     }
     //POCOR-8479 End

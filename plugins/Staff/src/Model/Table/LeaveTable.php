@@ -85,13 +85,25 @@ class LeaveTable extends ControllerActionTable
             ->add('date_from', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
             ])
+            ->notEmpty('institution_id')
             ->allowEmpty('file_content');
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $StaffLeave = TableRegistry::get('Institution.StaffLeave');
+        //POCOR-9496 start
+        $entity->staff_id = $this->Auth->User('id');
+        if (!empty($entity->id)) {
+            $getAssigneeId = $this->find()
+                ->where(['id' => $entity->id])
+                ->first()
+                ->assignee_id ?? null;
+            $entity->assignee_id = $getAssigneeId;
+        } //POCOR-9496 end
+
         $entity = $StaffLeave->getNumberOfDays($entity);
+
         if (!$entity) {
             // Error message to tell that leave period applied has overlapped exisiting leave records.
             $this->Alert->error('AlertRules.StaffLeave.leavePeriodOverlap', ['reset' => true]);
@@ -159,11 +171,15 @@ class LeaveTable extends ControllerActionTable
         $selectedAction = 'Staff'.$this->getAlias();
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $selectedAction);
+        $this->field('staff_id',['type'=>'hidden']);
+        $this->field('start_time',['type'=>'hidden']);
+        $this->field('end_time',['type'=>'hidden']);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('staff_leave_type_id');
+        $this->field('staff_id',['type'=>'hidden']);
         $this->field('start_time', ['entity' => $entity]);
         $this->field('end_time', ['entity' => $entity]);
         $this->field('institution_id', ['entity' => $entity]);
@@ -500,14 +516,15 @@ class LeaveTable extends ControllerActionTable
     public function onGetAssigneeId(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
-            return $entity->assignee->name;
+            $name = $entity->assignee->name ?? null;
+            return (!empty($name) && $name !== '0' && $name !== 0) ? $name : '-';
         } elseif ($this->action == 'index') {
             $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'assignee');
             return isset($rowEntity->name) ? $rowEntity->name : '-';
         }
     }
 
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    /*public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action != 'add' && $action != 'edit'){
             return $attr;
@@ -515,7 +532,7 @@ class LeaveTable extends ControllerActionTable
         $attr['value'] = 0;
         $attr['type'] = 'hidden';
         return $attr;
-    }
+    }*/
 
     public function onGetInstitutionId(Event $event, Entity $entity)
     {
@@ -682,6 +699,7 @@ class LeaveTable extends ControllerActionTable
                 ])
                 ->toArray();
             $attr['type'] = 'select';
+            $attr['onChangeReload'] = true;
             $attr['options'] =  (empty($institutionOptions)) ? $all_instittutions : $institutionOptions;
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
@@ -695,7 +713,6 @@ class LeaveTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        //echo "<pre>"; print_r($entity);die;
         if (isset($buttons['view'])) {
             if ($entity->is_historical) {
                 $rowEntityId = $this->getFieldEntity($entity->is_historical, $entity->id, 'id');
@@ -748,6 +765,130 @@ class LeaveTable extends ControllerActionTable
             }
         }
         return $buttons;
+    }
+
+    //POCOR-9496
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add') {
+            $assigneesOptions = $this->getAssigneesOptions($request);
+            $attr['type'] = 'select';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = false;
+            $attr['options'] = $assigneesOptions;
+        }elseif($action == 'edit'){
+            $entity = $attr['entity'];
+            $getName = $this->Assignees
+                        ->find()
+                        ->where(['id IS' => $entity->assignee_id])
+                        ->first();
+            $fullName = $getName
+                        ? $getName->first_name . ' ' . $getName->last_name
+                        : '';
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->assignee_id;
+            $attr['attr']['value'] = $fullName;
+        }
+
+        return $attr;
+    }
+
+    //POCOR-9496
+    private function getAssigneesOptions(ServerRequest $request)
+    {
+        $alias = $this->getAlias();
+        $filter_id = $request->getData("$alias.staff_leave_type_id", 0); 
+        $institutionId = $this->request->getData()['Leave']['institution_id'];
+        $assignees_all = $this->findAssigneeOptions(0, $institutionId);
+        $assignees_filtered = $this->findAssigneeOptions($filter_id, $institutionId);
+        $options = ['' => '-- ' . __('Select Assignee') . ' --'] + $assignees_all + $assignees_filtered;
+        return $options;
+    }
+
+    //POCOR-9496
+    private function findAssigneeOptions($filter_id, $institutionId)
+    {
+        $workflowModel = 'Staff > Career > Leave';
+        $workflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+        $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        $workflowFiltersTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowsFilters');
+        $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        $stepId = '';
+        $filter_id = is_numeric($filter_id) ? intval($filter_id) : 0;
+        $workModelQuery = $Workflows
+            ->find()
+            ->select(['id' => $workflowModelsTable->aliasField('id'),
+                'workflow_id' => $Workflows->aliasField('id'),
+                'is_school_based' => $workflowModelsTable->aliasField('is_school_based')])
+            ->innerJoin([$workflowFiltersTable->getAlias() => $workflowFiltersTable->getTable()],
+                [
+                    $workflowFiltersTable->aliasField('workflow_id') . ' = ' . $Workflows->aliasField('id'),
+                    $workflowFiltersTable->aliasField('filter_id') . ' = ' . $filter_id
+                ])
+            ->leftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
+                [
+                    $workflowModelsTable->aliasField('id') . ' = ' . $Workflows->aliasField('workflow_model_id')
+                ])
+            ->where([$workflowModelsTable->aliasField('name = "') . $workflowModel . '"']);
+
+        $workModelId = $workModelQuery->first();
+        if(!empty($workModelId)) {
+            $workflowId = $workModelId->workflow_id;
+            $isSchoolBased = $workModelId->is_school_based;
+            $workflowStepsOptions = $workflowStepsTable
+                ->find()
+                ->select([
+                    'stepId' => $workflowStepsTable->aliasField('id'),
+                ])
+                ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
+                ->first();
+            $stepId = $workflowStepsOptions->stepId;
+        }
+
+        $assigneeOptions = [];
+        if (!is_null($stepId)) {
+            $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
+            $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
+            if (!empty($stepRoles)) {
+                $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+                if ($isSchoolBased) {
+                    if (is_null($institutionId)) {
+                        //Log::write('debug', 'InstitutionId not found.');
+                    } else {
+                        $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
+                        $securityGroupId = $institutionObj->security_group_id;
+                        $areaObj = $institutionObj->area;
+                        // School based assignee
+                        $where = [
+                            'OR' => [[$SecurityGroupUsers->aliasField('security_group_id IS') => $securityGroupId],
+                                ['Institutions.id' => $institutionId]],
+                            $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
+                        ];
+                        $schoolBasedAssigneeQuery = $SecurityGroupUsers
+                            ->find('userList', ['where' => $where])
+                            ->leftJoinWith('SecurityGroups.Institutions');
+                        $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
+                        // Region based assignee
+                        $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+                        $regionBasedAssigneeQuery = $SecurityGroupUsers
+                            ->find('UserList', ['where' => $where, 'area' => $areaObj]);
+
+                        $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
+                        // End
+                        $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
+                    }
+                } else {
+                    $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+                    $assigneeQuery = $SecurityGroupUsers
+                        ->find('userList', ['where' => $where])
+                        ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
+                    $assigneeOptions = $assigneeQuery->toArray();
+                }
+            }
+        }
+        return $assigneeOptions;
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)

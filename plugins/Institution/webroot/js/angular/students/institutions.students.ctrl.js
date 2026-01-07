@@ -510,6 +510,19 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                                     preferred_name: selectedUserData.preferred_name,
                                     date_of_birth: selectedUserData.date_of_birth,
                                 });
+                            } else if (externalSearchSourceName === 'Seychelles Civil Status') { // POCOR-9481
+                                Object.assign(data, {
+                                    gender_id: data['gender_id'],
+                                    gender: data['gender'],
+                                    first_name: data['first_name'],
+                                    last_name: data['last_name'],
+                                    name: data['full_name'],
+                                    date_of_birth: data['date_of_birth'],
+                                    nationality_id: data['nationality_id'],
+                                    nationality: data['nationality'],
+                                    identity_type: selectedUserData.identity_type_name,
+                                    identity_type_id: scope.selectedUserData.identity_type_id
+                                });
                             } else {
                                 Object.assign(data, {
                                     gender_id: data['gender.id'],
