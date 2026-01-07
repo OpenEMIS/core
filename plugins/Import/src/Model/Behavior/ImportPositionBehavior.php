@@ -382,6 +382,11 @@ class ImportPositionBehavior extends Behavior
                 if (!isset($tempRow['position_no'])) {
                     $tempRow['position_no'] = $this->_table->InstitutionPositions->getUniquePositionNo($institutionID);
                 }
+                //POCOR-9472 start
+                if (empty($tempRow['assignee_id'])) {
+                    $rowInvalidCodeCols['assignee'] =
+                        'No assignee is configured for the selected workflow step';
+                } //POCOR-9472 end
 
                 if ($extra['entityValidate']) {
                     $tempRow['action_type'] = 'imported';
@@ -515,6 +520,9 @@ class ImportPositionBehavior extends Behavior
                 'passedExcelFile' => $this->_generateDownloadableFile($dataPassed, 'passed', $header, $systemDateFormat),
                 'executionTime' => (microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"])
             ];
+            if (empty($completedData['dataFailed']) && $completedData['totalImported'] == 0) {
+                    return false;
+            } 
 
             $session->write($this->sessionKey, $completedData);
             $url = $this->_table->ControllerAction->url('results');
