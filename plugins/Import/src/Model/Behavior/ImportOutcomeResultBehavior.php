@@ -305,8 +305,6 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             $resultHeader = ['Row Number','OpenEMIS ID'];
             $systemDateFormat = TableRegistry::get('Configuration.ConfigItems')
                 ->value('date_format');
-
-            $resultHeader = array('OpenEMIS ID');
             $session = $this->_table->Session;
 
             $session->write($this->sessionKey, [
