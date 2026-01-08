@@ -80,8 +80,6 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             $outcome_period_id    = $requestData['outcome_period'];
             $academic_period_id   = $requestData['academic_period'];
             $institution_id       = $queryString['institution_id'];
-
-
             /* ===========================
              *  LOAD TABLES
              * =========================== */
@@ -394,11 +392,10 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         $passParams = $this->_table->request->getParam('pass');
         $encodedQueryString = $passParams[1] ?? null;
         $data = $this->_table->paramsDecode($encodedQueryString);
-       
+        $requestData = $this->_table->request->getData('ImportOutcomeResults');
+        $education_subject_id = $requestData['education_subject'];
         $educationSubjectsTable = TableRegistry::get('Education.EducationSubjects');
         $template = $data['outcome_template'];
-        //$education_subject_id = $data['education_subject'];
-        $education_subject_id = 60;
         $classId = $data['class'];
         $outcome_period_id = $data['outcome_period'];
         $institution_id = $data['institution_id'];

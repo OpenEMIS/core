@@ -451,7 +451,6 @@ class ImportOutcomeResultsTable extends AppTable
 
     public function onUpdateFieldOutcomePeriod(Event $event, array $attr, $action, ServerRequest $request)
     {
-
         if ($action == 'add') {
             $data = $request->getData('ImportOutcomeResults');
             $academicPeriodId = $data['academic_period'] ?? $this->AcademicPeriods->getCurrent();
