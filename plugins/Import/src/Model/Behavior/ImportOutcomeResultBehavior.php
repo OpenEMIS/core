@@ -400,6 +400,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         $outcome_period_id = $data['outcome_period'];
         $institution_id = $data['institution_id'];
         $academic_period_id = $data['academic_period'];
+        $education_subject_id = $data['education_subject']?? $requestData['education_subject'] ?? null;
         $name = $educationSubjectsTable->get($education_subject_id)->name;
         $activeSheet->setCellValue("A2", $name);
         $activeSheet->setCellValue("B2", "Outcome -->");
