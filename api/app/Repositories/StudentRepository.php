@@ -625,7 +625,7 @@ class StudentRepository extends Controller
         $query = InstitutionStudentAbsenceDetails::with([
             'absenceType:id,name',
             'studentAbsenceReason:id,name',
-            'period:id,name',
+            'attendancePeriod:id,name',
             'subject:id,name'
         ])->where('student_id', $studentId)
             ->where('institution_id', $institutionId);
@@ -646,8 +646,8 @@ class StudentRepository extends Controller
 
         return $records->map(function ($record) {
             return [
-                'period_id' => $record->period->id ?? null,
-                'period_name' => $record->period->name ?? null,
+                'period_id' => $record->attendancePeriod->id ?? null,
+                'period_name' => $record->attendancePeriod->name ?? null,
                 'subject_id' => $record->subject->id ?? null,
                 'subject_name' => $record->subject->name ?? null,
                 'absence_type_id' => $record->absenceType->id ?? null,
