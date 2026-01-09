@@ -541,7 +541,7 @@ class StudentController extends Controller
     {
         try {
             $data = $this->studentService->getStudentAbsences($request);
-            return $this->sendSuccessResponse("Student Absences List Found", $data);
+            return $this->sendSuccessResponse("Institutions Student Absences List Found", $data);
 
         } catch (\Exception $e) {
             Log::error(
