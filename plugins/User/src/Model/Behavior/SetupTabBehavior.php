@@ -3,7 +3,7 @@
 namespace User\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Behavior;
 
 class SetupTabBehavior extends Behavior
@@ -15,7 +15,7 @@ class SetupTabBehavior extends Behavior
         return $events;
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
     }

@@ -3,7 +3,7 @@ namespace Configuration\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -32,11 +32,11 @@ class ConfigStaffTransfersTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('remove', false);
 
-        $this->InstitutionTypes = TableRegistry::get('Institution.Types');
-        $this->InstitutionSectors = TableRegistry::get('Institution.Sectors');
+        $this->InstitutionTypes = TableRegistry::getTableLocator()->get('Institution.Types');
+        $this->InstitutionSectors = TableRegistry::getTableLocator()->get('Institution.Sectors');
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $submit = isset($data['submit']) ? $data['submit'] : 'save';
         if ($submit == 'save') {
@@ -62,7 +62,7 @@ class ConfigStaffTransfersTable extends ControllerActionTable
         }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('name', ['visible' => ['index' => true]]);
         $this->field('code', ['type' => 'hidden']);
@@ -76,23 +76,23 @@ class ConfigStaffTransfersTable extends ControllerActionTable
     }
   
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $extra['elements']['controls'] = $this->buildSystemConfigFilters();
         $this->checkController();
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('type') => 'Staff Transfers']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->has('code')) {
             switch ($entity->code) {
@@ -142,12 +142,12 @@ class ConfigStaffTransfersTable extends ControllerActionTable
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function onGetValue(Event $event, Entity $entity)
+    public function onGetValue(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('code')) {
@@ -213,7 +213,7 @@ class ConfigStaffTransfersTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetDefaultValue(Event $event, Entity $entity)
+    public function onGetDefaultValue(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('code')) {
@@ -248,7 +248,7 @@ class ConfigStaffTransfersTable extends ControllerActionTable
         return $value;
     }
 
-    public function onUpdateFieldValueSelection(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldValueSelection(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
         if ($entity->has('code')) {
@@ -296,7 +296,7 @@ class ConfigStaffTransfersTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldValue(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
         if ($entity->has('code')) {
@@ -381,8 +381,8 @@ class ConfigStaffTransfersTable extends ControllerActionTable
         // true: enabled Staff Transfer (default)
         // false: disabled Staff Transfer
 
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
         // enable_staff_transfer_by_types
         $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
@@ -408,7 +408,7 @@ class ConfigStaffTransfersTable extends ControllerActionTable
     public function checkStaffTransferRestricted($institutionId = 0, $compareInstitutionId = 0)
     {
         $isRestricted = false;
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
         $restrictStaffTransferByType = $ConfigItems->value('restrict_staff_transfer_by_type');
         if ($restrictStaffTransferByType) {
@@ -433,7 +433,7 @@ class ConfigStaffTransfersTable extends ControllerActionTable
 
     public function compareInstitutionType($institutionId = 0, $compareInstitutionId = 0)
     {
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
         $compareInstitutionTypeId = $Institutions->get($compareInstitutionId)->institution_type_id;
 
@@ -442,7 +442,7 @@ class ConfigStaffTransfersTable extends ControllerActionTable
     
     public function compareInstitutionProvider($institutionId = 0, $compareInstitutionId = 0)
     {
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $institutionProviderId = $Institutions->get($institutionId)->institution_provider_id;
         $compareInstitutionProviderId = $Institutions->get($compareInstitutionId)->institution_provider_id;
 

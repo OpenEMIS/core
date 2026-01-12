@@ -1,7 +1,7 @@
 <?php
 namespace Scholarship\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Page\Model\Entity\PageElement;
@@ -18,7 +18,7 @@ class ScholarshipRecipientInstitutionChoicesController extends BaseController
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('Scholarship.InstitutionChoiceStatuses');
+        $this->InstitutionChoiceStatuses = $this->fetchTable('Scholarship.InstitutionChoiceStatuses');
         $this->isSelectedOptions = $this->getSelectOptions('general.yesno');
     }
 
@@ -122,7 +122,7 @@ class ScholarshipRecipientInstitutionChoicesController extends BaseController
         }
     }
 
-    public function onRenderIsSelected(Event $event, Entity $entity, PageElement $element)
+    public function onRenderIsSelected(EventInterface $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
 

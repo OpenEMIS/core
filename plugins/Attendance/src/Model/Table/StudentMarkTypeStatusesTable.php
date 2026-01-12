@@ -3,7 +3,7 @@ namespace Attendance\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -52,7 +52,7 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
         return $validator;
     }*/ 
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
 
         $this->field('academic_period_id', ['type' => 'select']);       
@@ -76,17 +76,17 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
        }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query)
+    public function indexBeforeQuery(EventInterface $event, Query $query)
     {
         $query->contain($this->_contain);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query)
     {
         $query->contain($this->_contain);
     }
 
-	public function addBeforeSaveBkp(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+	public function addBeforeSaveBkp(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
 	{   
 		if(!empty($entity->education_grades) && !empty($entity->academic_period_id) && !empty($entity->student_attendance_mark_type_id) && !empty($entity->date_enabled)) {
 			$educationGrades = [];
@@ -117,7 +117,7 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
 
 
     //POCOR-9353
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {  
         if (!empty($entity->education_grades) 
             && !empty($entity->academic_period_id) 
@@ -151,18 +151,18 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
         return $entity; // continue save if all ok
     }
 	
-	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
-		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 		$academicPeriodId = !is_null($entity->academic_period_id) ? $entity->academic_period_id : $AcademicPeriod->getCurrent();	
         list($educationGradeOptions) = array_values($this->getSelectOptions($academicPeriodId));
         $this->fields['education_grades']['options'] = $educationGradeOptions;
     }
 	
-    // public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action)
+    // public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action)
     {
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodOptions = $AcademicPeriods->getYearList();
 				
         $attr['type'] = 'select';
@@ -173,10 +173,10 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldStudentAttendanceMarkTypeId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldStudentAttendanceMarkTypeId(Event $event, array $attr, $action)
+    // public function onUpdateFieldStudentAttendanceMarkTypeId(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStudentAttendanceMarkTypeId(EventInterface $event, array $attr, $action)
     {
-        $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+        $StudentAttendanceMarkTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes');
         $studentAttendanceMarkTypesOptions = $StudentAttendanceMarkTypes
                                                 ->find( 'list', 
                                                 ['keyField' => 'id',
@@ -195,7 +195,7 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
     {
         //Return all required options and their key      
 
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
         $educationGradeOptions = $EducationGrades
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->find('visible')
@@ -208,7 +208,7 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
         return compact('educationGradeOptions', 'selectedEducationGrade');
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true) {
         if ($field == 'student_attendance_mark_type_id') {
             return __('Student Attendance Mark Types');
         }elseif ($field == 'date_disabled') {

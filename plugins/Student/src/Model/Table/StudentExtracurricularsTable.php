@@ -3,7 +3,7 @@ namespace Student\Model\Table;
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
@@ -31,7 +31,7 @@ class StudentExtracurricularsTable extends ControllerActionTable {
         ]);
     }
 
-    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, $primary)
     {
         // Example handling
         if (isset($options['student_id'])) {
@@ -43,7 +43,7 @@ class StudentExtracurricularsTable extends ControllerActionTable {
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = $extra['academic_period_id'] ?? $this->AcademicPeriods->getCurrent();

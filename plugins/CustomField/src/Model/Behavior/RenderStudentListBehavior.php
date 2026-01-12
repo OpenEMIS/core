@@ -4,7 +4,7 @@ namespace CustomField\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use CustomField\Model\Behavior\RenderBehavior;
 use Cake\Log\Log;
 use Cake\View\Helper\IdGeneratorTrait;
@@ -22,14 +22,14 @@ class RenderStudentListBehavior extends RenderBehavior
         parent::initialize($config);
     }
 
-	public function onGetCustomStudentListElement(Event $event, $action, $entity, $attr, $options=[]) {
-        $CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
-        $CustomFields = TableRegistry::get('Survey.SurveyQuestions');
-        $CustomFormsFields = TableRegistry::get('Survey.SurveyFormsQuestions');
-        $Classes = TableRegistry::get('Institution.InstitutionClasses');
-        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $StudentSurveys = TableRegistry::get('Student.StudentSurveys');
-        $StudentSurveyAnswers = TableRegistry::get('Student.StudentSurveyAnswers');
+	public function onGetCustomStudentListElement(EventInterface $event, $action, $entity, $attr, $options=[]) {
+        $CustomFieldTypes = TableRegistry::getTableLocator()->get('CustomField.CustomFieldTypes');
+        $CustomFields = TableRegistry::getTableLocator()->get('Survey.SurveyQuestions');
+        $CustomFormsFields = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
+        $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $StudentSurveys = TableRegistry::getTableLocator()->get('Student.StudentSurveys');
+        $StudentSurveyAnswers = TableRegistry::getTableLocator()->get('Student.StudentSurveyAnswers');
 
         $model = $this->_table;
         $session = $model->request->getSession();
@@ -808,7 +808,7 @@ class RenderStudentListBehavior extends RenderBehavior
         return $value;
     }
 
-    public function formatStudentListEntity(Event $event, Entity $entity, ArrayObject $settings) {
+    public function formatStudentListEntity(EventInterface $event, Entity $entity, ArrayObject $settings) {
         $surveysArray = $entity->has('institution_student_surveys') ? $entity->institution_student_surveys : [];
 
         if (isset($entity->id)) {
@@ -818,8 +818,8 @@ class RenderStudentListBehavior extends RenderBehavior
 
             $params = json_decode($customField->params, true);
             if (array_key_exists($formKey, $params)) {
-                $StudentSurveys = TableRegistry::get('Student.StudentSurveys');
-                $StudentSurveyAnswers = TableRegistry::get('Student.StudentSurveyAnswers');
+                $StudentSurveys = TableRegistry::getTableLocator()->get('Student.StudentSurveys');
+                $StudentSurveyAnswers = TableRegistry::getTableLocator()->get('Student.StudentSurveyAnswers');
 
                 $status = $entity->status_id;
                 $institutionId = $entity->institution_id;
@@ -870,7 +870,7 @@ class RenderStudentListBehavior extends RenderBehavior
         $entity->set('institution_student_surveys', $surveysArray);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options) {
       //echo "<pre>";print_r($_SESSION['SurveyTabCount']);die;
         $tabcount = $_SESSION['SurveyTabCount'];
 
@@ -878,8 +878,8 @@ class RenderStudentListBehavior extends RenderBehavior
             if ($entity->has('institution_student_surveys')) {
                 $fieldKey = 'survey_question_id';
                 $formKey = 'survey_form_id';
-                $StudentSurveys = TableRegistry::get('Student.StudentSurveys');
-                $StudentSurveyAnswers = TableRegistry::get('Student.StudentSurveyAnswers');
+                $StudentSurveys = TableRegistry::getTableLocator()->get('Student.StudentSurveys');
+                $StudentSurveyAnswers = TableRegistry::getTableLocator()->get('Student.StudentSurveyAnswers');
 
                 $status = $entity->status_id;
                 $institutionId = $entity->institution_id;
@@ -975,8 +975,8 @@ class RenderStudentListBehavior extends RenderBehavior
             if ($entity->has('institution_student_surveys')) {
                 $fieldKey = 'survey_question_id';
                 $formKey = 'survey_form_id';
-                $StudentSurveys = TableRegistry::get('Student.StudentSurveys');
-                $StudentSurveyAnswers = TableRegistry::get('Student.StudentSurveyAnswers');
+                $StudentSurveys = TableRegistry::getTableLocator()->get('Student.StudentSurveys');
+                $StudentSurveyAnswers = TableRegistry::getTableLocator()->get('Student.StudentSurveyAnswers');
 
                 $status = $entity->status_id;
                 $institutionId = $entity->institution_id;

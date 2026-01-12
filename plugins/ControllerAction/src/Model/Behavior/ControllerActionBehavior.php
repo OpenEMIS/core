@@ -4,7 +4,7 @@ namespace ControllerAction\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Log\Log;
@@ -59,7 +59,7 @@ class ControllerActionBehavior extends Behavior
         return $events;
     }
 
-    public function buildValidator(Event $event, Validator $validator, $name)
+    public function buildValidator(EventInterface $event, Validator $validator, $name)
     {
         if ($name == 'default') {
             $schema = $this->_table->getSchema();

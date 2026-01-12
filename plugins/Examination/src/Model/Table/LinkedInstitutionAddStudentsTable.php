@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Text;
 use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
@@ -58,7 +58,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, Request $request, Component $Navigation, $persona)
     {
         $queryString = $request->query['queryString'];
         $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
@@ -69,7 +69,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         $Navigation->addCrumb('Students');
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->controller->getExamCentresTab('ExamCentreStudents');
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
@@ -97,7 +97,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         ]);
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, $request) {
         $institutions = [];
 
         if ($action == 'add') {
@@ -124,7 +124,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldStudentId(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldStudentId(EventInterface $event, array $attr, $action, $request) {
         $students = [];
 
         if ($action == 'add') {
@@ -133,7 +133,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                 $academicPeriodId = $request->getData()[$this->getAlias()]['academic_period_id'];
                 $examinationId = $request->getData()[$this->getAlias()]['examination_id'];
                 $educationGradeId = $request->getData()[$this->getAlias()]['education_grade_id'];
-                $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
+                $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->getIdByCode('CURRENT');
                 $examinationCentreId = $request->getData()[$this->getAlias()]['examination_centre_id'];
 
                 $InstitutionStudents = $this->Institutions->Students;
@@ -165,7 +165,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $extra['redirect'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentreStudents', 'queryString' => $this->request->query('queryString')];
         $requestData[$this->getAlias()]['student_id'] = 0;
@@ -173,7 +173,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         $requestData[$this->getAlias()]['examination_subject_id'] = 0;
     }
 
-    public function addBeforeSave(Event $event, $entity, $requestData, $extra)
+    public function addBeforeSave(EventInterface $event, $entity, $requestData, $extra)
     {
         $process = function ($model, $entity) use ($requestData) {
             if (!empty($requestData[$this->getAlias()]['examination_students']) && !empty($requestData[$this->getAlias()]['examination_centre_id'])) {
@@ -181,7 +181,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                 $newEntities = [];
 
                 $selectedExaminationCentre = $requestData[$this->getAlias()]['examination_centre_id'];
-                $ExaminationCentreSubjects = TableRegistry::get('Examination.ExaminationCentreSubjects');
+                $ExaminationCentreSubjects = TableRegistry::getTableLocator()->get('Examination.ExaminationCentreSubjects');
                 $examCentreSubjects = $ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
                 $autoAssignToRooms = $entity->auto_assign_to_rooms;
                 $studentCount = 0;
@@ -265,7 +265,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                                     'examination_id' => $examCentreRoomStudent['examination_id'],
                                     'examination_centre_id' => $examCentreRoomStudent['examination_centre_id']
                                 ];
-                                $ExaminationCentreRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomStudents');
+                                $ExaminationCentreRoomStudents = TableRegistry::getTableLocator()->get('Examination.ExaminationCentreRoomStudents');
                                 $examCentreRoomStudentEntity = $ExaminationCentreRoomStudents->newEntity($newEntity);
                                 $saveSucess = $ExaminationCentreRoomStudents->save($examCentreRoomStudentEntity);
                                 $counter--;

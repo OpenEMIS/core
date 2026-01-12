@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -33,16 +33,16 @@ class StudentWithdrawalReportTable extends AppTable
         // $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
     }
 
-    public function onExcelGetInstitutionName(Event $event, Entity $entity)
+    public function onExcelGetInstitutionName(EventInterface $event, Entity $entity)
     {
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         
         $where = [];
         if ( $entity->institution_id > 0) {
@@ -56,9 +56,9 @@ class StudentWithdrawalReportTable extends AppTable
         return $institutionName->name;
     }
 
-    public function onExcelGetInstitutionCode(Event $event, Entity $entity)
+    public function onExcelGetInstitutionCode(EventInterface $event, Entity $entity)
     {
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         
         $where = [];
         if ( $entity->institution_id > 0) {
@@ -73,13 +73,13 @@ class StudentWithdrawalReportTable extends AppTable
     }
 
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions('Institutions');
         return $attr;
     }
 
-    public function onExcelGetStudentName(Event $event, Entity $entity)
+    public function onExcelGetStudentName(EventInterface $event, Entity $entity)
     {
         $studentName = [];
         ($entity->student_first_name) ? $studentName[] = $entity->student_first_name : '';
@@ -90,18 +90,18 @@ class StudentWithdrawalReportTable extends AppTable
         return implode(' ', $studentName);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
        $requestData = json_decode($settings['process']['params']);
         $academic_period_id = $requestData->academic_period_id;
         $institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
-        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-        $Statuses = TableRegistry::get('Workflow.WorkflowSteps');
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $StudentWithdrawReasons = TableRegistry::get('Student.StudentWithdrawReasons');
-        $Users = TableRegistry::get('User.Users');
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
+        $Statuses = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $StudentWithdrawReasons = TableRegistry::getTableLocator()->get('Student.StudentWithdrawReasons');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $where = [];
         if ( $institution_id > 0) {
             $where = [$this->aliasField('institution_id = ') => $institution_id];
@@ -162,7 +162,7 @@ class StudentWithdrawalReportTable extends AppTable
             ->where([$where]);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
        $newArray = [];
       

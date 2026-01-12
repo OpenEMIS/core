@@ -4,7 +4,7 @@ namespace Student\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
 
@@ -35,7 +35,7 @@ class TextbooksTable extends ControllerActionTable {
         return $events;
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields) {
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields) {
         $searchableFields[] = 'textbook_id';
     }
 
@@ -50,7 +50,7 @@ class TextbooksTable extends ControllerActionTable {
         ]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('comment', ['visible' => false]);
         $this->fields['textbook_id']['sort'] = ['field' => 'MainTextbooks.title'];
@@ -97,7 +97,7 @@ class TextbooksTable extends ControllerActionTable {
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         $userData = $this->Session->read(); //# [POCOR-6548] Check if user data not found then add current login user data
@@ -168,7 +168,7 @@ class TextbooksTable extends ControllerActionTable {
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
         //POCOR-8414 start
@@ -184,7 +184,7 @@ class TextbooksTable extends ControllerActionTable {
 				$userId = $queryString['student_id'];
 			}
             //POCOR-8489 --End
-            $Users = TableRegistry::get('User.Users');
+            $Users = TableRegistry::getTableLocator()->get('User.Users');
             $result = $Users
                 ->find()
                 ->select(['first_name','last_name'])
@@ -215,19 +215,19 @@ class TextbooksTable extends ControllerActionTable {
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function onGetTextbookId(Event $event, Entity $entity)
+    public function onGetTextbookId(EventInterface $event, Entity $entity)
     {
         return $entity->main_textbook->code_title;
     }
 
-    public function onGetAcademicPeriodId(Event $event, Entity $entity)
+    public function onGetAcademicPeriodId(EventInterface $event, Entity $entity)
     {
         if (($this->action == 'view') || ($this->action == 'index')) {
             return $entity->academic_period->name;
         }
     }
 
-    public function onGetInstitutionId(Event $event, Entity $entity)
+    public function onGetInstitutionId(EventInterface $event, Entity $entity)
     {
         return $entity->institution->code_name;
     }

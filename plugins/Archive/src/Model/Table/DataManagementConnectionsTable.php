@@ -6,7 +6,7 @@ use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -86,7 +86,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // Remove back toolbarButton
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
@@ -102,7 +102,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         return $events;
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         if ($this->action == 'edit') {
             $originalButtons = $buttons->getArrayCopy();
@@ -123,7 +123,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'db_type_id':
@@ -167,7 +167,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
 
     }   
     
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('name');    
         $this->field('db_type_id');
@@ -186,7 +186,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $this->setFieldOrder(['name','db_type_id','host','host_port','db_name','username','conn_status_id','status_checked','modified_user_id','modified','created_user_id','created']);
     }
 
-    public function editBeforeAction(Event $event, ArrayObject $extra)
+    public function editBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('name');    
         $this->field('db_type_id');
@@ -206,7 +206,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
 
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         //Setup fields
         list($databaseTypeOptions) = array_values($this->getSelectOptions());
@@ -227,14 +227,14 @@ class DataManagementConnectionsTable extends ControllerActionTable
         return compact('databaseTypeOptions', 'selectedDatabaseType');
     }
     
-    public function onGetDbTypeId(Event $event, Entity $entity)
+    public function onGetDbTypeId(EventInterface $event, Entity $entity)
     {
         list($databaseTypeOptions) = array_values($this->getSelectOptions());
 
         return $databaseTypeOptions[$entity->db_type_id];
     }
 
-    public function onGetConnStatusId(Event $event, Entity $entity)
+    public function onGetConnStatusId(EventInterface $event, Entity $entity)
     {
         if($entity->conn_status_id == "1"){
             return $entity->conn_status_id = '<b style="color:green;">Online</b>';
@@ -243,7 +243,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         }
     }
 
-    public function onGetModifiedUserId(Event $event, Entity $entity)
+    public function onGetModifiedUserId(EventInterface $event, Entity $entity)
     {
         $Users = TableRegistry::getTableLocator()->get('User.Users');
         $result = $Users
@@ -255,7 +255,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         return $entity->modified_user_id = $result->first_name.' '.$result->last_name;
     }
 
-    public function onGetCreatedUserId(Event $event, Entity $entity)
+    public function onGetCreatedUserId(EventInterface $event, Entity $entity)
     {
         $Users = TableRegistry::getTableLocator()->get('User.Users');
         $result = $Users
@@ -267,7 +267,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         return $entity->created_user_id = $result->first_name.' '.$result->last_name;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $data){
 
         $post_data= $this->request->data;
         if(isset($post_data)){
@@ -598,7 +598,7 @@ die;*/
         }
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
+        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $remoteConnection,
         ]);
         $distinctResults = $tableArchived->find('all')

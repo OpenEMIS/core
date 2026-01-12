@@ -4,7 +4,7 @@ namespace User\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
@@ -45,7 +45,7 @@ class ContactTypesTable extends ControllerActionTable
 		return $validator;
 	}
 
-	public function indexBeforeAction(Event $event, ArrayObject $extra)
+	public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
 	{
 		$this->field('validation_pattern', ['after' => 'name', 'sort' => false]);
 		$this->field('contact_option_id', ['visible' => 'false']);
@@ -53,7 +53,7 @@ class ContactTypesTable extends ControllerActionTable
 		$this->field('editable', ['visible' => 'false']);
 	}
 
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
 	{
 		$parentFieldOptions = $this->ContactOptions->find('list')->toArray();
 		$selectedParentFieldOption = $this->queryString('parent_field_option_id', $parentFieldOptions);
@@ -65,13 +65,13 @@ class ContactTypesTable extends ControllerActionTable
 		$this->controller->set(compact('parentFieldOptions', 'selectedParentFieldOption'));
 	}
 
-	public function addEditBeforeAction(Event $event, ArrayObject $extra)
+	public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
 	{
 		$this->field('default', ['visible' => 'false']);
 		$this->field('contact_option_id');
 	}
 
-	public function onUpdateFieldContactOptionId(Event $event, array $attr, $action, ServerRequest $request)
+	public function onUpdateFieldContactOptionId(EventInterface $event, array $attr, $action, ServerRequest $request)
 	{
 		if ($action == 'add' || $action == 'edit') {
 			$parentFieldOptions = $this->ContactOptions->find('list')->toArray();
@@ -84,19 +84,19 @@ class ContactTypesTable extends ControllerActionTable
 		return $attr;
 	}
 
-	public function beforeSave(Event $event)
+	public function beforeSave(EventInterface $event)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':

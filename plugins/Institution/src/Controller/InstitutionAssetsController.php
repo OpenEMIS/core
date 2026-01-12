@@ -1,7 +1,7 @@
 <?php
 namespace Institution\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use App\Model\Traits\OptionsTrait;
 use Page\Model\Entity\PageElement;
@@ -19,9 +19,9 @@ class InstitutionAssetsController extends PageController
     {
         parent::initialize();
 
-        $this->loadModel('Institution.InstitutionAssets');
-        $this->loadModel('Institution.AssetTypes');
-//        $this->loadModel('AcademicPeriod.AcademicPeriods');
+        $this->InstitutionAssets = $this->fetchTable('Institution.InstitutionAssets');
+        $this->AssetTypes = $this->fetchTable('Institution.AssetTypes');
+//        $this->AcademicPeriods = $this->fetchTable('AcademicPeriod.AcademicPeriods');
     }
 
     public function implementedEvents()
@@ -154,7 +154,7 @@ class InstitutionAssetsController extends PageController
 //        $page->move('academic_period_id')->first();
     }
 
-    public function onRenderAccessibility(Event $event, Entity $entity, PageElement $element)
+    public function onRenderAccessibility(EventInterface $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
 
@@ -163,7 +163,7 @@ class InstitutionAssetsController extends PageController
         }
     }
 
-    public function onRenderPurpose(Event $event, Entity $entity, PageElement $element)
+    public function onRenderPurpose(EventInterface $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
 

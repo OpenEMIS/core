@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 
 use Cake\I18n\Date;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -44,7 +44,7 @@ class InstitutionStudentAbsencesArchivedTable extends ControllerActionTable
         $this->toggle('search', false);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(EventInterface $event, ArrayObject $extra) {
         $this->field('institution_student_absence_day_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
         $this->field('created_user_id', ['visible' => false]);
@@ -94,11 +94,11 @@ class InstitutionStudentAbsencesArchivedTable extends ControllerActionTable
         // ];
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // Setup period options
-        $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionStaffAttendances = TableRegistry::getTableLocator()->get('Staff.InstitutionStaffAttendances');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
         if ($this->request->query('user_id') !== null) {
@@ -235,7 +235,7 @@ class InstitutionStudentAbsencesArchivedTable extends ControllerActionTable
             // end setup weeks
 
                     // element control
-            $Classes = TableRegistry::get('Institution.InstitutionClasses');
+            $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
             $selectedAcademicPeriodId = $params['academic_period_id'];
 
             $classOptions = $Classes->getClassOptions($selectedPeriod, $institutionId);
@@ -254,7 +254,7 @@ class InstitutionStudentAbsencesArchivedTable extends ControllerActionTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
 
@@ -324,12 +324,12 @@ class InstitutionStudentAbsencesArchivedTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         return $entity->user->openemis_no;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'institution_class_id') {
             return __('Class');
@@ -343,11 +343,11 @@ class InstitutionStudentAbsencesArchivedTable extends ControllerActionTable
     }
 
     // POCOR-6938
-    public function onGetDate(Event $event, Entity $entity)
+    public function onGetDate(EventInterface $event, Entity $entity)
     {
         $student_id = $entity->student_id;
 
-        $studentAbsenceDays = TableRegistry::get('Institution.InstitutionStudentAbsences');
+        $studentAbsenceDays = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsences');
         $result = $studentAbsenceDays->find()->select(['selectdate'=>$studentAbsenceDays->aliasField('date')])
         ->where([$studentAbsenceDays->aliasField('student_id')=>$student_id])->first();
         $getdate = date_create($result->selectdate);

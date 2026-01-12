@@ -5,7 +5,7 @@ namespace System\Model\Table;
 use ArrayObject;
 use Cake\Utility\Inflector;
 use InvalidArgumentException;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -41,13 +41,13 @@ class NoticesTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
         $this->controller->set('contentHeader', $header);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('created', ['visible' => true, 'sort' => true]);
         $this->field('created_user_id', ['visible' => true, 'sort' => false]);
@@ -77,7 +77,7 @@ class NoticesTable extends ControllerActionTable
 
 
     }
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $userId = $this->Auth->user('id');
         $isSuperAdmin = $this->Auth->user('super_admin');
@@ -173,7 +173,7 @@ class NoticesTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'status') {
             return __('Enable');
@@ -186,7 +186,7 @@ class NoticesTable extends ControllerActionTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('status', ['visible' => false]);
         $this->field('notice_status', ['visible' => true]);
@@ -230,7 +230,7 @@ class NoticesTable extends ControllerActionTable
     }
 
 
-    public function onGetStatus(Event $event, Entity $entity)
+    public function onGetStatus(EventInterface $event, Entity $entity)
     {
         if($entity->status == 1){
             return 'Enable';
@@ -239,7 +239,7 @@ class NoticesTable extends ControllerActionTable
         }
     }
 
-    public function onGetNoticeStatus(Event $event, Entity $entity)
+    public function onGetNoticeStatus(EventInterface $event, Entity $entity)
     {
          $isSuperAdmin = $this->Auth->user('super_admin');
         if($isSuperAdmin){
@@ -298,9 +298,9 @@ class NoticesTable extends ControllerActionTable
         }
     }
 
-    public function onGetSecurityRoleId(Event $event, Entity $entity)
+    public function onGetSecurityRoleId(EventInterface $event, Entity $entity)
     {
-        $table = TableRegistry::get('Security.SecurityRoles');
+        $table = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $obj = [];
         $roles = TableRegistry::getTableLocator()->get('Alert.NoticeRoles')
                 ->find()

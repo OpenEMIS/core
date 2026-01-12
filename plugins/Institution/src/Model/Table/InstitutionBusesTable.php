@@ -5,7 +5,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
@@ -87,7 +87,7 @@ class InstitutionBusesTable extends ControllerActionTable
         return parent::findOptionList($query, $options);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // POCOR-6168 start
         $session = $this->request->getSession();
@@ -158,7 +158,7 @@ class InstitutionBusesTable extends ControllerActionTable
     }
 
     // POCOR-6168 For Filters
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $transportProviderId = $this->request->getQuery('provider');
         $transportStatusId = $this->request->getQuery('status');
@@ -180,7 +180,7 @@ class InstitutionBusesTable extends ControllerActionTable
     // POCOR-6168 For Filters
 
     // POCOR-6168 For excel Filters
-    public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $extra, Query $query)
     {
         $session = $this->request->getSession();
         //$institutionId  = $session->read('Institution.Institutions.id');
@@ -209,7 +209,7 @@ class InstitutionBusesTable extends ControllerActionTable
     }
     // POCOR-6168 For excel Filters
 
-   public function beforeAction(Event $event, ArrayObject $extra)
+   public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         //POCOR-8647 Start
         //$this->field('institution_transport_provider_id', ['type' => 'select', 'after' => 'comment']);
@@ -231,7 +231,7 @@ class InstitutionBusesTable extends ControllerActionTable
         $this->controller->changePageHeader($this, $modelAlias, $userType);*/
     } 
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
          
          switch ($field) {

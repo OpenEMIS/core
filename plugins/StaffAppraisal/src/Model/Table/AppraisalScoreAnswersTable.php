@@ -2,7 +2,7 @@
 namespace StaffAppraisal\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
@@ -29,7 +29,7 @@ class AppraisalScoreAnswersTable extends AppraisalAnswersTable
         parent::initialize($config);
     }
 
-    public function appraisalEditBeforePatch(Event $event, ArrayObject $requestData, $alias)
+    public function appraisalEditBeforePatch(EventInterface $event, ArrayObject $requestData, $alias)
     {
         // pr($requestData);die;
         $formId = $requestData[$alias]['appraisal_form_id'];
@@ -38,7 +38,7 @@ class AppraisalScoreAnswersTable extends AppraisalAnswersTable
         $count = 0;
 
         // Get all the appraisal score criteria id and store to an array
-        $appraisalFormsCriteriasScores = TableRegistry::get('StaffAppraisal.AppraisalFormsCriteriasScores');
+        $appraisalFormsCriteriasScores = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalFormsCriteriasScores');
         $appraisalCriteriaScoreEntities = $appraisalFormsCriteriasScores->find()
             ->where([
                 $appraisalFormsCriteriasScores->aliasField('appraisal_form_id') => $formId
@@ -63,7 +63,7 @@ class AppraisalScoreAnswersTable extends AppraisalAnswersTable
 
         $noOfCriteriaScoreIds = count($criteriaScoreIds);
 
-        $appraisalFormsCriteriasScoresLinks = TableRegistry::get('StaffAppraisal.AppraisalFormsCriteriasScoresLinks');
+        $appraisalFormsCriteriasScoresLinks = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalFormsCriteriasScoresLinks');
 
 
         // Those criteria score that has already calculated
@@ -192,7 +192,7 @@ class AppraisalScoreAnswersTable extends AppraisalAnswersTable
    //  	$noOfCriteriaScoreIds = count($criteriaScoreIds);
    //  	$count = 0;
 
-   //      $appraisalFormsCriteriasScoresLinks = TableRegistry::get('StaffAppraisal.AppraisalFormsCriteriasScoresLinks');
+   //      $appraisalFormsCriteriasScoresLinks = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalFormsCriteriasScoresLinks');
 
    //      // Those criteria score that has already calculated
    //      $proccessedCriteriaScore = [];
@@ -298,7 +298,7 @@ class AppraisalScoreAnswersTable extends AppraisalAnswersTable
 
 
 
-    // public function appraisalEditBeforePatch(Event $event, ArrayObject $requestData, $alias)
+    // public function appraisalEditBeforePatch(EventInterface $event, ArrayObject $requestData, $alias)
     // {
     //     if (!empty($requestData[$alias]['appraisal_score_answers'])) {
 
@@ -316,7 +316,7 @@ class AppraisalScoreAnswersTable extends AppraisalAnswersTable
     //     $noOfCriteriaScoreIds = count($criteriaScoreIds);
     //     $count = 0;
 
-    //     $appraisalFormsCriteriasScoresLinks = TableRegistry::get('StaffAppraisal.AppraisalFormsCriteriasScoresLinks');
+    //     $appraisalFormsCriteriasScoresLinks = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalFormsCriteriasScoresLinks');
 
     //     // Those criteria score that has already calculated
     //     $proccessedCriteriaScore = [];

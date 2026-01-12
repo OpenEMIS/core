@@ -10,7 +10,7 @@ use Cake\Collection\Collection;
 use Cake\Core\Configure;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\Log\Log;
@@ -184,7 +184,7 @@ class StaffTable extends ControllerActionTable
 
         $this->setDeleteStrategy('restrict');
 
-        $custom_fields = TableRegistry::get($this->customFieldTableName);
+        $custom_fields = TableRegistry::getTableLocator()->get($this->customFieldTableName);
         $bigCustomFieldData = $custom_fields->find('all')->select([
             'custom_field_id' => $custom_fields->aliasfield('id'),
             'custom_field_name' => $custom_fields->aliasfield('name'),
@@ -237,7 +237,7 @@ class StaffTable extends ControllerActionTable
     * @ticket POCOR-6749
     */
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'index' || $action == 'add') {
             // check for the user permission to view here
@@ -246,7 +246,7 @@ class StaffTable extends ControllerActionTable
         }
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'staff_id';
         $searchableFields[] = 'openemis_no';
@@ -287,7 +287,7 @@ class StaffTable extends ControllerActionTable
             ->add('start_date', 'ruleInAllPeriod', [
                 'rule' => function ($value, $context) {
                     $checkDate = date('Y-m-d', strtotime($value));
-                    $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                    $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                     // check for staff import start date must be within the range of the academic period - POCOR-4576
                     $academicPeriodList = $AcademicPeriods
                         ->find('years')
@@ -322,11 +322,11 @@ class StaffTable extends ControllerActionTable
         return $validator;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $institutionId = $this->getInstitutionID();
         $periodId = $this->request->getQuery('academic_period_id');
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academicPeriodId = $AcademicPeriods->getCurrent();
         if (!$periodId) {
             $periodId = $academicPeriodId;
@@ -431,7 +431,7 @@ class StaffTable extends ControllerActionTable
         if (!$relatedField) {
             return null;
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
             return $related->toArray();
@@ -466,7 +466,7 @@ class StaffTable extends ControllerActionTable
      */
     private static function getRelatedOptions($tableName, $order = '`order`', $where = [])
     {
-        $Table = TableRegistry::get($tableName);
+        $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->find('list')
                 ->select(['id', 'name'])
@@ -523,9 +523,9 @@ class StaffTable extends ControllerActionTable
 
     private function addStaffContactFields(Query $query)
     {
-        $staff_contacts = TableRegistry::get('UserContacts');
-        $contact_types = TableRegistry::get('User.ContactTypes');
-        $contact_options = TableRegistry::get('User.ContactOptions');
+        $staff_contacts = TableRegistry::getTableLocator()->get('UserContacts');
+        $contact_types = TableRegistry::getTableLocator()->get('User.ContactTypes');
+        $contact_options = TableRegistry::getTableLocator()->get('User.ContactOptions');
         $staff_contacts->getAlias('staff_contacts');
         $contact_types->getAlias('contact_types');
         $contact_options->getAlias('contact_options');
@@ -553,8 +553,8 @@ class StaffTable extends ControllerActionTable
 
     private function addStaffPositionField(Query $query)
     {
-        $positions = TableRegistry::get('Institution.StaffPositionTitles');
-        $institution_positions = TableRegistry::get('Institution.InstitutionPositions');
+        $positions = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
+        $institution_positions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
         $options = array(
             0 => __('Non-Teaching'),
             1 => __('Teaching')
@@ -635,7 +635,7 @@ class StaffTable extends ControllerActionTable
 
     private function addStaffCustomFields(Query $query)
     {
-        $institution_staffs = TableRegistry::get('Institution.InstitutionStaff');
+        $institution_staffs = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
         $the_staffs = $institution_staffs
             ->find('all')
             ->select('staff_id')
@@ -646,8 +646,8 @@ class StaffTable extends ControllerActionTable
         if (empty($staff_ids)) {
             return;
         }
-        $custom_field_values = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
-        $custom_fields = TableRegistry::get('StaffCustomField.StaffCustomFields');
+        $custom_field_values = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFieldValues');
+        $custom_fields = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFields');
         $custom_options = self::getRelatedOptions('StaffCustomField.StaffCustomFieldOptions');
         $customFieldData = $this->customFieldData;
         $custom_values = $custom_field_values->find('all')->select([
@@ -718,18 +718,18 @@ class StaffTable extends ControllerActionTable
         return $query;
     }
 
-    public function onExcelGetFTE(Event $event, Entity $entity)
+    public function onExcelGetFTE(EventInterface $event, Entity $entity)
     {
         return ($entity->FTE * 100) . '%';
     }
 
-    public function onExcelGetPositionTitleTeaching(Event $event, Entity $entity)
+    public function onExcelGetPositionTitleTeaching(EventInterface $event, Entity $entity)
     {
         $yesno = $this->getSelectOptions('general.yesno');
         return (array_key_exists($entity->position_title_teaching, $yesno)) ? $yesno[$entity->position_title_teaching] : '';
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         //redeclare fields for sorting purpose.
         $extraField[] = [
@@ -906,7 +906,7 @@ class StaffTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $settings)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $settings)
     {
         $session = $this->Session;
         $institutionId = $this->getInstitutionID();
@@ -980,7 +980,7 @@ class StaffTable extends ControllerActionTable
         }
 
         //POCOR-6248 starts
-        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItem = $ConfigItemTable
             ->find()
             ->where([
@@ -1070,7 +1070,7 @@ class StaffTable extends ControllerActionTable
 
     public function getIdentityTypeData($value_selection)
     {
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $typesIdentity = $IdentityTypes
             ->find()
             ->select([
@@ -1084,7 +1084,7 @@ class StaffTable extends ControllerActionTable
         return $typesIdentity;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $request = $this->request;
         $query->contain(['Positions']);
@@ -1095,7 +1095,7 @@ class StaffTable extends ControllerActionTable
         }
         $extra['options']['sortWhitelist'] = $sortList;
 
-        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         // Academic Periods
         $periodOptions = $AcademicPeriodTable->getYearList();
 
@@ -1108,7 +1108,7 @@ class StaffTable extends ControllerActionTable
         $session = $request->getSession();
         $institutionId = $this->getInstitutionID();
 
-        $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+        $StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
         $activeStatusId = $this->Workflow->getStepsByModelCode('Institution.InstitutionPositions', 'ACTIVE');
 
         $positionData = $StaffPositionTitles->find('list')
@@ -1173,7 +1173,7 @@ class StaffTable extends ControllerActionTable
         $closedStatus = $this->Workflow->getStepsByModelCode($this->getRegistryAlias(), 'CLOSED');
         $staffPositionProfileStatuses = array_merge($approvedStatus, $closedStatus);
 
-        $StaffPositionProfilesTable = TableRegistry::get('Institution.StaffPositionProfiles');
+        $StaffPositionProfilesTable = TableRegistry::getTableLocator()->get('Institution.StaffPositionProfiles');
         $staffPositionProfilesRecordCount = $StaffPositionProfilesTable->find()
             ->where([
                 $StaffPositionProfilesTable->aliasField('institution_id') => $institutionId,
@@ -1181,7 +1181,7 @@ class StaffTable extends ControllerActionTable
             ])
             ->count();
 
-        $InstitutionStaffTransfersTable = TableRegistry::get('Institution.InstitutionStaffTransfers');
+        $InstitutionStaffTransfersTable = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffTransfers');
         $staffTransferInRecord = $InstitutionStaffTransfersTable
             ->find('InstitutionStaffTransferIn', ['institution_id' => $institutionId, 'pending_records' => true])
             ->count();
@@ -1195,9 +1195,9 @@ class StaffTable extends ControllerActionTable
         $statusOptions[self::PENDING_TRANSFEROUT] = __('Pending Transfer Out') . ' - ' . $staffTransferOutRecord;
 
         // Display Staff Release if staff release records
-        $ConfigStaffReleaseTable = TableRegistry::get('Configuration.ConfigStaffReleases');
+        $ConfigStaffReleaseTable = TableRegistry::getTableLocator()->get('Configuration.ConfigStaffReleases');
 
-        $InstitutionStaffReleasesTable = TableRegistry::get('Institution.InstitutionStaffReleases');
+        $InstitutionStaffReleasesTable = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffReleases');
         $staffReleaseInRecord = $InstitutionStaffReleasesTable
             ->find('InstitutionStaffReleaseIn', ['institution_id' => $institutionId, 'pending_records' => true])
             ->count();
@@ -1239,9 +1239,9 @@ class StaffTable extends ControllerActionTable
             }
         }//PCOOR-7115 ends
         //POCOR-6248 starts
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-        $UserIdentities = TableRegistry::get('User.Identities');
-        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+        $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItem = $ConfigItemTable
             ->find()
             ->where([
@@ -1332,12 +1332,12 @@ class StaffTable extends ControllerActionTable
         $query->group([$this->aliasField('id')]); // POCOR-7899
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
     {
         $this->dashboardQuery = clone $query;
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $institutionId = $this->getQueryString('institution_id');
@@ -1378,7 +1378,7 @@ class StaffTable extends ControllerActionTable
         $this->controller->set('selectedAction', 'Positions');
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         if ($this->action == 'add') {
             $buttons[0]['name'] = '<i class="fa kd-add"></i> ' . __('Create New');
@@ -1386,7 +1386,7 @@ class StaffTable extends ControllerActionTable
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
 
         if (!$entity->isNew() && $entity->getDirty('FTE')) {
@@ -1416,7 +1416,7 @@ class StaffTable extends ControllerActionTable
 
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $institutionPositionId = $entity->institution_position_id;
         $staffId = $entity->staff_id;
@@ -1478,8 +1478,8 @@ class StaffTable extends ControllerActionTable
         }
 
         $listeners = [
-            TableRegistry::get('Institution.InstitutionSubjectStaff'),
-            TableRegistry::get('Institution.StaffUser')
+            TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff'),
+            TableRegistry::getTableLocator()->get('Institution.StaffUser')
         ];
         $this->dispatchEventToModels('Model.Staff.afterSave', [$entity], $this, $listeners);
     }
@@ -1490,8 +1490,8 @@ class StaffTable extends ControllerActionTable
         $positionEntity = null;
         if (empty($staffEntity->security_group_user_id)) {
             // every staff record in school will be linked to a security role record in security_group_users
-            $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
-            $SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+            $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+            $SecurityGroupUsersTable = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
             $homeroomSecurityRoleId = $SecurityRoles->getHomeroomRoleId();
             $securityGroupUserId = $staffEntity->security_group_user_id;
 
@@ -1508,7 +1508,7 @@ class StaffTable extends ControllerActionTable
             // POCOR-7870 commented out redundant checks
             // $isHomeroomRole = !empty($positionEntity) && $positionEntity->is_homeroom; //POCOR-7257
             //POCOR-7309 starts
-//            $InstitutionStaffTbl = TableRegistry::get('institution_staff');
+//            $InstitutionStaffTbl = TableRegistry::getTableLocator()->get('institution_staff');
 //            $InstitutionStaffEntity = $InstitutionStaffTbl->find()
 //                ->where([
 //                    $InstitutionStaffTbl->aliasField('institution_id') => $staffEntity->staff_id,
@@ -1564,8 +1564,8 @@ class StaffTable extends ControllerActionTable
 
     public function removeStaffRole($staffEntity)
     {
-        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
-        $SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        $SecurityGroupUsersTable = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $homeroomSecurityRoleId = $SecurityRoles->getHomeroomRoleId();
         $securityGroupUserId = $staffEntity->security_group_user_id;
 
@@ -1594,7 +1594,7 @@ class StaffTable extends ControllerActionTable
             }
         }
         *///POCOR-7238 Starts
-        $InstitutionStaffTbl = TableRegistry::get('Institution.InstitutionStaff');
+        $InstitutionStaffTbl = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
         $InstitutionStaffEntity = []; //
         if ($securityGroupUserId) { //
             $InstitutionStaffEntity = $InstitutionStaffTbl->find()
@@ -1618,7 +1618,7 @@ class StaffTable extends ControllerActionTable
             if ($staffEntity->is_homeroom == 1) {
                 $securityGroupId = $positionEntity->institution->security_group_id;
                 if (!empty($positionEntity)) {
-                    $SecurityGroupUserTbl = TableRegistry::get('Security.SecurityGroupUsers');
+                    $SecurityGroupUserTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
                     $conditions = [
                         $SecurityGroupUserTbl->aliasField('security_group_id') => $securityGroupId,
                         $SecurityGroupUserTbl->aliasField('security_user_id') => $staffEntity->staff_id,
@@ -1645,7 +1645,7 @@ class StaffTable extends ControllerActionTable
 
             $securityGroupId = $positionEntity->institution->security_group_id;
             if (!empty($positionEntity) && ($staffEntity->is_homeroom == 1)) {
-                $SecurityGroupUserTbl = TableRegistry::get('Security.SecurityGroupUsers');
+                $SecurityGroupUserTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
                 $homeroom_conditions = [
                     $SecurityGroupUserTbl->aliasField('security_group_id') => $securityGroupId,
                     $SecurityGroupUserTbl->aliasField('security_user_id') => $staffEntity->staff_id,
@@ -1661,7 +1661,7 @@ class StaffTable extends ControllerActionTable
         }//POCOR-7238 Ends
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -1740,7 +1740,7 @@ class StaffTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function onGetStaffId(Event $event, Entity $entity)
+    public function onGetStaffId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('user')) {
@@ -1751,7 +1751,7 @@ class StaffTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetIsHomeroom(Event $event, Entity $entity)
+    public function onGetIsHomeroom(EventInterface $event, Entity $entity)
     {
         $home = ($entity->is_homeroom) ? __('Yes') : __('No');
         return $home;
@@ -1759,7 +1759,7 @@ class StaffTable extends ControllerActionTable
 
     // Function used by the Mini-Dashboard (Institution Staff)
 
-    public function onGetPositionType(Event $event, Entity $entity)
+    public function onGetPositionType(EventInterface $event, Entity $entity)
     {
         $options = $this->getSelectOptions('Position.types');
         $value = $options['FULL_TIME'];
@@ -1771,7 +1771,7 @@ class StaffTable extends ControllerActionTable
 
     // Function used by the Dashboard (For Institution Dashboard and Home Page)
 
-    public function onGetFTE(Event $event, Entity $entity)
+    public function onGetFTE(EventInterface $event, Entity $entity)
     {
         $value = '100%';
         if ($entity->FTE < 1) {
@@ -1782,7 +1782,7 @@ class StaffTable extends ControllerActionTable
 
     // Function used by the Dashboard (For Institution Dashboard and Home Page)
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('staff_type_id', ['type' => 'select', 'visible' => ['index' => false, 'view' => true, 'edit' => true]]);
         $this->field('staff_status_id', ['type' => 'select']);
@@ -1821,7 +1821,7 @@ class StaffTable extends ControllerActionTable
             );
 
             // Get Staff Licenses
-            $table = TableRegistry::get('Staff.Licenses');
+            $table = TableRegistry::getTableLocator()->get('Staff.Licenses');
             // Revisit here in awhile
             $InstitutionArray[__('Licenses')] = $table->getDonutChart(
                 'institution_staff_licenses',
@@ -1834,7 +1834,7 @@ class StaffTable extends ControllerActionTable
             $indexDashboard = 'dashboard';
 
             if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
-                $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $currentYearId = $AcademicPeriod->getCurrent();
                 $periodId = $this->request->getQuery['academic_period_id'];
                 if ($currentYearId == $periodId) {
@@ -1869,7 +1869,7 @@ class StaffTable extends ControllerActionTable
 
     // For Dashboard (Institution Dashboard and Home Page)
 
-    public function viewBeforeAction(Event $event)
+    public function viewBeforeAction(EventInterface $event)
     {
         if ($this->Session->read('Institution.StaffPositionProfiles.addSuccessful')) {
             $this->Alert->success('StaffPositionProfiles.request');
@@ -1883,7 +1883,7 @@ class StaffTable extends ControllerActionTable
         $this->fields['FTE']['order'] = $i++;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         //POCOR-8334-START
         $institutionId = $this->getInstitutionID();
@@ -1905,12 +1905,12 @@ class StaffTable extends ControllerActionTable
      **
      ******************************************************************************************************************/
 
-    public function editBeforeQuery(Event $event, Query $query)
+    public function editBeforeQuery(EventInterface $event, Query $query)
     {
         $query->contain(['Users', 'Positions', 'StaffTypes', 'StaffStatuses']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity)
+    public function editAfterAction(EventInterface $event, Entity $entity)
     {
         $this->field('staff_id', [
             'type' => 'readonly',
@@ -1941,7 +1941,7 @@ class StaffTable extends ControllerActionTable
         $this->setupTabElements($entity);
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         // populate 'to be deleted' field
         $staff = $this->Users->get($entity->staff_id);
@@ -1950,7 +1950,7 @@ class StaffTable extends ControllerActionTable
         $extra['excludedModels'] = [$this->StaffPositionProfiles->getAlias(), $this->StaffTransferOut->getAlias(), $this->StaffRelease->getAlias()];
 
         // staff transfer out
-        $InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
+        $InstitutionStaffTransfers = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffTransfers');
         $doneStatus = $InstitutionStaffTransfers::DONE;
 
         $transferOutRecordsCount = $InstitutionStaffTransfers->find()
@@ -1965,7 +1965,7 @@ class StaffTable extends ControllerActionTable
         $extra['associatedRecords'][] = ['model' => 'StaffTransferOut', 'count' => $transferOutRecordsCount];
 
         // staff release out
-        $InstitutionStaffReleases = TableRegistry::get('Institution.InstitutionStaffReleases');
+        $InstitutionStaffReleases = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffReleases');
         $releaseDoneStatus = $InstitutionStaffReleases::DONE;
 
         $releaseOutRecordsCount = $InstitutionStaffReleases->find()
@@ -1995,7 +1995,7 @@ class StaffTable extends ControllerActionTable
         }
 
         foreach ($associationArray as $tableName => $model) {
-            $Table = TableRegistry::get($tableName);
+            $Table = TableRegistry::getTableLocator()->get($tableName);
             $recordsCount = $Table->find()
                 ->where([
                     $Table->aliasField('staff_id') => $entity->staff_id,
@@ -2007,10 +2007,10 @@ class StaffTable extends ControllerActionTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param Entity $entity
      */
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $staff_id = !empty($entity->staff_id) ? $entity->staff_id : NULL;
         $institution_id = !empty($entity->institution_id) ? $entity->institution_id : 0;
@@ -2037,7 +2037,7 @@ class StaffTable extends ControllerActionTable
         $institutionId = $entity->institution_id ?? 0;
         $staffId = $entity->staff_id ?? 0;
         if ($institutionId && $staffId) {
-            $InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
+            $InstitutionStaffTransfers = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffTransfers');
             $doneStatus = $InstitutionStaffTransfers::DONE;
 
             $transferOutRecordsCount = $InstitutionStaffTransfers->find()
@@ -2051,7 +2051,7 @@ class StaffTable extends ControllerActionTable
                 ->count();
 
             $checkAllRecords['associatedRecords'][] = ['model' => 'StaffTransferOut', 'count' => $transferOutRecordsCount];
-            $InstitutionStaffReleases = TableRegistry::get('Institution.InstitutionStaffReleases');
+            $InstitutionStaffReleases = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffReleases');
 
             $releaseDoneStatus = $InstitutionStaffReleases::DONE;
             $releaseOutRecordsCount = $InstitutionStaffReleases->find()
@@ -2082,7 +2082,7 @@ class StaffTable extends ControllerActionTable
             }
 
             foreach ($associationArray as $tableName => $model) {
-                $Table = TableRegistry::get($tableName);
+                $Table = TableRegistry::getTableLocator()->get($tableName);
                 $recordsCount = $Table->find()
                     ->where([
                         $Table->aliasField('staff_id') => $entity->staff_id,
@@ -2150,7 +2150,7 @@ class StaffTable extends ControllerActionTable
 
 
             if ($institution_id == 0) {
-                $tableToClean = TableRegistry::get($table_name);
+                $tableToClean = TableRegistry::getTableLocator()->get($table_name);
                 $where = [
                     $tableToClean->aliasField($field_name) => $user_id
 
@@ -2182,8 +2182,8 @@ class StaffTable extends ControllerActionTable
      */
     private function deleteFromInstitutionStaffShifts($user_id, $table_name, $field_name, $institution_id)
     {
-        $tableToClean = TableRegistry::get($table_name);
-        $Shifts = TableRegistry::get('institution_shifts');
+        $tableToClean = TableRegistry::getTableLocator()->get($table_name);
+        $Shifts = TableRegistry::getTableLocator()->get('institution_shifts');
         $allShifts = $Shifts
             ->find('all')
             ->select('id')
@@ -2204,11 +2204,11 @@ class StaffTable extends ControllerActionTable
     * @ticket POCOR-6800
     */
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $broadcaster = $this;
         $listeners = [
-            TableRegistry::get('Institution.StaffLeave')    // Staff Leave associated to institution must be deleted.
+            TableRegistry::getTableLocator()->get('Institution.StaffLeave')    // Staff Leave associated to institution must be deleted.
         ];
         $this->dispatchEventToModels('Model.InstitutionStaff.afterDelete', [$entity], $broadcaster, $listeners);
 
@@ -2221,7 +2221,7 @@ class StaffTable extends ControllerActionTable
         $startDate = (!empty($entity->start_date)) ? $entity->start_date->format('Y-m-d') : null;
         $endDate = (!empty($entity->end_date)) ? $entity->end_date->format('Y-m-d') : null;
 
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
 
         // Deleting a staff-to-position record in a school removes all records related to the staff in the school (i.e. remove him from classes/subjects) falling between end date and start date of his assignment in the position.
         $classesInPosition = $InstitutionClasses->find()
@@ -2253,7 +2253,7 @@ class StaffTable extends ControllerActionTable
         // delete the staff from subjects
         // find subjects that matched the start-end date then delete from subject_staff that matches staff id and subjects returned from previous
 
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
         $subjectsDuringStaffPeriod = $InstitutionSubjects->find()
             ->where([$InstitutionSubjects->aliasField('institution_id') => $institutionId])
             ->matching('AcademicPeriods', function ($q) use ($startDate, $endDate) {
@@ -2274,7 +2274,7 @@ class StaffTable extends ControllerActionTable
         }
 
         // Staff behavior associated to institution must be deleted.
-        $StaffBehaviours = TableRegistry::get('Institution.StaffBehaviours');
+        $StaffBehaviours = TableRegistry::getTableLocator()->get('Institution.StaffBehaviours');
         $staffBehavioursData = $StaffBehaviours->find()
             ->where([
                 $StaffBehaviours->aliasField('staff_id') => $entity->staff_id,
@@ -2287,7 +2287,7 @@ class StaffTable extends ControllerActionTable
 
         // Rubrics related to staff must be deleted. (institution_site_quality_rubrics)
         // association cascade deletes institution_site_quality_rubric_answers
-        $InstitutionRubrics = TableRegistry::get('Institution.InstitutionRubrics');
+        $InstitutionRubrics = TableRegistry::getTableLocator()->get('Institution.InstitutionRubrics');
         $institutionRubricsQuery = $InstitutionRubrics->find()
             ->where([
                 $InstitutionRubrics->aliasField('staff_id') => $entity->staff_id,
@@ -2298,7 +2298,7 @@ class StaffTable extends ControllerActionTable
         }
 
         if (!empty($subjectIdsDuringStaffPeriod)) {
-            $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+            $InstitutionSubjectStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
             $InstitutionSubjectStaff->deleteAll([
                 $InstitutionSubjectStaff->aliasField('staff_id') => $staffId,
                 $InstitutionSubjectStaff->aliasField('institution_subject_id') . ' IN ' => $subjectIdsDuringStaffPeriod
@@ -2321,7 +2321,7 @@ class StaffTable extends ControllerActionTable
         ];
 
         if (isset($this->action) && $this->action == 'remove') { //POCOR-7083
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $username = $this->Auth->user()['username'];
                 $Webhooks->triggerShell('staff_delete', ['username' => $username], $body);
@@ -2427,7 +2427,7 @@ class StaffTable extends ControllerActionTable
             $_conditions[$this->getAlias() . '.' . $key] = $value;
         }
 
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $currentYearId = $AcademicPeriod->getCurrent();
         if (!empty($currentYearId)) {
             $currentYear = $AcademicPeriod->get($currentYearId, ['fields' => 'name'])->name;
@@ -2514,7 +2514,7 @@ class StaffTable extends ControllerActionTable
             $_conditions[$this->getAlias() . '.' . $key] = $value;
         }
 
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $currentYearId = $AcademicPeriod->getCurrent();
         if (!empty($currentYearId)) {
             $currentYear = $AcademicPeriod->get($currentYearId, ['fields' => 'name'])->name;
@@ -2925,7 +2925,7 @@ class StaffTable extends ControllerActionTable
         $isHomeroom = (array_key_exists('isHomeroom', $options)) ? $options['isHomeroom'] : null;
 
         if (!is_null($academicPeriodId)) {
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $academicPeriodData = $AcademicPeriods->find()
                 ->select([
                     $AcademicPeriods->aliasField('start_date'), $AcademicPeriods->aliasField('end_date')
@@ -3178,11 +3178,11 @@ class StaffTable extends ControllerActionTable
     {
         $loggedInUserId = $options['staff_id'];
         $superAdmin = $options['super_admin'];
-        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $userRoleId = $SecurityRoles->getLoggedInUserRoles($loggedInUserId);
-        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $permission = 'All Comments';
-        $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+        $SecurityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
         $functionsData = $SecurityFunctions->find()
             ->select([$SecurityFunctions->aliasField('id')])
             ->where([
@@ -3191,7 +3191,7 @@ class StaffTable extends ControllerActionTable
         if (!empty($functionsData)) {
             $funId = $functionsData['id'];
         }
-        $SecurityRoleFunctionsTbl = TableRegistry::get('Security.SecurityRoleFunctions');
+        $SecurityRoleFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         if ($superAdmin) {
             $data = array('result' => 1);
             echo json_encode($data, true);
@@ -3223,11 +3223,11 @@ class StaffTable extends ControllerActionTable
     {
         $loggedInUserId = $options['staff_id'];
         $superAdmin = $options['super_admin'];
-        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $userRoleId = $SecurityRoles->getLoggedInUserRoles($loggedInUserId);
-        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $permission = 'All Comments';
-        $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+        $SecurityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
         $functionsData = $SecurityFunctions->find()
             ->select([$SecurityFunctions->aliasField('id')])
             ->where([
@@ -3236,7 +3236,7 @@ class StaffTable extends ControllerActionTable
         if (!empty($functionsData)) {
             $funId = $functionsData['id'];
         }
-        $SecurityRoleFunctionsTbl = TableRegistry::get('Security.SecurityRoleFunctions');
+        $SecurityRoleFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         if ($superAdmin) {
             $data = array('result' => 1);
             echo json_encode($data, true);
@@ -3270,15 +3270,15 @@ class StaffTable extends ControllerActionTable
         $staffId = $options['staff_id'];
         $superAdmin = $options['super_admin'];
 
-        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $principalRoleId = $SecurityRoles->getPrincipalRoleId();
 
-        //$SecurityGroupInsTbl = TableRegistry::get('security_group_institutions');
-        //$SecurityGroupsTbl = TableRegistry::get('security_groups');
-        $SecurityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
-        $SecurityRolesTbl = TableRegistry::get('Security.SecurityRoles');
-        $SecurityUsersTbl = TableRegistry::get('User.Users');
-        $InstitutionsTbl = TableRegistry::get('Institution.Institutions');
+        //$SecurityGroupInsTbl = TableRegistry::getTableLocator()->get('security_group_institutions');
+        //$SecurityGroupsTbl = TableRegistry::getTableLocator()->get('security_groups');
+        $SecurityGroupUsersTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $SecurityRolesTbl = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        $SecurityUsersTbl = TableRegistry::getTableLocator()->get('User.Users');
+        $InstitutionsTbl = TableRegistry::getTableLocator()->get('Institution.Institutions');
 
         $SecurityGroupIns = $SecurityRolesTbl->find()
             ->select([$SecurityUsersTbl->aliasField('openemis_no'), $InstitutionsTbl->aliasField('code')])
@@ -3313,7 +3313,7 @@ class StaffTable extends ControllerActionTable
     {
         $permissionModule = ['Comments'];
         $categories = ['Report Cards'];
-        $SecurityFunctionsTbl = TableRegistry::get('Security.SecurityFunctions');
+        $SecurityFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
         $SecurityFunctions = $SecurityFunctionsTbl->find()
             ->select([$SecurityFunctionsTbl->aliasField('id')])
             ->where([
@@ -3328,7 +3328,7 @@ class StaffTable extends ControllerActionTable
             }
         }
 
-        $SecurityRoleFunctionsTbl = TableRegistry::get('Security.SecurityRoleFunctions');
+        $SecurityRoleFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
             ->where([
                 $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $funArr,
@@ -3357,21 +3357,21 @@ class StaffTable extends ControllerActionTable
         $staffId = $options['staff_id'];
         $superAdmin = $options['super_admin'];
 
-        $Institution = TableRegistry::get('Institution.Institutions');
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-        $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
-        $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
-        $institutionSubjectsTbl = TableRegistry::get('Institution.InstitutionSubjects');
-        $institutionClassSubjectsTbl = TableRegistry::get('Institution.InstitutionClassSubjects');
+        $Institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $InstitutionClassesSecondaryStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionClassesSecondaryStaff');
+        $InstitutionSubjectStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
+        $institutionSubjectsTbl = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+        $institutionClassSubjectsTbl = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
 
         $homeroomRoleId = $SecurityRoles->getHomeroomRoleId();
-        $SecurityGroupInsTbl = TableRegistry::get('Security.SecurityGroupInstitutions');
-        // $SecurityGroupsTbl = TableRegistry::get('Security.SecurityGroups');
+        $SecurityGroupInsTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
+        // $SecurityGroupsTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroups');
         $SecurityGroupsLocator = new TableLocator();
         $SecurityGroupsTbl = $SecurityGroupsLocator->get('security_groups');
-        $SecurityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsersTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $SecurityGroupIns = $SecurityGroupInsTbl->find()
             ->innerJoin([$SecurityGroupsTbl->getAlias() => $SecurityGroupsTbl->getTable()], [
                 $SecurityGroupsTbl->aliasField('id = ') . $SecurityGroupInsTbl->aliasField('security_group_id') //POCOR-6791
@@ -3389,7 +3389,7 @@ class StaffTable extends ControllerActionTable
                 $homeroomTeacherPermissionArr = ['result' => 1, 'subject_edit_data' =>  $InstitutionSubjectStaffData = []];
             } else {
                 //to find records for homeroom teacher staff
-                $institutionClassesTbl = TableRegistry::get('Institution.InstitutionClasses');
+                $institutionClassesTbl = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
                 $institutionClasses = $institutionClassesTbl
                     ->find()
                     ->select([ // to find records for homeroom teacher
@@ -3507,13 +3507,13 @@ class StaffTable extends ControllerActionTable
         $academicPeriodId = $options['academic_period_id'];
         $classId = $options['institution_class_id'];
 
-        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $teacherRoleId = $SecurityRoles->getTeacherRoleId();
-        $SecurityGroupInsTbl = TableRegistry::get('Security.SecurityGroupInstitutions');
-        // $SecurityGroupsTbl = TableRegistry::get('security_groups');
+        $SecurityGroupInsTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
+        // $SecurityGroupsTbl = TableRegistry::getTableLocator()->get('security_groups');
         $SecurityGroupsLocator = new TableLocator();
         $SecurityGroupsTbl = $SecurityGroupsLocator->get('security_groups');
-        $SecurityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsersTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $SecurityGroupIns = $SecurityGroupInsTbl->find()
             ->innerJoin([$SecurityGroupsTbl->getAlias() => $SecurityGroupsTbl->getTable()], [
                 $SecurityGroupsTbl->aliasField('id = ') . $SecurityGroupInsTbl->aliasField('security_group_id') //POCOR-6791
@@ -3532,10 +3532,10 @@ class StaffTable extends ControllerActionTable
                 $subjectTeacherPermissionArr = ['result' => 1];
             } else {
                 //to find record only subject teacher
-                $institutionSubjectsTbl = TableRegistry::get('Institution.InstitutionSubjects');
-                $institutionClassSubjectsTbl = TableRegistry::get('Institution.InstitutionClassSubjects');
-                $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
-                $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $institutionSubjectsTbl = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+                $institutionClassSubjectsTbl = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
+                $InstitutionSubjectStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
+                $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $AcademicPeriodData = $AcademicPeriodTable->find()
                     ->where([
                         $AcademicPeriodTable->aliasField('id') => $academicPeriodId,
@@ -3594,7 +3594,7 @@ class StaffTable extends ControllerActionTable
             $permissionModule = ['All Subjects'];
             // $categories = ['Academic', 'Report Cards']; //Anubhav
             $categories = ['Academic'];
-            $SecurityFunctionsTbl = TableRegistry::get('Security.SecurityFunctions');
+            $SecurityFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
             $SecurityFunctions = $SecurityFunctionsTbl->find()
                 ->select([$SecurityFunctionsTbl->aliasField('id')])
                 ->where([
@@ -3608,9 +3608,9 @@ class StaffTable extends ControllerActionTable
                 }
             }
             //get staff id roles POCOR-6814 Starts
-            $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-            $SecurityGroupTbl = TableRegistry::get('Security.UserGroups');
-            $SecurityGroupUserTbl = TableRegistry::get('Security.SecurityGroupUsers');
+            $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
+            $SecurityGroupTbl = TableRegistry::getTableLocator()->get('Security.UserGroups');
+            $SecurityGroupUserTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
 
              //POCOR-9212[START] // Here is the logic change: instead of checking institution_id from the table SecurityGroupInstitutions
              // check for the security_group_id
@@ -3658,7 +3658,7 @@ class StaffTable extends ControllerActionTable
                     $RoleArr[] = $SecurityGroup_v['SecurityGroupUsers']['security_role_id'];
                 }
             } //POCOR-6814 Ends
-            $SecurityRoleFunctionsTbl = TableRegistry::get('Security.SecurityRoleFunctions');
+            $SecurityRoleFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
             if (!empty($funArr) && !empty($RoleArr)) { //POCOR-7068
                 $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
                     ->where([
@@ -3697,11 +3697,11 @@ class StaffTable extends ControllerActionTable
             echo json_encode($SecurityRolesNames, true);
             die;
         }else{
-            $SecurityFunctionsTbl = TableRegistry::get('Security.SecurityFunctions');
+            $SecurityFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
             //get staff id roles POCOR-6814 Starts
-            $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-            $SecurityGroupTbl = TableRegistry::get('Security.UserGroups');
-            $SecurityGroupUserTbl = TableRegistry::get('Security.SecurityGroupUsers');
+            $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
+            $SecurityGroupTbl = TableRegistry::getTableLocator()->get('Security.UserGroups');
+            $SecurityGroupUserTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
             $SecurityGroup = $SecurityGroupTbl->find()
                 ->select([
                     $SecurityGroupUserTbl->aliasField('security_group_id'),
@@ -3732,7 +3732,7 @@ class StaffTable extends ControllerActionTable
                     $RoleArr[] = $SecurityGroup_v['SecurityGroupUsers']['security_role_id'];
                 }
             }
-            $SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
+            $SecurityRolesTable = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
             if (!empty($RoleArr)) { //POCOR-7068
                 $SecurityRolesData = $SecurityRolesTable->find()
                     ->where([
@@ -3755,7 +3755,7 @@ class StaffTable extends ControllerActionTable
         $institutionId = $options['institution_id'];
         $staffId = $options['staff_id'];
 
-        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $principalRoleId = $SecurityRoles->getPrincipalRoleId();
 
         return $query
@@ -3771,8 +3771,8 @@ class StaffTable extends ControllerActionTable
     {
         $institutionId = $options['institution_id'];
         $staffId = $options['staff_id'];
-        $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
-        $InstitutionPosition = TableRegistry::get('Institution.InstitutionPositions');
+        $StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
+        $InstitutionPosition = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
         return $query
             ->select([$this->aliasField('staff_id')])
             ->leftJoin(
@@ -3811,11 +3811,11 @@ class StaffTable extends ControllerActionTable
         // $staffId = $options['staff_id'];
         $staffId = $_SESSION['Auth']['User']['id']; // Added for Version4
 
-        $Institution = TableRegistry::get('Institution.Institutions');
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-        $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
+        $Institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $InstitutionClassesSecondaryStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionClassesSecondaryStaff');
 
         $homeroomRoleId = $SecurityRoles->getHomeroomRoleId();
         $securityGroupId = $Institution->get($institutionId)->security_group_id;
@@ -3859,7 +3859,7 @@ class StaffTable extends ControllerActionTable
 
     public function removeInactiveStaffSecurityRole()
     {
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
 
         $StaffTable = $this;
         while (true) {
@@ -3892,7 +3892,7 @@ class StaffTable extends ControllerActionTable
 
     public function removeIndividualStaffSecurityRole($staffId)
     {
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $StaffTable = $this;
         $institutionStaffRecords = $this->find()
             ->where([
@@ -3968,12 +3968,12 @@ class StaffTable extends ControllerActionTable
 
     public function findStaffAttendances(Query $query, array $options)
     {
-        $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
-        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionStaffAttendances = TableRegistry::getTableLocator()->get('Staff.InstitutionStaffAttendances');
+        $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $staffId = $options['staff_id'];
         $institutionId = $options['institution_id'];
         //POCOR-7020
-        $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
+        $institutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
         $staffRecord = $institutionStaff->find('all', ['conditions' => ['staff_id' => $staffId]])
             ->first();
         $staffStatusId = $staffRecord['staff_status_id'];
@@ -4003,7 +4003,7 @@ class StaffTable extends ControllerActionTable
             }
         }
 
-        $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+        $StaffLeaveTable = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
 
         $approvedLeaveStatuses = $this->getApprovedLeaveStatusIds(); // POCOR-9415 start
 
@@ -4273,9 +4273,9 @@ class StaffTable extends ControllerActionTable
     private function getAttendanceByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $shiftId, $archive = false)
     {
         if (!$archive) {
-            $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
-            $positions = TableRegistry::get('Institution.InstitutionPositions');
-            $staff = TableRegistry::get('Institution.InstitutionStaff');
+            $InstitutionStaffAttendances = TableRegistry::getTableLocator()->get('Staff.InstitutionStaffAttendances');
+            $positions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
+            $staff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
             $allStaffAttendancesQuery = $InstitutionStaffAttendances
                 ->find('all')
                 ->where([
@@ -4331,7 +4331,7 @@ class StaffTable extends ControllerActionTable
         $approvedLeaveStatuses = $this->getApprovedLeaveStatusIds(); // POCOR-9415
 //        Log::debug(print_r($approvedLeaveStatuses,true));
         if (!$archive) {
-            $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+            $StaffLeaveTable = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
         }else{
             $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
         }
@@ -4348,7 +4348,7 @@ class StaffTable extends ControllerActionTable
         }
 //        Log::debug(print_r($commonConditions, true));
         if (!$archive) {
-            $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+            $StaffLeaveTable = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
             $allStaffLeaves = $StaffLeaveTable
                 ->find()
                 ->matching('StaffLeaveTypes')
@@ -4379,7 +4379,7 @@ class StaffTable extends ControllerActionTable
     {
 
         if (!$archive) {
-            $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+            $StaffLeaveTable = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
         }
         if ($archive) {
             $StaffLeaveTable = ArchiveConnections::getArchiveTable('Institution.InstitutionStaffLeave');
@@ -4440,7 +4440,7 @@ class StaffTable extends ControllerActionTable
      */
     private function getWorkingDays($weekStartDate, $weekEndDate)
     {
-        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $startDate = new DateTime($weekStartDate);
         $endDate = new DateTime($weekEndDate);
         $interval = new DateInterval('P1D');
@@ -4464,7 +4464,7 @@ class StaffTable extends ControllerActionTable
      */
     private function getQueryWithShiftId(Query $query, $shiftId)
     {
-        $positions = TableRegistry::get('Institution.InstitutionPositions');
+        $positions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
         if ($shiftId != -1) {
             $query = $query
                 ->leftJoin([$positions->getAlias() => $positions->getTable()],
@@ -4684,7 +4684,7 @@ class StaffTable extends ControllerActionTable
      */
     private function getFormattedStaffAttendanceArchivedRow($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $day_id)
     {
-        $AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
+        $AbsenceTypesTable = TableRegistry::getTableLocator()->get('Institution.AbsenceTypes');
         $absenceTypes = $AbsenceTypesTable->getAbsenceTypeList();
         return function (ResultSetInterface $results) use (
             $attendanceByStaffIdRecords,
@@ -4827,7 +4827,7 @@ class StaffTable extends ControllerActionTable
         if (!$relatedField) {
             return null;
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
             return $related->name;
@@ -4837,7 +4837,7 @@ class StaffTable extends ControllerActionTable
         return null;
     }
 
-    public function beforeFind(Event $event, Query $query, ArrayObject $options)
+    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options)
     {
 
         if (!empty($_REQUEST['_device']) && $_REQUEST['_device'] == true) {
@@ -4859,10 +4859,10 @@ class StaffTable extends ControllerActionTable
     public function findStaffShiftsAttendance(Query $query, array $options)
     {
         $staffId = $options['staff_id'];
-        $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
-        $positions = TableRegistry::get('Institution.InstitutionPositions');
-        $shiftOption = TableRegistry::get('Institution.ShiftOptions');
-        $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
+        $institutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $positions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
+        $shiftOption = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');
+        $InstitutionStaffAttendances = TableRegistry::getTableLocator()->get('Staff.InstitutionStaffAttendances');
         $staffShiftsData = $query
             ->leftJoin(
                 [$InstitutionStaffAttendances->getAlias() => $InstitutionStaffAttendances->getTable()],
@@ -4895,7 +4895,7 @@ class StaffTable extends ControllerActionTable
 
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'photo_content') {
             return __('Photo Content');
@@ -4962,11 +4962,11 @@ class StaffTable extends ControllerActionTable
         return $query;
     }
 
-    public function onGetStaffPositionGradeId(Event $event, Entity $entity)
+    public function onGetStaffPositionGradeId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->staff_position_grade_id) {
-            $StaffPositionGradesTable = TableRegistry::get('Institution.StaffPositionGrades');
+            $StaffPositionGradesTable = TableRegistry::getTableLocator()->get('Institution.StaffPositionGrades');
             $StaffPositionGrades = $StaffPositionGradesTable->get($entity->staff_position_grade_id);
             $value = $StaffPositionGrades->name;
         }

@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use DatePeriod;
 use DateInterval;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -85,7 +85,7 @@ class StaffAbsencesTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $staffId = $entity['staff_id'];
         $institutionId = $entity['institution_id'];
@@ -93,7 +93,7 @@ class StaffAbsencesTable extends ControllerActionTable
         $dateTo = $entity['date_to']->format('Y-m-d');
         $entity = $this->getNumberOfDays($entity);
 
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
         $staffData = $InstitutionStaff
             ->find('all')
             ->where([
@@ -131,7 +131,7 @@ class StaffAbsencesTable extends ControllerActionTable
         }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         if (in_array($this->action, ['view', 'edit', 'delete'])) {
             $modelAlias = 'Staff Leave';
@@ -157,14 +157,14 @@ class StaffAbsencesTable extends ControllerActionTable
         $this->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'time', 'start_time', 'full_day', 'end_time', 'number_of_days', 'comments', 'file_name', 'file_content']);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('start_time', ['visible' => false]);
         $this->field('end_time', ['visible' => false]);
         $this->field('time', ['after' => 'date_to']);
     }
 
-    public function indexHistoricalBeforeQuery(Event $event, Query $mainQuery, Query $historicalQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
+    public function indexHistoricalBeforeQuery(EventInterface $event, Query $mainQuery, Query $historicalQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
@@ -278,12 +278,12 @@ class StaffAbsencesTable extends ControllerActionTable
             ]);
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('staff_leave_type_id');
         $this->field('assignee_id', ['entity' => $entity]); //send entity information
@@ -298,7 +298,7 @@ class StaffAbsencesTable extends ControllerActionTable
         $this->setFieldOrder(['staff_leave_type_id', 'academic_period_id','date_from', 'date_to', 'full_day', 'start_time', 'end_time','number_of_days', 'comments', 'file_name', 'file_content', 'assignee_id']);
     }
 
-    public function onGetTime(Event $event, Entity $entity) {
+    public function onGetTime(EventInterface $event, Entity $entity) {
         $time = '-';
         $isFullDay = $this->getFieldEntity($entity->is_historical, $entity->id, 'full_day');
         if($entity->full_day == 0){
@@ -309,12 +309,12 @@ class StaffAbsencesTable extends ControllerActionTable
         return $time;
     }
 
-    public function onGetFullDay(Event $event, Entity $entity)
+    public function onGetFullDay(EventInterface $event, Entity $entity)
     {
         return $this->fullDayOptions[$entity->full_day];
     }
 
-    public function onGetStatusId(Event $event, Entity $entity)
+    public function onGetStatusId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             $statusName = $entity->status->name;
@@ -329,7 +329,7 @@ class StaffAbsencesTable extends ControllerActionTable
         return '<span class="status highlight">' . $statusName . '</span>';
     }
 
-    public function onGetAssigneeId(Event $event, Entity $entity)
+    public function onGetAssigneeId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->assignee->name;
@@ -339,7 +339,7 @@ class StaffAbsencesTable extends ControllerActionTable
         }
     }
 
-    public function onGetInstitutionId(Event $event, Entity $entity)
+    public function onGetInstitutionId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->institution->code_name;
@@ -353,7 +353,7 @@ class StaffAbsencesTable extends ControllerActionTable
         }
     }
 
-    public function onGetStaffLeaveTypeId(Event $event, Entity $entity)
+    public function onGetStaffLeaveTypeId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->staff_leave_type->name;
@@ -363,7 +363,7 @@ class StaffAbsencesTable extends ControllerActionTable
         }
     }
 
-    public function onGetAcademicPeriodId(Event $event, Entity $entity)
+    public function onGetAcademicPeriodId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->academic_period->name;
@@ -373,7 +373,7 @@ class StaffAbsencesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldFileName(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFileName(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'view') {
             $attr['type'] = 'hidden';
@@ -384,7 +384,7 @@ class StaffAbsencesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffId(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
             $userId = $this->getUserId();
@@ -395,7 +395,7 @@ class StaffAbsencesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffLeaveTypeId(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -405,7 +405,7 @@ class StaffAbsencesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -423,7 +423,7 @@ class StaffAbsencesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldFullDay(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFullDay(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
             // $attr['type'] = 'select';
@@ -434,7 +434,7 @@ class StaffAbsencesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStartTime(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStartTime(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
             if (isset($request->getData($this->getAlias())['full_day'])) {
@@ -453,7 +453,7 @@ class StaffAbsencesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEndTime(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEndTime(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
             if (isset($request->getData($this->getAlias())['full_day'])) {
@@ -500,7 +500,7 @@ class StaffAbsencesTable extends ControllerActionTable
         return $userId;
     }
 
-    public function institutionStaffAfterDelete(Event $event, Entity $institutionStaffEntity)
+    public function institutionStaffAfterDelete(EventInterface $event, Entity $institutionStaffEntity)
     {
         $staffLeaveData = $this->find()
             ->where([
@@ -641,7 +641,7 @@ class StaffAbsencesTable extends ControllerActionTable
         return (($comparison_date >= $start_date) && ($comparison_date <= $end_date));
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (isset($buttons['view'])) {
             if ($entity->is_historical) {
@@ -716,8 +716,8 @@ class StaffAbsencesTable extends ControllerActionTable
         $endDate = $endDate->modify('+1 day');
         $interval = new DateInterval('P1D');
         $datePeriod = new DatePeriod($startDate, $interval, $endDate);
-        $CalendarEvents = TableRegistry::get('Calendars');
-        $CalendarTypes = TableRegistry::get('CalendarTypes');
+        $CalendarEvents = TableRegistry::getTableLocator()->get('Calendars');
+        $CalendarTypes = TableRegistry::getTableLocator()->get('CalendarTypes');
         $publicCalendarEvents = $CalendarEvents
                                 ->find('all')
                                 ->contain(['CalendarTypes','CalendarEventDates'])

@@ -9,8 +9,8 @@ class POCOR3906 extends AbstractMigration
 {
     public function up()
     {
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $InstitutionStaffLeave = TableRegistry::get('Institution.StaffLeave');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $InstitutionStaffLeave = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
 
         // institution_staff_attendance_activities
         $StaffAttendanceActivities = $this->table(

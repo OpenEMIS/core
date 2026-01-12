@@ -2,7 +2,7 @@
 namespace App\Model\Behavior;
 
 use DateTime;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Behavior;
@@ -14,7 +14,7 @@ use App\Model\Traits\MessagesTrait;
 class DefaultValidationBehavior extends Behavior {
 	private $importValidationFailed = NULL;
 
-	public function buildValidator(Event $event, Validator $validator, $name) {
+	public function buildValidator(EventInterface $event, Validator $validator, $name) {
 
 		$this->_attachDefaultValidation($validator);
 	}

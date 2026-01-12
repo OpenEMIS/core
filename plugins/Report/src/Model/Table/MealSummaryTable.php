@@ -5,7 +5,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
@@ -55,7 +55,7 @@ class MealSummaryTable extends AppTable
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $areaId = $requestData->area_education_id;
@@ -87,7 +87,7 @@ class MealSummaryTable extends AppTable
             
             $institutionIds = [];
             if (!$superAdmin) {
-                $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+                $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
                 $instituitionData = $InstitutionsTable->find('byAccess', ['userId' => $userId])->toArray();
                 if (isset($instituitionData)) {
                     foreach ($instituitionData as $key => $value) {
@@ -171,7 +171,7 @@ class MealSummaryTable extends AppTable
             ]);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
 
@@ -242,7 +242,7 @@ class MealSummaryTable extends AppTable
     }
 
     public function getChildren($id, $idArray) {
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $result = $Areas->find()
                            ->where([
                                $Areas->aliasField('parent_id') => $id

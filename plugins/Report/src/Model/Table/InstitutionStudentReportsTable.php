@@ -6,7 +6,7 @@ use ZipArchive;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
@@ -40,19 +40,19 @@ class InstitutionStudentReportsTable extends AppTable
         
     }
 
-    public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery (EventInterface $event, ArrayObject $settings, Query $query) {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-        $InstitutionStudentTable = TableRegistry::get('Institution.InstitutionStudents');
-        $InstitutionTypesTable = TableRegistry::get('Institution.InstitutionTypes');
-        $InstitutionTable = TableRegistry::get('Institution.Institutions');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+        $InstitutionStudentTable = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+        $InstitutionTypesTable = TableRegistry::getTableLocator()->get('Institution.InstitutionTypes');
+        $InstitutionTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
 
        
-        $AreaT = TableRegistry::get('Area.Areas');                    
+        $AreaT = TableRegistry::getTableLocator()->get('Area.Areas');                    
         //Level-1
         $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
         $childArea =[];
@@ -162,16 +162,16 @@ class InstitutionStudentReportsTable extends AppTable
                 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $InstitutionTypesTable = TableRegistry::get('Institution.InstitutionTypes');
+                $InstitutionTypesTable = TableRegistry::getTableLocator()->get('Institution.InstitutionTypes');
                 $institution_type = $InstitutionTypesTable->find('all',['conditions'=>['id'=>$row['institution_type_id']]])->first();
                 $row['institution_type'] = $institution_type->name;
 
-                $Users = TableRegistry::get('Security.Users');
-                $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+                $Users = TableRegistry::getTableLocator()->get('Security.Users');
+                $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
                
-                $Guardians = TableRegistry::get('StudentCustomField.StudentCustomFieldValues');
-                $studentCustomFieldOptions = TableRegistry::get('StudentCustomField.StudentCustomFieldOptions');
-                $studentCustomFields = TableRegistry::get('StudentCustomField.StudentCustomFields');
+                $Guardians = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues');
+                $studentCustomFieldOptions = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldOptions');
+                $studentCustomFields = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFields');
 
                 $guardianData = $Guardians->find()
                 ->select([
@@ -235,8 +235,8 @@ class InstitutionStudentReportsTable extends AppTable
         });
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
-        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields) {
+        $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
 
         $settings['identity'] = $identity;
@@ -424,7 +424,7 @@ class InstitutionStudentReportsTable extends AppTable
             'type' => 'string',
             'label' => 'Preferred Language',
         ];
-        $InfrastructureCustomFields = TableRegistry::get('StudentCustomField.StudentCustomFields');
+        $InfrastructureCustomFields = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFields');
         $customFieldData = $InfrastructureCustomFields->find()->select([
             'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
             'custom_field' => $InfrastructureCustomFields->aliasfield('name')

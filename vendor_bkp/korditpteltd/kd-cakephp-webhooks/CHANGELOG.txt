@@ -1,0 +1,26 @@
+v1.0.9
+- Fixed routing syntax
+
+v1.0.8
+- Fixed a bug where both active and inactive webhooks are triggered
+
+v1.0.7
+- Updated code syntax to be backward compatible with older version of cakephp
+
+v1.0.6
+- Updated webhooks table and added webhook shell
+
+v1.0.5
+- Added username mapping
+
+v1.0.4
+- Added readme and license information
+
+v1.0.3
+- Updated javascript to trigger for multiple events
+
+v1.0.2
+- Updated javascript to use vanilla javascript
+
+v1.0.1
+- Initial setup

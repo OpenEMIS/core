@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 namespace Angular\Controller\Component;
 
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 
 class AngularComponent extends Component
@@ -36,7 +36,7 @@ class AngularComponent extends Component
     }
 
     // Is called after the controller’s beforeFilter method but before the controller executes the current action handler.
-    public function startup(Event $event)
+    public function startup(EventInterface $event)
     {
         $app = $this->getConfig('app');
         $modules = $this->getConfig('modules');

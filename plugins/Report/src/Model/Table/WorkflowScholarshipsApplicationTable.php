@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 
 class WorkflowScholarshipsApplicationTable extends AppTable
@@ -47,7 +47,7 @@ class WorkflowScholarshipsApplicationTable extends AppTable
         return $events;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields) {
         $newFields = [];
 
         $newFields[] = [
@@ -101,7 +101,7 @@ class WorkflowScholarshipsApplicationTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query) {
         $requestData = json_decode($settings['process']['params']);
         $category = $requestData->category;
 

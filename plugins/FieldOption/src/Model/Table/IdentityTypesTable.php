@@ -8,7 +8,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 
 class IdentityTypesTable extends ControllerActionTable
@@ -29,12 +29,12 @@ class IdentityTypesTable extends ControllerActionTable
         $this->addBehavior('FieldOption.FieldOption');
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('validation_pattern', ['after' => 'name']);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
@@ -47,7 +47,7 @@ class IdentityTypesTable extends ControllerActionTable
         return $query->where([$this->aliasField('id') => $defaultId]);
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity)
+    public function addEditBeforePatch(EventInterface $event, Entity $entity)
     {
         $entity->prevDefaultIdentityType = $this->getDefaultValue(); //keep the current default value before it is being updated.
     }
@@ -67,13 +67,13 @@ class IdentityTypesTable extends ControllerActionTable
         }
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':

@@ -5,7 +5,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\Log\Log;
@@ -39,7 +39,7 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
 
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
@@ -58,7 +58,7 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
         $this->controller->set('contentHeader', __($institutions_crumb) . ' ' . $parent_crumb . ' - ' . $reportName);
     }
 
-    public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFormat(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $session = $this->request->getSession();
         $institution_id = $session->read('Institution.Institutions.id');
@@ -73,7 +73,7 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $options = $options = $this->controller->getInstitutionStatisticStandardReportFeature();
         $attr['options'] = $options;
@@ -87,7 +87,7 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
         return $attr;
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),
@@ -97,7 +97,7 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -180,8 +180,8 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
             {
                 return $results->map(function ($row)
                 {
-                    $studentAbsenceReasonData = TableRegistry::get('Institution.StudentAbsenceReasons');
-                    $absence = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
+                    $studentAbsenceReasonData = TableRegistry::getTableLocator()->get('Institution.StudentAbsenceReasons');
+                    $absence = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsenceDetails');
                     $row['referrer_full_name'] = $row['first_name'].' '.$row['middle_name'].' '.$row['third_name'].' '.$row['last_name'];
                     //change POCOR-7374 for excused count
                      $checkstudent = $this->find()->select(['absence_type_id'])->where([$this->aliasField('student_id') => $row['student_id'],$this->aliasField('absence_type_id') => 1])->first();
@@ -194,7 +194,7 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
                             $where[$this->aliasField('education_grade_id')] = $row['education_grade_id'];
                             $where[$this->aliasField('institution_class_id')] = $row['institution_class_id'];
                             $where[$this->aliasField('academic_period_id')] = $row['academic_period_id'];
-                            $studentAbsenceReason = TableRegistry::get('Institution.StudentAbsenceReasons');        
+                            $studentAbsenceReason = TableRegistry::getTableLocator()->get('Institution.StudentAbsenceReasons');        
                             $customFieldData = $studentAbsenceReason->find()
                                 ->select([
                                     'reason_id' => $studentAbsenceReason->aliasField('id'),
@@ -256,11 +256,11 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
     }
     
 
-    public function onExcelGetAbsenceTypeLate(Event $event, Entity $entity)
+    public function onExcelGetAbsenceTypeLate(EventInterface $event, Entity $entity)
     {
         $type =$entity->absence_type_id;
-        $absencetype = TableRegistry::get('Institution.AbsenceTypes');
-        $absence = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
+        $absencetype = TableRegistry::getTableLocator()->get('Institution.AbsenceTypes');
+        $absence = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsenceDetails');
         $findabsent = $absence->find()
                       ->leftJoin(['AbsenceTypes' => 'absence_types'], 
                         ['AbsenceTypes.id = '. $absence->aliasField('absence_type_id')])
@@ -280,11 +280,11 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
 
     }
 
-    public function onExcelGetAbsenceTypeUnexcused(Event $event, Entity $entity)
+    public function onExcelGetAbsenceTypeUnexcused(EventInterface $event, Entity $entity)
     { 
         $type = $entity->absence_type_id;
-        $absencetype = TableRegistry::get('Institution.AbsenceTypes');
-        $absence = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
+        $absencetype = TableRegistry::getTableLocator()->get('Institution.AbsenceTypes');
+        $absence = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsenceDetails');
         $findabsent = $absence->find()
                       ->leftJoin(['AbsenceTypes' => 'absence_types'], 
                         ['AbsenceTypes.id = '. $absence->aliasField('absence_type_id')])
@@ -303,7 +303,7 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
         return $entity->get_absent_unexcused;
     }
 
-    public function onExcelGetUserIdentitiesDefault(Event $event, Entity $entity)
+    public function onExcelGetUserIdentitiesDefault(EventInterface $event, Entity $entity)
     {
         $return = [];
         if ($entity->has('user')) {
@@ -324,7 +324,7 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
     /**
     * Generate the all Header for sheet
     */
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
         $newFields[] = [
@@ -388,7 +388,7 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
             'type'  => 'string',
             'label' => __('Unexcused'),
         ];
-        $studentAbsenceReason = TableRegistry::get('student_absence_reasons');        
+        $studentAbsenceReason = TableRegistry::getTableLocator()->get('student_absence_reasons');        
         $customFieldData = $studentAbsenceReason->find()
             ->select([
                 'reason_id' => 'student_absence_reasons.id',

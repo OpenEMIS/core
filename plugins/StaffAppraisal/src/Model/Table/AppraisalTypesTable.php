@@ -2,7 +2,7 @@
 namespace StaffAppraisal\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -27,14 +27,14 @@ class AppraisalTypesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
             $this->AppraisalPeriods->getAlias()
         ];
     }
     // Start POCOR-5188
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $is_manual_exist = $this->getManualUrl('Administration','Types','Staff Appraisals');       
         if(!empty($is_manual_exist)){
@@ -55,7 +55,7 @@ class AppraisalTypesTable extends ControllerActionTable
         }
     }// End POCOR-5188
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'code') {
             return __('Code');

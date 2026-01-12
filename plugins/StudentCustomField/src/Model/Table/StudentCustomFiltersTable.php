@@ -3,7 +3,7 @@ namespace StudentCustomField\Model\Table;
 
 use ArrayObject;
 use CustomField\Model\Table\CustomFormsTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\Http\ServerRequest;
@@ -25,10 +25,10 @@ class StudentCustomFiltersTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreign_key' => 'academic_period_id']);
         $this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes', 'foreignKey' => 'education_programme_id']);
         
-        $this->CustomModules = TableRegistry::get('CustomField.CustomModules');
+        $this->CustomModules = TableRegistry::getTableLocator()->get('CustomField.CustomModules');
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(EventInterface $event, ArrayObject $extra) {
         $this->field('name', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
 		$this->field('custom_module_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'onChangeReload' => true]);
 		$this->field('student_custom_form_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'onChangeReload' => true]);
@@ -56,7 +56,7 @@ class StudentCustomFiltersTable extends ControllerActionTable
         return $validator;
 	}
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
        
@@ -74,11 +74,11 @@ class StudentCustomFiltersTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCustomModuleId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         //POCOR-8434 starts
         $selectedModuels = ['Student', 'Student > Registrations'];
-        $CustomModulesTable = TableRegistry::get('CustomField.CustomModules');
+        $CustomModulesTable = TableRegistry::getTableLocator()->get('CustomField.CustomModules');
         $module = $CustomModulesTable
                     ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                     ->where([$CustomModulesTable->aliasField('code IN') => $selectedModuels])
@@ -103,7 +103,7 @@ class StudentCustomFiltersTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnCustomModule(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnCustomModule(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
        
@@ -121,10 +121,10 @@ class StudentCustomFiltersTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldStudentCustomFormId(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldStudentCustomFormId(EventInterface $event, array $attr, $action, $request) {
         if(!is_null($request->getData('StudentCustomFilters')['custom_module_id'])){
             $custom_module_id = $request->getData('StudentCustomFilters')['custom_module_id'];
-            $StudentCustomFormsTable = TableRegistry::get('StudentCustomField.StudentCustomForms');
+            $StudentCustomFormsTable = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomForms');
             $module = $StudentCustomFormsTable
                         ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                         ->where([$StudentCustomFormsTable->aliasField('custom_module_id') => $custom_module_id])
@@ -140,7 +140,7 @@ class StudentCustomFiltersTable extends ControllerActionTable
                 } else {
                     if(!is_null($request->getQuery('custom_module_id'))){
                         $custom_module_id = $request->getQuery('custom_module_id');
-                        $StudentCustomFormsTable = TableRegistry::get('StudentCustomField.StudentCustomForms');
+                        $StudentCustomFormsTable = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomForms');
                         $module = $StudentCustomFormsTable
                                     ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                                     ->where([$StudentCustomFormsTable->aliasField('custom_module_id') => $custom_module_id])
@@ -157,9 +157,9 @@ class StudentCustomFiltersTable extends ControllerActionTable
         return $attr;
 	}
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action)
     {
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodOptions = $AcademicPeriods->getYearList();
 				
         $attr['type'] = 'select';
@@ -170,16 +170,16 @@ class StudentCustomFiltersTable extends ControllerActionTable
     }
 
     public
-    function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
+    function onUpdateFieldEducationProgrammeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $request = $this->request;
 
         if ($action == 'add' || $action == 'edit') {
             $academic_period_id = $request->getData('StudentCustomFilters')['academic_period_id'];
             
-            $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $academicPeriodId = !is_null($academic_period_id) ? $academic_period_id : $AcademicPeriod->getCurrent();
-            $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+            $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
             if ($action == 'add') {
                 $programmeOptions = $EducationProgrammes
                         ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])

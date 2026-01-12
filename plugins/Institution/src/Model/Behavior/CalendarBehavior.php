@@ -5,27 +5,27 @@ use ArrayObject;
 use DatePeriod;
 use DateInterval;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 
 class CalendarBehavior extends Behavior
 {
     public function isSchoolClosed($date, $institutionId = null)
     {
-        $CalendarEventDates = TableRegistry::get('CalendarEventDates');
+        $CalendarEventDates = TableRegistry::getTableLocator()->get('CalendarEventDates');
 
         return $CalendarEventDates->isSchoolClosed($date, $institutionId);
     }
 
     public function getInstitutionClosedDates($startDate, $endDate, $institutionList)
     {
-        $CalendarEventDates = TableRegistry::get('CalendarEventDates');
+        $CalendarEventDates = TableRegistry::getTableLocator()->get('CalendarEventDates');
         return $CalendarEventDates->getInstitutionClosedDates($startDate, $endDate, $institutionList);
     }
 
     public function getDateFromPeriodWeekDay($selectedPeriod, $selectedWeek, $day)
     {
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $weeks = $AcademicPeriod->getAttendanceWeeks($selectedPeriod);
         $workingDaysOfWeek = $AcademicPeriod->getWorkingDaysOfWeek();
 

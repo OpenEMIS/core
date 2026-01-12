@@ -15,12 +15,12 @@ class EmailAllStudentReportCardsShell extends Shell
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('SystemProcesses');
-        $this->loadModel('ReportCard.StudentReportCardEmailProcesses');
-        $this->loadModel('Institution.InstitutionStudentsProfileTemplates');
-        $this->loadModel('Email.EmailProcesses');
-        $this->loadModel('Email.EmailProcessAttachments');
-        $this->loadModel('Email.EmailTemplates');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
+        $this->StudentReportCardEmailProcesses = $this->fetchTable('ReportCard.StudentReportCardEmailProcesses');
+        $this->InstitutionStudentsProfileTemplates = $this->fetchTable('Institution.InstitutionStudentsProfileTemplates');
+        $this->EmailProcesses = $this->fetchTable('Email.EmailProcesses');
+        $this->EmailProcessAttachments = $this->fetchTable('Email.EmailProcessAttachments');
+        $this->EmailTemplates = $this->fetchTable('Email.EmailTemplates');
     }
 
     public function main()
@@ -192,7 +192,7 @@ class EmailAllStudentReportCardsShell extends Shell
     {
         $subject = '';
 
-        $StudentReportCardEmailTable = TableRegistry::get('ReportCard.StudentReportCardEmail');
+        $StudentReportCardEmailTable = TableRegistry::getTableLocator()->get('ReportCard.StudentReportCardEmail');
 		$modelAlias = $StudentReportCardEmailTable->registryAlias();
         $availablePlaceholders = $StudentReportCardEmailTable->getPlaceholders();
         $reportCardId = $studentsReportCardEntity->student_profile_template_id;
@@ -208,7 +208,7 @@ class EmailAllStudentReportCardsShell extends Shell
     {
         $message = '';
 
-        $StudentReportCardEmailTable = TableRegistry::get('ReportCard.StudentReportCardEmail');
+        $StudentReportCardEmailTable = TableRegistry::getTableLocator()->get('ReportCard.StudentReportCardEmail');
         $modelAlias = $StudentReportCardEmailTable->registryAlias();
         $availablePlaceholders = $StudentReportCardEmailTable->getPlaceholders();
         $reportCardId = $studentsReportCardEntity->student_profile_template_id;

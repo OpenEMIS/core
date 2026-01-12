@@ -2,7 +2,7 @@
 namespace App\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -40,11 +40,11 @@ class ApiSecuritiesTable extends AppTable
         return $query;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $tempScopeName = 'scopes';
 
-        $apiSecuritiesScopes = TableRegistry::get('ApiSecuritiesScopes');
+        $apiSecuritiesScopes = TableRegistry::getTableLocator()->get('ApiSecuritiesScopes');
         $entity->{$tempScopeName}['api_security_id'] = $entity->id;
 
         $scopeEntity = $apiSecuritiesScopes->newEntity($entity->{$tempScopeName});

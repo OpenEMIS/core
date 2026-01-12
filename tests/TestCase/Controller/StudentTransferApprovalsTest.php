@@ -66,7 +66,7 @@ class StudentTransferApprovalsTest extends AppTestCase
         $this->get($url);
         $this->assertResponseOk();
 
-        $table = TableRegistry::get('Institution.TransferApprovals');
+        $table = TableRegistry::getTableLocator()->get('Institution.TransferApprovals');
         $entity = $table->get($this->primaryKey);
 
         $data = [
@@ -90,7 +90,7 @@ class StudentTransferApprovalsTest extends AppTestCase
         $this->postData($url, $data);
         $entity = $table->get($this->primaryKey);
 
-        $TransferApprovals = TableRegistry::get("Institution.TransferApprovals");
+        $TransferApprovals = TableRegistry::getTableLocator()->get("Institution.TransferApprovals");
         $this->assertEquals($TransferApprovals::APPROVED, $entity->status);
     }
 
@@ -101,7 +101,7 @@ class StudentTransferApprovalsTest extends AppTestCase
         $this->get($url);
         $this->assertResponseOk();
 
-        $table = TableRegistry::get('Institution.TransferApprovals');
+        $table = TableRegistry::getTableLocator()->get('Institution.TransferApprovals');
         $entity = $table->get($this->primaryKey);
 
         $data = [

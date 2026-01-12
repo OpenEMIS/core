@@ -2,7 +2,7 @@
 namespace InstitutionRepeater\Model\Table;
 
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
 
 class RepeaterSurveysTable extends ControllerActionTable
@@ -52,7 +52,7 @@ class RepeaterSurveysTable extends ControllerActionTable
         return $events;
     }
 
-	public function institutionSurveyAfterSave(Event $event, Entity $institutionSurveyEntity)
+	public function institutionSurveyAfterSave(EventInterface $event, Entity $institutionSurveyEntity)
     {
     	$this->updateAll(
             ['status_id' => $institutionSurveyEntity->status_id],
@@ -64,7 +64,7 @@ class RepeaterSurveysTable extends ControllerActionTable
         );
     }
 
-	public function institutionSurveyAfterDelete(Event $event, Entity $institutionSurveyEntity)
+	public function institutionSurveyAfterDelete(EventInterface $event, Entity $institutionSurveyEntity)
 	{
 		$this->deleteAll(
 			[

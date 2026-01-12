@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Log\Log;
 use Cake\Utility\Text;
@@ -62,7 +62,7 @@ class InstitutionCasesTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //POCOR-7367::Start
         //POCOR-7613 start
@@ -85,7 +85,7 @@ class InstitutionCasesTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
 
         if ($entity->isNew()) {
@@ -115,12 +115,12 @@ class InstitutionCasesTable extends ControllerActionTable
         }
     }
 
-    public function linkedRecordAfterSave(Event $event, Entity $linkedRecordEntity)
+    public function linkedRecordAfterSave(EventInterface $event, Entity $linkedRecordEntity)
     {
         $this->autoLinkRecordWithCases($linkedRecordEntity);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('linked_records', [
             'type' => 'custom_linked_records',
@@ -209,7 +209,7 @@ class InstitutionCasesTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $requestQuery = $this->request->getQuery('query');
         $selectedFeature = $requestQuery['feature'];
@@ -322,13 +322,13 @@ class InstitutionCasesTable extends ControllerActionTable
         }
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //$query->contain(['LinkedRecords']);
         $this->field('case_number', ['visible' => true]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         //start POCOR-6210
         $this->field('case_number', ['visible' => true]);//POCOR-7613
@@ -407,7 +407,7 @@ class InstitutionCasesTable extends ControllerActionTable
         //End POCOR-6210
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('case_number', ['visible' => true, 'type' => "readonly"]);//POCOR-7613
         $this->field('title');
@@ -698,7 +698,7 @@ class InstitutionCasesTable extends ControllerActionTable
     }
 
     // POCOR-6170
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $institutionId = $this->getInstitutionID() ? $this->getInstitutionID() : 0;
         $assignee_id = $this->getUserID();
@@ -801,7 +801,7 @@ class InstitutionCasesTable extends ControllerActionTable
     }
     // POCOR-6170
     // POCOR-6170
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {   //POCOR-7613 start
         $extraField[] = [
             'key' => 'InstitutionCases.case_number',
@@ -865,7 +865,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
     // POCOR-6170
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('institution_id');//POCOR-7437
         $this->field('case_number', ['visible' => 'true']);//POCOR-7613
@@ -877,7 +877,7 @@ class InstitutionCasesTable extends ControllerActionTable
     }
 
     //POCOR-7437 start
-    public function indexAfterAction(Event $event, $data)
+    public function indexAfterAction(EventInterface $event, $data)
     {
         $this->field('case_number', ['visible' => true]);
         $this->field('status_id', ['visible' => true, 'after' => 'created']);
@@ -898,7 +898,7 @@ class InstitutionCasesTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, $request)
     {
 
         if ($request->getParam('controller') == "Profiles") {
@@ -953,13 +953,13 @@ class InstitutionCasesTable extends ControllerActionTable
     }
     //POCOR-7642 end
     //POCOR-7668 start
-    public function onGetAssigneeId(Event $event, Entity $entity)
+    public function onGetAssigneeId(EventInterface $event, Entity $entity)
     {
         return $entity->assignee->name;
     }
     //POCOR-7668 end
     //POCOR-7613 start
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'case_number':
@@ -991,7 +991,7 @@ class InstitutionCasesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldCaseTypeId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldCaseTypeId(EventInterface $event, array $attr, $action, $request)
     {
         $CaseTypes = TableRegistry::getTableLocator()->get('Cases.CaseTypes');
         $CaseTypeList = $CaseTypes
@@ -1010,7 +1010,7 @@ class InstitutionCasesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCasePriorityId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldCasePriorityId(EventInterface $event, array $attr, $action, $request)
     {
         $CasePriority = TableRegistry::getTableLocator()->get('Cases.CasePriorities');
         $CasePriorityList = $CasePriority
@@ -1029,17 +1029,17 @@ class InstitutionCasesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onGetCaseTypeId(Event $event, Entity $entity)
+    public function onGetCaseTypeId(EventInterface $event, Entity $entity)
     {
         return $entity->case_type->name;
     }
 
-    public function onGetCasePriorityId(Event $event, Entity $entity)
+    public function onGetCasePriorityId(EventInterface $event, Entity $entity)
     {
         return $entity->case_priority->name;
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('case_number', ['visible' => false]);
         $this->setFieldOrder([ //POCOR-7613
@@ -1047,7 +1047,7 @@ class InstitutionCasesTable extends ControllerActionTable
         ]);
     }
 
-    public function onGetCustomPersonalCommentElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomPersonalCommentElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         $fieldKey = 'comment';
         $tableHeaders = [__('Comment'), _('Created By'), _('Created On')];

@@ -3,7 +3,7 @@ namespace Profile\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 
@@ -12,7 +12,7 @@ use Directory\Model\Table\DirectoriesTable as UserTable;
 
 class StudentUserTable extends UserTable
 {
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $extra['toolbarButtons']['back']['url']['action'] = 'ProfileStudents';
     }

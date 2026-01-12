@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -29,7 +29,7 @@ class ExtracurricularsTable extends AppTable {
 		$this->fields['extracurricular_type_id']['type'] = 'select';
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(EventInterface $event) {
 		$this->fields['end_date']['visible'] = false;
 		$this->fields['hours']['visible'] = false;
 		$this->fields['points']['visible'] = false;
@@ -43,14 +43,14 @@ class ExtracurricularsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('name', $order++);
 	}
 
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
 	{
 		//if ($this->controller->name == 'Profiles') {
             unset($settings['indexButtons']['add']);
         //}
 	}
 
-	public function addEditBeforeAction(Event $event) {
+	public function addEditBeforeAction(EventInterface $event) {
 		$order = 0;
 		$this->ControllerAction->setFieldOrder('academic_period_id', $order++);
 		$this->ControllerAction->setFieldOrder('extracurricular_type_id', $order++);
@@ -78,17 +78,17 @@ class ExtracurricularsTable extends AppTable {
 		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
-	public function afterAction(Event $event, $data) {
+	public function afterAction(EventInterface $event, $data) {
 		$this->setupTabElements();
 	}
 
-	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+	public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
 		$session = $this->getRequest()->getSession(); // POCOR-8683
         $staffId = $session->read('Staff.Staff.id');
 
-		$Staff = TableRegistry::get('Security.Users');
+		$Staff = TableRegistry::getTableLocator()->get('Security.Users');
 
         $query
             ->select([
@@ -130,7 +130,7 @@ class ExtracurricularsTable extends AppTable {
 
     }
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+	public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $cloneFields = $fields->getArrayCopy();
         $extraFields[] = [

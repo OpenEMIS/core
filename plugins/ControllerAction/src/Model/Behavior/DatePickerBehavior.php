@@ -17,14 +17,14 @@ have received a copy of the GNU General Public License along with this program. 
 namespace ControllerAction\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Behavior;
 use ControllerAction\Model\Traits\PickerTrait;
 
 class DatePickerBehavior extends Behavior {
 	use PickerTrait;
 
-	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
+	public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options) {
 		foreach ($this->getConfig() as $field) {
 			if (!empty($data[$field])) {
 				if (is_object($data[$field])) {

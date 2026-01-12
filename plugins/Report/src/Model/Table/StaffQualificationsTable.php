@@ -3,7 +3,7 @@ namespace Report\Model\Table;
 
 use ArrayObject;
 use Cake\Datasource\Exception\RecordNotFoundException;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -50,26 +50,26 @@ class StaffQualificationsTable extends AppTable  {
         $this->addBehavior('Report.ReportList');
     }
 
-    public function beforeAction(Event $event) {
+    public function beforeAction(EventInterface $event) {
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request) {
         $attr['options'] = $this->controller->getFeatureOptions($this->alias());
         return $attr;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) {
         $requestData = json_decode($settings['process']['params']);
         $userId = $requestData->user_id;
         $superAdmin = $requestData->super_admin;
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
         $academicPeriodId = $requestData->academic_period_id;
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $startDate = $periodEntity->start_date->format('Y-m-d');
         $endDate = $periodEntity->end_date->format('Y-m-d');
@@ -198,7 +198,7 @@ class StaffQualificationsTable extends AppTable  {
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) { 
                 return $results->map(function ($row) { 
                     //For Default ID NO
-                    $identity_typesTable = TableRegistry::get('FieldOption.IdentityTypes');
+                    $identity_typesTable = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
                     $identity_types = $identity_typesTable->find() //POCOR-8882
                                         ->where(['`default`' => 1])
                                         ->first();
@@ -220,7 +220,7 @@ class StaffQualificationsTable extends AppTable  {
         }
     }
 
-    public function onExcelGetSpecialisations(Event $event, Entity $entity)
+    public function onExcelGetSpecialisations(EventInterface $event, Entity $entity)
     {
         $return = [];
         if ($entity->has('qualification_specialisations')) {
@@ -246,7 +246,7 @@ class StaffQualificationsTable extends AppTable  {
         if (!$relatedField) {
             return [];
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
             return $related->toArray();
@@ -267,7 +267,7 @@ class StaffQualificationsTable extends AppTable  {
     /**
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    public function onExcelGetIdentityType(EventInterface $event, Entity $entity)
     {
         $identity_type_id = $entity->identity_type_id;
         $identity_type = self::getRelatedRecord('identity_types', $identity_type_id);
@@ -275,7 +275,7 @@ class StaffQualificationsTable extends AppTable  {
         return $identity_name;
     }
 
-    public function onExcelGetSubjects(Event $event, Entity $entity)
+    public function onExcelGetSubjects(EventInterface $event, Entity $entity)
     {
         $return = [];
         if ($entity->has('education_subjects')) {
@@ -289,7 +289,7 @@ class StaffQualificationsTable extends AppTable  {
         return implode(', ', array_values($return));
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields) 
     {
         $newFields = [];
         $newFields[] = [

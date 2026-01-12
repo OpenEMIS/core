@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use Cake\Network\Response;
@@ -68,7 +68,7 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
             ->requirePresence('preferred');
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->getDirty('preferred')) {
             $institutionId = $entity->institution_id;
@@ -104,7 +104,7 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
         }
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->preferred == 1) {
             $this->Institutions->updateAll(
@@ -114,7 +114,7 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
         }
     }
     //START:POCOR-6889
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
     	$institutionId = $this->getInstitutionID();
     	$query
@@ -126,7 +126,7 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
 
     
     // Start POCOR-5188
-    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra) {
         $is_manual_exist = $this->getManualUrl('Institutions','Contacts - People','General');       
         if(!empty($is_manual_exist)){
             $btnAttr = [
@@ -146,13 +146,13 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
         }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('preferred', ['type' => 'select', 'after' => 'contact_person']);
     }
 
 
-    public function onUpdateFieldPreferred(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldPreferred(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 //        $functionName = __FUNCTION__;
 //        $this->log($functionName, 'debug');
@@ -165,7 +165,7 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onGetPreferred(Event $event, Entity $entity)
+    public function onGetPreferred(EventInterface $event, Entity $entity)
     {
         $options = $this->getSelectOptions('general.yesno');
         return $options[$entity->preferred];
@@ -173,7 +173,7 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
 
     // End POCOR-5188
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
             case 'contact_person':

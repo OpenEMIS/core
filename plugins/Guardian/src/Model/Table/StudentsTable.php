@@ -3,7 +3,7 @@ namespace Guardian\Model\Table;
 
 use ArrayObject;
 use Cake\I18n\Time;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -54,7 +54,7 @@ class StudentsTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function afterAction(Event $event, $data)
+    public function afterAction(EventInterface $event, $data)
     {
         if ($this->action != 'view') {
             $this->setupTabElements();
@@ -65,14 +65,14 @@ class StudentsTable extends ControllerActionTable
         ]);
     }
 
-    public function onGetGuardianId(Event $event, Entity $entity)
+    public function onGetGuardianId(EventInterface $event, Entity $entity)
     {
         if ($entity->has('_matchingData')) {
             return $entity->_matchingData['Users']->name;
         }
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         if ($this->controller->getName() == 'Directories') {
             $studentId = $this->Session->read('Directory.Directories.id');
@@ -84,7 +84,7 @@ class StudentsTable extends ControllerActionTable
         $this->field('guardian_relation_id', ['type' => 'hidden']);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // $session = $this->request->getSession();
         // $userId = $session->read('Directory.Directories.id');
@@ -99,13 +99,13 @@ class StudentsTable extends ControllerActionTable
         }
     }
 
-    public function viewBeforeAction(Event $event)
+    public function viewBeforeAction(EventInterface $event)
     {
         $this->field('photo_content', ['type' => 'image', 'order' => 0]);
         $this->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupTabElements($entity);
         $toolbarButtons = $extra['toolbarButtons'];
@@ -122,7 +122,7 @@ class StudentsTable extends ControllerActionTable
         $extra['toolbarButtons'] = $toolbarButtons;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $newButtons = [];

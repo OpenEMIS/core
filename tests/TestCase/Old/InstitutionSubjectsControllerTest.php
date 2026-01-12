@@ -107,8 +107,8 @@ class InstitutionSubjectsControllerTest extends AppTestCase
 
         // $this->assertResponseCode(200);
 
-        $table = TableRegistry::get('Institutions.InstitutionSubjects');
-        $hasManyTable = TableRegistry::get('Institutions.InstitutionClassSubjects');
+        $table = TableRegistry::getTableLocator()->get('Institutions.InstitutionSubjects');
+        $hasManyTable = TableRegistry::getTableLocator()->get('Institutions.InstitutionClassSubjects');
         
         $data = [
             'InstitutionSubjects' => [
@@ -172,8 +172,8 @@ class InstitutionSubjectsControllerTest extends AppTestCase
         $this->setInstitutionSession(1);
         $testUrl = $this->url('edit/'.$this->id);
 
-        $table = TableRegistry::get('Institutions.InstitutionSubjects');
-        $hasManyTable = TableRegistry::get('Institutions.InstitutionSubjectStudents');
+        $table = TableRegistry::getTableLocator()->get('Institutions.InstitutionSubjects');
+        $hasManyTable = TableRegistry::getTableLocator()->get('Institutions.InstitutionSubjectStudents');
 
         $this->get($testUrl);
         $this->assertResponseCode(200);
@@ -262,8 +262,8 @@ class InstitutionSubjectsControllerTest extends AppTestCase
         $this->setInstitutionSession(1);
         $testUrl = $this->url('remove');
 
-        $table = TableRegistry::get('Institutions.InstitutionSubjects');
-        $hasManyTable = TableRegistry::get('Institutions.InstitutionSubjectStudents');
+        $table = TableRegistry::getTableLocator()->get('Institutions.InstitutionSubjects');
+        $hasManyTable = TableRegistry::getTableLocator()->get('Institutions.InstitutionSubjectStudents');
 
         $exists = $table->exists([$table->primaryKey() => $this->id]);
         $this->assertTrue($exists);

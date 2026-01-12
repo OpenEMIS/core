@@ -18,7 +18,7 @@ class SurveyBehavior extends Behavior {
 		$models = $this->getConfig('models');
 		foreach ($models as $key => $model) {
 			if (!is_null($model)) {
-				$this->{$key} = TableRegistry::get($model);
+				$this->{$key} = TableRegistry::getTableLocator()->get($model);
 				$this->{lcfirst($key).'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->getAlias())) . '_id';
 			} else {
 				$this->{$key} = null;

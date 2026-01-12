@@ -13,8 +13,8 @@ class VersionShell extends Shell
     {
         parent::initialize();
 
-        $this->loadModel('System.SystemUpdates');
-        $this->loadModel('Configurations.ConfigItems');
+        $this->SystemUpdates = $this->fetchTable('System.SystemUpdates');
+        $this->ConfigItems = $this->fetchTable('Configurations.ConfigItems');
     }
 
     public function main()

@@ -22,12 +22,12 @@ class POCOR6998 extends AbstractMigration
 
         $this->execute('TRUNCATE TABLE `education_programmes_next_programmes`');
 
-        $education_systems = TableRegistry::get('education_systems');
-        $education_levels = TableRegistry::get('education_levels');
-        $education_cycles = TableRegistry::get('education_cycles');
-        $education_programmes = TableRegistry::get('education_programmes');
-        $education_programmes_next_programmes = TableRegistry::get('education_programmes_next_programmes'); 
-        $education_grades = TableRegistry::get('education_grades');
+        $education_systems = TableRegistry::getTableLocator()->get('education_systems');
+        $education_levels = TableRegistry::getTableLocator()->get('education_levels');
+        $education_cycles = TableRegistry::getTableLocator()->get('education_cycles');
+        $education_programmes = TableRegistry::getTableLocator()->get('education_programmes');
+        $education_programmes_next_programmes = TableRegistry::getTableLocator()->get('education_programmes_next_programmes'); 
+        $education_grades = TableRegistry::getTableLocator()->get('education_grades');
 
         $EducationSystemData = $education_systems
                                 ->find()

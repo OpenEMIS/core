@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 
@@ -38,20 +38,20 @@ class BodyMassesTable extends AppTable
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions($this->alias());
         return $attr;
     }
 
-    public function onExcelGetAge(Event $event, Entity $entity)
+    public function onExcelGetAge(EventInterface $event, Entity $entity)
     {
         // Calculate the age
         $age = '';
@@ -64,17 +64,17 @@ class BodyMassesTable extends AppTable
         return $age;
     }
 
-    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    public function onExcelGetIdentityType(EventInterface $event, Entity $entity)
     {
         $identityTypeName = '';
         if (!empty($entity->identity_type)) {
-            $identityType = TableRegistry::get('FieldOption.IdentityTypes')->find()->where(['id'=>$entity->identity_type])->first();
+            $identityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes')->find()->where(['id'=>$entity->identity_type])->first();
             $identityTypeName = $identityType->name;
         }
         return $identityTypeName;
     }
 
-    public function onExcelGetBmi(Event $event, Entity $entity)
+    public function onExcelGetBmi(EventInterface $event, Entity $entity)
     {
 
         $bodyMassIndex = '';
@@ -96,7 +96,7 @@ class BodyMassesTable extends AppTable
         return $bodyMassIndex;
     }
 
-    public function onExcelGetGender(Event $event, Entity $entity)
+    public function onExcelGetGender(EventInterface $event, Entity $entity)
     {
         $gender = '';
         if (!empty($entity->user->gender->name) ) {
@@ -106,7 +106,7 @@ class BodyMassesTable extends AppTable
         return $gender;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -135,11 +135,11 @@ class BodyMassesTable extends AppTable
                 $conditions['Institutions.area_id IN'] = $allselectedAreas;
         }
 
-        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
-        $Class = TableRegistry::get('Institution.InstitutionClasses');
-        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $areas = TableRegistry::get('Area.Areas');
-        $institutionsTable = TableRegistry::get('Institution.Institutions');
+        $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
+        $Class = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $areas = TableRegistry::getTableLocator()->get('Area.Areas');
+        $institutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
 
         $query
             ->select([
@@ -222,7 +222,7 @@ class BodyMassesTable extends AppTable
             //POCOR-6719 Starts
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($type) {
             return $results->map(function ($row) use($type) {
-                $areas1 = TableRegistry::get('Area.Areas');
+                $areas1 = TableRegistry::getTableLocator()->get('Area.Areas');
                 $areasData = $areas1
                             ->find()
                             ->where([$areas1->alias('code')=>$row->area_code])
@@ -230,9 +230,9 @@ class BodyMassesTable extends AppTable
                 $row['region_code'] = '';
                 $row['region_name'] = '';
                 if($areasData->parent_id){ // POCOR-9070
-                    $areas = TableRegistry::get('Area.Areas');
-                    $areaLevels = TableRegistry::get('Area.AreaLevels');
-                    $institutions = TableRegistry::get('Instituion.Institutions');
+                    $areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                    $areaLevels = TableRegistry::getTableLocator()->get('Area.AreaLevels');
+                    $institutions = TableRegistry::getTableLocator()->get('Instituion.Institutions');
                     $val = $areas
                                 ->find()
                                 ->select([
@@ -266,7 +266,7 @@ class BodyMassesTable extends AppTable
         });//POCOR-6719 Ends
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $cloneFields = $fields->getArrayCopy();
         $extraFields = [];
@@ -286,7 +286,7 @@ class BodyMassesTable extends AppTable
         ];
 
         //POCOR-6650 Starts
-        $AreaLevelTbl = TableRegistry::get('Area.Areas');
+        $AreaLevelTbl = TableRegistry::getTableLocator()->get('Area.Areas');
         $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->enableHydration(false)->toArray();
         //POCOR-6719 Starts
         $extraFieldsFirst[] = [
@@ -412,7 +412,7 @@ class BodyMassesTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetStudentName(Event $event, Entity $entity)
+    public function onExcelGetStudentName(EventInterface $event, Entity $entity)
     {
         //cant use $this->Users->get() since it will load big data and cause memory allocation problem
         $studentName = [];
@@ -426,7 +426,7 @@ class BodyMassesTable extends AppTable
 
     //POCOR-6944
     public function getChildren($id, $idArray) {
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $result = $Areas->find()
                            ->where([
                                $Areas->aliasField('parent_id') => $id

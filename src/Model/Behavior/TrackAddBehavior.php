@@ -5,7 +5,7 @@ use Exception;
 use ArrayObject;
 
 use Cake\I18n\Time;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
@@ -29,7 +29,7 @@ class TrackAddBehavior extends Behavior
         return $events;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $requestData)
     {
         $this->trackAdd($entity);
     }
@@ -39,9 +39,9 @@ class TrackAddBehavior extends Behavior
         try {
             // Insert only if is a external API call, to be removed in future
             if ($entity->has('action_type') && $entity->action_type == 'third_party') {
-                $InsertedRecords = TableRegistry::get('InsertedRecords');
+                $InsertedRecords = TableRegistry::getTableLocator()->get('InsertedRecords');
                 $source = $entity->source();
-                $entityTable = TableRegistry::get($source);
+                $entityTable = TableRegistry::getTableLocator()->get($source);
                 $entityData = $entity->toArray();
                 $session = new Session();
                 $userId = $session->read('Auth.User.id') ? $session->read('Auth.User.id'): 1;

@@ -8,7 +8,7 @@ use DateTime;
 use DateTimeInterface;
 use Exception;
 use InvalidArgumentException;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\Network\Session;
@@ -154,7 +154,7 @@ class ImportPositionBehavior extends Behavior
         ]);
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $queryString = $this->_table->request->getParam('pass');
         $encodedQueryString = $queryString[1];
@@ -183,7 +183,7 @@ class ImportPositionBehavior extends Behavior
         }
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         $buttons[0]['name'] = '<i class="fa kd-import"></i> ' . __('Import');
     }
@@ -251,12 +251,12 @@ class ImportPositionBehavior extends Behavior
             ]);
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $options['validate'] = 'importFile';
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
         ini_set('max_execution_time', 3600);
 

@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
@@ -95,7 +95,7 @@ class UsersTable extends AppTable
         return $events;
     }
 
-    public function updateLoginLanguage(Event $event, $user, $language)
+    public function updateLoginLanguage(EventInterface $event, $user, $language)
     {
         if ($user['preferred_language'] != $language) {
             $user = $this->get($user['id']);
@@ -104,7 +104,7 @@ class UsersTable extends AppTable
         }
     }
 
-    public function afterLogin(Event $event, $user)
+    public function afterLogin(EventInterface $event, $user)
     {
         $lastLogin = new Time();
         $controller = $event->getSubject();
@@ -123,7 +123,7 @@ class UsersTable extends AppTable
         ], ['id' => $user['id']]);
     }
 
-    public function createAuthorisedUser(Event $event, $userName, array $userInfo)
+    public function createAuthorisedUser(EventInterface $event, $userName, array $userInfo)
     {
         $openemisNo = $this->getUniqueOpenemisId();
 
@@ -202,7 +202,7 @@ class UsersTable extends AppTable
         $model->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('username', ['visible' => false]);
         $this->ControllerAction->field('super_admin', ['visible' => false]);
@@ -230,7 +230,7 @@ class UsersTable extends AppTable
         }
     }
 
-    public function afterAction(Event $event)
+    public function afterAction(EventInterface $event)
     {
         // POCOR-8683 start
         $action = $this->action;
@@ -345,7 +345,7 @@ class UsersTable extends AppTable
         $associationId = ($options['institution_association_id']) ? $options['institution_association_id'] : 0;
         $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
         // POCOR-7994 start
-        $association_students = TableRegistry::get('Student.InstitutionAssociationStudent');
+        $association_students = TableRegistry::getTableLocator()->get('Student.InstitutionAssociationStudent');
         $the_students = $association_students
             ->find('all')
             ->select('security_user_id')
@@ -448,7 +448,7 @@ class UsersTable extends AppTable
         $this->controller->set('tabElements', $tabElements);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $settings)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $settings)
     {
         $this->ControllerAction->field('first_name', ['visible' => false]);
         $this->ControllerAction->field('middle_name', ['visible' => false]);
@@ -479,7 +479,7 @@ class UsersTable extends AppTable
         }
     }
 
-    public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(EventInterface $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
         $queryParams = $request->getQuery();
 
@@ -563,7 +563,7 @@ class UsersTable extends AppTable
             ->order(['Identities.number' => $options['direction']]);
     }
 
-    public function viewBeforeAction(Event $event)
+    public function viewBeforeAction(EventInterface $event)
     {
         if ($this->alias() == 'Users') {
             // means that this originates from a controller
@@ -589,7 +589,7 @@ class UsersTable extends AppTable
         $this->ControllerAction->setFieldOrder($fieldOrder);
     }
 
-    public function addEditBeforeAction(Event $event)
+    public function addEditBeforeAction(EventInterface $event)
     {
         $this->fields['openemis_no']['attr']['readonly'] = true;
         $this->fields['photo_content']['type'] = 'image';
@@ -917,7 +917,7 @@ class UsersTable extends AppTable
         return $validator;
     }
 
-    public function onGetPhotoContent(Event $event, Entity $entity)
+    public function onGetPhotoContent(EventInterface $event, Entity $entity)
     {
         $fileContent = $entity->photo_content;
         $value = "";
@@ -946,7 +946,7 @@ class UsersTable extends AppTable
         return $value;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'default_identity_type') {
             $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
@@ -1004,7 +1004,7 @@ class UsersTable extends AppTable
         return $value;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -1126,7 +1126,7 @@ class UsersTable extends AppTable
         ]);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //Stop import if contact/contact type has validation error
         if ($entity->has('contact_error')) {
@@ -1140,7 +1140,7 @@ class UsersTable extends AppTable
         return true;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options): void
     {
 //        Log::debug(__FUNCTION__);
         // This logic is meant for Import
@@ -1209,7 +1209,7 @@ class UsersTable extends AppTable
 
     }
 
-    public function onChangeUserNationalities(Event $event, Entity $entity)
+    public function onChangeUserNationalities(EventInterface $event, Entity $entity)
     {
         $nationalityId = $entity->nationality_id;
         $Nationalities = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
@@ -1256,7 +1256,7 @@ class UsersTable extends AppTable
         );
     }
 
-    public function onChangeUserIdentities(Event $event, Entity $entity)
+    public function onChangeUserIdentities(EventInterface $event, Entity $entity)
     {
         $UserNationalityTable = TableRegistry::getTableLocator()->get('User.UserNationalities');
         //POCOR-8664 start
@@ -1355,7 +1355,7 @@ class UsersTable extends AppTable
         }
     }
 
-    public function onChangeNationalities(Event $event, Entity $entity)
+    public function onChangeNationalities(EventInterface $event, Entity $entity)
     {
         $nationalityId = $entity->id;
         $identityTypeId = $entity->identity_type_id;
@@ -1388,7 +1388,7 @@ class UsersTable extends AppTable
         );
     }
 
-    public function onChangeUserContacts(Event $event, Entity $entity)
+    public function onChangeUserContacts(EventInterface $event, Entity $entity)
     {
         $securityUserId = $entity->security_user_id;
         //POCOR-8660 start
@@ -1406,7 +1406,7 @@ class UsersTable extends AppTable
         }
     }
 
-    public function beforeFind(Event $event, Query $query, ArrayObject $options)
+    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options)
     {
 
         if (!empty($_REQUEST['_device']) && $_REQUEST['_device'] == true) {

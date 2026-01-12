@@ -3,7 +3,7 @@ namespace Examination\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
@@ -64,12 +64,12 @@ class ExaminationsTable extends ControllerActionTable {
             ->requirePresence('examination_subjects');
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['ExaminationSubjects.EducationSubjects', 'ExaminationSubjects.ExaminationGradingTypes']);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra) {
         $this->field('description', ['visible' => false]);
 
         // Start POCOR-5188
@@ -93,7 +93,7 @@ class ExaminationsTable extends ControllerActionTable {
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
 //        dd($selectedAcademicPeriod);
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -107,17 +107,17 @@ class ExaminationsTable extends ControllerActionTable {
         $query->where($where);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controller->getExamsTab();
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // send to ctp
         $this->controller->set('examinationGradingTypeOptions', $this->getGradingTypeOptions());
@@ -125,13 +125,13 @@ class ExaminationsTable extends ControllerActionTable {
         $this->setupFields($entity);
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // only can choose subject in add
         $subjects = [];
         if (!empty($this->request->getData()[$this->getAlias()]['education_grade_id'])) {
             $selectedGrade = $this->request->getData()[$this->getAlias()]['education_grade_id'];
-            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+            $EducationSubjects = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
             $subjects = $EducationSubjects->getEducationSubjectsByGrades($selectedGrade);
         }
 
@@ -139,14 +139,14 @@ class ExaminationsTable extends ControllerActionTable {
         $this->controller->set('educationSubjectOptions', $subjects);
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         if (!isset($data[$this->getAlias()]['examination_subjects']) || empty($data[$this->getAlias()]['examination_subjects'])) {
             $this->Alert->warning($this->aliasField('noExaminationSubjects'));
         }
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         // used to do validation for examination item date
         if (isset($data['examination_subjects'])) {
@@ -173,19 +173,19 @@ class ExaminationsTable extends ControllerActionTable {
         ]);
     }
 
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['ExaminationSubjects.StudentResults']);
     }
 
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         if (!isset($data[$this->getAlias()]['examination_subjects']) || empty($data[$this->getAlias()]['examination_subjects'])) {
             $this->Alert->warning($this->aliasField('noExaminationSubjects'));
         }
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $errors = $entity->getErrors();
         if (empty($errors)) {
@@ -209,7 +209,7 @@ class ExaminationsTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
@@ -229,15 +229,15 @@ class ExaminationsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationProgrammeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
             $attr['visible'] = false;
 
         } else if ($action == 'add' || $action == 'edit') {
 
-            $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
+			$AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 			$academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
 
             if ($action == 'add') {
@@ -263,7 +263,7 @@ class ExaminationsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function addEditOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnChangeEducationProgrammeId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         unset($request->getQuery['programme']);
@@ -277,7 +277,7 @@ class ExaminationsTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
@@ -308,7 +308,7 @@ class ExaminationsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function addOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addOnChangeEducationGrade(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         unset($request->getQuery['grade']);
@@ -324,7 +324,7 @@ class ExaminationsTable extends ControllerActionTable {
         }
     }
 
-    public function addOnAddExaminationItem(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnAddExaminationItem(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $fieldKey = 'examination_subjects';
 
@@ -376,19 +376,19 @@ class ExaminationsTable extends ControllerActionTable {
 
     public function getGradingTypeOptions()
     {
-        $examinationGradingType = TableRegistry::get('Examination.ExaminationGradingTypes');
+        $examinationGradingType = TableRegistry::getTableLocator()->get('Examination.ExaminationGradingTypes');
         $examinationGradingTypeOptions = $examinationGradingType->find('list')->toArray();
         return $examinationGradingTypeOptions;
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
             $this->ExaminationSubjects->getAlias(), $this->ExaminationCentreRooms->getAlias()
         ];
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'maximum_award_amount') {
             return __('Annual Award Amount');

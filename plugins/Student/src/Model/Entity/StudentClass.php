@@ -13,7 +13,7 @@ class StudentClass extends Entity
     protected function _getAcademicPeriod() {
     	$name = '';
     	if ($this->has('institution_class') && $this->institution_class->has('academic_period_id')) {
-    		$data = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($this->institution_class->academic_period_id)->toArray();
+    		$data = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')->get($this->institution_class->academic_period_id)->toArray();
     		if (!empty($data)) {
     			$name = $data['name'];
     		}
@@ -24,7 +24,7 @@ class StudentClass extends Entity
 	protected function _getInstitution() {
     	$name = '';
     	if ($this->has('institution_class') && $this->institution_class->has('institution_id')) {
-    		$data = TableRegistry::get('Institution.Institutions')->get($this->institution_class->institution_id)->toArray();
+    		$data = TableRegistry::getTableLocator()->get('Institution.Institutions')->get($this->institution_class->institution_id)->toArray();
     		if (!empty($data)) {
     			$name = $data['name'];
     		}
@@ -36,7 +36,7 @@ class StudentClass extends Entity
     	$name = '';
         $teacherId = $this->institution_class->staff_id;
         if (!empty($teacherId)) {
-            $Users = TableRegistry::get('Security.Users');
+            $Users = TableRegistry::getTableLocator()->get('Security.Users');
             try {
                 $user = $Users->get($teacherId);
                 $name = $user->name;
@@ -51,7 +51,7 @@ class StudentClass extends Entity
     	$name = '';
 
     	if ($this->has('institution_class_id')) {
-    		$InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+    		$InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
     		$data = $InstitutionClassGrades
     			->find()
     			->where([
@@ -77,7 +77,7 @@ class StudentClass extends Entity
     	$name = '';
 
     	if ($this->has('institution_class_id')) {
-    		$InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+    		$InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
     		$data = $InstitutionClassGrades
     			->find()
     			->where([

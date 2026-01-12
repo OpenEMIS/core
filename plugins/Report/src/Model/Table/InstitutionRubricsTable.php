@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\ORM\Table;
@@ -37,7 +37,7 @@ class InstitutionRubricsTable extends AppTable {
 		$this->addBehavior('Report.ReportList');
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(EventInterface $event) {
 		$controllerName = $this->controller->getName();
 		$reportName = __('Rubrics');
 		$this->controller->Navigation->substituteCrumb($this->getAlias(), $reportName);
@@ -54,12 +54,12 @@ class InstitutionRubricsTable extends AppTable {
 	}
 
 	//POCOR - 7415 start
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['label'=>'Area Name']]);
     }
     //POCOR - 7415 end
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request) {
+	public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'add') {
 			$attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
 			$attr['onChangeReload'] = true;
@@ -73,7 +73,7 @@ class InstitutionRubricsTable extends AppTable {
 		}
 	}
 
-	public function onUpdateFieldRubricTemplateId(Event $event, array $attr, $action, ServerRequest $request) {
+	public function onUpdateFieldRubricTemplateId(EventInterface $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'add') {
 			if (isset($this->request->getData($this->getAlias())['feature'])) {
 				$feature = $this->request->getData($this->getAlias())['feature'];
@@ -120,7 +120,7 @@ class InstitutionRubricsTable extends AppTable {
 		}
 	}
 
-	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request) {
+	public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'add') {
 			if (isset($this->request->getData($this->getAlias())['feature'])) {
 				$feature = $this->request->getData($this->getAlias())['feature'];
@@ -144,7 +144,7 @@ class InstitutionRubricsTable extends AppTable {
 		}
 	}
 
-	public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request) {
+	public function onUpdateFieldStatus(EventInterface $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'add') {
 
 			if (isset($this->request->getData($this->getAlias())['feature'])
@@ -201,7 +201,7 @@ class InstitutionRubricsTable extends AppTable {
 		}
 	}
 
-	public function onExcelGetStatus(Event $event, Entity $entity) {
+	public function onExcelGetStatus(EventInterface $event, Entity $entity) {
 		$status = $entity->status;
 		switch ($status) {
 			case self::COMPLETED:
@@ -213,7 +213,7 @@ class InstitutionRubricsTable extends AppTable {
 		}
 	}
 	/*POCOR-6176 starts*/
-	public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
+	public function onUpdateFieldAreaLevelId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
     	if ($action == 'add') {
     		$Areas = TableRegistry::getTableLocator()->get('Area.AreaLevels');
@@ -234,7 +234,7 @@ class InstitutionRubricsTable extends AppTable {
         return $attr;
     }
 
-    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaEducationId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
     	$Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $entity = $attr['entity'];
@@ -255,7 +255,7 @@ class InstitutionRubricsTable extends AppTable {
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 		$institutionList = [];
 		$areaId = $request->getData($this->getAlias())['area_education_id'];
@@ -323,7 +323,7 @@ class InstitutionRubricsTable extends AppTable {
     }
     /*POCOR-6176 ends*/
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':

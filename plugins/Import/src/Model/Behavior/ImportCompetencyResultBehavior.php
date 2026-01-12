@@ -2,7 +2,7 @@
 namespace Import\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Session;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -25,7 +25,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
      * @param  ArrayObject  $data   Event object
      * @return Response             Response object
      */
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
         /**
          * currently, extending the max execution time for individual scripts from the default of 30 seconds to 180 seconds
@@ -51,7 +51,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
                 return false;
             }
 
-            $systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
+            $systemDateFormat = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('date_format');
 
             $fileObj = $entity->select_file;
             $uploadedName = $fileObj['name'];
@@ -67,7 +67,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
             $dataPassed = [];
             $extra = new ArrayObject(['lookup' => [], 'entityValidate' => true]);
 
-            $activeModel = TableRegistry::get($this->config('plugin').'.'.$this->config('model'));
+            $activeModel = TableRegistry::getTableLocator()->get($this->config('plugin').'.'.$this->config('model'));
             $activeModel->addBehavior('DefaultValidation');
 
             $maxRows = $this->config('max_rows');
@@ -79,7 +79,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
                 return false;
             }
 
-            $competencyItemsTable = TableRegistry::get('Competency.CompetencyItems');
+            $competencyItemsTable = TableRegistry::getTableLocator()->get('Competency.CompetencyItems');
             $competency_item_id = $this->_table->request->query['competency_item'];
             $competencyItemsName = $competencyItemsTable
                     ->find()
@@ -106,7 +106,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
                 $headerCriteriaId[] = $value->id;
             }
 
-            $InstitutionCompetencyItemCommentsTable = TableRegistry::get('Institution.InstitutionCompetencyItemComments');
+            $InstitutionCompetencyItemCommentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionCompetencyItemComments');
 
             if (!$this->checkCorrectIdTemplate(2, $headerCriteriaId, $sheet, $totalColumns, 1)) {
                 $entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
@@ -126,7 +126,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
                 // do the save for the comment
                 $student = $sheet->getCellByColumnAndRow(0, $row);
                 $studentOpenEmisId = $student->getValue();
-                $UsersTable = TableRegistry::get('User.Users');
+                $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
 
                 $User = $UsersTable->find()
                     ->select(['id'])
@@ -343,7 +343,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
         $activeSheet = $objPHPExcel->getActiveSheet();
 
         $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName,  __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName);
-        $competencyItemsTable = TableRegistry::get('Competency.CompetencyItems');       
+        $competencyItemsTable = TableRegistry::getTableLocator()->get('Competency.CompetencyItems');       
         $competency_item_id = $this->_table->request->query['competency_item'];
        
         $name = $competencyItemsTable
@@ -406,7 +406,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
 
     public function setCodesDataTemplate($objPHPExcel)
     {
-        $competencyGradingOptionsTable = TableRegistry::get('Competency.CompetencyGradingOptions');
+        $competencyGradingOptionsTable = TableRegistry::getTableLocator()->get('Competency.CompetencyGradingOptions');
 
         $arrayCompetencyCriterias = $this->_table->getCompetencyCriteriasArray();
 
@@ -420,7 +420,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
             $sheet = $objPHPExcel->getSheet(0);
             $cell = $sheet->getCellByColumnAndRow($dropdownColumn, 1);
             $CompetencyId = $cell->getValue();
-            $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
+            $outcomeCriteriasTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
             $outcomeGradingTypeId = $outcomeCriteriasTable->find()
             ->where([
                 $outcomeCriteriasTable->aliasField('id') => $CompetencyId,
@@ -428,7 +428,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
             ->extract('outcome_grading_type_id')
             ->first();
 
-            $competencyCriteriasTable = TableRegistry::get('Competency.CompetencyCriterias');
+            $competencyCriteriasTable = TableRegistry::getTableLocator()->get('Competency.CompetencyCriterias');
             $competencyGradingTypeId = $competencyCriteriasTable->find()
               ->where([
                   $competencyCriteriasTable->aliasField('id') => $CompetencyId,
@@ -507,7 +507,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
         $gradeValue = $cell->getValue();
         $Comment = $sheet->getCellByColumnAndRow($numberColumn+1, $row);
         $commentValue = $Comment->getValue();
-        $usersTable = TableRegistry::get('User.Users');
+        $usersTable = TableRegistry::getTableLocator()->get('User.Users');
 
         $User = $usersTable->find()
             ->select(['id'])
@@ -516,7 +516,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
             ])
             ->first();
 
-        $competencyCriteriasTable = TableRegistry::get('Competency.CompetencyCriterias');
+        $competencyCriteriasTable = TableRegistry::getTableLocator()->get('Competency.CompetencyCriterias');
         $competencyGradingTypeId = $competencyCriteriasTable->find()
           ->where([
               $competencyCriteriasTable->aliasField('id') => $competencyIdValue,
@@ -524,7 +524,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
           ->extract('competency_grading_type_id')
           ->first();
 
-        $competencyGradingOptionsTable = TableRegistry::get('Competency.CompetencyGradingOptions');
+        $competencyGradingOptionsTable = TableRegistry::getTableLocator()->get('Competency.CompetencyGradingOptions');
 
         if (!empty($gradeValue)) {
             $Grading = $competencyGradingOptionsTable->find()

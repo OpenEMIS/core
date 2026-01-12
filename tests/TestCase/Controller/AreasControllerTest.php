@@ -78,7 +78,7 @@ class AreasControllerTest extends AppTestCase
 
 	// 	$this->postData('/Areas/Areas/add', $data);
 
-	// 	$table = TableRegistry::get('Area.Areas');
+	// 	$table = TableRegistry::getTableLocator()->get('Area.Areas');
 	// 	$this->assertNotEmpty($table->get(2));
 	// }
 
@@ -98,7 +98,7 @@ class AreasControllerTest extends AppTestCase
 
 	// 	$this->postData('/Areas/Areas/edit/2', $data);
 
-	// 	$table = TableRegistry::get('Area.Areas');
+	// 	$table = TableRegistry::getTableLocator()->get('Area.Areas');
 	// 	$entity = $table->get(2);
 	// 	$this->assertEquals($data['code'], $entity->code);
 	// }
@@ -117,7 +117,7 @@ class AreasControllerTest extends AppTestCase
 	// // 	];
 
 	// // 	$this->post('/Areas/Areas/remove/2?parent=1', $data);
-	// // 	$table = TableRegistry::get('Area.Areas');
+	// // 	$table = TableRegistry::getTableLocator()->get('Area.Areas');
 	// // 	$exists = $table->exists([$table->primaryKey() => 2]);
 	// // 	$this->assertFalse($exists);
 	// // }
@@ -131,7 +131,7 @@ class AreasControllerTest extends AppTestCase
  //    {
  //        parent::setUp();
  //        $this->urlPrefix('/Areas/Areas/');
- //        $this->table = TableRegistry::get('Area.Areas');
+ //        $this->table = TableRegistry::getTableLocator()->get('Area.Areas');
  //    }
 
  //    public function testIndexAdministrativeBoundaries()
@@ -250,7 +250,7 @@ class AreasControllerTest extends AppTestCase
  //        ];
  //        $this->postData($testUrl, $data);
 
- //        $table = TableRegistry::get('Area.Areas');
+ //        $table = TableRegistry::getTableLocator()->get('Area.Areas');
  //        $exists = $table->exists([$table->primaryKey() => 213]);
  //        $this->assertFalse($exists);
  //    }
@@ -280,8 +280,8 @@ class AreasControllerTest extends AppTestCase
  //        $expectedSecurityAreaId = 2;
  //        $expectedInstitutionAreaId = 2;
 
- //        $securityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
- //        $institutions = TableRegistry::get('Institution.Institutions');
+ //        $securityGroupAreas = TableRegistry::getTableLocator()->get('Security.SecurityGroupAreas');
+ //        $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 
  //        // Calling doUpdateAssociatedRecord method from areasTable.php
  //        $this->table->doUpdateAssociatedRecord($requestData);
@@ -326,7 +326,7 @@ class AreasControllerTest extends AppTestCase
  //            ]
  //        ];
 
- //        $areas = TableRegistry::get('Area.Areas');
+ //        $areas = TableRegistry::getTableLocator()->get('Area.Areas');
 
  //        // Calling doReplaceAreaTable method from areasTable.php
  //        $this->table->doReplaceAreaTable($missingAreaArray, $jsonArray);

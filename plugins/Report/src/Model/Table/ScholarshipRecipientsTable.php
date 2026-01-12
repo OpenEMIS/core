@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -34,7 +34,7 @@ class ScholarshipRecipientsTable extends AppTable  {
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelGetGender(Event $event, Entity $entity)
+    public function onExcelGetGender(EventInterface $event, Entity $entity)
     {
         $gender = '';
         if (!is_null($entity->recipient->gender->name)) {
@@ -44,7 +44,7 @@ class ScholarshipRecipientsTable extends AppTable  {
         return $gender;
     }
 
-    public function onExcelGetNationality(Event $event, Entity $entity)
+    public function onExcelGetNationality(EventInterface $event, Entity $entity)
     {
         $nationality = '';
         if (!is_null($entity->recipient->main_nationality->name)) {
@@ -54,7 +54,7 @@ class ScholarshipRecipientsTable extends AppTable  {
         return $nationality;
     }
 
-    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    public function onExcelGetIdentityType(EventInterface $event, Entity $entity)
     {
         $identityType = '';
         if (!is_null($entity->recipient->main_identity_type->name)) {
@@ -64,7 +64,7 @@ class ScholarshipRecipientsTable extends AppTable  {
         return $identityType;
     }
 
-    public function onExcelGetAcademic(Event $event, Entity $entity)
+    public function onExcelGetAcademic(EventInterface $event, Entity $entity)
     {
         $academic = '';
         if (!is_null($entity->scholarship->academic_period->name)) {
@@ -74,7 +74,7 @@ class ScholarshipRecipientsTable extends AppTable  {
         return $academic;
     }
 
-    public function onExcelGetLocation(Event $event, Entity $entity)
+    public function onExcelGetLocation(EventInterface $event, Entity $entity)
     {
         $location = '';
         if (!is_null($entity->ApplicationInstitutionChoices['location_type']) && $entity->ApplicationInstitutionChoices['is_selected'] == 1) {
@@ -84,7 +84,7 @@ class ScholarshipRecipientsTable extends AppTable  {
         return $location;
     }
 
-    public function onExcelGetCountry(Event $event, Entity $entity)
+    public function onExcelGetCountry(EventInterface $event, Entity $entity)
     {
         $country = '';
         if (!is_null($entity->Countries['name']) && $entity->ApplicationInstitutionChoices['is_selected'] == 1) {
@@ -94,7 +94,7 @@ class ScholarshipRecipientsTable extends AppTable  {
         return $country;
     }
 
-    public function onExcelGetApprovedAmount(Event $event, Entity $entity)
+    public function onExcelGetApprovedAmount(EventInterface $event, Entity $entity)
     {
         $amount = '';
         if (!is_null($entity->approved_amount) && $entity->ApplicationInstitutionChoices['is_selected'] == 1) {
@@ -104,7 +104,7 @@ class ScholarshipRecipientsTable extends AppTable  {
         return $amount;
     }
 
-    public function onExcelGetFieldOfStudy(Event $event, Entity $entity)
+    public function onExcelGetFieldOfStudy(EventInterface $event, Entity $entity)
     {
         $fieldOfStudy = '';
         if (!is_null($entity->EducationFieldOfStudies['name']) && $entity->ApplicationInstitutionChoices['is_selected'] == 1) {
@@ -114,7 +114,7 @@ class ScholarshipRecipientsTable extends AppTable  {
         return $fieldOfStudy;
     } 
 
-    public function onExcelGetCourse(Event $event, Entity $entity)
+    public function onExcelGetCourse(EventInterface $event, Entity $entity)
     {
         $course = '';
         if (!is_null($entity->ApplicationInstitutionChoices['course_name']) && $entity->ApplicationInstitutionChoices['is_selected'] == 1) {
@@ -124,7 +124,7 @@ class ScholarshipRecipientsTable extends AppTable  {
         return $course;
     }
 
-    public function onExcelGetQualificationLevel(Event $event, Entity $entity)
+    public function onExcelGetQualificationLevel(EventInterface $event, Entity $entity)
     {
         $qualificationLevel = '';
         if (!is_null($entity->QualificationLevels['name']) && $entity->ApplicationInstitutionChoices['is_selected'] == 1) {
@@ -134,7 +134,7 @@ class ScholarshipRecipientsTable extends AppTable  {
         return $qualificationLevel;
     }
 
-    public function onExcelGetStartDate(Event $event, Entity $entity)
+    public function onExcelGetStartDate(EventInterface $event, Entity $entity)
     {
         $startDate = '';
         if (!is_null($entity->ApplicationInstitutionChoices['start_date']) && $entity->ApplicationInstitutionChoices['is_selected'] == 1) {
@@ -144,7 +144,7 @@ class ScholarshipRecipientsTable extends AppTable  {
         return $startDate;
     }
 
-    public function onExcelGetEndDate(Event $event, Entity $entity)
+    public function onExcelGetEndDate(EventInterface $event, Entity $entity)
     {
         $endDate = '';
         if (!is_null($entity->ApplicationInstitutionChoices['end_date']) && $entity->ApplicationInstitutionChoices['is_selected'] == 1) {
@@ -154,7 +154,7 @@ class ScholarshipRecipientsTable extends AppTable  {
         return $endDate;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) 
     {
 
         $requestData = json_decode($settings['process']['params']);
@@ -169,11 +169,11 @@ class ScholarshipRecipientsTable extends AppTable  {
             $conditions[$this->Scholarships->aliasField('scholarship_financial_assistance_type_id')] = $financialAssistanceType;
         }
 
-        $ApplicationInstitutionChoices = TableRegistry::get('Scholarship.ApplicationInstitutionChoices');
-        $InstitutionChoiceTypes = TableRegistry::get('Scholarship.InstitutionChoiceTypes');
-        $Country = TableRegistry::get('FieldOption.Countries');
-        $EducationFieldOfStudies = TableRegistry::get('Education.EducationFieldOfStudies');
-        $QualificationLevels = TableRegistry::get('FieldOption.QualificationLevels');
+        $ApplicationInstitutionChoices = TableRegistry::getTableLocator()->get('Scholarship.ApplicationInstitutionChoices');
+        $InstitutionChoiceTypes = TableRegistry::getTableLocator()->get('Scholarship.InstitutionChoiceTypes');
+        $Country = TableRegistry::getTableLocator()->get('FieldOption.Countries');
+        $EducationFieldOfStudies = TableRegistry::getTableLocator()->get('Education.EducationFieldOfStudies');
+        $QualificationLevels = TableRegistry::getTableLocator()->get('FieldOption.QualificationLevels');
 
         $query
             ->contain([
@@ -263,7 +263,7 @@ class ScholarshipRecipientsTable extends AppTable  {
             ->where($conditions);
     }
     
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields) 
     {       
        $newFields = [];
 

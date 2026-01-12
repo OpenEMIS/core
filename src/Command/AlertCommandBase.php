@@ -27,11 +27,11 @@ abstract class AlertCommandBase extends \Cake\Command\Command
 
     public function initialize(): void
     {
-        $this->loadModel('Alert.Alerts');
-        $this->loadModel('Alert.AlertRules');
-        $this->loadModel('Alert.AlertLogs');
-        $this->loadModel('Security.Users');
-        $this->loadModel('Security.SecurityGroupUsers');
+        $this->Alerts = $this->fetchTable('Alert.Alerts');
+        $this->AlertRules = $this->fetchTable('Alert.AlertRules');
+        $this->AlertLogs = $this->fetchTable('Alert.AlertLogs');
+        $this->Users = $this->fetchTable('Security.Users');
+        $this->SecurityGroupUsers = $this->fetchTable('Security.SecurityGroupUsers');
 
         $class = basename(str_replace('\\', '/', static::class));
         $this->processName = str_replace('Command', '', $class);
@@ -252,7 +252,7 @@ abstract class AlertCommandBase extends \Cake\Command\Command
             return;
         }
 
-        $this->loadModel('SystemProcesses');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
         $now = FrozenTime::now();
 
         $this->SystemProcesses->updateAll([
@@ -267,7 +267,7 @@ abstract class AlertCommandBase extends \Cake\Command\Command
 
     public function failProcess(int $processId, int $userId, $e = null): void
     {
-        $this->loadModel('SystemProcesses');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
 
         $this->SystemProcesses->updateAll([
             'status' => -2,
@@ -285,7 +285,7 @@ abstract class AlertCommandBase extends \Cake\Command\Command
     // In AlertCommandBase.php
     public function completeProcess(int $processId, int $userId): void
     {
-        $this->loadModel('SystemProcesses');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
         $now = FrozenTime::now();
 
         $this->SystemProcesses->updateAll([

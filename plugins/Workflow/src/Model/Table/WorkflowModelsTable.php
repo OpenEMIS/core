@@ -64,7 +64,7 @@ class WorkflowModelsTable extends AppTable
 
         $featureOptions = [];
         foreach ($records as $obj) {
-            $model = TableRegistry::get($obj->model);
+            $model = TableRegistry::getTableLocator()->get($obj->model);
             $feature = Inflector::humanize(Inflector::underscore($model->getAlias()));
             $featureOptions[$model->getAlias()] = __($feature);
         }

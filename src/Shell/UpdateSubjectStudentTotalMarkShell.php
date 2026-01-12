@@ -13,15 +13,15 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('Institution.InstitutionSubjectStudents');
-        $this->loadModel('Institution.InstitutionStudents');
-        $this->loadModel('AcademicPeriod.AcademicPeriods');
-        $this->loadModel('Assessment.AssessmentItemResults');
-        $this->loadModel('Assessment.AssessmentGradingTypes');
-        $this->loadModel('Assessment.AssessmentGradingOptions');
-        $this->loadModel('Assessment.AssessmentPeriods');
-        $this->loadModel('Assessment.Assessments');
-        $this->loadModel('UpdatedSubjectStudents');
+        $this->InstitutionSubjectStudents = $this->fetchTable('Institution.InstitutionSubjectStudents');
+        $this->InstitutionStudents = $this->fetchTable('Institution.InstitutionStudents');
+        $this->AcademicPeriods = $this->fetchTable('AcademicPeriod.AcademicPeriods');
+        $this->AssessmentItemResults = $this->fetchTable('Assessment.AssessmentItemResults');
+        $this->AssessmentGradingTypes = $this->fetchTable('Assessment.AssessmentGradingTypes');
+        $this->AssessmentGradingOptions = $this->fetchTable('Assessment.AssessmentGradingOptions');
+        $this->AssessmentPeriods = $this->fetchTable('Assessment.AssessmentPeriods');
+        $this->Assessments = $this->fetchTable('Assessment.Assessments');
+        $this->UpdatedSubjectStudents = $this->fetchTable('UpdatedSubjectStudents');
     }
 
     public function main()

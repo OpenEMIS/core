@@ -3,7 +3,7 @@ namespace Scholarship\Controller;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\Utility\Inflector;
@@ -16,7 +16,7 @@ class ScholarshipsController extends AppController
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('User.Users');
+        $this->Users = $this->fetchTable('User.Users');
         $this->loadComponent('Scholarship.ScholarshipTabs');
     }
 
@@ -83,7 +83,7 @@ class ScholarshipsController extends AppController
 
     // end
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $this->Navigation->addCrumb('Scholarships', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Scholarships', 'index']);
         $header = __('Scholarships');
@@ -148,7 +148,7 @@ class ScholarshipsController extends AppController
         $event = $model->getEventManager()->dispatch($event);
     }
 
-    public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
+    public function beforeQuery(EventInterface $event, Table $model, Query $query, ArrayObject $extra)
     {
         $request = $this->getQueryString();
         if (!is_null($request)) {

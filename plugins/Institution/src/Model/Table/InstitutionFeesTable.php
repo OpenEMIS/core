@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Text;
 use Cake\Http\ServerRequest;
 use Cake\ORM\TableRegistry;
@@ -54,7 +54,7 @@ class InstitutionFeesTable extends ControllerActionTable
         return $validator;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         $this->institutionId = $this->getInstitutionID();
@@ -65,7 +65,7 @@ class InstitutionFeesTable extends ControllerActionTable
         $this->field('education_grade_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
         $this->field('education_programme', ['type' => 'select', 'visible' => ['index'=>true]]);
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $this->currency = $ConfigItems->value('currency');
         $this->field('fee_types', ['type' => 'element', 'element' => 'Institution.Fees/fee_types', 'currency' => $this->currency, 'visible' => ['view'=>true, 'edit'=>true]]);
 
@@ -90,7 +90,7 @@ class InstitutionFeesTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function onUpdateIncludes(Event $event, ArrayObject $includes, $action)
+    public function onUpdateIncludes(EventInterface $event, ArrayObject $includes, $action)
     {
         if ($action == 'edit' || $action == 'add') {
             $includes['fees'] = [
@@ -106,14 +106,14 @@ class InstitutionFeesTable extends ControllerActionTable
     ** index action methods
     **
     ******************************************************************************************************************/
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder([
             'education_programme', 'education_grade_id', 'total'
         ]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         if (empty($this->request->getQuery('academic_period_id'))) {
@@ -162,14 +162,14 @@ class InstitutionFeesTable extends ControllerActionTable
     ** view action methods
     **
     ******************************************************************************************************************/
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder([
             'academic_period_id', 'education_grade_id', 'fee_types'
         ]);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'EducationGrades',
@@ -177,7 +177,7 @@ class InstitutionFeesTable extends ControllerActionTable
         ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $feeTypes = [];
         $amount = 0.00;
@@ -203,7 +203,7 @@ class InstitutionFeesTable extends ControllerActionTable
     ** edit action methods
     **
     ******************************************************************************************************************/
-    public function editBeforeAction(Event $event, ArrayObject $extra)
+    public function editBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder([
             'academic_period_id', 'education_grade_id'
@@ -214,12 +214,12 @@ class InstitutionFeesTable extends ControllerActionTable
         $this->field('total', ['visible' => false]);
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $this->cleanFeeTypes($data);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $feeTypes = [];
         foreach ($this->fields['fee_types']['options'] as $key=>$obj) {
@@ -260,7 +260,7 @@ class InstitutionFeesTable extends ControllerActionTable
     ** add action methods
     **
     ******************************************************************************************************************/
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder([
             'academic_period_id', 'education_grade_id'
@@ -282,7 +282,7 @@ class InstitutionFeesTable extends ControllerActionTable
         // $attr['attr']['value'] = $this->institutionId;
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $this->cleanFeeTypes($data);
         $newOptions = ['InstitutionFeeTypes'=>['validate'=>false]];
@@ -293,7 +293,7 @@ class InstitutionFeesTable extends ControllerActionTable
         }
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $feeTypes = [];
         foreach ($this->fields['fee_types']['options'] as $key=>$obj) {
@@ -316,7 +316,7 @@ class InstitutionFeesTable extends ControllerActionTable
     **
     ******************************************************************************************************************/
 
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
             $this->InstitutionFeeTypes->getAlias()
@@ -328,12 +328,12 @@ class InstitutionFeesTable extends ControllerActionTable
     ** field specific methods
     **
     ******************************************************************************************************************/
-    public function onGetEducationProgramme(Event $event, Entity $entity)
+    public function onGetEducationProgramme(EventInterface $event, Entity $entity)
     {
         return $entity->education_grade->education_programme->name;
     }
 
-    public function onGetTotal(Event $event, Entity $entity)
+    public function onGetTotal(EventInterface $event, Entity $entity)
     {
         return $this->currency.' '.number_format($this->getTotal($entity), 2);
     }
@@ -353,13 +353,13 @@ class InstitutionFeesTable extends ControllerActionTable
         return $amount;
     }
 
-    public function onUpdateFieldFeeTypes(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldFeeTypes(EventInterface $event, array $attr, $action, $request)
     {
         $attr['options'] = $this->InstitutionFeeTypes->FeeTypes->getList();
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, $request)
     {
         $this->_academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $this->_selectedAcademicPeriodId = $this->postString('academic_period_id');
@@ -372,7 +372,7 @@ class InstitutionFeesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, $request)
     {
         if (empty($this->request->getData()[$this->getAlias()]['academic_period_id'])) {
             $this->request->getData()[$this->getAlias()]['academic_period_id'] = $this->AcademicPeriods->getCurrent();
@@ -409,7 +409,7 @@ class InstitutionFeesTable extends ControllerActionTable
         }
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         //$institutionId = $this->Session->read('Institution.Institutions.id');
         $institutionId  = $this->getInstitutionID();
@@ -455,7 +455,7 @@ class InstitutionFeesTable extends ControllerActionTable
         ]);
     }
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+	public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
 
         $extraField[] = [
@@ -482,7 +482,7 @@ class InstitutionFeesTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'academic_period_id') {
             return  __('Academic Period');

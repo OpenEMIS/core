@@ -41,9 +41,10 @@ use Cake\Routing\Route\DashedRoute;
  * `:action` markers.
  *
  */
-Router::defaultRouteClass('Route');
-
-Router::scope('/', function (RouteBuilder $routes) {
+return function (RouteBuilder $routes) {
+    $routes->setRouteClass('Route');
+    
+    $routes->scope('/', function (RouteBuilder $routes) {
     /**
      * Here, we are connecting '/' (base path) to a controller called 'Pages',
      * its action called 'display', and we pass a param to select the view file
@@ -108,18 +109,18 @@ Router::scope('/', function (RouteBuilder $routes) {
      * routes you want in your application.
      */
     $routes->fallbacks('Route');
-});
+    });
 
-Router::scope('/Installer', ['plugin' => 'Installer', 'controller' => 'Installer'], function ($route) {
-    $route->setExtensions(['json']);
-    $route->connect('/:action');
-});
+    $routes->scope('/Installer', ['plugin' => 'Installer', 'controller' => 'Installer'], function (RouteBuilder $route) {
+        $route->setExtensions(['json']);
+        $route->connect('/:action');
+    });
 
 
-// For restful controller
-Router::scope('/restful', [], function ($routes) {
+    // For restful controller
+    $routes->scope('/restful', [], function (RouteBuilder $routes) {
 
-    $routes->scope('/doc', ['controller' => 'Doc'], function ($routes) {
+        $routes->scope('/doc', ['controller' => 'Doc'], function (RouteBuilder $routes) {
         $routes->connect( '/', ['action' => 'index']);
         $routes->connect( '/index', ['action' => 'index']);
         $routes->connect( '/listing', ['action' => 'listing']);
@@ -128,9 +129,9 @@ Router::scope('/restful', [], function ($routes) {
         $routes->connect( '/editing', ['action' => 'editing']);
         $routes->connect( '/deleting', ['action' => 'deleting']);
         $routes->connect( '/curl', ['action' => 'curl']);
-    });
+        });
 
-    $routes->scope('/', ['controller' => 'Restful'], function ($routes) {
+        $routes->scope('/', ['controller' => 'Restful'], function (RouteBuilder $routes) {
         $routes->setExtensions(['json', 'xml']);
         $routes->connect( '/', ['action' => 'nothing']);
 
@@ -222,35 +223,29 @@ Router::scope('/restful', [], function ($routes) {
             ['action' => 'delete', '_method' => 'DELETE']
         );
     });
-});
+    });
 
-// For restful session
-Router::scope('/session', ['plugin' => 'Restful'], function ($routes) {
-    $routes->scope('/', ['controller' => 'Session'], function ($routes) {
+    // For restful session
+    $routes->scope('/session', ['plugin' => 'Restful'], function (RouteBuilder $routes) {
+        $routes->scope('/', ['controller' => 'Session'], function (RouteBuilder $routes) {
         $routes->setExtensions(['json']);
 
         $routes->connect('/:key', ['action' => 'check', '_method' => 'GET'], ['pass' => ['key']]);
         $routes->connect('/:key', ['action' => 'read', '_method' => 'GET'], ['pass' => ['key']]);
         $routes->connect('/', ['action' => 'write', '_method' => 'POST']);
         $routes->connect('/:key', ['action' => 'delete', '_method' => 'DELETE'], ['pass' => ['key']]);
+        });
     });
-});
 
-// Router::scope('/Areas', ['plugin' => 'Area'], function ($routes) {
-//     $routes->scope('/', ['controller' => 'Areas'], function ($routes) {
-//         $routes->setExtensions(['json']);
+    // Router::scope('/Areas', ['plugin' => 'Area'], function ($routes) {
+    //     $routes->scope('/', ['controller' => 'Areas'], function ($routes) {
+    //         $routes->setExtensions(['json']);
 
-//         $routes->connect('/:key', ['action' => 'index', '_method' => 'GET'], ['pass' => ['key']]);
-//     });
-// });
+    //         $routes->connect('/:key', ['action' => 'index', '_method' => 'GET'], ['pass' => ['key']]);
+    //     });
+    // });
 
-Router::scope('/', function ($routes) {
-    $routes->connect('/Profile', ['controller' => 'Profiles', 'action' => 'Healths']);
-});
-
-
-/**
- * Load all plugin routes.  See the Plugin documentation on
- * how to customize the loading of plugin routes.
- */
-// Plugin::routes();
+    $routes->scope('/', function (RouteBuilder $routes) {
+        $routes->connect('/Profile', ['controller' => 'Profiles', 'action' => 'Healths']);
+    });
+};

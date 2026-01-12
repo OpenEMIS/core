@@ -8,7 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
@@ -29,7 +29,7 @@ class ExaminationResultsTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -47,7 +47,7 @@ class ExaminationResultsTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('examination_id', ['type' => 'string', 'sort' => false]);
         $this->field('name', ['sort' => ['field' => 'ExaminationCentres.name']]);
@@ -75,7 +75,7 @@ class ExaminationResultsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $serverRequest = $this->request;
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
@@ -115,7 +115,7 @@ class ExaminationResultsTable extends ControllerActionTable
         $extra['options']['sortWhitelist'] = $sortList;
     }
 
-    public function onGetName(Event $event, Entity $entity)
+    public function onGetName(EventInterface $event, Entity $entity)
     {
         return $entity->examination_centre->code_name;
     }
@@ -129,7 +129,7 @@ class ExaminationResultsTable extends ControllerActionTable
         return $examinationOptions;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'name') {
             return  __('Name');

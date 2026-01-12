@@ -26,6 +26,10 @@ if (php_sapi_name() === 'cli-server') {
 }
 require dirname(__DIR__) . '/vendor/autoload.php';
 
+// Load TableRegistry compatibility extension for CakePHP 5
+// TableRegistry exists in CakePHP 5 but is missing the get() method
+require dirname(__DIR__) . '/config/table_registry_compat.php';
+
 use App\Application;
 use Cake\Http\Server;
 use Cake\ORM\TableRegistry;
@@ -41,7 +45,7 @@ $server = new Server(new Application(dirname(__DIR__) . '/config'));
 try {
     $server->emit($server->run());
 } catch (Exception $ex) {
-    $ErrorTable = TableRegistry::get('System.SystemErrors');
+    $ErrorTable = TableRegistry::getTableLocator()->get('System.SystemErrors');
     $ErrorTable->insertError($ex);
     Log::write('error', $ex);
     throw $ex;

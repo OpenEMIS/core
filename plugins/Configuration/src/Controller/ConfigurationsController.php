@@ -2,12 +2,11 @@
 namespace Configuration\Controller;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Http\Client;
 use Cake\Http\ServerRequest;
 use Page\Traits\EncodingTrait;
-use Cake\Event\EventInterface;
 
 class ConfigurationsController extends AppController
 {
@@ -93,7 +92,7 @@ class ConfigurationsController extends AppController
     public function getExternalUsers()
     {
         $this->autoRender = false;
-        $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+        $ExternalAttributes = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
         $attributes = $ExternalAttributes
             ->find('list', [
                 'keyField' => 'attribute_field',
@@ -153,7 +152,7 @@ class ConfigurationsController extends AppController
         }
     }
 
-    public function isActionIgnored(Event $event, $action)
+    public function isActionIgnored(EventInterface $event, $action)
     {
         if (in_array($action, ['generateServerAuthorisationToken', 'getExternalUsers'])) {
             return true;
@@ -208,7 +207,7 @@ class ConfigurationsController extends AppController
     {
         $requestData = $this->request->input('json_decode', true);
         $requestDataParams = $requestData['params'];
-        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemsTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItemsData = $ConfigItemsTable->findByCode($requestDataParams)->first();
 
         if ($ConfigItemsData) {

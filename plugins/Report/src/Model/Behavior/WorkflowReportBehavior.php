@@ -4,7 +4,7 @@ namespace Report\Model\Behavior;
 
 use ArrayObject;
 use DateTime;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
@@ -27,7 +27,7 @@ class WorkflowReportBehavior extends Behavior
         return $events;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $requestData = json_decode($settings['process']['params']);
 
@@ -79,10 +79,10 @@ class WorkflowReportBehavior extends Behavior
         // Re-order the column (Status followed by Assignee) - End
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query)
     {
         //POCOR-7433 start
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $requestData = json_decode($settings['process']['params']);
         $requestData->report_start_date = date('Y-m-d h', strtotime($requestData->report_start_date));
         $requestData->report_end_date = date('Y-m-d h', strtotime($requestData->report_end_date));
@@ -112,7 +112,7 @@ class WorkflowReportBehavior extends Behavior
         if (!$superAdmin) {
             //POCOR-7433
             if ($institution_id == 0) {
-                $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+                $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
                 $instituitionData = $InstitutionsTable->find('byAccess', ['userId' => $userId])->toArray();
                 if (isset($instituitionData)) {
                     foreach ($instituitionData as $key => $value) {

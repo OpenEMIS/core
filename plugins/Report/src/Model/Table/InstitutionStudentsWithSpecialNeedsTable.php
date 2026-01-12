@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Hash;
@@ -35,11 +35,11 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
 
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
-        $SpecialNeedsAssessments = TableRegistry::get('SpecialNeeds.SpecialNeedsAssessments');
-        $SpecialNeedsTypes = TableRegistry::get('SpecialNeeds.SpecialNeedsTypes');
-        $SpecialNeedDifficulties = TableRegistry::get('SpecialNeeds.SpecialNeedDifficulties');
+        $SpecialNeedsAssessments = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsAssessments');
+        $SpecialNeedsTypes = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsTypes');
+        $SpecialNeedDifficulties = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedDifficulties');
 
         $SpecialNeedsStudents = $SpecialNeedsAssessments
             ->find()
@@ -79,17 +79,17 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
         $this->_specialNeedDifficultyName = $SpecialNeedsDifficultyName;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
 
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $userId = $requestData->user_id;
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $userAreaCodes = $SecurityGroupUsers->getAreaCodesByUser($userId);
 
-        $Class = TableRegistry::get('Institution.InstitutionClasses');
-        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $Class = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
 
         if ($academicPeriodId !=0 ) {
             $query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
@@ -228,7 +228,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
             ]);
     }
 
-    public function onExcelRenderAge(Event $event, Entity $entity, $attr)
+    public function onExcelRenderAge(EventInterface $event, Entity $entity, $attr)
     {
         $age = '';
         if ($entity->has('date_of_birth') && !empty($entity->date_of_birth)) {
@@ -239,7 +239,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
         return $age;
     }
 
-    public function onExcelGetDateOfAssessment(Event $event, Entity $entity)
+    public function onExcelGetDateOfAssessment(EventInterface $event, Entity $entity)
     {
         $studentId = $entity->student_id;
 
@@ -256,7 +256,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
         return '';
     }
 
-    public function onExcelGetAllNationalities(Event $event, Entity $entity)
+    public function onExcelGetAllNationalities(EventInterface $event, Entity $entity)
     {
         $return = [];
         if ($entity->has('user')) {
@@ -274,7 +274,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
         return implode(', ', array_values($return));
     }
 
-    public function onExcelGetSpecialNeedType(Event $event, Entity $entity)
+    public function onExcelGetSpecialNeedType(EventInterface $event, Entity $entity)
     {
         $studentId = $entity->student_id;
 
@@ -287,7 +287,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
     }
 
 
-    public function onExcelGetSpecialNeedDifficulty(Event $event, Entity $entity)
+    public function onExcelGetSpecialNeedDifficulty(EventInterface $event, Entity $entity)
     {
         $studentId = $entity->student_id;
 
@@ -299,7 +299,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
         return '';
     }
 
-    public function onExcelGetComment(Event $event, Entity $entity)
+    public function onExcelGetComment(EventInterface $event, Entity $entity)
     {
         $studentId = $entity->student_id;
 
@@ -311,7 +311,7 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
         return '';
     }
 
-    public function onExcelGetDate(Event $event, Entity $entity)
+    public function onExcelGetDate(EventInterface $event, Entity $entity)
     {
         $studentId = $entity->student_id;
 
@@ -323,19 +323,19 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
         return '';
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
-        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
 
         $requestData = json_decode($settings['process']['params']);
 
         $userId = $requestData->user_id;
         $userSuperAdmin = $requestData->super_admin;
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $userAreaCodes = $SecurityGroupUsers->getAreaCodesByUser($userId);
 
-        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $principalRoleId = $SecurityRoles->getPrincipalRoleId();
         $deputyPrincipalRoleId = $SecurityRoles->getDeputyPrincipalRoleId();
 

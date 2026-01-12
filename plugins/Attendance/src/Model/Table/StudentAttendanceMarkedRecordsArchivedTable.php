@@ -3,7 +3,7 @@ namespace Attendance\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\AppTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -32,7 +32,7 @@ class StudentAttendanceMarkedRecordsArchivedTable extends AppTable
         ]);
     }
 
-//    public function indexBeforeAction(Event $event, ArrayObject $extra)
+//    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
 //    {
 //        $this->log('indexBeforeAction', 'debug');
 //    }
@@ -43,7 +43,7 @@ class StudentAttendanceMarkedRecordsArchivedTable extends AppTable
 //        return $events;
 //    }
 //
-//    public function isAuthorized(Event $event, $scope, $action, $extra)
+//    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
 //    {
 //        if ($action == 'index' || $action == 'view') {
 //            // check for the user permission to view here
@@ -79,7 +79,7 @@ class StudentAttendanceMarkedRecordsArchivedTable extends AppTable
     //POCOR-7143[START]
     public function markedRecordAfterSave($options)
     {
-        $ClassAttendanceRecords = TableRegistry::get('institution_class_attendance_records_archived');
+        $ClassAttendanceRecords = TableRegistry::getTableLocator()->get('institution_class_attendance_records_archived');
         $institutionClassId = $options['institution_class_id'];
         $educationGradeId = $options['education_grade_id'];
         $institutionId = $options['institution_id'];
@@ -92,7 +92,7 @@ class StudentAttendanceMarkedRecordsArchivedTable extends AppTable
         $month = (int) $explodedData[1];
         $day = (int) $explodedData[2];
 
-        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecordsArchived');
+        $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecordsArchived');
         $totalMarkedCount = $StudentAttendanceMarkedRecords
             ->find()
             ->where([
@@ -104,7 +104,7 @@ class StudentAttendanceMarkedRecordsArchivedTable extends AppTable
             ])
             ->count();
 
-        $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+        $StudentAttendanceMarkTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes');
         $attendancePerDay = $StudentAttendanceMarkTypes->getAttendancePerDayByClass($institutionClassId, $academicPeriodId);
 
         $ClassAttendanceRecordsData = $ClassAttendanceRecords
@@ -141,7 +141,7 @@ class StudentAttendanceMarkedRecordsArchivedTable extends AppTable
     //POCOR-7143[END]
     public function numberOfperiodByClass($options)
     {
-        $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+        $StudentAttendanceMarkTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes');
         $institionClassId = $options['institution_class_id'];
         $academicPeriodId = $options['academic_period_id'];
         $dayId = $options['day_id'];
@@ -215,7 +215,7 @@ class StudentAttendanceMarkedRecordsArchivedTable extends AppTable
 
 
                     //POCOR-7143[START]
-                    $StudentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records_archived');
+                    $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('student_attendance_marked_records_archived');
                     $totalMarkedCount = $StudentAttendanceMarkedRecords
                         ->find()
                         ->where([
@@ -231,7 +231,7 @@ class StudentAttendanceMarkedRecordsArchivedTable extends AppTable
                         $year = (int) $explodedData[0];
                         $month = (int) $explodedData[1];
                         $daydata = (int) $explodedData[2];
-                        $ClassAttendanceRecords = TableRegistry::get('institution_class_attendance_records_archived');
+                        $ClassAttendanceRecords = TableRegistry::getTableLocator()->get('institution_class_attendance_records_archived');
                         $ClassAttendanceRecords->updateAll(
                             [self::DAY_COLUMN_PREFIX . $daydata => self::PARTIAL_MARKED],
                             [

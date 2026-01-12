@@ -7,7 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
@@ -33,7 +33,7 @@ class EducationLevelsTable extends ControllerActionTable
 		$this->setDeleteStrategy('restrict');
 	}
 
-	public function indexBeforeAction(Event $event, ArrayObject $extra)
+	public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
 	{
 		$this->fields['education_level_isced_id']['sort'] = ['field' => 'EducationLevelIsced.name'];
 		$this->fields['education_system_id']['sort'] = ['field' => 'EducationSystems.name'];
@@ -59,7 +59,7 @@ class EducationLevelsTable extends ControllerActionTable
 		// End POCOR-5188
 	}
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options){
 
         // Webhook Education Level create -- start
         if($entity->isNew()){
@@ -70,7 +70,7 @@ class EducationLevelsTable extends ControllerActionTable
                 'education_level_name' =>$entity->name,
                 'education_level_isced' =>$entity->education_level_isced_id,
             ];
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
+            /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('education_level_create', ['username' => $username], $body);
             }*/
@@ -86,7 +86,7 @@ class EducationLevelsTable extends ControllerActionTable
                     'education_level_name' =>$entity->name,
                     'education_level_isced' =>$entity->education_level_isced_id,
             ];
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
+            /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('education_level_update', ['username' => $username], $body);
             }*/
@@ -94,7 +94,7 @@ class EducationLevelsTable extends ControllerActionTable
         // Webhook Education Level update -- end
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         // Webhook Education Level Delete -- Start
 
@@ -102,23 +102,23 @@ class EducationLevelsTable extends ControllerActionTable
         $body = [
             'education_level_id' =>$entity->id,
         ];
-        /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
+        /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
         if($this->Auth->user()){
             $Webhooks->triggerShell('education_level_delete', ['username' => $username], $body);
         }*/
         // Webhook Education Level Delete -- End
     }
 
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+	public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
 	{
 		$query->where([$this->aliasField('education_system_id') => $entity->education_system_id]);
 	}
 
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
 	{
 		$serverRequest = $this->request;
 		// Academic period filter
-	    $EducationSystems = TableRegistry::get('Education.EducationSystems');
+	    $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ?$serverRequest->getQuery('academic_period_id') : $this->EducationSystems->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
@@ -147,13 +147,13 @@ class EducationLevelsTable extends ControllerActionTable
 		$extra['options']['sortWhitelist'] = $sortList;
 	}
 
-	public function addEditBeforeAction(Event $event, ArrayObject $extra)
+	public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
 	{
 		$this->field('education_system_id');
 		$this->fields['education_level_isced_id']['type'] = 'select';
 	}
 
-	public function onUpdateFieldEducationSystemId(Event $event, array $attr, $action, ServerRequest $request)
+	public function onUpdateFieldEducationSystemId(EventInterface $event, array $attr, $action, ServerRequest $request)
 	{
 		list($systemOptions, $selectedSystem) = array_values($this->getSelectOptions());
 		$attr['options'] = $systemOptions;
@@ -186,7 +186,7 @@ class EducationLevelsTable extends ControllerActionTable
 
 	public function getEducationLevelOptions($selectedAcademicPeriod)
 	{
-		$educationSystems = TableRegistry::get('Education.EducationSystems');
+		$educationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
 
 		$list = $this
 			->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
@@ -218,7 +218,7 @@ class EducationLevelsTable extends ControllerActionTable
 					])
 					->toArray();
 		}else{
-			$educationSystems = TableRegistry::get('Education.EducationSystems');
+			$educationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
 			$list = $this
 					->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
 					->find('visible')
@@ -235,9 +235,9 @@ class EducationLevelsTable extends ControllerActionTable
 
     public function getLevelOptionsByInstitution($institutionId)
     {
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
 
         $list = $InstitutionGrades
             ->find()
@@ -257,7 +257,7 @@ class EducationLevelsTable extends ControllerActionTable
     }
 
     //updating type of academic period
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, Request $request)
     {
         list(,,  $systemOptions, $selectedSystem) = array_values($this->getSelectOptions());
         $attr['options'] = $cycleOptions;
@@ -268,19 +268,19 @@ class EducationLevelsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'name') {
             return __('Name');

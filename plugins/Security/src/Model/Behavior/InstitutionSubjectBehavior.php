@@ -6,7 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\ResultSet;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Date;
 
 class InstitutionSubjectBehavior extends Behavior
@@ -22,7 +22,7 @@ class InstitutionSubjectBehavior extends Behavior
         return $events;
     }
 
-    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, $primary)
     {
         // This logic is dependent on SecurityAccessBehavior because it relies on SecurityAccess join table
         // This logic will only be triggered when the table is accessed by RestfulController
@@ -100,7 +100,7 @@ class InstitutionSubjectBehavior extends Behavior
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
             $userId = $this->_table->Auth->user('id');
@@ -109,7 +109,7 @@ class InstitutionSubjectBehavior extends Behavior
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $action = 'edit';
         if (!$this->checkAllSubjectsPermission($action)) {
@@ -175,7 +175,7 @@ class InstitutionSubjectBehavior extends Behavior
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $action = 'view';
 

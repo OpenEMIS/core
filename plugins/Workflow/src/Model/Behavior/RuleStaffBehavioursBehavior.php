@@ -4,7 +4,7 @@ namespace Workflow\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
 use Workflow\Model\Behavior\RuleBehavior;
@@ -30,7 +30,7 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
         parent::initialize($config);
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->rule) {
@@ -44,7 +44,7 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
         }
     }
 
-    public function onGetStaffBehavioursRule(Event $event, Entity $entity)
+    public function onGetStaffBehavioursRule(EventInterface $event, Entity $entity)
     {
         $model = $this->_table;
         if ($model->action == 'index' && $entity->has('rule')) {
@@ -63,7 +63,7 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
 
                     if (isset($ruleConfig[$field]['lookupModel'])) {
                         $lookupModel = $this->getConfig('rule.'.$field.'.lookupModel');
-                        $modelTable = TableRegistry::get($lookupModel);
+                        $modelTable = TableRegistry::getTableLocator()->get($lookupModel);
 
                         try {
                             $fieldRecord = $modelTable->get($fieldValue);

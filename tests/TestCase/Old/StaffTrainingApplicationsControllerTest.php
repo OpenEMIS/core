@@ -125,7 +125,7 @@ class StaffTrainingApplicationsControllerTest extends AppTestCase
     public function testDelete() {
         $testUrl = $this->url('remove/' . $this->existingApplicationId);
 
-        $table = TableRegistry::get('Institution.StaffTrainingApplications');
+        $table = TableRegistry::getTableLocator()->get('Institution.StaffTrainingApplications');
 
         $exists = $table->exists([$table->primaryKey() => $this->existingApplicationId]);
         $this->assertTrue($exists);

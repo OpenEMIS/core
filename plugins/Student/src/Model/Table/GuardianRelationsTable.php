@@ -4,7 +4,7 @@ namespace Student\Model\Table;
 use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 
 use App\Model\Table\ControllerActionTable;
@@ -39,11 +39,11 @@ class GuardianRelationsTable extends ControllerActionTable
                 ]);
     }
 
-	public function indexBeforeAction(Event $event, ArrayObject $extra) {
+	public function indexBeforeAction(EventInterface $event, ArrayObject $extra) {
 		$this->field('gender_id', ['after' => 'name']);
 	}
 
-	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+	public function addEditBeforeAction(EventInterface $event, ArrayObject $extra) {
 		$this->fields['gender_id']['type'] = 'select';
 	}
 
@@ -67,19 +67,19 @@ class GuardianRelationsTable extends ControllerActionTable
         return $list;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':

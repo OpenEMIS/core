@@ -7,7 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 //use Cake\I18n\Time;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
@@ -33,7 +33,7 @@ class SurveyFiltersTable extends ControllerActionTable
         ]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('custom_module_id',['visible' => false]);
         $this->field('survey_form_id', ['visible' => true]);
@@ -51,12 +51,12 @@ class SurveyFiltersTable extends ControllerActionTable
         return $events;
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'survey_form_id';
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $serverRequest = $this->request;
         $search = $this->getSearchKey(); //POCOR-7271
@@ -66,7 +66,7 @@ class SurveyFiltersTable extends ControllerActionTable
 
         //custom module option in toolbar
         $name = array('Institution > Overview'); //POCOR-9390
-        $CustomModules = TableRegistry::get('CustomField.CustomModules');
+        $CustomModules = TableRegistry::getTableLocator()->get('CustomField.CustomModules');
         $moduleOptions =  $CustomModules
             ->find('list', ['keyField' => 'id', 'valueField' => 'code'])
            ->where([$CustomModules->aliasField('name IN') => $name])->toArray();
@@ -80,7 +80,7 @@ class SurveyFiltersTable extends ControllerActionTable
             $this->controller->set(compact('moduleOptions'));
         }
         // Survey form options toolbar
-        $this->SurveyForms = TableRegistry::get('Survey.SurveyForms');
+        $this->SurveyForms = TableRegistry::getTableLocator()->get('Survey.SurveyForms');
         $surveyFormOptions = $this->SurveyForms
             ->find('list')
             ->order([
@@ -94,14 +94,14 @@ class SurveyFiltersTable extends ControllerActionTable
         $extra['elements']['controls'] = ['name' => 'Survey.filter_rules_controls', 'data' => [], 'options' => [], 'order' => 2];
         $this->controller->set(compact('surveyFormOptions'));
 
-        $surveyFilterInstitutionProviders = TableRegistry::get('Survey.SurveyFilterInstitutionProviders'); // POCOR-8921
-        $institutionType = TableRegistry::get('Survey.SurveyFilterInstitutionTypes');
-        $areaEducation = TableRegistry::get('Survey.SurveyFilterAreas');
-        $provider = TableRegistry::get('Institution.InstitutionProviders');
+        $surveyFilterInstitutionProviders = TableRegistry::getTableLocator()->get('Survey.SurveyFilterInstitutionProviders'); // POCOR-8921
+        $institutionType = TableRegistry::getTableLocator()->get('Survey.SurveyFilterInstitutionTypes');
+        $areaEducation = TableRegistry::getTableLocator()->get('Survey.SurveyFilterAreas');
+        $provider = TableRegistry::getTableLocator()->get('Institution.InstitutionProviders');
 
-        $type = TableRegistry::get('FieldOption.InstitutionTypes');
-        $areas = TableRegistry::get('Area.Areas');
-        $survey_forms = TableRegistry::get('Survey.SurveyForms');
+        $type = TableRegistry::getTableLocator()->get('FieldOption.InstitutionTypes');
+        $areas = TableRegistry::getTableLocator()->get('Area.Areas');
+        $survey_forms = TableRegistry::getTableLocator()->get('Survey.SurveyForms');
 
         if($surveyFormId == -1 && $moduleId == 1)
         {
@@ -135,7 +135,7 @@ class SurveyFiltersTable extends ControllerActionTable
 
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('custom_module_id', ['type' => 'select']);
         $this->field('survey_form_id', ['type' => 'select']);
@@ -166,7 +166,7 @@ class SurveyFiltersTable extends ControllerActionTable
 
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('institution_provider_id', ['visible' => true]);	//POCOR-7548
         $this->field('institution_type_id', ['visible' => true]);	//POCOR-7548
@@ -181,7 +181,7 @@ class SurveyFiltersTable extends ControllerActionTable
         //POCOR-7548
     }
 
-    public function editBeforeAction(Event $event, ArrayObject $extra)
+    public function editBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('custom_module_id', ['type' => 'readonly']);
         $this->field('survey_form_id', ['type' => 'select']);
@@ -193,7 +193,7 @@ class SurveyFiltersTable extends ControllerActionTable
         ]);
     }
 
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //$entity->survey_filter_id = $_SESSION['surveyFilterId'];
         // $entity->survey_filter_id = $this->paramsDecode($this->request->getParam('pass')[1])['id'];//POCOR-8408
@@ -204,9 +204,9 @@ class SurveyFiltersTable extends ControllerActionTable
             $filterId = $decodedParams['id'];
         }
         // $filterId = $entity->survey_filter_id;
-        $tableProvider = TableRegistry::get('Institution.SurveyFilterInstitutionProviders');
-        $institutionType = TableRegistry::get('Survey.SurveyFilterInstitutionTypes');
-        $areaEducation = TableRegistry::get('Survey.SurveyFilterAreas');
+        $tableProvider = TableRegistry::getTableLocator()->get('Institution.SurveyFilterInstitutionProviders');
+        $institutionType = TableRegistry::getTableLocator()->get('Survey.SurveyFilterInstitutionTypes');
+        $areaEducation = TableRegistry::getTableLocator()->get('Survey.SurveyFilterAreas');
 
         $providerResult = $tableProvider->find()->select(['institution_provider_id'])
                         ->where([$tableProvider->aliasField('survey_filter_id') => $filterId])
@@ -301,7 +301,7 @@ class SurveyFiltersTable extends ControllerActionTable
 
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
 
         $institution_type_id = [];
@@ -338,10 +338,10 @@ class SurveyFiltersTable extends ControllerActionTable
     }
 
 
-     public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, ServerRequest $request){
+     public function onUpdateFieldCustomModuleId(EventInterface $event, array $attr, $action, ServerRequest $request){
         //$name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey', 'Institution > Staff > Survey');
         $name = array('Institution > Overview'); //POCOR-9390
-        $CustomModules = TableRegistry::get('CustomField.CustomModules');
+        $CustomModules = TableRegistry::getTableLocator()->get('CustomField.CustomModules');
         $moduleOptions =  $CustomModules
             ->find('list', ['keyField' => 'id', 'valueField' => 'code'])
            ->where(['CustomModules.name IN' => $name])->toArray();
@@ -349,13 +349,13 @@ class SurveyFiltersTable extends ControllerActionTable
         if(!empty($this->request->getAttribute('params')['pass'][1])){
             $dataid = $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
             $filerID  = $dataid ;
-            $CustomModules = TableRegistry::get('Survey.SurveyFormsFilters');
+            $CustomModules = TableRegistry::getTableLocator()->get('Survey.SurveyFormsFilters');
             $CustomModulesdata = $CustomModules->find()->select(['custom_module_id'])
                                 ->where([$CustomModules->aliasField('id') =>  $filerID])->first();
          }
 
         if ($action == 'edit'){
-            $CustomModules = TableRegistry::get('CustomField.CustomModules');
+            $CustomModules = TableRegistry::getTableLocator()->get('CustomField.CustomModules');
             $data = $CustomModules->find()->select(['code' =>$CustomModules->aliasField('code')])->where([$CustomModules->aliasField('id') => $CustomModulesdata->custom_module_id])->first();
             $attr['type'] = 'readonly';
             $attr['value'] = $CustomModulesdata->custom_module_id;
@@ -370,7 +370,7 @@ class SurveyFiltersTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldSurveyFormId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldSurveyFormId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $CustomModules = $this->request->getData('SurveyFilters')['custom_module_id'];
         if($CustomModules==null){
@@ -381,19 +381,19 @@ class SurveyFiltersTable extends ControllerActionTable
         if(!empty($this->request->getAttribute('params')['pass'][1])){
             $dataid = $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
             $filerID  = $dataid ;
-            $formTable = TableRegistry::get('Survey.SurveyFormsFilters');
+            $formTable = TableRegistry::getTableLocator()->get('Survey.SurveyFormsFilters');
             $formTabledata = $formTable->find()->select(['survey_form_id'])
                                 ->where([$formTable->aliasField('id') =>  $filerID])->first();
          }
         if ($action == 'edit'){
-            $forms = TableRegistry::get('Survey.SurveyForms');
+            $forms = TableRegistry::getTableLocator()->get('Survey.SurveyForms');
             $data = $forms->find()->select(['name' =>$forms->aliasField('name')])->where([$forms->aliasField('id') => $formTabledata->survey_form_id])->first();
             $attr['type'] = 'readonly';
             $attr['value'] = $formTabledata->survey_form_id;
             $attr['attr']['value'] = $data->name;
             return $attr;
         }else{
-            $formTable = TableRegistry::get('Survey.SurveyForms');
+            $formTable = TableRegistry::getTableLocator()->get('Survey.SurveyForms');
             $formOptions = $formTable
                 ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                 ->where([$formTable->aliasField('custom_module_id') => $CustomModules])
@@ -408,7 +408,7 @@ class SurveyFiltersTable extends ControllerActionTable
 
     public function getInstitutionType()
     {
-        $TypesTable = TableRegistry::get('Institution.Types');
+        $TypesTable = TableRegistry::getTableLocator()->get('Institution.Types');
         $typeOptions = $TypesTable
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->find('visible')
@@ -417,16 +417,16 @@ class SurveyFiltersTable extends ControllerActionTable
         return $typeOptions;
     }
 
-    public function onGetCustomModuleId(Event $event, Entity $entity)
+    public function onGetCustomModuleId(EventInterface $event, Entity $entity)
     {
-        $CustomModules = TableRegistry::get('CustomField.CustomModules');
+        $CustomModules = TableRegistry::getTableLocator()->get('CustomField.CustomModules');
         $data = $CustomModules->find()->select(['code' =>$CustomModules->aliasField('code')])->where([$CustomModules->aliasField('id') => $entity->custom_module_id])->first();
        return $data->code;
     }
 
     public function getInstitutionProvider()
     {
-        $providerTable = TableRegistry::get('Institution.InstitutionProviders');
+        $providerTable = TableRegistry::getTableLocator()->get('Institution.InstitutionProviders');
         $providerOptions = $providerTable
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->where(['visible' => 1])
@@ -436,7 +436,7 @@ class SurveyFiltersTable extends ControllerActionTable
 
     public function getAreaEducation()
     {
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $AreasEducationOptions = $Areas
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->where(['visible' => 1])
@@ -445,7 +445,7 @@ class SurveyFiltersTable extends ControllerActionTable
     }
 
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
                 $entity = $this->newEntity([
@@ -471,16 +471,16 @@ class SurveyFiltersTable extends ControllerActionTable
 
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if($this->action=='add'){
             $type = $entity->institution_type_id[0]['institution_type_id'];
             $provider = $entity->institution_provider_id[0]['institution_provider_id'];
             $areaEducation = $entity->area_education_id[0]['area_education_id']; //POCOR-7548
             $filterId = $entity->id;
-            $institutionProvider = TableRegistry::get('Survey.SurveyFilterInstitutionProviders');
-            $institutionType = TableRegistry::get('Survey.SurveyFilterInstitutionTypes');
-            $surveyarea = TableRegistry::get('Survey.SurveyFilterAreas');
+            $institutionProvider = TableRegistry::getTableLocator()->get('Survey.SurveyFilterInstitutionProviders');
+            $institutionType = TableRegistry::getTableLocator()->get('Survey.SurveyFilterInstitutionTypes');
+            $surveyarea = TableRegistry::getTableLocator()->get('Survey.SurveyFilterAreas');
             $checkProvider = $institutionProvider->find()->where(['survey_filter_id' => $filterId])->toArray();
             $checkType = $institutionType->find()->where(['survey_filter_id' => $filterId])->toArray();
             $checkArea = $surveyarea->find()->where(['survey_filter_id' => $filterId])->toArray();
@@ -526,11 +526,11 @@ class SurveyFiltersTable extends ControllerActionTable
 
     }
 
-    public function onGetInstitutionTypeId(Event $event, Entity $entity)
+    public function onGetInstitutionTypeId(EventInterface $event, Entity $entity)
     {
         $typedata = [];
         $filterId = $entity->id;
-        $type = TableRegistry::get('FieldOption.InstitutionTypes');
+        $type = TableRegistry::getTableLocator()->get('FieldOption.InstitutionTypes');
         $surveyInstitutionTypes = TableRegistry::getTableLocator()->get('Survey.SurveyFilterInstitutionTypes');
         $InstitutionTypesData = $surveyInstitutionTypes->find()
                                 ->where([$surveyInstitutionTypes->aliasField('survey_filter_id') => $filterId])->first()->institution_type_id;
@@ -554,12 +554,12 @@ class SurveyFiltersTable extends ControllerActionTable
         }
     }
 
-    public function onGetInstitutionProviderId(Event $event, Entity $entity)
+    public function onGetInstitutionProviderId(EventInterface $event, Entity $entity)
     {
         $result = [];
         $filterId = $entity->id;
-        $institutionProviders = TableRegistry::get('Institution.InstitutionProviders');
-        $surveyinstitutionProviders = TableRegistry::get('Institution.SurveyFilterInstitutionProviders');
+        $institutionProviders = TableRegistry::getTableLocator()->get('Institution.InstitutionProviders');
+        $surveyinstitutionProviders = TableRegistry::getTableLocator()->get('Institution.SurveyFilterInstitutionProviders');
         $institutionProvidersData = $surveyinstitutionProviders->find()
                                 ->where([$surveyinstitutionProviders->aliasField('survey_filter_id') => $filterId])->first()->institution_provider_id;
         if($institutionProvidersData != -1){
@@ -582,12 +582,12 @@ class SurveyFiltersTable extends ControllerActionTable
         }
     }
 
-    public function onGetAreaEducationId(Event $event, Entity $entity)
+    public function onGetAreaEducationId(EventInterface $event, Entity $entity)
     {
         $result = [];
         $filterId = $entity->id;
-        $areaEducation = TableRegistry::get('Area.Areas');
-        $surveyAreaEducation = TableRegistry::get('Survey.SurveyFilterAreas');
+        $areaEducation = TableRegistry::getTableLocator()->get('Area.Areas');
+        $surveyAreaEducation = TableRegistry::getTableLocator()->get('Survey.SurveyFilterAreas');
         $areaeducationData = $surveyAreaEducation->find()
                                 ->where([$surveyAreaEducation->aliasField('survey_filter_id') => $filterId])->first()->area_education_id;
         if($areaeducationData != -1){
@@ -610,13 +610,13 @@ class SurveyFiltersTable extends ControllerActionTable
         }
     }
 
-    public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function beforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $filterId = $entity->id;
-        $status = TableRegistry::get('Survey.SurveyStatuses');
-        $surveyFilterAreas = TableRegistry::get('Survey.SurveyFilterAreas');
-        $surveyFilterInstitutionProviders = TableRegistry::get('Institution.SurveyFilterInstitutionProviders');
-        $surveyFilterInstitutionTypes = TableRegistry::get('Survey.SurveyFilterInstitutionTypes');
+        $status = TableRegistry::getTableLocator()->get('Survey.SurveyStatuses');
+        $surveyFilterAreas = TableRegistry::getTableLocator()->get('Survey.SurveyFilterAreas');
+        $surveyFilterInstitutionProviders = TableRegistry::getTableLocator()->get('Institution.SurveyFilterInstitutionProviders');
+        $surveyFilterInstitutionTypes = TableRegistry::getTableLocator()->get('Survey.SurveyFilterInstitutionTypes');
         $checkstatus = $status->find()->where([$status->aliasField('survey_filter_id') => $filterId])->toArray();
         $checkFilterAreas = $surveyFilterAreas->find()->where([$surveyFilterAreas->aliasField('survey_filter_id') => $filterId])->toArray();
         $checksurveyProviders = $surveyFilterInstitutionProviders->find()->where([$surveyFilterInstitutionProviders->aliasField('survey_filter_id') => $filterId])->toArray();
@@ -669,14 +669,14 @@ class SurveyFiltersTable extends ControllerActionTable
         return $query;
     }
     //POCOR-7611 start
-    public function onUpdateFieldInstitutionProviderId(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldInstitutionProviderId(EventInterface $event, array $attr, $action, ServerRequest $request){
         if($action == "edit"){
         if(!empty($this->request->getAttribute('params')['pass'][1])){
         $data=$this->paramsDecode($this->request->getAttribute('params')['pass'][1]);
         $filterId = $data['id'];
         }
-        $institutionProviders = TableRegistry::get('Institution.InstitutionProviders');
-        $surveyinstitutionProviders = TableRegistry::get('Survey.SurveyFilterInstitutionProviders');
+        $institutionProviders = TableRegistry::getTableLocator()->get('Institution.InstitutionProviders');
+        $surveyinstitutionProviders = TableRegistry::getTableLocator()->get('Survey.SurveyFilterInstitutionProviders');
         $institutionProvidersData = $surveyinstitutionProviders->find()
         ->where([$surveyinstitutionProviders->aliasField('survey_filter_id') => $filterId])
         ->first()
@@ -703,7 +703,7 @@ class SurveyFiltersTable extends ControllerActionTable
            return $attr;
         }
     }
-    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if($action == "edit"){
             if(!empty($this->request->getAttribute('params')['pass'][1])){
@@ -711,8 +711,8 @@ class SurveyFiltersTable extends ControllerActionTable
             $filterId = $data['id'];
             }
         $typedata = [];
-        $type = TableRegistry::get('FieldOption.InstitutionTypes');
-        $surveyInstitutionTypes = TableRegistry::get('Survey.SurveyFilterInstitutionTypes');
+        $type = TableRegistry::getTableLocator()->get('FieldOption.InstitutionTypes');
+        $surveyInstitutionTypes = TableRegistry::getTableLocator()->get('Survey.SurveyFilterInstitutionTypes');
         $InstitutionTypesData = $surveyInstitutionTypes->find()
                                 ->where([$surveyInstitutionTypes->aliasField('survey_filter_id') => $filterId])->first()->institution_type_id;
         if($InstitutionTypesData != -1){
@@ -738,7 +738,7 @@ class SurveyFiltersTable extends ControllerActionTable
 
     }
    }
-    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaEducationId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
        if($action =="edit"){
         $result = [];
@@ -746,8 +746,8 @@ class SurveyFiltersTable extends ControllerActionTable
             $data = $this->paramsDecode($this->request->getAttribute('params')['pass'][1]);
             $filterId=$data['id'];
             }
-        $areaEducation = TableRegistry::get('Area.Areas');
-        $surveyAreaEducation = TableRegistry::get('Survey.SurveyFilterAreas');
+        $areaEducation = TableRegistry::getTableLocator()->get('Area.Areas');
+        $surveyAreaEducation = TableRegistry::getTableLocator()->get('Survey.SurveyFilterAreas');
         $areaeducationData = $surveyAreaEducation->find()
                                 ->where([$surveyAreaEducation->aliasField('survey_filter_id') => $filterId])->first()->area_education_id;
         if($areaeducationData != -1){
@@ -772,7 +772,7 @@ class SurveyFiltersTable extends ControllerActionTable
    }
     //POCOR-7611 end
 
-   public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+   public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'survey_form_id') {
             return __('SurveyForm');

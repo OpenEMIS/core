@@ -23,7 +23,7 @@ class POCOR5681 extends AbstractMigration
         $this->execute("ALTER TABLE `education_systems` CHANGE `academic_period_id` `academic_period_id` INT(11) NOT NULL COMMENT 'links to academic_periods.id'");
 
         //updating academic_period_id column value
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academicPeriodId = $AcademicPeriods
                     ->find()
                     ->where([

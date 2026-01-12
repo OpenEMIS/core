@@ -4,10 +4,9 @@ namespace Security\Controller;
 
 use ArrayObject;
 use App\Controller\AppController;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
-use Cake\Event\EventInterface;
 
 class SecuritiesController extends AppController
 {
@@ -62,7 +61,7 @@ class SecuritiesController extends AppController
             $this->set('viewUrl', $viewUrl);
             $this->set('alertUrl', $alertUrl);
             $this->set('moduleKey', $moduleKey);
-            $header = __('Security') . ' - ' . TableRegistry::get('Security.SecurityRoles')->get($this->ControllerAction->paramsDecode($roleId))->name;
+            $header = __('Security') . ' - ' . TableRegistry::getTableLocator()->get('Security.SecurityRoles')->get($this->ControllerAction->paramsDecode($roleId))->name;
             $this->set('contentHeader', __($header));
             $this->render('Permissions/permission_edit');
         } else {
@@ -126,20 +125,20 @@ class SecuritiesController extends AppController
         $this->set('contentHeader', __($header));
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         //change header in POCOR-7175
         if($model->getAlias() =='SystemGroupsList') {
              $header = __('System Groups');
             $listId = $this->request->getQuery('userGroupId');
-            $table= TableRegistry::get('Security.SecurityGroups');
+            $table= TableRegistry::getTableLocator()->get('Security.SecurityGroups');
             $headerName = $table->find()->where(['id' => $listId])->first()->name;
             $header .= ' - ' . __($model->getHeader($headerName));
             $this->set('contentHeader', $header);
         }elseif($model->getAlias() == 'UserGroupsList') {
             $header = __('User Groups');
             $listId = $this->request->getQuery('userGroupId');
-            $table= TableRegistry::get('Security.UserGroups');
+            $table= TableRegistry::getTableLocator()->get('Security.UserGroups');
             $headerName = $table->find()->where(['id IS ' => $listId])->first()->name;
             $header .= ' - ' . __($model->getHeader($headerName));
             $this->set('contentHeader', $header);

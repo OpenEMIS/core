@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -87,7 +87,7 @@ class SurveysTable extends AppTable
         return $validator;
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
@@ -104,14 +104,14 @@ class SurveysTable extends AppTable
     }
 
     //POCOR - 7415 start
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('area_id',
             ['type' => 'hidden', 'attr' => ['label' => __('Area Name')]]);
     }
 
     //POCOR - 7415 end
-    public function onUpdateFieldInstitutionStatus(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionStatus(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['options'] = $this->controller->getInstitutionStatusOptions($this->getAlias());
@@ -129,7 +129,7 @@ class SurveysTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['options'] = ['' => '-- ' . __('Select') . ' --', ] // POCOR-9219
@@ -147,7 +147,7 @@ class SurveysTable extends AppTable
         }
     }
 
-//    public function onExcelAfterHeader(Event $event, ArrayObject $settings)
+//    public function onExcelAfterHeader(EventInterface $event, ArrayObject $settings)
 //    {
 //       if ($settings['renderNotComplete'] || $settings['renderNotOpen']) {
 //            $fields = $settings['sheet']['fields'];
@@ -357,7 +357,7 @@ class SurveysTable extends AppTable
 //        }
 //    }
 //
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
 //        $sheets[] = [
 //            'name' => $this->getAlias(),
@@ -382,7 +382,7 @@ class SurveysTable extends AppTable
             $this->excelContent($sheets, $formName, null, $formId);
         }
     }
-//    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+//    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
 //    {
 //        // Setting request data and modifying fetch condition
 //        $requestData = json_decode($settings['process']['params']);
@@ -653,7 +653,7 @@ public function getChildren($id, $idArray)
         return $conditions;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query)
     {
 
         $conditions = $this->getCondition();
@@ -693,7 +693,7 @@ public function getChildren($id, $idArray)
 //        }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         foreach ($fields as $key => $field) {
             if ($field['field'] == 'institution_id') {
@@ -794,7 +794,7 @@ public function getChildren($id, $idArray)
 
     //POCOR-8515 starts
 
-    public function onUpdateFieldSurveyFormId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldSurveyFormId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $data = $this->request->getData($this->getAlias());
@@ -850,7 +850,7 @@ public function getChildren($id, $idArray)
         }
     }//POCOR-8515 ends
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -883,7 +883,7 @@ public function getChildren($id, $idArray)
 
     //POCOR-6695 Starts
 
-    public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStatus(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         if ($action == 'add') {
@@ -913,7 +913,7 @@ public function getChildren($id, $idArray)
 
     //POCOR-6695 Starts
 
-    public function onExcelGetStatusId(Event $event, Entity $entity)
+    public function onExcelGetStatusId(EventInterface $event, Entity $entity)
     {
         $status = $entity->status_id;
         if ($status == 1 || $status == -1) {
@@ -927,7 +927,7 @@ public function getChildren($id, $idArray)
         }
     }//End of POCOR-6695
 
-    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaLevelId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (!isset($request->getData($this->getAlias())['feature'])) {
             return $attr;
@@ -950,7 +950,7 @@ public function getChildren($id, $idArray)
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         //POCOR-8515 Starts
         $selectedArea = $request->getData($this->getAlias())['area_id'];
@@ -1093,7 +1093,7 @@ public function getChildren($id, $idArray)
         return $result;
     }
 
-    public function onUpdateFieldAreaId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -1129,7 +1129,7 @@ public function getChildren($id, $idArray)
         return $attr;
     }
 
-public function onUpdateFieldSurveySection(Event $event, array $attr, $action, ServerRequest $request)
+public function onUpdateFieldSurveySection(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $surveyForm = $this->request->getData($this->getAlias())['survey_form_id'];
         if ($action == 'add') {
@@ -1140,7 +1140,7 @@ public function onUpdateFieldSurveySection(Event $event, array $attr, $action, S
                 $todayDate = date('Y-m-d');
                 $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
                 if ($feature == 'Report.SurveysReport') {
-                    $SurveyStatusTable = TableRegistry::get('Survey.SurveyStatuses');
+                    $SurveyStatusTable = TableRegistry::getTableLocator()->get('Survey.SurveyStatuses');
                     $surveyQuestions = self::getDynamicTableInstance('FieldOption.IdentityTypes');
                     $surveySection = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
                     $surveyFormOptions = $surveySection
@@ -1173,7 +1173,7 @@ public function onUpdateFieldSurveySection(Event $event, array $attr, $action, S
         }
     }
 
-public function onUpdateFieldTableQuestion(Event $event, array $attr, $action, ServerRequest $request)
+public function onUpdateFieldTableQuestion(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $surveyQuestionId = $this->request->getData($this->getAlias())['survey_section'] ?? '';
         $surveyFormId = $this->request->getData($this->getAlias())['survey_form_id'] ?? -1;
@@ -1228,7 +1228,7 @@ public function onUpdateFieldTableQuestion(Event $event, array $attr, $action, S
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':

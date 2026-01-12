@@ -8,7 +8,7 @@ use Alert\Model\Behavior\AlertRuleBehavior;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class AlertRuleRetirementWarningBehavior extends AlertRuleBehavior
 {
@@ -67,7 +67,7 @@ class AlertRuleRetirementWarningBehavior extends AlertRuleBehavior
         parent::initialize($config);
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
@@ -83,12 +83,12 @@ class AlertRuleRetirementWarningBehavior extends AlertRuleBehavior
         }
     }
 
-    public function onRetirementWarningSetupFields(Event $event, Entity $entity)
+    public function onRetirementWarningSetupFields(EventInterface $event, Entity $entity)
     {
         $this->onAlertRuleSetupFields($event, $entity);
     }
 
-    public function onGetRetirementWarningThreshold(Event $event, Entity $entity)
+    public function onGetRetirementWarningThreshold(EventInterface $event, Entity $entity)
     {
         $thresholdData = json_decode($entity->threshold, true);
         return $thresholdData['value'];

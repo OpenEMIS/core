@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
@@ -89,7 +89,7 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
         return $validator;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $total_male = $entity->infrastructure_wash_sanitation_male_functional + $entity->infrastructure_wash_sanitation_male_nonfunctional;
         $total_female = $entity->infrastructure_wash_sanitation_female_functional + $entity->infrastructure_wash_sanitation_female_nonfunctional;
@@ -100,9 +100,9 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
         $entity->infrastructure_wash_sanitation_total_mixed = $total_mixed;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $requestData)
     {
-        $SanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
+        $SanitationQuantitiesTable = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashSanitationQuantities');
         $SanitationQuantitiesTable->deleteAll(['infrastructure_wash_sanitation_id' => $entity->id]);
 
         $data1 = $SanitationQuantitiesTable->newEmptyEntity();
@@ -160,14 +160,14 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
         return $query;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $modelAlias = 'InfrastructureWashSanitations';
         $userType = '';
         $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('infrastructure_wash_sanitation_type_id');
         $this->field('infrastructure_wash_sanitation_use_id');
@@ -227,7 +227,7 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
         // End POCOR-5188
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
             case 'academic_period_id':
@@ -259,16 +259,16 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
         ->orderDesc($this->aliasField('created'));
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $SanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
+        $SanitationQuantitiesTable = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashSanitationQuantities');
 
         $this->fields['academic_period_id']['type'] = 'select';
         $this->fields['academic_period_id']['options'] = $academicPeriodOptions;
@@ -303,7 +303,7 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
         $this->field('infrastructure_wash_sanitation_accessibility_id', ['attr' => ['label' => __('Accessibility')]]);
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra){
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra){
 
         $Data = $this->getData();
         $quantity = $this->getSanitationQuantity($Data);
@@ -324,7 +324,7 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
     }
 
     public function getData(){
-        $InfrastructureWashSanitationQuantities = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
+        $InfrastructureWashSanitationQuantities = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashSanitationQuantities');
         $sanatationQuantitiesIdArr = $this->paramsDecode($this->request->getAttribute('params')['pass'][1]);
         $sanatationId = $sanatationQuantitiesIdArr['id'];
         $sanitationQualitiesData = $InfrastructureWashSanitationQuantities->find()
@@ -371,7 +371,7 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
     }
 
     // POCOR-6146 start
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
             "key" => "InfrastructureWashSanitations.infrastructure_wash_sanitation_type_id",
@@ -426,7 +426,7 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
     }
     // POCOR-6146 start
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query){
         $session = $this->request->session();
         //$institutionId = $session->read('Institution.Institutions.id');
         $institutionId  = $this->getInstitutionID();

@@ -2,7 +2,7 @@
 
 namespace App\Model\Table;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 
 class UserAccountsTable extends AppTable
@@ -19,7 +19,7 @@ class UserAccountsTable extends AppTable
         return $validator;
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         try {
             $tabElements = $this->controller->getUserTabElements();

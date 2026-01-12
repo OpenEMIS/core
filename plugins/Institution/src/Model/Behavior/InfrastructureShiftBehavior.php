@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 
@@ -33,7 +33,7 @@ class InfrastructureShiftBehavior extends Behavior
         return $events;
     }
 
-    public function isRecordExists(Event $event)
+    public function isRecordExists(EventInterface $event)
     {
         $callable = function ($model, $params) {
             return true;
@@ -41,7 +41,7 @@ class InfrastructureShiftBehavior extends Behavior
         return $callable;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $model = $this->_table;
         $buttons = $model->onUpdateActionButtons($event, $entity, $buttons);
@@ -59,15 +59,15 @@ class InfrastructureShiftBehavior extends Behavior
         return $buttons;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
 
         $institutionId = $model->getQueryString('institution_id');
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academicPeriodId = $AcademicPeriods->getCurrent();
 
-        $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+        $InstitutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
         $isOwnerCount = $InstitutionShifts->isOwner($institutionId, $academicPeriodId);
         $isOccupierCount = $InstitutionShifts->isOccupier($institutionId, $academicPeriodId);
 
@@ -91,7 +91,7 @@ class InfrastructureShiftBehavior extends Behavior
         }
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $model = $this->_table;
         $session = $model->request->getSession();
@@ -104,7 +104,7 @@ class InfrastructureShiftBehavior extends Behavior
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($this->isOccupier) {
             $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
@@ -117,14 +117,14 @@ class InfrastructureShiftBehavior extends Behavior
     private function isAcademicInstitution()
     {
         $session = $this->_table->request->getSession();
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         //$institutionId = $session->read('Institution.Institutions.id');
         $institutionId = $this->_table->getQueryString('institution_id');
         $classification = $InstitutionsTable->get($institutionId)->classification;
         return $classification == $InstitutionsTable::ACADEMIC;
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
         $session = $model->request->getSession();
@@ -143,7 +143,7 @@ class InfrastructureShiftBehavior extends Behavior
         }
     }
 
-    public function editBeforeAction(Event $event, ArrayObject $extra)
+    public function editBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
         $session = $model->request->getSession();
@@ -157,7 +157,7 @@ class InfrastructureShiftBehavior extends Behavior
         }
     }
 
-    public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    public function deleteBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
         $session = $model->request->getSession();
@@ -182,10 +182,10 @@ class InfrastructureShiftBehavior extends Behavior
             $institutionId = $model->getQueryString('institution_id');
             //$institutionId = $session->read('Institution.Institutions.id');
 
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $academicPeriodId = $AcademicPeriods->getCurrent();
 
-            $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+            $InstitutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
 
             $conditions = [
                 [$InstitutionShifts->aliasField('academic_period_id') => $academicPeriodId],

@@ -8,7 +8,7 @@ use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -56,7 +56,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         return $events;
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'education_subject_id';
         $searchableFields[] = 'code';
@@ -76,7 +76,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'education_subject_id', 'education_grade_id', 'education_programme_id', 'education_level_id', 'hours_required']);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options){
         // Webhook Education Subject create -- start
         if($entity->isNew()){
             $body = array();
@@ -85,7 +85,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
                 'education_subject_id' =>$entity->education_subject_id,
                 'education_grade_id' =>$entity->education_grade_id,
             ];
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
+            /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('education_grade_subject_create', ['username' => $username], $body);
             }*/
@@ -100,7 +100,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
                 'education_subject_id' =>$entity->education_subject_id,
                 'education_grade_id' =>$entity->education_grade_id,
             ];
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
+            /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('education_grade_subject_update', ['username' => $username], $body);
             }*/
@@ -108,14 +108,14 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         // Webhook Education grade subject -- end
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options){
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options){
 
         // Webhook Education Grade Subject Delete -- Start
         $body = array();
         $body = [
             'grade_subject_id' => $entity->id
         ];
-        /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
+        /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
 
 
         if(isset($_SESSION['Auth']['User'])){ //POCOR-7308
@@ -124,13 +124,13 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         // Webhook Education Grade Subject Delete -- End
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         // visible field is not used for now
         $this->field('visible', ['visible' => 'hidden']);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('code');
         $this->field('education_subject_id', ['type' => 'integer']);
@@ -164,7 +164,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $serverRequest = $this->request;
         $searchKey = $this->getSearchKey();
@@ -178,7 +178,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
 
         $extra['auto_contain_fields'] = ['EducationSubjects' => ['code']];*/
                 // Academic period filter
-        $EducationSystems = TableRegistry::get('Education.EducationSystems');
+        $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationGrades->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? $serverRequest->getQuery('academic_period_id') : $this->EducationGrades->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
@@ -280,21 +280,21 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $extra['options']['sortWhitelist'] = $sortList;
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
         $query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels', 'EducationSubjects']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         list($levelOptions, $selectedLevel, $programmeOptions, $selectedProgramme, $gradeOptions, $selectedGrade) = array_values($this->_getSelectOptions());
         $this->field('education_level_id', ['selectedLevel' => $selectedLevel]);
@@ -308,33 +308,33 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $this->setFieldOrder(['education_level_id', 'education_programme_id', 'education_grade_id', 'education_subject_id', 'requirement','result_type', 'hours_required', 'auto_allocation']);//POCOR-8435
     }
 
-    public function onGetCode(Event $event, Entity $entity)
+    public function onGetCode(EventInterface $event, Entity $entity)
     {
         return $entity->education_subject->code;
     }
 
-    public function onGetEducationGradeId(Event $event, Entity $entity)
+    public function onGetEducationGradeId(EventInterface $event, Entity $entity)
     {
         return $entity->education_grade->code_name;
     }
 
-    public function onGetEducationProgrammeId(Event $event, Entity $entity)
+    public function onGetEducationProgrammeId(EventInterface $event, Entity $entity)
     {
         return $entity->education_grade->education_programme->cycle_programme_name;
     }
 
-    public function onGetEducationLevelId(Event $event, Entity $entity)
+    public function onGetEducationLevelId(EventInterface $event, Entity $entity)
     {
         return $entity->education_grade->education_programme->education_cycle->education_level->system_level_name;
     }
 
-    public function onGetAutoAllocation(Event $event, Entity $entity)
+    public function onGetAutoAllocation(EventInterface $event, Entity $entity)
     {
         // return $entity->auto_allocation == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>'; // if wanted to displayed the tick and cross
         return $this->autoAllocationOptions[$entity->auto_allocation];
     }
 
-    public function onUpdateFieldCode(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldCode(EventInterface $event, array $attr, $action, ServerRequest $request){
         if ($action == 'edit') {
             $subjectCode = '';
             if ($attr['entity']->has('education_subject')) {
@@ -347,7 +347,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldEducationSubjectId(EventInterface $event, array $attr, $action, ServerRequest $request){
         if ($action == 'edit') {
             $subjectId = $attr['entity']->education_subject_id;
             $subjectName = '';
@@ -398,7 +398,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'edit') {
                 $gradeId = $attr['entity']->education_grade_id;
@@ -421,7 +421,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationProgrammeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'edit') {
@@ -442,7 +442,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEducationLevelId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationLevelId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'edit') {
@@ -463,7 +463,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldAutoAllocation(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldAutoAllocation(EventInterface $event, array $attr, $action, ServerRequest $request){
         // setting the tooltip message
         $tooltipMessage = $this->getMessage($this->getAlias().'.tooltip_message');
         $attr['attr']['label']['escape'] = false; //disable the htmlentities (on LabelWidget) so can show html on label.
@@ -478,7 +478,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         // populate 'to be deleted' field
         $subject = $this->EducationSubjects->get($entity->education_subject_id);
@@ -487,7 +487,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $gradeId = $entity->education_grade_id;
         $subjectId = $entity->education_subject_id;
 
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
         $associatedInstitutionSubjectsCount = $InstitutionSubjects->find()
             ->matching('ClassSubjects.InstitutionClasses.ClassGrades')
             ->where([
@@ -497,7 +497,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
             ->count();
         $extra['associatedRecords'][] = ['model' => 'InstitutionSubjects', 'count' => $associatedInstitutionSubjectsCount];
 
-        $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $SubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
         $associatedSubjectStudentsCount = $SubjectStudents->find()
             ->matching('InstitutionClasses.ClassGrades')
             ->where([
@@ -508,7 +508,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $extra['associatedRecords'][] = ['model' => 'InstitutionSubjectStudents', 'count' => $associatedSubjectStudentsCount];
 
         //check textbook
-        $Textbooks = TableRegistry::get('Textbook.Textbooks');
+        $Textbooks = TableRegistry::getTableLocator()->get('Textbook.Textbooks');
         $associatedTextbooksCount = $Textbooks->find()
             ->where([
                 $Textbooks->aliasField('education_subject_id') => $subjectId,
@@ -522,7 +522,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
     {
         $serverRequest = $this->request;
         // Academic period filter
-        $EducationSystems = TableRegistry::get('Education.EducationSystems');
+        $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationGrades->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? $serverRequest->getQuery('academic_period_id') : $this->EducationGrades->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
@@ -577,7 +577,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         return $tooltipMessage;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true) {
         if ($field == 'name') {
             return __('Name');
         }elseif ($field == 'code') {
@@ -609,13 +609,13 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
@@ -628,14 +628,14 @@ class EducationGradesSubjectsTable extends ControllerActionTable
      * as a dropdown (select) input. The options available in the dropdown are 
      * defined as "Compulsory" and "Elective".
      * 
-     * @param Event $event The event object that triggered this method.
+     * @param EventInterface $event The event object that triggered this method.
      * @param array $attr An array containing the attributes of the field being modified.
      * @param string $action The action being performed (e.g., add, edit).
      * @param ServerRequest $request The HTTP request object containing context for the action.
      * 
      * @return array The modified attributes array with dropdown type and options for the "requirement" field.
      */
-    public function onUpdateFieldRequirement(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldRequirement(EventInterface $event, array $attr, $action, ServerRequest $request){
        
         $options = ['Compulsory','Elective']; 
         $optionsAssoc = array_combine($options, $options);
@@ -652,14 +652,14 @@ class EducationGradesSubjectsTable extends ControllerActionTable
      * as a dropdown (select) input. The options available in the dropdown are 
      * defined as "Assessments" and "Outcomes".
      * 
-     * @param Event $event The event object that triggered this method.
+     * @param EventInterface $event The event object that triggered this method.
      * @param array $attr An array containing the attributes of the field being modified.
      * @param string $action The action being performed (e.g., add, edit).
      * @param ServerRequest $request The HTTP request object containing context for the action.
      * 
      * @return array The modified attributes array with dropdown type and options for the "result type" field.
      */
-    public function onUpdateFieldResultType(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldResultType(EventInterface $event, array $attr, $action, ServerRequest $request){
 
         $options = ['Assessments','Outcomes']; 
         $optionsAssoc = array_combine($options, $options);

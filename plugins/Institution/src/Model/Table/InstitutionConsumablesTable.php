@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 
 // POCOR-8873
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -61,7 +61,7 @@ class InstitutionConsumablesTable extends ControllerActionTable
             ->allowEmpty('bin_no');
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $binNo = $entity->bin_no;
         $institutionId = $entity->institution_id ?? $this->getInstitutionID();
@@ -83,13 +83,13 @@ class InstitutionConsumablesTable extends ControllerActionTable
     }
 
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
@@ -119,7 +119,7 @@ class InstitutionConsumablesTable extends ControllerActionTable
         $this->controller->set('selectedAction', 'Overview');
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         
         if ($field == 'item_type_id') {
@@ -147,7 +147,7 @@ class InstitutionConsumablesTable extends ControllerActionTable
     }
 
     //POCOR-8979 start
-    public function onGetBalance(Event $event, Entity $entity)
+    public function onGetBalance(EventInterface $event, Entity $entity)
     {
         $content = "";
         $InstitutionConsumableTransactions = TableRegistry::getTableLocator()->get('Institution.InstitutionConsumableTransactions');
@@ -166,7 +166,7 @@ class InstitutionConsumablesTable extends ControllerActionTable
     }
     //POCOR-8979 end
 
-    public function onUpdateFieldItemTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldItemTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {  
         if ($action == 'add' || $action == 'edit') {
             $attr['onChangeReload'] = 'StockUnitId';
@@ -175,12 +175,12 @@ class InstitutionConsumablesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStockUnitId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStockUnitId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $request = $this->request;
 
         if ($action == 'add' || $action == 'edit') {
-            $ItemTypes = TableRegistry::get('FieldOption.ItemTypes');
+            $ItemTypes = TableRegistry::getTableLocator()->get('FieldOption.ItemTypes');
             $itemTypeId = !is_null($request->getData($this->aliasField('item_type_id'))) ? $request->getData($this->aliasField('item_type_id')) : 0;
 
             if ($itemTypeId != 0) {

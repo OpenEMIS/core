@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
@@ -76,7 +76,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		]);
 	}
 
-	public function beforeAction(Event $event, ArrayObject $extra) {
+	public function beforeAction(EventInterface $event, ArrayObject $extra) {
 		$this->field('type', [
 			'visible' => true,
 			'options' => $this->getSelectOptions('Staff.position_types'),
@@ -106,7 +106,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		$this->field('security_role_id', ['after' => 'staff_position_categories_id', 'options' => $extra['roleList']]);
 	}
 
-	public function indexBeforeAction(Event $event, ArrayObject $extra) {
+	public function indexBeforeAction(EventInterface $event, ArrayObject $extra) {
 		if ($this->Session->check('StaffPositionTitles.error')) {
 			$this->Alert->error($this->Session->read('StaffPositionTitles.error'), ['reset' => true]);
 			$this->Session->delete('StaffPositionTitles.error');
@@ -117,12 +117,12 @@ class StaffPositionTitlesTable extends ControllerActionTable
         $this->field('file_name',['visible'=>false]);//POCOR-7758
 	}
 
-	public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+	public function addOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
 	{
 		$entity->position_grade_selection = self::SELECT_POSITION_GRADES;
 	}
 
-	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
 	{
 		$this->field('file_name', ['visible' => false]);//POCOR-7758
 		$this->field('file_content', ['attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);//POCOR-7758
@@ -130,7 +130,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		$this->setupFields($entity);
 	}
 
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+	public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
 	{
 		// POCOR-8777
 		$requestDataArray = $requestData->getArrayCopy();
@@ -143,7 +143,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	}
 
 
-	public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+	public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
 	{
 		$isSelectAll = $this->checkIsSelectAll($entity);
 
@@ -154,7 +154,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		}
 	}
 
-	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+	public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra) {
 
 		$this->field('file_name', ['visible' => false]);//POCOR-7758
 		$this->field('file_content', ['attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);//POCOR-7758
@@ -177,14 +177,14 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		}
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
 	{
 		$this->field('file_name', ['visible' => false]);//POCOR-7758
 		$this->field('file_content', ['attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);//POCOR-7758
 		$this->setupFields($entity);
 	}
 
-	public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
 	{
 		$query->contain(['PositionGrades']);
 	}
@@ -196,7 +196,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
      * @ticket POCOR-6950
      */
 // // POCOR-8128
-//	public function onUpdateFieldStaffPositionCategoriesId(Event $event, array $attr, $action, ServerRequest $request)
+//	public function onUpdateFieldStaffPositionCategoriesId(EventInterface $event, array $attr, $action, ServerRequest $request)
 //	{
 //		$request = $this->request;
 //        if ($action == 'add' || $action == 'edit') {
@@ -206,7 +206,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 //        		$attr['default'] = $selectedLevel;
 //        	}else if($action == 'edit'){//POCOR-7292 starts
 //        		$typeId= $this->paramsDecode($request->getAttribute('params')['pass'][1]);
-//        		$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+//        		$StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
 //        		$Options = $StaffPositionTitles
 //					            ->find()
 //					            ->where([$StaffPositionTitles->aliasField('id') => $typeId['id']])
@@ -227,7 +227,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	public function getTypeOptions($request, $action = null)//POCOR-7292 add param $action
     {
 		$type = $this->request->getData('StaffPositionTitles')['type'];
-		$StaffPositionCategories = TableRegistry::get('Staff.StaffPositionCategories');
+		$StaffPositionCategories = TableRegistry::getTableLocator()->get('Staff.StaffPositionCategories');
 
 		// POCOR-8777
 		$whereCondition = is_null($type) ? [$StaffPositionCategories->aliasField('type') . ' IS NULL'] : [$StaffPositionCategories->aliasField('type') => $type];
@@ -235,7 +235,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
         //POCOR-7292 starts
         if($action == 'edit'){
     		$StaffPositionTitlesPass= $this->paramsDecode($this->request->getAttribute('params')['pass'][1]);
-    		$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+    		$StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
     		$Options = $StaffPositionTitles
 				->find()
 				->where([$StaffPositionTitles->aliasField('id') => $StaffPositionTitlesPass['id']])
@@ -251,7 +251,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
          return compact('levelOptions', 'selectedLevel');
     }
 
-	public function onUpdateFieldPositionGradeSelection(Event $event, array $attr, $action, ServerRequest $request)
+	public function onUpdateFieldPositionGradeSelection(EventInterface $event, array $attr, $action, ServerRequest $request)
 	{
 		if ($action == 'add' || $action == 'edit') {
 			$attr['options'] = $this->positionGradeSelection;
@@ -261,11 +261,11 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		return $attr;
 	}
 
-	public function onUpdateFieldPositionGrades(Event $event, array $attr, $action, ServerRequest $request)
+	public function onUpdateFieldPositionGrades(EventInterface $event, array $attr, $action, ServerRequest $request)
 	{
 		$requestData = $this->request->getData();
 		$entity = $attr['entity'];
-		$staffPositionGradeOptions = TableRegistry::get('Institution.StaffPositionGrades')->getList()->toArray();
+		$staffPositionGradeOptions = TableRegistry::getTableLocator()->get('Institution.StaffPositionGrades')->getList()->toArray();
 
 		$positionGradeSelection = null;
 		if (isset($requestData[$this->getAlias()]['position_grade_selection'])) {
@@ -306,12 +306,12 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
 	}
 
-    public function onGetPositionGrades(Event $event, Entity $entity)
+    public function onGetPositionGrades(EventInterface $event, Entity $entity)
     {
         $isSelectAll = $this->checkIsSelectAll($entity);
 
         if ($this->action == 'view' && $isSelectAll) {
-            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionGrades');
+            $StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionGrades');
             $list = $StaffPositionTitles
                 ->find('list')
                 ->find('order')
@@ -320,7 +320,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
             return (!empty($list))? implode(', ', $list) : ' ';
         }
     }
-    public function onGetType(Event $event, Entity $entity)
+    public function onGetType(EventInterface $event, Entity $entity)
 	{
 		$types = $this->getSelectOptions('Staff.position_types');
 		return array_key_exists($entity->type, $types) ? $types[$entity->type] : $entity->type;
@@ -333,9 +333,9 @@ class StaffPositionTitlesTable extends ControllerActionTable
      * @ticket POCOR-6950
      */
 
-	public function onGetStaffPositionCategoriesId(Event $event, Entity $entity)
+	public function onGetStaffPositionCategoriesId(EventInterface $event, Entity $entity)
 	{
-		$StaffPositionCategories = TableRegistry::get('Staff.StaffPositionCategories');
+		$StaffPositionCategories = TableRegistry::getTableLocator()->get('Staff.StaffPositionCategories');
             $list = $StaffPositionCategories
                 ->find('list')
                 ->find('order')
@@ -345,7 +345,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
             return (!empty($list))? implode(', ', $list) : ' ';
 	}
 
-	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+	public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
 	{
 		$this->setAllPositionGrades($entity);
 
@@ -361,7 +361,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	private function setAllPositionGrades($entity)
 	{
 		if ($entity->has('position_grade_selection') && $entity->position_grade_selection == self::SELECT_ALL_POSITION_GRADES) {
-			$StaffPositionTitlesGrades = TableRegistry::get('Institution.StaffPositionTitlesGrades');
+			$StaffPositionTitlesGrades = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitlesGrades');
 			$entityId = $entity->id;
 
 			$data = [
@@ -380,7 +380,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
     public function checkIsSelectAll($entity)
     {
-        $StaffPositionTitlesGrades = TableRegistry::get('Institution.StaffPositionTitlesGrades');
+        $StaffPositionTitlesGrades = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitlesGrades');
 
         $isSelectAll = $StaffPositionTitlesGrades
             ->find()
@@ -413,7 +413,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	}
 
 	public function checkIfRunning($titleId) {
-		$SystemProcesses = TableRegistry::get('SystemProcesses');
+		$SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
 		$runningProcess = $SystemProcesses->getRunningProcesses('Institution.StaffPositionTitles');
 		foreach ($runningProcess as $process) {
 			$param = json_decode($process['params']);
@@ -425,7 +425,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	}
 
 	public function checkIfError($titleId) {
-		$SystemProcesses = TableRegistry::get('SystemProcesses');
+		$SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
 		$runningProcess = $SystemProcesses->getErrorProcesses('Institution.StaffPositionTitles');
 		foreach ($runningProcess as $process) {
 			$param = json_decode($process['params']);
@@ -442,7 +442,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		return $events;
 	}
 
-	public function shellRestartUpdateRole(Event $event, $systemProcessId, $executedCount, $params) {
+	public function shellRestartUpdateRole(EventInterface $event, $systemProcessId, $executedCount, $params) {
 		$decodedParam = json_decode($params);
 		$newRoleId = $decodedParam->newRoleId;
 		$titleId = $decodedParam->titleId;
@@ -455,8 +455,8 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	}
 
 	public function securityRolesUpdates($newRoleId, $titleId) {
-		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
-		$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+		$SecurityGroupUsersTable = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+		$InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
 
 		while (true) {
 			$subQuery = $InstitutionStaffTable->find()
@@ -593,19 +593,19 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	}
 
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+	public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':

@@ -30,8 +30,8 @@ class ShiftShell extends Shell
         $arr=[];
         $canCopy = false;
         $data=[];
-        $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
-        $InstitutionShifts1 = TableRegistry::get('Institution.InstitutionShifts');
+        $InstitutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
+        $InstitutionShifts1 = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
         $count = $InstitutionShifts->find()->where([$InstitutionShifts->aliasField('academic_period_id') => $copyTo])->count();
         // can copy if no shifts created in current acedemic period before
         if ($count == 0) {
@@ -46,7 +46,7 @@ class ShiftShell extends Shell
         }
         elseif($count>0){
              // can copy if some shifts are present in copy to academic period
-            $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+            $InstitutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
             $copiedRecords = $InstitutionShifts->find()
                                 ->innerJoin(
                                     ['InstitutionShifts1' => 'institution_shifts'],
@@ -92,8 +92,8 @@ class ShiftShell extends Shell
         try {
            
             $connection = ConnectionManager::get('default');
-            $Institutions = TableRegistry::get('Institution.Institutions');
-            $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+            $InstitutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
             $connection->query("SET FOREIGN_KEY_CHECKS=0"); 
             if(!empty($data)){
                 $connection->query("INSERT INTO `institution_shifts` (

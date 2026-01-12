@@ -16,7 +16,7 @@ class EducationGrade extends Entity
 		if ($this->has('education_programme')) {
 			$name = $this->education_programme->name . ' - ' . $this->name;
 		} else {
-			$table = TableRegistry::get('Education.EducationProgrammes');
+			$table = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
 			$id = $this->education_programme_id;
 			try {
 				$name = $table->get($id)->name . ' - ' . $this->name;
@@ -33,7 +33,7 @@ class EducationGrade extends Entity
 		if ($this->has('education_programme')) {
 			$name = $this->education_programme->name;
 		} else {
-			$table = TableRegistry::get('Education.EducationProgrammes');
+			$table = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
 			$id = $this->education_programme_id;
 			$name = $table->get($id)->name;
 		}
@@ -45,7 +45,7 @@ class EducationGrade extends Entity
 		if ($this->has('education_programme')) {
 			$name = $this->education_programme->order;
 		} else {
-			$table = TableRegistry::get('Education.EducationProgrammes');
+			$table = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
 			$id = $this->education_programme_id;
 			$name = $table->get($id)->order . ' - ' . $this->name;			
 		}

@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use App\Model\Table\ControllerActionTable;
 
@@ -57,7 +57,7 @@ class StudentCompetencyCommentsTable extends ControllerActionTable
         $this->addBehavior('Institution.InstitutionTab');
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         // set breadcrumbs
         $session = $this->request->getSession();
@@ -92,7 +92,7 @@ class StudentCompetencyCommentsTable extends ControllerActionTable
         $this->field('institution_course_id', ['visible' => false]);//POCOR-6863
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // set up tabs
         $tabElements = $this->controller->getCompetencyTabElements();
@@ -104,7 +104,7 @@ class StudentCompetencyCommentsTable extends ControllerActionTable
         }
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain(['AcademicPeriods'])
@@ -115,7 +115,7 @@ class StudentCompetencyCommentsTable extends ControllerActionTable
             ]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'name') {
             return __('Class Name');
@@ -124,10 +124,10 @@ class StudentCompetencyCommentsTable extends ControllerActionTable
         }
     }
 
-    public function onGetCompetencyTemplate(Event $event, Entity $entity)
+    public function onGetCompetencyTemplate(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
-            $CompetencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
+            $CompetencyTemplates = TableRegistry::getTableLocator()->get('Competency.CompetencyTemplates');
             $competencyEntity = $CompetencyTemplates->find()
                 ->where([
                     $CompetencyTemplates->aliasField('id') => $this->competencyTemplateId,
@@ -138,13 +138,13 @@ class StudentCompetencyCommentsTable extends ControllerActionTable
         }
     }
 
-    public function onGetCustomStudentsElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomStudentsElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         $tableHeaders = [__('OpenEMIS ID'), __('Student Name'), __('Student Status')];
         $tableCells = [];
         $colOffset = 3; // 0 -> OpenEMIS ID, 1 -> Student Name, 2 -> Student Status
 
-        $CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
+        $CompetencyPeriods = TableRegistry::getTableLocator()->get('Competency.CompetencyPeriods');
         $competencyPeriodEntity = $CompetencyPeriods->find()
             ->where([
                 $CompetencyPeriods->aliasField('academic_period_id') => $this->academicPeriodId,
@@ -156,8 +156,8 @@ class StudentCompetencyCommentsTable extends ControllerActionTable
         }
 
         if (!is_null($this->classId)) {
-            $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-            $PeriodComments = TableRegistry::get('Institution.InstitutionCompetencyPeriodComments');
+            $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+            $PeriodComments = TableRegistry::getTableLocator()->get('Institution.InstitutionCompetencyPeriodComments');
             $Users = $ClassStudents->Users;
             $StudentStatuses = $ClassStudents->StudentStatuses;
 

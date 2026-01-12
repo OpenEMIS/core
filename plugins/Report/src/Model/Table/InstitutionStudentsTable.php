@@ -5,7 +5,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\AppTable;
@@ -35,7 +35,7 @@ class InstitutionStudentsTable extends AppTable
         $this->statuses = $this->StudentStatuses->findCodeList();
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),
@@ -46,14 +46,14 @@ class InstitutionStudentsTable extends AppTable
     }
 
     // Thed-to-do: We should write data patch to delete orphan institution student records instead of auto delete from this report
-    // public function onExcelBeforeWrite(Event $event, ArrayObject $settings, $rowProcessed, $percentCount) {
+    // public function onExcelBeforeWrite(EventInterface $event, ArrayObject $settings, $rowProcessed, $percentCount) {
     //     if (empty($settings['entity']->user)) {
     //         $entity = $settings['entity'];
     //         return $this->delete($entity);
     //     }
     // }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         // Setting request data and modifying fetch condition
         $requestData = json_decode($settings['process']['params']);
@@ -61,7 +61,7 @@ class InstitutionStudentsTable extends AppTable
         $educationProgrammeId = $requestData->education_programme_id;
         $statusId = $requestData->status;
         //POCOR-8416[START]
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
         //POCOR-8416[END]
         $educationlevelId = $requestData->education_level_id;
@@ -462,7 +462,7 @@ class InstitutionStudentsTable extends AppTable
         });
     }
 
-    public function onExcelRenderAge(Event $event, Entity $entity, $attr)
+    public function onExcelRenderAge(EventInterface $event, Entity $entity, $attr)
     {
         $age = '';
         if ($entity->has('date_of_birth') && !empty($entity->date_of_birth)) {
@@ -473,7 +473,7 @@ class InstitutionStudentsTable extends AppTable
         return $age;
     }
     //POCOR-8768 starts
-    public function onExcelRenderDateOfBirth(Event $event, Entity $entity, $attr)
+    public function onExcelRenderDateOfBirth(EventInterface $event, Entity $entity, $attr)
     {
         $dateOfBirth = '';
         if ($entity->has('date_of_birth') && !empty($entity->date_of_birth)) {
@@ -483,7 +483,7 @@ class InstitutionStudentsTable extends AppTable
     }
     //POCOR-8768 ends
     //POCOR-9302 start
-    public function onExcelGetStartDate(Event $event, Entity $entity)
+    public function onExcelGetStartDate(EventInterface $event, Entity $entity)
     {
 
         $startDate = '';
@@ -493,7 +493,7 @@ class InstitutionStudentsTable extends AppTable
         return $startDate;
     }
     //POCOR-9302 end
-    public function onExcelGetEndDate(Event $event, Entity $entity)
+    public function onExcelGetEndDate(EventInterface $event, Entity $entity)
     {
 
         $endDate = '';
@@ -503,7 +503,7 @@ class InstitutionStudentsTable extends AppTable
         return $endDate;
     }
 
-    public function onExcelRenderOpenemisNo(Event $event, Entity $entity, $attr)
+    public function onExcelRenderOpenemisNo(EventInterface $event, Entity $entity, $attr)
     {
         $student_id = $entity->student_id;
         $StudentGuardians = TableRegistry::getTableLocator()->get('Student.StudentGuardians');
@@ -548,7 +548,7 @@ class InstitutionStudentsTable extends AppTable
     }
 
 
-    public function onExcelRenderMotherOpenemisNo(Event $event, Entity $entity, $attr)
+    public function onExcelRenderMotherOpenemisNo(EventInterface $event, Entity $entity, $attr)
     {
         $entity->mother_openemis_no = '';
         if (!empty($entity->MotherData[0])) {
@@ -558,7 +558,7 @@ class InstitutionStudentsTable extends AppTable
         return $entity->mother_openemis_no;
     }
 
-    public function onExcelRenderMotherName(Event $event, Entity $entity, $attr)
+    public function onExcelRenderMotherName(EventInterface $event, Entity $entity, $attr)
     {
         $entity->mother_name = '';
         if (!empty($entity->MotherData[0])) {
@@ -568,7 +568,7 @@ class InstitutionStudentsTable extends AppTable
         return $entity->mother_name;
     }
 
-    public function onExcelRenderMotherContact(Event $event, Entity $entity, $attr)
+    public function onExcelRenderMotherContact(EventInterface $event, Entity $entity, $attr)
     {
         $UserContacts = TableRegistry::getTableLocator()->get('User.Contacts');
         $entity->mother_contact = '';
@@ -587,7 +587,7 @@ class InstitutionStudentsTable extends AppTable
         return $entity->mother_contact;
     }
 
-    public function onExcelRenderFatherOpenemisNo(Event $event, Entity $entity, $attr)
+    public function onExcelRenderFatherOpenemisNo(EventInterface $event, Entity $entity, $attr)
     {
         $entity->father_openemis_no = '';
         if (!empty($entity->FatherData[0])) {
@@ -597,7 +597,7 @@ class InstitutionStudentsTable extends AppTable
         return $entity->father_openemis_no;
     }
 
-    public function onExcelRenderFatherName(Event $event, Entity $entity, $attr)
+    public function onExcelRenderFatherName(EventInterface $event, Entity $entity, $attr)
     {
         $entity->father_name = '';
         if (!empty($entity->FatherData[0])) {
@@ -607,7 +607,7 @@ class InstitutionStudentsTable extends AppTable
         return $entity->father_name;
     }
 
-    public function onExcelRenderFatherContact(Event $event, Entity $entity, $attr)
+    public function onExcelRenderFatherContact(EventInterface $event, Entity $entity, $attr)
     {
         $UserContacts = TableRegistry::getTableLocator()->get('User.Contacts');
         $entity->father_contact = '';
@@ -626,7 +626,7 @@ class InstitutionStudentsTable extends AppTable
         return $entity->father_contact;
     }
 
-    public function onExcelRenderGuardianOpenemisNo(Event $event, Entity $entity, $attr)
+    public function onExcelRenderGuardianOpenemisNo(EventInterface $event, Entity $entity, $attr)
     {
         $entity->guardian_openemis_no = '';
         if (!empty($entity->GuardianData[0])) {
@@ -636,7 +636,7 @@ class InstitutionStudentsTable extends AppTable
         return $entity->guardian_openemis_no;
     }
 
-    public function onExcelRenderGuardianName(Event $event, Entity $entity, $attr)
+    public function onExcelRenderGuardianName(EventInterface $event, Entity $entity, $attr)
     {
         $entity->guardian_name = '';
         if (!empty($entity->GuardianData[0])) {
@@ -646,7 +646,7 @@ class InstitutionStudentsTable extends AppTable
         return $entity->guardian_name;
     }
 
-    public function onExcelRenderGuardianGender(Event $event, Entity $entity, $attr)
+    public function onExcelRenderGuardianGender(EventInterface $event, Entity $entity, $attr)
     {
         $Genders = TableRegistry::getTableLocator()->get('User.Genders');
         $entity->guardian_gender = '';
@@ -663,7 +663,7 @@ class InstitutionStudentsTable extends AppTable
         return $entity->guardian_gender;
     }
 
-    public function onExcelRenderGuardianDateOfBirth(Event $event, Entity $entity, $attr)
+    public function onExcelRenderGuardianDateOfBirth(EventInterface $event, Entity $entity, $attr)
     {
         $entity->guardian_date_of_birth = '';
         if (!empty($entity->GuardianData[0])) {
@@ -673,7 +673,7 @@ class InstitutionStudentsTable extends AppTable
         return $entity->guardian_date_of_birth;
     }
 
-    public function onExcelGetAllNationalities(Event $event, Entity $entity)
+    public function onExcelGetAllNationalities(EventInterface $event, Entity $entity)
     {
         $return = [];
         if ($entity->has('user')) {
@@ -691,7 +691,7 @@ class InstitutionStudentsTable extends AppTable
         return implode(', ', array_values($return));
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
 
         $requestData = json_decode($settings['process']['params']);

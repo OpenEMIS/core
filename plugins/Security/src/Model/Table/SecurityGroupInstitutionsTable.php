@@ -2,7 +2,7 @@
 namespace Security\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -33,11 +33,11 @@ class SecurityGroupInstitutionsTable extends AppTable {
         return $events;
     }
 
-	public function institutionAfterSave(Event $event, Entity $entity)
+	public function institutionAfterSave(EventInterface $event, Entity $entity)
     {
         if ($entity->isNew()) {
-        	$SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-        	$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+        	$SecurityInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
+        	$SecurityGroupAreas = TableRegistry::getTableLocator()->get('Security.SecurityGroupAreas');
         	if ($entity->institution_id['_ids']) {
 	            foreach ($entity->institution_id['_ids'] as $key => $value) {
 	                    $securityInstitution = $SecurityInstitutions->newEntity([

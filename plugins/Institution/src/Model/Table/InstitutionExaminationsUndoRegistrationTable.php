@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Http\ServerRequest;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Utility\Text;
 use Cake\I18n\Time;
@@ -56,12 +56,12 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'ExaminationStudents'];
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $toolbarButtons = $extra['toolbarButtons'];
         if (!is_null($toolbarButtons['back'])) {
@@ -84,7 +84,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request) {
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request) {
         if ($action == 'add') {
             $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             $attr['default'] = $selectedAcademicPeriod;
@@ -98,7 +98,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addOnChangeAcademicPeriodId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addOnChangeAcademicPeriodId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 
         if ($this->request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $data)) {
@@ -112,7 +112,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldExaminationId(EventInterface $event, array $attr, $action, $request) {
         $examinationOptions = [];
 
         if ($action == 'add') {
@@ -154,7 +154,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addOnChangeExaminationId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addOnChangeExaminationId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 
         if ($this->request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $data)) {
@@ -165,7 +165,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldExaminationEducationGrade(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldExaminationEducationGrade(EventInterface $event, array $attr, $action, $request) {
         $educationGrade = '';
         if ($action == 'add') {
             if (!empty($request->getData($this->getAlias())['examination_id'])) {
@@ -187,9 +187,9 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldInstitutionClassId(EventInterface $event, array $attr, $action, $request) {
         $classes = [];
-        $InstitutionClass = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClass = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         if ($action == 'add') {
             if (!empty($request->getData()[$this->getAlias()]['examination_id'])) {
                 $institutionId = $attr['entity']->institution_id;
@@ -214,7 +214,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStudentId(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldStudentId(EventInterface $event, array $attr, $action, $request) {
         $students = [];
 
         if ($action == 'add') {
@@ -222,10 +222,10 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                 $institutionId = $attr['entity']->institution_id;
                 $academicPeriodId = $request->getData()[$this->getAlias()]['academic_period_id'];
                 $institutionClassId = $request->getData()[$this->getAlias()]['institution_class_id'];
-                $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
+                $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->getIdByCode('CURRENT');
                 $examinationId = $request->getData()[$this->getAlias()]['examination_id'];
 
-                $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+                $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
                 $students = $ClassStudents->find()
                     ->matching('EducationGrades')
                     ->leftJoin(['InstitutionExaminationStudents' => 'examination_centres_examinations_students'], [
@@ -254,7 +254,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         } else if ($action == 'reconfirm') {
             $studentIds = $this->Session->read($this->getRegistryAlias().'.confirmStudent');
             if (!empty($studentIds)) {
-                $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+                $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
                 $students = $ClassStudents->find()
                     ->matching('EducationGrades')
                     ->innerJoin(['InstitutionExaminationStudents' => 'examination_centres_examinations_students'], [
@@ -276,13 +276,13 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $requestData[$this->getAlias()]['student_id'] = 0;
         $requestData[$this->getAlias()]['examination_centre_id'] = 0;
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons) {
         switch ($this->action) {
             case 'add':
                 $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Next');
@@ -301,7 +301,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         }
     }
 
-    public function reconfirm(Event $event, ArrayObject $extra)
+    public function reconfirm(EventInterface $event, ArrayObject $extra)
     {
         $extra['redirect'] = [
             'plugin' => 'Institution',
@@ -329,13 +329,13 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                         ->where([$this->aliasField('student_id').' IN ' => $students, $this->aliasField('examination_id') => $examinationId])
                         ->toArray();
 
-                    $ExamCentreStudents = TableRegistry::get('Examination.ExamCentreStudents');
+                    $ExamCentreStudents = TableRegistry::getTableLocator()->get('Examination.ExamCentreStudents');
                     foreach ($deleteStudentEntity as $deleteStudent) {
                         $ExamCentreStudents->delete($deleteStudent);
                     }
 
                     // event to delete all associated records for student
-                    $listeners[] = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
+                    $listeners[] = TableRegistry::getTableLocator()->get('Examination.ExaminationCentresExaminationsStudents');
                     $this->dispatchEventToModels('Model.Examinations.afterUnregister', [$students, $examinationId, $examinationCentres], $this, $listeners);
 
                     $this->Alert->success($this->aliasField('success'));
@@ -352,7 +352,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         return $entity;
     }
 
-    public function addBeforeSave(Event $event, $entity, $requestData, $extra)
+    public function addBeforeSave(EventInterface $event, $entity, $requestData, $extra)
     {
         $process = function ($model, $entity) {
             return false;

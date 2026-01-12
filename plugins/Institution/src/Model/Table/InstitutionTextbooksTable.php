@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Utility\Security;
 
@@ -76,16 +76,16 @@ class InstitutionTextbooksTable extends ControllerActionTable
         return $events;
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields) {
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields) {
         $searchableFields[] = 'textbook_id';
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->institutionId = $this->getInstitutionID();
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $request = $this->request;
         $searchKey = $this->getSearchKey();
@@ -278,7 +278,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $searchKey = $this->getSearchKey();
 
@@ -321,14 +321,14 @@ class InstitutionTextbooksTable extends ControllerActionTable
         }
     }
 
-    public function onGetOpenEmisNo(Event $event, Entity $entity)
+    public function onGetOpenEmisNo(EventInterface $event, Entity $entity)
     {
         if (($this->action == 'index')) {
             return $entity->user->openemis_no;
         }
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'Users',
@@ -337,7 +337,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(EventInterface $event, Entity $entity)
     {
 
         $this->setupFields($entity);
@@ -351,7 +351,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         }
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         $textbookCode = '';
         if ($data[$this->getAlias()]['textbook_id'] && $data[$this->getAlias()]['academic_period_id']) {
@@ -426,7 +426,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         return $process;
     }
 
-    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->security_user_id) { //retrieve student and staff POCOR-7362
 
@@ -442,7 +442,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         }
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($this->action == 'add') {
             $this->field('allocated_to', ['entity' => $entity]);
@@ -461,7 +461,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->field('student_status', ['visible' => false]);
     }
 
-    public function onUpdateFieldAllocatedTo(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAllocatedTo(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
         $studentOptions = [];
@@ -558,13 +558,13 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
     // POCOR-7362 ends
 
-    public function onUpdateFieldAvailableStudent(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAvailableStudent(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['type'] = 'hidden';
         $attr['attr']['value'] = implode(',', array_keys($this->availableStudent));
         return $attr;
     }
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $entity->name = $entity->code;
 
@@ -580,35 +580,35 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $extra['associatedRecords'][] = ['model' => 'InstitutionTextbooks', 'count' => $PreviousInstitutionTextbooks];
     }
 
-    public function onGetAcademicPeriodId(Event $event, Entity $entity)
+    public function onGetAcademicPeriodId(EventInterface $event, Entity $entity)
     {
         if (($this->action == 'view') || ($this->action == 'index')) {
             return $entity->academic_period->name;
         }
     }
 
-    public function onGetEducationLevelId(Event $event, Entity $entity)
+    public function onGetEducationLevelId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->education_subject->education_grades[0]->education_programme->education_cycle->education_level->system_level_name;
         }
     }
 
-    public function onGetEducationProgrammeId(Event $event, Entity $entity)
+    public function onGetEducationProgrammeId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->education_subject->education_grades[0]->education_programme->cycle_programme_name;
         }
     }
 
-    public function onGetEducationGradeId(Event $event, Entity $entity)
+    public function onGetEducationGradeId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->education_subject->education_grades[0]->name;
         }
     }
 
-    public function onGetInstitutionClassId(Event $event, Entity $entity)
+    public function onGetInstitutionClassId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             // pr($entity);
@@ -618,19 +618,19 @@ class InstitutionTextbooksTable extends ControllerActionTable
         }
     }
 
-    public function onGetEducationSubjectId(Event $event, Entity $entity)
+    public function onGetEducationSubjectId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->education_subject->code_name;
         }
     }
 
-    public function onGetTextbookId(Event $event, Entity $entity)
+    public function onGetTextbookId(EventInterface $event, Entity $entity)
     {
         return $entity->textbook->code_title;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
@@ -649,7 +649,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnChangeAcademicPeriod(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         // $requestProgramme = $request->getQuery('programme');
@@ -694,7 +694,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->request = $request->withQueryParams($queryParams);
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
@@ -735,7 +735,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnChangeEducationGrade(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         // $requestClass = $request->getQuery('class');
@@ -774,7 +774,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->request = $request->withQueryParams($queryParams);       
     }
 
-    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationSubjectId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
@@ -800,7 +800,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeEducationSubject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnChangeEducationSubject(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         // $requestClass = $request->getQuery('class');
@@ -842,7 +842,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         
     }
 
-    public function onUpdateFieldTextbookId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTextbookId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
@@ -874,7 +874,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeTextbook(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnChangeTextbook(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         // $requestClass = $request->getQuery('class');
@@ -921,7 +921,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         }
     }
 
-    public function onGetCustomTextbooksStudentsElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomTextbooksStudentsElement(EventInterface $event, $action, $entity, $attr, $options=[])
     {
         // $tableHeaders = [$this->getMessage($this->aliasField('trainer_type')), $this->getMessage($this->aliasField('trainer'))];
         $header[] = [
@@ -1031,7 +1031,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         }
     }
 
-    public function addEditOnAddTextbooksStudents(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnAddTextbooksStudents(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $alias = $this->getAlias();
         $fieldKey = 'textbooks_students';
@@ -1078,7 +1078,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
     }
 
-    public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldSecurityUserId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
 
@@ -1189,7 +1189,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         return compact('periodOptions', 'selectedPeriod');
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'code':

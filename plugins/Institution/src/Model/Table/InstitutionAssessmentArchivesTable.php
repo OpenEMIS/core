@@ -11,7 +11,7 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
@@ -60,7 +60,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         if (!$relatedField) {
             return "";
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
             return $related->toArray();
@@ -73,14 +73,14 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
 
 
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         $user = self::getRelatedRecord('security_users', $entity->student_id);
 
         return $user['openemis_no'];
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('class_number', ['visible' => false]);
         $this->field('staff_id', ['visible' => false]);
@@ -112,7 +112,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -128,7 +128,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -138,7 +138,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         list($query, $extra) = $this->setBasicQuery($query, $extra);
         list($query, $extra) = $this->setAccessControlledQuery($query, $extra);
 
-        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
         $selectedAcademicPeriod = !is_null(
             $this->request->getQuery('academic_period_id'))
             ?
@@ -183,7 +183,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
 
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'name') {
             return __('Class Name');
@@ -194,13 +194,13 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         }
     }
 
-    public function onGetEducationGrade(Event $event, Entity $entity)
+    public function onGetEducationGrade(EventInterface $event, Entity $entity)
     {
         $EducationGrade = self::getRelatedRecord('education_grades', $entity->education_grade_id);
         return $EducationGrade['programme_grade_name'];
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (isset($buttons['view']['url'])) {
@@ -225,10 +225,10 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
 
     /**
      * Function to get Total Male Students on index page - POCOR-6183
-     * @param Entity $entity and Event $event
+     * @param Entity $entity and EventInterface $event
      * @return int
      */
-    public function onGetCapacity(Event $event, Entity $entity)
+    public function onGetCapacity(EventInterface $event, Entity $entity)
     {
         //POCOR-7339-HINDOL check query string
         $whereArchive = [
@@ -256,7 +256,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
+        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $remoteConnection,
         ]);
         $distinctResults = $tableArchived->find('all')
@@ -269,10 +269,10 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
     }
     /**
      * Function to get class name on index page - POCOR-6183
-     * @param Entity $entity and Event $event
+     * @param Entity $entity and EventInterface $event
      * @return string
      */
-    public function onGetName(Event $event, Entity $entity)
+    public function onGetName(EventInterface $event, Entity $entity)
     {
         $class = self::getRelatedRecord('institution_classes', $entity->institution_class_id);
         return $class['name'];
@@ -286,10 +286,10 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
      */
     private function setBasicQuery(Query $query, ArrayObject $extra)
     {
-        $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-        $Assessments = TableRegistry::get('Assessment.Assessments');
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $ClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
+        $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
 
         $extra['options']['order'] = [
             $EducationProgrammes->aliasField('order') => 'asc',
@@ -349,7 +349,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         $institutionId = $this->getQueryString('institution_id');
         $session = $this->request->getSession();
         //$institutionId = $session->read('Institution.Institutions.id');
-        $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $ClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
         $userId = $session->read('Auth.User.id');
         $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
         if (!$AccessControl->isAdmin()) {
@@ -415,7 +415,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
     {
     // Academic Periods filter
 
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $institutionId = $this->institutionId;
         $academicPeriodStudentAttendanceArray = ArchiveConnections::getArchiveYears('assessment_item_results',
             ['institution_id' => $institutionId]);
@@ -442,7 +442,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
      */
     private function setAssessmentOptions($selectedAcademicPeriod, $selectedAssessment = -1)
     {
-        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
         $assessment_array = [0];
         $institutionId = $this->institutionId;
         $whereArchive = ['academic_period_id' => $selectedAcademicPeriod,

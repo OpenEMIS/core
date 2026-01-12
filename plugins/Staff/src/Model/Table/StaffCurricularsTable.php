@@ -2,7 +2,7 @@
 namespace Staff\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -33,7 +33,7 @@ class StaffCurricularsTable extends ControllerActionTable {
         return $events;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
        if ($field == 'total_male_students') {
             return  __('Male Students');
@@ -66,7 +66,7 @@ class StaffCurricularsTable extends ControllerActionTable {
         }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(EventInterface $event, ArrayObject $extra) {
         //POCOR-8379 Starts use if condition only
         if($this->controller->getName() != 'Profiles'){
             //POCOR-8056
@@ -86,7 +86,7 @@ class StaffCurricularsTable extends ControllerActionTable {
     }
     
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //POCOR-8028 removed academic period
         $staffId = $this->getStaffID();
@@ -97,8 +97,8 @@ class StaffCurricularsTable extends ControllerActionTable {
         }
 
         $institutionId = $this->getInstitutionID();
-        $InstitutionCurriculars = TableRegistry::get('Institution.InstitutionCurriculars');
-        $curricular_types = TableRegistry::get('FieldOption.CurricularTypes');
+        $InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
+        $curricular_types = TableRegistry::getTableLocator()->get('FieldOption.CurricularTypes');
         if ($this->controller->getName() == 'Profiles') {
             $where = [$this->aliasField('staff_id') => $staffId];
         } else {
@@ -140,29 +140,29 @@ class StaffCurricularsTable extends ControllerActionTable {
 
     }
 
-    public function onGetCategory(Event $event, Entity $entity)
+    public function onGetCategory(EventInterface $event, Entity $entity)
     {
         
         return $entity['institution_curricular']['category'] ? __('Curricular') : __('Extracurricular');
     }
 
-    public function onGetTotalMaleStudents(Event $event, Entity $entity)
+    public function onGetTotalMaleStudents(EventInterface $event, Entity $entity)
     {
         return $entity['institution_curricular']['total_male_students'];
     }
 
-    public function onGetTotalFemaleStudents(Event $event, Entity $entity)
+    public function onGetTotalFemaleStudents(EventInterface $event, Entity $entity)
     {
         return $entity['institution_curricular']['total_female_students'];
     }
 
-    public function onGetTotalStudents(Event $event, Entity $entity)
+    public function onGetTotalStudents(EventInterface $event, Entity $entity)
     {
         $total = $entity->total_male_students + $entity->total_female_students ;
         return $total;
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('category', ['visible' => true]);
         $this->field('total_male_students', ['visible' => true]);

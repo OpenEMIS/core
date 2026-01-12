@@ -3,7 +3,7 @@ namespace FieldOption\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;

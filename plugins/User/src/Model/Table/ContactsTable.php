@@ -8,7 +8,7 @@ use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Http\ServerRequest;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
@@ -44,11 +44,11 @@ class ContactsTable extends ControllerActionTable
         $this->addBehavior('User.SetupTab');
         $this->addBehavior('User.UserTab');
 
-        $this->ContactOptionsTable = TableRegistry::get('User.ContactOptions');
+        $this->ContactOptionsTable = TableRegistry::getTableLocator()->get('User.ContactOptions');
         $this->contactOptionsArray = $this->ContactOptionsTable->findCodeList();
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $this->field('description', []);
@@ -135,7 +135,7 @@ class ContactsTable extends ControllerActionTable
 
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // POCOR-8080-1
         // they need entity to set value in EDIT or restart
@@ -143,7 +143,7 @@ class ContactsTable extends ControllerActionTable
         $this->field('contact_type_id', ['type' => 'select', 'entity' => $entity]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         if ($this->request->getParam('controller') == 'Staff') {
             $userId = $this->getUserID();
@@ -153,7 +153,7 @@ class ContactsTable extends ControllerActionTable
         $this->fields['preferred']['options'] = $this->getSelectOptions('general.yesno');
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //to check if contact is new for its type. if yes, then set as preferred
         if ($entity->isNew()) {
@@ -171,7 +171,7 @@ class ContactsTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //if preferred set, then unset other preferred for the same contact option
         // POCOR-8080-1
@@ -202,7 +202,7 @@ class ContactsTable extends ControllerActionTable
                 $entity->set('contact_option_code', $key);
                 //update information on security user table
                 $listeners = [
-                    TableRegistry::get('User.Users')
+                    TableRegistry::getTableLocator()->get('User.Users')
                 ];
 
                 $this->dispatchEventToModels('Model.UserContacts.onChange', [$entity], $this, $listeners);
@@ -212,7 +212,7 @@ class ContactsTable extends ControllerActionTable
         }
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $contactOption = $this->getContactOptionID($entity);
         if ($entity->preferred == 1) { //if the preferred contact deleted
@@ -237,7 +237,7 @@ class ContactsTable extends ControllerActionTable
                 if ($contactOption == $this->contactOptionsArray['EMA']) { //if the deleted contact option is email
                     //update information on security user table
                     $listeners = [
-                        TableRegistry::get('User.Users')
+                        TableRegistry::getTableLocator()->get('User.Users')
                     ];
                     $this->dispatchEventToModels('Model.UserContacts.onChange', [$query], $this, $listeners);
                 }
@@ -387,7 +387,7 @@ class ContactsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function onUpdateFieldContactOptionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldContactOptionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         // POCOR-8080-1 start
@@ -429,7 +429,7 @@ class ContactsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldContactTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldContactTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         // POCOR-8080-1 start
@@ -477,7 +477,7 @@ class ContactsTable extends ControllerActionTable
     }
 
     public
-    function addEditOnChangeContactOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    function addEditOnChangeContactOption(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         // POCOR-8080-1 start
         $alias = $this->getAlias();
@@ -496,7 +496,7 @@ class ContactsTable extends ControllerActionTable
 
     /*POCOR-6267 Starts*/
     public
-    function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $userId = $this->getUserID();
         $query->where([$this->aliasField('security_user_id IS') => $userId])->orderDesc('preferred');
@@ -507,7 +507,7 @@ class ContactsTable extends ControllerActionTable
     /*POCOR-6267 Ends*/
 
     public
-    function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }

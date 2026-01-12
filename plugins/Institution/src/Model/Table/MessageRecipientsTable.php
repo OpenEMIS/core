@@ -7,7 +7,7 @@ use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -37,7 +37,7 @@ class MessageRecipientsTable extends ControllerActionTable{
         $this->belongsTo('Messaging', ['className' => 'Institution.Messaging','foreignKey'=>"message_id"]);
         $this->belongsTo('SecurityUsers', ['className' => 'User.Users', 'foreignKey' => "recipient_id"]);
     }
-    public function indexAfterAction(Event $event, Query $query)
+    public function indexAfterAction(EventInterface $event, Query $query)
     {
         $tabElements = $this->controller->getMessagingTabElements();
         $this->controller->set('tabElements', $tabElements);
@@ -50,7 +50,7 @@ class MessageRecipientsTable extends ControllerActionTable{
         $this->field('mobile_number');
 
     }
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $messageId = $this->Session->read('messageId');
         $query->contain('SecurityUsers');

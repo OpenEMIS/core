@@ -1,0 +1,6 @@
+QUICK FIX - Copy and paste this entire block into your terminal:
+
+cd /Users/ehteramahmad/Desktop/openemis_version_upgrade_new_bkp_instituion_working_copy/pocor-openemis-core && rm -rf vendor/cakephp/cakephp && cd vendor/korditpteltd/iksso-cakephp-sso 2>/dev/null && git reset --hard HEAD 2>/dev/null; cd ../../.. && cd vendor/korditpteltd/ikrst-cakephp-restful 2>/dev/null && git reset --hard HEAD 2>/dev/null; cd ../../.. && /opt/homebrew/Cellar/php@8.1/*/bin/php /opt/homebrew/bin/composer clear-cache && /opt/homebrew/Cellar/php@8.1/*/bin/php /opt/homebrew/bin/composer require cakephp/cakephp:^5.2.0 --no-interaction --update-with-dependencies --prefer-dist && /opt/homebrew/Cellar/php@8.1/*/bin/php /opt/homebrew/bin/composer show cakephp/cakephp | grep -E "^name|^versions"
+
+
+

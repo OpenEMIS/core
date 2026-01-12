@@ -56,7 +56,7 @@ class InstitutionStudentIndexesControllerTest extends AppTestCase
         $this->setInstitutionSession(1);
         $this->setStudentSession(1039);
 
-        $table = TableRegistry::get('Institution.InstitutionStudentIndexes');
+        $table = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentIndexes');
         $urlParams = $table->paramsEncode(['id' => 32]);
 
         $this->get('/Institutions/InstitutionStudentIndexes/view/' . $urlParams . '?index_id=20&academic_period_id=25');
@@ -73,8 +73,8 @@ class InstitutionStudentIndexesControllerTest extends AppTestCase
         $userId = 2;
         $academicPeriodId = 10;
 
-        $Indexes = TableRegistry::get('Indexes.Indexes');
-        $InstitutionStudentIndexes = TableRegistry::get('Institution.InstitutionStudentIndexes');
+        $Indexes = TableRegistry::getTableLocator()->get('Indexes.Indexes');
+        $InstitutionStudentIndexes = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentIndexes');
 
         $url = [
             'plugin' => 'Indexes',

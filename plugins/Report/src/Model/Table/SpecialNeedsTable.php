@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 
 use App\Model\Table\AppTable;
@@ -37,7 +37,7 @@ class SpecialNeedsTable extends AppTable
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),
@@ -47,27 +47,27 @@ class SpecialNeedsTable extends AppTable
         ];
     }
 
-    // public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    // public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     // {
     //     // Setting request data and modifying fetch condition
     //     $requestData = json_decode($settings['process']['params']);
     //     $academic_period_id = $requestData->academic_period_id;
     //     $institution_id = $requestData->institution_id;
     //     $areaId = $requestData->area_education_id;
-    //     $Users = TableRegistry::get('User.Users');
-    //     $Genders = TableRegistry::get('User.Genders');
-    //     $SpecialNeedsAssessments = TableRegistry::get('SpecialNeeds.SpecialNeedsAssessments');
-    //     $SpecialNeedsServices = TableRegistry::get('SpecialNeeds.SpecialNeedsServices');
-    //     $SpecialNeedsTypes = TableRegistry::get('SpecialNeeds.SpecialNeedsTypes');
-    //     $SpecialNeedsDifficulties = TableRegistry::get('SpecialNeeds.SpecialNeedsDifficulties');
-    //     $SpecialNeedsServiceTypes = TableRegistry::get('SpecialNeeds.SpecialNeedsServiceTypes');
-    //     $StudentGuardians = TableRegistry::get('Student.StudentGuardians');
-    //     $InstitutionStudentRisks = TableRegistry::get('Institution.InstitutionStudentRisks');
-    //     $GuardianRelations = TableRegistry::get('Student.GuardianRelations');
-    //     $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-    //     $UserIdentities = TableRegistry::get('User.Identities');
-    //     $UserContact = TableRegistry::get('user_contacts');
-    //     $UserSpecialNeedsReferrals = TableRegistry::get('user_special_needs_referrals');
+    //     $Users = TableRegistry::getTableLocator()->get('User.Users');
+    //     $Genders = TableRegistry::getTableLocator()->get('User.Genders');
+    //     $SpecialNeedsAssessments = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsAssessments');
+    //     $SpecialNeedsServices = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsServices');
+    //     $SpecialNeedsTypes = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsTypes');
+    //     $SpecialNeedsDifficulties = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsDifficulties');
+    //     $SpecialNeedsServiceTypes = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsServiceTypes');
+    //     $StudentGuardians = TableRegistry::getTableLocator()->get('Student.StudentGuardians');
+    //     $InstitutionStudentRisks = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentRisks');
+    //     $GuardianRelations = TableRegistry::getTableLocator()->get('Student.GuardianRelations');
+    //     $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+    //     $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+    //     $UserContact = TableRegistry::getTableLocator()->get('user_contacts');
+    //     $UserSpecialNeedsReferrals = TableRegistry::getTableLocator()->get('user_special_needs_referrals');
     //     if ($institution_id != 0) {
     //         $where = [$this->aliasField('institution_id') => $institution_id];
     //     } else {
@@ -205,12 +205,12 @@ class SpecialNeedsTable extends AppTable
     //         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
     //             return $results->map(function ($row) {
                     
-    //                 $UserSpecialNeedsReferrals = TableRegistry::get('user_special_needs_referrals');
+    //                 $UserSpecialNeedsReferrals = TableRegistry::getTableLocator()->get('user_special_needs_referrals');
     //                 $staff_user_data = $UserSpecialNeedsReferrals
     //                             ->find()
     //                             ->where([$UserSpecialNeedsReferrals->alias('security_user_id')=>$row->referred_user_id])
     //                             ->toArray();
-    //                 $security_users = TableRegistry::get('security_users');
+    //                 $security_users = TableRegistry::getTableLocator()->get('security_users');
     //                 foreach($staff_user_data AS $staff_user){
     //                     $val = $security_users
     //                                 ->find()
@@ -229,7 +229,7 @@ class SpecialNeedsTable extends AppTable
     //                 $row['staff_name'] = $implodedArr;
 
 
-    //                 $UserContact = TableRegistry::get('user_contacts');
+    //                 $UserContact = TableRegistry::getTableLocator()->get('user_contacts');
 
     //                 foreach($staff_user_data AS $staff_user){
     //                     $val = $UserContact
@@ -257,7 +257,7 @@ class SpecialNeedsTable extends AppTable
     // }
 
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         // Setting request data and modifying fetch condition
         $requestData = json_decode($settings['process']['params']);
@@ -266,26 +266,26 @@ class SpecialNeedsTable extends AppTable
         $areaId = $requestData->area_education_id;
         $report_for = $requestData->special_needs_feature;
 
-        $UserSpecialNeedsReferrals = TableRegistry::get('user_special_needs_referrals');
-        $security_users = TableRegistry::get('security_users');
-        $special_needs_referrer_types = TableRegistry::get('special_needs_referrer_types');
-        $special_need_types = TableRegistry::get('special_need_types');
-        $user_special_needs_assessments = TableRegistry::get('user_special_needs_assessments');
-        $special_need_difficulties = TableRegistry::get('special_need_difficulties');
-        $academic_periods = TableRegistry::get('academic_periods');
-        $user_special_needs_services = TableRegistry::get('user_special_needs_services');
-        $special_needs_service_types = TableRegistry::get('special_needs_service_types');
-        $special_needs_service_classification = TableRegistry::get('special_needs_service_classification');
-        $user_special_needs_devices = TableRegistry::get('user_special_needs_devices');
-        $special_needs_device_types = TableRegistry::get('special_needs_device_types');
-        $special_needs_plan_types = TableRegistry::get('special_needs_plan_types');
-        $user_special_needs_plans = TableRegistry::get('user_special_needs_plans');
-        $special_needs_diagnostics_types = TableRegistry::get('special_needs_diagnostics_types');
-        $user_special_needs_diagnostics = TableRegistry::get('user_special_needs_diagnostics');
-        $special_needs_diagnostics_degree = TableRegistry::get('special_needs_diagnostics_degree');
-        $identity_types = TableRegistry::get('identity_types');
+        $UserSpecialNeedsReferrals = TableRegistry::getTableLocator()->get('user_special_needs_referrals');
+        $security_users = TableRegistry::getTableLocator()->get('security_users');
+        $special_needs_referrer_types = TableRegistry::getTableLocator()->get('special_needs_referrer_types');
+        $special_need_types = TableRegistry::getTableLocator()->get('special_need_types');
+        $user_special_needs_assessments = TableRegistry::getTableLocator()->get('user_special_needs_assessments');
+        $special_need_difficulties = TableRegistry::getTableLocator()->get('special_need_difficulties');
+        $academic_periods = TableRegistry::getTableLocator()->get('academic_periods');
+        $user_special_needs_services = TableRegistry::getTableLocator()->get('user_special_needs_services');
+        $special_needs_service_types = TableRegistry::getTableLocator()->get('special_needs_service_types');
+        $special_needs_service_classification = TableRegistry::getTableLocator()->get('special_needs_service_classification');
+        $user_special_needs_devices = TableRegistry::getTableLocator()->get('user_special_needs_devices');
+        $special_needs_device_types = TableRegistry::getTableLocator()->get('special_needs_device_types');
+        $special_needs_plan_types = TableRegistry::getTableLocator()->get('special_needs_plan_types');
+        $user_special_needs_plans = TableRegistry::getTableLocator()->get('user_special_needs_plans');
+        $special_needs_diagnostics_types = TableRegistry::getTableLocator()->get('special_needs_diagnostics_types');
+        $user_special_needs_diagnostics = TableRegistry::getTableLocator()->get('user_special_needs_diagnostics');
+        $special_needs_diagnostics_degree = TableRegistry::getTableLocator()->get('special_needs_diagnostics_degree');
+        $identity_types = TableRegistry::getTableLocator()->get('identity_types');
 
-        $genders = TableRegistry::get('genders');
+        $genders = TableRegistry::getTableLocator()->get('genders');
         
         $where = [];
         if ($institution_id > 0) {
@@ -385,7 +385,7 @@ class SpecialNeedsTable extends AppTable
 
         if($report_for == 'assessments'){
             
-            $AcademicPeriods = TableRegistry::get('academic_periods');
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('academic_periods');
             $periodsOptions = $AcademicPeriods
                         ->find('all')
                         ->where([
@@ -759,7 +759,7 @@ class SpecialNeedsTable extends AppTable
 
 
 
-    public function onExcelGetAge(Event $event, Entity $entity)
+    public function onExcelGetAge(EventInterface $event, Entity $entity)
     {
         $age = '';
         if (!empty($entity->start_year) && !empty($entity->date_of_birth)) {
@@ -771,7 +771,7 @@ class SpecialNeedsTable extends AppTable
         return $age;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields) 
     {
         $report_for = json_decode($settings['process']['params'], true)['special_needs_feature'];
         
@@ -1308,7 +1308,7 @@ class SpecialNeedsTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    // public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    // public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields) 
     // {
     //     $newFields[] = [
     //         'key' => 'Institutions.code',

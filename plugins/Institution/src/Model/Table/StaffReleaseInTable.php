@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -77,14 +77,14 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         return $events;
     }
 
-    public function onSetSchoolBasedConditions(Event $event, Entity $entity, $where)
+    public function onSetSchoolBasedConditions(EventInterface $event, Entity $entity, $where)
     {
         $where[$this->aliasField('new_institution_id')] = $entity->id;
         unset($where[$this->aliasField('institution_id')]);
         return $where;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         parent::beforeAction($event, $extra);
 
@@ -93,7 +93,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         $this->field('transfer_type', ['type' => 'hidden']);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('previous_staff_type_id', ['type' => 'hidden']);
         $this->field('previous_FTE', ['type' => 'hidden']);
@@ -111,7 +111,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         $this->setFieldOrder(['status_id', 'assignee_id', 'staff_id', 'previous_institution_id', 'new_start_date', 'new_institution_position_id']);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $getInstitutionId = $this->getQueryString('institution_id');
         $requestInstitutionId = $this->request->getParam('institutionId');
@@ -137,7 +137,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('previous_information_header', ['type' => 'section', 'title' => __('Release From')]);
         $this->field('staff_id', ['entity' => $entity]);
@@ -161,7 +161,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         $this->field('comment');
     }
 
-    public function onGetStaffId(Event $event, Entity $entity)
+    public function onGetStaffId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('user')) {
@@ -170,7 +170,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         return $value;
     }
 
-    public function onGetFTE(Event $event, Entity $entity)
+    public function onGetFTE(EventInterface $event, Entity $entity)
     {
         $value = '';
         if (!empty($entity->previous_FTE)) {
@@ -179,7 +179,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         return $value;
     }
 
-    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $requestData = $this->request->getData();
         if (!empty($entity->previous_institution_staff_id)) {
@@ -193,12 +193,12 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         $this->request = $this->request->withData($this->getAlias(), $requestData);
     }
 
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['Users', 'NewInstitutions', 'PreviousInstitutions']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('previous_information_header', ['type' => 'section', 'title' => __('Release From')]);
         $this->field('staff_id', ['type' => 'readonly', 'entity' => $entity]);
@@ -228,7 +228,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         $this->field('comment');
     }
 
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStaffId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -239,7 +239,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         }
     }
 
-    public function onUpdateFieldPreviousInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldPreviousInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -250,7 +250,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         }
     }
 
-    public function onUpdateFieldNewInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldNewInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -261,7 +261,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         }
     }
 
-    public function onUpdateFieldPreviousStaffTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldPreviousStaffTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -274,7 +274,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         return $attr;
     }
 
-    public function onUpdateFieldPreviousEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldPreviousEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -287,7 +287,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         }
     }
 
-    public function onUpdateFieldPreviousStartDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldPreviousStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -300,7 +300,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         }
     }
 
-    public function onUpdateFieldNewStartDate(Event $event, array $attr, $action, ServerRequest $request) 
+    public function onUpdateFieldNewStartDate(EventInterface $event, array $attr, $action, ServerRequest $request) 
     {
         if (in_array($action, ['edit', 'approve'])) {
             $attr['null'] = false;
@@ -308,7 +308,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         }
     }
 
-    public function onUpdateFieldNewEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldNewEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];   
@@ -317,13 +317,13 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         }
     }
 
-    public function onUpdateFieldNewInstitutionPositionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldNewInstitutionPositionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $options = [];
             $requestData = $request->getData();
             if (!empty($requestData[$this->getAlias()]['new_institution_id']) && !empty($requestData[$this->getAlias()]['new_FTE']) && !empty($requestData[$this->getAlias()]['new_start_date'])) {
-                $PositionsTable = TableRegistry::get('Institution.InstitutionPositions');
+                $PositionsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
 
                 $userId = $this->Auth->user('id');
                 $isAdmin = $this->AccessControl->isAdmin();
@@ -343,7 +343,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         }
     }
 
-    public function onUpdateFieldNewFTE(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldNewFTE(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             // need to specify select option for approve action
@@ -353,7 +353,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         }
     }
 
-    public function onUpdateFieldNewStaffTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldNewStaffTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $options = $this->NewStaffTypes->find('list')->toArray();
@@ -364,7 +364,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         }
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         // redirect to view page of record after save
         $extra['redirect'][0] = 'view';

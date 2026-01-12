@@ -4,7 +4,7 @@ namespace MoodleApi\Model\Table;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 
 use App\Model\Table\ControllerActionTable;

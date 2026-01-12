@@ -2,7 +2,7 @@
 
 namespace Profile\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
@@ -14,8 +14,8 @@ class CommentsController extends PageController
     {
         parent::initialize();
 
-        $this->loadModel('Security.Users');
-        $this->loadModel('User.Comments');
+        $this->Users = $this->fetchTable('Security.Users');
+        $this->Comments = $this->fetchTable('User.Comments');
         $this->loadComponent('Page.Page');
         $this->Page->loadElementsFromTable($this->Comments);
     }
@@ -184,7 +184,7 @@ class CommentsController extends PageController
                 $page->addCrumb('Comments');
             }
         } else if ($plugin == 'Guardian') {
-            $User = TableRegistry::get('User.Users');
+            $User = TableRegistry::getTableLocator()->get('User.Users');
             $session = $this->request->getSession();
             $institutionName = $session->read('Institution.Institutions.name');
             $institutionId = $this->getInstitutionId();

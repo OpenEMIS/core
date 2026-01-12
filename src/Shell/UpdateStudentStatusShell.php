@@ -4,7 +4,7 @@ namespace App\Shell;
 use Exception;
 use Cake\I18n\Time;
 use Cake\Console\Shell;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\ConnectionManager;
 
@@ -13,16 +13,16 @@ class UpdateStudentStatusShell extends Shell
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('Institution.StudentWithdraw');
-        $this->loadModel('Institution.Students');
-        $this->loadModel('SystemProcesses');
+        $this->StudentWithdraw = $this->fetchTable('Institution.StudentWithdraw');
+        $this->Students = $this->fetchTable('Institution.Students');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
     }
 
     public function main(): void
     {
         if (!empty($this->args[0])) {
             $exit = false;
-            $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
+            $StudentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
             $this->out('Initializing Update of Student Withdrawal Status ('.Time::now().')');
 
             $systemProcessId = $this->SystemProcesses->addProcess('UpdateStudentStatus', getmypid(), $this->args[0]);

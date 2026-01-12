@@ -8,7 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Routing\Router;
 
 use App\Model\Table\AppTable;
@@ -69,7 +69,7 @@ class InfrastructureNeedsTable extends ControllerActionTable
         return $events;
     }
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'download' || $action == 'image') {
             // check for the user permission to download here
@@ -119,14 +119,14 @@ class InfrastructureNeedsTable extends ControllerActionTable
     }
 
     /* POCOR-6150 */
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $modelAlias = 'InfrastructureNeeds';
         $userType = '';
         $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('code');
         $this->field('name');
@@ -193,7 +193,7 @@ class InfrastructureNeedsTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
             case 'code':
@@ -231,7 +231,7 @@ class InfrastructureNeedsTable extends ControllerActionTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // determine if download button is shown
         $showFunc = function () use ($entity) {
@@ -249,7 +249,7 @@ class InfrastructureNeedsTable extends ControllerActionTable
         $this->setupFields($entity, $extra);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity, $extra);
     }
@@ -290,7 +290,7 @@ class InfrastructureNeedsTable extends ControllerActionTable
         // $this->setFieldOrder(['academic_period_id', 'date_of_visit', 'quality_visit_type_id', 'comment', 'file_name', 'file_content']);
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('code', ['attr' => ['label' => __('Code')]]);
         $this->field('name', ['attr' => ['label' => __('Name')]]);
@@ -310,7 +310,7 @@ class InfrastructureNeedsTable extends ControllerActionTable
         $this->field('file_content', ['before' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         //$institutionId  = $session->read('Institution.Institutions.id');
@@ -350,7 +350,7 @@ class InfrastructureNeedsTable extends ControllerActionTable
     // Projects segemnt for view
     private function getAssociatedRecords($entity)
     {
-        $InfrastructureProjectsNeeds = TableRegistry::get('Institution.InfrastructureProjectsNeeds'); 
+        $InfrastructureProjectsNeeds = TableRegistry::getTableLocator()->get('Institution.InfrastructureProjectsNeeds'); 
 
         $projectData = $InfrastructureProjectsNeeds->find()
             ->contain(['InfrastructureProjects'])
@@ -386,7 +386,7 @@ class InfrastructureNeedsTable extends ControllerActionTable
     }
     // Projects segemnt for view
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->getSession();
         //$institutionId  = $session->read('Institution.Institutions.id');
@@ -424,7 +424,7 @@ class InfrastructureNeedsTable extends ControllerActionTable
         });  
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
             'key'   => 'InfrastructureNeeds.code',

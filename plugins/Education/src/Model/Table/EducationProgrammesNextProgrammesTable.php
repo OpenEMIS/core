@@ -5,7 +5,7 @@ use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class EducationProgrammesNextProgrammesTable extends AppTable {
 	public function initialize(array $config): void {

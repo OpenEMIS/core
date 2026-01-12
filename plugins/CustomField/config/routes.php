@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/CustomFields', ['plugin' => 'CustomField'], function ($routes) {
-	Router::connect('/CustomFields', ['plugin' => 'CustomField', 'controller' => 'CustomFields']);
-	Router::connect('/CustomFields/:action/*', ['plugin' => 'CustomField', 'controller' => 'CustomFields']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/CustomFields', ['plugin' => 'CustomField'], function (RouteBuilder $routes) {
+    	$routes->connect('/CustomFields', ['plugin' => 'CustomField', 'controller' => 'CustomFields']);
+    	$routes->connect('/CustomFields/:action/*', ['plugin' => 'CustomField', 'controller' => 'CustomFields']);
+    });
+};

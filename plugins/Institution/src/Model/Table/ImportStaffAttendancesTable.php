@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\I18n\Date;
 use Cake\Collection\Collection;
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
@@ -67,14 +67,14 @@ class ImportStaffAttendancesTable extends AppTable
     }
 
     // POCOR-8944 start
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona): void
+    public function onGetBreadcrumb(EventInterface $event, Request $request, Component $Navigation, $persona): void
     {
         $crumbTitle = $this->getHeader($this->getAlias());
         // POCOR-8944 end
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         $tempRow['staff_id'] = $tempRow['openemis_no'];
         $tempRow['date'] = DateTime::createFromFormat('d/m/Y', $tempRow['date']);
@@ -86,7 +86,7 @@ class ImportStaffAttendancesTable extends AppTable
         return true;
     }
 
-    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulateUsersData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
         $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel); // POCOR-8944
         $modelData = $lookedUpTable->find('all')->select(['id', 'first_name', 'middle_name', 'third_name', 'last_name', $lookupColumn]);
 
@@ -123,7 +123,7 @@ class ImportStaffAttendancesTable extends AppTable
 
 
 
-    public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateAcademicPeriodsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel); // POCOR-8944
         $modelData = $lookedUpTable->getAvailableAcademicPeriods(false);
@@ -148,7 +148,7 @@ class ImportStaffAttendancesTable extends AppTable
     }
 
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData): void // POCOR-8944
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $requestData): void // POCOR-8944
     {
         $process = function($model, $entity) use ($requestData) {
             $errors = $entity->errors();

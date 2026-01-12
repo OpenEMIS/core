@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 
 class PagesBehavior extends Behavior
@@ -29,13 +29,13 @@ class PagesBehavior extends Behavior
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
 
         if ($model->action == 'index') {
             $selectedModule = !is_null($model->request->getQuery('module')) ? $model->request->getQuery('module') : '-1';
-            $CustomModules = TableRegistry::get('CustomField.CustomModules');
+            $CustomModules = TableRegistry::getTableLocator()->get('CustomField.CustomModules');
             $moduleDetails = $CustomModules->find('list', [
                     'keyField' => 'id',
                     'valueField' => 'code'

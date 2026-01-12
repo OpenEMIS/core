@@ -5,13 +5,12 @@ namespace Profile\Controller;
 use ArrayObject;
 
 use Cake\Datasource\Exception\RecordNotFoundException;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Routing\Router;
-use Cake\Event\EventInterface;
 use App\Controller\AppController;
 
 class ProfilesController extends AppController
@@ -39,7 +38,7 @@ class ProfilesController extends AppController
     {
         parent::initialize();
 
-        $this->loadModel('Configuration.ConfigItems');
+        $this->ConfigItems = $this->fetchTable('Configuration.ConfigItems');
 
         // get the configuration for change_password
         $changePasswordAllowed = $this->ConfigItems->value('change_password');
@@ -486,7 +485,7 @@ class ProfilesController extends AppController
     }
 
     //POCOR-5312 starts
-    /*public function isActionIgnored(Event $event, $action)
+    /*public function isActionIgnored(EventInterface $event, $action)
     {
         return true;
     }*/
@@ -645,7 +644,7 @@ class ProfilesController extends AppController
             $id = $session->read('Staff.Staff.id');
         }
         if (!empty($id)) {
-            $Users = TableRegistry::get('Security.Users');
+            $Users = TableRegistry::getTableLocator()->get('Security.Users');
             $entity = $Users->get($id);
             $name = $entity->name;
             $crumb = Inflector::humanize(Inflector::underscore($modelAlias));
@@ -659,7 +658,7 @@ class ProfilesController extends AppController
     }
 
     public
-    function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $session = $this->request->getSession();
 
@@ -855,7 +854,7 @@ class ProfilesController extends AppController
     }
 
     public
-    function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
+    function beforePaginate(EventInterface $event, Table $model, Query $query, ArrayObject $options)
     {
         $loginUserId = $this->Auth->user('id'); // login user
         $action = $this->request->getParam('action');
@@ -919,7 +918,7 @@ class ProfilesController extends AppController
     }
 
     public
-    function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
+    function beforeQuery(EventInterface $event, Table $model, Query $query, ArrayObject $extra)
     {
         $this->beforePaginate($event, $model, $query, $extra);
     }
@@ -955,8 +954,8 @@ class ProfilesController extends AppController
         //POCOR-8334-END
         $userID = $params['id'];
         // $this->ControllerAction->model->action = $this->request->action;
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $currentPeriod = $AcademicPeriods->getCurrent();
         //POCOR-7733 start
         $session->write('AcademicPeriod.currentAcademicPeriod', $currentPeriod);
@@ -1114,7 +1113,7 @@ class ProfilesController extends AppController
             $userID,
             'user_demographics',
             'security_user_id');
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $enabledTypeList = $ConfigItem
             ->find()
             ->select(['name' => $ConfigItem->aliasField('name')])
@@ -1359,8 +1358,8 @@ class ProfilesController extends AppController
     {
         $userId = $this->Auth->user('id');
 
-        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 
         $InstitutionStaff = $InstitutionStaff
             ->find()
@@ -1395,14 +1394,14 @@ class ProfilesController extends AppController
 
         $selectedInstitutionOptions = $selectedInstitutionOptions->enableHydration(false)->toArray();
 
-        $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
+        $academicPeriodId = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')
             ->getCurrent();
-        $academicPeriodOptions = TableRegistry::get('AcademicPeriod.AcademicPeriods')
+        $academicPeriodOptions = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')
             ->getYearList();
 
-        $shiftOptions = TableRegistry::get('Schedule.ScheduleIntervals')
+        $shiftOptions = TableRegistry::getTableLocator()->get('Schedule.ScheduleIntervals')
             ->getStaffShiftOptions($academicPeriodId, false, $institutionId);
-        $intervals = TableRegistry::get('Schedule.ScheduleIntervals');
+        $intervals = TableRegistry::getTableLocator()->get('Schedule.ScheduleIntervals');
 
         $conditions = [
             $intervals->aliasField('academic_period_id') => $academicPeriodId,
@@ -1439,7 +1438,7 @@ class ProfilesController extends AppController
         $userId = $this->Auth->user('id');
 
         $InstitutionStudents =
-            TableRegistry::get('Institution.InstitutionStudents')
+            TableRegistry::getTableLocator()->get('Institution.InstitutionStudents')
                 ->find()
                 ->where([
                     'InstitutionStudents.student_id' => $userId
@@ -1448,11 +1447,11 @@ class ProfilesController extends AppController
                 ->first();
 
         $institutionId = $InstitutionStudents['institution_id'];
-        $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
+        $academicPeriodId = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')
             ->getCurrent();
 
         $InstitutionClassStudentsResult =
-            TableRegistry::get('Institution.InstitutionClassStudents')
+            TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents')
                 ->find()
                 ->where([
                     'academic_period_id' => $academicPeriodId,
@@ -1464,7 +1463,7 @@ class ProfilesController extends AppController
 
         $institutionClassId = $InstitutionClassStudentsResult['institution_class_id'];
         if ($institutionClassId !== null) {
-        $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables')
+        $ScheduleTimetables = TableRegistry::getTableLocator()->get('Schedule.ScheduleTimetables')
             ->find()
             ->where([
                 'academic_period_id' => $academicPeriodId,

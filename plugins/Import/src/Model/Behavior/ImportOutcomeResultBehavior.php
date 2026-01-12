@@ -3,7 +3,7 @@
 namespace Import\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Session;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -21,12 +21,12 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
 
     /**
      * Actual Import business logics reside in this function
-     * @param Event $event Event object
+     * @param EventInterface $event Event object
      * @param Entity $entity Entity object containing the uploaded file parameters
      * @param ArrayObject $data Event object
      * @return Response             Response object
      */
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
         /**
          * currently, extending the max execution time for individual scripts from the default of 30 seconds to 180 seconds
@@ -52,7 +52,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 return false;
             }
 
-            $systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
+            $systemDateFormat = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('date_format');
 
             $fileObj = $entity->select_file;
             $uploadedName = $fileObj['name'];
@@ -68,7 +68,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             $dataPassed = [];
             $extra = new ArrayObject(['lookup' => [], 'entityValidate' => true]);
 
-            $activeModel = TableRegistry::get($this->config('plugin') . '.' . $this->config('model'));
+            $activeModel = TableRegistry::getTableLocator()->get($this->config('plugin') . '.' . $this->config('model'));
             $activeModel->addBehavior('DefaultValidation');
 
             $maxRows = $this->config('max_rows');
@@ -80,14 +80,14 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 return false;
             }
 
-            $educationSubjectsTable = TableRegistry::get('Education.EducationSubjects');
+            $educationSubjectsTable = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
             $education_subject_id = $this->_table->request->query['education_subject'];
             $subjectName = $educationSubjectsTable->get($education_subject_id)->name;
 
             // check correct template
             $header = array($subjectName, 'Outcome -->');
             // POCOR- 7987 moved up
-            $outcomeTemplatesTable = TableRegistry::get('Outcome.OutcomeTemplates');
+            $outcomeTemplatesTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeTemplates');
             // calculate outcome criterias
             $template = $this->_table->request->query['outcome_template'];
 
@@ -100,8 +100,8 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
 
             //calculate number of student
             $classId = $this->_table->request->query['class'];
-            $institutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-            $studentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+            $institutionClassStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+            $studentStatusesTable = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
             $arrayStudent = $institutionClassStudentsTable->find()
                 ->matching('Users')
                 ->matching('InstitutionClasses')
@@ -115,7 +115,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 ])
                 ->toArray();
 
-            $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
+            $outcomeCriteriasTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
             $aryOutcomeCriteria = $outcomeCriteriasTable->find()
                 ->where([
                     $outcomeCriteriasTable->aliasField('education_subject_id') => $education_subject_id,
@@ -132,7 +132,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 $headerCriteriaId[] = $value->id;
             }
 
-            $institutionOutcomeSubjectCommentsTable = TableRegistry::get('Institution.InstitutionOutcomeSubjectComments');
+            $institutionOutcomeSubjectCommentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionOutcomeSubjectComments');
 
             if (!$this->checkCorrectTemplate(2, $headerCriteriaId, $sheet, $totalColumns, 1)) {
                 $entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
@@ -152,7 +152,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 // do the save for the comment
                 $student = $sheet->getCellByColumnAndRow(0, $row);
                 $studentOpenEmisId = $student->getValue();
-                $UsersTable = TableRegistry::get('User.Users');
+                $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
 
                 $User = $UsersTable->find()
                     ->select(['id'])
@@ -385,7 +385,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
 
         $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) . ' ' . $dataSheetName);
 
-        $educationSubjectsTable = TableRegistry::get('Education.EducationSubjects');
+        $educationSubjectsTable = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
         $education_subject_id = $this->_table->request->query['education_subject'];
         $name = $educationSubjectsTable->get($education_subject_id)->name;
 
@@ -400,7 +400,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
 
         $template = $this->_table->request->query['outcome_template'];
         // POCOR- 7987:start
-        $outcomeTemplatesTable = TableRegistry::get('Outcome.OutcomeTemplates');
+        $outcomeTemplatesTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeTemplates');
         // calculate outcome criterias
 
         $educationGradeId = $outcomeTemplatesTable->find()
@@ -410,7 +410,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             ->extract('education_grade_id')
             ->first();
         // POCOR- 7987:end
-        $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
+        $outcomeCriteriasTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
         $arrayOutcomeCriterias = $outcomeCriteriasTable->find()
             ->where([
                 $outcomeCriteriasTable->aliasField('education_subject_id') => $education_subject_id,
@@ -433,8 +433,8 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         $activeSheet->getRowDimension(2)->setRowHeight($suggestedRowHeight);
 
         $classId = $this->_table->request->query['class'];
-        $institutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-        $studentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+        $institutionClassStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $studentStatusesTable = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $arrayStudent = $institutionClassStudentsTable->find()
             ->select([
                 $institutionClassStudentsTable->Users->aliasField('openemis_no'),
@@ -481,11 +481,11 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
 
     public function setCodesDataTemplate($objPHPExcel)
     {
-        $outcomeGradingOptionsTable = TableRegistry::get('Outcome.OutcomeGradingOptions');
+        $outcomeGradingOptionsTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeGradingOptions');
         $education_subject_id = $this->_table->request->query['education_subject'];
         $template = $this->_table->request->query['outcome_template'];
 
-        $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
+        $outcomeCriteriasTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
         $outcomeCriteriasArray = $outcomeCriteriasTable->find()
             ->where([
                 $outcomeCriteriasTable->aliasField('education_subject_id') => $education_subject_id,
@@ -494,8 +494,8 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             ->toArray();
 
         $classId = $this->_table->request->query['class'];
-        $institutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-        $studentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+        $institutionClassStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $studentStatusesTable = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $studentArray = $institutionClassStudentsTable->find()
             ->matching('Users')
             ->matching('InstitutionClasses')
@@ -512,7 +512,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             $sheet = $objPHPExcel->getSheet(0);
             $cell = $sheet->getCellByColumnAndRow($column, 1);
             $outcomeId = $cell->getValue();
-            $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
+            $outcomeCriteriasTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
             $outcomeGradingTypeId = $outcomeCriteriasTable->find()
                 ->where([
                     $outcomeCriteriasTable->aliasField('id') => $outcomeId,
@@ -576,7 +576,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         $cell = $sheet->getCellByColumnAndRow($numberColumn, $row);
         $gradeValue = $cell->getValue();
 
-        $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
+        $outcomeCriteriasTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
         $outcomeGradingTypeId = $outcomeCriteriasTable->find()
             ->where([
                 $outcomeCriteriasTable->aliasField('id') => $outcomeIdValue,
@@ -584,7 +584,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             ->extract('outcome_grading_type_id')
             ->first();
 
-        $usersTable = TableRegistry::get('User.Users');
+        $usersTable = TableRegistry::getTableLocator()->get('User.Users');
 
         $User = $usersTable->find()
             ->select(['id'])
@@ -593,7 +593,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             ])
             ->first();
 
-        $outcomeGradingOptionsTable = TableRegistry::get('Outcome.OutcomeGradingOptions');
+        $outcomeGradingOptionsTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeGradingOptions');
 
         $Grading = $outcomeGradingOptionsTable->find()
             ->select(['id'])

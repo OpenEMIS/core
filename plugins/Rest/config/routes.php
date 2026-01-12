@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Rest', ['plugin' => 'Rest'], function ($routes) {
-	Router::connect('/Rest', ['plugin' => 'Rest', 'controller' => 'Rest']);
-	Router::connect('/Rest/:action/*', ['plugin' => 'Rest', 'controller' => 'Rest']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/Rest', ['plugin' => 'Rest'], function (RouteBuilder $routes) {
+    	$routes->connect('/Rest', ['plugin' => 'Rest', 'controller' => 'Rest']);
+    	$routes->connect('/Rest/:action/*', ['plugin' => 'Rest', 'controller' => 'Rest']);
+    });
+};
