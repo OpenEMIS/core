@@ -15,6 +15,12 @@ $this->start('toolbar');
         ];
         echo $this->Html->link('<i class="fa kd-back"></i>', $backUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escape' => false, 'ng-show' => 'action == \'view\'']);
     ?>
+    <?php if ($_sync ?? false) : ?>
+        <!-- Show sync button when external data source is configured and user has permission -->
+        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Sync Results');?>" ng-show="action == 'view'" ng-click="ExaminationsResultsController.onSyncClick()">
+            <i class="fa fa-refresh"></i>
+        </button>
+    <?php endif; ?>
     <?php if ($_edit) : ?>
         <!-- Show buttons when action is view: -->
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view'" ng-click="ExaminationsResultsController.onEditClick()">
