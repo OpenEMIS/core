@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\I18n\Date;
 use Cake\I18n\Time;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -41,7 +41,7 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
         $this->toggle('search', false);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(EventInterface $event, ArrayObject $extra) {
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
         $this->field('created_user_id', ['visible' => false]);
@@ -74,11 +74,11 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
         // ];
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // Setup period options
-        $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionStaffAttendances = TableRegistry::getTableLocator()->get('Staff.InstitutionStaffAttendances');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
         if ($this->request->query('user_id') !== null) {
@@ -164,9 +164,9 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
             }
             $this->advancedSelectOptions($weekOptions, $selectedWeek);
                 $this->controller->set(compact('weekOptions', 'selectedWeek'));
-            $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
-            $StaffLeaveTypesTable = TableRegistry::get('Staff.StaffLeaveTypes');
-            $StaffUser = TableRegistry::get('User.Users');
+            $StaffLeaveTable = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
+            $StaffLeaveTypesTable = TableRegistry::getTableLocator()->get('Staff.StaffLeaveTypes');
+            $StaffUser = TableRegistry::getTableLocator()->get('User.Users');
             $query
             ->select([
                 'institution_id' => $this->aliasField('institution_id'),
@@ -206,7 +206,7 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
         }
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $data = $this->request->query;
         $academic_period_id = $data['academic_period_id'];
@@ -226,13 +226,13 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 
-                $UserData = TableRegistry::get('User.Users');
+                $UserData = TableRegistry::getTableLocator()->get('User.Users');
                 $UserDataRow = $UserData
                             ->find()
                             ->where([$UserData->alias('id')=>$row->staff_id])
                             ->first();
 
-                $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+                $StaffLeaveTable = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
                 $StaffLeaveTypes = $StaffLeaveTable
                     ->find()
                     ->matching('StaffLeaveTypes')
@@ -254,7 +254,7 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
         });
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
 
@@ -310,17 +310,17 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         return $entity->user->openemis_no;
     }
 
-    public function onGetInstitutionName(Event $event, Entity $entity)
+    public function onGetInstitutionName(EventInterface $event, Entity $entity)
     {
         return $entity->institution->name;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'institution_name') {
             return __('Institution');

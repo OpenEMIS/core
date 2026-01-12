@@ -87,7 +87,7 @@ class InstitutionStudentWithdrawRequestControllerTest extends AppTestCase
         ];
         $this->postData($testUrl, $data);
 
-        $table = TableRegistry::get('Institutions.institution_student_withdraw');
+        $table = TableRegistry::getTableLocator()->get('Institutions.institution_student_withdraw');
         $lastInsertedRecord = $table->find()
             ->where([$table->aliasField('student_id') => $data['WithdrawRequests']['student_id'],
                 $table->aliasField('institution_id') => $data['WithdrawRequests']['institution_id'],
@@ -142,7 +142,7 @@ class InstitutionStudentWithdrawRequestControllerTest extends AppTestCase
         ];
         $this->postData($testUrl, $data);
 
-        $table = TableRegistry::get('Institutions.institution_student_withdraw');
+        $table = TableRegistry::getTableLocator()->get('Institutions.institution_student_withdraw');
         $editedRecord = $table->find()
             ->where([$table->aliasField('id') => $data['WithdrawRequests']['id'],
                 $table->aliasField('effective_date') => $data['WithdrawRequests']['effective_date'],

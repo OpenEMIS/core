@@ -11,7 +11,7 @@ use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Chronos\Date;
 use Cake\Chronos\Chronos;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
 use Cake\Log\Log;
 
@@ -70,7 +70,7 @@ class VisitRequestsTable extends ControllerActionTable
             ->allowEmpty('file_content');
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('comment', ['visible' => false]);
         $this->field('file_name', ['visible' => false]);
@@ -99,7 +99,7 @@ class VisitRequestsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // determine if download button is shown
         $showFunc = function () use ($entity) {
@@ -115,12 +115,12 @@ class VisitRequestsTable extends ControllerActionTable
         $this->setupFields($entity, $extra);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity, $extra);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -146,7 +146,7 @@ class VisitRequestsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldDateOfVisit(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldDateOfVisit(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -161,7 +161,7 @@ class VisitRequestsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnChangeAcademicPeriod(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         unset($request->getQuery['academic_period_id']);
@@ -255,7 +255,7 @@ class VisitRequestsTable extends ControllerActionTable
     }
 
     // POCOR-6166
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         // POCOR-6166
         $category = $this->request->getQuery('category');
@@ -266,7 +266,7 @@ class VisitRequestsTable extends ControllerActionTable
         $jsonString = substr($requestData, 0, $endPosition + 1);
         $data = json_decode($jsonString, true);
         $institutionId = $data['institution_id'];
-        $assignees = TableRegistry::get('User.Users');
+        $assignees = TableRegistry::getTableLocator()->get('User.Users');
 		$query
 		->select(['assignee' => $assignees->find()->func()->concat([
             'first_name' => 'literal',
@@ -303,7 +303,7 @@ class VisitRequestsTable extends ControllerActionTable
         // POCOR-6166
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         // POCOR-6166
         $extraField[] = [
@@ -346,13 +346,13 @@ class VisitRequestsTable extends ControllerActionTable
     // POCOR-6166
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Visits > Requests';
-            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
@@ -384,12 +384,12 @@ class VisitRequestsTable extends ControllerActionTable
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
-                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
                 if (!empty($stepRoles)) {
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $Areas = TableRegistry::get('Area.Areas');
-                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                    $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                    $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     if ($isSchoolBased) {
                         if (is_null($institutionId)) {                        
                             Log::write('debug', 'Institution Id not found.');
@@ -435,7 +435,7 @@ class VisitRequestsTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'date_of_visit':

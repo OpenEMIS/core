@@ -9,7 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Http\ServerRequest;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Network\Exception\NotFoundException;
 use Cake\Datasource\Exception\RecordNotFoundException;
@@ -221,7 +221,7 @@ class AcademicPeriodsTable extends ControllerActionTable
             ]);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
@@ -276,7 +276,7 @@ class AcademicPeriodsTable extends ControllerActionTable
     }
 
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         // Webhook Academic Period Delete -- Start
         $body = array();
@@ -285,14 +285,14 @@ class AcademicPeriodsTable extends ControllerActionTable
             'parent_id' => $entity->parent_id
         ];
 
-        /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
+        /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
         if ($this->Auth->user()) {
             $Webhooks->triggerShell('academic_period_delete', [], $body);
         }*/
         // Webhook Academic Period Delete -- End
     }
 
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         //        $entity = $this->find()->select(['current'])->where($ids)->first();
         $connection = $this->getConnection();
@@ -317,7 +317,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (!$this->AccessControl->isAdmin()) {
@@ -328,7 +328,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $requestData)
     {
         if ($entity->isNew()) {
 
@@ -343,7 +343,7 @@ class AcademicPeriodsTable extends ControllerActionTable
                 'academic_period_id' => '',
             ];
 
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
+            /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('academic_period_create', ['username' => $username], $body);
             }*/
@@ -361,7 +361,7 @@ class AcademicPeriodsTable extends ControllerActionTable
                 'current' => $entity->start_date,
                 'academic_period_id' => $entity->id,
             ];
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
+            /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('academic_period_update', [], $updateBody);
             }*/
@@ -372,7 +372,7 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData)
     {
 
 
@@ -380,7 +380,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         if (isset($entity->old_end_date) && !empty($entity->old_end_date) && isset($entity->old_end_year) && !empty($entity->old_end_year)) { //when edit academic period
             $academic_end_date = (new Date($entity->old_end_date))->format('Y-m-d');
             $academic_end_year = $entity->old_end_year;
-            $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+            $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
 
             $institutionStudentsData = $institutionStudents
                 ->find()
@@ -426,17 +426,17 @@ class AcademicPeriodsTable extends ControllerActionTable
 
         $broadcaster = $this;
         $listeners = [];
-        $listeners[] = TableRegistry::get('Institution.InstitutionLands');
-        $listeners[] = TableRegistry::get('Institution.InstitutionBuildings');
-        $listeners[] = TableRegistry::get('Institution.InstitutionFloors');
-        $listeners[] = TableRegistry::get('Institution.InstitutionRooms');
+        $listeners[] = TableRegistry::getTableLocator()->get('Institution.InstitutionLands');
+        $listeners[] = TableRegistry::getTableLocator()->get('Institution.InstitutionBuildings');
+        $listeners[] = TableRegistry::getTableLocator()->get('Institution.InstitutionFloors');
+        $listeners[] = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
 
         if (!empty($listeners)) {
             $this->dispatchEventToModels('Model.AcademicPeriods.afterSave', [$entity], $broadcaster, $listeners);
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : null;
         if ($parentId != null) {
@@ -446,13 +446,13 @@ class AcademicPeriodsTable extends ControllerActionTable
         }
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
 
         $this->addAfterSave($event, $entity, $requestData);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         //        $this->log('before', 'debug');
         $this->field('academic_period_level_id');
@@ -463,7 +463,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         $this->fields['rght']['visible'] = false;
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         //        $this->log('after', 'debug');
         $this->field('current');
@@ -481,12 +481,12 @@ class AcademicPeriodsTable extends ControllerActionTable
         $this->setFieldOrder($this->_fieldOrder);
     }
 
-    public function editBeforeQuery(Event $event, Query $query)
+    public function editBeforeQuery(EventInterface $event, Query $query)
     {
         $query->contain('Levels');
     }
 
-    public function editAfterAction(Event $event, Entity $entity)
+    public function editAfterAction(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
@@ -499,7 +499,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         $this->fields['academic_period_level_id']['attr']['value'] = $entity->level->name;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('academic_order', ['visible' => false]);
         $toolbarElements = [
@@ -535,13 +535,13 @@ class AcademicPeriodsTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(EventInterface $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
         $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : 0;
         $query->where([$this->aliasField('parent_id') => $parentId]);
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         //Setup fields
         $this->_fieldOrder = ['academic_period_level_id', 'code', 'name'];
@@ -581,20 +581,20 @@ class AcademicPeriodsTable extends ControllerActionTable
         Log::write('debug', $shellCmd);
     }
 
-    public function onGetCurrent(Event $event, Entity $entity)
+    public function onGetCurrent(EventInterface $event, Entity $entity)
     {
         return $entity->current == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
 
     // For PHPOE-1916
-    public function onGetEditable(Event $event, Entity $entity)
+    public function onGetEditable(EventInterface $event, Entity $entity)
     {
         return $entity->editable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
 
     // End PHPOE-1916
 
-    public function onGetName(Event $event, Entity $entity)
+    public function onGetName(EventInterface $event, Entity $entity)
     {
         return $event->getSubject()->HtmlField->link($entity->name, [
             'plugin' => $this->controller->getPlugin(),
@@ -605,7 +605,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodLevelId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodLevelId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : 0;
         $results = $this
@@ -640,7 +640,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCurrent(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCurrent(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = $this->getSelectOptions('general.yesno');
         $attr['onChangeReload'] = 'changeCurrent';
@@ -648,7 +648,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCopyDataFrom(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCopyDataFrom(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if (array_key_exists($this->getAlias(), $request->getData())) {
@@ -686,7 +686,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEditable(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEditable(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($request->getData()[$this->getAlias()]['current'])) {
             if ($request->getData()[$this->getAlias()]['current'] == 1) {
@@ -697,7 +697,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldVisible(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldVisible(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($request->getData()[$this->getAlias()]['current'])) {
             if ($request->getData()[$this->getAlias()]['current'] == 1) {
@@ -708,7 +708,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeCurrent(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeCurrent(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         //unset($request->getQuery('current'));
@@ -979,7 +979,7 @@ class AcademicPeriodsTable extends ControllerActionTable
             5 => 'Friday',
             6 => 'Saturday',
         ];
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
         $daysPerWeek = $ConfigItems->value('days_per_week');
         $lastDayIndex = ($firstDayOfWeek + $daysPerWeek - 1) % 7;
@@ -1005,7 +1005,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         // );
 
         $period = $this->findById($id)->first();
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
 
         // If First of week is sunday changed the value to 7, because sunday with the '0' value unable to be displayed
@@ -1042,7 +1042,7 @@ class AcademicPeriodsTable extends ControllerActionTable
     public function getDateFrom($id)
     {
         $period = $this->findById($id)->first();
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
 
         // If First of week is sunday changed the value to 7, because sunday with the '0' value unable to be displayed
@@ -1709,7 +1709,7 @@ class AcademicPeriodsTable extends ControllerActionTable
      */
     private function getInstitutionClasses($institutionId)
     {
-        $tableClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $tableClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $distinctClasses = $tableClasses->find('all')
             ->where(['institution_id' => $institutionId])
             ->select(['id'])
@@ -1754,7 +1754,7 @@ class AcademicPeriodsTable extends ControllerActionTable
 
         $model = $this;
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
         $daysPerWeek = $ConfigItems->value('days_per_week');
         $weeks = $model->getAttendanceWeeks($academicPeriodId);
@@ -1910,7 +1910,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         $schoolClosedRequired = $options['school_closed_required'] ?? false;
 
         $model = $this;
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $firstDayOfWeek = (int)$ConfigItems->value('first_day_of_week');
         $daysPerWeek = (int)$ConfigItems->value('days_per_week');
         $weeks = $model->getAttendanceWeeks($academicPeriodId);
@@ -2020,7 +2020,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         $lastDay = new Date($options['week_end_day']);
         $institutionId = $options['institution_id'];
         $today = null;
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
         $daysPerWeek = $ConfigItems->value('days_per_week');
         $schooldays = [];
@@ -2080,7 +2080,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         $institutionId = $options['institution_id'];
         $today = null;
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
         $daysPerWeek = $ConfigItems->value('days_per_week');
         $schooldays = [];
@@ -2137,7 +2137,7 @@ class AcademicPeriodsTable extends ControllerActionTable
             $this->aliasField('academic_period_level_id') => $periodLevelId,
             $this->aliasField('start_date >=') => $startDate
         ];
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $nextAcademicPeriodId = $AcademicPeriods
             ->find('visible')
             // ->find('editable', ['isEditable' => true]) V4
@@ -2150,7 +2150,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         return $nextAcademicPeriodId;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'visible':

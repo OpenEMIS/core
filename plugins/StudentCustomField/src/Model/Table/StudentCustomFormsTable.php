@@ -3,7 +3,7 @@ namespace StudentCustomField\Model\Table;
 
 use ArrayObject;
 use CustomField\Model\Table\CustomFormsTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\Http\ServerRequest;
@@ -29,12 +29,12 @@ class StudentCustomFormsTable extends CustomFormsTable
         parent::initialize($config);
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         //POCOR-8434 starts
         $studentRegisteration = false;
         if($this->request->getQuery('module')){
-            $CustomModulesTable = TableRegistry::get('CustomField.CustomModules');
+            $CustomModulesTable = TableRegistry::getTableLocator()->get('CustomField.CustomModules');
             $module = $CustomModulesTable
                         ->find()
                         ->where([$CustomModulesTable->aliasField('id') => $this->request->getQuery('module')])
@@ -50,11 +50,11 @@ class StudentCustomFormsTable extends CustomFormsTable
         }
     }
 
-    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCustomModuleId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         //POCOR-8434 starts
         if($request->getQuery('module')){
-            $CustomModulesTable = TableRegistry::get('CustomField.CustomModules');
+            $CustomModulesTable = TableRegistry::getTableLocator()->get('CustomField.CustomModules');
             $module = $CustomModulesTable
                         ->find()
                         ->where([$CustomModulesTable->aliasField('id') => $request->getQuery('module')])
@@ -74,7 +74,7 @@ class StudentCustomFormsTable extends CustomFormsTable
         //POCOR-8434 starts
         $where = [];
         if($this->request->getQuery('module')){
-            $CustomModulesTable = TableRegistry::get('CustomField.CustomModules');
+            $CustomModulesTable = TableRegistry::getTableLocator()->get('CustomField.CustomModules');
             $module = $CustomModulesTable
                         ->find()
                         ->where([$CustomModulesTable->aliasField('id') => $this->request->getQuery('module')])
@@ -87,7 +87,7 @@ class StudentCustomFormsTable extends CustomFormsTable
         return $query->where($where);//POCOR-8434 ends
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'custom_module_id') {
             return __('Custom Module');
@@ -114,7 +114,7 @@ class StudentCustomFormsTable extends CustomFormsTable
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();

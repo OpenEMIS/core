@@ -7,7 +7,7 @@ use Cake\Core\Configure;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
@@ -22,7 +22,6 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Institution\Model\Behavior\LatLongBehavior as LatLongOptions;
 use Cake\Datasource\EntityInterface;
-use Cake\Event\EventInterface;
 
 class InstitutionMapsTable extends ControllerActionTable
 {
@@ -76,7 +75,7 @@ class InstitutionMapsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         if ($extra['toolbarButtons']['back']['url']['action'] == 'InstitutionMaps') {
             $extra['toolbarButtons']['back']['type'] = 'hidden'; //POCOR-6943
@@ -134,7 +133,7 @@ class InstitutionMapsTable extends ControllerActionTable
             $this->field('google_maps', ['visible' => ['view'=>true]]);
             $this->field('map', ['type' => 'map', 'visible' => ['view'=>true]]);
 
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $LatLongPermission = $ConfigItems->value("latitude_longitude");
 
             if ($LatLongPermission == LatLongOptions::EXCLUDED) {
@@ -164,7 +163,7 @@ class InstitutionMapsTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder([
 
@@ -177,7 +176,7 @@ class InstitutionMapsTable extends ControllerActionTable
         ]);
     }
 
-    public function editBeforeAction(Event $event, ArrayObject $extra)
+    public function editBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder([
             'location_section',
@@ -185,7 +184,7 @@ class InstitutionMapsTable extends ControllerActionTable
         ]);
     }
 
-    public function onGetGoogleMaps(Event $event, Entity $entity)
+    public function onGetGoogleMaps(EventInterface $event, Entity $entity)
     {
         $ControllerActionHelper = $event->getSubject();
         $htmlHelper = $event->getSubject()->Html;
@@ -197,7 +196,7 @@ class InstitutionMapsTable extends ControllerActionTable
         return $htmlHelper->tag(__('a href='. $url .' target="_blank"> Open External Link</a'));
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'latitude') {
             return __('Latitude');
@@ -208,7 +207,7 @@ class InstitutionMapsTable extends ControllerActionTable
         }
     }
     //POCOR-8314
-    public function onBeforeDelete(Event $event, $entity, $options)
+    public function onBeforeDelete(EventInterface $event, $entity, $options)
     {
         $encodedQueryParams = $this->ControllerAction->getQueryString();
         if(empty($params)){

@@ -5,7 +5,7 @@ namespace App\Shell;
 //use Exception;
 use Cake\I18n\Time;
 use Cake\Console\Shell;
-//use Cake\Event\Event;
+//use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\ConnectionManager;
 
@@ -21,8 +21,8 @@ class StudentAssessmentsShell extends Shell
     {
         //POCOR-7339-HINDOL cleaned the code
         parent::initialize();
-        $this->loadModel('SystemProcesses');
-        $this->loadModel('Archive.TransferLogs');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
+        $this->TransferLogs = $this->fetchTable('Archive.TransferLogs');
     }
 
     public function main()
@@ -70,12 +70,12 @@ class StudentAssessmentsShell extends Shell
     {
         //POCOR-7339-HINDOL
 
-        $sourceTable = TableRegistry::get('Institution.AssessmentItemResults');
+        $sourceTable = TableRegistry::getTableLocator()->get('Institution.AssessmentItemResults');
         $targetTableExists = $this->hasArchiveTable($sourceTable);
         if (!$targetTableExists) {
             return 0;
         }
-        $targetTable = TableRegistry::get('Institution.AssessmentItemResultsArchived');
+        $targetTable = TableRegistry::getTableLocator()->get('Institution.AssessmentItemResultsArchived');
         try {
             // Start a database transaction
             $whereCondition = ['academic_period_id' => $academicPeriodId];
@@ -103,11 +103,11 @@ class StudentAssessmentsShell extends Shell
 //            'academicPeriodId' => $academicPeriodId,
         ];
         $name = 'Archive Student Assessments';
-        $model = TableRegistry::get('Archive.TransferLogs');
+        $model = TableRegistry::getTableLocator()->get('Archive.TransferLogs');
         $eventName = '';
         $processModel = $model->registryAlias();
         $param = json_encode($param);
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $systemProcessId = $SystemProcesses->addProcess($name, $mypid, $processModel, $eventName, $param);
         $processInfo = date('d-m-Y H:i:s') . ' : ' . $name;
         $this->out($processInfo . ' - Start System PID:' . $systemProcessId);
@@ -120,7 +120,7 @@ class StudentAssessmentsShell extends Shell
     public
     function setSystemProcessRunning($systemProcessId)
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $processInfo = date('d-m-Y H:i:s');
         $this->out($processInfo . ' - Running System PID:' . $systemProcessId);
         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::RUNNING, 1);
@@ -132,7 +132,7 @@ class StudentAssessmentsShell extends Shell
     public
     function setSystemProcessFailed($systemProcessId)
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $processInfo = date('d-m-Y H:i:s');
         $this->out($processInfo . ' - Error in System PID:' . $systemProcessId);
         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::ERROR);
@@ -144,7 +144,7 @@ class StudentAssessmentsShell extends Shell
     public
     function setSystemProcessCompleted($systemProcessId)
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $processInfo = date('d-m-Y H:i:s');
         $this->out($processInfo . ' - Completed System PID:' . $systemProcessId);
         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::COMPLETED);
@@ -156,7 +156,7 @@ class StudentAssessmentsShell extends Shell
     public
     function setTransferLogsCompleted($pid)
     {
-        $TransferLogs = TableRegistry::get('Archive.TransferLogs');
+        $TransferLogs = TableRegistry::getTableLocator()->get('Archive.TransferLogs');
         $processInfo = date('d-m-Y H:i:s');
         $this->out($processInfo . ' - set Transfer Logs Completed PID:' . $pid);
         $TransferLogs->updateAll(['process_status' => $TransferLogs::DONE], [

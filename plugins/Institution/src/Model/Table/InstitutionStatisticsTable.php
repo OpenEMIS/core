@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
@@ -57,7 +57,7 @@ class InstitutionStatisticsTable extends AppTable
         return $validator->notEmpty('feature');
     }
 
-	public function beforeAction(Event $event)
+	public function beforeAction(EventInterface $event)
 	{
 		$controllerName = $this->controller->getName();
 		$reportName = __('Statistics');
@@ -75,7 +75,7 @@ class InstitutionStatisticsTable extends AppTable
 		$this->controller->set('contentHeader', __((string) $controllerName).' - '.$reportName);
 	}
 
-	public function addBeforeAction(Event $event)
+	public function addBeforeAction(EventInterface $event)
 	{
         $this->fields = [];
         $institutionId =  $this->getInstitutionID();
@@ -187,7 +187,7 @@ class InstitutionStatisticsTable extends AppTable
         }
     }
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+	public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $requestData = $this->request->getData();
@@ -236,7 +236,7 @@ class InstitutionStatisticsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFormat(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             if (isset($this->request->getData($this->getAlias())['feature']) && !empty($this->request->getData($this->getAlias())['feature'])) {
@@ -258,10 +258,10 @@ class InstitutionStatisticsTable extends AppTable
     }
 
     // academic period filter
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $periodOptions = $AcademicPeriods->getYearList(['isEditable' => true]);
             $selectedPeriod = $AcademicPeriods->getCurrent();
             $attr['onChangeReload'] = "academic_period_id";
@@ -276,16 +276,16 @@ class InstitutionStatisticsTable extends AppTable
 
     //START: POCOR-6629
     // education grade filter
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $periodOptions = $AcademicPeriods->getYearList(['isEditable' => true]);
             $selectedPeriod = $this->request->getData('InstitutionStatistics')['academic_period_id'] ?? $AcademicPeriods->getCurrent();//POCOR-8857
             $institutionId = $this->request->getData('InstitutionStatistics')['institution_id'] ?? $this->getInstitutionID();//POCOR-8857
-            $EducationGrades = TableRegistry::get('Education.EducationGrades');
-            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-            $grades = TableRegistry::get('Institution.InstitutionGrades');
+            $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+            $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+            $grades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
             $periodGrades = $EducationGrades->find('list', ['keyField' => 'id',
                                 'valueField' => 'programme_grade_name'])
                             ->find('visible')
@@ -311,7 +311,7 @@ class InstitutionStatisticsTable extends AppTable
     }
     //START: POCOR-6629
 
-    public function onExcelTemplateBeforeGenerate(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateBeforeGenerate(EventInterface $event, array $params, ArrayObject $extra)
     {
         $str = $this->get($params['feature'])->name;
         $reportName = str_replace(' ', '_', $str);
@@ -320,7 +320,7 @@ class InstitutionStatisticsTable extends AppTable
         ]);
     }
 
-    public function onExcelTemplateInitialiseQueryVariables(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseQueryVariables(EventInterface $event, array $params, ArrayObject $extra)
     {
         // get json query from reports database table
         $customReportData = $this->get($params['feature']);
@@ -335,7 +335,7 @@ class InstitutionStatisticsTable extends AppTable
         return $variables;
     }
 
-    public function onCsvBeforeGenerate(Event $event, ArrayObject $settings)
+    public function onCsvBeforeGenerate(EventInterface $event, ArrayObject $settings)
     {
         $params = $settings['requestQuery'];
         $customReportData = $this->get($params['feature']);
@@ -359,7 +359,7 @@ class InstitutionStatisticsTable extends AppTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'feature') {
             return __('Feature');
@@ -380,7 +380,7 @@ class InstitutionStatisticsTable extends AppTable
         }
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $params = $this->getQueryString();
         $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
@@ -405,7 +405,7 @@ class InstitutionStatisticsTable extends AppTable
      * @author Ehteram Ahmad
      */
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData)
     {
         $param = $this->request->getParam('pass')[1];
         $url = ['plugin' => $this->request->getParam('plugin'), 'controller' => $this->request->getParam('controller'), 'action' =>  'InstitutionStatistics', '0' => 'index','1' => $param ];

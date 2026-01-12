@@ -2,7 +2,7 @@
 namespace Infrastructure\Model\Table;
 
 use CustomField\Model\Table\CustomFieldsTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\Http\ServerRequest;

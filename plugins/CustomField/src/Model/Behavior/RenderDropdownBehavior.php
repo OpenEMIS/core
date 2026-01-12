@@ -3,7 +3,7 @@ namespace CustomField\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderDropdownBehavior extends RenderBehavior {
@@ -13,7 +13,7 @@ class RenderDropdownBehavior extends RenderBehavior {
         parent::initialize($config);
     }
 
-	public function onGetCustomDropdownElement(Event $event, $action, $entity, $attr, $options=[]) {
+	public function onGetCustomDropdownElement(EventInterface $event, $action, $entity, $attr, $options=[]) {
         $value = '';
 
         $dropdownOptions = [];
@@ -105,7 +105,7 @@ class RenderDropdownBehavior extends RenderBehavior {
         return $value;
     }
 
-    public function processDropdownValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+    public function processDropdownValues(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
         $settings['valueKey'] = 'number_value';
         $this->processValues($entity, $data, $settings);
     }

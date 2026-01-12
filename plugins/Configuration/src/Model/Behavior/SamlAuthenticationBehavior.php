@@ -2,7 +2,7 @@
 namespace Configuration\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
@@ -36,7 +36,7 @@ class SamlAuthenticationBehavior extends Behavior
         return $events;
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $entity->getErrors($entity->getErrors('saml'), null, true);
         $this->model->field('idp_entity_id', ['attr' => ['required' => true, 'label' => __('Identity Provider - Entity ID')]]);
@@ -88,7 +88,7 @@ class SamlAuthenticationBehavior extends Behavior
         $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'idp_entity_id', 'idp_sso', 'idp_sso_binding', 'idp_slo', 'idp_slo_binding', 'idp_x509cert', 'idp_cert_fingerprint', 'idp_cert_fingerprint_algorithm', 'sp_entity_id', 'sp_acs', 'sp_slo', 'sp_name_id_format', 'sp_private_key', 'allow_create_user', 'mapped_username', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role', 'mapped_email']);
     }
 
-    public function onUpdateFieldIdpSsoBinding(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldIdpSsoBinding(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             if (!isset($request->getData()[$this->model->getAlias()]['idp_sso_binding'])) {
@@ -97,7 +97,7 @@ class SamlAuthenticationBehavior extends Behavior
         }
     }
 
-    public function onUpdateFieldIdpSloBinding(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldIdpSloBinding(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             if (!isset($request->getData()[$this->model->getAlias()]['idp_slo_binding'])) {
@@ -106,7 +106,7 @@ class SamlAuthenticationBehavior extends Behavior
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->model->field('idp_entity_id', ['attr' => ['label' => __('Identity Provider - Entity ID')]]);
         $this->model->field('idp_sso', ['attr' => ['label' => __('Identity Provider - Single Signon Service')]]);
@@ -132,7 +132,7 @@ class SamlAuthenticationBehavior extends Behavior
         $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'idp_entity_id', 'idp_sso', 'idp_sso_binding', 'idp_slo', 'idp_slo_binding', 'idp_x509cert', 'idp_cert_fingerprint', 'idp_cert_fingerprint_algorithm', 'sp_entity_id', 'sp_acs', 'sp_slo', 'sp_name_id_format', 'sp_private_key', 'sp_metadata', 'allow_create_user', 'mapped_username', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role', 'mapped_email']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->model->fields['name']['type'] = 'readonly';
         $this->model->fields['idp_entity_id']['attr']['value'] = $entity->saml->idp_entity_id;
@@ -153,77 +153,77 @@ class SamlAuthenticationBehavior extends Behavior
         $this->model->fields['sp_private_key']['attr']['value'] = $entity->saml->sp_private_key;
     }
 
-    public function onGetIdpEntityId(Event $event, Entity $entity)
+    public function onGetIdpEntityId(EventInterface $event, Entity $entity)
     {
         return $entity->saml->idp_entity_id;
     }
 
-    public function onGetIdpSso(Event $event, Entity $entity)
+    public function onGetIdpSso(EventInterface $event, Entity $entity)
     {
         return $entity->saml->idp_sso;
     }
 
-    public function onGetIdpSsoBinding(Event $event, Entity $entity)
+    public function onGetIdpSsoBinding(EventInterface $event, Entity $entity)
     {
         return $entity->saml->idp_sso_binding;
     }
 
-    public function onGetIdpSlo(Event $event, Entity $entity)
+    public function onGetIdpSlo(EventInterface $event, Entity $entity)
     {
         return $entity->saml->idp_slo;
     }
 
-    public function onGetIdpSloBinding(Event $event, Entity $entity)
+    public function onGetIdpSloBinding(EventInterface $event, Entity $entity)
     {
         return $entity->saml->idp_slo_binding;
     }
 
-    public function onGetIdpX509cert(Event $event, Entity $entity)
+    public function onGetIdpX509cert(EventInterface $event, Entity $entity)
     {
         return $entity->saml->idp_x509cert;
     }
 
-    public function onGetIdpCertFingerprint(Event $event, Entity $entity)
+    public function onGetIdpCertFingerprint(EventInterface $event, Entity $entity)
     {
         return $entity->saml->idp_cert_fingerprint;
     }
 
-    public function onGetIdpCertFingerprintAlgorithm(Event $event, Entity $entity)
+    public function onGetIdpCertFingerprintAlgorithm(EventInterface $event, Entity $entity)
     {
         return $entity->saml->idp_cert_fingerprint_algorithm;
     }
 
-    public function onGetSpEntityId(Event $event, Entity $entity)
+    public function onGetSpEntityId(EventInterface $event, Entity $entity)
     {
         return $entity->saml->sp_entity_id;
     }
 
-    public function onGetSpAcs(Event $event, Entity $entity)
+    public function onGetSpAcs(EventInterface $event, Entity $entity)
     {
         return $entity->saml->sp_acs;
     }
 
-    public function onGetSpSlo(Event $event, Entity $entity)
+    public function onGetSpSlo(EventInterface $event, Entity $entity)
     {
         return $entity->saml->sp_slo;
     }
 
-    public function onGetSpNameIdFormat(Event $event, Entity $entity)
+    public function onGetSpNameIdFormat(EventInterface $event, Entity $entity)
     {
         return $entity->saml->sp_name_id_format;
     }
 
-    public function onGetSpPrivateKey(Event $event, Entity $entity)
+    public function onGetSpPrivateKey(EventInterface $event, Entity $entity)
     {
         return $entity->saml->sp_private_key;
     }
 
-    public function onGetSpMetadata(Event $event, Entity $entity)
+    public function onGetSpMetadata(EventInterface $event, Entity $entity)
     {
         return $entity->saml->sp_metadata;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra = null)
+    public function beforeAction(EventInterface $event, ArrayObject $extra = null)
     {
 
     }

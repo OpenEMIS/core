@@ -3,7 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
@@ -79,7 +79,7 @@ class InstitutionTripsTable extends ControllerActionTable
                             $busId = $data['institution_bus_id'];
 
                             try {
-                                $InstitutionBuses = TableRegistry::get('Institution.InstitutionBuses');
+                                $InstitutionBuses = TableRegistry::getTableLocator()->get('Institution.InstitutionBuses');
                                 $busEntity = $InstitutionBuses->get($busId);
 
                                 if ($busEntity->has('capacity') && $busEntity->capacity > 0) {
@@ -103,7 +103,7 @@ class InstitutionTripsTable extends ControllerActionTable
             ]);
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $tripDays = [];
         if (isset($data['days']) && array_key_exists('_ids', $data['days']) && !empty($data['days']['_ids'])) {
@@ -183,7 +183,7 @@ class InstitutionTripsTable extends ControllerActionTable
         return $days;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // POCOR-6169 start
         // academic period filter
@@ -253,15 +253,15 @@ class InstitutionTripsTable extends ControllerActionTable
     }
 
     // POCOR-6169 start
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
         //$institutionId  = $session->read('Institution.Institutions.id');
         $tripTypes = $this->request->getQuery('trip_types');
 
-        $institutionProvider = TableRegistry::get('Institution.InstitutionTransportProviders');
-        $institutionBuses = TableRegistry::get('Institution.InstitutionBuses');
+        $institutionProvider = TableRegistry::getTableLocator()->get('Institution.InstitutionTransportProviders');
+        $institutionBuses = TableRegistry::getTableLocator()->get('Institution.InstitutionBuses');
 
         if (isset($extra['selectedAcademicPeriodOptions'])) {
             $query->where([
@@ -341,7 +341,7 @@ class InstitutionTripsTable extends ControllerActionTable
         return $selectedAcademicPeriod;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->getSession();
         //$institutionId  = $session->read('Institution.Institutions.id');
@@ -349,8 +349,8 @@ class InstitutionTripsTable extends ControllerActionTable
         $tripTypes = $this->request->getQuery('trip_types');
         $academicPeriod = ($this->request->getQuery('period')) ? $this->request->getQuery('period') : $this->AcademicPeriods->getCurrent() ;
 
-        $institutionProvider = TableRegistry::get('Institution.InstitutionTransportProviders');
-        $institutionBuses = TableRegistry::get('Institution.InstitutionBuses');
+        $institutionProvider = TableRegistry::getTableLocator()->get('Institution.InstitutionTransportProviders');
+        $institutionBuses = TableRegistry::getTableLocator()->get('Institution.InstitutionBuses');
 
         $query->select([
             $this->aliasField('id') ,
@@ -407,7 +407,7 @@ class InstitutionTripsTable extends ControllerActionTable
         });
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
             'key'   => 'academic_period_id',
@@ -461,7 +461,7 @@ class InstitutionTripsTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 
 
@@ -490,7 +490,7 @@ class InstitutionTripsTable extends ControllerActionTable
         // $this->fields['days']['options'] = $InstitutionBuses;
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $this->fields['academic_period_id']['type'] = 'select';
@@ -536,7 +536,7 @@ class InstitutionTripsTable extends ControllerActionTable
     }
     // POCOR-6169 end
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['InstitutionTripDays', 'InstitutionTripPassengers']);
         //START:POCOR-6169
@@ -555,7 +555,7 @@ class InstitutionTripsTable extends ControllerActionTable
     }
 
     // view page POCOR-6169
-    public function viewAfterAction(Event $event,Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event,Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity, $extra);
     }
@@ -610,7 +610,7 @@ class InstitutionTripsTable extends ControllerActionTable
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
 
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
-    public function onUpdateFieldInstitutionBusId(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldInstitutionBusId(EventInterface $event, array $attr, $action, $request) {
 
         $parentId = $this->request->getData('InstitutionTrips')['institution_transport_provider_id'];
         if(!empty($parentId)){
@@ -632,14 +632,14 @@ class InstitutionTripsTable extends ControllerActionTable
     }
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $modelAlias = 'InstitutionTrips';
         $userType = '';
         $this->controller->changePageHeaderTrips($this, $modelAlias, $userType);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
             case 'institution_transport_provider_id':
@@ -675,13 +675,13 @@ class InstitutionTripsTable extends ControllerActionTable
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();

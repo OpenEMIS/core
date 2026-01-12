@@ -1,6 +1,6 @@
 <?php
 namespace Institution\Model\Table;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use CustomField\Model\Table\CustomTableCellsTable;
 use Cake\Log\Log;
@@ -20,7 +20,7 @@ class InstitutionSurveyTableCellsTable extends CustomTableCellsTable {
 		return $events;
 	}
 
-	public function institutionSurveyAfterSave(Event $event, Entity $institutionSurveyEntity)
+	public function institutionSurveyAfterSave(EventInterface $event, Entity $institutionSurveyEntity)
 	{
 		$deleteTableCells = $institutionSurveyEntity->delete_table_cells;
 		if (!empty($deleteTableCells)) {

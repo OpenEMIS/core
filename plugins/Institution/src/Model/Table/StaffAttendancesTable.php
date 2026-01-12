@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use DateInterval;
 use DatePeriod;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -65,9 +65,9 @@ class StaffAttendancesTable extends ControllerActionTable
         return $events;
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
-        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $startDate = $AcademicPeriodTable->get($this->request->getQuery('academic_period_id'))->start_date->format('Y-m-d');
         $endDate = $AcademicPeriodTable->get($this->request->getQuery('academic_period_id'))->end_date->format('Y-m-d');
         $months = $AcademicPeriodTable->generateMonthsByDates($startDate, $endDate);
@@ -105,7 +105,7 @@ class StaffAttendancesTable extends ControllerActionTable
         }
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $academicPeriodId = $this->request->getQuery('academic_period_id');
         $institutionId = $this->Session->read('Institution.Institutions.id');
@@ -119,7 +119,7 @@ class StaffAttendancesTable extends ControllerActionTable
             ;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $newArray = [];
         $newArray[] = [
@@ -135,7 +135,7 @@ class StaffAttendancesTable extends ControllerActionTable
         $month = $sheet['month'];
         $startDate = $sheet['startDate'];
         $endDate = $sheet['endDate'];
-        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $days = $AcademicPeriodTable->generateDaysOfMonth($year, $month, $startDate, $endDate);
         $workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
         $dayIndex = [];
@@ -156,7 +156,7 @@ class StaffAttendancesTable extends ControllerActionTable
         $this->_attendanceData = $this->getAttendanceData($startDate, $endDate, $sheet['institutionId']);
     }
 
-    public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderAttendance(EventInterface $event, Entity $entity, array $attr)
     {
         // get the data from the temporary variable
         $leaveData = $this->_leaveData;
@@ -192,7 +192,7 @@ class StaffAttendancesTable extends ControllerActionTable
     public function getLeaveData($monthStartDay, $monthEndDay, $institutionId)
     {
         // getting data for staff leave
-        $StaffLeave = TableRegistry::get('Institution.StaffLeave');
+        $StaffLeave = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
         $where = [
             'OR' => [
                 [
@@ -222,7 +222,7 @@ class StaffAttendancesTable extends ControllerActionTable
 
         // reformating staff leave array
         $leaveByStaffIdRecords = [];
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $workingDaysOfWeek = $AcademicPeriods->getWorkingDaysOfWeek();
         foreach ($StaffLeaveArr as $key => $value) {
             $staffId = $value->staff_id;
@@ -247,7 +247,7 @@ class StaffAttendancesTable extends ControllerActionTable
     public function getAttendanceData($monthStartDay, $monthEndDay, $institutionId)
     {
         // getting data for staff attendance
-        $StaffAttendances = TableRegistry::get('Institution.InstitutionStaffAttendances');
+        $StaffAttendances = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffAttendances');
         $StaffAttendancesArr = $StaffAttendances
              ->find()
             ->where([

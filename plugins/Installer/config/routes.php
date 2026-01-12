@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Installer', ['plugin' => 'Installer'], function ($routes) {
-    Router::connect('/Installer', ['plugin' => 'Installer', 'controller' => 'Installer']);
-    Router::connect('/Installer/:action/*', ['plugin' => 'Installer', 'controller' => 'Installer']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/Installer', ['plugin' => 'Installer'], function (RouteBuilder $routes) {
+        $routes->connect('/Installer', ['plugin' => 'Installer', 'controller' => 'Installer']);
+        $routes->connect('/Installer/:action/*', ['plugin' => 'Installer', 'controller' => 'Installer']);
+    });
+};

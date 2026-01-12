@@ -6,7 +6,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Http\ServerRequest;
 use Cake\Controller\Controller;
@@ -17,7 +17,7 @@ class GuardianStudentBehavior extends Behavior {
 		$this->associatedModel = (isset($config['associatedModel']))? $config['associatedModel']: null;
 	}
 
-	public function beforeFind(Event $event, Query $query, $options) {
+	public function beforeFind(EventInterface $event, Query $query, $options) {
 		$session = $this->_table->request->session();
 
 		if ($session->check('Students.security_user_id')) {
@@ -53,11 +53,11 @@ class GuardianStudentBehavior extends Behavior {
 		return $events;
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(EventInterface $event) {
 		// to set field order and other stuff
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $ids) {
+	public function onBeforeDelete(EventInterface $event, ArrayObject $options, $ids) {
 		$process = function() use ($ids, $options) {
 			// must also delete security roles here
 
@@ -80,7 +80,7 @@ class GuardianStudentBehavior extends Behavior {
 	}
 
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforePaginate(EventInterface $event, Request $request, Query $query, ArrayObject $options) {
 		if ($this->_table->Session->check('Students.security_user_id')) {
 			$studentSecurityUserId = $this->_table->Session->read('Students.security_user_id');
 
@@ -91,7 +91,7 @@ class GuardianStudentBehavior extends Behavior {
 	}
 
 
-	public function addBeforeAction(Event $event) {
+	public function addBeforeAction(EventInterface $event) {
 		if (array_key_exists('new', $this->_table->request->query)) {
 
 		} else {
@@ -118,7 +118,7 @@ class GuardianStudentBehavior extends Behavior {
 		}
 	}
 
-	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		if (!array_key_exists('new', $this->_table->request->query)) {
 			$newOptions = [];
 			$newOptions['validate'] = false;
@@ -129,7 +129,7 @@ class GuardianStudentBehavior extends Behavior {
 		}
 	}
 
-	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addAfterPatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		if (!array_key_exists('new', $this->_table->request->query)) {
 			$timeNow = strtotime("now");
 			$sessionVar = $this->_table->alias().'.add.'.strtotime("now");
@@ -160,7 +160,7 @@ class GuardianStudentBehavior extends Behavior {
 		}
 	}
 
-	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
+	public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $data) {
 		// that function removes the session and makes it redirect to
 		// index without any named params
 		// else the 'new' url param will cause it to add it with previous settings (from institution site student / staff)
@@ -175,7 +175,7 @@ class GuardianStudentBehavior extends Behavior {
 		return $this->controller->redirect($action);
 	}
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+	public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) {
 		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
 		if (isset($entity->guardian_students)) {
 			if (array_key_exists(0, $entity->guardian_students)) {
@@ -198,7 +198,7 @@ class GuardianStudentBehavior extends Behavior {
 		return $buttons;
 	}
 
-	public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldGuardianRelationId(EventInterface $event, array $attr, $action, $request) {
 		$attr['type'] = 'select';
 		$attr['options'] = $this->_table->StudentGuardians->GuardianRelations->getList()->toArray();
 		if (empty($attr['options'])){
@@ -207,7 +207,7 @@ class GuardianStudentBehavior extends Behavior {
 		return $attr;
 	}
 
-	public function onUpdateFieldGuardianEducationLevelId(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldGuardianEducationLevelId(EventInterface $event, array $attr, $action, $request) {
 		$attr['type'] = 'select';
 		$attr['options'] = $this->_table->StudentGuardians->GuardianEducationLevels->getList()->toArray();
 		if (empty($attr['options'])){

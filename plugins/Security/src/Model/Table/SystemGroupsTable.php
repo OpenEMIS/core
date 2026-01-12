@@ -2,7 +2,7 @@
 namespace Security\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -49,13 +49,13 @@ class SystemGroupsTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function institutionAfterSave(Event $event, Entity $entity)
+    public function institutionAfterSave(EventInterface $event, Entity $entity)
     {
         if ($entity->isNew()) {
             $obj = $this->newEntity(['name' => $entity->code . ' - ' . $entity->name]);
             $securityGroup = $this->save($obj);
             if ($securityGroup) {
-                $SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+                $SecurityInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
                 // add the relationship of security group and institutions
                 $securityInstitution = $SecurityInstitutions->newEntity([
                     'security_group_id' => $securityGroup->id,
@@ -96,7 +96,7 @@ class SystemGroupsTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $controller = $this->controller;
         $tabElements = [
@@ -124,21 +124,21 @@ class SystemGroupsTable extends ControllerActionTable
         $this->setFieldOrder(['name', 'users']); // POCOR-8446
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('no_of_users', ['visible' => ['index' => true]]);
         $this->setFieldOrder(['name', 'no_of_users','institution_id']);
     }
 
-    public function onGetNoOfUsers(Event $event, Entity $entity)
+    public function onGetNoOfUsers(EventInterface $event, Entity $entity)
     {
         $id = $entity->id;
-        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $count = $GroupUsers->findAllBySecurityGroupId($id)->count();
         return $count;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryParams = $this->request->getQuery();
         $query->find('inInstitutions');
@@ -149,7 +149,7 @@ class SystemGroupsTable extends ControllerActionTable
         // filter groups by users permission
         if ($this->Auth->user('super_admin') != 1) {
             $userId = $this->Auth->user('id');
-            $SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+            $SecurityGroupUsersTable = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
             $SecurityGroupUsers = $SecurityGroupUsersTable
                 ->find('list')
                 ->where([
@@ -167,12 +167,12 @@ class SystemGroupsTable extends ControllerActionTable
         }
     }
 
-    public function viewBeforeQuery(Event $event, Query $query)
+    public function viewBeforeQuery(EventInterface $event, Query $query)
     {
         $query->contain(['Users']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->request->getData[$this->getAlias()]['security_group_id'] = $entity->id;
         $toolbarAttr = [
@@ -206,7 +206,7 @@ class SystemGroupsTable extends ControllerActionTable
         return $query;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'custom_module_id') {
             return __('Custom Module');

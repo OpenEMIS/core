@@ -4,7 +4,7 @@ namespace Security\Model\Table;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
@@ -29,7 +29,7 @@ class UserRolesTable extends AppTable
         }
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $controller = $this->controller;
         $tabElements = [
@@ -52,7 +52,7 @@ class UserRolesTable extends AppTable
         $this->ControllerAction->setFieldOrder(['security_group_id', 'name', 'visible']);
     }
 
-    public function onUpdateFieldSecurityGroupId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSecurityGroupId(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'index') {
             $attr['visible'] = false;
@@ -73,18 +73,18 @@ class UserRolesTable extends AppTable
         return $attr;
     }
 
-    public function onGetVisible(Event $event, Entity $entity)
+    public function onGetVisible(EventInterface $event, Entity $entity)
     {
         return $entity->visible == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
 
-    public function onGetPermissions(Event $event, Entity $entity)
+    public function onGetPermissions(EventInterface $event, Entity $entity)
     {
         $subject = $event->getSubject(); // ControllerActionHelper
         return '';
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(EventInterface $event)
     {
         $toolbarElements = [
             ['name' => 'Security.UserRoles/controls', 'data' => [], 'options' => []]
@@ -93,13 +93,13 @@ class UserRolesTable extends AppTable
         $this->ControllerAction->setFieldOrder(['visible', 'name', 'permissions']);
     }
 
-    public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(EventInterface $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
         $selectedGroup = $this->request->getQuery('security_group_id');
         $query->where([$this->aliasField('security_group_id') => $selectedGroup]);
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('visible', ['type' => 'hidden', 'value' => 1, 'visible' => true]);
         $this->ControllerAction->field('order', ['type' => 'hidden', 'value' => 0, 'visible' => true]);

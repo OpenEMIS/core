@@ -8,7 +8,7 @@ use Cake\Core\Configure;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\I18n\I18n;
@@ -264,7 +264,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
         $this->addBehavior('Institution.LatLong');
         $this->addBehavior('Institution.InstitutionTab');
-        $this->SecurityGroups = TableRegistry::get('Security.SystemGroups');
+        $this->SecurityGroups = TableRegistry::getTableLocator()->get('Security.SystemGroups');
 
     }
 
@@ -418,7 +418,7 @@ class InstitutionsTable extends ControllerActionTable
         return $events;
     }
 
-    // public function isAuthorized(Event $event, $scope, $action, $extra)
+    // public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     // {
     //     if ($action == 'index' || $action == 'view' || $action == 'add') {
     //         // check for the user permission to view here
@@ -427,7 +427,7 @@ class InstitutionsTable extends ControllerActionTable
     //     }
     // }
 
-    public function areaAdminstrativeAfterDelete(Event $event, $areaAdministrative)
+    public function areaAdminstrativeAfterDelete(EventInterface $event, $areaAdministrative)
     {
         $subquery = $this->AreaAdministratives
             ->find()
@@ -450,7 +450,7 @@ class InstitutionsTable extends ControllerActionTable
         }
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         unset($sheets[0]);
         $studentsTabsData = $this->studentsTabsData;
@@ -475,7 +475,7 @@ class InstitutionsTable extends ControllerActionTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $sheetData = $settings['sheet']['sheetData'];
         $instituteType = $sheetData['institute_tabs_type'];
@@ -640,7 +640,7 @@ class InstitutionsTable extends ControllerActionTable
                 }
             }
             if ($instituteType == 'Overview') {
-                $InfrastructureCustomFields = TableRegistry::get('InstitutionCustomField.InstitutionCustomFields');
+                $InfrastructureCustomFields = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFields');
                 $customFieldData = $InfrastructureCustomFields->find()->select([
                     'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
                     'custom_field' => $InfrastructureCustomFields->aliasfield('name')
@@ -664,12 +664,12 @@ class InstitutionsTable extends ControllerActionTable
         }
     }
 
-    public function onExcelGetDesignation(Event $event, Entity $entity)
+    public function onExcelGetDesignation(EventInterface $event, Entity $entity)
     {
 
     }
 
-    public function onExcelGetShiftType(Event $event, Entity $entity)
+    public function onExcelGetShiftType(EventInterface $event, Entity $entity)
     {
         if (isset($this->shiftTypes[$entity->shift_type])) {
             return __($this->shiftTypes[$entity->shift_type]);
@@ -678,7 +678,7 @@ class InstitutionsTable extends ControllerActionTable
         }
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $sheetData = $settings['sheet']['sheetData'];
         $instituteType = $sheetData['institute_tabs_type'];
@@ -731,7 +731,7 @@ class InstitutionsTable extends ControllerActionTable
 
         if ($instituteType == 'Contact People') {
 
-            $institutionContactPersons = TableRegistry::get('Institution.InstitutionContactPersons');
+            $institutionContactPersons = TableRegistry::getTableLocator()->get('Institution.InstitutionContactPersons');
             $res = $query->select([
                 'person' => $institutionContactPersons->aliasField('contact_person'),
                 'designation' => $institutionContactPersons->aliasField('designation'),
@@ -749,7 +749,7 @@ class InstitutionsTable extends ControllerActionTable
 
         }
         if ($instituteType == 'Shifts') {
-            $institutionContactPersons = TableRegistry::get('Institution.InstitutionContactPersons');
+            $institutionContactPersons = TableRegistry::getTableLocator()->get('Institution.InstitutionContactPersons');
             $res = $query->select(['academic_period' => 'AcademicPeriods.name', 'shift_name' => 'ShiftOptions.name', 'shift_start_time' => 'InstitutionShifts.start_time', 'shift_end_time' => 'InstitutionShifts.end_time', 'Owner' => 'Institutions.name', 'Occupier' => 'Institutions.name',])
                 ->LeftJoin(['InstitutionShifts' => 'institution_shifts'], [
                     $this->aliasField('id') . ' = InstitutionShifts.institution_id',
@@ -768,9 +768,9 @@ class InstitutionsTable extends ControllerActionTable
         }
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $Guardians = TableRegistry::get('InstitutionCustomField.InstitutionCustomFieldValues');
-                $institutionCustomFieldOptions = TableRegistry::get('InstitutionCustomField.InstitutionCustomFieldOptions');
-                $institutionCustomFields = TableRegistry::get('InstitutionCustomField.InstitutionCustomFields');
+                $Guardians = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldValues');
+                $institutionCustomFieldOptions = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldOptions');
+                $institutionCustomFields = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFields');
 
                 $guardianData = $Guardians->find()
                     ->select([
@@ -835,7 +835,7 @@ class InstitutionsTable extends ControllerActionTable
 
     }
 
-    public function onGetName(Event $event, Entity $entity)
+    public function onGetName(EventInterface $event, Entity $entity)
     {
         $name = $entity->name;
         $redirectToOverview = false;
@@ -866,7 +866,7 @@ class InstitutionsTable extends ControllerActionTable
         return $name;
     }
 
-    public function onGetShiftType(Event $event, Entity $entity)
+    public function onGetShiftType(EventInterface $event, Entity $entity)
     {
         $type = ' ';
         if (array_key_exists($entity->shift_type, $this->shiftTypes)) {
@@ -902,19 +902,19 @@ class InstitutionsTable extends ControllerActionTable
         return $data;
     }
 
-    public function onUpdateDefaultActions(Event $event)
+    public function onUpdateDefaultActions(EventInterface $event)
     {
         return ['downloadFile'];
     }
 
-    public function onUpdateFieldDateOpened(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldDateOpened(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $today = new Date();
         $attr['date_options']['endDate'] = $today->format('d-m-Y');
         return $attr;
     }
 
-    public function onUpdateFieldDateClosed(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldDateClosed(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['default_date'] = false;
 
@@ -929,7 +929,7 @@ class InstitutionsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionStatusId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionStatusId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['visible'] = false;
@@ -938,12 +938,12 @@ class InstitutionsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $this->setInstitutionStatusId($data);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
             $entity->shift_type = 0;
@@ -960,7 +960,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->debugMonitorYearOpened($entity, $options);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $DataManagementConnections = TableRegistry::getTableLocator()->get('Archive.DataManagementConnections');
         $DataManagementConnectionsResult = $DataManagementConnections
@@ -1085,7 +1085,7 @@ class InstitutionsTable extends ControllerActionTable
     }
 
     //POCOR-7271 changed survey condition
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if($entity->isNew()){
             $this->triggerWebhookShell($entity,'institutions_create'); //POCOR-7971
@@ -1377,7 +1377,7 @@ class InstitutionsTable extends ControllerActionTable
     }
 
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $securityGroupId = $entity->security_group_id;
         $SecurityGroup = TableRegistry::getTableLocator()->get('Security.SystemGroups');
@@ -1400,7 +1400,7 @@ class InstitutionsTable extends ControllerActionTable
         }
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         if ($this->action == 'index') {
             $institutionCount = $this->find();
@@ -1492,7 +1492,7 @@ class InstitutionsTable extends ControllerActionTable
      ** index action methods
      **
      ******************************************************************************************************************/
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $this->Session->delete('Institution.Institutions.id');
@@ -1531,7 +1531,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
     }
 
-    public function onGetAreaId(Event $event, Entity $entity)
+    public function onGetAreaId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'index') {
             $areaName = $entity->Areas['name'];
@@ -1562,14 +1562,14 @@ class InstitutionsTable extends ControllerActionTable
         return $entity->area_id;
     }
 
-    public function onGetAreaAdministrativeId(Event $event, Entity $entity)
+    public function onGetAreaAdministrativeId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->area_administrative_id;
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'area_id' && $this->action == 'index') {
             // Getting the system value for the area
@@ -1621,7 +1621,7 @@ class InstitutionsTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //the query options are setup so that Security.InstitutionBehavior can reuse it
         $extra['query'] = [
@@ -1661,7 +1661,7 @@ class InstitutionsTable extends ControllerActionTable
         // end POCOR-3983
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->dashboardQuery = clone $query;
         $search = $this->getSearchKey();
@@ -1739,7 +1739,7 @@ class InstitutionsTable extends ControllerActionTable
         }
     }
 
-    public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function deleteAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $extra['redirect'] = [
             'plugin' => 'Institution',
@@ -1755,7 +1755,7 @@ class InstitutionsTable extends ControllerActionTable
      ** view action methods
      **
      ******************************************************************************************************************/
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder([
             'information_section',
@@ -1817,7 +1817,7 @@ class InstitutionsTable extends ControllerActionTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('classification', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
 
@@ -1839,7 +1839,7 @@ class InstitutionsTable extends ControllerActionTable
      ** add / addEdit action methods
      **
      ******************************************************************************************************************/
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $userId = $this->Session->read('Auth.User.id');
         $superAdmin = $this->Session->read('Auth.User.super_admin');
@@ -1848,7 +1848,7 @@ class InstitutionsTable extends ControllerActionTable
         $data['superAdmin'] = $superAdmin;
     }
 
-    public function editBeforeAction(Event $event, ArrayObject $extra)
+    public function editBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder([
             'information_section',
@@ -1871,7 +1871,7 @@ class InstitutionsTable extends ControllerActionTable
         //End:POCOR-6660
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('institution_type_id', ['type' => 'select']);
         $this->field('institution_provider_id', ['type' => 'select', 'sectorId' => $entity->institution_sector_id]);
@@ -1897,7 +1897,7 @@ class InstitutionsTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldInstitutionProviderId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionProviderId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $providerOptions = [];
         $selectedSectorId = '';
@@ -1965,7 +1965,7 @@ class InstitutionsTable extends ControllerActionTable
         return $data;
     }
 
-    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             // list($typeOptions, $selectedType) = array_values($this->getTypeOptions());
@@ -1977,7 +1977,7 @@ class InstitutionsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $institutionId = $entity->id;
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
@@ -2036,7 +2036,7 @@ class InstitutionsTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeType(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
 
@@ -2068,7 +2068,7 @@ class InstitutionsTable extends ControllerActionTable
      **
      ******************************************************************************************************************/
 
-    public function onUpdateFieldClassification(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldClassification(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             if (!Configure::read('schoolMode')) {
@@ -2085,13 +2085,13 @@ class InstitutionsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onGetClassification(Event $event, Entity $entity)
+    public function onGetClassification(EventInterface $event, Entity $entity)
     {
         $selectedClassification = $entity->classification;
         return __($this->classificationOptions[$selectedClassification]);
     }
 
-    public function onExcelGetClassification(Event $event, Entity $entity)
+    public function onExcelGetClassification(EventInterface $event, Entity $entity)
     {
         return __($this->classificationOptions[$entity->classification]);
     }
@@ -2170,7 +2170,7 @@ class InstitutionsTable extends ControllerActionTable
         }
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
             $this->SecurityGroups->getAlias(), $this->InstitutionSurveys->getAlias(), $this->StudentSurveys->getAlias(),
@@ -2181,7 +2181,7 @@ class InstitutionsTable extends ControllerActionTable
         ];
     }
 
-    public function getCustomFilter(Event $event)
+    public function getCustomFilter(EventInterface $event)
     {
         $filters = [
             //POCOR-6618 Starts hide shift type filter from advance search
@@ -2379,7 +2379,7 @@ class InstitutionsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetLogoContent(Event $event, Entity $entity)
+    public function onGetLogoContent(EventInterface $event, Entity $entity)
     {
         $fileContent = $entity->logo_content;
         $value = "";
@@ -2426,7 +2426,7 @@ class InstitutionsTable extends ControllerActionTable
     }
 
     //POCOR-7191::Start
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($this->checkInstitutionRecords($entity)) {
             $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
@@ -2438,14 +2438,14 @@ class InstitutionsTable extends ControllerActionTable
             $securityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions')
                 ->find()->where(['institution_id' => $entity->id])->first();
             if(!empty( $securityGroupInstitutions)) {
-                $securityGroups = TableRegistry::get('Security.SystemGroups')
+                $securityGroups = TableRegistry::getTableLocator()->get('Security.SystemGroups')
                 ->find()->where(['id' => $securityGroupInstitutions->security_group_id])->first(); //POCOR-7755
             }
-            $institutionActivities = TableRegistry::get('Institution.InstitutionActivities')
+            $institutionActivities = TableRegistry::getTableLocator()->get('Institution.InstitutionActivities')
                 ->find()->where(['institution_id' => $entity->id])->first();
             if ($securityGroupInstitutions && $securityGroups) {
-                TableRegistry::get('Security.SecurityGroupInstitutions')->delete($securityGroupInstitutions);
-                TableRegistry::get('Security.SecurityGroups')->delete($securityGroups); //POCOR-7755
+                TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions')->delete($securityGroupInstitutions);
+                TableRegistry::getTableLocator()->get('Security.SecurityGroups')->delete($securityGroups); //POCOR-7755
             }
             if ($institutionActivities) {
                 TableRegistry::getTableLocator()->get('Institution.InstitutionActivities')->delete($institutionActivities);
@@ -2738,7 +2738,7 @@ class InstitutionsTable extends ControllerActionTable
     }
     //POCOR-7971 ::end
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //echo "<pre>"; print_r($query->toArray); die;
       //  return $query;

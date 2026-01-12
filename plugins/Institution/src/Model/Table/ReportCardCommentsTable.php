@@ -6,7 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
 
 class ReportCardCommentsTable extends ControllerActionTable
@@ -37,7 +37,7 @@ class ReportCardCommentsTable extends ControllerActionTable
         ]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['class_number']['visible'] = false;
         $this->fields['institution_shift_id']['visible'] = false;
@@ -71,14 +71,14 @@ class ReportCardCommentsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
      {
         $institutionId = $this->getInstitutionID();
-        $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-        $ReportCards = TableRegistry::get('ReportCard.ReportCards');
+        $ClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
+        $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
+        $ReportCards = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
 
         // Academic Periods filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -122,8 +122,8 @@ class ReportCardCommentsTable extends ControllerActionTable
         $isSuperAdmin = $this->Auth->user()['super_admin'];
         $staffId = $this->Auth->user()['id'];
         if (!$isSuperAdmin) {
-            $allclassesPermission = TableRegistry::get('Institution.InstitutionClasses')->getRolePermissionAccessForAllClasses($staffId, $institutionId);
-            $myClassesPermission = TableRegistry::get('Institution.InstitutionClasses')->getRolePermissionAccessForMyClasses($staffId, $institutionId);
+            $allclassesPermission = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')->getRolePermissionAccessForAllClasses($staffId, $institutionId);
+            $myClassesPermission = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')->getRolePermissionAccessForMyClasses($staffId, $institutionId);
             if (!$allclassesPermission) {
                 //$where[$this->aliasField('staff_id')] = $staffId;
                 $where = [
@@ -228,16 +228,16 @@ class ReportCardCommentsTable extends ControllerActionTable
     }
 
     /*POCOR-6566 starts*/
-    public function onGetTotalMaleStudents(Event $event, Entity $entity)
+    public function onGetTotalMaleStudents(EventInterface $event, Entity $entity)
     {
         $gender_id = 1; // male
         $classId = $entity->institution_class_id;
         $institutionId = $entity->institution_id;
         $periodId = $entity->academic_period_id;
         $gradeId = $entity->education_grade_id;
-        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
+        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $totalMaleStudentRecord = $InstitutionClassStudents->find()
                                 ->contain('Users')
                                 ->matching('StudentStatuses', function ($q) {
@@ -258,16 +258,16 @@ class ReportCardCommentsTable extends ControllerActionTable
         }
     }
 
-    public function onGetTotalFemaleStudents(Event $event, Entity $entity)
+    public function onGetTotalFemaleStudents(EventInterface $event, Entity $entity)
     {
         $gender_id = 2; // female
         $classId = $entity->institution_class_id;
         $institutionId = $entity->institution_id;
         $periodId = $entity->academic_period_id;
         $gradeId = $entity->education_grade_id;
-        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
+        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $totalFemaleStudentRecord = $InstitutionClassStudents->find()
                                 ->contain('Users')
                                 ->matching('StudentStatuses', function ($q) {
@@ -289,7 +289,7 @@ class ReportCardCommentsTable extends ControllerActionTable
     }
     /*POCOR-6566 ends*/
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'name') {
             return __('Class Name');
@@ -302,17 +302,17 @@ class ReportCardCommentsTable extends ControllerActionTable
         }
     }
 
-    public function onGetEducationGrade(Event $event, Entity $entity)
+    public function onGetEducationGrade(EventInterface $event, Entity $entity)
     {
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
         $grade = $EducationGrades->get($entity->education_grade_id);
         return $grade->programme_grade_name;
     }
 
 
-    public function onGetSubjects(Event $event, Entity $entity)
+    public function onGetSubjects(EventInterface $event, Entity $entity)
     {
-        // $ReportCardSubjects = TableRegistry::get('ReportCard.ReportCardSubjects');
+        // $ReportCardSubjects = TableRegistry::getTableLocator()->get('ReportCard.ReportCardSubjects');
         // $count = $ReportCardSubjects
         //     ->find('matchingClassSubjects', [
         //         'report_card_id' => $entity->report_card_id,
@@ -322,7 +322,7 @@ class ReportCardCommentsTable extends ControllerActionTable
         // return $count;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (isset($buttons['view']['url'])) {

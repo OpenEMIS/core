@@ -2,7 +2,7 @@
 namespace Student\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -37,7 +37,7 @@ class StudentReportCardsTable extends ControllerActionTable
         return $events;
     }
      //POCOR-7321 end
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['principal_comments']['visible'] = false;
         $this->fields['homeroom_teacher_comments']['visible'] = false;
@@ -53,7 +53,7 @@ class StudentReportCardsTable extends ControllerActionTable
         $this->fields['academic_period_id']['type'] = 'integer';
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder(['academic_period_id', 'institution_id', 'report_card_id', 'education_grade_id', 'institution_class_id']);
 
@@ -98,12 +98,12 @@ class StudentReportCardsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $user = $this->Auth->user();
 
-        $InstitutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-        $StudentGuardians = TableRegistry::get('Student.StudentGuardians');
+        $InstitutionStudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
+        $StudentGuardians = TableRegistry::getTableLocator()->get('Student.StudentGuardians');
 
         //Start POCOR-7055
         if ($user['is_student'] == 1 && $user['is_guardian'] == 1 && $user['is_staff'] == 1) {
@@ -162,12 +162,12 @@ class StudentReportCardsTable extends ControllerActionTable
         }
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder(['academic_period_id', 'report_card_id', 'institution_id', 'institution_class_id', 'education_grade_id']);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         //POCOR 7321 start
@@ -249,7 +249,7 @@ class StudentReportCardsTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
@@ -266,8 +266,8 @@ class StudentReportCardsTable extends ControllerActionTable
         $this->controller->set('selectedAction', 'ReportCards');
     }
     //POCOR-7321 start
-    public function viewPDF(Event $event, ArrayObject $extra){
-        $model = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+    public function viewPDF(EventInterface $event, ArrayObject $extra){
+        $model = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
         $ids = $this->paramsDecode($this->paramsPass(0));
 
         if ($model->exists($ids)) {
@@ -305,7 +305,7 @@ class StudentReportCardsTable extends ControllerActionTable
     }
     //POCOR-7321 ends
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'report_card_id') {
             return __('Report Card');

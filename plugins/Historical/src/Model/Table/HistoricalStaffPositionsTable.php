@@ -2,7 +2,7 @@
 namespace Historical\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
@@ -46,7 +46,7 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         if ($this->controller->getName() === 'Staff') {
             $this->behaviors()->get('Historical')->getConfig([
@@ -75,7 +75,7 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
             ]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'staff_position_title_id':
@@ -87,7 +87,7 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         }
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('start_date');
         $this->field('end_date');
@@ -103,7 +103,7 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         $this->setFieldOrder(['start_date', 'end_date', 'institution_type_id', 'institution_id', 'staff_position_title_id', 'staff_type_id', 'comments', 'file_name', 'file_content']);
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain([
@@ -123,7 +123,7 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
             ]);
     }
 
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain([
@@ -131,7 +131,7 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
             ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $options = ['type' => 'staff'];
         $tabElements = $this->controller->getCareerTabElements($options);
@@ -155,27 +155,27 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         $this->setFieldOrder(['photo', 'openemis_no', 'staff_type_id', 'staff_status_id', 'staff', 'staff_position_title_id', 'fte', 'start_date', 'end_date', 'institution_id', 'comments', 'file_name', 'file_content']);
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         return $entity->user->openemis_no;
     }
 
-    public function onGetStaff(Event $event, Entity $entity)
+    public function onGetStaff(EventInterface $event, Entity $entity)
     {
         return $entity->user->name;
     }
 
-    public function onGetFte(Event $event, Entity $entity)
+    public function onGetFte(EventInterface $event, Entity $entity)
     {
         return '-';
     }
 
-    public function onGetInstitutionId(Event $event, Entity $entity)
+    public function onGetInstitutionId(EventInterface $event, Entity $entity)
     {
         return $entity->institution->code_name;
     }
 
-    public function onGetPhoto(Event $event, Entity $entity)
+    public function onGetPhoto(EventInterface $event, Entity $entity)
     {
         $fileContent = $entity->user->photo_content;
 
@@ -188,10 +188,10 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $TypesTable = TableRegistry::get('Institution.Types');
+            $TypesTable = TableRegistry::getTableLocator()->get('Institution.Types');
             $typeOptions = $TypesTable
                 ->find('list')
                 ->find('visible')
@@ -209,7 +209,7 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $institutionList = [];

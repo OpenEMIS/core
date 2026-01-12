@@ -3,7 +3,7 @@ namespace Report\Model\Table;
 
 use ArrayObject;
 use DateTime;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -34,11 +34,11 @@ class InstitutionCasesTable extends AppTable
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('AcademicPeriod.Period');
 
-        $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+        $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
         $this->features = $WorkflowRules->getFeatureOptionsWithClassName();
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),
@@ -60,7 +60,7 @@ class InstitutionCasesTable extends AppTable
         //POCOR-7786 end
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -75,7 +75,7 @@ class InstitutionCasesTable extends AppTable
         }
         //POCOR-7786 start
         // $module = $requestData->module;
-        // $listener = TableRegistry::get(]);
+        // $listener = TableRegistry::getTableLocator()->get(]);
         $query
             ->select([
                 'case_id'=>'InstitutionCases.id',
@@ -121,8 +121,8 @@ class InstitutionCasesTable extends AppTable
                     $arr->executed_by = $arr['_matchingData']['CreatedUser']['openemis_no']." - ".$arr['_matchingData']['CreatedUser']['name'];
                     $arr->assignee=$arr['assignee_openemis']." - ".$arr['assignee_first_name']." ".$arr["assignee_last_name"];
                     
-                    $linkedRecords = TableRegistry::get('Institution.InstitutionCaseLinks'); //POCOR-7786
-                    $institutionCases = TableRegistry::get('Institution.InstitutionCases');
+                    $linkedRecords = TableRegistry::getTableLocator()->get('Institution.InstitutionCaseLinks'); //POCOR-7786
+                    $institutionCases = TableRegistry::getTableLocator()->get('Institution.InstitutionCases');
                     $childCases=$linkedRecords->find()
                                                ->where([$linkedRecords->aliasField('parent_case_id')=>$arr->case_id])
                                                ->toArray();
@@ -161,7 +161,7 @@ class InstitutionCasesTable extends AppTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $requestData = json_decode($settings['process']['params']);
         //POCOR-7786 start
@@ -255,7 +255,7 @@ class InstitutionCasesTable extends AppTable
 
        
             
-        // $listener = TableRegistry::get($this->features[$module]);  //POCOR-7786 start
+        // $listener = TableRegistry::getTableLocator()->get($this->features[$module]);  //POCOR-7786 start
         // $event = $listener->dispatchEvent('InstitutionCase.onIncludeCustomExcelFields', [$newFields], $listener);  //POCOR-7786 start
          //POCOR-7786 end
         if ($event->isStopped()) {
@@ -268,7 +268,7 @@ class InstitutionCasesTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetFullName(Event $event, Entity $entity)
+    public function onExcelGetFullName(EventInterface $event, Entity $entity)
     {
         $fullName = [];
         ($entity->first_name) ? $fullName[] = $entity->first_name : '';

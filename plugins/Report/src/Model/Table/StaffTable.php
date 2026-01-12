@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
@@ -71,7 +71,7 @@ class StaffTable extends AppTable  {
         return $validator;
     }
 
-     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+     public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if ($data[$this->getAlias()]['feature'] == 'Report.StaffDuties') {
             $options['validate'] = 'StaffDuties';
@@ -89,14 +89,14 @@ class StaffTable extends AppTable  {
         //POCOR-5185[end]
     }
     //POCOR - 7408 start
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['label'=>'Area Name','required' => true]]);
        
     }
     //POCOR - 7408 end
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
 
@@ -119,7 +119,7 @@ class StaffTable extends AppTable  {
 
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request) {
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request) {
         $options = $this->controller->getFeatureOptions($this->getAlias());
         $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
         $attr['onChangeReload'] = true;
@@ -144,7 +144,7 @@ class StaffTable extends AppTable  {
         return $attr;
     }
 
-    public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStaffLeaveTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -184,7 +184,7 @@ class StaffTable extends AppTable  {
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -214,7 +214,7 @@ class StaffTable extends AppTable  {
         }
     }
 
-    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaLevelId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -248,7 +248,7 @@ class StaffTable extends AppTable  {
         return $attr;
     }
 
-    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaEducationId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -296,7 +296,7 @@ class StaffTable extends AppTable  {
         return $attr;
     }
 
-    public function onUpdateFieldSystemUsage(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldSystemUsage(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -313,7 +313,7 @@ class StaffTable extends AppTable  {
         }
     }
 
-    public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request) {
+    public function onUpdateFieldStatus(EventInterface $event, array $attr, $action, ServerRequest $request) {
         if ($action == 'add') {
             $Workflow = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
             if (isset($this->request->getData($this->getAlias())['feature'])) {
@@ -374,7 +374,7 @@ class StaffTable extends AppTable  {
         return $statuses;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $areaId = $requestData->area_education_id;
@@ -494,7 +494,7 @@ class StaffTable extends AppTable  {
             ->where([$this->aliasField('is_staff') => 1, $conditions]);
     }
 
-    public function onExcelGetBirthcertificateNumber(Event $event, Entity $entity)
+    public function onExcelGetBirthcertificateNumber(EventInterface $event, Entity $entity)
     {
         
         $userTable = TableRegistry::getTableLocator()->get('security_users');
@@ -522,7 +522,7 @@ class StaffTable extends AppTable  {
             return $getbirthCertificate;
     }
 
-    public function onExcelGetOtherIdentityType(Event $event, Entity $entity)
+    public function onExcelGetOtherIdentityType(EventInterface $event, Entity $entity)
     {
         $userTable = TableRegistry::getTableLocator()->get('User.Users');
         $userIdentities = TableRegistry::getTableLocator()->get('User.UserIdentities');
@@ -557,12 +557,12 @@ class StaffTable extends AppTable  {
          return $entity->getIdentityTypes;
     }
 
-    public function onExcelGetOtherIdentityNumber(Event $event, Entity $entity)
+    public function onExcelGetOtherIdentityNumber(EventInterface $event, Entity $entity)
     {
         return $entity->getIdentitynumber;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields) {
         $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
          $newFields[] = [
@@ -703,7 +703,7 @@ class StaffTable extends AppTable  {
         $fields->exchangeArray($newFields);
     }
 
-    public function onUpdateFieldAreaId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -730,7 +730,7 @@ class StaffTable extends AppTable  {
         }
         return $attr;
     }
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         if (isset($this->request->getData($this->getAlias())['feature'])) {
@@ -847,7 +847,7 @@ class StaffTable extends AppTable  {
         }
     }
     //Start:POCOR-6779
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['academic_period_id'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -915,7 +915,7 @@ class StaffTable extends AppTable  {
         }
     }
 
-    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationSubjectId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         if (isset($this->request->getData($this->getAlias())['feature'])) {
@@ -979,7 +979,7 @@ class StaffTable extends AppTable  {
     }
     //End:POCOR-6779
 
-    public function onUpdateFieldHealthReportType(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldHealthReportType(EventInterface $event, array $attr, $action, ServerRequest $request){
         if (isset($request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
             if ((in_array($feature, ['Report.StaffHealthReports']))
@@ -1014,7 +1014,7 @@ class StaffTable extends AppTable  {
      * @return array
      * @ticket POCOR-5185
     **/
-    public function onUpdateFieldStudentPerTeacherRatio(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStudentPerTeacherRatio(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $feature = $this->request->getData($this->getAlias())['feature'] ?? null;
         if ($feature && in_array($feature, ['Report.StaffRequirements'])) {
@@ -1032,7 +1032,7 @@ class StaffTable extends AppTable  {
      * @return array
      * @ticket POCOR-5185
      **/
-    public function onUpdateFieldUpperTolerance(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldUpperTolerance(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array(($this->request->getData($this->getAlias())['feature'] ?? null), ['Report.StaffRequirements'])) {
             $attr['type'] = 'integer';
@@ -1051,7 +1051,7 @@ class StaffTable extends AppTable  {
      * @return array
      * @ticket POCOR-5185
      **/
-    public function onUpdateFieldLowerTolerance(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldLowerTolerance(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array(($this->request->getData($this->getAlias())['feature'] ?? null), ['Report.StaffRequirements'])) {
             $attr['type'] = 'integer';
@@ -1085,7 +1085,7 @@ class StaffTable extends AppTable  {
     }
     //POCOR-5185[end]
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':

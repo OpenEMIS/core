@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\Database\Schema\Table;
 use DatePeriod;
 use DateInterval;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -47,11 +47,11 @@ class StaffEntitlementTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $this->field('year', ['visible' => true]);
@@ -80,7 +80,7 @@ class StaffEntitlementTable extends ControllerActionTable
         $this->field('status_id', ['visible' => false]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $yearsQuery = clone $query;
         $yearsQuery
@@ -248,30 +248,30 @@ class StaffEntitlementTable extends ControllerActionTable
     }
 
     // POCOR-9287 start
-    public function onGetDaysTotal(Event $event, Entity $entity)
+    public function onGetDaysTotal(EventInterface $event, Entity $entity)
     {
             return $entity->days_total . " ";
 
     }
-    public function onGetYear(Event $event, Entity $entity)
+    public function onGetYear(EventInterface $event, Entity $entity)
     {
 
         return $entity->year ?? __('Not Specified');
 
     }
-    public function onGetDaysTaken(Event $event, Entity $entity)
+    public function onGetDaysTaken(EventInterface $event, Entity $entity)
     {
 
         return $entity->days_taken ?? __('Not Specified');
 
     }
-    public function onGetDaysBalance(Event $event, Entity $entity)
+    public function onGetDaysBalance(EventInterface $event, Entity $entity)
     {
 
         return $entity->days_balance ?? __('Not Specified');
 
     }
-    public function onGetStaffLeaveType(Event $event, Entity $entity)
+    public function onGetStaffLeaveType(EventInterface $event, Entity $entity)
     {
         return $this->getRelatedName('Staff.StaffLeaveTypes', $entity->staff_leave_type_id);
 

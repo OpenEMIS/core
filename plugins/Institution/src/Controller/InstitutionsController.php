@@ -9,6 +9,7 @@ use Cake\Controller\Exception\SecurityException;
 use Cake\Database\Expression\QueryExpression;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\Response;
 use Cake\Http\Session;
 use Cake\I18n\Date;
@@ -23,7 +24,6 @@ use Cake\Utility\Text;
 use ControllerAction\Model\Traits\UtilityTrait;
 use Exception;
 use PHPExcel_IOFactory;
-use Cake\Event\EventInterface;
 use Cake\Auth\DefaultPasswordHasher;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Cake\I18n\Time;
@@ -191,7 +191,7 @@ class InstitutionsController extends AppController
 
         parent::initialize();
         $this->loadComponent('Cookie'); //POCOR-8551
-        $data = $this->loadModel('Calendars');
+        $data = $this->Calendars = $this->fetchTable('Calendars');
         // $this->viewBuilder()->setHelpers(['HtmlField']);
 
         // $this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
@@ -250,7 +250,7 @@ class InstitutionsController extends AppController
 
 
         $this->attachAngularModulesForDirectory();
-        $this->loadModel('Institution.StaffBodyMasses');
+        $this->StaffBodyMasses = $this->fetchTable('Institution.StaffBodyMasses');
 // POCOR-5672: Removing CSRF token mismatch condition for specific actions in the save APIs
         $csrfExemptActions = [
             'saveStudentData',
@@ -2940,7 +2940,7 @@ class InstitutionsController extends AppController
         return $events;
     }
 
-    public function isActionIgnored(Event $event, $action)
+    public function isActionIgnored(EventInterface $event, $action)
     {
         $pass = $this->request->getParam('pass');
         if (isset($pass[0]) && $pass[0] == 'downloadFile') {
@@ -3327,7 +3327,7 @@ class InstitutionsController extends AppController
     }
 
     public
-    function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $isInstitutionIndex = $this->isInstitutionIDSkipped();
         $alias = $model->getAlias();
@@ -3706,13 +3706,13 @@ class InstitutionsController extends AppController
     }
 
     public
-    function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
+    function beforeQuery(EventInterface $event, Table $model, Query $query, ArrayObject $extra)
     {
         $this->beforePaginate($event, $model, $query, $extra);
     }
 
     public
-    function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
+    function beforePaginate(EventInterface $event, Table $model, Query $query, ArrayObject $options)
     {
 
         if (!$this->request->is('ajax')) {
@@ -7372,8 +7372,8 @@ class InstitutionsController extends AppController
         }
         //POCOR-8434 starts
         if (!empty($institutionId) && $studentAdmissionStatusValue == 0 && strtolower($studentAdmissionStatus) == "enrolled") {
-            $workflows = TableRegistry::get('Workflow.Workflows');
-            $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+            $workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+            $workflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
             $workflowResults = $workflows->find()
                 ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
                 ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
@@ -7387,7 +7387,7 @@ class InstitutionsController extends AppController
             $workflowStepId = $workflowResults->workflowSteps_id;
 
             if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($workflowResults)) {
-                $institutionStudentEnrolment = TableRegistry::get('Institution.StudentEnrolment');
+                $institutionStudentEnrolment = TableRegistry::getTableLocator()->get('Institution.StudentEnrolment');
                 $entityEnrolmentData = [
                     'start_date' => $startDate,
                     'end_date' => $endDate,
@@ -7413,7 +7413,7 @@ class InstitutionsController extends AppController
         } else if(!empty($institutionId)) {
             $workflowStepId = $studentAdmissionStatusValue;
 
-            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+            $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
             $workflowStepData = $workflowStepsTable->find()->contain('Workflows')
                 ->where([
                     $workflowStepsTable->aliasField('id') => $workflowStepId
@@ -7421,7 +7421,7 @@ class InstitutionsController extends AppController
 
             if($workflowStepData->workflow->name == 'Student Admission'){
                 if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId)) {
-                    $institutionStudentAdmission = TableRegistry::get('Institution.StudentAdmission');
+                    $institutionStudentAdmission = TableRegistry::getTableLocator()->get('Institution.StudentAdmission');
                     $entityAdmissionData = [
                         'start_date' => $startDate,
                         'end_date' => $endDate,
@@ -7463,7 +7463,7 @@ class InstitutionsController extends AppController
                 }
             } else if($workflowStepData->workflow->name == 'Student Enrolment') {
                 if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId)) {
-                    $institutionStudentEnrolment = TableRegistry::get('Institution.StudentEnrolment');
+                    $institutionStudentEnrolment = TableRegistry::getTableLocator()->get('Institution.StudentEnrolment');
                     $entityEnrolmentData = [
                         'start_date' => $startDate,
                         'end_date' => $endDate,
@@ -7489,8 +7489,8 @@ class InstitutionsController extends AppController
             }
         }
         //previous code commented by Abhinav
-        // $workflows = TableRegistry::get('Workflow.Workflows');
-        // $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+        // $workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        // $workflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
         // $workflowResults = $workflows->find()
         //     ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
         //     ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [

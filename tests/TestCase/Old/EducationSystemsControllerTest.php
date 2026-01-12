@@ -70,7 +70,7 @@ class EducationSystemsControllerTest extends AppTestCase
         $this->get($testUrl);
         $this->assertResponseCode(200);
 
-        $table = TableRegistry::get('Education.EducationSystems');
+        $table = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $data = [
             'EducationSystems' => [
                 'name' => 'New National Education System',
@@ -90,7 +90,7 @@ class EducationSystemsControllerTest extends AppTestCase
     {
         $testUrl = $this->url('view/'.$this->id);
 
-        $table = TableRegistry::get('Education.EducationSystems');
+        $table = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $this->get($testUrl);
 
         $this->assertResponseCode(200);
@@ -101,7 +101,7 @@ class EducationSystemsControllerTest extends AppTestCase
         $testUrl = $this->url('edit/'.$this->id);
 
         // TODO: DO A GET FIRST
-        $table = TableRegistry::get('Education.EducationSystems');
+        $table = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $this->get($testUrl);
 
         $this->assertResponseCode(200);
@@ -125,7 +125,7 @@ class EducationSystemsControllerTest extends AppTestCase
     // public function testDelete() {
     //     $testUrl = $this->url('remove');
 
-    //     $table = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+    //     $table = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
     //     $exists = $table->exists([$table->primaryKey() => $this->id]);
     //     $this->assertTrue($exists);

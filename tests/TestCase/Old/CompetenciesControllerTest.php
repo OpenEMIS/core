@@ -33,7 +33,7 @@ class CompetenciesControllerTest extends AppTestCase
         parent::setUp();
         $this->urlPrefix('/FieldOptions/Competencies/');
 
-        $this->table = TableRegistry::get('Staff.competencies');
+        $this->table = TableRegistry::getTableLocator()->get('Staff.competencies');
     }
 
     public function testIndexCompetencies()

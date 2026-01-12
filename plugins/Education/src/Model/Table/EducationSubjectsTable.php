@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 
@@ -85,7 +85,7 @@ class EducationSubjectsTable extends ControllerActionTable
     }
 
     //POCOR-8142::Start
-    public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function beforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
@@ -100,7 +100,7 @@ class EducationSubjectsTable extends ControllerActionTable
     }
     //POCOR-8142::End
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         // To handle when delete all subjects
         if (!array_key_exists('field_of_studies', $data[$this->getAlias()])) {
@@ -118,22 +118,22 @@ class EducationSubjectsTable extends ControllerActionTable
         $options->exchangeArray($arrayOptions);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['FieldOfStudies']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(EventInterface $event, Entity $entity)
     {
         $this->field('field_of_studies', ['after' => 'visible', 'entity' => $entity, 'type' => 'custom_field_of_studies']);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('field_of_studies', ['after' => 'visible', 'entity' => $entity, 'type' => 'custom_field_of_studies']);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options){
 
         // Webhook Education Subject create -- start
         if($entity->isNew()){
@@ -143,7 +143,7 @@ class EducationSubjectsTable extends ControllerActionTable
                 'subject_name' =>$entity->name,
                 'subject_code' =>$entity->code,
             ];
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             if (!empty($entity->created_user_id)) {
                 $Webhooks->triggerShell('education_subject_create', ['username' => $username], $body);
             }
@@ -158,7 +158,7 @@ class EducationSubjectsTable extends ControllerActionTable
                 'subject_name' =>$entity->name,
                 'subject_code' =>$entity->code,
             ];
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             if (!empty($entity->modified_user_id)) {
                 $Webhooks->triggerShell('education_subject_update', ['username' => $username], $body);
             }
@@ -166,14 +166,14 @@ class EducationSubjectsTable extends ControllerActionTable
         // Webhook Education Subject` update -- end
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options){
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options){
 
         // Webhook Education Subject Delete -- Start
         $body = array();
         $body = [
             'subject_id' => $entity->id
         ];
-        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
         if($this->Auth->user()){
             $Webhooks->triggerShell('education_subject_delete', ['username' => $username], $body);
         }
@@ -182,7 +182,7 @@ class EducationSubjectsTable extends ControllerActionTable
 
     public function getFieldOfStudiesOptions()
     {
-        $EducationFieldOfStudies = TableRegistry::get('Education.EducationFieldOfStudies');
+        $EducationFieldOfStudies = TableRegistry::getTableLocator()->get('Education.EducationFieldOfStudies');
 
         $fieldOfStudiesOptions = $EducationFieldOfStudies
             ->find('list')
@@ -193,7 +193,7 @@ class EducationSubjectsTable extends ControllerActionTable
         return $fieldOfStudiesOptions;
     }
 
-    public function onGetCustomFieldOfStudiesElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomFieldOfStudiesElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         $cellCount = 0;
         $tableHeaders = [__('Field of Studies')];
@@ -280,7 +280,7 @@ class EducationSubjectsTable extends ControllerActionTable
     {
         $educationSubjectId = $entity->id;
 
-        $StaffQualificationsSubjects = TableRegistry::get('Staff.QualificationsSubjects');
+        $StaffQualificationsSubjects = TableRegistry::getTableLocator()->get('Staff.QualificationsSubjects');
         $query = $StaffQualificationsSubjects->find()
             ->matching('StaffQualifications', function ($q) use ($educationFieldOfStudyId) {
                 return $q->where(['education_field_of_study_id' => $educationFieldOfStudyId]);
@@ -293,7 +293,7 @@ class EducationSubjectsTable extends ControllerActionTable
         return $count > 0 ? true : false;
     }
 
-    public function addEditOnAddFieldOfStudy(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnAddFieldOfStudy(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $alias = $this->getAlias();
         $fieldKey = 'selected_field_of_study';
@@ -317,7 +317,7 @@ class EducationSubjectsTable extends ControllerActionTable
         ];
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'name') {
             return __('Name');
@@ -338,7 +338,7 @@ class EducationSubjectsTable extends ControllerActionTable
         }
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();

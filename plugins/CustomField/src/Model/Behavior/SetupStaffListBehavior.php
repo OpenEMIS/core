@@ -5,7 +5,7 @@ namespace CustomField\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use CustomField\Model\Behavior\SetupBehavior;
 
@@ -26,8 +26,8 @@ class SetupStaffListBehavior extends SetupBehavior
     {
         parent::initialize($config);
 
-        $this->CustomModules = TableRegistry::get('CustomField.CustomModules');
-        $this->CustomForms = TableRegistry::get('Survey.SurveyForms');
+        $this->CustomModules = TableRegistry::getTableLocator()->get('CustomField.CustomModules');
+        $this->CustomForms = TableRegistry::getTableLocator()->get('Survey.SurveyForms');
 
         $this->formOptions = $this->CustomForms
             ->find('list')
@@ -41,12 +41,12 @@ class SetupStaffListBehavior extends SetupBehavior
             ->toArray();
     }
 
-    public function buildValidator(Event $event, Validator $validator, $name)
+    public function buildValidator(EventInterface $event, Validator $validator, $name)
     {
         $validator->notEmpty('survey_form');
     }
 
-    public function onSetStaffListElements(Event $event, Entity $entity)
+    public function onSetStaffListElements(EventInterface $event, Entity $entity)
     {
         $model = $this->_table;
         $request = $model->request;
@@ -93,7 +93,7 @@ class SetupStaffListBehavior extends SetupBehavior
         $model->field('survey_form', $inputOptions);
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['field_type']) && $data['field_type'] == $this->fieldTypeCode) {
             if (isset($data['survey_form']) && !empty($data['survey_form'])) {

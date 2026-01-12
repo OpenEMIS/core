@@ -7,7 +7,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\ResultSet;
 use Cake\Http\ServerRequest;
 use Cake\Log\Log;
@@ -37,7 +37,7 @@ class StudentCurricularsTable extends ControllerActionTable
         ]);
     }
     //POCOR-8056
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         //POCOR-8413 starts
         if($this->controller->getName() != 'Profiles'){
@@ -48,7 +48,7 @@ class StudentCurricularsTable extends ControllerActionTable
     }
     //POCOR-8056
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //POCOR-8028 removed academic period
         $session = $this->request->getSession();
@@ -59,8 +59,8 @@ class StudentCurricularsTable extends ControllerActionTable
         } else {
             $sId_id = $userData['Auth']['User']['id'];
         }
-        $InstitutionCurriculars = TableRegistry::get('Institution.InstitutionCurriculars');
-        $curricular_types = TableRegistry::get('FieldOption.CurricularTypes');
+        $InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
+        $curricular_types = TableRegistry::getTableLocator()->get('FieldOption.CurricularTypes');
         $institutionId = $this->getInstitutionID();
         if ($this->controller->getName() == 'Profiles') {
             $where = [$this->aliasField('student_id') => $sId_id];
@@ -119,7 +119,7 @@ class StudentCurricularsTable extends ControllerActionTable
 
     }
 
-    public function onGetCurricularType(Event $event, Entity $entity)
+    public function onGetCurricularType(EventInterface $event, Entity $entity)
     {
         if ($entity->type != '') {
             return $entity->type;
@@ -132,7 +132,7 @@ class StudentCurricularsTable extends ControllerActionTable
         }
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         $session = $this->request->getSession();
         $sId = $this->getStudentID();
@@ -142,7 +142,7 @@ class StudentCurricularsTable extends ControllerActionTable
         return (!empty($student_data)) ? $student_data[0] : '--';
     }
 
-    public function onGetStudentName(Event $event, Entity $entity)
+    public function onGetStudentName(EventInterface $event, Entity $entity)
     {
         $session = $this->request->getSession();
         $sId = $this->getStudentID();
@@ -153,7 +153,7 @@ class StudentCurricularsTable extends ControllerActionTable
     }
 
 
-    public function onGetType(Event $event, Entity $entity)
+    public function onGetType(EventInterface $event, Entity $entity)
     {
         $connection = ConnectionManager::get('default');
         $results = $connection->query("SELECT name FROM curricular_types WHERE id=" . $entity->institution_curricular->curricular_type_id);
@@ -162,14 +162,14 @@ class StudentCurricularsTable extends ControllerActionTable
 
     }
 
-    public function onGetCurricularCategory(Event $event, Entity $entity)
+    public function onGetCurricularCategory(EventInterface $event, Entity $entity)
     {
 
         return $entity['institution_curricular']['category'] ? __('Co-Curricular') : ( !empty($entity->category) ? __('Co-Curricular') : __('Extracurricular')); //POCOR-7751
     }
 
 
-    public function onGetCategory(Event $event, Entity $entity)
+    public function onGetCategory(EventInterface $event, Entity $entity)
     {
         return $entity['institution_curricular']['category'] ? __('Co-Curricular') : __('Extracurricular');
     }
@@ -183,12 +183,12 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $this->field('category', ['visible' => true]);
@@ -211,11 +211,11 @@ class StudentCurricularsTable extends ControllerActionTable
             'end_date']); //POCOR-7604
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // $this->field('student_id', ['visible' => false]);
         $InstitutionID = $this->getStudentID();
-        $InstitutionCurriculars = TableRegistry::get('Institution.InstitutionCurriculars');
+        $InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
         $result = $InstitutionCurriculars
             ->find()
             ->select(['id', 'name'])
@@ -229,7 +229,7 @@ class StudentCurricularsTable extends ControllerActionTable
             }
         }
 
-        $curricularPosition = TableRegistry::get('FieldOption.CurricularPositions');
+        $curricularPosition = TableRegistry::getTableLocator()->get('FieldOption.CurricularPositions');
         $result1 = $curricularPosition
             ->find()
             ->select(['id', 'name'])
@@ -255,12 +255,12 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->field('id', ['type' => 'hidden', 'value' => Security::hash(time(), 'sha256')]);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $data)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
         $curricularData = $this->InstitutionCurriculars->get($entity->institution_curricular_id);
 
         $studentData = $this->Users->get($entity->student_id)->gender_id;
-        $genderCode = TableRegistry::get('User.Genders')->get($studentData)->code;
+        $genderCode = TableRegistry::getTableLocator()->get('User.Genders')->get($studentData)->code;
         $connection = ConnectionManager::get('default');
         if ($genderCode == "M") {
             $data = empty($curricularData->total_male_students) ? 1 : $curricularData->total_male_students + 1;
@@ -273,14 +273,14 @@ class StudentCurricularsTable extends ControllerActionTable
     }
 
     //POCOR-8414
-    public function afterAction(Event $event, ArrayObject $options)
+    public function afterAction(EventInterface $event, ArrayObject $options)
     {
         $plugin = __($this->controller->getPlugin());
         if($plugin != 'Profile' && $plugin != 'GuardianNav'){
             $id = $this->request->getAttribute('params')['pass'][1];
             $DecodedQueryString = $this->paramsDecode($id);
             $userId = $DecodedQueryString['user_id'];
-            $Users = TableRegistry::get('User.Users');
+            $Users = TableRegistry::getTableLocator()->get('User.Users');
             $result = $Users
                 ->find()
                 ->select(['first_name','last_name'])

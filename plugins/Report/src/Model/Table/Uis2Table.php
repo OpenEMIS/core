@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 
@@ -28,7 +28,7 @@ class Uis2Table extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         unset($sheets[0]);
         $uisTabsData = $this->uisTabsData;
@@ -42,7 +42,7 @@ class Uis2Table extends AppTable
 
         
     }
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $sheetData = $settings['sheet']['sheetData'];
         $UISType = $sheetData['uis_tabs_type'];
@@ -195,19 +195,19 @@ class Uis2Table extends AppTable
     }
 
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $sheetData = $settings['sheet']['sheetData'];
         $uisType = $sheetData['uis_tabs_type'];
-        $areaAdministratives = TableRegistry::get('area_administratives');
-        $institutions = TableRegistry::get('institutions');
-        $area = TableRegistry::get('areas');
+        $areaAdministratives = TableRegistry::getTableLocator()->get('area_administratives');
+        $institutions = TableRegistry::getTableLocator()->get('institutions');
+        $area = TableRegistry::getTableLocator()->get('areas');
         $reqData = json_decode($settings['process']['params'], true);
         $academic_period_id = $reqData['academic_period_id'];
         
         if ($uisType == 'UIS-A2')
         {
-            $summaryProgrammeSectorGendersTypes = TableRegistry::get('Report.SummaryProgrammeSectorGenders');
+            $summaryProgrammeSectorGendersTypes = TableRegistry::getTableLocator()->get('Report.SummaryProgrammeSectorGenders');
             $res = $query->select([
                 'academic_period_name' => 'academic_period_name',
                 'institution_sector_name' => 'institution_sector_name',

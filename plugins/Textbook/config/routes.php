@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Textbooks', ['plugin' => 'Textbook'], function ($routes) {
-	Router::connect('/Textbooks', ['plugin' => 'Textbook', 'controller' => 'Textbooks']);
-	Router::connect('/Textbooks/:action/*', ['plugin' => 'Textbook', 'controller' => 'Textbooks']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/Textbooks', ['plugin' => 'Textbook'], function (RouteBuilder $routes) {
+    	$routes->connect('/Textbooks', ['plugin' => 'Textbook', 'controller' => 'Textbooks']);
+    	$routes->connect('/Textbooks/:action/*', ['plugin' => 'Textbook', 'controller' => 'Textbooks']);
+    });
+};

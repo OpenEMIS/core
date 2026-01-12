@@ -37,9 +37,9 @@ class POCOR7469 extends AbstractMigration
 
 
 
-        $WorkFlowModelT = TableRegistry::get('workflow_models');
-        $WorkFlowT = TableRegistry::get('workflows');
-        $WorkFlowStepT = TableRegistry::get('workflow_steps');
+        $WorkFlowModelT = TableRegistry::getTableLocator()->get('workflow_models');
+        $WorkFlowT = TableRegistry::getTableLocator()->get('workflows');
+        $WorkFlowStepT = TableRegistry::getTableLocator()->get('workflow_steps');
 
         $workFlowModel = $WorkFlowModelT->find()->where(['name'=>'Institutions > Behaviour > Students'])->first();
         $workFlow = $WorkFlowT->find()->where(['workflow_model_id'=> $workFlowModel->id])->first();

@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 use Cake\Log\Log;
 use App\Model\Traits\OptionsTrait;
@@ -66,7 +66,7 @@ class WorkflowsTable extends AppTable
 
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', [
@@ -120,7 +120,7 @@ class WorkflowsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $featureOptions = $this->controller->getFeatureOptions($this->getAlias());
 
@@ -128,7 +128,7 @@ class WorkflowsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldModel(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldModel(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (!isset($this->request->getData($this->getAlias())['feature'])) {
             $selectedFeature = key($this->modelList);
@@ -141,7 +141,7 @@ class WorkflowsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldCategory(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCategory(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $categoryOptions = $this->getSelectOptions('WorkflowSteps.category');
         $categoryOptions = ['-1' => __('All Categories')] + $categoryOptions;
@@ -163,7 +163,7 @@ class WorkflowsTable extends AppTable
         return $validator;
     }*/
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($request->getData($this->getAlias())['model'])) {
             $feature = $this->request->getData($this->getAlias())['model'];
@@ -177,7 +177,7 @@ class WorkflowsTable extends AppTable
         }
         return $attr;
     }
-    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaLevelId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($request->getData($this->getAlias())['model'])) {
             $feature = $this->request->getData($this->getAlias())['model'];
@@ -206,7 +206,7 @@ class WorkflowsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldArea(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldArea(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($request->getData($this->getAlias())['model'])) {
             $feature = $this->request->getData($this->getAlias())['model'];
@@ -237,7 +237,7 @@ class WorkflowsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $areaId = $request->getData()['Workflows']['area'];
         $feature = $request->getData($this->getAlias())['model'];
@@ -297,7 +297,7 @@ class WorkflowsTable extends AppTable
         return $attr;
     }
 
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         $fieldsOrder[] = 'feature';
         $fieldsOrder[] = 'model';
@@ -357,7 +357,7 @@ class WorkflowsTable extends AppTable
         $this->ControllerAction->setFieldOrder($fieldsOrder);
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
     {
 
         if (isset($requestData['submit']) && $requestData['submit'] == 'save') {
@@ -371,7 +371,7 @@ class WorkflowsTable extends AppTable
         }
     }
 
-     public function onUpdateFieldReportStartDate(Event $event, array $attr, $action, ServerRequest $request)
+     public function onUpdateFieldReportStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($request->getData()['Workflows']['institution_id'] == 0) {
             $attr['type'] = 'date';
@@ -383,7 +383,7 @@ class WorkflowsTable extends AppTable
     }
 
 
-    public function onUpdateFieldReportEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldReportEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
        if ($request->getData()['Workflows']['institution_id'] == 0) {
             $attr['type'] = 'date';
@@ -393,7 +393,7 @@ class WorkflowsTable extends AppTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':

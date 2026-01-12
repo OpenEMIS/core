@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Validation\Validator;
 use Cake\ORM\Behavior;
@@ -29,7 +29,7 @@ class EmailTemplateBehavior extends Behavior
         $model->toggle('remove', false);
     }
 
-    public function buildValidator(Event $event, Validator $validator, $name)
+    public function buildValidator(EventInterface $event, Validator $validator, $name)
     {
         $validator
             ->requirePresence('subject')
@@ -48,10 +48,10 @@ class EmailTemplateBehavior extends Behavior
         return $events;
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $model = $this->_table;
-        $EmailTemplatesTable = TableRegistry::get('Email.EmailTemplates');
+        $EmailTemplatesTable = TableRegistry::getTableLocator()->get('Email.EmailTemplates');
 
         // append email_template to entity
         $query->formatResults(function (ResultSetInterface $results) use ($model, $EmailTemplatesTable) {
@@ -83,12 +83,12 @@ class EmailTemplateBehavior extends Behavior
         });
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity, $extra);
     }
 
-    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->has('email_template')) {
             if ($entity->email_template->has('subject')) {
@@ -101,7 +101,7 @@ class EmailTemplateBehavior extends Behavior
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         if (array_key_exists('list', $toolbarButtonsArray)) {
@@ -112,13 +112,13 @@ class EmailTemplateBehavior extends Behavior
         $this->setupFields($event, $entity, $extra);
     }
 
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         $process = function ($model, $entity) use ($data) {
             $errors = $entity->errors();
 
             if (empty($errors)) {
-                $EmailTemplatesTable = TableRegistry::get('Email.EmailTemplates');
+                $EmailTemplatesTable = TableRegistry::getTableLocator()->get('Email.EmailTemplates');
                 $requestData = $data[$model->alias()];
 
                 $emailTemplateData = [
@@ -140,35 +140,35 @@ class EmailTemplateBehavior extends Behavior
 
     }
 
-    public function onGetSubject(Event $event, Entity $entity)
+    public function onGetSubject(EventInterface $event, Entity $entity)
     {
         if($entity->has('email_template')) {
             return $entity->email_template->subject;
         }
     }
 
-    public function onGetMessage(Event $event, Entity $entity)
+    public function onGetMessage(EventInterface $event, Entity $entity)
     {
         if($entity->has('email_template')) {
             return $entity->email_template->message;
         }
     }
 
-    public function onGetDefaultSubject(Event $event, Entity $entity)
+    public function onGetDefaultSubject(EventInterface $event, Entity $entity)
     {
         if($entity->has('default_email_template')) {
             return $entity->default_email_template->subject;
         }
     }
 
-    public function onGetDefaultMessage(Event $event, Entity $entity)
+    public function onGetDefaultMessage(EventInterface $event, Entity $entity)
     {
         if($entity->has('default_email_template')) {
             return $entity->default_email_template->message;
         }
     }
 
-    public function onGetCustomEmailTemplatePlaceholdersElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomEmailTemplatePlaceholdersElement(EventInterface $event, $action, $entity, $attr, $options=[])
     {
         if ($action == 'edit') {
             $tableHeaders =[__('Keywords'), __('Remarks')];
@@ -198,7 +198,7 @@ class EmailTemplateBehavior extends Behavior
         return $this->config('placeholder');
     }
 
-    private function setupFields(Event $event, Entity $entity, ArrayObject $extra)
+    private function setupFields(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $model = $this->_table;
         $model->field('email_content', ['type' => 'section']);

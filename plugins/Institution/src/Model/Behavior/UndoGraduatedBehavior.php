@@ -3,7 +3,7 @@ namespace Institution\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Institution\Model\Behavior\UndoBehavior;
 
 class UndoGraduatedBehavior extends UndoBehavior {
@@ -18,11 +18,11 @@ class UndoGraduatedBehavior extends UndoBehavior {
 		return $events;
 	}
 
-	public function onGetGraduatedStudents(Event $event, $data) {
+	public function onGetGraduatedStudents(EventInterface $event, $data) {
 		return $this->getStudents($data);
 	}
 
-	public function processSaveGraduatedStudents(Event $event, Entity $entity, ArrayObject $data) 
+	public function processSaveGraduatedStudents(EventInterface $event, Entity $entity, ArrayObject $data) 
     {
 		$studentIds = [];
 

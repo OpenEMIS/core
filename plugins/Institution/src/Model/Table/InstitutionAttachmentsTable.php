@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
@@ -44,7 +44,7 @@ class InstitutionAttachmentsTable extends ControllerActionTable
         ]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('description', ['visible' => false]); //POCOR-5067
         $this->field('file_name', ['visible' => false]);
@@ -89,7 +89,7 @@ class InstitutionAttachmentsTable extends ControllerActionTable
     }
 
 	//Start: POCOR-5067
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
             case 'institution_attachment_type_id':
@@ -117,7 +117,7 @@ class InstitutionAttachmentsTable extends ControllerActionTable
         }
     }
 	//End: POCOR-5067
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
@@ -127,7 +127,7 @@ class InstitutionAttachmentsTable extends ControllerActionTable
         ]);
     }
     //START:POCOR-5067
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $institutionId = $this->getInstitutionID();
         $InsAttachmentTypeTable = TableRegistry::getTableLocator()->get('Institution.InstitutionAttachmentTypes');
@@ -151,12 +151,12 @@ class InstitutionAttachmentsTable extends ControllerActionTable
     }
     //END:POCOR-5067
 
-    public function onGetFileType(Event $event, Entity $entity)
+    public function onGetFileType(EventInterface $event, Entity $entity)
     {
         return $this->getFileTypeForView($entity->file_name);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $institutionId = $this->getQueryString('institution_id');
@@ -177,12 +177,12 @@ class InstitutionAttachmentsTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function editBeforeSave(Event $event, $entity, $requestData, $extra)
+    public function editBeforeSave(EventInterface $event, $entity, $requestData, $extra)
     {
        //echo "<pre>"; print_r($entity); die;
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $sentData = $this->request->getData();
         $alias = $this->getAlias();

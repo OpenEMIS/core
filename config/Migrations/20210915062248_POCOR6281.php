@@ -31,14 +31,14 @@ class POCOR6281 extends AbstractMigration
             PRIMARY KEY (`id`)
           )");
 
-        $EducationSystems = TableRegistry::get('Education.EducationSystems');
-        $EducationLevels = TableRegistry::get('Education.EducationLevels');
-        $EducationCycles = TableRegistry::get('Education.EducationCycles');
-        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
+        $EducationLevels = TableRegistry::getTableLocator()->get('Education.EducationLevels');
+        $EducationCycles = TableRegistry::getTableLocator()->get('Education.EducationCycles');
+        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('Academic.AcademicPeriods');
+        $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
 
         $InstitutionGradesdata = $InstitutionGrades
                 ->find('all')

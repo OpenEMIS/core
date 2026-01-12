@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
@@ -32,7 +32,7 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
         ]);
     }
 
-    public function onGetCode(Event $event, Entity $entity)
+    public function onGetCode(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('institution') && $entity->institution->has('code')) {
@@ -41,7 +41,7 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
         return $value;
     }
 
-    public function onGetAreaEducation(Event $event, Entity $entity)
+    public function onGetAreaEducation(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'index') {
             $areaName = $entity->feeder_institution->area->name;
@@ -73,7 +73,7 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
         return $entity->feeder_institution->area->name;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'area_education' && $this->action == 'index') {
             // Getting the system value for the area
@@ -99,7 +99,7 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
         }
     }
 
-    public function onGetNoOfStudents(Event $event, Entity $entity)
+    public function onGetNoOfStudents(EventInterface $event, Entity $entity)
     {
         $noOfStudents = 0;
 
@@ -119,7 +119,7 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
         return $noOfStudents;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(); //to show list of academic period for selection
         $extra['selectedAcademicPeriod'] = $this->getSelectedAcademicPeriod($this->request);
@@ -147,7 +147,7 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
         $this->field('academic_period_id', ['visible' => 'false']);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $extra['auto_contain'] = false;
 
@@ -198,7 +198,7 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id', [
             'type' => 'select'
@@ -216,7 +216,7 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
         $this->field('modified', ['visible' => 'false']);
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain([

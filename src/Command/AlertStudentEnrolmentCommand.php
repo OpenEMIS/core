@@ -38,8 +38,8 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
      */
     public function execute(Arguments $args, ConsoleIo $io): int
     {
-        $this->loadModel('Institution.Students');
-        $this->loadModel('Institution.StudentEnrolment');
+        $this->Students = $this->fetchTable('Institution.Students');
+        $this->StudentEnrolment = $this->fetchTable('Institution.StudentEnrolment');
         if (!$this->prepareContext($args, $io)) {
             return static::CODE_SUCCESS;
         }

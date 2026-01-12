@@ -4,7 +4,7 @@ namespace Competency\Controller;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 
@@ -122,7 +122,7 @@ class CompetenciesController extends AppController
         //POCOR-8074-5 end
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $header = __('Competency');
         $header .= ' - ' . $model->getHeader($model->getAlias());

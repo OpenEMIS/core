@@ -4,7 +4,7 @@ namespace Staff\Model\Table;
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -57,14 +57,14 @@ class PayslipsTable extends ControllerActionTable
 
     } 
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $data['staff_id'] = $queryString['staff_id'];
         $this->field('staff_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
@@ -122,7 +122,7 @@ class PayslipsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     { 
         if ($entity->isNew()) {
             $emptyFields = 0;
@@ -150,8 +150,8 @@ class PayslipsTable extends ControllerActionTable
                 $entity->getErrors($response);    
                 return false;
             }else{
-                $apiSecuritiesScopes = TableRegistry::get('ApiSecuritiesScopes');
-                $apiSecurities = TableRegistry::get('ApiSecurities');
+                $apiSecuritiesScopes = TableRegistry::getTableLocator()->get('ApiSecuritiesScopes');
+                $apiSecurities = TableRegistry::getTableLocator()->get('ApiSecurities');
                 $apiSecuritiesData = $apiSecurities->find('all')
                     ->select([
                         'ApiSecurities.id','ApiSecurities.name','ApiSecurities.add'
@@ -176,7 +176,7 @@ class PayslipsTable extends ControllerActionTable
                 }else{
                     if (!empty($entity->openemis_id)) {
                         $openemis_payload_exist = 1;
-                        $Users = TableRegistry::get('security_users');
+                        $Users = TableRegistry::getTableLocator()->get('security_users');
                         $user_data= $Users
                                     ->find()
                                     ->where(['security_users.openemis_no' => $entity->openemis_id])
@@ -191,7 +191,7 @@ class PayslipsTable extends ControllerActionTable
                     }
 
                     if(( !empty($entity->user_identity_number) && !empty($entity->user_identity_type_id))){
-                        $UsersIdentity = TableRegistry::get('user_identities');
+                        $UsersIdentity = TableRegistry::getTableLocator()->get('user_identities');
                         $user_identity_data= $UsersIdentity
                                     ->find()
                                     ->where(['user_identities.number' => $entity->user_identity_number,
@@ -228,24 +228,24 @@ class PayslipsTable extends ControllerActionTable
 
 
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('identity_number', ['visible' => false]);
     }
 
-    public function onGetFileType(Event $event, Entity $entity)
+    public function onGetFileType(EventInterface $event, Entity $entity)
     {
         return $this->getFileTypeForView($entity->file_name);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $user = $this->Auth->user();
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
@@ -289,7 +289,7 @@ class PayslipsTable extends ControllerActionTable
         return $buttons;
     } 
 
-    public function afterAction(Event $event)
+    public function afterAction(EventInterface $event)
     {
         $this->setupTabElements();
     }
@@ -309,7 +309,7 @@ class PayslipsTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'name') {
             return __('Name');

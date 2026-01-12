@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Emails', ['plugin' => 'Email'], function ($routes) {
-	Router::connect('/Emails', ['plugin' => 'Email', 'controller' => 'Emails']);
-	Router::connect('/Emails/:action/*', ['plugin' => 'Email', 'controller' => 'Emails']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/Emails', ['plugin' => 'Email'], function (RouteBuilder $routes) {
+    	$routes->connect('/Emails', ['plugin' => 'Email', 'controller' => 'Emails']);
+    	$routes->connect('/Emails/:action/*', ['plugin' => 'Email', 'controller' => 'Emails']);
+    });
+};

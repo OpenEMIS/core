@@ -5,7 +5,7 @@ use ArrayObject;
 use DateTime;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -55,7 +55,7 @@ class AuditLastLoginsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
 
@@ -109,7 +109,7 @@ class AuditLastLoginsTable extends AppTable
         });
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
 

@@ -6,7 +6,7 @@ use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use Cake\Core\Configure;
 use Cake\Http\Exception\NotFoundException;
@@ -28,14 +28,14 @@ class IndexBehavior extends Behavior
         return $events;
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         if ($this->_table->action == 'index') {
             $buttons->exchangeArray([]);
         }
     }
 
-    public function index(Event $mainEvent, ArrayObject $extra)
+    public function index(EventInterface $mainEvent, ArrayObject $extra)
     {
         //$serverRequest = $this->controller->request->getSession();
         $model = $this->_table;

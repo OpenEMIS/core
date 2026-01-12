@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use DatePeriod;
 use DateInterval;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -49,7 +49,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
         $this->addBehavior('Institution.StaffProfile');
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $contentHeader = $this->controller->viewVars['contentHeader'];
         list($staffName, $module) = explode(' - ', $contentHeader);
@@ -64,7 +64,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $allowOutAcademicYear = $ConfigItems->value('allow_out_academic_year');
 
         if ($allowOutAcademicYear == 1) {
@@ -101,7 +101,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
         return $events;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('start_time', ['visible' => false]);
         $this->field('end_time', ['visible' => false]);
@@ -115,18 +115,18 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
         $this->addExtraButtons($extra);
 
     }
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         unset($buttons['edit']);
         return $buttons;
     }
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $staffId = $this->staffId;
         $institutionId = $this->institutionId;

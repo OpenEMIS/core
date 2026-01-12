@@ -15,9 +15,9 @@ class GenerateAllStaffReportCardsShell extends Shell
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('CustomExcel.StaffReportCards');
-        $this->loadModel('ReportCard.StaffReportCardProcesses');
-        $this->loadModel('SystemProcesses');
+        $this->StaffReportCards = $this->fetchTable('CustomExcel.StaffReportCards');
+        $this->StaffReportCardProcesses = $this->fetchTable('ReportCard.StaffReportCardProcesses');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
     }
 
     public function main()

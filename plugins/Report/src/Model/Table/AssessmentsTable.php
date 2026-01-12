@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -64,7 +64,7 @@ class AssessmentsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
        
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $institutionId = $requestData->institution_id ?? null;
@@ -211,7 +211,7 @@ class AssessmentsTable extends AppTable
             });
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $originalField)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $originalField)
     {
         $requestData = json_decode($settings['process']['params']);
         $institutionId = $requestData->institution_id ?? null;
@@ -416,7 +416,7 @@ class AssessmentsTable extends AppTable
         $originalField->exchangeArray($fields);
     }
 
-    public function onExcelRenderSubject(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderSubject(EventInterface $event, Entity $entity, array $attr)
     {
         $subjectId = $attr['subjectId'];
         $assessmentPeriodId = $attr['assessmentPeriodId'];
@@ -453,7 +453,7 @@ class AssessmentsTable extends AppTable
     }
 
     //POCOR-9305
-    public function onExcelRenderAssessmentPeriodWeightedMark(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderAssessmentPeriodWeightedMark(EventInterface $event, Entity $entity, array $attr)
     {
         $weightsum = array_sum($this->assessmentPeriodWeights);
         $assessmentPeriodWeightedMark = $this->assessmentPeriodWeightedMark;
@@ -477,7 +477,7 @@ class AssessmentsTable extends AppTable
     }
 
 
-    public function onExcelRenderTotalWeightedMark(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderTotalWeightedMark(EventInterface $event, Entity $entity, array $attr)
     {
         $totalWeightedMark = $this->totalWeightedMark;
         $this->totalWeightedMark = 0;
@@ -487,7 +487,7 @@ class AssessmentsTable extends AppTable
         return ' '.$totalWeightedMark;
     }
 
-    public function onExcelRenderTotalMark(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderTotalMark(EventInterface $event, Entity $entity, array $attr)
     {
         $totalMark = $this->totalMark;
         $this->totalMark = 0;
@@ -497,7 +497,7 @@ class AssessmentsTable extends AppTable
         return ' '.$totalMark;
     }
 
-    /*public function onExcelRenderNationality(Event $event, Entity $entity, array $attr)
+    /*public function onExcelRenderNationality(EventInterface $event, Entity $entity, array $attr)
     {
         if ($entity->user->nationalities) {
             $nationalities = $entity->user->nationalities;
@@ -511,7 +511,7 @@ class AssessmentsTable extends AppTable
         }
     }*/
 
-    public function onExcelRenderSubjectbkp(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderSubjectbkp(EventInterface $event, Entity $entity, array $attr)
     {
         $subjectId = $attr['subjectId'];
         $assessmentPeriodId = $attr['assessmentPeriodId'];
@@ -615,7 +615,7 @@ class AssessmentsTable extends AppTable
         return $printedResult;
     }
 
-     public function onExcelBeforeQuerybkp(Event $event, ArrayObject $settings, $query)
+     public function onExcelBeforeQuerybkp(EventInterface $event, ArrayObject $settings, $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $institutionId = $requestData->institution_id ?? null;

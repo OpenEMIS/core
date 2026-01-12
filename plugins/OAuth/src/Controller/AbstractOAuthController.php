@@ -100,10 +100,10 @@ abstract class AbstractOAuthController extends Controller
                 $dataArr = array("Enter Required fields"=>$response);
             }
             else{
-                $enableLocalLogin = TableRegistry::get('Configuration.ConfigItems')->value('enable_local_login');
-                $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
-                $apiSecuritiesScopes = TableRegistry::get('ApiSecuritiesScopes');
-                $apiSecurities = TableRegistry::get('ApiSecurities');
+                $enableLocalLogin = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('enable_local_login');
+                $authentications = TableRegistry::getTableLocator()->get('SSO.SystemAuthentications')->getActiveAuthentications();
+                $apiSecuritiesScopes = TableRegistry::getTableLocator()->get('ApiSecuritiesScopes');
+                $apiSecurities = TableRegistry::getTableLocator()->get('ApiSecurities');
                 $apiSecuritiesData = $apiSecurities->find('all')
                 ->select([
                     'ApiSecurities.id','ApiSecurities.name','ApiSecurities.execute'
@@ -134,7 +134,7 @@ abstract class AbstractOAuthController extends Controller
                     $postData = $this->request->getData();
                     $password = $postData['password'];
                     $hash = password_hash($password,  PASSWORD_DEFAULT);
-                    $userData = TableRegistry::get('Security.Users');
+                    $userData = TableRegistry::getTableLocator()->get('Security.Users');
                   //  echo "<pre>"; print_r($userData); die;
                     $getUserData = $userData->find('all')
                     ->select([

@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Collection\Collection;
 
@@ -44,7 +44,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         // ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controller->getCompetencyTabs();
 
@@ -81,7 +81,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $criteriaForm = $this->getQueryString(null, 'criteriaForm');
         if ($criteriaForm) {
@@ -94,7 +94,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         }
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['grading_options']['formFields'] = array_keys($this->GradingOptions->getFormFields());
 
@@ -103,10 +103,10 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         ]);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // $gradingOptions will contain the GradeOptionId and the association.(1 for true and 0 for false)
-        // $GradingOptions = TableRegistry::get('Competency.CompetencyGradingOptions');
+        // $GradingOptions = TableRegistry::getTableLocator()->get('Competency.CompetencyGradingOptions');
         $gradingOptions = [];
         if (!is_null($entity->grading_options)) {
 
@@ -125,7 +125,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         $this->controller->set('gradingOptions', $gradingOptions);
     }
 
-    public function addEditOnReload(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
+    public function addEditOnReload(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
     {
         $groupOptionData = $this->GradingOptions->getFormFields();
         if (!empty($entity->id)) {
@@ -141,7 +141,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         }
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         if (!isset($requestData[$this->getAlias()]['grading_options']) || empty($requestData[$this->getAlias()]['grading_options'])) {
             $this->Alert->warning($this->aliasField('noGradingOptions'));
@@ -160,7 +160,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         }
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         if ($extra->offsetExists('criteriaForm')) {
             $url = $this->url('add');
@@ -172,7 +172,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         }
     }
 
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
 
         if (!isset($requestData[$this->getAlias()]['grading_options']) || empty($requestData[$this->getAlias()]['grading_options'])) {
@@ -191,14 +191,14 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         }
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
             $this->GradingOptions->getAlias()
         ];
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['grading_options']['formFields'] = array_keys($this->GradingOptions->getFormFields('view'));
 
@@ -207,7 +207,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         ]);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             $this->GradingOptions->getAlias()
@@ -230,7 +230,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         return $this->getList($query);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'code') {
             return __('Code');

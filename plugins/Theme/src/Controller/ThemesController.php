@@ -1,7 +1,7 @@
 <?php
 namespace App\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 
 class ThemesController extends AppController

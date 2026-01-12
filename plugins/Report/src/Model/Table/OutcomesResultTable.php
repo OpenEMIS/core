@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 use Cake\Utility\Hash;
 use Cake\Datasource\ResultSetInterface;
@@ -55,7 +55,7 @@ class OutcomesResultTable extends AppTable
 
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -94,7 +94,7 @@ class OutcomesResultTable extends AppTable
         }
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -365,7 +365,7 @@ class OutcomesResultTable extends AppTable
             });
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $criteriaList =  $settings['criteria_list_entities'];
         $prefix = $settings['criteria_prefix'];
@@ -481,7 +481,7 @@ class OutcomesResultTable extends AppTable
     }
 
     public function getChildren($id, $idArray) {
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $result = $Areas->find()
                             ->where([
                                 $Areas->aliasField('parent_id') => $id

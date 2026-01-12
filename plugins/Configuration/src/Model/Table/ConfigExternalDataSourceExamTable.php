@@ -3,7 +3,7 @@
 namespace Configuration\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
@@ -103,7 +103,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         return $validator;
     } //POCOR-6930 Ends
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('visible', ['visible' => false]);
         $this->field('editable', ['visible' => false]);
@@ -145,7 +145,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('value', ['visible' => true]);
         if ($entity->value != 'None') {
@@ -154,11 +154,11 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         $this->field('value_selection', ['type' => 'hidden']); //POCOR-7533
     }
 
-    public function onGetCustomExternalSourceElement(Event $event, $action, Entity $entity, $attr, $options = [])
+    public function onGetCustomExternalSourceElement(EventInterface $event, $action, Entity $entity, $attr, $options = [])
     {
         $tableHeaders = [__('Attribute Name'), __('Value')];
         $tableCells = [];
-        $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+        $ExternalDataSourceAttributes = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
         $attributes = $ExternalDataSourceAttributes
             ->find('list', [
                 'keyField' => 'attribute_field',
@@ -217,7 +217,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         return $event->getSubject()->renderElement('Configuration.external_data_exam_source', ['attr' => $attr]);
     }
 
-    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldValue(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'add'])) {
             $id = $this->id;
@@ -227,7 +227,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                 if (isset($request->getData()[$this->getAlias()]['value'])) {
                     $value = $request->getData()[$this->getAlias()]['value'];
                 }
-                $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+                $ExternalDataSourceAttributes = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
                 $attributes = $ExternalDataSourceAttributes
                     ->find('list', [
                         'keyField' => 'attribute_field',
@@ -260,7 +260,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                     $request->getData()[$this->getAlias()][$key] = $value;
                 }
                 if ($entity->field_type == 'Dropdown') {
-                    $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
+                    $optionTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItemOptions');
                     $options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
                         ->where([
                             'ConfigItemOptions.option_type' => $entity->option_type,
@@ -275,7 +275,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         return $attr;
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
+    public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
     {
         if ($requestData[$this->getAlias()]['value'] == 'OpenEMIS Exams' || $requestData[$this->getAlias()]['value'] == 'CXC' || $requestData[$this->getAlias()]['value'] == 'PacSIMS') { //POCOR-7533
             $url = rtrim(trim($requestData[$this->getAlias()]['url']), "/");
@@ -341,7 +341,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         }
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
     {
 
         //POCOR-6930 Starts
@@ -350,7 +350,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
             $errorMessage = 'Please enter the required details.';
             $this->Alert->error('general.externalSourceDataErr', ['reset' => true]);
         } else { //POCOR-6930 Ends
-            $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+            $ExternalDataSourceAttributes = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
             $ExternalDataSourceAttributes->deleteAll(['external_data_source_type' => $entity->value]);
             $fields = [
                 'url',
@@ -391,11 +391,11 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 
         //POCOR-7509 start
-        $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+        $ExternalDataSourceAttributes = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
         $attributes = $ExternalDataSourceAttributes
             ->find('list', [
                 'keyField' => 'attribute_field',

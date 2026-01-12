@@ -7,7 +7,7 @@ use Cake\Database\Schema\Table;
 use Exception;
 use Cake\I18n\Time;
 use Cake\Console\Shell;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\Date;
@@ -21,8 +21,8 @@ class StaffAttendancesShell extends Shell
     {
         parent::initialize();
 
-        $this->loadModel('SystemProcesses');
-        $this->loadModel('Archive.TransferLogs');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
+        $this->TransferLogs = $this->fetchTable('Archive.TransferLogs');
     }
 
     public function main()
@@ -78,7 +78,7 @@ class StaffAttendancesShell extends Shell
         //POCOR-7468-HINDOL a) removed code about remote backup db b)
         $this->out('started moving');
         $connection = ConnectionManager::get('default');
-        $sourceTable = TableRegistry::get('institution_staff_attendances');
+        $sourceTable = TableRegistry::getTableLocator()->get('institution_staff_attendances');
         $targetTableExists = $this->hasArchiveTable($sourceTable);
         $this->out('checked for target table institution_staff_attendances');
         $sourceTable = null;
@@ -96,7 +96,7 @@ class StaffAttendancesShell extends Shell
         $connection->execute("DELETE FROM institution_staff_attendances WHERE academic_period_id = $academicPeriodId");
         $this->log('staff attendances moved', 'debug');
         $result = ['moved_leaves' => -1, 'moved_attendances' => $moved_attendances];
-        $sourceTable = TableRegistry::get('institution_staff_leave');
+        $sourceTable = TableRegistry::getTableLocator()->get('institution_staff_leave');
         $targetTableExists = $this->hasArchiveTable($sourceTable);
         $sourceTable = null;
         if (!$targetTableExists) {
@@ -190,11 +190,11 @@ class StaffAttendancesShell extends Shell
 //            'academicPeriodId' => $academicPeriodId,
         ];
         $name = 'Archive Staff Absences and Leaves';
-        $model = TableRegistry::get('Archive.TransferLogs');
+        $model = TableRegistry::getTableLocator()->get('Archive.TransferLogs');
         $eventName = '';
         $processModel = $model->registryAlias();
         $param = json_encode($param);
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $systemProcessId = $SystemProcesses->addProcess($name, $mypid, $processModel, $eventName, $param);
         $processInfo = date('d-m-Y H:i:s') . ' : ' . $name;
         $this->out($processInfo . ' - Start System PID:' . $systemProcessId);
@@ -207,7 +207,7 @@ class StaffAttendancesShell extends Shell
     public
     function setSystemProcessRunning($systemProcessId)
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $processInfo = date('d-m-Y H:i:s');
         $this->out($processInfo . ': Running System PID:' . $systemProcessId);
         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::RUNNING, 1);
@@ -219,7 +219,7 @@ class StaffAttendancesShell extends Shell
     public
     function setSystemProcessFailed($systemProcessId)
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $processInfo = date('d-m-Y H:i:s');
         $this->out($processInfo . ' - Error in System PID:' . $systemProcessId);
         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::ERROR);
@@ -231,7 +231,7 @@ class StaffAttendancesShell extends Shell
     public
     function setSystemProcessCompleted($systemProcessId)
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $processInfo = date('d-m-Y H:i:s');
         $this->out($processInfo . ' - Completed System PID:' . $systemProcessId);
         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::COMPLETED);
@@ -243,7 +243,7 @@ class StaffAttendancesShell extends Shell
     public
     function setTransferLogsCompleted($pid)
     {
-        $TransferLogs = TableRegistry::get('Archive.TransferLogs');
+        $TransferLogs = TableRegistry::getTableLocator()->get('Archive.TransferLogs');
         $processInfo = date('d-m-Y H:i:s');
         $this->out($processInfo . ' - set Transfer Logs Completed PID:' . $pid);
         $TransferLogs->updateAll(['process_status' => $TransferLogs::DONE], [

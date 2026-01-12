@@ -180,10 +180,10 @@ class POCOR8222 extends AbstractMigration
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
         // Bulk insert data from InstitutionStudentsReportCards to InstitutionStudentsGpa
-        $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        $StudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
         $recordValue = $StudentsReportCards->find()->select(['student_id', 'academic_period_id', 'institution_id', 'education_grade_id', 'gpa'])->toArray();
 
-        $StudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
+        $StudentsGpa = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsGpa');
         $dataToSave = [];
         $i = 0 ;
         foreach ($recordValue as $value) {

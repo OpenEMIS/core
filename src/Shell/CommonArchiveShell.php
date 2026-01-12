@@ -23,7 +23,7 @@ class CommonArchiveShell extends Shell
     {
         //POCOR-7339-HINDOL cleaned the code
         parent::initialize();
-        $this->loadModel('Archive.DataManagementCollection');
+        $this->DataManagementCollection = $this->fetchTable('Archive.DataManagementCollection');
     }
 
     public function main()
@@ -48,7 +48,7 @@ class CommonArchiveShell extends Shell
 //        $recordsMovedStr = number_format($recordsMoved, 0, '', ' ');
         $featureName = $caller->featureName;
         $pid = $caller->pid;
-        $TransferLogs = TableRegistry::get('Archive.TransferLogs');
+        $TransferLogs = TableRegistry::getTableLocator()->get('Archive.TransferLogs');
         $transferlog = $TransferLogs
             ->find('all')
             ->where(['p_id' => $pid])->first();
@@ -84,7 +84,7 @@ class CommonArchiveShell extends Shell
         $pid = $caller->pid;
         $processName = $caller->processName;
         $systemProcessId = $caller->systemProcessId;
-        $sourceTable = TableRegistry::get($table_name);
+        $sourceTable = TableRegistry::getTableLocator()->get($table_name);
         $targetTableNameAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
@@ -93,7 +93,7 @@ class CommonArchiveShell extends Shell
         }
 //        Log::write('debug', "targetTableName: $targetTableName");
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $targetTable = TableRegistry::get($targetTableName, ['connection' => $remoteConnection]);
+        $targetTable = TableRegistry::getTableLocator()->get($targetTableName, ['connection' => $remoteConnection]);
         try {
             // Start a database transaction
             $whereCondition = ['academic_period_id' => $academicPeriodId];
@@ -208,11 +208,11 @@ class CommonArchiveShell extends Shell
             'academicPeriodId' => $academicPeriodId,
             'pid' => $pid,
         ];
-        $model = TableRegistry::get('Archive.TransferLogs');
+        $model = TableRegistry::getTableLocator()->get('Archive.TransferLogs');
         $eventName = '';
         $processModel = $model->getRegistryAlias();
         $param = json_encode($param);
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $systemProcessId = $SystemProcesses->addProcess($name, $mypid, $processModel, $eventName, $param);
         return $systemProcessId;
     }
@@ -223,7 +223,7 @@ class CommonArchiveShell extends Shell
     public static
     function setSystemProcessRunning($systemProcessId)
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::RUNNING, 1);
         $processInfo = date('Y-m-d H:i:s');
         return $processInfo;
@@ -235,7 +235,7 @@ class CommonArchiveShell extends Shell
     public static
     function setSystemProcessCompleted($systemProcessId)
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::COMPLETED);
         $processInfo = date('Y-m-d H:i:s');
         return $processInfo;
@@ -247,7 +247,7 @@ class CommonArchiveShell extends Shell
     public static
     function setTransferLogsCompleted($pid)
     {
-        $TransferLogs = TableRegistry::get('Archive.TransferLogs');
+        $TransferLogs = TableRegistry::getTableLocator()->get('Archive.TransferLogs');
         $processInfo = date('Y-m-d H:i:s');
         // POCOR-7957 start
 //        $transferlog = $TransferLogs
@@ -273,7 +273,7 @@ class CommonArchiveShell extends Shell
     public static
     function setTransferLogsFailed($pid)
     {
-        $TransferLogs = TableRegistry::get('Archive.TransferLogs');
+        $TransferLogs = TableRegistry::getTableLocator()->get('Archive.TransferLogs');
         $processInfo = date('Y-m-d H:i:s');
 //       POCOR-7957 end
 //        $transferlog = $TransferLogs
@@ -297,7 +297,7 @@ class CommonArchiveShell extends Shell
     public static
     function setSystemProcessFailed($systemProcessId)
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::ERROR);
     }
 

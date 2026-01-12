@@ -3,7 +3,7 @@ namespace Workflow\Controller\Component;
 
 use Cake\ORM\TableRegistry;
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Log\LogTrait;
 
@@ -20,17 +20,27 @@ class WorkflowComponent extends Component
     public $WorkflowStatusesSteps;
     public $attachWorkflow = false;     // indicate whether the model require workflow
     public $hasWorkflow = false;    // indicate whether workflow is setup
-    public $components = ['Auth', 'ControllerAction', 'AccessControl'];
+    // Components are defined in the parent class as protected $components = []
+    // We set them in initialize() method instead to avoid type declaration conflicts
 
     public function initialize(array $config): void
     {
+        // Set components to avoid redeclaring the property (which causes type conflicts in CakePHP 5)
+        $this->components = ['Auth', 'ControllerAction', 'AccessControl'];
+        
+        // Manually populate _componentMap since we set components after constructor
+        // This is needed for __get() to work properly in CakePHP 5
+        if ($this->components) {
+            $this->_componentMap = $this->_registry->normalizeArray($this->components);
+        }
+        
         $this->controller = $this->_registry->getController();
         $this->action = $this->request->params['action'];
 
-        $this->WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
-        $this->WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
-        $this->WorkflowStatuses = TableRegistry::get('Workflow.WorkflowStatuses');
-        $this->WorkflowStatusesSteps = TableRegistry::get('Workflow.WorkflowStatusesSteps');
+        $this->WorkflowModels = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+        $this->WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        $this->WorkflowStatuses = TableRegistry::getTableLocator()->get('Workflow.WorkflowStatuses');
+        $this->WorkflowStatusesSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowStatusesSteps');
 
         // To bypass the permission
         $session = $this->getController()->getRequest()->getSession();
@@ -53,7 +63,7 @@ class WorkflowComponent extends Component
         return $events;
     }
 
-    public function isActionIgnored(Event $event, $action)
+    public function isActionIgnored(EventInterface $event, $action)
     {
         $pass = $this->request->pass;
         if (isset($pass[0]) && in_array($pass[0], ['processWorkflow', 'processReassign'])) {
@@ -181,7 +191,7 @@ class WorkflowComponent extends Component
     {
         $accessibleStatusIds = [];
 
-        $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+        $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
 
         // Array to store security roles in each Workflow Step
         $stepRoles = [];

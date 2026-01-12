@@ -24,7 +24,7 @@ class EducationCertificationsControllerTest extends AppTestCase
     {
         parent::setUp();
         $this->urlPrefix('/Educations/Certifications/');
-        $this->table = TableRegistry::get('Education.EducationCertifications');
+        $this->table = TableRegistry::getTableLocator()->get('Education.EducationCertifications');
     }
 
     public function testIndex()

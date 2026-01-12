@@ -5,24 +5,19 @@
     "type": "project",
     "license": "GPL-2.0",
     "require": {
-        "php": ">=7.4",
-        "cakephp/cakephp": "4.4.16",
+        "php": ">=8.1,<9.0",
+        "cakephp/cakephp": "^5.2.0",
         "mobiledetect/mobiledetectlib": "2.*",
-        "korditpteltd/kd-cakephp-webhooks": "^1.0",
         "mk-j/php_xlsxwriter": "^0.32",
         "phpoffice/phpspreadsheet": "^1.3",
-        "admad/cakephp-jwt-auth": "3.0.0",
-        "mpdf/mpdf": "^8.1",
-        "korditpteltd/iksso-cakephp-sso": "*",
-        "korditpteltd/ikpge-cakephp-page": "*",
-        "korditpteltd/ikrst-cakephp-restful": "*"
+        "mpdf/mpdf": "^8.1"
     },
     "require-dev": {
         "psy/psysh": "@stable",
         "phpunit/phpunit": "*",
         "cakephp/plugin-installer": "*",
-        "cakephp/bake": "^2.6",
-        "cakephp/migrations": "^3.2"
+        "cakephp/bake": "^3.0",
+        "cakephp/migrations": "^4.0"
     },
     "suggest": {
         "phpunit/phpunit": "Allows automated tests to be run without system-wide install.",
@@ -67,8 +62,6 @@
             "Map\\": "plugins/Map/src/",
             "Health\\": "plugins/Health/src/",
             "Cache\\": "plugins/Cache/src/",
-            "Restful\\": "plugins/Restful/src/",
-            "SSO\\": "plugins/SSO/src/",
             "System\\": "plugins/System/src/",
             "System\\View\\Helper\\": "/View/Helper/",
             "InstitutionRepeater\\": "plugins/InstitutionRepeater/src/",
@@ -102,6 +95,10 @@
             "Manuals\\": "./plugins/Manuals/src",
             "Report\\": "./plugins/Report/src",
             "KORDITPTELTD\\IKSSO-CAKEPHP-SSO\\": "./vendor/korditpteltd/iksso-cakephp-sso/src",
+            "Page\\": "./vendor/korditpteltd/ikpge-cakephp-page/src",
+            "Restful\\": "./vendor/korditpteltd/ikrst-cakephp-restful/src",
+            "Webhook\\": "./vendor/korditpteltd/kd-cakephp-webhooks/src",
+            "SSO\\": "./vendor/korditpteltd/iksso-cakephp-sso/src",
             "Gpa\\": "./plugins/Gpa/src"
         }
     },
@@ -111,9 +108,7 @@
             "Cake\\Test\\": "./vendor/cakephp/cakephp/tests",
             "ControllerAction\\Test\\": "./plugins/ControllerAction/tests",
             "OAuth\\Test\\": "./plugins/OAuth/tests",
-            "Archive\\Test\\": "./plugins/Archive/tests",
-            "KORDITPTELTD\\IKPGE-CAKEPHP-PAGE\\": "./vendor/korditpteltd/ikpge-cakephp-page/src",
-            "KORDITPTELTD\\IKSSO-CAKEPHP-SSO\\": "./vendor/korditpteltd/iksso-cakephp-sso/src"
+            "Archive\\Test\\": "./plugins/Archive/tests"
         }
     },
     "scripts": {

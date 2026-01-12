@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class TypesBehavior extends Behavior
 {
@@ -27,14 +27,14 @@ class TypesBehavior extends Behavior
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
 
         if ($model->action == 'index') {
             $request = $model->request; // POCOR-9074
             $selectedLevel = !is_null($request->getQuery('level')) ? $request->getQuery('level') : '-1'; // POCOR-9074
-            $InfrastructureLevels = TableRegistry::get('Infrastructure.InfrastructureLevels');
+            $InfrastructureLevels = TableRegistry::getTableLocator()->get('Infrastructure.InfrastructureLevels');
             $levelDetails = $InfrastructureLevels->find('list', [
                     'keyField' => 'id',
                     'valueField' => 'code'
@@ -60,12 +60,12 @@ class TypesBehavior extends Behavior
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $model = $this->_table;
         $extra['elements']['controls'] = ['name' => 'Infrastructure.controls', 'data' => [], 'options' => [], 'order' => 1];
 
-        $InfrastructureLevels = TableRegistry::get('Infrastructure.InfrastructureLevels');
+        $InfrastructureLevels = TableRegistry::getTableLocator()->get('Infrastructure.InfrastructureLevels');
         $levelOptions = $InfrastructureLevels->find('list')->toArray();
         $selectedLevel = $model->request->getQuery('level') ?? -1; // POCOR-9074
 

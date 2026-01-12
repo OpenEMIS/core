@@ -3,7 +3,7 @@ namespace Directory\Model\Table;
 
 use ArrayObject;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -41,7 +41,7 @@ class AbsencesTable extends AppTable
         return $events;
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
         switch ($action) {
             case 'index':
                     // $toolbarButtons['edit'] = $buttons['index'];
@@ -70,7 +70,7 @@ class AbsencesTable extends AppTable
             $entity = $this->get($condition['id']);
             $institutionStudentAbsenceDaysEntity = $this->InstitutionStudentAbsenceDays->get($entity->institution_student_absence_day_id);
             $this->InstitutionStudentAbsenceDays->delete($institutionStudentAbsenceDaysEntity);
-            TableRegistry::get('InstitutionStudentAbsenceDetails')
+            TableRegistry::getTableLocator()->get('InstitutionStudentAbsenceDetails')
                     ->deleteAll(['student_id'=>$entity->student_id,
                             'date'=>$entity->date,
                             ]);
@@ -81,7 +81,7 @@ class AbsencesTable extends AppTable
         }
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(EventInterface $event)
     {
        // $query = $this->request->query;
 
@@ -107,7 +107,7 @@ class AbsencesTable extends AppTable
         // $this->ControllerAction->setFieldOrder('student_absence_reason_id', $order++);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -159,12 +159,12 @@ class AbsencesTable extends AppTable
         $this->controller->set('selectedAction', $this->alias());
     }
 
-    public function indexAfterAction(Event $event, $data)
+    public function indexAfterAction(EventInterface $event, $data)
     {
         $this->setupTabElements();
     }
 
-    public function beforeFind( Event $event, Query $query )
+    public function beforeFind( EventInterface $event, Query $query )
     {
         $userData = $this->Session->read();
 
@@ -186,7 +186,7 @@ class AbsencesTable extends AppTable
             }
         }
 
-        $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
+        $InstitutionStudentAbsenceDetails = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsenceDetails');
             $query
                 ->find('all')
                 ->autoFields(true)

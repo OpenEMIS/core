@@ -5,7 +5,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 
 class AttachmentTypesTable extends ControllerActionTable
@@ -37,7 +37,7 @@ class AttachmentTypesTable extends ControllerActionTable
         $scholarshipId = $options['scholarship_id'] ?? null;
 
         // Load ApplicationAttachments and fetch existing attachment type IDs
-        $ApplicationAttachmentsTable = TableRegistry::get('Scholarship.ApplicationAttachments');
+        $ApplicationAttachmentsTable = TableRegistry::getTableLocator()->get('Scholarship.ApplicationAttachments');
         $existingAttachmentTypeIds = $ApplicationAttachmentsTable->find()
             ->where([
                 'applicant_id' => $applicantId,
@@ -47,7 +47,7 @@ class AttachmentTypesTable extends ControllerActionTable
             ->toArray();
 
         // Load ScholarshipsScholarshipAttachmentTypes and join with AttachmentTypes
-        $ScholarshipsScholarshipAttachmentTypesTable = TableRegistry::get('Scholarship.ScholarshipsScholarshipAttachmentTypes');
+        $ScholarshipsScholarshipAttachmentTypesTable = TableRegistry::getTableLocator()->get('Scholarship.ScholarshipsScholarshipAttachmentTypes');
         $query
             ->select([
                 'id' => $this->aliasField('id'),
@@ -72,19 +72,19 @@ class AttachmentTypesTable extends ControllerActionTable
     }
 
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':

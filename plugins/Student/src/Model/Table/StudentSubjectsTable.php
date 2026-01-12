@@ -3,7 +3,7 @@ namespace Student\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
@@ -43,7 +43,7 @@ class StudentSubjectsTable extends ControllerActionTable
         // ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         //$contentHeader = $this->controller->viewVars['contentHeader'];
         $contentHeader = $this->controller->viewBuilder()->getVars()['contentHeader'];
@@ -54,7 +54,7 @@ class StudentSubjectsTable extends ControllerActionTable
         $this->controller->Navigation->substituteCrumb(__('Student Subjects'), $module);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['student_status_id']['visible'] = false;
         $this->fields['total_mark']['visible'] = false;//POCOR-8435
@@ -90,7 +90,7 @@ class StudentSubjectsTable extends ControllerActionTable
             if ($hasMySubjectsPermission) {
                 $userId = $this->Auth->user('id');
 
-                $institutionSubjectStaffTable = TableRegistry::get('Institution.InstitutionSubjectStaff');
+                $institutionSubjectStaffTable = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
                 $subjectsTeaching = $institutionSubjectStaffTable->find()
                     ->find('list', ['keyField' => 'subject', 'valueField' => 'subject'])
                     ->select (['subject' => $institutionSubjectStaffTable->aliasField('institution_subject_id'),
@@ -151,7 +151,7 @@ class StudentSubjectsTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // Academic Periods filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
@@ -170,7 +170,7 @@ class StudentSubjectsTable extends ControllerActionTable
         }//POCOR-8413 ends
         $encodedQueryString = $this->paramsEncode($queryString);
         // Institution and Grade filter
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
         $institutionQuery = $InstitutionStudents->find()
             ->contain(['Institutions', 'StudentStatuses', 'EducationGrades'])
             ->where([
@@ -253,8 +253,8 @@ class StudentSubjectsTable extends ControllerActionTable
         }
         //POCOR-6468
         if(isset($userData['Institution']['StudentUser']['primaryKey']['id'])){
-            $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');//POCOR-6468 starts
-            $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->getIdByCode('CURRENT');//POCOR-6468 starts
+            $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
             $InstitutionClassStudentsQuery = $InstitutionClassStudents->find()
                                 ->where([
                                     $InstitutionClassStudents->aliasField('student_id') => $userData['Institution']['StudentUser']['primaryKey']['id'],
@@ -267,7 +267,7 @@ class StudentSubjectsTable extends ControllerActionTable
                 $where[$this->aliasField('institution_class_id')] = $InstitutionClassStudentsQuery->institution_class_id;
             }
         }
-        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         //POCOR-6468
       //  $where[$this->aliasField('student_status_id')] = $enrolledStatus; //POCOR-7111
 
@@ -297,13 +297,13 @@ class StudentSubjectsTable extends ControllerActionTable
 
     /**
      * get total marks from a common query
-     * @param Event $event
+     * @param EventInterface $event
      * @param Entity $entity
      * @return float
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      * This function is commented as not to show total mark (POCOR-8435)
      */  
-    // public function onGetTotalMark(Event $event, Entity $entity)
+    // public function onGetTotalMark(EventInterface $event, Entity $entity)
     // {
     //     // POCOR-7896 start
     //     $sum_results = $entity->total_mark;
@@ -311,7 +311,7 @@ class StudentSubjectsTable extends ControllerActionTable
     //     // POCOR-7896 end
     // }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -351,7 +351,7 @@ class StudentSubjectsTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options = ['type' => 'student'];
         //$tabElements = $this->controller->getAcademicTabElements($options);
@@ -363,7 +363,7 @@ class StudentSubjectsTable extends ControllerActionTable
         $this->controller->set('selectedAction', 'Subjects');
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'academic_period_id') {
             return __('Academic Period');
@@ -391,12 +391,12 @@ class StudentSubjectsTable extends ControllerActionTable
      * corresponding to the provided `education_grade_id` and `education_subject_id` of the entity.
      * The retrieved "result type" is then assigned to both the `$entity` and returned in the `$attr` array.
      * 
-     * @param Event $event The event object that triggered this method.
+     * @param EventInterface $event The event object that triggered this method.
      * @param Entity $entity The entity whose "result type" needs to be fetched and updated.
      * 
      * @return void
      */
-    public function onGetResultType(Event $event, Entity $entity)
+    public function onGetResultType(EventInterface $event, Entity $entity)
     {
         $EducationGradeSubjects = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects');
         $result = $EducationGradeSubjects
@@ -417,12 +417,12 @@ class StudentSubjectsTable extends ControllerActionTable
      * If the "result type" is "Outcomes," the method returns the `outcome_result` value of the entity.
      * Otherwise, it calculates and returns the `total_mark` rounded to two decimal places.
      * 
-     * @param Event $event The event object that triggered this method.
+     * @param EventInterface $event The event object that triggered this method.
      * @param Entity $entity The entity whose final result needs to be calculated and returned.
      * 
      * @return float|string The final result, either as a rounded total mark or the outcome result.
      */
-    public function onGetFinalResult(Event $event, Entity $entity)
+    public function onGetFinalResult(EventInterface $event, Entity $entity)
     {
         if ($entity->result_type == "Outcomes") {
             return $entity->outcome_result;

@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
 use Cake\Validation\Validator;
@@ -84,12 +84,12 @@ class InstitutionContactsTable extends ControllerActionTable {
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {
          $Navigation->substituteCrumb('Contacts', 'Contacts (Institution)');
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         $institutionId = null;
@@ -156,13 +156,13 @@ class InstitutionContactsTable extends ControllerActionTable {
 
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra) {
         // no index page
         $url = $this->url('view');
         return $this->controller->redirect($url);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'telephone':

@@ -6,7 +6,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\I18n;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
@@ -20,7 +20,7 @@ class TranslationsTable extends AppTable {
 	}
 
 	// Search component
-	public function indexBeforeAction(Event $event){
+	public function indexBeforeAction(EventInterface $event){
 		// By default English has to be there
 		$defaultLocale = 'en';
 
@@ -53,7 +53,7 @@ class TranslationsTable extends AppTable {
 		]);
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity) {
+	public function addEditAfterAction(EventInterface $event, Entity $entity) {
 		if ($entity->editable == 0) {
 			if ($this->action == 'edit') {
 				$this->ControllerAction->field('en', ['type' => 'readonly']);
@@ -62,7 +62,7 @@ class TranslationsTable extends AppTable {
 		$this->ControllerAction->field('editable', ['visible' => false]);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforePaginate(EventInterface $event, Request $request, Query $query, ArrayObject $options) {
 		$options['auto_search'] = false;
 		$options['auto_contain'] = false;
 
@@ -73,11 +73,11 @@ class TranslationsTable extends AppTable {
 		}
 	}
 
-	public function onGetEditable(Event $event, Entity $entity) {
+	public function onGetEditable(EventInterface $event, Entity $entity) {
 		return ($entity->editable == 0)? __('No'): __('Yes');
 	}
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) {
     	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		if ($entity->editable == 0) {
 			// remove the delete button

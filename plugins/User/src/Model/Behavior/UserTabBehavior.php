@@ -5,7 +5,7 @@ namespace User\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class UserTabBehavior extends Behavior
 {
@@ -25,7 +25,7 @@ class UserTabBehavior extends Behavior
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra = null)
+    public function beforeAction(EventInterface $event, ArrayObject $extra = null)
     {
         if (!$extra) {
             return;
@@ -243,7 +243,7 @@ class UserTabBehavior extends Behavior
     }
 
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
         $buttons = $this->fixActionButtons($entity, $buttons);
@@ -359,7 +359,7 @@ class UserTabBehavior extends Behavior
         return $buttons;
     }
 
-    public function addDeleteBeforeAction(Event $event, ArrayObject $extra)
+    public function addDeleteBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
         $url = $model->url('index');

@@ -4,7 +4,7 @@ namespace ReportCard\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -41,7 +41,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         $this->toggle('search', false);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'class_name') {
             return __('Class');
@@ -64,7 +64,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         }
     }
 
-    public function onGetStudentID(Event $event, Entity $entity)
+    public function onGetStudentID(EventInterface $event, Entity $entity)
     {
         if (isset($entity->student->openemis_no) && !empty($entity->student->openemis_no)) {
             return $entity->student->openemis_no;
@@ -72,7 +72,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         return ' - ';
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
 
         //POCOR_7319 starts
@@ -109,7 +109,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         // End
 
         //Area Filter
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $areaOptions = [];
         $areaOptions = $Areas->find('list')
             ->toArray();
@@ -123,7 +123,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         //End
 
         //Institution Filter
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $institutionOptions = [];
         if ($selectedArea == -1) {
             $institutionOptions = $Institutions->find('list')
@@ -166,8 +166,8 @@ class ReportCardProcessesTable extends ControllerActionTable
 
         //End
         //Education grade Filter
-         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-         $EducationGrades=TableRegistry::get('Education.EducationGrades');
+         $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+         $EducationGrades=TableRegistry::getTableLocator()->get('Education.EducationGrades');
          $EducationGradeOptions = [];
          $educationGradeList = [];
          if($selectedInstitution == -1){
@@ -218,11 +218,11 @@ class ReportCardProcessesTable extends ControllerActionTable
         //POCOR-7319 ends
 
         // POCOR-7067 Starts
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $timeZone = $ConfigItems->value("time_zone");
         date_default_timezone_set($timeZone);//POCOR-7067 Ends
 
-        $ReportCardProcessesTable = TableRegistry::get('ReportCard.ReportCardProcesses');
+        $ReportCardProcessesTable = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
         $entitydata = $ReportCardProcessesTable->find('all', ['conditions' => [
             'status' => '2' //POCOR-7989 start
         ]])->where([$ReportCardProcessesTable->aliasField('modified IS NOT NULL')])->toArray();
@@ -302,7 +302,7 @@ class ReportCardProcessesTable extends ControllerActionTable
     }
 
 
-    public function onGetStatus(Event $event, Entity $entity)
+    public function onGetStatus(EventInterface $event, Entity $entity)
     {
 
         $status = [
@@ -318,7 +318,7 @@ class ReportCardProcessesTable extends ControllerActionTable
     }
 
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['institution_id']['visible'] = true;
         $this->fields['institution_class_id']['visible'] = true;
@@ -340,7 +340,7 @@ class ReportCardProcessesTable extends ControllerActionTable
 
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('class_name', ['sort' => ['field' => 'InstitutionClasses.name']]);
@@ -357,7 +357,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         $this->controller->set('selectedAction', 'Processes');
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         if ($entity->has('user')) {
             return $entity->user->openemis_no;
@@ -365,7 +365,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         return ' - ';
     }
 
-    public function onGetClassName(Event $event, Entity $entity)
+    public function onGetClassName(EventInterface $event, Entity $entity)
     {
         if ($entity->has('institution_class')) {
             return $entity->institution_class->name;
@@ -392,7 +392,7 @@ class ReportCardProcessesTable extends ControllerActionTable
 
     public function getChildren($id, $idArray)
     {
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $result = $Areas->find()
             ->where([
                 $Areas->aliasField('parent_id') => $id
@@ -405,11 +405,11 @@ class ReportCardProcessesTable extends ControllerActionTable
         return $idArray;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $extra)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->status == 3)//Status is complete
         {
-            $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+            $StudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
             # Update the status of student process
             $StudentsReportCards->query()->update()
                 ->set([

@@ -15,9 +15,9 @@ class POCOR2455 extends AbstractMigration
      */
     public function up()
     {
-        $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
-        $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-        $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
+        $WorkflowsTable = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        $WorkflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        $WorkflowStatusesTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowStatuses');
 
         // rename institution_staff_assignments
         $InstitutionStudentWithdraw = $this->table('institution_student_withdraw');
@@ -506,8 +506,8 @@ class POCOR2455 extends AbstractMigration
         // delete workflow statuses
         $this->execute("DELETE FROM `workflow_statuses` WHERE `workflow_model_id` = " . $this->workflowModelId);
 
-        $WorkflowTable = TableRegistry::get('Workflow.Workflows');
-        $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+        $WorkflowTable = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        $WorkflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
 
         $workflowIds = $WorkflowTable
             ->find()

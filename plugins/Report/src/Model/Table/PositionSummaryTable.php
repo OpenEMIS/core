@@ -5,7 +5,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
@@ -35,21 +35,21 @@ class PositionSummaryTable extends AppTable
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
         $academicPeriodId = $requestData->academic_period_id;
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $startDate = $periodEntity->start_date->format('Y-m-d');
         $endDate = $periodEntity->end_date->format('Y-m-d');
-        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
-        $Staff = TableRegistry::get('Security.Users');
-        $Genders = TableRegistry::get('User.Genders');
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-        $UserIdentities = TableRegistry::get('User.Identities');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $Staff = TableRegistry::getTableLocator()->get('Security.Users');
+        $Genders = TableRegistry::getTableLocator()->get('User.Genders');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
         $conditions = [];
         if (!empty($academicPeriodId)) {
             $conditions['OR'] = [
@@ -129,10 +129,10 @@ class PositionSummaryTable extends AppTable
         //POCOR-9124 start
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
-                $InstitutionPositions = TableRegistry::get('institution_positions');
-                $Staff = TableRegistry::get('Security.Users');
-                $Genders = TableRegistry::get('User.Genders');
+                $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+                $InstitutionPositions = TableRegistry::getTableLocator()->get('institution_positions');
+                $Staff = TableRegistry::getTableLocator()->get('Security.Users');
+                $Genders = TableRegistry::getTableLocator()->get('User.Genders');
 
                 $male_occupancy = [];
                 $female_occupancy = [];
@@ -211,7 +211,7 @@ class PositionSummaryTable extends AppTable
          //POCOR-9124 end
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
 
@@ -273,7 +273,7 @@ class PositionSummaryTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetStaffPositionId(Event $event, Entity $entity)
+    public function onExcelGetStaffPositionId(EventInterface $event, Entity $entity)
     {
         $options = $this->getSelectOptions('Staff.position_types');
         $staffPositionTitleType = '';
@@ -293,18 +293,18 @@ class PositionSummaryTable extends AppTable
         return $staffPositionTitleType;
     }
 
-    public function onExcelGetInstitutionId(Event $event, Entity $entity)
+    public function onExcelGetInstitutionId(EventInterface $event, Entity $entity)
     {
         return $entity->institution->code_name;
     }
 
-    public function onExcelGetIsHomeroom(Event $event, Entity $entity)
+    public function onExcelGetIsHomeroom(EventInterface $event, Entity $entity)
     {
         $options = $this->getSelectOptions('general.yesno');
         return $options[$entity->is_homeroom];
     }
 
-    public function onExcelGetStaffName(Event $event, Entity $entity)
+    public function onExcelGetStaffName(EventInterface $event, Entity $entity)
     {
         if ($entity->has('_matchingData')) {
             return $entity->_matchingData['Users']->name;

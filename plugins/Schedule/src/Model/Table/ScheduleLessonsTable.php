@@ -4,7 +4,7 @@ namespace Schedule\Model\Table;
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -93,7 +93,7 @@ class ScheduleLessonsTable extends ControllerActionTable
     {
         $intervalId = $options['institution_schedule_interval_id'];
         $staffId = $options['staff_id'];
-        $scheduleTimeTable = TableRegistry::get('Schedule.ScheduleTimetables')
+        $scheduleTimeTable = TableRegistry::getTableLocator()->get('Schedule.ScheduleTimetables')
                 ->find()
                 ->where(['institution_schedule_interval_id'=>$intervalId,'status'=>  self::PUBLISH])
                 ->disableHydration() // POCOR-8533
@@ -130,7 +130,7 @@ class ScheduleLessonsTable extends ControllerActionTable
     {
         $intervalId = $options['institution_schedule_interval_id'];
         $studentId = $options['student_id'];
-        $ScheduleTimeslots = TableRegistry::get('Schedule.ScheduleTimeslots')
+        $ScheduleTimeslots = TableRegistry::getTableLocator()->get('Schedule.ScheduleTimeslots')
                 ->find('list',['id'])
                 ->select('id')
                 //->where(['institution_schedule_interval_id'=>$intervalId])

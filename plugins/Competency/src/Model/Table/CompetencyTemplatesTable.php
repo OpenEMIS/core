@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use Cake\Http\ServerRequest;
@@ -51,7 +51,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
     }
 
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         if ($this->action == 'index' || $this->action == 'add') {
@@ -59,7 +59,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $serverRequest = $this->request;
         list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($serverRequest->getQuery('period')));
@@ -100,7 +100,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 
         $this->controller->getCompetencyTemplateTabs();
@@ -109,7 +109,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         $this->controller->Navigation->substituteCrumb(Inflector::humanize(Inflector::underscore($this->getAlias())), $header);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 
         $this->controller->getCompetencyTemplateTabs();
@@ -118,12 +118,12 @@ class CompetencyTemplatesTable extends ControllerActionTable
         $this->controller->Navigation->substituteCrumb($this->getAlias(), $header);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('academic_period_id') => $extra['selectedPeriod']]);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id', [
             'type' => 'hidden',
@@ -144,7 +144,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
@@ -158,14 +158,14 @@ class CompetencyTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationProgrammeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
 
         if ($action == 'view') {
             $attr['visible'] = false;
         } else if ($action == 'add') {
-            $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             if (!empty($this->request->getQuery('period')) && empty($request->data($this->aliasField('academic_period_id')))) {
                 $academicPeriodId = $this->request->getQuery('period');
             } else {
@@ -192,7 +192,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnChangeEducationProgrammeId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         unset($request->getQuery['programme']);
@@ -206,7 +206,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
 
@@ -235,7 +235,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
     }
 
     //Start:POCOR-7066
-   public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+   public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $action = $this->request->getAttribute('params')['pass'][0];
         if($action != 'edit'){ // POCOR-9377
@@ -252,7 +252,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
 
     //End:POCOR-7066
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         if (empty($entity->getErrors())) {
             $extra['redirect'] = [
@@ -291,7 +291,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         return compact('periodOptions', 'selectedPeriod');
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         //POCOR-8074-5 start
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);

@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Date;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
@@ -53,7 +53,7 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         $this->addBehavior('Institution.InfrastructureShift');
 
-        $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
+        $this->Levels = TableRegistry::getTableLocator()->get('Infrastructure.InfrastructureLevels');
         $this->levelOptions = $this->Levels->find('list')->toArray();
         $this->accessibilityOptions = $this->getSelectOptions('InstitutionAssets.accessibility');
         $this->accessibilityTooltip = $this->getMessage('InstitutionInfrastructures.accessibilityOption');
@@ -79,11 +79,11 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
         return $events;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
-        $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
-        $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
-        $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
+        $InstitutionFloors = TableRegistry::getTableLocator()->get('Institution.InstitutionFloors');
+        $InstitutionBuildings = TableRegistry::getTableLocator()->get('Institution.InstitutionBuildings');
+        $InstitutionRooms = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
         $requestData = json_decode($settings['process']['params']);
         $institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
@@ -93,7 +93,7 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
         $conditionsBuildings = [];
 
 
-        $institutions = TableRegistry::get('Institution.Institutions');
+        $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         if (!empty($areaId) && $areaId != -1) {
             if($query->repository['registryAlias'] ='Report.SpecialNeedsFacilities' ){
                 $conditionsLands['Institutions.area_id'] = $areaId;
@@ -150,16 +150,16 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
             //POCOR-6730 STARTS
                     ->formatResults(function (\Cake\Collection\CollectionInterface $results) use($type) {
                         return $results->map(function ($row) use($type) {
-                            $areas1 = TableRegistry::get('Area.Areas');
+                            $areas1 = TableRegistry::getTableLocator()->get('Area.Areas');
                             $areasData = $areas1
                                         ->find()
                                         ->where([$areas1->getAlias('code')=>$row->area_code])
                                         ->first();
                             $row['region_code'] = $row['region_name'] = '';
                             if($areasData->parent_id){ // POCOR-9070
-                                $areas = TableRegistry::get('Area.Areas');
-                                $areaLevels = TableRegistry::get('Area.AreaLevels');
-                                $institutions = TableRegistry::get('Instituion.Institutions');
+                                $areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                                $areaLevels = TableRegistry::getTableLocator()->get('Area.AreaLevels');
+                                $institutions = TableRegistry::getTableLocator()->get('Instituion.Institutions');
                                 $val = $areas
                                             ->find()
                                             ->select([
@@ -213,16 +213,16 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                     //POCOR-6730 STARTS
                     ->formatResults(function (\Cake\Collection\CollectionInterface $results) use($type) {
                         return $results->map(function ($row) use($type) {
-                            $areas1 = TableRegistry::get('Area.Areas');
+                            $areas1 = TableRegistry::getTableLocator()->get('Area.Areas');
                             $areasData = $areas1
                                         ->find()
                                         ->where([$areas1->getAlias('code')=>$row->area_code])
                                         ->first();
                             $row['region_code'] = $row['region_name'] = '';
                             if($areasData->parent_id){ // POCOR-9070
-                                $areas = TableRegistry::get('Area.Areas');
-                                $areaLevels = TableRegistry::get('Area.AreaLevels');
-                                $institutions = TableRegistry::get('Instituion.Institutions');
+                                $areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                                $areaLevels = TableRegistry::getTableLocator()->get('Area.AreaLevels');
+                                $institutions = TableRegistry::getTableLocator()->get('Instituion.Institutions');
                                 $val = $areas
                                             ->find()
                                             ->select([
@@ -277,16 +277,16 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                     //POCOR-6730 STARTS
                     ->formatResults(function (\Cake\Collection\CollectionInterface $results) use($type) {
                         return $results->map(function ($row) use($type) {
-                            $areas1 = TableRegistry::get('areas');
+                            $areas1 = TableRegistry::getTableLocator()->get('areas');
                             $areasData = $areas1
                                         ->find()
                                         ->where([$areas1->getAlias('code')=>$row->area_code])
                                         ->first();
                             $row['region_code'] = $row['region_name'] = '';
                             if($areasData->parent_id){ // POCOR-9070
-                                $areas = TableRegistry::get('Area.Areas');
-                                $areaLevels = TableRegistry::get('Area.AreaLevels');
-                                $institutions = TableRegistry::get('Instituion.Institutions');
+                                $areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                                $areaLevels = TableRegistry::getTableLocator()->get('Area.AreaLevels');
+                                $institutions = TableRegistry::getTableLocator()->get('Instituion.Institutions');
                                 $val = $areas
                                             ->find()
                                             ->select([
@@ -341,16 +341,16 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                     ->where([$InstitutionBuildings->aliasField('accessibility') => 1,$conditionsBuildings])//POCOR-6730 STARTS
                     ->formatResults(function (\Cake\Collection\CollectionInterface $results) use($type) {
                         return $results->map(function ($row) use($type) {
-                            $areas1 = TableRegistry::get('areas');
+                            $areas1 = TableRegistry::getTableLocator()->get('areas');
                             $areasData = $areas1
                                         ->find()
                                         ->where([$areas1->getAlias('code')=>$row->area_code])
                                         ->first();
                             $row['region_code'] = $row['region_name'] = '';
                             if($areasData->parent_id){ // POCOR-9070
-                                $areas = TableRegistry::get('Area.Areas');
-                                $areaLevels = TableRegistry::get('Area.AreaLevels');
-                                $institutions = TableRegistry::get('Instituion.Institutions');
+                                $areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                                $areaLevels = TableRegistry::getTableLocator()->get('Area.AreaLevels');
+                                $institutions = TableRegistry::getTableLocator()->get('Instituion.Institutions');
                                 $val = $areas
                                             ->find()
                                             ->select([
@@ -386,14 +386,14 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
         );
     }
 
-    public function onExcelRenderAccessibility(Event $event, Entity $entity, $attr)
+    public function onExcelRenderAccessibility(EventInterface $event, Entity $entity, $attr)
     {
         if ($entity->accessibility == 1) {
             return 'Accessible';
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
 
@@ -412,7 +412,7 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
         ];
 
         //POCOR-6730 Starts
-        $AreaLevelTbl = TableRegistry::get('Area.AreaLevels');
+        $AreaLevelTbl = TableRegistry::getTableLocator()->get('Area.AreaLevels');
         $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->enableHydration(false)->toArray();
         //POCOR-6730 Starts
         $newFields[] = [

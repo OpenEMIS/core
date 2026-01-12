@@ -1635,7 +1635,7 @@ class SurveyRepository extends Controller
 
     private function deleteExpiredResponse()
     {
-        //$SurveyResponses = TableRegistry::get('Survey.SurveyResponses');
+        //$SurveyResponses = TableRegistry::getTableLocator()->get('Survey.SurveyResponses');
 
         $expiryDate = Date('Y-m-d h:i:s', strtotime('-3 days'));
 

@@ -3,7 +3,7 @@ namespace Student\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
 
 class StudentSurveysTable extends ControllerActionTable
@@ -57,7 +57,7 @@ class StudentSurveysTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         //Add controls filter to index, view and edit page
         $indexElements = [
@@ -137,7 +137,7 @@ class StudentSurveysTable extends ControllerActionTable
         $this->_redirect($institutionId, $studentId, $selectedPeriod, $selectedForm);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $indexElements = [];
         $toolbarButtons = $extra['toolbarButtons'];
@@ -150,12 +150,12 @@ class StudentSurveysTable extends ControllerActionTable
         $this->controller->set('indexElements', $indexElements);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupTabElements($entity);
     }
@@ -183,7 +183,7 @@ class StudentSurveysTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->alias());
     }
 
-    public function institutionSurveyAfterSave(Event $event, Entity $institutionSurveyEntity)
+    public function institutionSurveyAfterSave(EventInterface $event, Entity $institutionSurveyEntity)
     {
         $this->updateAll(
             ['status_id' => $institutionSurveyEntity->status_id],

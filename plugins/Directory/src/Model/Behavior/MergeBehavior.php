@@ -7,7 +7,7 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
@@ -150,14 +150,14 @@ class MergeBehavior extends Behavior
 
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param array $attr
      * @param $action
      * @param Request $request
      * @return array
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onUpdateFieldFirstId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFirstId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'merge') {
             $entity = $attr['entity'];
@@ -170,14 +170,14 @@ class MergeBehavior extends Behavior
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param array $attr
      * @param $action
      * @param Request $request
      * @return array
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onUpdateFieldMergeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldMergeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $model = $this->_table;
         if ($action == 'merge') {
@@ -187,7 +187,7 @@ class MergeBehavior extends Behavior
             $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
             $urlAction = $model->getAlias();
             $attr['url'] = ['controller' => $model->controller->getName(), 'action' => $urlAction, 'ajaxUserAutocomplete'];
-            $Users = TableRegistry::get('User.Users');
+            $Users = TableRegistry::getTableLocator()->get('User.Users');
             $requestData = $model->request->getData();
             if (isset($requestData) && !empty($requestData[$model->getAlias()]['merge_id'])) {
                 $mergeId = $requestData[$model->getAlias()]['merge_id'];
@@ -214,8 +214,8 @@ class MergeBehavior extends Behavior
         if ($this->_table->request->is(['ajax'])) {
             $term = $this->_table->request->getQuery('term');
 
-            $Users = TableRegistry::get('User.Users');
-            $UserIdentitiesTable = TableRegistry::get('User.Identities');
+            $Users = TableRegistry::getTableLocator()->get('User.Users');
+            $UserIdentitiesTable = TableRegistry::getTableLocator()->get('User.Identities');
 
             $query = $Users
                 ->find()
@@ -258,7 +258,7 @@ class MergeBehavior extends Behavior
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param $module
      * @param $field
      * @param $language
@@ -266,7 +266,7 @@ class MergeBehavior extends Behavior
      * @return string|null
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
 
         switch ($field) {
@@ -305,11 +305,11 @@ class MergeBehavior extends Behavior
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param ArrayObject $extra
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         if (isset($toolbarButtonsArray['edit'])) {
@@ -323,13 +323,13 @@ class MergeBehavior extends Behavior
     }
 
 //    /**
-//     * @param Event $event
+//     * @param EventInterface $event
 //     * @param Entity $entity
 //     * @param ArrayObject $options
 //     * @param ArrayObject $extra
 //     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
 //     */
-//    public function _mergeBeforeSave(Event $event, Entity $entity, ArrayObject $options, ArrayObject $extra) // POCOR-8633
+//    public function _mergeBeforeSave(EventInterface $event, Entity $entity, ArrayObject $options, ArrayObject $extra) // POCOR-8633
 //    {
 //        $model = $this->_table;
 //        try {
@@ -346,13 +346,13 @@ class MergeBehavior extends Behavior
 //    }
 
 //    /**
-//     * @param Event $event
+//     * @param EventInterface $event
 //     * @param Entity $entity
 //     * @param ArrayObject $options
 //     * @param ArrayObject $extra
 //     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
 //     */
-//    public function _mergeAfterSave(Event $event, Entity $entity, ArrayObject $options, ArrayObject $extra) // POCOR-8633
+//    public function _mergeAfterSave(EventInterface $event, Entity $entity, ArrayObject $options, ArrayObject $extra) // POCOR-8633
 //    {
 //        // POCOR-9015 start
 //        $model = $this->_table;
@@ -645,11 +645,11 @@ class MergeBehavior extends Behavior
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param ArrayObject $buttons
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         $model = $this->_table;
         switch ($model->action) {

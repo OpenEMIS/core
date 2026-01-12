@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -41,19 +41,19 @@ class InstitutionRubricsTable extends AppTable
         $this->addBehavior('Institution.InstitutionTab');
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('status', ['visible' => ['index' => false, 'view' => true, 'edit' => false]]);
         $this->ControllerAction->field('comment', ['visible' => false]);
         $this->ControllerAction->field('institution_class_id', ['visible' => ['index' => false, 'view' => false, 'edit' => true]]);
     }
 
-    public function afterAction(Event $event, ArrayObject $config)
+    public function afterAction(EventInterface $event, ArrayObject $config)
     {
         $this->ControllerAction->setFieldOrder($this->_fieldOrder);
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $templateId = $this->get($settings['id'])->rubric_template_id;
         $sheets[] = [
@@ -66,7 +66,7 @@ class InstitutionRubricsTable extends AppTable
         $event->stopPropagation();
     }
 
-    public function onGetCustomRubricSectionsElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomRubricSectionsElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         $value = '';
 
@@ -156,7 +156,7 @@ class InstitutionRubricsTable extends AppTable
         return $value;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'education_grade_id') {
             return __('Programme') . '<span class="divider"></span>' . __('Grade');
@@ -167,22 +167,22 @@ class InstitutionRubricsTable extends AppTable
         }
     }
 
-    public function onGetEducationGradeId(Event $event, Entity $entity)
+    public function onGetEducationGradeId(EventInterface $event, Entity $entity)
     {
         return $entity->education_grade->education_programme->name . '<span class="divider"></span>' . $entity->education_grade->name;
     }
 
-    public function onGetInstitutionSubjectId(Event $event, Entity $entity)
+    public function onGetInstitutionSubjectId(EventInterface $event, Entity $entity)
     {
         return $entity->class->name . '<span class="divider"></span>' . $entity->subject->name;
     }
 
-    public function onGetLastModified(Event $event, Entity $entity)
+    public function onGetLastModified(EventInterface $event, Entity $entity)
     {
         return $this->formatDate($entity->modified);
     }
 
-    public function onGetToBeCompletedBy(Event $event, Entity $entity)
+    public function onGetToBeCompletedBy(EventInterface $event, Entity $entity)
     {
         $value = '<i class="fa fa-minus"></i>';
 
@@ -213,12 +213,12 @@ class InstitutionRubricsTable extends AppTable
         return $value;
     }
 
-    public function onGetCompletedOn(Event $event, Entity $entity)
+    public function onGetCompletedOn(EventInterface $event, Entity $entity)
     {
         return $this->formatDateTime($entity->modified);
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(EventInterface $event)
     {
         list($statusOptions, $selectedStatus) = array_values($this->_getSelectOptions());
 
@@ -267,7 +267,7 @@ class InstitutionRubricsTable extends AppTable
         }
     }
 
-    public function indexBeforePaginate(Event $event, $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(EventInterface $event, $request, Query $query, ArrayObject $options)
     {
         list(, $selectedStatus) = array_values($this->_getSelectOptions());
 
@@ -277,13 +277,13 @@ class InstitutionRubricsTable extends AppTable
         $options['order'] = [$this->AcademicPeriods->aliasField('order') => 'asc'];
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query)
     {
         $query
             ->contain($this->_contain);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(EventInterface $event, Entity $entity)
     {
         $this->ControllerAction->field('rubric_sections', [
             'type' => 'custom_rubric_sections',
@@ -305,7 +305,7 @@ class InstitutionRubricsTable extends AppTable
         $this->_fieldOrder = ['status', 'rubric_template_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'institution_subject_id', 'staff_id', 'rubric_sections'];
     }
 
-    public function onBeforeDelete(Event $event, ArrayObject $options, $ids)
+    public function onBeforeDelete(EventInterface $event, ArrayObject $options, $ids)
     {
         $rubricRecord = $this->get($ids);
 
@@ -326,7 +326,7 @@ class InstitutionRubricsTable extends AppTable
         }
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         list(, $selectedStatus) = array_values($this->_getSelectOptions());
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
@@ -358,10 +358,10 @@ class InstitutionRubricsTable extends AppTable
         $todayDate = date("Y-m-d");
 
         $RubricStatuses = $this->RubricTemplates->RubricStatuses;
-        $Classes = TableRegistry::get('Institution.InstitutionClasses');
-        $Subjects = TableRegistry::get('Institution.InstitutionSubjects');
-        $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-        $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $Subjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+        $ClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
+        $ClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
 
         foreach ($rubrics as $key => $rubric) {
             $rubricStatuses = $RubricStatuses

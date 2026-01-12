@@ -2,7 +2,7 @@
 namespace Student\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
@@ -51,7 +51,7 @@ class StudentFeesTable extends ControllerActionTable {
         ]);
 	}
 
-	public function beforeAction(Event $event, ArrayObject $extra) {
+	public function beforeAction(EventInterface $event, ArrayObject $extra) {
 		$session = $this->Session;
 		$queryString = $this->getQueryString();
         $userID = $this->getStudentID();
@@ -66,10 +66,10 @@ class StudentFeesTable extends ControllerActionTable {
 			$this->studentId = $this->getStudentID();
 		}
 
-		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+		$ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
     	$this->currency = $ConfigItems->value('currency');
 
-		$InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+		$InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
 		$buffer = $InstitutionStudents->find()->where([$InstitutionStudents->aliasField('student_id') => $this->studentId])->toArray();
 		$this->_conditions['institutionIds'] = [];
 		$this->_conditions['academicPeriodIds'] = [];
@@ -147,7 +147,7 @@ class StudentFeesTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
 	{
 		$query
 			->contain([
@@ -186,7 +186,7 @@ class StudentFeesTable extends ControllerActionTable {
 		}
 	}
 
-	public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra) {
+	public function indexAfterAction(EventInterface $event, Query $query, ResultSet $resultSet, ArrayObject $extra) {
 		$options = ['type' => 'student'];
 		$tabElements = $this->controller->getFinanceTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
@@ -199,7 +199,7 @@ class StudentFeesTable extends ControllerActionTable {
 ** view action methods
 **
 ******************************************************************************************************************/
-	public function viewBeforeQuery(Event $event, Query $query) {
+	public function viewBeforeQuery(EventInterface $event, Query $query) {
 		if (isset($this->request->getParam('pass')[1])) {
 			$query
 			->contain([
@@ -211,7 +211,7 @@ class StudentFeesTable extends ControllerActionTable {
 		}
 	}
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra) {
 		$feeTypes = [];
 		$amount = 0.00;
     	foreach ($entity->institution_fee_types as $key=>$obj) {
@@ -228,7 +228,7 @@ class StudentFeesTable extends ControllerActionTable {
 		$this->fields['fee_types']['data'] = $feeTypes;
 		$this->fields['fee_types']['total'] = $this->currency.' '.number_format($amount, 2);
 
-    	$StudentFeesAbstract = TableRegistry::get('Institution.StudentFeesAbstract');
+    	$StudentFeesAbstract = TableRegistry::getTableLocator()->get('Institution.StudentFeesAbstract');
     	$fields = $StudentFeesAbstract->fields;
     	$fields['payment_date']['tableHeader'] = __('Payment Date');
     	$fields['created_user_id']['tableHeader'] = __('Created By');
@@ -250,7 +250,7 @@ class StudentFeesTable extends ControllerActionTable {
 ** specific field methods
 **
 ******************************************************************************************************************/
-	public function onGetAmountPaid(Event $event, Entity $entity) {
+	public function onGetAmountPaid(EventInterface $event, Entity $entity) {
 		return $this->currency.' '.number_format($this->getAmountPaid($entity), 2);
 	}
 
@@ -272,12 +272,12 @@ class StudentFeesTable extends ControllerActionTable {
 		}
 	}
 
-	public function onGetEducationGradeId(Event $event, Entity $entity)
+	public function onGetEducationGradeId(EventInterface $event, Entity $entity)
 	{
 		return $entity->education_grade->programme_name . ' - ' . $entity->education_grade->name;
 	}
 
-	public function onGetTotalFee(Event $event, Entity $entity)
+	public function onGetTotalFee(EventInterface $event, Entity $entity)
 	{
 		return $this->currency.' '.number_format($this->getTotalFee($entity), 2);
 	}
@@ -288,7 +288,7 @@ class StudentFeesTable extends ControllerActionTable {
 		return $amount;
 	}
 
-	public function onGetOutstandingFee(Event $event, Entity $entity) {
+	public function onGetOutstandingFee(EventInterface $event, Entity $entity) {
 		return $this->currency.' '.$this->getOutstandingFee($entity);
 	}
 
@@ -309,7 +309,7 @@ class StudentFeesTable extends ControllerActionTable {
 		return $entityRecords;
 	}
 
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+	public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'institution_id':

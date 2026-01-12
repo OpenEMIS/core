@@ -2,7 +2,7 @@
 namespace App\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
@@ -15,13 +15,13 @@ use XLSXWriter;
 use Cake\ORM\TableRegistry;
 
 // Events
-// public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {}
-// public function onExcelGenerate(Event $event, $writer, ArrayObject $settings) {}
-// public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {}
-// public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {}
-// public function onExcelStartSheet(Event $event, ArrayObject $settings, $totalCount) {}
-// public function onExcelEndSheet(Event $event, ArrayObject $settings, $totalProcessed) {}
-// public function onExcelGetLabel(Event $event, $column) {}
+// public function onExcelBeforeGenerate(EventInterface $event, ArrayObject $settings) {}
+// public function onExcelGenerate(EventInterface $event, $writer, ArrayObject $settings) {}
+// public function onExcelGenerateComplete(EventInterface $event, ArrayObject $settings) {}
+// public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) {}
+// public function onExcelStartSheet(EventInterface $event, ArrayObject $settings, $totalCount) {}
+// public function onExcelEndSheet(EventInterface $event, ArrayObject $settings, $totalProcessed) {}
+// public function onExcelGetLabel(EventInterface $event, $column) {}
 
 class StudentAbsencesExcelBehavior extends Behavior
 {
@@ -180,23 +180,23 @@ class StudentAbsencesExcelBehavior extends Behavior
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institution_id = $requestData->institution_id;
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-        $Genders = TableRegistry::get('User.Genders');
-        $Users = TableRegistry::get('User.Users');
-        $StudentGuardians = TableRegistry::get('Student.StudentGuardians');
-        $Guardians = TableRegistry::get('Security.Users');
-        $UserContacts = TableRegistry::get('UserContacts');
-        $GuardianUser = TableRegistry::get('Security.Users');
-        $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $StudentMarkTypeStatusGrades = TableRegistry::get('Attendance.StudentMarkTypeStatusGrades');
-        $StudentMarkTypeStatuses = TableRegistry::get('Attendance.StudentMarkTypeStatuses');
-        $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
-        $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
-        $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
-        $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
+        $Genders = TableRegistry::getTableLocator()->get('User.Genders');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
+        $StudentGuardians = TableRegistry::getTableLocator()->get('Student.StudentGuardians');
+        $Guardians = TableRegistry::getTableLocator()->get('Security.Users');
+        $UserContacts = TableRegistry::getTableLocator()->get('UserContacts');
+        $GuardianUser = TableRegistry::getTableLocator()->get('Security.Users');
+        $InstitutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
+        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $StudentMarkTypeStatusGrades = TableRegistry::getTableLocator()->get('Attendance.StudentMarkTypeStatusGrades');
+        $StudentMarkTypeStatuses = TableRegistry::getTableLocator()->get('Attendance.StudentMarkTypeStatuses');
+        $StudentAttendanceMarkTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes');
+        $StudentAttendanceTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceTypes');
+        $StudentAttendancePerDayPeriods = TableRegistry::getTableLocator()->get('Attendance.StudentAttendancePerDayPeriods');
+        $InstitutionStudentAbsenceDetails = TableRegistry::getTableLocator()->get('Institution.StudentAbsencesPeriodDetails');
         if ( $institution_id > 0) {
             $where = [$InstitutionStudentAbsenceDetails->aliasField('institution_id = ') => $institution_id];
         } else {
@@ -353,8 +353,8 @@ class StudentAbsencesExcelBehavior extends Behavior
                     $result[$key][] = $value->education_grade;
                     $result[$key][] = $value->gender;
                     //user identity
-                    $UserIdentities = TableRegistry::get('User.Identities');
-                    $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+                    $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+                    $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
                     $identites = $UserIdentities->find()
                                     ->select([
                                         'identity_types' => $IdentityTypes->aliasField('name'),
@@ -372,7 +372,7 @@ class StudentAbsencesExcelBehavior extends Behavior
                     $result[$key][] = !empty($identites) ? $identites->identity_number : '';
                     $result[$key][] = $value->address;
                     //User contacts
-                    $UserContacts = TableRegistry::get('UserContacts');
+                    $UserContacts = TableRegistry::getTableLocator()->get('UserContacts');
                     $detail = $UserContacts->find()->select([$UserContacts->aliasField('value')])
                             ->where([$UserContacts->aliasField('security_user_id') => $stdId])->toArray();
                     $data = [];
@@ -564,7 +564,7 @@ class StudentAbsencesExcelBehavior extends Behavior
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $action = $this->_table->action;
         if (in_array($action, $this->config('pages'))) {
@@ -591,7 +591,7 @@ class StudentAbsencesExcelBehavior extends Behavior
         }
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         if ($buttons->offsetExists('view')) {
             $export = $buttons['view'];

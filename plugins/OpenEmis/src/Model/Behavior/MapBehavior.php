@@ -3,7 +3,7 @@ namespace OpenEmis\Model\Behavior;
 
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 
 /**
@@ -58,22 +58,22 @@ class MapBehavior extends Behavior
         return $events;
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(EventInterface $event)
     {
         $this->_fieldSetup();
     }
 
-    public function viewBeforeAction(Event $event)
+    public function viewBeforeAction(EventInterface $event)
     {
         $this->_fieldSetup();
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $this->_fieldSetup();
     }
 
-    public function editBeforeAction(Event $event)
+    public function editBeforeAction(EventInterface $event)
     {
         $this->_fieldSetup();
     }
@@ -88,9 +88,9 @@ class MapBehavior extends Behavior
         }
     }
 
-    public function onGetMapElement(Event $event, $action, Entity $entity, $attr, $options)
+    public function onGetMapElement(EventInterface $event, $action, Entity $entity, $attr, $options)
     {
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $mapZoom = $ConfigItems->value('map_zoom');
 
         // map configuration for kdx-map

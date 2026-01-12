@@ -3,7 +3,7 @@ namespace Scholarship\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
@@ -45,7 +45,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $scholarshipId = $this->ControllerAction->getQueryString('scholarship_id');
         $recipientId = $this->ControllerAction->getQueryString('recipient_id');
@@ -65,7 +65,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         }
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) {
         $scholarshipId = $this->ControllerAction->getQueryString('scholarship_id');
         $recipientId = $this->ControllerAction->getQueryString('recipient_id');
 
@@ -120,7 +120,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
             ->order(['academic_period_id', 'estimated_disbursement_date']);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $newArray = [];
         $newArray[] = [
@@ -189,7 +189,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         $fields->exchangeArray($newArray);
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, Request $request, Component $Navigation, $persona)
     {
         $title = __('Payment Structures');
 
@@ -201,7 +201,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         $Navigation->addCrumb($title);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryString = $this->request->query['queryString'];
         $recipientId = $this->paramsDecode($queryString)['recipient_id'];
@@ -213,14 +213,14 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         ]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('recipient_id', ['type' => 'hidden']);
         $this->field('scholarship_id', ['type' => 'hidden']);
         $this->field('estimated_amount', ['after' => 'academic_period_id']);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $recipientId = $this->ControllerAction->getQueryString('recipient_id');
         $scholarshipId = $this->ControllerAction->getQueryString('scholarship_id');
@@ -232,14 +232,14 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'RecipientPaymentStructureEstimates.DisbursementCategories'
         ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
@@ -296,7 +296,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         ]);
     }
 
-    public function addEditOnSelectDisbursementCategory(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnSelectDisbursementCategory(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $fieldKey = 'recipient_payment_structure_estimates';
 
@@ -309,7 +309,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
 
         if (isset($data[$this->alias()]['disbursement_category_id']) && !empty($data[$this->alias()]['disbursement_category_id'])) {
             $selectedDisbursementCategory = $data[$this->alias()]['disbursement_category_id'];
-            $disbursementCategoryEntity = TableRegistry::get('Scholarship.DisbursementCategories')->get($selectedDisbursementCategory);
+            $disbursementCategoryEntity = TableRegistry::getTableLocator()->get('Scholarship.DisbursementCategories')->get($selectedDisbursementCategory);
             $data[$this->alias()][$fieldKey][] = [
                 'scholarship_disbursement_category_id' => $disbursementCategoryEntity->id,
                 'scholarship_disbursement_category_name' => $disbursementCategoryEntity->name,
@@ -329,13 +329,13 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
     }
 
     // index
-    public function onGetEstimatedAmount(Event $event, Entity $entity)
+    public function onGetEstimatedAmount(EventInterface $event, Entity $entity)
     {
         $value = $this->RecipientPaymentStructureEstimates->getEstimatedAmount($entity->id);
         return $value;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'estimated_amount') {
             return $this->Scholarships->addCurrencySuffix('Estimated Amount');
@@ -345,17 +345,17 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
     }
 
     //view
-    public function onGetScholarshipName(Event $event, Entity $entity)
+    public function onGetScholarshipName(EventInterface $event, Entity $entity)
     {
         return $entity->scholarship->name;
     }
 
-    public function onGetApprovedAmount(Event $event, Entity $entity)
+    public function onGetApprovedAmount(EventInterface $event, Entity $entity)
     {
          return $entity->scholarship_recipient->approved_amount;
     }
 
-    public function onGetCustomDisbursementCategoryElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomDisbursementCategoryElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         if ($action == 'index') {
             // No implementation yet
@@ -396,7 +396,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
                 if (!$entity->isNew() && $entity->has('recipient_payment_structure_estimates')) {
                     foreach ($entity->recipient_payment_structure_estimates as $key => $obj) {
 
-                        $disbursementCategoryEntity = TableRegistry::get('Scholarship.DisbursementCategories')->get($obj->scholarship_disbursement_category_id);
+                        $disbursementCategoryEntity = TableRegistry::getTableLocator()->get('Scholarship.DisbursementCategories')->get($obj->scholarship_disbursement_category_id);
 
                         $arrayPaymentStructureEstimates[] = [
                             'scholarship_disbursement_category_id' => $obj->scholarship_disbursement_category_id,
@@ -423,7 +423,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
             }
 
             // options
-            $DisbursementCategory = TableRegistry::get('Scholarship.DisbursementCategories');
+            $DisbursementCategory = TableRegistry::getTableLocator()->get('Scholarship.DisbursementCategories');
             $disbursementCategoryOptions = $DisbursementCategory->getList()->toArray();
 
             if (!empty($arrayPaymentStructureEstimates)) {
@@ -501,7 +501,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         return $event->subject()->renderElement('../ControllerAction/table_with_dropdown', ['attr' => $attr]);
     }
 
-    public function onUpdateFieldBalanceAmount(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldBalanceAmount(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -532,7 +532,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAnnualAwardAmount(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldAnnualAwardAmount(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -544,7 +544,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         }
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         if (array_key_exists($this->alias(), $requestData)) {
             if (!array_key_exists('recipient_payment_structure_estimates', $requestData[$this->alias()])) {
@@ -553,7 +553,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
         $recipientId = $this->ControllerAction->getQueryString('recipient_id');
         $scholarshipId = $this->ControllerAction->getQueryString('scholarship_id');
@@ -591,7 +591,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
+    public function onUpdateIncludes(EventInterface $event, ArrayObject $includes, $action) {
         $includes['datepicker']['include'] = true;
     }
 }

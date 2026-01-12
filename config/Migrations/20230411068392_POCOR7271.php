@@ -73,14 +73,14 @@ class POCOR7271 extends AbstractMigration
                   )');
 
         // survey form filter data patch logic start
-        $forms = TableRegistry::get('survey_forms');
-        $tableFilter = TableRegistry::get('survey_forms_filters');
+        $forms = TableRegistry::getTableLocator()->get('survey_forms');
+        $tableFilter = TableRegistry::getTableLocator()->get('survey_forms_filters');
         $result = $tableFilter->find()->select(['survey_form_id','survey_filter_id','id'])
                   ->group([$tableFilter->aliasField('survey_form_id')])->toArray();
         $currentTimeZone = date("Y-m-d H:i:s");
-        $tableType = TableRegistry::get('survey_filter_institution_types');
-        $tableProvider = TableRegistry::get('survey_filter_institution_providers');
-        $tableArea = TableRegistry::get('survey_filter_areas');
+        $tableType = TableRegistry::getTableLocator()->get('survey_filter_institution_types');
+        $tableProvider = TableRegistry::getTableLocator()->get('survey_filter_institution_providers');
+        $tableArea = TableRegistry::getTableLocator()->get('survey_filter_areas');
         foreach($result as $value){
           $id = $value->id; 
           $survey_filter_id = $value->survey_filter_id; 
@@ -135,7 +135,7 @@ class POCOR7271 extends AbstractMigration
         
 
        // survey_status data patch logic start
-       $surveyStatuses = TableRegistry::get('survey_statuses');
+       $surveyStatuses = TableRegistry::getTableLocator()->get('survey_statuses');
        $fetchData  = $surveyStatuses->find()->select(['survey_form_id','id'])->toArray();
       foreach($fetchData as $rowVal){
         $surveyFormId = $rowVal->survey_form_id;

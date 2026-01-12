@@ -4,7 +4,7 @@ namespace Education\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
@@ -61,7 +61,7 @@ class EducationProgrammesTable extends ControllerActionTable {
         }
     }*/
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(EventInterface $event, ArrayObject $extra) {
         if ($this->action != 'index') {
             $this->field('next_programmes', ['type' => 'custom_next_programme', 'valueClass' => 'table-full-width','after'=>'same_grade_promotion']);
             $this->field('same_grade_promotion');//POCOR-4746
@@ -69,11 +69,11 @@ class EducationProgrammesTable extends ControllerActionTable {
         }
     }
 
-    public function afterAction(Event $event, ArrayObject $extra) {
+    public function afterAction(EventInterface $event, ArrayObject $extra) {
         $this->setFieldOrder($this->_fieldOrder);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra) {
         $this->fields['education_field_of_study_id']['sort'] = ['field' => 'EducationFieldOfStudies.name'];
         $this->fields['education_cycle_id']['sort'] = ['field' => 'EducationCycles.name'];
         $this->fields['education_certification_id']['sort'] = ['field' => 'EducationCertifications.name'];
@@ -99,7 +99,7 @@ class EducationProgrammesTable extends ControllerActionTable {
 		// End POCOR-5188
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options){
         // Webhook Education programme create -- start
 
         if($entity->isNew()){
@@ -109,7 +109,7 @@ class EducationProgrammesTable extends ControllerActionTable {
                 'programme_name' =>$entity->name,
                 'programme_id' =>$entity->id,
             ];
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
+            /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('education_programme_create', ['username' => $username], $body);
             }*/
@@ -125,7 +125,7 @@ class EducationProgrammesTable extends ControllerActionTable {
                 'programme_name' => $entity->name,
                 'programme_id' => $entity->id
             ];
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
+            /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('education_programme_update', ['username' => $username], $body);
             }*/
@@ -134,9 +134,9 @@ class EducationProgrammesTable extends ControllerActionTable {
         // Webhook Education programme update -- end
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options) {
         $id = $entity->id;
-        $EducationProgrammesNextProgrammesTable = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
+        $EducationProgrammesNextProgrammesTable = TableRegistry::getTableLocator()->get('Education.EducationProgrammesNextProgrammes');
         $EducationProgrammesNextProgrammesTable->deleteAll([
             $EducationProgrammesNextProgrammesTable->aliasField('next_programme_id') => $id
         ]);
@@ -147,14 +147,14 @@ class EducationProgrammesTable extends ControllerActionTable {
         $body = [
             'programme_id' => $entity->id
         ];
-        /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
+        /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
         if($this->Auth->user()){
             $Webhooks->triggerShell('education_programme_delete', ['username' => $username], $body);
         }*/
         // Webhook Education Programme Delete -- End
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
         $serverRequest = $this->request;
         /*list($academicPeriodOptions, $selectedAcademicPeriod, $levelOptions, $selectedLevel, $cycleOptions, $selectedCycle) = array_values($this->getSelectOptions());
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod','levelOptions', 'selectedLevel', 'cycleOptions', 'selectedCycle'));
@@ -162,7 +162,7 @@ class EducationProgrammesTable extends ControllerActionTable {
         $query->where([$this->aliasField('education_cycle_id') => $selectedCycle]);*/
 
         // Academic period filter
-        $EducationSystems = TableRegistry::get('Education.EducationSystems');
+        $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? $serverRequest->getQuery('academic_period_id') : $this->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
@@ -209,14 +209,14 @@ class EducationProgrammesTable extends ControllerActionTable {
         $extra['options']['sortWhitelist'] = $sortList;
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra) {
         $this->field('education_cycle_id');
         $this->fields['education_field_of_study_id']['type'] = 'select';
         $this->fields['education_certification_id']['type'] = 'select';
         $this->fields['same_grade_promotion']['type'] = 'select';//POCOR-4746
     }
 
-    public function onUpdateFieldEducationCycleId(Event $event, array $attr, $action, ServerRequest $request) {
+    public function onUpdateFieldEducationCycleId(EventInterface $event, array $attr, $action, ServerRequest $request) {
         //POCOR-5908 starts
         list(,,,, $cycleOptions, $selectedCycle) = array_values($this->getSelectOptions());
         //POCOR-5908 ends
@@ -231,7 +231,7 @@ class EducationProgrammesTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra) {
         $query->where([$this->aliasField('education_cycle_id') => $entity->education_cycle_id]);
     }
 
@@ -242,8 +242,8 @@ class EducationProgrammesTable extends ControllerActionTable {
     }
 
     public function findAvailableProgrammes(Query $query, array $options) {
-        $EducationCycles = TableRegistry::get('Education.EducationCycles');
-        $EducationLevels = TableRegistry::get('Education.EducationLevels');
+        $EducationCycles = TableRegistry::getTableLocator()->get('Education.EducationCycles');
+        $EducationLevels = TableRegistry::getTableLocator()->get('Education.EducationLevels');
 
         return $query
                         ->find('visible')
@@ -268,7 +268,7 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     public function getSelectOptions() {
         // Academic period filter
-        $EducationSystems = TableRegistry::get('Education.EducationSystems');
+        $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
@@ -296,8 +296,8 @@ class EducationProgrammesTable extends ControllerActionTable {
         return compact('academicPeriodOptions', 'selectedAcademicPeriod', 'levelOptions', 'selectedLevel', 'cycleOptions', 'selectedCycle');
     }
 
-    public function onGetCustomNextProgrammeElement(Event $event, $action, $entity, $attr, $options = []) {
-        $EducationProgrammesNextProgrammes = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
+    public function onGetCustomNextProgrammeElement(EventInterface $event, $action, $entity, $attr, $options = []) {
+        $EducationProgrammesNextProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammesNextProgrammes');
         if ($action == 'index') {
             $value = $EducationProgrammesNextProgrammes
                     ->find()
@@ -328,8 +328,8 @@ class EducationProgrammesTable extends ControllerActionTable {
             $academic_period_id = $AcademicPeriod->AcademicPeriods->getCurrent();
             $form = $event->getSubject()->Form;
             $nextProgrammeOptions = [];
-            $systemCycle = TableRegistry::get('Education.EducationSystems');
-            $educationCycles = TableRegistry::get('Education.EducationCycles');
+            $systemCycle = TableRegistry::getTableLocator()->get('Education.EducationSystems');
+            $educationCycles = TableRegistry::getTableLocator()->get('Education.EducationCycles');
             $cycleRecord = $educationCycles->find()
                 ->select([
                     'education_level_id' => 'EducationCycles.education_level_id',
@@ -352,7 +352,7 @@ class EducationProgrammesTable extends ControllerActionTable {
             }
 
 
-            $EducationSystems = TableRegistry::get('Education.EducationSystems');
+            $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
             $educationProgrammesTable = clone $this;
             $educationProgrammesTable->setAlias('EducationProgrammesClone');
 
@@ -397,7 +397,7 @@ class EducationProgrammesTable extends ControllerActionTable {
 
             $arrayNextProgrammes = [];
             if ($this->request->is(['get'])) {
-                $educationProgramme = TableRegistry::get('Education.EducationProgrammes');
+                $educationProgramme = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
                 foreach ($nextProgrammeslist as $next_programme_id) {
                     $programme = $educationProgramme->find()->where([$educationProgramme->aliasField('id') => $next_programme_id])->contain(['EducationCycles'])->first();
                     $arrayNextProgrammes[] = [
@@ -482,7 +482,7 @@ class EducationProgrammesTable extends ControllerActionTable {
                 $currentLevelOrder = $currentProgrammSystem->education_cycle->education_level->order;
                 $currentLevelId = $currentProgrammSystem->education_cycle->education_level->id;
 
-                $EducationSystems = TableRegistry::get('Education.EducationSystems');
+                $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
 
 
                 $educationProgrammesTable = clone $this;
@@ -529,7 +529,7 @@ class EducationProgrammesTable extends ControllerActionTable {
 
                 $arrayNextProgrammes = [];
                 if ($this->request->is(['get'])) {
-                    $educationProgramme = TableRegistry::get('Education.EducationProgrammes');
+                    $educationProgramme = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
                     foreach ($nextProgrammeslist as $next_programme_id) {
                         $programme = $educationProgramme->find()->where([$educationProgramme->aliasField('id') => $next_programme_id])->contain(['EducationCycles'])->first();
                         $arrayNextProgrammes[] = [
@@ -602,7 +602,7 @@ class EducationProgrammesTable extends ControllerActionTable {
         return $event->getSubject()->renderElement('Education.next_programmes', ['attr' => $attr]);
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
         // to be revisit
         // $data[$this->alias()]['setVisible'] = true;
         // To handle when delete all programmes
@@ -618,7 +618,7 @@ class EducationProgrammesTable extends ControllerActionTable {
         $options->exchangeArray($arrayOptions);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query) {
+    public function viewEditBeforeQuery(EventInterface $event, Query $query) {
         $query->contain(['EducationNextProgrammes']);
     }
 
@@ -633,14 +633,14 @@ class EducationProgrammesTable extends ControllerActionTable {
                         ->toArray();
     }
     //POCOR-4746 start
-    public function onUpdateFieldSameGradePromotion(Event $event, array $attr, $action, ServerRequest $request) {
+    public function onUpdateFieldSameGradePromotion(EventInterface $event, array $attr, $action, ServerRequest $request) {
         $options = [1 => "Enabled", 0 => "Disabled"];
         $attr['options'] = $options;
         $attr['onChangeReload'] = 'changeCurrent';
         return $attr;
     }
 
-    public function onGetSameGradePromotion(Event $event, Entity $entity)
+    public function onGetSameGradePromotion(EventInterface $event, Entity $entity)
     {
        if($entity->same_grade_promotion==1){
           return $entity->same_grade_promotion="Enabled";
@@ -650,19 +650,19 @@ class EducationProgrammesTable extends ControllerActionTable {
        }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'name') {
             return __('Name');
@@ -696,7 +696,7 @@ class EducationProgrammesTable extends ControllerActionTable {
     }
 
     // POCOR-8507
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra) {
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra) {
         if ($this->hasAssociatedRecords($this, $entity, $extra)) {
             $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
             $event->stopPropagation();

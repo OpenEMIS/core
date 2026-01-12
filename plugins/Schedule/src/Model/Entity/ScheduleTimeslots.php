@@ -65,7 +65,7 @@ class ScheduleTimeslots extends Entity
             $operator = ' <= ';
         }
 
-        $ScheduleTimeslotsTable = TableRegistry::get($this->getSource());
+        $ScheduleTimeslotsTable = TableRegistry::getTableLocator()->get($this->getSource());
         $totalIntervalQuery = $ScheduleTimeslotsTable->find();
 
         $totalInterval = $totalIntervalQuery

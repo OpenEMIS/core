@@ -1,6 +1,6 @@
 <?php
 namespace Institution\Model\Table;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 
 class InstitutionCommitteeAttachmentsTable extends AppTable {
@@ -21,7 +21,7 @@ class InstitutionCommitteeAttachmentsTable extends AppTable {
         return $events;
     }
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'download') {
             // check for the user permission to download here

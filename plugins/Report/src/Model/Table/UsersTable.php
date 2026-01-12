@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\Datasource\ResultSetInterface;
@@ -36,46 +36,46 @@ class UsersTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function beforeAction(Event $event) 
+    public function beforeAction(EventInterface $event) 
     {
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) 
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request) 
     {
         $attr['options'] = $this->controller->getFeatureOptions($this->alias());
         return $attr;
     }
 
-    public function onExcelGetUserTypeStudent(Event $event, Entity $entity)
+    public function onExcelGetUserTypeStudent(EventInterface $event, Entity $entity)
     {
         return 'Student';
     }
 
-    public function onExcelGetUserTypeStaff(Event $event, Entity $entity)
+    public function onExcelGetUserTypeStaff(EventInterface $event, Entity $entity)
     {
         return 'Staff';
     }
 
-    public function onExcelGetUserTypeGuardian(Event $event, Entity $entity)
+    public function onExcelGetUserTypeGuardian(EventInterface $event, Entity $entity)
     {
         return 'Guardian';
     }
 
-    public function onExcelGetUserTypeOthers(Event $event, Entity $entity)
+    public function onExcelGetUserTypeOthers(EventInterface $event, Entity $entity)
     {
         return 'Others';
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {  
         $cloneFields = $fields->getArrayCopy();
         $extraFields = [];

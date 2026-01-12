@@ -2,7 +2,7 @@
 namespace Student\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Http\ServerRequest;
@@ -36,7 +36,7 @@ class StudentBehavioursTable extends ControllerActionTable
 
 	}
 
-	public function indexBeforeAction(Event $event, ArrayObject $settings) {
+	public function indexBeforeAction(EventInterface $event, ArrayObject $settings) {
 		$this->field('student_id', ['visible' => false]);
 		$this->field('assignee_id', ['visible' => false]);
 		$this->field('student_behaviour_category_id', ['type' => 'select','visible' => false]);
@@ -46,7 +46,7 @@ class StudentBehavioursTable extends ControllerActionTable
 		$this->setFieldOrder(['institution_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'student_behaviour_category_id']);
 	}
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+	public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) {
 		parent::onUpdateActionButtons($event, $entity, $buttons);
                 
 		if (array_key_exists('view', $buttons)) {
@@ -71,7 +71,7 @@ class StudentBehavioursTable extends ControllerActionTable
 	}
 	
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
 	{
 	    $session = $this->request->getSession();
 	    $userData = $session->read('Auth.User');
@@ -126,7 +126,7 @@ class StudentBehavioursTable extends ControllerActionTable
 	        $query->where($conditions, [], true);
 	    }
 	}
-	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+	public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options = ['type' => 'student'];
         $tabElements = $this->getAcademicTabElements($options);

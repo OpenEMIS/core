@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\I18n\Date;
 use Cake\Collection\Collection;
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
@@ -21,13 +21,13 @@ class ImportStudentMealsTable extends AppTable {
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'InstitutionMealStudents']);
-        $this->Institutions = TableRegistry::get('Institution.Institutions');
-        $this->Students = TableRegistry::get('Institution.Students');
-        $this->Users = TableRegistry::get('User.Users');
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $this->InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-        $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $this->InstitutionMealStudents = TableRegistry::get('Institution.InstitutionMealStudents');
+        $this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $this->Students = TableRegistry::getTableLocator()->get('Institution.Students');
+        $this->Users = TableRegistry::getTableLocator()->get('User.Users');
+        $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $this->InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $this->InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $this->InstitutionMealStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionMealStudents');
     }
 
     public function beforeAction($event) {
@@ -35,7 +35,7 @@ class ImportStudentMealsTable extends AppTable {
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
         }
-        $this->systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
+        $this->systemDateFormat = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('date_format');
     }
 
     public function implementedEvents() {
@@ -54,7 +54,7 @@ class ImportStudentMealsTable extends AppTable {
         return $events;
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         //die('3');
         $request = $this->request;
@@ -64,13 +64,13 @@ class ImportStudentMealsTable extends AppTable {
         }
     }
 
-    public function addOnInitialize(Event $event, Entity $entity)
+    public function addOnInitialize(EventInterface $event, Entity $entity)
     {
         $request = $this->request;
         unset($request->query['class']);
     }
 
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         //die('5');
         $this->dependency = [];
@@ -100,24 +100,24 @@ class ImportStudentMealsTable extends AppTable {
         }
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
+    public function onGetBreadcrumb(EventInterface $event, Request $request, Component $Navigation, $persona) {
         $crumbTitle = $this->getHeader($this->alias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
 
-    public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
+    public function onImportCheckUnique(EventInterface $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
             $tempRow['entity'] = $this->InstitutionMealStudents->newEntity();
            
     }
 
-    public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
+    public function onImportUpdateUniqueKeys(EventInterface $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
     //POCOR-6681 Starts
-    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
-        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;// for enrolled status //POCOR-6613 ends
-        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $StudentData = TableRegistry::get('Institution.Students');
+    public function onImportPopulateUsersData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+        $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;// for enrolled status //POCOR-6613 ends
+        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $StudentData = TableRegistry::getTableLocator()->get('Institution.Students');
         $classId = $this->request->query('class');
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')->select(['id','openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', $lookupColumn]);
         $currentPeriodId = $this->AcademicPeriods->getCurrent();
         $allStudents = $this->InstitutionClassStudents
@@ -163,11 +163,11 @@ class ImportStudentMealsTable extends AppTable {
      */
 
 
-    public function onImportPopulateMealProgrammesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulateMealProgrammesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         //START: POCOR-6723
-        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
+        $MealInstitutionProgrammes = TableRegistry::getTableLocator()->get('Meal.MealInstitutionProgrammes');
         $MealInstitutionProgrammesData = $MealInstitutionProgrammes
                                 ->find()
                                 ->where([$MealInstitutionProgrammes->aliasField('institution_id') => $this->institutionId])
@@ -203,8 +203,8 @@ class ImportStudentMealsTable extends AppTable {
     
     }
 
-    public function onImportPopulateMealReceivedData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+    public function onImportPopulateMealReceivedData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')->select(['id', 'name', $lookupColumn]);
 
         $nameHeader = $this->getExcelLabel($lookedUpTable, 'name');
@@ -225,9 +225,9 @@ class ImportStudentMealsTable extends AppTable {
         }
     }
 
-    public function onImportPopulateMealBenefitData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulateMealBenefitData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')->select(['id', 'name', $lookupColumn]);
 
         $nameHeader = $this->getExcelLabel($lookedUpTable, 'name');
@@ -251,7 +251,7 @@ class ImportStudentMealsTable extends AppTable {
     }
 
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
   
         $userId =  $this->Users
                    ->find('all')
@@ -331,19 +331,19 @@ class ImportStudentMealsTable extends AppTable {
         return true;
     }
 
-    public function onImportGetPeriodId(Event $event, $cellValue)
+    public function onImportGetPeriodId(EventInterface $event, $cellValue)
     {
         return $cellValue;
     }
 
-    public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow) {
+    public function onImportSetModelPassedRecord(EventInterface $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow) {
         $flipped = array_flip($columns);
         $original = $originalRow->getArrayCopy();
         $key = $flipped['student_id'];
         $tempPassedRecord['data'][$key] = $original[$key];
     }
 
-    public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldClass(EventInterface $event, array $attr, $action, Request $request) {
         //die('15');
         if ($action == 'add') {
             $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();

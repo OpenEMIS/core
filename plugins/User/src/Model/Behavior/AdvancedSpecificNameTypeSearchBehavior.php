@@ -6,7 +6,7 @@ use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
 use Cake\ORM\Association\BelongsTo;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Datasource\Exception\MissingModelException;
 
@@ -38,7 +38,7 @@ class AdvancedSpecificNameTypeSearchBehavior extends Behavior {
 		return $events;
 	}
 
-	public function onBuildQuery(Event $event, Query $query, $advancedSearchHasMany) {
+	public function onBuildQuery(EventInterface $event, Query $query, $advancedSearchHasMany) {
 		$searches = [];
 		foreach ($this->_keys as $key) {
 			if (isset($advancedSearchHasMany[$key])) {
@@ -60,7 +60,7 @@ class AdvancedSpecificNameTypeSearchBehavior extends Behavior {
 		return $query;
 	}
 
-	public function onSetupFormField(Event $event, ArrayObject $searchables, $advanceSearchModelData) {
+	public function onSetupFormField(EventInterface $event, ArrayObject $searchables, $advanceSearchModelData) {
 		foreach ($this->_keys as $key) {
 			$label = Inflector::humanize($key);
 			$searchables[$key] = [

@@ -5,7 +5,7 @@ namespace System\Model\Table;
 use ArrayObject;
 use Cake\Utility\Inflector;
 use InvalidArgumentException;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -35,20 +35,20 @@ class CredentialsTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
         $this->controller->set('contentHeader', $header);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('created', ['visible' => true, 'sort' => true]);
         $this->field('message', ['sort' => true]);
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryParams = $this->request->getQuery();
         if (!isset($queryParams['sort'])) {
@@ -59,17 +59,17 @@ class CredentialsTable extends ControllerActionTable
 
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
 
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setfieldOrder($this->fieldsOrder);
     }

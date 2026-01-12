@@ -7,7 +7,7 @@ use ArrayObject;
 use Cake\Collection\CollectionInterface;
 use Cake\Core\Configure;
 use Cake\Database\Exception as DatabaseException;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
@@ -148,7 +148,7 @@ class StudentUserTable extends ControllerActionTable
         $model->hasMany('Extracurriculars', ['className' => 'Student.Extracurriculars', 'foreignKey' => 'security_user_id', 'dependent' => true]);
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $options['associated']['Nationalities'] = [
             'validate' => 'AddByAssociation'
@@ -169,7 +169,7 @@ class StudentUserTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $BaseUsers = TableRegistry::get('User.Users');
+        $BaseUsers = TableRegistry::getTableLocator()->get('User.Users');
         $validator = $BaseUsers->setUserValidation($validator, $this);
         $validator->setProvider('custom', $this);
         $validator
@@ -228,7 +228,7 @@ class StudentUserTable extends ControllerActionTable
         return $validator;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('username', ['visible' => false]);
         $toolbarButtons = $extra['toolbarButtons'];
@@ -250,7 +250,7 @@ class StudentUserTable extends ControllerActionTable
             //$studentId = isset($params['id']) ? $params['id'] : $this->Session->read('Institution.StudentUser.primaryKey.id');
 
             // get the id of the latest student record in the current institution
-            $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+            $InstitutionStudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
             $institutionStudentId = $InstitutionStudentsTable->find()
                 ->where([
                     $InstitutionStudentsTable->aliasField('student_id') => $studentId,
@@ -299,7 +299,7 @@ class StudentUserTable extends ControllerActionTable
     }
 
     // POCOR-5684
-    public function onGetIdentityNumber(Event $event, Entity $entity)
+    public function onGetIdentityNumber(EventInterface $event, Entity $entity)
     {
         $users_ids = self::getDynamicTableInstance('User.UserIdentities');
         $user_identities = $users_ids->find()
@@ -368,7 +368,7 @@ class StudentUserTable extends ControllerActionTable
     }
 
     // POCOR-5684
-    public function onGetIdentityTypeID(Event $event, Entity $entity)
+    public function onGetIdentityTypeID(EventInterface $event, Entity $entity)
     {
         $users_ids = self::getDynamicTableInstance('User.Identities');
         $user_identities = $users_ids->find()
@@ -456,7 +456,7 @@ class StudentUserTable extends ControllerActionTable
         }
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $entity = $extra['entity'];
         $userId = $this->Auth->user('id');
@@ -513,7 +513,7 @@ class StudentUserTable extends ControllerActionTable
 
     //POCOR-7982
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'MainNationalities', 'MainIdentityTypes', 'Genders'
@@ -522,7 +522,7 @@ class StudentUserTable extends ControllerActionTable
 
     //POCOR-7982
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if (!empty($entity->date_of_death)) { //POCOR-8059
             if (isset($entity->dod_range)) {
@@ -534,7 +534,7 @@ class StudentUserTable extends ControllerActionTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 
         $this->setupTabElements($entity);
@@ -599,7 +599,7 @@ class StudentUserTable extends ControllerActionTable
 
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->Session->write('Student.Students.id', $entity->id);
         $this->Session->write('Student.Students.name', $entity->name);
@@ -627,7 +627,7 @@ class StudentUserTable extends ControllerActionTable
         $this->fields['institution_id']['value'] = $extra['institutionId'];
     }
 
-    public function onUpdateFieldIdentityNumber(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldIdentityNumber(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
             $attr['fieldName'] = $this->getAlias() . '.identities.0.number';
@@ -637,7 +637,7 @@ class StudentUserTable extends ControllerActionTable
     }
 
     //POCOR-9393
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $this->triggerWebhooks($entity->id, $entity);
         $this->getEventManager()->dispatch(new Event('Model.Students.afterSaveCustom', $this, [
@@ -648,7 +648,7 @@ class StudentUserTable extends ControllerActionTable
     }
 
     //POCOR-9393
-    public function studentsAfterSave(Event $event)
+    public function studentsAfterSave(EventInterface $event)
     {
         $entity = $event->getData('entity');
         if ($entity->isNew()) {
@@ -658,7 +658,7 @@ class StudentUserTable extends ControllerActionTable
 
     //to handle identity_number field that is automatically created by mandatory behaviour.
 
-    public function pullBeforePatch(Event $event, Entity $entity, ArrayObject $queryString, ArrayObject $patchOption, ArrayObject $extra)
+    public function pullBeforePatch(EventInterface $event, Entity $entity, ArrayObject $queryString, ArrayObject $patchOption, ArrayObject $extra)
     {
         if (!isset($queryString['institution_id'])) {
             $session = $this->request->getSession();
@@ -666,7 +666,7 @@ class StudentUserTable extends ControllerActionTable
         }
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         unset($sheets[0]);
         $studentsTabsData = $this->studentsTabsData;
@@ -694,7 +694,7 @@ class StudentUserTable extends ControllerActionTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $sheetData = $settings['sheet']['sheetData'];
         $StudentType = $sheetData['student_tabs_type'];
@@ -981,7 +981,7 @@ class StudentUserTable extends ControllerActionTable
 
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $InstitutionStudents = self::getDynamicTableInstance('User.InstitutionStudents');
         $ClassStudents = self::getDynamicTableInstance('Institution.InstitutionClassStudents');

@@ -4,7 +4,7 @@ namespace Attendance\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\AppTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -33,7 +33,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
     }
 
     //POCOR-7023 starts
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $path_uri = '/restful/v2/Attendance-StudentAttendanceMarkedRecords.json';
         if (is_int(strpos($_SERVER['REQUEST_URI'], $path_uri))) {
@@ -83,11 +83,11 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
 
             $statement->execute();
             $row = $statement->fetchAll(\PDO::FETCH_ASSOC);
-            $StudentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records');
-            $studentMarkTypeStatusGrades = TableRegistry::get('student_mark_type_status_grades');
-            $studentMarkTypeStatuses = TableRegistry::get('student_mark_type_statuses');
-            $studentAttendanceMarkTypes = TableRegistry::get('student_attendance_mark_types');
-            $studentAttendanceTypes = TableRegistry::get('student_attendance_types');
+            $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('student_attendance_marked_records');
+            $studentMarkTypeStatusGrades = TableRegistry::getTableLocator()->get('student_mark_type_status_grades');
+            $studentMarkTypeStatuses = TableRegistry::getTableLocator()->get('student_mark_type_statuses');
+            $studentAttendanceMarkTypes = TableRegistry::getTableLocator()->get('student_attendance_mark_types');
+            $studentAttendanceTypes = TableRegistry::getTableLocator()->get('student_attendance_types');
             if (!empty($row)) {
                 $data = $StudentAttendanceMarkedRecords
                     ->find()
@@ -263,7 +263,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
     //POCOR-7143[START]
     public function markedRecordAfterSave($options)
     {
-        $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
+        $ClassAttendanceRecords = TableRegistry::getTableLocator()->get('Institution.ClassAttendanceRecords');
         $institutionClassId = $options['institution_class_id'];
         $educationGradeId = $options['education_grade_id'];
         $institutionId = $options['institution_id'];
@@ -276,7 +276,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $month = (int) $explodedData[1];
         $day = (int) $explodedData[2];
 
-        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+        $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
         $totalMarkedCount = $StudentAttendanceMarkedRecords
             ->find()
             ->where([
@@ -288,7 +288,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
             ])
             ->count();
 
-        $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+        $StudentAttendanceMarkTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes');
         $attendancePerDay = $StudentAttendanceMarkTypes->getAttendancePerDayByClass($institutionClassId, $academicPeriodId);
 
         $ClassAttendanceRecordsData = $ClassAttendanceRecords
@@ -326,7 +326,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
 
     public function numberOfperiodByClass($options)
     {
-        $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+        $StudentAttendanceMarkTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes');
         $institionClassId = $options['institution_class_id'];
         $academicPeriodId = $options['academic_period_id'];
         $dayId = $options['day_id'];
@@ -340,10 +340,10 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         // });
     }
 
-    public function afterSaveCommit(Event $event, Entity $entity)
+    public function afterSaveCommit(EventInterface $event, Entity $entity)
     {
 
-        $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
+        $ClassAttendanceRecords = TableRegistry::getTableLocator()->get('Institution.ClassAttendanceRecords');
         $ClassAttendanceRecords->dispatchEvent('Model.StudentAttendances.afterSaveCommit', [$entity], $ClassAttendanceRecords);
     }
 
@@ -436,7 +436,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
 
 
                     //POCOR-7143[START]
-                    $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+                    $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
                     $totalMarkedCount = $StudentAttendanceMarkedRecords
                         ->find()
                         ->where([
@@ -453,7 +453,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                         $year = (int) $explodedData[0];
                         $month = (int) $explodedData[1];
                         $daydata = (int) $explodedData[2];
-                        $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
+                        $ClassAttendanceRecords = TableRegistry::getTableLocator()->get('Institution.ClassAttendanceRecords');
                         $ClassAttendanceRecords->updateAll(
                             [self::DAY_COLUMN_PREFIX . $daydata => self::PARTIAL_MARKED],
                             [

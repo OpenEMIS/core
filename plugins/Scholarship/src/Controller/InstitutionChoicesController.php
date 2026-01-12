@@ -1,7 +1,7 @@
 <?php
 namespace Scholarship\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
@@ -16,12 +16,12 @@ class InstitutionChoicesController extends PageController
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('Security.Users');
-        $this->loadModel('FieldOption.Countries');
-        $this->loadModel('Area.AreaAdministratives');
-        $this->loadModel('Education.EducationFieldOfStudies');
-        $this->loadModel('Scholarship.ApplicationInstitutionChoices');
-        $this->loadModel('Scholarship.InstitutionChoiceTypes');
+        $this->Users = $this->fetchTable('Security.Users');
+        $this->Countries = $this->fetchTable('FieldOption.Countries');
+        $this->AreaAdministratives = $this->fetchTable('Area.AreaAdministratives');
+        $this->EducationFieldOfStudies = $this->fetchTable('Education.EducationFieldOfStudies');
+        $this->ApplicationInstitutionChoices = $this->fetchTable('Scholarship.ApplicationInstitutionChoices');
+        $this->InstitutionChoiceTypes = $this->fetchTable('Scholarship.InstitutionChoiceTypes');
 
         $this->loadComponent('Scholarship.ScholarshipTabs');
 
@@ -216,7 +216,7 @@ class InstitutionChoicesController extends PageController
         $page->getTab('InstitutionChoices')->setActive('true');
     }
 
-    public function onRenderLocationType(Event $event, Entity $entity, PageElement $element)
+    public function onRenderLocationType(EventInterface $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
 
@@ -227,7 +227,7 @@ class InstitutionChoicesController extends PageController
         }
     }
 
-    public function onRenderScholarshipInstitutionChoiceTypeId(Event $event, Entity $entity, PageElement $element)
+    public function onRenderScholarshipInstitutionChoiceTypeId(EventInterface $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
 

@@ -2,7 +2,7 @@
 namespace Staff\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
@@ -46,7 +46,7 @@ class StaffSubjectsTable extends ControllerActionTable {
         return $events;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra) {
         //echo "<pre>"; print_r($extra['query']->toArray());die;
         $this->field('academic_period', []);
         //start:POCOR-5274
@@ -109,10 +109,10 @@ class StaffSubjectsTable extends ControllerActionTable {
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
         $data = $query->toArray() ;
         $institutionId = $data[0]['institution_id'];
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academicPeriodId = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $AcademicPeriods->getCurrent();
         $query->contain([
             'InstitutionSubjects'
@@ -128,7 +128,7 @@ class StaffSubjectsTable extends ControllerActionTable {
 
         $extra['options']['sortWhitelist'] = $sortList;
         // Academic Periods
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academicPeriodId = $AcademicPeriods->getCurrent();
         //start:POCOR-5274
         $academicPeriodId = 0;
@@ -160,8 +160,8 @@ class StaffSubjectsTable extends ControllerActionTable {
             $staff_id  = 1;
         }
 
-        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
+        $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
 
         return $query
             ->select([$Classes->aliasField('name')])
@@ -182,7 +182,7 @@ class StaffSubjectsTable extends ControllerActionTable {
     }
     //end:POCOR-5274
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
 
         if ($this->action == 'index') {
@@ -195,7 +195,7 @@ class StaffSubjectsTable extends ControllerActionTable {
 
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
@@ -215,7 +215,7 @@ class StaffSubjectsTable extends ControllerActionTable {
         return $buttons;
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra) {
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra) {
         $options = ['type' => 'staff'];
         $tabElements = $this->getCareerTabElements($options);
         $controllerName = $this->controller->getName();
@@ -225,15 +225,15 @@ class StaffSubjectsTable extends ControllerActionTable {
 
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         $staffId = $this->getStaffID();
         $institutionId = $this->getInstitutionID();
-        $institutionName = TableRegistry::get('Institution.Institutions')->get($institutionId)->name;
+        $institutionName = TableRegistry::getTableLocator()->get('Institution.Institutions')->get($institutionId)->name;
 
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
-        $academicPeriodOptions = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getYearList();
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
+        $academicPeriodOptions = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')->getYearList();
         $selectedAcademicPeriod = '';
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod, [
             'message' => '{{label}} - ' . $this->getMessage('StaffSubjects.notActiveTeachingStaff'),
@@ -261,7 +261,7 @@ class StaffSubjectsTable extends ControllerActionTable {
 
         $classOptions = [];
 
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         if (
             array_key_exists($this->getAlias(), $this->request->getData())
              && array_key_exists('academic_period_id', $this->request->getData()[$this->getAlias()])
@@ -294,7 +294,7 @@ class StaffSubjectsTable extends ControllerActionTable {
         $extra['staffId'] = $staffId;
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) {
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra) {
         $session = $this->request->getSession();
         $staffId = $this->getStaffID();
         $subjectOptions = $this->getSubjectOptions();
@@ -349,14 +349,14 @@ class StaffSubjectsTable extends ControllerActionTable {
     }
 
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $extra['redirect'] = false;
         $subjectOptions = (isset($extra['subjectOptions']))? $extra['subjectOptions']: [];
         $staffId = (isset($extra['staffId']))? $extra['staffId']: null;
         $process = function ($model, $entity) use ($requestData, $subjectOptions, $staffId) {
             if (empty($staffId)) return false;
-            $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+            $InstitutionSubjectStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
             $result = false;
             if (isset($requestData['Subjects'])) {
                 foreach ($requestData['Subjects'] as $key => $value) {
@@ -390,7 +390,7 @@ class StaffSubjectsTable extends ControllerActionTable {
         return $process;
     }
     //start:POCOR-5274
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'institution_class':
@@ -424,7 +424,7 @@ class StaffSubjectsTable extends ControllerActionTable {
         }
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         if ($this->action == 'add') {
             if (array_key_exists('subjects', $this->fields) && empty($this->fields['subjects']['data']['subjects'])) {
@@ -450,7 +450,7 @@ class StaffSubjectsTable extends ControllerActionTable {
         }
     }
 
-    public function addOnChangeAcademicPeriodId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addOnChangeAcademicPeriodId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
         $dataArray = $data->getArrayCopy();
         if (array_key_exists($this->getAlias(), $dataArray) && array_key_exists('institution_class_id', $dataArray[$this->getAlias()]) ) {
             unset($dataArray[$this->getAlias()]['institution_class_id']);

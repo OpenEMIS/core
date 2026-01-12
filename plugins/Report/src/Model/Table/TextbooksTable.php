@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 
@@ -39,7 +39,7 @@ class TextbooksTable extends AppTable  {
         ]);
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('academic_period_id', ['select' => false]);
@@ -50,7 +50,7 @@ class TextbooksTable extends AppTable  {
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
         $attr['onChangeReload'] = true;
@@ -71,14 +71,14 @@ class TextbooksTable extends AppTable  {
         }
         return $result;
     }
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = $this->AcademicPeriods->getYearList();
         $attr['default'] = $this->AcademicPeriods->getCurrent();
         return $attr;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -95,7 +95,7 @@ class TextbooksTable extends AppTable  {
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
         return $events;
     }
-    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaLevelId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -122,7 +122,7 @@ class TextbooksTable extends AppTable  {
         }
     }
 
-    public function onUpdateFieldAreaId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -150,7 +150,7 @@ class TextbooksTable extends AppTable  {
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {   
         $areaId = $request->getData($this->getAlias())['area_id'];
         $institutionTypeId = $request->getData($this->getAlias())['institution_type_id'];
@@ -250,7 +250,7 @@ class TextbooksTable extends AppTable  {
     }
 
     /*POCOR-6176 Starts function for ordering required order of fields*/
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         if ($entity->has('feature')) {
             $feature = $entity->feature;
@@ -276,7 +276,7 @@ class TextbooksTable extends AppTable  {
         }
     }
     /*POCOR-6176 Ends*/
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':

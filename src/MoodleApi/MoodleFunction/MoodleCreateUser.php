@@ -108,8 +108,8 @@ class MoodleCreateUser extends MoodleFunction
     //change in POCOR-8381
     public function linkMoodletoOpenEmis($moodleId, $moodleUsername)
     {
-        $MoodleApiCreatedUsers = TableRegistry::get("MoodleApi.MoodleApiCreatedUsers");
-        $SecurityUsers = TableRegistry::get("Security.Users");
+        $MoodleApiCreatedUsers = TableRegistry::getTableLocator()->get("MoodleApi.MoodleApiCreatedUsers");
+        $SecurityUsers = TableRegistry::getTableLocator()->get("Security.Users");
 
         // Assuming $this->openemis_no is the value for core_user_id
         $openemis_no = $this->openemis_no;

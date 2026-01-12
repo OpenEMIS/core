@@ -2,7 +2,7 @@
 namespace StaffAppraisal\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -56,12 +56,12 @@ class AppraisalCriteriasTable extends ControllerActionTable
             ->requirePresence('field_type_id', 'create');
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['FieldTypes', 'AppraisalSliders', 'AppraisalNumbers', 'AppraisalDropdownOptions.AppraisalDropdownAnswers']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $code = $entity->field_type->code;
         switch ($code) {
@@ -86,7 +86,7 @@ class AppraisalCriteriasTable extends ControllerActionTable
         }
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('code');
         $this->field('name');
@@ -97,23 +97,23 @@ class AppraisalCriteriasTable extends ControllerActionTable
         ]);     
     }
 
-    public function onGetMin(Event $event, Entity $entity)
+    public function onGetMin(EventInterface $event, Entity $entity)
     {
         return strval($entity->appraisal_slider->min);
     }
 
-    public function onGetMax(Event $event, Entity $entity)
+    public function onGetMax(EventInterface $event, Entity $entity)
     {
         return strval($entity->appraisal_slider->max);
     }
 
-    public function onGetStep(Event $event, Entity $entity)
+    public function onGetStep(EventInterface $event, Entity $entity)
     {
         return strval($entity->appraisal_slider->step);
     }
 
-    // public function onUpdateFieldFieldTypeId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldFieldTypeId(Event $event, array $attr, $action)
+    // public function onUpdateFieldFieldTypeId(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFieldTypeId(EventInterface $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
             $fieldTypeOptions = $this->FieldTypes
@@ -172,7 +172,7 @@ class AppraisalCriteriasTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnAddOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnAddOption(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if ($data->offsetExists($this->getAlias())) {//POCOR-9187[START] alias -> getAlias()
             if (array_key_exists('appraisal_dropdown_options', $data[$this->getAlias()])) {
@@ -191,14 +191,14 @@ class AppraisalCriteriasTable extends ControllerActionTable
     }
 
     //POCOR-9187[START]
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
     //POCOR-9187[END]
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['field_type_id']) && !empty($data['field_type_id'])) {
             $fieldTypeCode = $this->FieldTypes->get($data['field_type_id'])->code;
@@ -218,7 +218,7 @@ class AppraisalCriteriasTable extends ControllerActionTable
         }
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
             $this->AppraisalDropdownOptions->getAlias()
@@ -310,7 +310,7 @@ class AppraisalCriteriasTable extends ControllerActionTable
         }
     }
     // Start POCOR-5188
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $visible = ['index' => false, 'view' => true, 'edit' => true, 'add' => true];//POCOR-8864
         $this->field('description', ['visible' => $visible,'after'=>'field_type_id']);//POCOR-8864
@@ -334,7 +334,7 @@ class AppraisalCriteriasTable extends ControllerActionTable
     }
     // End POCOR-5188
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'code') {
             return __('Code');

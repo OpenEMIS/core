@@ -4,6 +4,7 @@ namespace ControllerAction\View\Helper;
 use ArrayObject;
 use Cake\View\UrlHelper;
 use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\View\Helper;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -902,7 +903,7 @@ class HtmlFieldHelper extends Helper
     public function binary($action, Entity $entity, $attr, $options = [])
     {
         $value = '';
-        $table = TableRegistry::get($attr['className']);
+        $table = TableRegistry::getTableLocator()->get($attr['className']);
         //this is comment becuase of facing error in Personal > General > Account edit by superrole.POCOR-7485 Starts cakephp-4
         /*$fileUpload = $table->behaviors()->get('FileUpload');
         $name = '&nbsp;';

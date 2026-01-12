@@ -6,7 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
@@ -49,7 +49,7 @@ class IndividualPromotionTable extends ControllerActionTable
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {
         $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'];
         $Navigation->substituteCrumb('Individual Promotion', 'Students', $url);
@@ -73,7 +73,7 @@ class IndividualPromotionTable extends ControllerActionTable
         return $validator;
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -104,8 +104,8 @@ class IndividualPromotionTable extends ControllerActionTable
         $studentEntity = $this->get($studentId);
 
         // check transfer requests
-        $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-        $StudentTransfersTable = TableRegistry::get('Institution.InstitutionStudentTransfers');
+        $WorkflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+        $StudentTransfersTable = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentTransfers');
         $pendingTransferStatuses = $StudentTransfersTable->getStudentTransferWorkflowStatuses('PENDING');
 
         $conditions = [
@@ -126,7 +126,7 @@ class IndividualPromotionTable extends ControllerActionTable
             return $this->controller->redirect($extra['redirect']);
         } else {
             // check withdraw requests
-            $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
+            $StudentWithdrawTable = TableRegistry::getTableLocator()->get('Institution.StudentWithdraw');
             $pendingWithdrawStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentWithdraw', 'PENDING');
 
             $conditions = [
@@ -179,7 +179,7 @@ class IndividualPromotionTable extends ControllerActionTable
             'new_information_header', 'student_status_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'effective_date']);
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -197,7 +197,7 @@ class IndividualPromotionTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldStudentId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStudentId(EventInterface $event, array $attr, $action, ServerRequest $request)
     { 
         $studentId = $attr['entity']->student_id;
 
@@ -207,7 +207,7 @@ class IndividualPromotionTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldFromAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFromAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         switch ($action) {
             case 'reconfirm':
@@ -225,7 +225,7 @@ class IndividualPromotionTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldFromEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFromEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         switch ($action) {
             case 'reconfirm':
@@ -243,7 +243,7 @@ class IndividualPromotionTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStudentStatusId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $statusNames = $this->StudentStatuses->find('list')->toArray();
 
@@ -274,7 +274,7 @@ class IndividualPromotionTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         switch ($action) {
             case 'reconfirm':
@@ -301,7 +301,7 @@ class IndividualPromotionTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         switch ($action) {
             case 'reconfirm':
@@ -348,7 +348,7 @@ class IndividualPromotionTable extends ControllerActionTable
                     $statuses = $this->StudentStatuses->findCodeList();
                     $fromGradeId = $attr['entity']->education_grade_id;
                     $institutionId = $request->getData()[$this->getAlias()]['institution_id'];
-                    $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+                    $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
                     // PROMOTED status
                     if ($studentStatusId == $statuses['PROMOTED']) {
                         $fromAcademicPeriodId = $attr['entity']->academic_period_id;
@@ -482,7 +482,7 @@ class IndividualPromotionTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionClassId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         switch ($action) {
             case 'reconfirm':
@@ -524,7 +524,7 @@ class IndividualPromotionTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEffectiveDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEffectiveDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         switch ($action) {
             case 'reconfirm':
@@ -567,7 +567,7 @@ class IndividualPromotionTable extends ControllerActionTable
     private function checkIsOverStudentClassCapacity($classId)
     {
         if (!empty($classId)) {
-            $institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
+            $institutionClassTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
 
             //Query to check if selected student and next class have capacity and return the classes that do not have
             $results = $institutionClassTable->find('all', array('fields' => array('id', 'name'), 'contain' => array()));
@@ -589,7 +589,7 @@ class IndividualPromotionTable extends ControllerActionTable
         return false;
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         //echo "<pre>"; print_r($entity); die;
         $checkResult = false;
@@ -610,9 +610,9 @@ class IndividualPromotionTable extends ControllerActionTable
 
                     $educationGradeId = $entity->education_grade_id;
                     $educationGradeName = $this->EducationGrades->get($educationGradeId)->code;
-                    $EducationGrades = TableRegistry::get('Education.EducationGrades');
-                    $studentStatuses = TableRegistry::get('Student.StudentStatuses');
-                    $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+                    $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+                    $studentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+                    $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
                     $EducationGradesData = $EducationGrades->find()
                     ->where([
                         $EducationGrades->aliasField('code') => $educationGradeName
@@ -621,7 +621,7 @@ class IndividualPromotionTable extends ControllerActionTable
                     ->toArray();
                     $studentId = $entity->student_id;
                     $studentStatusesValidateRepeater = 'no';
-                    $studentStatuses = TableRegistry::get('Student.StudentStatuses');
+                    $studentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
                     $statusStudentId = $studentStatuses->find()->where([$studentStatuses->aliasField('id') => $entity->student_status_id])
                             ->first();
                     $students =  $institutionStudents->find()->where(
@@ -693,7 +693,7 @@ class IndividualPromotionTable extends ControllerActionTable
         return $process;
     }
 
-    public function reconfirm(Event $event, ArrayObject $extra)
+    public function reconfirm(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -747,7 +747,7 @@ class IndividualPromotionTable extends ControllerActionTable
     public function savePromotion(Entity $entity)
     {
         $institutionStudentsId = $this->getQueryString('institution_student_id');
-        $studentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
+        $studentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
         //$id = $entity->id;
         $id = $institutionStudentsId;
         $originalStudent = $this->get($id);
@@ -838,7 +838,7 @@ class IndividualPromotionTable extends ControllerActionTable
             $newClassStudent['academic_period_id'] = $entity->academic_period_id;
         }
 
-        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         $existingClassStudent = $InstitutionClassStudents->find()
             ->where([
                 $InstitutionClassStudents->aliasField('institution_id') => $originalStudent->institution_id,
@@ -890,11 +890,11 @@ class IndividualPromotionTable extends ControllerActionTable
         return false;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $listeners = [
-            TableRegistry::get('Institution.InstitutionClassStudents'),
-            TableRegistry::get('Institution.InstitutionSubjectStudents')
+            TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents'),
+            TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents')
         ];
         $this->dispatchEventToModels('Model.Students.afterSave', [$entity], $this, $listeners);
     }
@@ -905,7 +905,7 @@ class IndividualPromotionTable extends ControllerActionTable
     */
     public function institutionClassStudentData($classId)
     {
-        $institutionClass =  TableRegistry::get('Institution.InstitutionClasses');
+        $institutionClass =  TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         if($classId != -1){
             $bodyData = $institutionClass->find('all',
                             [ 'contain' => [
@@ -986,7 +986,7 @@ class IndividualPromotionTable extends ControllerActionTable
                     'institution_classes_secondary_staff_openemis_no' => !empty($secondaryTeachers) ? $secondaryTeachers : NULL,
                     'institution_class_students_openemis_no' => !empty($students) ? $students : NULL
                 ];
-                    $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                    $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
                     if ($this->Auth->user()) {
                         $Webhooks->triggerShell('class_update', ['username' => $username], $body);
                     }
@@ -1005,8 +1005,8 @@ class IndividualPromotionTable extends ControllerActionTable
         $statusId = $entity->student_status_id;
         $statusId = $entity->academic_period_id;
         $academicPeriodId = $this->request->getData()['IndividualPromotion']['academic_period_id'];
-        $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-        $studentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+        $studentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $statusStudentId = $studentStatuses->find()->where([$studentStatuses->aliasField('name') => 'Promoted'])
                             ->first()->id;
         $students =  $institutionStudents->find()->where([$institutionStudents->aliasField('student_id') => $studentId, $institutionStudents->aliasField('student_status_id') => $statusStudentId , $institutionStudents->aliasField('academic_period_id') => $academicPeriodId,$institutionStudents->aliasField('education_grade_id') => $educationGradeId])->first();

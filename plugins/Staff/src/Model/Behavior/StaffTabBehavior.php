@@ -5,7 +5,7 @@ namespace Staff\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 
 class StaffTabBehavior extends Behavior
@@ -94,7 +94,7 @@ class StaffTabBehavior extends Behavior
             $encodedQueryString = $model->paramsEncode($queryString);
         }
 
-        $labels_tbl = TableRegistry::get('System.Labels');   //POCOR-8056
+        $labels_tbl = TableRegistry::getTableLocator()->get('System.Labels');   //POCOR-8056
         $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();//POCOR-8056
         if(empty($curricular_label_Data->name)){
             $curricular_label_Data->name = "Institution Curriculars";
@@ -123,7 +123,7 @@ class StaffTabBehavior extends Behavior
 
         // unset classes and subjects if institution is non-academic
         if ($institutionID) {
-            $InstitutionTable = TableRegistry::get('Institution.Institutions');
+            $InstitutionTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $classification = $InstitutionTable->get($institutionID)->classification;
             if ($classification == $InstitutionTable::NON_ACADEMIC) {
                 unset($staffTabElements['Classes']);

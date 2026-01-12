@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Attendance\Model\Table\StudentAttendanceTypesTable as AttendanceTypes;
 use Cake\Log\Log;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use DateTime;//POCOR-7183
 use Cake\I18n\Time;//POCOR-7183
 
@@ -36,7 +36,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
         return $events;
     }
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'index' || $action == 'view') {
             // check for the user permission to view here
@@ -73,9 +73,9 @@ class StudentAttendanceMarkTypesTable extends AppTable
 
     public function getAttendancePerDayByClass($classId, $academicPeriodId)
     {
-        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-        $StudentMarkTypeStatuses = TableRegistry::get('Attendance.StudentMarkTypeStatuses');
-        $StudentMarkTypeStatusGrades = TableRegistry::get('Attendance.StudentMarkTypeStatusGrades');
+        $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
+        $StudentMarkTypeStatuses = TableRegistry::getTableLocator()->get('Attendance.StudentMarkTypeStatuses');
+        $StudentMarkTypeStatusGrades = TableRegistry::getTableLocator()->get('Attendance.StudentMarkTypeStatusGrades');
         $gradeId = $InstitutionClassGrades
             ->find()
             ->where([$InstitutionClassGrades->aliasField('institution_class_id IS') => $classId])
@@ -105,7 +105,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
                 ->first();
             if (!is_null($attendancePerDay)) {
                 $attendancePerDayId = $attendancePerDay->id;
-                $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+                $StudentAttendancePerDayPeriods = TableRegistry::getTableLocator()->get('Attendance.StudentAttendancePerDayPeriods');
                 $modelData = $StudentAttendancePerDayPeriods
                              ->find()
                              ->select([
@@ -143,12 +143,12 @@ class StudentAttendanceMarkTypesTable extends AppTable
     {
         // POCOR-7183 add parmas $weekStartDay, $weekEndDay
         $prefix = 'Period ';
-        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-        $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
-        $StudentMarkTypeStatuses = TableRegistry::get('Attendance.StudentMarkTypeStatuses');
-        $StudentMarkTypeStatusGrades = TableRegistry::get('Attendance.StudentMarkTypeStatusGrades');
-        $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
-        $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes'); 
+        $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
+        $StudentAttendanceTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceTypes');
+        $StudentMarkTypeStatuses = TableRegistry::getTableLocator()->get('Attendance.StudentMarkTypeStatuses');
+        $StudentMarkTypeStatusGrades = TableRegistry::getTableLocator()->get('Attendance.StudentMarkTypeStatusGrades');
+        $StudentAttendancePerDayPeriods = TableRegistry::getTableLocator()->get('Attendance.StudentAttendancePerDayPeriods');
+        $StudentAttendanceMarkTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes'); 
         //POCOR-9353 start
         $where = [
             $StudentAttendanceTypes->aliasField('code IS') => 'DAY_AND_SUBJECT',
@@ -262,7 +262,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
                     }
                 }
 
-                $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+                $StudentAttendancePerDayPeriods = TableRegistry::getTableLocator()->get('Attendance.StudentAttendancePerDayPeriods');
                 //POCOR-7183 starts
                 if($dayId == -1){
                     $DayConditions = [

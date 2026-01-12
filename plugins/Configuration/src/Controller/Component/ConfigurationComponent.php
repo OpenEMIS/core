@@ -18,7 +18,7 @@ namespace Configuration\Controller\Component;
 
 use ArrayObject;
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 
 class ConfigurationComponent extends Component
@@ -32,11 +32,21 @@ class ConfigurationComponent extends Component
         'StaffReleases' => ['className' => 'Configuration.ConfigStaffReleases']
     ];
 
-    public $components = ['AccessControl'];
+    // Components are defined in the parent class as protected $components = []
+    // We set them in initialize() method instead to avoid type declaration conflicts
 
     // Is called before the controller's beforeFilter method.
     public function initialize(array $config): void
     {
+        // Set components to avoid redeclaring the property (which causes type conflicts in CakePHP 5)
+        $this->components = ['AccessControl'];
+        
+        // Manually populate _componentMap since we set components after constructor
+        // This is needed for __get() to work properly in CakePHP 5
+        if ($this->components) {
+            $this->_componentMap = $this->_registry->normalizeArray($this->components);
+        }
+        
         foreach (array_keys($this->configOptions) as $key) {
             $this->AccessControl->addAccessMap($key);
         }

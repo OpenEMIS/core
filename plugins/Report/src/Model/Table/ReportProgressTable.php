@@ -5,7 +5,7 @@ use Cake\I18n\Time;
 use Cake\I18n\FrozenTime;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Log\Log;
 use Cake\Datasource\Exception\RecordNotFoundException;
@@ -68,7 +68,7 @@ class ReportProgressTable extends AppTable  {
 		return $result->id;
 	}
 
-	// public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+	// public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     // {
 	// 	$data = json_decode($entity->params, true);
 	// 	$data['format'] = 'xlsx';

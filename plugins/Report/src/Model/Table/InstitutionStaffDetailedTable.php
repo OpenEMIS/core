@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Network\Session;
 
@@ -46,7 +46,7 @@ class InstitutionStaffDetailedTable extends AppTable
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),
@@ -56,15 +56,15 @@ class InstitutionStaffDetailedTable extends AppTable
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         // Setting request data and modifying fetch condition
         $requestData = json_decode($settings['process']['params']);
         $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
         $academicPeriodId = $requestData->academic_period_id;
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $InstitutionStaffTable = TableRegistry::get('Institution.InstitutionStaff');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $startDate = $periodEntity->start_date->format('Y-m-d');
         $endDate = $periodEntity->end_date->format('Y-m-d');
@@ -75,8 +75,8 @@ class InstitutionStaffDetailedTable extends AppTable
         foreach($getyear->toArray() as $val) {
             $year  = $val['name'];
         }
-        $custom_field = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
-        $StaffCustomFields = TableRegistry::get('StaffCustomField.StaffCustomFields');
+        $custom_field = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFieldValues');
+        $StaffCustomFields = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFields');
         $conditions = [];
         if ($institutionId != 0) {
             $conditions[$this->aliasField('institution_id')] = $institutionId;
@@ -190,10 +190,10 @@ class InstitutionStaffDetailedTable extends AppTable
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($year) {
             return $results->map(function ($row) use ($year){
                 $row['academic_period'] = $year;
-                $Guardians = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
-                $staffCustomFieldOptions = TableRegistry::get('StaffCustomField.StaffCustomFieldOptions');
-                $staffCustomFields = TableRegistry::get('StaffCustomField.StaffCustomFields');
-                $staffCustomFormsFields = TableRegistry::get('StaffCustomField.StaffCustomFormsFields');
+                $Guardians = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFieldValues');
+                $staffCustomFieldOptions = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFieldOptions');
+                $staffCustomFields = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFields');
+                $staffCustomFormsFields = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFormsFields');
     
                     $guardianData = $Guardians->find()
                     ->select([
@@ -259,7 +259,7 @@ class InstitutionStaffDetailedTable extends AppTable
         });
     }
 
-    public function onExcelGetUserIdentitiesDefault(Event $event, Entity $entity)
+    public function onExcelGetUserIdentitiesDefault(EventInterface $event, Entity $entity)
     {
         $return = [];
         if ($entity->has('user')) {
@@ -277,7 +277,7 @@ class InstitutionStaffDetailedTable extends AppTable
         return implode(', ', array_values($return));
     }
 
-    public function onExcelGetUserIdentities(Event $event, Entity $entity)
+    public function onExcelGetUserIdentities(EventInterface $event, Entity $entity)
     {
         $return = [];
         if ($entity->has('user')) {
@@ -298,9 +298,9 @@ class InstitutionStaffDetailedTable extends AppTable
 
     
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields) 
     {
-        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
 
         $settings['identity'] = $identity;
@@ -416,8 +416,8 @@ class InstitutionStaffDetailedTable extends AppTable
             'type' => 'date',
             'label' => __('Start Date')
         ];
-        $InfrastructureCustomFields = TableRegistry::get('StaffCustomField.StaffCustomFields');
-        $staffCustomFormsFields = TableRegistry::get('StaffCustomField.StaffCustomFormsFields');
+        $InfrastructureCustomFields = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFields');
+        $staffCustomFormsFields = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFormsFields');
             $customFieldData = $InfrastructureCustomFields->find()->select([
                 'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
                 'custom_field' => $InfrastructureCustomFields->aliasfield('name')

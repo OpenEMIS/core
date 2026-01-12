@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
@@ -21,13 +21,13 @@ class IncomeTable extends AppTable  {
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function beforeAction(Event $event) {
+    public function beforeAction(EventInterface $event) {
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) 
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -73,7 +73,7 @@ class IncomeTable extends AppTable  {
                
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
 

@@ -7,7 +7,7 @@ use ZipArchive;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use PDOException;
@@ -45,7 +45,7 @@ class MealsTable extends AppTable
         return $events;
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
@@ -58,7 +58,7 @@ class MealsTable extends AppTable
         $this->ControllerAction->field('format');
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if ($data[$this->getAlias()]['feature'] == 'Report.MealSummary') {
             $options['validate'] = 'MealSummary';
@@ -67,14 +67,14 @@ class MealsTable extends AppTable
         }
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['label'=>'Area Education','required' => true]]);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $options = $this->controller->getFeatureOptions($this->getAlias());
         $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
@@ -168,7 +168,7 @@ class MealsTable extends AppTable
         return $result;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $areaId = $request->getData($this->getAlias())['area_education_id'];
         $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
@@ -308,7 +308,7 @@ class MealsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -336,7 +336,7 @@ class MealsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaLevelId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -364,7 +364,7 @@ class MealsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaEducationId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         if (isset($this->request->getData($this->getAlias())['feature'])) {
@@ -404,7 +404,7 @@ class MealsTable extends AppTable
         return $attr;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':
@@ -427,7 +427,7 @@ class MealsTable extends AppTable
     }
 
     public function getChildren($id, $idArray) {
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $result = $Areas->find()
                            ->where([
                                $Areas->aliasField('parent_id') => $id
@@ -440,7 +440,7 @@ class MealsTable extends AppTable
         return $idArray;
     }
     //POCOR-9268 Starts
-    public function onUpdateFieldReportStartDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldReportStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $requestData = $this->request->getData($this->getAlias());
         $feature = isset($requestData['feature']) ? $requestData['feature'] : null;
@@ -464,7 +464,7 @@ class MealsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldReportEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldReportEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $requestData = $this->request->getData($this->getAlias());
         $feature = isset($requestData['feature']) ? $requestData['feature'] : null;

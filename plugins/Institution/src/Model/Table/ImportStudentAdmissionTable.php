@@ -9,7 +9,7 @@ use Cake\Collection\Collection;
 use Cake\Controller\Component;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
@@ -42,16 +42,16 @@ class ImportStudentAdmissionTable extends AppTable
         $this->addBehavior('Institution.ImportStudent');
 
         // register the target table once
-        $this->Institutions = TableRegistry::get('Institution.Institutions');
-        $this->StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
-        $this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-        $this->Students = TableRegistry::get('Security.Users');
-        $this->Workflows = TableRegistry::get('Workflow.Workflows');
-        $this->EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $this->StudentAdmission = TableRegistry::getTableLocator()->get('Institution.StudentAdmission');
+        $this->InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+        $this->Students = TableRegistry::getTableLocator()->get('Security.Users');
+        $this->Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        $this->EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
     }
 
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         $this->ControllerAction->field('academic_period_id', [
             'type' => 'select',
@@ -62,7 +62,7 @@ class ImportStudentAdmissionTable extends AppTable
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $session = $this->request->getSession();
         $academic_period_id = $this->request->getData()['ImportStudentAdmission']['academic_period_id'];
@@ -80,7 +80,7 @@ class ImportStudentAdmissionTable extends AppTable
         return $attr;
     }
 
-    public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeAcademicPeriod(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
 
@@ -242,13 +242,13 @@ class ImportStudentAdmissionTable extends AppTable
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {
         $crumbTitle = $this->getHeader($this->getAlias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
 
-    public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
+    public function onImportCheckUnique(EventInterface $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
     {
         $columns = new Collection($columns);
         $filtered = $columns->filter(function ($value, $key, $iterator) {
@@ -270,14 +270,14 @@ class ImportStudentAdmissionTable extends AppTable
         $tempRow['institution_class_id'] = null;
     }
 
-    public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity)
+    public function onImportUpdateUniqueKeys(EventInterface $event, ArrayObject $importedUniqueCodes, Entity $entity)
     {
         $importedUniqueCodes[] = $entity->student_id;
     }
 
-    public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateAcademicPeriodsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         //POCOR-9394[START]
         // $academicPeriodId = $this->AcademicPeriods->getCurrent();
         $academicPeriodId = $this->request->getSession()->read('period') ?? $this->AcademicPeriods->getCurrent();
@@ -307,10 +307,10 @@ class ImportStudentAdmissionTable extends AppTable
         }
     }
 
-    public function onImportPopulateEducationGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateEducationGradesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $session = $this->request->getSession();
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $programmeHeader = $this->getExcelLabel($lookedUpTable, 'education_programme_id');
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 3;
@@ -353,12 +353,12 @@ class ImportStudentAdmissionTable extends AppTable
         }
     }
 
-    public function onImportPopulateStudentUserData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateStudentUserData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         unset($data[$columnOrder]);
     }
 
-    public function onImportPopulateInstitutionClassesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateInstitutionClassesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         try {
             $institution = $this->Institutions->get($this->institutionId);
@@ -408,15 +408,15 @@ class ImportStudentAdmissionTable extends AppTable
         }
         //POCOR-9394[END]
         $academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $modelData = [];
         $modelData[$academicPeriod->code] = $InstitutionClasses->getClassOptions($academicPeriodId, $this->institutionId);
         return $modelData;
     }
 //POCOR-7716 start (For removing workflowstep (status_id) in export functionality)
-    // public function onImportPopulateWorkflowStepsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    // public function onImportPopulateWorkflowStepsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     // {
-    //     $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+    //     $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
 
     //     $workflowResult = $this->Workflows
     //         ->find()
@@ -641,7 +641,7 @@ class ImportStudentAdmissionTable extends AppTable
 
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
 
         $institution_id = $this->checkInstitution($tempRow, $rowInvalidCodeCols);
@@ -738,7 +738,7 @@ class ImportStudentAdmissionTable extends AppTable
                                     $selectedClassIdFound = true;
 
                                     //check class grade against selected grade
-                                    $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+                                    $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
                                     $classGrade = $InstitutionClasses->getClassGradeOptions($id);
 
                                     if (!in_array($tempRow['education_grade_id'], $classGrade)) { //if selected grade cant be found on class grade
@@ -746,7 +746,7 @@ class ImportStudentAdmissionTable extends AppTable
                                         return false;
                                     } else {
                                         //checking class capacity if student imported straight to the class.
-                                        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+                                        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
                                         $countStudent = $InstitutionClassStudents->getStudentCountByClass($id);
                                         $classCapacity = $InstitutionClasses->get($id)->capacity;
 
@@ -818,10 +818,10 @@ class ImportStudentAdmissionTable extends AppTable
         }
     }
 
-    public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow)
+    public function onImportSetModelPassedRecord(EventInterface $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow)
     {
         //POCOR-6995 Start
-        $institutionClass = TableRegistry::get('Institution.InstitutionClasses');
+        $institutionClass = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         /*$classIds = [];
         foreach($clonedEntity->institution_class_id as $keys=>$val){
             print_r($val);die;
@@ -915,7 +915,7 @@ class ImportStudentAdmissionTable extends AppTable
             ];
 
             //print_r($body);die;
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             $Webhooks->triggerShell('class_update', ['username' => ''], $body);
             // end POCOR-6995
         }
@@ -938,7 +938,7 @@ class ImportStudentAdmissionTable extends AppTable
         return $timeZone;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':

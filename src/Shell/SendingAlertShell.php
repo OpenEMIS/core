@@ -13,8 +13,8 @@ class SendingAlertShell extends Shell
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('Alert.AlertLogs');
-        $this->loadModel('Alert.AlertRules');
+        $this->AlertLogs = $this->fetchTable('Alert.AlertLogs');
+        $this->AlertRules = $this->fetchTable('Alert.AlertRules');
     }
 
     public function main()

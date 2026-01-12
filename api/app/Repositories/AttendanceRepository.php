@@ -802,7 +802,7 @@ class AttendanceRepository extends Controller
         $dataArr = [];
         
         if (!$archive) {
-            //$StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+            //$StaffLeaveTable = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
             $allStaffLeaves = new InstitutionStaffLeave();
 
             $allStaffLeaves = $allStaffLeaves->select('institution_staff_leave.*', 'staff_leave_types.name as leave_type_name');

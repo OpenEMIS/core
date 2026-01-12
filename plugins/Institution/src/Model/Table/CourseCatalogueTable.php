@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Routing\Router;
 
 use App\Model\Table\ControllerActionTable;
@@ -74,12 +74,12 @@ class CourseCatalogueTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'StaffTrainingResults'];
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // remove add button from index
         $this->toggle('add', false);
@@ -114,10 +114,10 @@ class CourseCatalogueTable extends ControllerActionTable
         $extra['toolbarButtons']['back'] = $backBtn;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // courses must be approved
-        $Courses = TableRegistry::get('Training.TrainingCourses');
+        $Courses = TableRegistry::getTableLocator()->get('Training.TrainingCourses');
         $steps = $this->Workflow->getStepsByModelCode($Courses->getRegistryAlias(), 'APPROVED');
         if (!empty($steps)) {
             $query->where([
@@ -125,16 +125,16 @@ class CourseCatalogueTable extends ControllerActionTable
             ]);
         }
 
-        $Sessions = TableRegistry::get('Training.TrainingSessions');
+        $Sessions = TableRegistry::getTableLocator()->get('Training.TrainingSessions');
         $sessionSteps = $this->Workflow->getStepsByModelCode($Sessions->getRegistryAlias(), 'APPROVED');
 
         $session = $this->request->getSession();
         $staffId = $session->read('Staff.Staff.id');
         $InstitutionId = $session->read('Institution.Institutions.id');
-        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+        $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
         $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
 
-        $Staff = TableRegistry::get('Institution.Staff');
+        $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
         $staffData = $Staff->find()
                     ->contain('Positions')
                     ->where([
@@ -149,7 +149,7 @@ class CourseCatalogueTable extends ControllerActionTable
         if (!empty($staffData) && $staffData->has('position')) {
             $positionTitle = $staffData->position->staff_position_title_id;
 
-            $TargetPopulationTable = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
+            $TargetPopulationTable = TableRegistry::getTableLocator()->get('Training.TrainingCoursesTargetPopulations');
             $query
                 ->leftJoin(
                     [$TargetPopulationTable->getAlias() => $TargetPopulationTable->getTable()],
@@ -176,9 +176,9 @@ class CourseCatalogueTable extends ControllerActionTable
             ->order($this->aliasField('code'));
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        $Sessions = TableRegistry::get('Training.TrainingSessions');
+        $Sessions = TableRegistry::getTableLocator()->get('Training.TrainingSessions');
         $sessionSteps = $this->Workflow->getStepsByModelCode($Sessions->getRegistryAlias(), 'APPROVED');
         $query->contain(['TargetPopulations', 'TrainingProviders', 'CoursePrerequisites', 'Specialisations', 'ResultTypes'])
             ->contain(['TrainingSessions' => function ($q) use ($sessionSteps) {
@@ -186,7 +186,7 @@ class CourseCatalogueTable extends ControllerActionTable
             }]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('sessions', ['type' => 'sessions']);
         $this->field('target_populations', ['type' => 'chosenSelect']);
@@ -211,7 +211,7 @@ class CourseCatalogueTable extends ControllerActionTable
         ]);
     }
 
-    public function onGetSessions(Event $event, Entity $entity)
+    public function onGetSessions(EventInterface $event, Entity $entity)
     {
         $trainingSessions = count($entity->training_sessions);
         if ($trainingSessions) {
@@ -221,7 +221,7 @@ class CourseCatalogueTable extends ControllerActionTable
         }
     }
 
-    public function onGetSessionsElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetSessionsElement(EventInterface $event, $action, $entity, $attr, $options=[])
     {
         if ($action == 'view') {
             $trainingSessions = $entity->training_sessions;
@@ -231,7 +231,7 @@ class CourseCatalogueTable extends ControllerActionTable
             if (count($trainingSessions) == 0) {
                 return __('No Training Sessions');
             } else {
-                $StaffTrainingApplications = TableRegistry::get('Institution.StaffTrainingApplications');
+                $StaffTrainingApplications = TableRegistry::getTableLocator()->get('Institution.StaffTrainingApplications');
                 $tableHeaders = [__('Code'), __('Name'), __('Start Date'), __('End Date'), ''];
 
                 $tableCells = [];
@@ -282,7 +282,7 @@ class CourseCatalogueTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'code') {
             return __('Code');

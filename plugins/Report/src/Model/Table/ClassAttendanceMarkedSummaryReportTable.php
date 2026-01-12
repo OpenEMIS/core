@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -52,7 +52,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature');
@@ -61,24 +61,24 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         $this->field('institution_course_id', ['visible' => false]);//POCOR-6863
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions('Institutions');
         return $attr;
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $requestData = json_decode($settings['process']['params']);
         $this->schoolClosedDays = $this->getSchoolClosedDate($requestData);
     }
 
-    public function onExcelGetInstitutionShiftId(Event $event, Entity $entity)
+    public function onExcelGetInstitutionShiftId(EventInterface $event, Entity $entity)
     {
         return $entity->shift_name;
     }
 
-    public function onExcelGetEducationGrades(Event $event, Entity $entity)
+    public function onExcelGetEducationGrades(EventInterface $event, Entity $entity)
     {
         $classGrades = [];
         if ($entity->education_grades) {
@@ -90,12 +90,12 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         return implode(', ', $classGrades); //display as comma seperated
     }
 
-    public function onExcelRenderPeriodName(Event $event, Entity $entity)
+    public function onExcelRenderPeriodName(EventInterface $event, Entity $entity)
     {
         $period_name = '';
         if ($entity->has('period')) {
         $education_grade_id = $entity->education_grades[0]->id;
-        $StudentMarkTypeStatusGrades = TableRegistry::get('Attendance.StudentMarkTypeStatusGrades');
+        $StudentMarkTypeStatusGrades = TableRegistry::getTableLocator()->get('Attendance.StudentMarkTypeStatusGrades');
         $data = $StudentMarkTypeStatusGrades
                 ->find()
                 ->select([
@@ -124,7 +124,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
             $period = $entity->period;
             $student_attendance_mark_type_id = $data[0]->StudentAttendanceMarkTypes['id'];
             $student_attendance_type_id = $data[0]->StudentAttendanceMarkTypes['student_attendance_type_id'];
-            $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+            $StudentAttendanceTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceTypes');
             $attendancetype = $StudentAttendanceTypes
                                 ->find()
                                 ->select([
@@ -137,7 +137,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
             $attendancecode = $attendancetype[0]->code;
 
             if ($attendancecode == 'DAY') {
-                $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+                $StudentAttendancePerDayPeriods = TableRegistry::getTableLocator()->get('Attendance.StudentAttendancePerDayPeriods');
                 $periodData = $StudentAttendancePerDayPeriods
                                 ->find()
                                 ->select([
@@ -161,17 +161,17 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         return $period_name;
     }
 
-    public function onExcelGetSubjectName(Event $event, Entity $entity)
+    public function onExcelGetSubjectName(EventInterface $event, Entity $entity)
     { 
         if (!$entity->has('subject_name')) {
             return '-';
         }
     }
 
-    public function onExcelRenderSubjectStaff(Event $event, Entity $entity)
+    public function onExcelRenderSubjectStaff(EventInterface $event, Entity $entity)
     { 
         $subject_id = $entity->subject_id;
-        $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+        $InstitutionSubjectStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
         $staffSubjectData = $InstitutionSubjectStaff
                             ->find()
                             ->select([
@@ -201,7 +201,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         return $staff_subject_name;
     }
 
-    public function onExcelGetTotalUnmarked(Event $event, Entity $entity)
+    public function onExcelGetTotalUnmarked(EventInterface $event, Entity $entity)
     {  
         $reportStartDate = (new DateTime($this->reportStartDate));
         $reportEndDate = (new DateTime($this->reportEndDate));
@@ -215,7 +215,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         return $totalunmarked;
     }
 
-    public function onExcelGetTotalDaysToBeMarked(Event $event, Entity $entity)
+    public function onExcelGetTotalDaysToBeMarked(EventInterface $event, Entity $entity)
     {  
         $reportStartDate = (new DateTime($this->reportStartDate));
         $reportEndDate = (new DateTime($this->reportEndDate));
@@ -229,11 +229,11 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         return $totalDaysToBeMarked;
     }
 
-    public function onExcelGetSecondaryStaffName(Event $event, Entity $entity)
+    public function onExcelGetSecondaryStaffName(EventInterface $event, Entity $entity)
     {
         // $institution_class_id = $entity->id;
         $institution_class_id = $entity->class_id; //POCOR-8902
-        $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
+        $InstitutionClassesSecondaryStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionClassesSecondaryStaff');
         $data = $InstitutionClassesSecondaryStaff
                 ->find()
                 ->select([
@@ -263,7 +263,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         return $secondary_staff_name;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $institution_id = $requestData->institution_id;
@@ -272,7 +272,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         $attendance_type = $requestData->attendance_type; 
         //$periods = $requestData->periods; 
         $areaId = $requestData->area_education_id;
-        $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+        $StudentAttendanceTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceTypes');
         // POCOR-6967
         // $attendanceTypeCode = '';
         // if (!empty($attendance_type)) {
@@ -325,12 +325,12 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         }
         $academic_period_id = $requestData->academic_period_id;
 
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-        $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
-        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords'); 
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $InstitutionClassesSecondaryStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionClassesSecondaryStaff');
+        $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords'); 
 
         // Start POCOR-7061 query updated client requirement 
         /*$query
@@ -542,7 +542,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
     }
     
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         // Start POCOR-7061 query updated client requirement 
         $newFields[] = [
@@ -756,7 +756,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         *POCOR-7061
     */
 
-    public function onExcelGetHomeroomStaffName(Event $event, Entity $entity)
+    public function onExcelGetHomeroomStaffName(EventInterface $event, Entity $entity)
     {
         $studentName = [];
         ($entity->HomeroomStaffName) ? $studentName[] = $entity->HomeroomStaffName : '';

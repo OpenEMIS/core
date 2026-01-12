@@ -9,9 +9,9 @@ class POCOR2813 extends AbstractMigration
 
     public function up()
     {
-        $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
-        $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-        $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
+        $WorkflowsTable = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        $WorkflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        $WorkflowStatusesTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowStatuses');
 
         $workflowModelData = [
             [
@@ -1942,7 +1942,7 @@ class POCOR2813 extends AbstractMigration
 
     public function down()
     {   
-        $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
+        $WorkflowsTable = TableRegistry::getTableLocator()->get('Workflow.Workflows');
 
         // delete workflow_models
         $this->execute("DELETE FROM `workflow_models` WHERE `id` = " . $this->workflowModelId);

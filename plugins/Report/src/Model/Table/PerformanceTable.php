@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
@@ -50,7 +50,7 @@ class PerformanceTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-   public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+   public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if ($data[$this->getAlias()]['feature'] == 'Report.Assessments') {
             $options['validate'] = 'assessments';
@@ -96,7 +96,7 @@ class PerformanceTable extends AppTable
             ->notEmpty('outcome_period');
        return $validator;
     }
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
@@ -110,7 +110,7 @@ class PerformanceTable extends AppTable
         $this->ControllerAction->field('outcome_period', ['type' => 'hidden', 'attr' => ['required' => true]]);
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $option = $this->controller->getFeatureOptions($this->getAlias());
@@ -126,7 +126,7 @@ class PerformanceTable extends AppTable
             return $attr;
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
@@ -159,7 +159,7 @@ class PerformanceTable extends AppTable
      * @param  \Cake\Network\Request  $request
      * @return attr
      */
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -184,7 +184,7 @@ class PerformanceTable extends AppTable
      * @param  \Cake\Network\Request  $request
      * @return attr
      */
-    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaLevelId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
                 $feature = $this->request->getData($this->getAlias())['feature'];
@@ -215,7 +215,7 @@ class PerformanceTable extends AppTable
      * @param  \Cake\Network\Request  $request
      * @return attr
      */
-    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaEducationId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $areaLevel = $request->getData($this->getAlias())['area_level_id'];
@@ -242,7 +242,7 @@ class PerformanceTable extends AppTable
      * @param  \Cake\Network\Request  $request
      * @return attr
      */
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($request->getData($this->getAlias())['feature'])) {
             $areaId = $request->getData($this->getAlias())['area_education_id'];
@@ -291,7 +291,7 @@ class PerformanceTable extends AppTable
      * @param  \Cake\Network\Request  $request
      * @return attr
      */
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $institutionId = $request->getData($this->getAlias())['institution_id'];
         $academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
@@ -356,7 +356,7 @@ class PerformanceTable extends AppTable
      * @param  \Cake\Network\Request  $request
      * @return attr
      */
-    public function onUpdateFieldAssessmentPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssessmentPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if($this->request->getData()['Performance']['feature'] == 'Report.Performance'){
             $gradeId = $request->getData($this->getAlias())['education_grade_id'];
@@ -398,7 +398,7 @@ class PerformanceTable extends AppTable
      * @param  \Cake\Network\Request  $request
      * @return attr
      */
-    public function onUpdateFieldAcademicTerm(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicTerm(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if($this->request->getData()['Performance']['feature'] == 'Report.Performance'){
             $assessmentPeriodId = $this->request->getData($this->getAlias())['assessment_period_id'];
@@ -438,7 +438,7 @@ class PerformanceTable extends AppTable
      * @param  \ArrayObject  $settings
      * @return query
      */
-    public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery (EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $areaId = $requestData->area_education_id;
@@ -509,7 +509,7 @@ class PerformanceTable extends AppTable
      * @param  \ArrayObject  $settings
      * @return $fields
      */
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
 
@@ -607,7 +607,7 @@ class PerformanceTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':
@@ -631,7 +631,7 @@ class PerformanceTable extends AppTable
         }
     }
 
-    public function onUpdateFieldOutcomePeriod(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldOutcomePeriod(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $requestData = $request->getData();
 

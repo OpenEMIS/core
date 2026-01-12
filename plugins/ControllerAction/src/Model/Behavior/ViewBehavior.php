@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class ViewBehavior extends Behavior
 {
@@ -16,7 +16,7 @@ class ViewBehavior extends Behavior
         return $events;
     }
 
-    public function view(Event $mainEvent, ArrayObject $extra)
+    public function view(EventInterface $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
 

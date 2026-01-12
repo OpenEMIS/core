@@ -7,7 +7,7 @@ use DateTime;
 use Exception;
 use InvalidArgumentException;
 use Cake\Core\Configure;
-//use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use Cake\Mailer\Email;
 //use Cake\Network\Exception\ForbiddenException;
@@ -18,11 +18,11 @@ use Firebase\JWT\JWT;
 use Cake\Datasource\ConnectionManager;
 use Cake\Event\EventManager;
 use Cake\Event\EventDispatcherTrait;
-use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\I18n\FrozenTime;
 use Firebase\JWT\Key;
+// __() is a global function loaded from vendor/cakephp/cakephp/src/I18n/functions.php
 
 class UsersController extends AppController
 {
@@ -254,7 +254,7 @@ class UsersController extends AppController
                 ], true);
 
                 /*POCOR-5284 Starts*/
-                $Themes = TableRegistry::get('Theme.Themes');
+                $Themes = TableRegistry::getTableLocator()->get('Theme.Themes');
                 $getData = $Themes->find()
                     ->where([$Themes->aliasField('name') => 'Application Name'])
                     ->first();
@@ -704,8 +704,8 @@ class UsersController extends AppController
             }
         }//POCOR-7156 ends
         $this->autoRender = false;
-        $enableLocalLogin = TableRegistry::get('Configuration.ConfigItems')->value('enable_local_login');
-        $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
+        $enableLocalLogin = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('enable_local_login');
+        $authentications = TableRegistry::getTableLocator()->get('SSO.SystemAuthentications')->getActiveAuthentications();
         if (!$enableLocalLogin && count($authentications) == 1) {
             $authenticationType = $authentications[0]['authentication_type'];
             $code = $authentications[0]['code'];
@@ -984,6 +984,14 @@ class UsersController extends AppController
                 $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
                 $supportUrl = $ConfigItems->value('support_url');
                 $this->getRequest()->getSession()->write('System.help', $supportUrl);
+                
+                // Redirect to Dashboard after successful login
+                // Return redirect response which will be handled by SSOComponent
+                $redirectUrl = $this->Auth->redirectUrl();
+                if (!$redirectUrl) {
+                    $redirectUrl = ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'];
+                }
+                return $this->redirect($redirectUrl);
             }
         }
     }

@@ -4,7 +4,7 @@ namespace CustomField\Model\Behavior;
 use ArrayObject;
 use Cake\Log\Log;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderTableBehavior extends RenderBehavior {
@@ -12,7 +12,7 @@ class RenderTableBehavior extends RenderBehavior {
         parent::initialize($config);
     }
 
-	public function onGetCustomTableElement(Event $event, $action, $entity, $attr, $options=[]) {
+	public function onGetCustomTableElement(EventInterface $event, $action, $entity, $attr, $options=[]) {
         $value = '';
 
         $fieldType = strtolower($this->fieldTypeCode);
@@ -166,7 +166,7 @@ class RenderTableBehavior extends RenderBehavior {
         return $value;
     }
 
-    public function patchTableValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
+    public function patchTableValues(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
     {
         $tableCells = $settings['tableCells'];
         $deleteTableCells = $settings['deleteTableCells'];

@@ -38,10 +38,10 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
      */
     public function execute(Arguments $args, ConsoleIo $io): int
     {
-        $this->loadModel('Institution.StudentAbsencesPeriodDetails');
-        $this->loadModel('Institution.Students');
-        $this->loadModel('Institution.Institutions');
-        $this->loadModel('User.Users');
+        $this->StudentAbsencesPeriodDetails = $this->fetchTable('Institution.StudentAbsencesPeriodDetails');
+        $this->Students = $this->fetchTable('Institution.Students');
+        $this->Institutions = $this->fetchTable('Institution.Institutions');
+        $this->Users = $this->fetchTable('User.Users');
 //        $io->out('start');
         if (!$this->prepareContext($args, $io)) {
             return static::CODE_SUCCESS;

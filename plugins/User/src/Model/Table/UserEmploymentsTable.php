@@ -3,7 +3,7 @@ namespace User\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
@@ -32,7 +32,7 @@ class UserEmploymentsTable extends ControllerActionTable {
             ]);
     }
 
-	public function beforeAction(Event $event, ArrayObject $extra) {
+	public function beforeAction(EventInterface $event, ArrayObject $extra) {
         $this->setupTabElements();
 
 		// Start POCOR-5188
@@ -132,7 +132,7 @@ class UserEmploymentsTable extends ControllerActionTable {
 		$this->controller->set('selectedAction', $action);
 	}
 	//POCOR-7376 start
-	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('date_from');
         $this->field('date_to');

@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use Cake\ORM\TableRegistry;
@@ -43,12 +43,12 @@ class AlertsTable extends ControllerActionTable
         return $events;
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
     }
 
-    public function setupFields(Event $event, Entity $entity)
+    public function setupFields(EventInterface $event, Entity $entity)
     {
         $this->field('name', ['sort' => false]);
         $this->field('process_name', ['visible' => false]);
@@ -59,7 +59,7 @@ class AlertsTable extends ControllerActionTable
 
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Administration','Alerts','Communications');
@@ -82,7 +82,7 @@ class AlertsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         if(empty($params)){
             $extra['options']['direction'] = 'asc';
@@ -90,7 +90,7 @@ class AlertsTable extends ControllerActionTable
             $extra['options']['sort'] = 'name';
         }
          //POCOR-7558 start
-        $systemProcess=TableRegistry::get('SystemProcesses');
+        $systemProcess=TableRegistry::getTableLocator()->get('SystemProcesses');
         $query->select([
             $this->aliasField('id'),
             $this->aliasField('name'),
@@ -117,7 +117,7 @@ class AlertsTable extends ControllerActionTable
         $this->field('last_run_date', ['visible' => true]); //POCOR-7558
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // for shell process the modified_user_id unable to get the auth user id.
         $this->field('modified_user_id',['visible' => false]);
@@ -153,7 +153,7 @@ class AlertsTable extends ControllerActionTable
         // end process toolbar buttons
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $shellName = $entity->process_name;
@@ -187,7 +187,7 @@ class AlertsTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function process(Event $event, ArrayObject $extra)
+    public function process(EventInterface $event, ArrayObject $extra)
     {
         $requestQuery = $this->request->getQuery();
         $params = [];
@@ -204,12 +204,12 @@ class AlertsTable extends ControllerActionTable
         return $this->controller->redirect($url);
     }
 
-    public function onGetName(Event $event, Entity $entity)
+    public function onGetName(EventInterface $event, Entity $entity)
     {
         return Inflector::humanize(Inflector::underscore($entity->name));
     }
 
-    public function onGetStatus(Event $event, Entity $entity)
+    public function onGetStatus(EventInterface $event, Entity $entity)
     {
         $shellName = $entity->process_name;
         if ($this->isShellStopExist($shellName)) {
@@ -347,7 +347,7 @@ class AlertsTable extends ControllerActionTable
 
 
    //POCOR-7558 start
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'frequency':
@@ -369,7 +369,7 @@ class AlertsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldFrequency(Event $event, array $attr, $action)
+    public function onUpdateFieldFrequency(EventInterface $event, array $attr, $action)
     {
         // POCOR-8286 start
         $entity = $attr['entity'];
@@ -404,7 +404,7 @@ class AlertsTable extends ControllerActionTable
     }
 
 
-    public function editBeforeAction(Event $event)
+    public function editBeforeAction(EventInterface $event)
     {
         $this->field('name',['type' => 'readonly']);
 //        $this->field('frequency',['after' => 'name']);

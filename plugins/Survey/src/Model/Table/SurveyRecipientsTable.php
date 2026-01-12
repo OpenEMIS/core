@@ -6,7 +6,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use Cake\Http\ServerRequest;
 
@@ -27,13 +27,13 @@ class SurveyRecipientsTable extends ControllerActionTable
         $this->toggle('edit', false);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //custom module option in toolbar
         $serverRequest = $this->request;
-        $CustomModules = TableRegistry::get('CustomField.CustomModules');
+        $CustomModules = TableRegistry::getTableLocator()->get('CustomField.CustomModules');
         $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey','Institution > Staff > Survey');
-        $CustomModules = TableRegistry::get('CustomField.CustomModules');
+        $CustomModules = TableRegistry::getTableLocator()->get('CustomField.CustomModules');
         $moduleOptions =  $CustomModules
             ->find('list', ['keyField' => 'id', 'valueField' => 'code'])
            ->where([$CustomModules->aliasField('name IN') => $name])->toArray();
@@ -46,7 +46,7 @@ class SurveyRecipientsTable extends ControllerActionTable
         }
 
         // Survey form options
-        $this->SurveyForms = TableRegistry::get('Survey.SurveyForms');
+        $this->SurveyForms = TableRegistry::getTableLocator()->get('Survey.SurveyForms');
         $surveyFormOptions = $this->SurveyForms
             ->find('list')
             ->order([
@@ -59,7 +59,7 @@ class SurveyRecipientsTable extends ControllerActionTable
         $this->controller->set(compact('surveyFormOptions'));
 
         // survey filter options toolbar
-        $this->SurveyFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+        $this->SurveyFilters = TableRegistry::getTableLocator()->get('Survey.SurveyFormsFilters');
         if($surveyFormId != -1){
             $surveyFilterOptions = $this->SurveyFilters
                 ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
@@ -84,13 +84,13 @@ class SurveyRecipientsTable extends ControllerActionTable
         $extra['elements']['controls'] = ['name' => 'Survey.survey_status', 'data' => [], 'options' => [], 'order' => 3];
         $this->controller->set(compact('surveyFilterOptions'));
 
-        $institutions = TableRegistry::get('Institution.Institutions');
-        $surveyForm = TableRegistry::get('Survey.SurveyForms');
-        $SurveyFormFilters = TableRegistry::get('Survey.SurveyFormsFilters');
-        $SurveyStatus = TableRegistry::get('Survey.SurveyStatuses'); //POCOR-7611
-        $SurveyAreas = TableRegistry::get('Survey.SurveyFilterAreas'); //POCOR-7611
-        $SurveyInstitutionProviders=TableRegistry::get('Survey.SurveyFilterInstitutionProviders');//POCOR-7611
-        $SurveyInstitutionTypes = TableRegistry::get('Survey.SurveyFilterInstitutionTypes');//POCOR-7611
+        $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $surveyForm = TableRegistry::getTableLocator()->get('Survey.SurveyForms');
+        $SurveyFormFilters = TableRegistry::getTableLocator()->get('Survey.SurveyFormsFilters');
+        $SurveyStatus = TableRegistry::getTableLocator()->get('Survey.SurveyStatuses'); //POCOR-7611
+        $SurveyAreas = TableRegistry::getTableLocator()->get('Survey.SurveyFilterAreas'); //POCOR-7611
+        $SurveyInstitutionProviders=TableRegistry::getTableLocator()->get('Survey.SurveyFilterInstitutionProviders');//POCOR-7611
+        $SurveyInstitutionTypes = TableRegistry::getTableLocator()->get('Survey.SurveyFilterInstitutionTypes');//POCOR-7611
         $this->field('institution_code',['visible' => true]);
         $this->field('institution_name', ['visible' => true]);
         $this->field('status_id', ['visible' => false]);
@@ -267,7 +267,7 @@ class SurveyRecipientsTable extends ControllerActionTable
 
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'academic_period_id') {
             return __('Academic Period');

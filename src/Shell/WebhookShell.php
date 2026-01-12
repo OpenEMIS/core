@@ -2,7 +2,7 @@
 namespace App\Shell;
 
 use Cake\Console\Shell;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\FrozenTime;
 use Cake\Http\Client; 
 use Cake\ORM\TableRegistry;
@@ -19,7 +19,7 @@ class WebhookShell extends Shell {
         $this->out('Initialize Webhook Shell ('.FrozenTime::now().')...');
         try {
             //POCOR-6804: START
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $apiToken = $ConfigItems->value('api_settings');
             //$http = new Client();
             $http = new Client();

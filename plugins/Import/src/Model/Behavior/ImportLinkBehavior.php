@@ -2,7 +2,7 @@
 namespace Import\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
@@ -39,7 +39,7 @@ class ImportLinkBehavior extends Behavior
     }
 
     //using after action for ordering of toolbar buttons (because export also using afteraction)
-    public function indexAfterActionImportv4(Event $event, Query $query, $data, ArrayObject $extra)
+    public function indexAfterActionImportv4(EventInterface $event, Query $query, $data, ArrayObject $extra)
     {
         if ($this->_table->request->action != 'Surveys') { 
             $attr = $this->_table->getButtonAttr();
@@ -51,7 +51,7 @@ class ImportLinkBehavior extends Behavior
         }
     }
 
-    public function viewAfterActionImportv4(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterActionImportv4(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($this->_table->request->action == 'Surveys') {
             $attr = $this->_table->getButtonAttr();
@@ -62,7 +62,7 @@ class ImportLinkBehavior extends Behavior
         }
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $customButton = [];
         switch ($action) {

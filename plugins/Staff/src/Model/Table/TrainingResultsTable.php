@@ -4,7 +4,7 @@ namespace Staff\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\Http\ServerRequest;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 
@@ -22,7 +22,7 @@ class TrainingResultsTable extends AppTable {
         ]);
 	}
 
-	public function onGetStatus(Event $event, Entity $entity) {
+	public function onGetStatus(EventInterface $event, Entity $entity) {
 		$SessionResults = $this->Sessions->SessionResults;
 		$sessionResult = $SessionResults
 			->find()
@@ -35,21 +35,21 @@ class TrainingResultsTable extends AppTable {
 		return '<span class="status highlight">' . $sessionResult->_matchingData['Statuses']->name . '</span>';
 	}
 
-	public function onGetTrainingCourse(Event $event, Entity $entity) {
+	public function onGetTrainingCourse(EventInterface $event, Entity $entity) {
 		$trainingSession = $this->Sessions->getTrainingSession($entity->training_session_id);
 		return $trainingSession->course->name;
 	}
 
-	public function onGetTrainingProvider(Event $event, Entity $entity) {
+	public function onGetTrainingProvider(EventInterface $event, Entity $entity) {
 		$trainingSession = $this->Sessions->getTrainingSession($entity->training_session_id);
 		return $trainingSession->_matchingData['TrainingProviders']->name;
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(EventInterface $event) {
 		$this->setupFields();
 	}
 
-	public function indexBeforePaginate(Event $event, $request, Query $query, ArrayObject $options) {
+	public function indexBeforePaginate(EventInterface $event, $request, Query $query, ArrayObject $options) {
 		$session = $this->request->getSession();
 		$sessionKey = 'Staff.Staff.id';
 
@@ -116,7 +116,7 @@ class TrainingResultsTable extends AppTable {
 		}
 	}
 
-	public function viewBeforeAction(Event $event) {
+	public function viewBeforeAction(EventInterface $event) {
 		$this->setupFields();
 	}
 
@@ -139,11 +139,11 @@ class TrainingResultsTable extends AppTable {
 		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
-	public function indexAfterAction(Event $event, $data) {
+	public function indexAfterAction(EventInterface $event, $data) {
 		$this->setupTabElements();
 	}
 
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+	public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'result':

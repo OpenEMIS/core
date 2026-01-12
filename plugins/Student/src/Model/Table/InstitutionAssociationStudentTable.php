@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\ResultSet;
 use Cake\Http\ServerRequest;
 
@@ -36,7 +36,7 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
 
         $this->addBehavior('Institution.InstitutionTab');
     }
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
 	{
 		$session = $this->request->getSession();
 		if ($this->controller->getName() == 'Profiles') {
@@ -66,7 +66,7 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
 	}
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['security_user_id']['visible'] = false;
         $this->setFieldOrder('academic_period_id','name','education_grade_id','student_status_id');  
@@ -92,13 +92,13 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
 
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'institution_association_id') {
             return __('Name');
@@ -157,7 +157,7 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
         return $count;
     }
 
-    // public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    // public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     // {
     //     if($entity->isNew() || $entity->dirty('student_status_id')) {
     //         $id = $entity->institution_association_id;
@@ -167,7 +167,7 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
     //     }
     // }
 
-    // public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    // public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
     // {   
     //     $id = $entity->institution_association_id;
     //     $countMale = $this->getMaleCountByAssociations($id);
@@ -176,7 +176,7 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
     // }
 
     //POCOR-8414 start
-    public function afterAction(Event $event, ArrayObject $options)
+    public function afterAction(EventInterface $event, ArrayObject $options)
     {
         $plugin = __($this->controller->getPlugin());
         if($plugin != 'Profile' && $plugin != 'GuardianNav'){
@@ -190,7 +190,7 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
 				$userId = $queryString['student_id'];
 			}
             //POCOR-8489 --End
-            $Users = TableRegistry::get('User.Users');
+            $Users = TableRegistry::getTableLocator()->get('User.Users');
             $result = $Users
                 ->find()
                 ->select(['first_name','last_name'])
