@@ -1089,6 +1089,12 @@ class StaffTable extends ControllerActionTable
         $request = $this->request;
         $query->contain(['Positions']);
 
+        //POCOR-9410 -- Only fetch ACTIVE users from security_users
+        $query->where([
+            $this->Users->aliasField('status') => 1
+        ]);
+
+
         $sortList = ['start_date', 'end_date'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);

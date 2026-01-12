@@ -1378,6 +1378,12 @@ class StudentsTable extends ControllerActionTable
         $this->setPreviousStudents();
 
         $query->contain(['EducationGrades']);
+
+        //POCOR-9410 -- Only fetch ACTIVE users from security_users
+        $query->where([
+            $this->Users->aliasField('status') => 1
+        ]);
+
         // Student Statuses
         list($statusOptions, $selectedStatus, $defaultStatusKey) = $this->setStatusOptions(); //POCOR-9369
 
