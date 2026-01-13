@@ -7450,7 +7450,7 @@ class InstitutionsController extends AppController
         $saved_student = [];
         if ($studentAdmissionStatusValue == 0 || strtolower($studentAdmissionStatus) == "enrolled") {//POCOR-7716 (0 is set for enrolled as in table no id will be equal tp zero)
             if (!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionId) && !empty($startDate) && !empty($endDate)) {
-                $institutionStudents = self::getDynamicTableInstance('institution_students');
+                $institutionStudents = self::getDynamicTableInstance('Institution.Students');
                 $entityStudentsData = [
                     'id' => Text::uuid(),
                     'student_status_id' => $requestData['student_status_id'] ?? null,
@@ -7618,7 +7618,7 @@ class InstitutionsController extends AppController
         if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId)) {
             $studentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
             $statuses = $studentStatuses->findCodeList();
-            $institutionClassStudents = self::getDynamicTableInstance('institution_class_students');
+            $institutionClassStudents = self::getDynamicTableInstance('Institution.InstitutionClassStudents');
             $entityClassData = [
                 'id' => Text::uuid(),
                 'student_id' => $userRecordId,
