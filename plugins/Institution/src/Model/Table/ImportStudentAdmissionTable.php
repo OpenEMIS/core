@@ -12,7 +12,6 @@ use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
 use DateTimeInterface;
 use DateTime;
 use mysql_xdevapi\Exception;
@@ -49,6 +48,7 @@ class ImportStudentAdmissionTable extends AppTable
         $this->Workflows = TableRegistry::get('Workflow.Workflows');
         $this->EducationGrades = TableRegistry::get('Education.EducationGrades');
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $this->IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
     }
 
     public function addAfterAction(Event $event, Entity $entity)
@@ -944,5 +944,47 @@ class ImportStudentAdmissionTable extends AppTable
         }
     }
 
+    //POCOR-9404
+    public function onImportPopulateIdentityTypesData(Event $event,$lookupPlugin, $lookupModel, $lookupColumn,$translatedCol,ArrayObject $data,$columnOrder) {
+        try {
+            $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+            $modelData = $this->populateIdentityTypesData();
 
+            // Get Excel labels (for headers)
+            $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+            $idLabel = $this->getExcelLabel($lookedUpTable, 'id');
+
+            $sheetName = $this->getExcelLabel('Imports', $lookupModel);
+            $data[$columnOrder]['sheetName'] = $sheetName;
+            $data[$columnOrder]['lookupColumn'] = 2;
+            // Add header row
+            $data[$columnOrder]['data'][] = [
+                $translatedReadableCol,
+                $idLabel,
+            ];
+            if (!empty($modelData)) {
+                foreach ($modelData as $modelName => $identityList) {
+                    if (!empty($identityList)) {
+                        foreach ($identityList as $id => $name) {
+                            $data[$columnOrder]['data'][] = [
+                                $name,
+                                $id,
+                            ];
+                        }
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            $this->log($e->getMessage(), 'error');
+        }
+    }
+
+    //POCOR-9404
+    private function populateIdentityTypesData()
+    {
+        $identityTypes = $this->IdentityTypes ;
+        $modelData = [];
+        $modelData[$identityTypes->getAlias()] = $identityTypes->find('list')->toArray();
+        return $modelData;
+    }
 }
