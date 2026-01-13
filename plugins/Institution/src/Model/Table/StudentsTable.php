@@ -225,7 +225,7 @@ class StudentsTable extends ControllerActionTable
                 'entity_create' => 'student_create',
                 'entity_delete' => 'student_delete',
                 'entity_update' => 'student_update',
-                'table_alias' => 'Institution.InstitutionStudents',
+                'table_alias' => 'Institution.Students',
                 'contain' => []
             ]
         ); // for webhook
