@@ -1,3 +1,13 @@
+### [4.51.0] - 2026-01-13
+- Implemented: Develop changes to Reports > Performance Assessment Report
+- Implemented: Develop Student Marks Audit Report
+- Implemented: Develop changes to the institution import feature to add an additional field (identity number)
+- Bug Fixed: Institutions>Staff>Import: On importing the Staff in the system, it is automatically assigning an End Date to the staff, putting the newly assigned staff in the End of Assignment list.
+- Bug Fixed: Directory>Merge: Account to be merged is not merged completely and still exist in directory
+- Bug Fixed: Institutions>Attendance>Staff: Time Input Popup doesn't close for Time in/ Time out column
+- Bug Fixed: Institutions>Performance>Assessments: Total marks should display when student is transferred
+- Bug Fixed: Institutions> Counselling > Add/Edit Page: Change Requester Dropdown to a Search Field which search for users on the basis of OpenEMIS ID, Name or ID number.
+
 ### [4.50.0] - 2026-01-02
 - Implemented: Develop sync button functions to get students examination results from OpenEMIS Exams to OpenEMIS Core
 - Bug Fixed: Institutions>Add Institution: Upon Leaving Gender drop down as unselected, User is getting SQL State error[23000] | Upon Leaving Institution drop down as unselected, User is getting SQL State error[23000]
