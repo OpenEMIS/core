@@ -708,8 +708,11 @@ class UsersTable extends AppTable
         //POCOR-6980[END]
 
         $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
-        $newOpenemisNo = $resultOpenemisNoTemp + 1;
-        $newOpenemisNo = $prefix . $newOpenemisNo;
+        $numericPart = (int) preg_replace('/\D+/', '', $resultOpenemisNoTemp);
+
+        $numericPart++;
+        $newOpenemisNo = $prefix . str_pad($numericPart, 5, '0', STR_PAD_LEFT);
+
         $resultOpenemisTemps = $openemisTemps->find('all')
             ->where(['openemis_no' => $newOpenemisNo])
             ->first();
