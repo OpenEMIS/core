@@ -83,7 +83,7 @@ class WebhookCommand extends Command
                 $decodedResponse = $tokenResponse->getJson();
 
                 $io->out("Response Code: " .$tokenResponse->getStatusCode());
-                $io->out(print_r($tokenResponse->getJson(), true));
+//                $io->out(print_r($tokenResponse->getJson(), true));
                 if ($tokenResponse->isOk() && isset($decodedResponse['data']['token'])) {
                     $token = $decodedResponse['data']['token'];
                     $headers['Authorization'] = 'Bearer ' . $token;
@@ -125,7 +125,7 @@ class WebhookCommand extends Command
             $status = $response->getStatusCode();
 
             $io->out("Response Code: " .$status);
-            $io->out(print_r($response->getJson(), true));
+//            $io->out(print_r($response->getJson(), true));
 
             if (in_array($status, [200, 201, 202, 204])) {
                 // the third CLI arg is usually the body param

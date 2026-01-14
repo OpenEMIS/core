@@ -7673,8 +7673,13 @@ class InstitutionsController extends AppController
             return;
         }
         //if he/she is not transferred - create new security group
-        $security_group = self::createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
-        return ;
+        $student_security_groups = self::getStudentSecurityGroups($student_id, $student_role_id);
+        //check that the student is not in other groups
+        if (sizeof($student_security_groups) == 0) {
+            self::createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
+            return;
+        }
+//        return ;
 
     }
 
@@ -7847,13 +7852,13 @@ class InstitutionsController extends AppController
      * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private
-    static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id)
+    static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id): true
     {
         $securityGroupUsersTbl = self::getDynamicTableInstance('security_group_users');
         $securityGroupUsersTbl->updateAll(
             [
                 'security_group_id' => $security_group_id,
-                'created' => new Time('NOW')
+                'created' => new FrozenTime('NOW')
             ],
             [
                 'security_group_id' => $previous_security_group_id,
@@ -7861,6 +7866,7 @@ class InstitutionsController extends AppController
                 'security_role_id' => $student_role_id
             ]
         );
+        return true;
     }
 
     /**
