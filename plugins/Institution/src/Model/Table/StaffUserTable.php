@@ -74,6 +74,14 @@ class StaffUserTable extends ControllerActionTable
             ]
             ]
         );
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'security_user_create',
+                'entity_delete' => 'security_user_delete',
+                'entity_update' => 'security_user_update',
+                'table_alias' => 'User.Users'
+            ]
+        ); // for webhook
     }
 
     public static function handleAssociations($model)
