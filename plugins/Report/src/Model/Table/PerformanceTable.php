@@ -66,11 +66,14 @@ class PerformanceTable extends AppTable
         $validator = $this->validationDefault($validator);
         $validator = $validator
             ->notEmpty('academic_period_id')
+            ->notEmpty('institution_type_id') //POCOR-9451
             ->notEmpty('institution_id')
             ->notEmpty('education_grade_id')
             ->notEmpty('area_level_id')
             ->notEmpty('area_education_id')
-            ->notEmpty('education_programme_id'); //POCOR-9443
+            ->notEmpty('education_programme_id') //POCOR-9443
+            ->notEmpty('assessment_period_id')
+            ->notEmpty('academic_term');
        return $validator;
     }
     public function validationPerformance(Validator $validator)
@@ -106,12 +109,14 @@ class PerformanceTable extends AppTable
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
+        $this->ControllerAction->field('institution_type_id', ['type' => 'hidden', 'attr' => ['required' => true]]);//POCOR-9451
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('education_programme_id', ['type' => 'hidden', 'attr' => ['required' => true]]); //POCOR-9443
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('assessment_period_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('academic_term', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('outcome_period', ['type' => 'hidden', 'attr' => ['required' => true]]);
+        $this->ControllerAction->field('education_subject_id', ['type' => 'hidden', 'attr' => ['required' => false]]); //POCOR-9484
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
@@ -135,6 +140,7 @@ class PerformanceTable extends AppTable
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['label'=>'Area Name','required' => true]]); //POCOR-7415
+        $this->ControllerAction->field('institution_type_id', ['type' => 'hidden', 'attr' => ['required' => true]]);//POCOR-9451
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
          $this->ControllerAction->field('education_programme_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
@@ -175,6 +181,7 @@ class PerformanceTable extends AppTable
             $attr['options'] = $academicPeriodOptions;
             $attr['type'] = 'select';
             $attr['select'] = false;
+            $attr['onChangeReload'] = true;
 
             if (empty($this->request->getData($this->getAlias())['academic_period_id'])) {
                 $this->request->getData($this->getAlias())['academic_period_id'] = $currentPeriod;
@@ -241,7 +248,35 @@ class PerformanceTable extends AppTable
         }
         return $attr;
     }
-
+    //POCOR-9451 start
+    /**
+     * Fetching Institution Type's options list.
+     *
+     * @param  \Cake\Network\Request  $request
+     * @return attr
+     */
+    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if (isset($this->request->getData($this->getAlias())['feature']) && $this->request->getData($this->getAlias())['feature'] == 'Report.Assessments') {
+            $InstitutionTypes = TableRegistry::getTableLocator()->get('Institution.Types');
+            
+            $institutionTypeOptions = $InstitutionTypes
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'name'
+                ])
+                ->order([$InstitutionTypes->aliasField('name') => 'ASC'])
+                ->toArray();
+            
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['options'] = ['' => '-- ' . __('Select') . ' --', 0 => __('All Institution Types')] + $institutionTypeOptions;
+            $attr['onChangeReload'] = true;
+        }
+        
+        return $attr;
+    }
+    //POCOR-9451 end
     /**
      * Fetching Institution's options list based on area id.
      *
@@ -255,6 +290,12 @@ class PerformanceTable extends AppTable
             if ($areaId > 0) {
                 $condition[$this->Institutions->aliasField('area_id')] = $areaId;
             }
+            //POCOR-9451 start
+            $institutionTypeId = $request->getData($this->getAlias())['institution_type_id'];
+            if ($institutionTypeId > 0) {
+                $condition[$this->Institutions->aliasField('institution_type_id')] = $institutionTypeId;
+            }
+            //POCOR-9451 end
             $institutionQuery = $this->Institutions
                             ->find('list', [
                                 'keyField' => 'id',
@@ -390,9 +431,10 @@ class PerformanceTable extends AppTable
      */
     public function onUpdateFieldAssessmentPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if($this->request->getData()['Performance']['feature'] == 'Report.Performance'){
+        if($this->request->getData()['Performance']['feature'] == 'Report.Performance' || $this->request->getData()['Performance']['feature'] == 'Report.Assessments'){
             $gradeId = $request->getData($this->getAlias())['education_grade_id'];
-            $academicPeriodId = $request->getData($this->getAlias())['academic_period_id'];
+            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $academicPeriodId = $request->getData($this->getAlias())['academic_period_id'] ?? $AcademicPeriods->getCurrent();
             if ($gradeId > 0) {
                 $condition[$this->Assessments->aliasField('education_grade_id')] = $gradeId;
             }
@@ -432,23 +474,33 @@ class PerformanceTable extends AppTable
      */
     public function onUpdateFieldAcademicTerm(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if($this->request->getData()['Performance']['feature'] == 'Report.Performance'){
+        if($this->request->getData()['Performance']['feature'] == 'Report.Performance' || $this->request->getData()['Performance']['feature'] == 'Report.Assessments'){
             $assessmentPeriodId = $this->request->getData($this->getAlias())['assessment_period_id'];
+            //POCOR-9484 query changes
+            $query = $this->AssessmentPeriods
+                ->find()
+                ->select(['academic_term'])
+                ->where([
+                    $this->AssessmentPeriods->aliasField('academic_term IS NOT') => null,
+                    $this->AssessmentPeriods->aliasField('academic_term !=') => ''
+                ]);
+
             if ($assessmentPeriodId > 0) {
-                $condition[$this->AssessmentPeriods->aliasField('academic_term')] = $assessmentPeriodId;
+                $query->where([
+                    $this->AssessmentPeriods->aliasField('id') => $assessmentPeriodId
+                ]);
             }
-            
-            $academicTermList = $this->AssessmentPeriods
-                            ->find('list', [
-                                'keyField' => 'academic_term',
-                                'valueField' => 'academic_term'
-                            ])
-                            ->where([
-                                $condition, 
-                                $this->AssessmentPeriods->aliasField('academic_term !=') => 'NULL'
-                            ])
-                            ->toArray();
-         
+
+            $academicTerm = $query
+                ->distinct([$this->AssessmentPeriods->aliasField('academic_term')])
+                ->enableHydration(false)
+                ->toArray();
+
+            $academicTermList = [];
+            foreach ($academicTerm as $val) {
+                $academicTermList[$val['academic_term']] = $val['academic_term'];
+            }
+
             $attr['type'] = 'select';
             $attr['select'] = false;
             if (count($academicTermList) > 1) {
@@ -702,6 +754,73 @@ class PerformanceTable extends AppTable
             $attr['onChangeReload'] = true;
         }
 
+        return $attr;
+    }
+
+    //POCOR-9484
+    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, $request)
+    {
+        $requestData = $request->getData();
+        if (
+            isset($requestData['Performance']['feature']) &&
+            $requestData['Performance']['feature'] == 'Report.Assessments'
+        ) {
+            $academicPeriodId   = $request->getData($this->aliasField('academic_period_id'));
+            $assessmentPeriodId = $request->getData($this->aliasField('assessment_period_id'));
+            $academicTerm       = $request->getData($this->aliasField('academic_term'));
+            $AssessmentItems   = TableRegistry::getTableLocator()->get('Assessment.AssessmentItems');
+            $Assessments       = TableRegistry::getTableLocator()->get('Assessment.Assessments');
+            $AssessmentPeriods = TableRegistry::getTableLocator()->get('Assessment.AssessmentPeriods');
+            $EducationSubjects = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
+
+            $conditions = [];
+            if (!empty($academicPeriodId)) {
+                $conditions[$Assessments->aliasField('academic_period_id')] = $academicPeriodId;
+            }
+            if (!empty($assessmentPeriodId) && $assessmentPeriodId > 0) {
+                $conditions[$AssessmentPeriods->aliasField('id')] = $assessmentPeriodId;
+            }
+            if (!empty($academicTerm) && $academicTerm > 0) {
+                $conditions[$AssessmentPeriods->aliasField('academic_term')] = $academicTerm;
+            }
+
+            $subjects = $AssessmentItems->find()
+                ->select([
+                    'id'   => $EducationSubjects->aliasField('id'),
+                    'name' => $EducationSubjects->aliasField('name')
+                ])
+                ->innerJoin(
+                    [$Assessments->getAlias() => $Assessments->getTable()],
+                    "{$Assessments->aliasField('id')} = {$AssessmentItems->aliasField('assessment_id')}"
+                )
+
+                ->leftJoin(
+                    [$AssessmentPeriods->getAlias() => $AssessmentPeriods->getTable()],
+                    "{$AssessmentPeriods->aliasField('assessment_id')} = {$Assessments->aliasField('id')}"
+                )
+
+                ->innerJoin(
+                    [$EducationSubjects->getAlias() => $EducationSubjects->getTable()],
+                    "{$EducationSubjects->aliasField('id')} = {$AssessmentItems->aliasField('education_subject_id')}"
+                )
+
+                ->where($conditions)
+                ->group([
+                    $EducationSubjects->aliasField('id'),
+                    $EducationSubjects->aliasField('name')
+                ])
+                ->order([$EducationSubjects->aliasField('name') => 'ASC'])
+                ->enableHydration(false)
+                ->toArray();
+            $allowedSubjects = [];
+            foreach ($subjects as $val) {
+                $allowedSubjects[$val['id']] = $val['name'];
+            }
+            $attr['type'] = 'chosenSelect';
+            $attr['onChangeReload'] = false;
+            $attr['attr']['multiple'] = true;
+            $attr['options'] = $allowedSubjects;
+        }
         return $attr;
     }
 

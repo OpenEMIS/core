@@ -47,15 +47,13 @@ class UsersMergeCommand extends Command
      * - Your logs also showed a unique on "unique_mobile" (generated/expression column in some envs).
      * - Add/remove fields to match your environment.
      */
+
     private const CANDIDATE_UNIQUE_FIELDS = [
+        'openemis_no',
         'username',
         'email',
-        'openemis_no',
         'unique_mobile', // present in some deployments (generated/normalized mobile)
-        'mobile_number', // present in some deployments (generated/normalized mobile)
-        // 'mobile_number', // include only if you truly have a unique on it
-        // 'identity_number',
-        // 'external_reference',
+        'mobile_number',
     ];
 
     public function setIo(ConsoleIo $io): void
@@ -75,6 +73,9 @@ class UsersMergeCommand extends Command
             $io->error('Missing required options: --system_process_id, --base_id, --merge_id');
             return self::CODE_ERROR;
         }
+
+        
+
 
         $pid = getmypid();
         $io->out(sprintf(
@@ -111,6 +112,9 @@ class UsersMergeCommand extends Command
                 /** @var Entity $merge */
                 $merge = $Users->find()->where(['id' => $this->mergeId])
                     ->applyOptions(['forUpdate' => true])->firstOrFail();
+
+                //NEW: validate user types
+                $this->assertSameUserType($base, $merge);
 
                 // 2) Compute move plan according to your rule: "if base is empty → take merge"
                 $plan = $this->buildMovePlan($Users, $base, $merge);
@@ -164,6 +168,38 @@ class UsersMergeCommand extends Command
             Log::error('[UsersMergeCommand] ' . $e->getMessage());
             $io->err($e->getMessage());
             return self::CODE_ERROR;
+        }
+    }
+
+    private function assertSameUserType(Entity $base, Entity $merge): void
+    {
+        $types = [
+            'is_student',
+            'is_staff',
+            'is_guardian',
+        ];
+
+        foreach ($types as $type) {
+            if ((int)$base->get($type) !== (int)$merge->get($type)) {
+                throw new \RuntimeException(sprintf(
+                    'Invalid merge: base user (%d) and merge user (%d) have different user types (%s mismatch).',
+                    $base->get('id'),
+                    $merge->get('id'),
+                    $type
+                ));
+            }
+        }
+
+        // Optional strict check: ensure exactly ONE role is true
+        $baseRoles = array_sum(array_map(fn($t) => (int)$base->get($t), $types));
+        $mergeRoles = array_sum(array_map(fn($t) => (int)$merge->get($t), $types));
+
+        if ($baseRoles !== 1 || $mergeRoles !== 1) {
+            throw new \RuntimeException(sprintf(
+                'Invalid merge: users must have exactly one role. base=%d roles, merge=%d roles.',
+                $baseRoles,
+                $mergeRoles
+            ));
         }
     }
 
@@ -251,21 +287,35 @@ class UsersMergeCommand extends Command
 
     private function forceNeutralize(Entity $merge, string $field, mixed $current, int $mergeId, \Cake\Database\Schema\TableSchema $schema): void
     {
-
         $colMeta    = $schema->getColumn($field) ?? [];
         $isNullable = (bool)($colMeta['null'] ?? false);
         $maxLen     = (int)($colMeta['length'] ?? 191);
 
+        // Numeric handling first (for integer FK-like columns)
+        if (is_numeric($current)) {
+            if ($isNullable) {
+                $merge->set($field, null);
+                $this->io->out("Force Nulled numeric $field");
+            } else {
+                // safe fallback numeric placeholder (0)
+                $merge->set($field, 0);
+                $this->io->out("Force Changed numeric $field to 0");
+            }
+            return;
+        }
+
+        // Non-numeric (string) handling
         if ($isNullable) {
             $merge->set($field, null);
-            $this->io->out('Force Nulled');
+            $this->io->out("Force Nulled $field");
         } else {
             $token = sprintf('MERGED-%d-%s', $mergeId, substr(sha1((string)$current), 0, 6));
             $merge->set($field, mb_substr($token, 0, max(1, $maxLen)));
-            $this->io->out("Force Changed to $token");
+            $this->io->out("Force Changed {$field} to $token");
         }
     }
 
+    
     /**
      * Optional safety: ensure that no third-party row will collide with BASE after move.
      * If it would, we throw — you can change this policy to "skip that field" instead.
@@ -274,6 +324,10 @@ class UsersMergeCommand extends Command
     {
         foreach ($plan as $field => $value) {
             if ($value === null || $value === '') {
+                continue;
+            }
+            // only preflight actual candidate-unique fields
+            if (!in_array($field, self::CANDIDATE_UNIQUE_FIELDS, true)) {
                 continue;
             }
             // Probe if some *other* row (not base or merge) already has this value
@@ -305,7 +359,158 @@ class UsersMergeCommand extends Command
      * Repoint foreign keys that reference the merge user id -> base user id.
      * Scans INFORMATION_SCHEMA for common FK column names you listed.
      */
-    private function repointForeignKeys($conn, int $baseId, int $mergeId, Table $SystemProcesses, int $systemProcessId): void
+    private function repointForeignKeys(
+    $conn,
+    int $baseId,
+    int $mergeId,
+    Table $SystemProcesses,
+    int $systemProcessId
+): void {
+
+    $db = $conn->config()['database'];
+
+    // FK-like columns we care about
+    $fkColumns = [
+        'student_id',
+        'security_user_id',
+        'user_id',
+        'core_user_id',
+        'guardian_id',
+        'staff_id',
+        'secondary_staff_id',
+        'assignee_id'
+    ];
+
+    // Discover tables + columns dynamically
+    $columns = $conn->execute(
+        "SELECT TABLE_NAME, COLUMN_NAME
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE COLUMN_NAME IN ('" . implode("','", $fkColumns) . "')
+           AND TABLE_SCHEMA = :db
+           AND TABLE_NAME NOT LIKE 'z%'",
+        ['db' => $db]
+    )->fetchAll('assoc');
+
+    $progress = 0;
+    $errors   = [];
+
+    foreach ($columns as $colInfo) {
+        $table = $colInfo['TABLE_NAME'];
+        $fkCol = $colInfo['COLUMN_NAME'];
+
+        try {
+            // 1️⃣ Discover composite UNIQUE indexes for this table
+            $uniqueIndexes = $this->getCompositeUniqueIndexes($conn, $table);
+
+            // 2️⃣ Fetch rows belonging to merge user
+            $rows = $conn->execute(
+                "SELECT * FROM `$table` WHERE `$fkCol` = :merge",
+                ['merge' => $mergeId]
+            )->fetchAll('assoc');
+
+            foreach ($rows as $row) {
+
+                // Prepare candidate row with baseId
+                $candidate = $row;
+                $candidate[$fkCol] = $baseId;
+
+                // 3️⃣ Check if this causes a duplicate
+                if ($this->wouldCauseDuplicate(
+                    $conn,
+                    $table,
+                    $uniqueIndexes,
+                    $candidate
+                )) {
+                    // Skip duplicate safely
+                    continue;
+                }
+
+                // 4️⃣ Safe to repoint
+                $conn->execute(
+                    "UPDATE `$table`
+                     SET `$fkCol` = :base
+                     WHERE id = :id",
+                    [
+                        'base' => $baseId,
+                        'id'   => $row['id']
+                    ]
+                );
+            }
+
+        } catch (\Throwable $e) {
+            $errors[] = "[{$table}.{$fkCol}] {$e->getMessage()}";
+        }
+
+        $progress++;
+        if (method_exists($SystemProcesses, 'updateProcess')) {
+            $SystemProcesses->updateProcess(
+                $systemProcessId,
+                null,
+                $SystemProcesses::RUNNING,
+                $progress
+            );
+        }
+    }
+
+    if ($errors) {
+        throw new \RuntimeException(
+            'User merge failed: ' . implode(' | ', $errors)
+        );
+    }
+}
+private function getCompositeUniqueIndexes($conn, string $table): array
+{
+    $indexes = $conn->execute(
+        "SHOW INDEX FROM `$table` WHERE Non_unique = 0"
+    )->fetchAll('assoc');
+
+    $uniqueIndexes = [];
+
+    foreach ($indexes as $idx) {
+        $uniqueIndexes[$idx['Key_name']][] = $idx['Column_name'];
+    }
+
+    // Remove single-column unique keys (student_id alone is irrelevant)
+    return array_filter($uniqueIndexes, fn($cols) => count($cols) > 1);
+}
+
+private function wouldCauseDuplicate(
+    $conn,
+    string $table,
+    array $uniqueIndexes,
+    array $candidateRow
+): bool {
+
+    foreach ($uniqueIndexes as $columns) {
+
+        $conditions = [];
+        $params     = [];
+
+        foreach ($columns as $col) {
+            if (!array_key_exists($col, $candidateRow)) {
+                continue 2; // Cannot evaluate this index
+            }
+
+            $conditions[] = "`$col` = :$col";
+            $params[$col] = $candidateRow[$col];
+        }
+
+        $sql = sprintf(
+            "SELECT 1 FROM `%s` WHERE %s LIMIT 1",
+            $table,
+            implode(' AND ', $conditions)
+        );
+
+        if ($conn->execute($sql, $params)->fetch()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+    private function repointForeignKeysOrg($conn, int $baseId, int $mergeId, Table $SystemProcesses, int $systemProcessId): void
     {
         $db = $conn->config()['database'];
 

@@ -69,7 +69,11 @@ class StudentsTable extends ControllerActionTable
         $this->addBehavior('User.AdvancedNameSearchStudent'); //POCOR-6647 using copy behavior of AdvancedNameSearchBehavior
         $this->addBehavior('Institution.StudentCascadeDelete'); // for cascade delete on student related tables from an institution
         $this->addBehavior('AcademicPeriod.AcademicPeriod'); // to make sure it is compatible with v4
-        $this->addBehavior('User.MoodleCreateUser');
+        //POCOR-9404 not call MoodleCreateUser while importing student
+        $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+        if (strpos($requestUri, 'ImportStudentAdmission') === false) {
+            $this->addBehavior('User.MoodleCreateUser');
+        }
 
         $this->addBehavior('Excel', [
             'excludes' => ['start_year', 'end_year', 'previous_institution_student_id'],
@@ -1378,6 +1382,12 @@ class StudentsTable extends ControllerActionTable
         $this->setPreviousStudents();
 
         $query->contain(['EducationGrades']);
+
+        //POCOR-9410 -- Only fetch ACTIVE users from security_users
+        $query->where([
+            $this->Users->aliasField('status') => 1
+        ]);
+
         // Student Statuses
         list($statusOptions, $selectedStatus, $defaultStatusKey) = $this->setStatusOptions(); //POCOR-9369
 

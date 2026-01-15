@@ -1452,8 +1452,22 @@ class InstitutionsController extends AppController
     public function ScheduleTimetable($action = 'view')
     {
         $url = $_SERVER['REQUEST_URI'];
-        $startPos = strpos($url, '/Institution/Institutions/ScheduleTimetable/view/') + strlen('/Institution/Institutions/ScheduleTimetable/view/');
-        $encodedPart = substr($url, $startPos);
+        /*$startPos = strpos($url, '/Institution/Institutions/ScheduleTimetable/view/') + strlen('/Institution/Institutions/ScheduleTimetable/view/');
+        $encodedPart = substr($url, $startPos);*/
+        //POCOR-9483 start
+        $viewNeedle = '/Institution/Institutions/ScheduleTimetable/view/';
+        $startPos = strpos($url, $viewNeedle);
+        if ($startPos !== false) {
+            $encodedPart = substr($url, $startPos + strlen($viewNeedle));
+        } else {
+            $editNeedle = '/Institution/Institutions/ScheduleTimetable/edit/';
+            $startPos = strpos($url, $editNeedle);
+            if ($startPos !== false) {
+                $encodedPart = substr($url, $startPos + strlen($editNeedle));
+            } else {
+                $encodedPart = $url;
+            }
+        }//POCOR-9483 end
 
         $timetableId = $this->getQueryString('timetable_id');
         $params = $this->getQueryString();
@@ -1808,33 +1822,82 @@ class InstitutionsController extends AppController
                 'SecurityFunctions.category' => 'Students'
             ])
             ->first();
-        $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['edit'];
+        //POCOR-9491
+        $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['index'];
         if(!empty($permission_id)){
             $securityRoleFunctions =  TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
 
             $securityRoleFunctionsData = $securityRoleFunctions
-            ->find()
+            ->find('all')
             ->where([
                 'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
                 'SecurityRoleFunctions.security_role_id IN ' => $permission_id,
             ])
-            ->first();
-            }
-        if(!empty($securityRoleFunctionsData)){
+            ->toArray();
+        
+        $roleIds = array_map(function($entity) {
+                  return $entity->security_role_id;
+                  }, $securityRoleFunctionsData);
+        if(!empty($roleIds)){
             $SecurityRoleTable = TableRegistry::get('Security.SecurityRoles');
             $SecurityRoleTableData = $SecurityRoleTable
-            ->find()
+            ->find('all')
             ->where([
-                $SecurityRoleTable->aliasField('id') => $securityRoleFunctionsData->security_role_id
+                $SecurityRoleTable->aliasField('id IN ') => $roleIds
             ])
-            ->first();
+            ->toArray();
         }
-        if ($SecurityRoleTableData->code == 'PRINCIPAL') {
-            if($securityRoleFunctionsData->_edit == 1){
-                $_edit = true;
+        $hasPrincipal = 0;
+        $isEditable = 0;
+
+        foreach ($SecurityRoleTableData as $role) {
+            if ($role->code === 'PRINCIPAL') {
+                $hasPrincipal = 1;
+                $securityRoleFunctionsData1 = $securityRoleFunctions
+                ->find()
+                ->where([
+                'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+                'SecurityRoleFunctions.security_role_id' => $role->id,
+                ])
+                ->first();
+                if($securityRoleFunctionsData1->_edit == 1){
+                    $isEditable = 1;
+                }
             }
-            //$_edit = true;
         }
+        if($hasPrincipal == 1 &&  $isEditable == 1){
+            $_edit = true;
+        }
+        }
+        //POCOR-9491
+        
+        //POCOR-9487
+        // $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['edit'];
+        // if(!empty($permission_id)){
+        //     $securityRoleFunctions =  TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+
+        //     $securityRoleFunctionsData = $securityRoleFunctions
+        //     ->find()
+        //     ->where([
+        //         'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+        //         'SecurityRoleFunctions.security_role_id IN ' => $permission_id,
+        //     ])
+        //     ->first();
+        //     }
+        // if(!empty($securityRoleFunctionsData)){
+        //     $SecurityRoleTable = TableRegistry::get('Security.SecurityRoles');
+        //     $SecurityRoleTableData = $SecurityRoleTable
+        //     ->find()
+        //     ->where([
+        //         $SecurityRoleTable->aliasField('id') => $securityRoleFunctionsData->security_role_id
+        //     ])
+        //     ->first();
+        // }
+        // if ($SecurityRoleTableData->code == 'PRINCIPAL') {
+        //     if($securityRoleFunctionsData->_edit == 1){
+        //         $_edit = true;
+        //     }
+        // }
         //POCOR-9487['End']
 
 
@@ -8090,7 +8153,7 @@ class InstitutionsController extends AppController
                         $institutionStudents->aliasField('student_id') => $userRecordId
                     ])
                     ->enableHydration(false)->first();
-           
+
             //Log::error($bodyData->sql());
 
 
@@ -8144,14 +8207,14 @@ class InstitutionsController extends AppController
     }
 
     /**
-     * Prepares the webhook body. 
+     * Prepares the webhook body.
      * POCOR-9393
      * @param array $student
      * @return array
      */
     private function prepareWebhookBody($student, array $studentCustomData = [])
     {
-        
+
         $body = [
             'id'            => $student['id'] ?? null,
             'student_id'    => $student['student_id'] ?? null,
@@ -8161,7 +8224,7 @@ class InstitutionsController extends AppController
             'middle_name'   => $student['middle_name'] ?? null,
             'third_name'    => $student['third_name'] ?? null,
             'last_name'     => $student['last_name'] ?? null,
-           'date_of_birth' => !empty($student['date_of_birth']) 
+           'date_of_birth' => !empty($student['date_of_birth'])
                                ? $student['date_of_birth']->format('Y-m-d') : null,
             'email'         => $student['email'] ?? null,
             'address'       => $student['address'] ?? null,
@@ -8660,7 +8723,7 @@ class InstitutionsController extends AppController
         $this->request->allowMethod(['post']);
         $data   = $this->request->getData();
         $params = $data['params'] ?? [];
-
+//        Log::debug(print_r([__FUNCTION__ => $params], true));
         $identityTypeId = (int)($params['identity_type_id'] ?? 0);
         $nationalityId  = (int)($params['nationality_id'] ?? 0);
 
@@ -8680,22 +8743,24 @@ class InstitutionsController extends AppController
                 'name' => $configItemsTable->aliasField('name'),
             ])
             ->where([
-                $configItemsTable->aliasField('type')  => 'External Data Source - Identity',
-                $configItemsTable->aliasField('value') => 1,
-                $configItemsTable->aliasField('name !=') => 'OpenEMIS Core',
+                $configItemsTable->aliasField('type = ')  . '"External Data Source - Identity"', // POCOR-9481
+                $configItemsTable->aliasField('value = ') . 1,
+                $configItemsTable->aliasField('name !=') . '"OpenEMIS Core"',
             ])
             ->innerJoin(
                 ['Nationalities' => 'nationalities'],
                 [
-                    'Nationalities.id ='            => $nationalityId,
-                    'Nationalities.identity_type_id =' => $identityTypeId,
-                    'Nationalities.external_validation ='
-                    => $configItemsTable->aliasField('id'),
+                    'Nationalities.id = '            . $nationalityId, // POCOR-9481
+                    'Nationalities.identity_type_id = ' . $identityTypeId,
+                    'Nationalities.external_validation = ' . $configItemsTable->aliasField('id'),
                 ]
             )
             ->disableHydration();
 
         $regularResults = $regularQuery->toArray();
+//        $regularResultSql = $regularQuery->sql(); // POCOR-9481
+//        Log::debug(print_r([__FUNCTION__ => $regularResultSql,
+//            __LINE__ => $regularResults], true));
 
         // 2) Check for “OpenEMIS Core” match via ExternalDataSourceAttributes
         $openEmisCoreItem = $configItemsTable->find()
@@ -10343,8 +10408,8 @@ class InstitutionsController extends AppController
         $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldValues');
         $fileRecord = $InstitutionCustomFieldValues->find()
                         ->where([
-                            'file IS NOT' => null, 
-                            'file_name IS NOT' => null, 
+                            'file IS NOT' => null,
+                            'file_name IS NOT' => null,
                             'institution_id' => $this->getInstitutionID(),
                         ])->first();
 
@@ -10361,7 +10426,7 @@ class InstitutionsController extends AppController
 
         return $this->response;
     }
-    
+
 }
 
 
