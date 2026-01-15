@@ -51,7 +51,7 @@ $(document).ready(function () {
         if ($existingOption.length) {
             $existingOption.prop('selected', true);
         } else {
-            var newValue = inputValue.toLowerCase().replace(/\s+/g, '_');
+            var newValue = inputValue.toLowerCase().replace(/\s+/g, ' ');
             var newOption = new Option(inputValue, newValue, true, true);
             $select.append(newOption);
         }
