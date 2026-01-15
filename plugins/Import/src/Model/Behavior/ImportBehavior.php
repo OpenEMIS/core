@@ -387,13 +387,10 @@ class ImportBehavior extends Behavior
         return function ($model, $entity) {
             $errors = $entity->getErrors();
             if (!empty($errors)) {
-                // set error message for php file upload errors
-                $fileError = Hash::get($entity->getInvalid(), 'select_file.error');
-                if (!empty($fileError)) {
-                    $errorMessage = $model->getMessage("fileUpload.$fileError");
-                    if ($errorMessage != '[Message Not Found]') {
-                        $entity->getErrors('select_file', $errorMessage, true);
-                    }
+                $fileObj = $entity->get('select_file');
+                if (!$fileObj || $fileObj->getError() === UPLOAD_ERR_NO_FILE) {
+                    $entity->setError('select_file', __('Please select a file to upload.'));
+                    return false;
                 }
 
                 return false;
@@ -507,7 +504,7 @@ class ImportBehavior extends Behavior
                     $tableEntity = $tempRow['entity'];
                     unset($tempRow['entity']);
                 }
-
+                $feature = $this->_table->request->getData()['ImportStaff']['feature'] ?? null;
                 if ($extra['entityValidate'] == true) {
                     //POCOR-9394[START]
                     //POCOR-9417[START]
@@ -518,8 +515,24 @@ class ImportBehavior extends Behavior
                     } else {
                         $tempRow['academic_period_id'] = $academic_period_id;
                     }
+                    //POCOR-9532 start
+                    if ($feature === 'Institution.Institutions.ImportStaff') {
+                        // CASE 1: XLSX has end_date → KEEP IT
+                        if (!empty($tempRow['end_date'])) {
+                            // normalize end_year
+                            $tempRow['end_year'] = date(
+                                'Y',
+                                strtotime(str_replace('/', '-', $tempRow['end_date']))
+                            );
 
-                    if($academic_period_id)
+                        }
+                        // CASE 2: XLSX end_date EMPTY → KEEP NULL
+                        else {
+                            $tempRow['end_date'] = null;
+                            $tempRow['end_year'] = null;
+                        }
+                        //POCOR-9532 end
+                    }elseif($academic_period_id)
                     {
                         $AcademicPeriodsData = $AcademicPeriods
                             ->find('all')
@@ -529,6 +542,7 @@ class ImportBehavior extends Behavior
                         $tempRow['end_date'] = $AcademicPeriodsData->end_date->format('d/m/Y');
                     } //POCOR-9417[END]
                     //POCOR-9394[END]
+
                     // added for POCOR-4577 import staff leave for workflow related record to save the transition record
                     $tempRow['action_type'] = 'imported';
                     $tempRow['student_id'] = (int) $tempRow['student_id'];

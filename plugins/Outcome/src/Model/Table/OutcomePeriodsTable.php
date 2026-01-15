@@ -66,9 +66,9 @@ class OutcomePeriodsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // academic period filter
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedPeriod = !is_null($serverRequest->getAttribute('query')['period']) ? $serverRequest->getAttribute('query')['period'] : $this->AcademicPeriods->getCurrent();
+        $selectedPeriod = !is_null($serverRequest->getQuery('period')) ? $serverRequest->getQuery('period') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
         $conditions[$this->aliasField('academic_period_id')] = $selectedPeriod;
 
@@ -82,7 +82,7 @@ class OutcomePeriodsTable extends ControllerActionTable
             $templateOptions = ['0' => '-- '.__('All Templates').' --'] + $templateOptions;
         }
 
-        $selectedTemplate = !is_null($serverRequest->getAttribute('query')['template']) ? $serverRequest->getAttribute('query')['template'] : 0;
+        $selectedTemplate = !is_null($serverRequest->getQuery('template')) ? $serverRequest->getQuery('template') : 0;
         $this->controller->set(compact('templateOptions', 'selectedTemplate'));
         if (!empty($selectedTemplate)){
             $conditions[$this->aliasField('outcome_template_id')] = $selectedTemplate;

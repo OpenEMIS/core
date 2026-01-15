@@ -619,14 +619,36 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
         timeInputElement.addEventListener('click', function (event) {
             timeInputElement.removeAttribute('readonly', 'readonly');
-            //POCOR-7770 to hide
+            //POCOR-7770 to hide - Close all other time pickers before showing the selected one
+            // First, hide all visible timepicker widgets in the DOM
+            $('.bootstrap-timepicker-widget:visible').hide();
+            // Then, hide all timepickers using the hideWidget method
             $('.timepicker').each(function() {
                 var element = $(this);
-                if (element.attr('id') !== timepickerId) {
-                    element.timepicker('hideWidget');
+                var elementId = element.attr('id');
+                // Hide all timepickers except the one being clicked
+                if (elementId && elementId !== timepickerId) {
+                    try {
+                        element.timepicker('hideWidget');
+                    } catch (e) {
+                        // Ignore errors if timepicker is not initialized on this element
+                    }
                 }
             });
-// Initialize the timepicker for the specific timepicker you want to show
+            // Close any open date pickers when time picker is clicked
+            $('.datepicker, input[data-datepicker], input.datepicker').each(function () {
+                var datepickerElement = $(this);
+                try {
+                    if (datepickerElement.data('datepicker') || datepickerElement.data('Datepicker')) {
+                        datepickerElement.datepicker('hide');
+                    }
+                } catch (e) {
+                    // Ignore errors if datepicker is not initialized on this element
+                }
+            });
+            // Close any visible datepicker dropdowns/widgets
+            $('.datepicker-dropdown, .bootstrap-datepicker, .datepicker-widget').hide();
+            // Initialize the timepicker for the specific timepicker you want to show
             $('#' + timepickerId).timepicker('showWidget');
             //END POCOR-7770 to hide
         });
@@ -636,6 +658,47 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                 event.preventDefault();
             }
         });
+
+        //POCOR-9499
+        // Add click handler to timeSpanElement (icon) to close other timepickers
+        timeSpanElement.addEventListener('click', function (event) {
+            if (!isDisabled) {
+                timeInputElement.removeAttribute('readonly', 'readonly');
+                //POCOR-7770 to hide - Close all other time pickers before showing the selected one
+                // First, hide all visible timepicker widgets in the DOM
+                $('.bootstrap-timepicker-widget:visible').hide();
+                // Then, hide all timepickers using the hideWidget method
+                $('.timepicker').each(function() {
+                    var element = $(this);
+                    var elementId = element.attr('id');
+                    // Hide all timepickers except the one being clicked
+                    if (elementId && elementId !== timepickerId) {
+                        try {
+                            element.timepicker('hideWidget');
+                        } catch (e) {
+                            // Ignore errors if timepicker is not initialized on this element
+                        }
+                    }
+                });
+                // Close any open date pickers when time picker is clicked
+                $('.datepicker, input[data-datepicker], input.datepicker').each(function () {
+                    var datepickerElement = $(this);
+                    try {
+                        if (datepickerElement.data('datepicker') || datepickerElement.data('Datepicker')) {
+                            datepickerElement.datepicker('hide');
+                        }
+                    } catch (e) {
+                        // Ignore errors if datepicker is not initialized on this element
+                    }
+                });
+                // Close any visible datepicker dropdowns/widgets
+                $('.datepicker-dropdown, .bootstrap-datepicker, .datepicker-widget').hide();
+                // Initialize the timepicker for the specific timepicker you want to show
+                $('#' + timepickerId).timepicker('showWidget');
+                //END POCOR-7770 to hide
+            }
+        });
+        //END POCOR-9499
 
         timeSpanElement.appendChild(timeIconElement);
         timeInputDivElement.appendChild(timeInputElement);

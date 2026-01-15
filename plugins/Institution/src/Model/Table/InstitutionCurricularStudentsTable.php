@@ -116,7 +116,6 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         }
 
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
-        $query = $this->request->getQuery();
 
         $this->field('student_id', ['visible' => false]);
         $this->field('student_name', ['visible' => true]);
@@ -154,7 +153,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
     {
         return $entity['institution_curricular']['category'] ? __('Co-Curricular') : ($entity->category ? __('Co-Curricular') : __('Extracurricular'));
     }
-    //POCOR-8482[END]   
+    //POCOR-8482[END]
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -175,7 +174,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
                             ])
                             ->where([$curriculars->aliasField('id') => $curricularIdGet])->first();
 
-        //POCOR-8482[START]                   
+        //POCOR-8482[START]
         // $entity->name = $curricularData->name;
         // $entity->category = $curricularData->category ? __('Co-Curricular') : __('Extracurricular');
         // $entity->curricularType = $curricularData->curricularType;
