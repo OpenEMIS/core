@@ -2655,7 +2655,7 @@ trait MessagesTrait
             'nodataexist' => 'Data does not exist for Selected from Academic Period.',
             'invalidDate' => 'From academic period cannot be greater than to academic period.',
             'educationsystemnotexist' => 'Education System does not exist in the Selected to Academic period.', // POCOR-9354
-            'nodataexisteducationsystem2' => 'Data 2 does not exist in education system for seleceted to academic period.'
+            'nodataexisteducationsystem2' => 'Education System does not exist in the Selected to Academic period (2).'
         ],
         'UserNationalities' => [
             'ValidateNumberSuccess' => 'Identity number validate successfully.',

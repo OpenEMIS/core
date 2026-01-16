@@ -388,13 +388,10 @@ class ImportBehavior extends Behavior
         return function ($model, $entity) {
             $errors = $entity->getErrors();
             if (!empty($errors)) {
-                // set error message for php file upload errors
-                $fileError = Hash::get($entity->getInvalid(), 'select_file.error');
-                if (!empty($fileError)) {
-                    $errorMessage = $model->getMessage("fileUpload.$fileError");
-                    if ($errorMessage != '[Message Not Found]') {
-                        $entity->getErrors('select_file', $errorMessage, true);
-                    }
+                $fileObj = $entity->get('select_file');
+                if (!$fileObj || $fileObj->getError() === UPLOAD_ERR_NO_FILE) {
+                    $entity->setError('select_file', __('Please select a file to upload.'));
+                    return false;
                 }
 
                 return false;

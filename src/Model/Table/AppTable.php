@@ -8,7 +8,6 @@ use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Event\EventInterface;
 use Cake\Log\LogTrait;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
@@ -34,9 +33,8 @@ class AppTable extends Table
         //Time::$defaultLocale = 'en_US';
         //Date::$defaultLocale = 'en_US';
 
-        // In CakePHP 5, DateTime class was removed. Use I18n::setLocale() instead
-        // $defaultLocale = I18n::getLocale();
-        I18n::setLocale('en_US');
+        $defaultLocale = Time::getDefaultLocale();
+        Time::setDefaultLocale('en_US');
 
         $_config = [
             'Modified' => true,
@@ -136,7 +134,7 @@ class AppTable extends Table
 
 
     // Event: 'ControllerAction.Model.onPopulateSelectOptions'
-    public function onPopulateSelectOptions(EventInterface $event, Query $query)
+    public function onPopulateSelectOptions(Event $event, Query $query)
     {
         return $this->getList($query);
     }
@@ -171,7 +169,7 @@ class AppTable extends Table
     }
 
 
-    public function onExcelRenderDateTime(EventInterface $event, Entity $entity, $attr)
+    public function onExcelRenderDateTime(Event $event, Entity $entity, $attr)
     {
         $field = $entity->{$attr['field']};
         if (!empty($field)) {
@@ -187,7 +185,7 @@ class AppTable extends Table
     }
 
     // Event: 'ControllerAction.Model.onFormatDate'
-    public function onFormatDate(EventInterface $event, $dateObject)
+    public function onFormatDate(Event $event, $dateObject)
     {
         return $this->formatDate($dateObject);
     }
@@ -209,7 +207,7 @@ class AppTable extends Table
     }
 
     // Event: 'ControllerAction.Model.onFormatTime'
-    public function onFormatTime(EventInterface $event, $timeObject)
+    public function onFormatTime(Event $event, $timeObject)
     {
         return $this->formatTime($timeObject);
     }
@@ -248,7 +246,7 @@ class AppTable extends Table
     }
 
     // Event: 'ControllerAction.Model.onFormatDateTime'
-    public function onFormatDateTime(EventInterface $event, $timeObject): string
+    public function onFormatDateTime(Event $event, $timeObject): string
     {
         return $this->formatDateTime($timeObject);
     }
@@ -257,7 +255,7 @@ class AppTable extends Table
      * For calling from view files
      * @param  Time   $dateObject [description]
      * @return [type]             [description]
-     * POCOR-9415 more error-save
+     * POCOR-9415, POCOR-9510 more error-save
      */
     public function formatDateTime($dateInput): string
     {
@@ -265,52 +263,67 @@ class AppTable extends Table
 
         $dateFormat = $ConfigItem->value('date_format') ?: 'Y-m-d';
         $timeFormat = $ConfigItem->value('time_format') ?: 'H:i:s';
-        $format = $dateFormat . ' - ' . $timeFormat;
 
-        $value = '';
+        $displayFormat = $dateFormat . ' - ' . $timeFormat;
+        $inputFormat   = $displayFormat;
 
         try {
-            // Normalize input to FrozenTime
-            if (is_string($dateInput)) {
-                $date = new FrozenTime($dateInput);
-            } elseif ($dateInput instanceof \DateTimeInterface) {
-                $date = FrozenTime::instance($dateInput);
-            } else {
-                throw new \InvalidArgumentException('Invalid date input format');
+            // Case 1: Already a DateTime object
+            if ($dateInput instanceof \DateTimeInterface) {
+                return FrozenTime::instance($dateInput)->format($displayFormat);
             }
 
-            $value = $date->format($format);
-        } catch (\Exception $e) {
-            Log::error('formatDateTime error: ' . $e->getMessage() . print_r($dateInput, true));
-            $value = ''; // fallback empty value
+            // Case 2: String input
+            if (is_string($dateInput) && trim($dateInput) !== '') {
+
+                // Try parsing EXACT expected format first
+                $date = FrozenTime::createFromFormat(
+                    $inputFormat,
+                    $dateInput
+                );
+
+                if ($date !== false) {
+                    return $date->format($displayFormat);
+                }
+
+                // Fallback: try ISO / DB formats
+                return (new FrozenTime($dateInput))->format($displayFormat);
+            }
+
+        } catch (\Throwable $e) {
+            Log::error(
+                'formatDateTime error: ' . $e->getMessage(),
+                ['input' => $dateInput]
+            );
         }
 
-        return $value;
+        return '';
     }
 
+
     // Not using $extra parameter to be backward compatible with restfulv1
-    public function onRestfulRenderDatetime(EventInterface $event, $entity, $property)
+    public function onRestfulRenderDatetime(Event $event, $entity, $property)
     {
         $dateTimeObj = $entity[$property];
         return $this->formatDateTime($dateTimeObj);
     }
 
     // Not using $extra parameter to be backward compatible with restfulv1
-    public function onRestfulRenderDate(EventInterface $event, $entity, $property)
+    public function onRestfulRenderDate(Event $event, $entity, $property)
     {
         $dateTimeObj = $entity[$property];
         return $this->formatDate($dateTimeObj);
     }
 
     // Not using $extra parameter to be backward compatible with restfulv1
-    public function onRestfulRenderTime(EventInterface $event, $entity, $property)
+    public function onRestfulRenderTime(Event $event, $entity, $property)
     {
         $dateTimeObj = $entity[$property];
         return $this->formatTime($dateTimeObj);
     }
 
     // Event: 'ControllerAction.Model.onGetFieldLabel'
-    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
 
         $Labels     = TableRegistry::getTableLocator()->get('Labels');
@@ -355,7 +368,7 @@ class AppTable extends Table
     }
 
     // Event: 'Model.excel.onExcelGetLabel'
-    public function onExcelGetLabel(EventInterface $event, $module, $col, $language)
+    public function onExcelGetLabel(Event $event, $module, $col, $language)
     {
        return __($this->getFieldLabel($module, $col, $language));
     }
@@ -371,7 +384,7 @@ class AppTable extends Table
     }
 
     // Event: 'ControllerAction.Model.onInitializeButtons'
-    public function onInitializeButtons(EventInterface $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra)
+    public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra)
     {
 
         // echo '<pre>';
@@ -988,7 +1001,7 @@ class AppTable extends Table
         $controller->set(compact('toolbarButtons', 'indexButtons'));
     }
 
-    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $id = $this->getEncodedKeys($entity);
 

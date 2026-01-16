@@ -356,6 +356,8 @@ class InstitutionsTable extends ControllerActionTable
             ])
             ->allowEmpty('email')
             ->notEmpty('institution_locality_id') //POCOR-9407
+            ->notEmpty('institution_gender_id', 'Institution Gender is required') //POCOR-9469
+            ->notEmpty('institution_type_id', 'Institution Type is required') //POCOR-9469
             ->add('email', [
                 'ruleValidEmail' => [
                     'rule' => 'checkEmailFormat',
@@ -384,6 +386,7 @@ class InstitutionsTable extends ControllerActionTable
             // ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
             //     'rule' => ['checkConfiguredArea']
             // ])
+            ->notEmpty('institution_provider_id', 'Provider is required') //POCOR-9452
             ->add('institution_provider_id', 'ruleLinkedSector', [
                 'rule' => 'checkLinkedSector',
                 'provider' => 'table'
@@ -1438,7 +1441,6 @@ class InstitutionsTable extends ControllerActionTable
             }
         }
         $extra['formButtons'] = false;
-
     }
 
     public function getNumberOfInstitutionsByModel($params = [])
@@ -1815,6 +1817,9 @@ class InstitutionsTable extends ControllerActionTable
                 $extra['toolbarButtons'][$key] = $button;
             }
         }
+        // POCOR-9519 start
+        $this->addManualButton($extra);
+        // POCOR-9519 end
     }
 
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
@@ -1868,6 +1873,7 @@ class InstitutionsTable extends ControllerActionTable
         //Start:POCOR-6660
         $this->field('latitude', ['type' => 'hidden']);
         $this->field('longitude', ['type' => 'hidden']);
+
         //End:POCOR-6660
     }
 
@@ -1895,6 +1901,7 @@ class InstitutionsTable extends ControllerActionTable
             'contact_section',
             'contact_person', 'telephone', 'email', 'website',
         ]);
+        $this->addManualButton($extra); // POCOR-9519
     }
 
     public function onUpdateFieldInstitutionProviderId(EventInterface $event, array $attr, $action, ServerRequest $request)
@@ -2742,5 +2749,30 @@ class InstitutionsTable extends ControllerActionTable
     {
         //echo "<pre>"; print_r($query->toArray); die;
       //  return $query;
+    }
+
+    /**
+     * @param ArrayObject|array $extra
+     * @return void
+     */
+    private function addManualButton(ArrayObject|array $extra): void
+    {
+        $is_manual_exist = $this->getManualUrl('Institutions', 'Institution', 'General');
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
+
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
     }
 }

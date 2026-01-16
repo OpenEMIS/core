@@ -73,16 +73,20 @@ class ConfigStaffTransfersTable extends ControllerActionTable
         $this->field('visible', ['visible' => false]);
         $this->field('field_type', ['visible' => false]);
         $this->field('option_type', ['visible' => false]);
+        //POCOR-9455 start
+        if ($this->action == 'view') {
+            $extra['elements']['controls'] = $this->buildSystemConfigFilters();
+            $this->checkController();
+        }
     }
-  
+    // public function indexBeforeAction(Event $event, ArrayObject $extra)
+    // {
+    //     $extra['elements']['controls'] = $this->buildSystemConfigFilters();
+    //     $this->checkController();
 
-    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
-    {
-        $extra['elements']['controls'] = $this->buildSystemConfigFilters();
-        $this->checkController();
-    }
-
-    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+    // }
+    //POCOR-9455 end
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('type') => 'Staff Transfers']);
     }

@@ -78,7 +78,7 @@ class CustomFieldListBehavior extends Behavior
                     $this->excelContent($sheets, $name);
                 }
             } else { // POCOR-9126 start
-                Log::debug(__FUNCTION__ . '7');
+//                Log::debug(__FUNCTION__ . '7'); // POCOR-9510 removed logging
                 $name = $this->_table->getAlias();
                 $this->excelContent($sheets, $name);
             } // POCOR-9126 end

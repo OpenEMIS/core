@@ -4,7 +4,7 @@ namespace Report\Controller;
 
 use ArrayObject;
 use App\Controller\AppController;
-use Cake\Event\EventInterface;
+use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
@@ -13,6 +13,7 @@ use PHPExcel_IOFactory;
 use Cake\Http\Exception\NotFoundException;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use Cake\Event\EventInterface;
 
 class ReportsController extends AppController
 {
@@ -61,7 +62,7 @@ class ReportsController extends AppController
         // POCOR-8034: end
     }
 
-    public function onInitialize(EventInterface $event, Table $table, ArrayObject $extra)
+    public function onInitialize(Event $event, Table $table, ArrayObject $extra)
     {
         $header = __('Reports') . ' - ' . __($table->getAlias());
         $this->set('contentHeader', $header);
@@ -228,6 +229,7 @@ class ReportsController extends AppController
                 'Report.AuditUsers' => __('Users'),
                 'Report.AuditSecuritiesRolesPermissions' => __('Security Roles and Permissions'), // POCOR-499
                 'Report.AuditSecuritiesGroupUserRoles' => __('Security Group User Roles'), // POCOR-499
+                'Report.AuditDeletedRecords' => __('Deleted Records'), // POCOR-9381
                 'Report.AuditInstitutionStudents' => __('Institution Students'), // POCOR-9382
                 'Report.AuditInstitutionStaff' => __('Institution Staff') // POCOR-9383
             ];

@@ -1082,7 +1082,7 @@ class ImportUsersTable extends AppTable
             'assignee_id',
             'student_id',
             'education_grade_id',
-            'institution_class_id'
+//            'institution_class_id' // POCOR-9476
         ];
 
         // Validate required fields
@@ -1290,10 +1290,10 @@ class ImportUsersTable extends AppTable
         $class_name = $tempRow['class_name'] ?? '';
 
         if (trim($class_name) === '') {
-            $this->addError($rowInvalidCodeCols, 'class_name', __('No class name specified'));
+//            $this->addError($rowInvalidCodeCols, 'class_name', __('No class name specified')); // POCOR-9476
             $tempRow['class_name'] = null;
             $tempRow['institution_class_id'] = null;
-            return true;
+            return false; // POCOR-9476
         }
 
         $institution_class_id = $this->getInstitutionClass(

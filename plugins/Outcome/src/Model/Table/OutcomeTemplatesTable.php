@@ -78,7 +78,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
         // academic period filter
         $serverRequest = $this->request;
         $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedPeriod = !is_null($serverRequest->getAttribute('query')['period']) ? $serverRequest->getAttribute('query')['period'] : $this->AcademicPeriods->getCurrent();
+        $selectedPeriod = !is_null($serverRequest->getQuery('period')) ? $serverRequest->getQuery('period') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
         $conditions[$this->aliasField('academic_period_id')] = $selectedPeriod;
 

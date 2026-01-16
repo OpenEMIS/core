@@ -26,7 +26,7 @@ class RenderCoordinatesBehavior extends RenderBehavior {
         }
     }
 
-	public function onGetCustomCoordinatesElement(EventInterface $event, $action, $entity, $attr, $options=[]) {
+    public function onGetCustomCoordinatesElement(Event $event, $action, $entity, $attr, $options=[]) {
         $value = '';
 
         $fieldType = strtolower($this->fieldTypeCode);
@@ -73,15 +73,15 @@ class RenderCoordinatesBehavior extends RenderBehavior {
                     }
                 }
             }
-            if ($postData instanceof Entity && !empty($postData->dirty())) {
-                $values = ($postData->invalid('coordinates_value')) ? json_decode(json_encode($postData->invalid('coordinates_value'))) : json_decode(json_encode($postData->coordinates_value));
+            if ($postData instanceof Entity && !empty($postData->getDirty())) {
+                $values = ($postData->getInvalid('coordinates_value')) ? json_decode(json_encode($postData->getInvalid('coordinates_value'))) : json_decode(json_encode($postData->coordinates_value));
             } elseif (!is_null($savedValue)) {
                 $values = json_decode($savedValue);
             } else {
                 $values = null;
             }
             if ($postData instanceof Entity && !empty($postData)) {
-                $errors = $postData->errors('coordinates_value');
+                $errors = $postData->getErrors('coordinates_value');
             }
         }
 
