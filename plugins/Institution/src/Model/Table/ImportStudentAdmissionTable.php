@@ -12,7 +12,6 @@ use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
 use DateTimeInterface;
 use DateTime;
 use mysql_xdevapi\Exception;
@@ -42,13 +41,14 @@ class ImportStudentAdmissionTable extends AppTable
         $this->addBehavior('Institution.ImportStudent');
 
         // register the target table once
-        $this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
-        $this->StudentAdmission = TableRegistry::getTableLocator()->get('Institution.StudentAdmission');
-        $this->InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
-        $this->Students = TableRegistry::getTableLocator()->get('Security.Users');
-        $this->Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
-        $this->EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
-        $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $this->Institutions = TableRegistry::get('Institution.Institutions');
+        $this->StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
+        $this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $this->Students = TableRegistry::get('Security.Users');
+        $this->Workflows = TableRegistry::get('Workflow.Workflows');
+        $this->EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $this->IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
     }
 
     public function addAfterAction(EventInterface $event, Entity $entity)
@@ -952,5 +952,47 @@ class ImportStudentAdmissionTable extends AppTable
         }
     }
 
+    //POCOR-9404
+    public function onImportPopulateIdentityTypesData(Event $event,$lookupPlugin, $lookupModel, $lookupColumn,$translatedCol,ArrayObject $data,$columnOrder) {
+        try {
+            $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+            $modelData = $this->populateIdentityTypesData();
 
+            // Get Excel labels (for headers)
+            $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+            $idLabel = $this->getExcelLabel($lookedUpTable, 'id');
+
+            $sheetName = $this->getExcelLabel('Imports', $lookupModel);
+            $data[$columnOrder]['sheetName'] = $sheetName;
+            $data[$columnOrder]['lookupColumn'] = 2;
+            // Add header row
+            $data[$columnOrder]['data'][] = [
+                $translatedReadableCol,
+                $idLabel,
+            ];
+            if (!empty($modelData)) {
+                foreach ($modelData as $modelName => $identityList) {
+                    if (!empty($identityList)) {
+                        foreach ($identityList as $id => $name) {
+                            $data[$columnOrder]['data'][] = [
+                                $name,
+                                $id,
+                            ];
+                        }
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            $this->log($e->getMessage(), 'error');
+        }
+    }
+
+    //POCOR-9404
+    private function populateIdentityTypesData()
+    {
+        $identityTypes = $this->IdentityTypes ;
+        $modelData = [];
+        $modelData[$identityTypes->getAlias()] = $identityTypes->find('list')->toArray();
+        return $modelData;
+    }
 }

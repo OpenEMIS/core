@@ -581,9 +581,23 @@ class MergeBehavior extends Behavior
             if (in_array($field, $exclude_fields)) {
                 continue; // Skip excluded fields
             }
+            //POCOR-9410 -- START: Trim string values before comparison
+            $base_raw = $base_entity->get($field);
+            $merge_raw = $merge_value;
 
-            $base_value = trim($base_entity->get($field)) ? trim($base_entity->get($field)) : null;
-            $merge_value = trim($merge_value) ? trim($merge_value) : null;
+            // Convert resources (photo blob) to strings to avoid trim() errors
+            if (is_resource($base_raw)) {
+                $base_raw = stream_get_contents($base_raw);
+            }
+            if (is_resource($merge_raw)) {
+                $merge_raw = stream_get_contents($merge_raw);
+            }
+
+            // If value is not a string, do NOT trim — just use it as-is
+            $base_value = is_string($base_raw) ? trim($base_raw) : $base_raw;
+            $merge_value = is_string($merge_raw) ? trim($merge_raw) : $merge_raw;
+            //POCOR-9410 -- END
+            
             $result_value = $base_value;
             $to_change = false;
             if (empty($result_value)) {

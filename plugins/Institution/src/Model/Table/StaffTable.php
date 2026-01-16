@@ -81,8 +81,12 @@ class StaffTable extends ControllerActionTable
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
-        $this->addBehavior('User.MoodleCreateUser');
-
+        //POCOR-9532 start 
+        $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+        if (strpos($requestUri, 'ImportStaff') === false) {
+            $this->addBehavior('User.MoodleCreateUser');
+        } //POCOR-9523 end
+        
         $this->addBehavior('Excel', [  //POCOR-6898 change Excel to ContactExcel Behaviour
             'excludes' => ['start_year', 'end_year', 'security_group_user_id'],
             'pages' => ['index'],
@@ -1088,6 +1092,12 @@ class StaffTable extends ControllerActionTable
     {
         $request = $this->request;
         $query->contain(['Positions']);
+
+        //POCOR-9410 -- Only fetch ACTIVE users from security_users
+        $query->where([
+            $this->Users->aliasField('status') => 1
+        ]);
+
 
         $sortList = ['start_date', 'end_date'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {

@@ -39,11 +39,15 @@ class CounsellingsTable extends ControllerActionTable
         $this->addBehavior('User.UserTab', [
             'appliedAction' => ['Counsellings'=>['id']]
         ]);
+        $this->addBehavior('OpenEmis.Autocomplete'); //POCOR-9523
+        $this->addBehavior('User.AdvancedNameSearch'); //POCOR-9523
+        $this->Users = TableRegistry::getTableLocator()->get('Security.Users');
     }
 
     public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
+        $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete'; //POCOR-9523
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
         return $events;
     }
@@ -156,64 +160,130 @@ class CounsellingsTable extends ControllerActionTable
         $this->setFieldOrder(['date', 'counselor_id', 'guidance_type_id', 'requester_id', 'guidance_utilized', 'description', 'intervention', 'comment', 'file_name', 'file_content']);
     }
 
-    /**
-     * Retrieve requester options for a given institution.
-     * 
-     * This function returns a combined list of Users as requesters in the system.
-     * @return array List of requester options formatted for dropdowns.
-     * POCOR-9459
-     */
-    public function getRequesterOptions($studentId)
+     
+   //POCOR-9523
+   public function onUpdateFieldRequesterId(Event $event,array $attr,$action,ServerRequest $request)
     {
-        $UserData = TableRegistry::get('User.Users');
-        $listUser = $UserData->find()
-                    ->select(['id', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name'])
-                    ->where([
-                        'status' => 1,
-                        'id !=' => $studentId,
-                    ])
-                    ->andWhere([
-                        'OR' => [
-                            'is_student' => 1,
-                            'is_staff' => 1,
-                            'is_guardian' => 1
-                        ]
-                    ])
-                    ->enableHydration(false)
-                    ->toArray();
-        $data = [];
+        if (in_array($action, ['add', 'edit'])) {
 
-        foreach ($listUser as $r) {
-            $fullName = trim(
-                $r['first_name'] . ' ' .
-                ($r['middle_name'] ?? '') . ' ' .
-                ($r['third_name'] ?? '') . ' ' .
-                ($r['last_name'] ?? '')
-            );
+            $attr['type'] = 'autocomplete';
+            $attr['target'] = [
+                'key'  => 'requester_id',
+                'name' => $this->aliasField('requester_id')
+            ];
 
-            $fullName = preg_replace('/\s+/', ' ', $fullName);
+            $attr['attr'] = [
+                'placeholder' => __('OpenEMIS ID, Identity Number or Name')
+            ];
 
-            $data[$r['id']] = $r['openemis_no'] . ' - ' . $fullName;
+            $attr['url'] = [
+                'controller' => 'Students',
+                'action'     => 'Counsellings',
+                'ajaxUserAutocomplete'
+            ];
+
+            /*EDIT mode */
+            if ($action === 'edit') {
+                $queryString = $this->getQueryString();
+
+                if (!empty($queryString['id'])) {
+                    $record = $this->find()
+                        ->select(['requester_id'])
+                        ->where(['id' => $queryString['id']])
+                        ->first();
+
+                    if (!empty($record->requester_id)) {
+                        try {
+                            $Users = TableRegistry::get('User.Users');
+                            $user  = $Users->get($record->requester_id);
+                            $attr['attr']['value'] =
+                                $user->openemis_no . ' - ' . $user->name;
+
+                        } catch (\Exception $e) {
+                            // fail
+                        }
+                    }
+                }
+            }
         }
 
-        return $data;
-    }
-
-
-    //POCOR-9459
-    public function onUpdateFieldRequesterId(Event $event, array $attr, $action, ServerRequest $request)
-    {
-        $queryString = $this->getQueryString();
-        $studentId = $queryString['student_id'];
-        $requesterOptions = $this->getRequesterOptions($studentId);
-        $attr['type'] = 'chosenSelect';
-        $attr['attr']['multiple'] = false;
-        $attr['onChangeReload'] = true;
-        $attr['options'] = $requesterOptions;
         return $attr;
     }
 
-     /**
+    //POCOR-9523
+    public function ajaxUserAutocomplete()
+    {
+        $this->controller->autoRender = false;
+        $this->ControllerAction->autoRender = false;
+
+        if ($this->request->is(['ajax'])) {
+
+            $term = trim($this->request->getQuery('term'));
+
+            $queryString = $this->getQueryString();
+            $studentId   = $queryString['student_id'] ?? null;
+
+            $UserIdentitiesTable = TableRegistry::get('User.Identities');
+
+            $query = $this->Users
+                ->find()
+                ->select([
+                    $this->Users->aliasField('openemis_no'),
+                    $this->Users->aliasField('first_name'),
+                    $this->Users->aliasField('middle_name'),
+                    $this->Users->aliasField('third_name'),
+                    $this->Users->aliasField('last_name'),
+                    $this->Users->aliasField('preferred_name'),
+                    $this->Users->aliasField('id')
+                ])
+                ->leftJoin(
+                    [$UserIdentitiesTable->getAlias() => $UserIdentitiesTable->getTable()],
+                    [
+                        $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $this->Users->aliasField('id')
+                    ]
+                )
+                ->where([
+                    $this->Users->aliasField('status IS') => 1,
+                ])
+                ->andWhere([
+                    'OR' => [
+                        $this->Users->aliasField('is_student') => 1,
+                        $this->Users->aliasField('is_staff') => 1,
+                        $this->Users->aliasField('is_guardian') => 1
+                    ]
+                ])
+                ->group([$this->Users->aliasField('id')])
+                ->limit(100);
+            if (!empty($studentId)) {
+                $query->where([
+                    $this->Users->aliasField('id !=') => $studentId
+                ]);
+            }
+            if (!empty($term)) {
+                $query = $this->addSearchConditions(
+                    $query,
+                    [
+                        'alias' => 'Users',
+                        'searchTerm' => $term,
+                        'OR' => [
+                            '`Identities`.number LIKE ' => $term . '%'
+                        ]
+                    ]
+                );
+            }
+            $data = [];
+            foreach ($query->all() as $obj) {
+                $data[] = [
+                    'label' => $obj->openemis_no . ' - ' . $obj->name,
+                    'value' => $obj->id
+                ];
+            }
+            echo json_encode($data);
+            die;
+        }
+    }
+
+    /**
      * Retrieve requester options for a given institution.
      * 
      * This function returns a combined list of Users as requesters in the system.It includes-
@@ -310,5 +380,7 @@ class CounsellingsTable extends ControllerActionTable
 
         return $data;
     }*/
+   
+
 
 }
