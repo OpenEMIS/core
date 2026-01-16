@@ -273,6 +273,24 @@ class StudentAdmissionTable extends ControllerActionTable
                 ]
             ])
             ->allowEmpty('institution_class_id')
+            ->allowEmptyString('identity_type_id')
+            ->allowEmptyString('identity_number')
+            // POCOR-9404 Check the rule
+            ->add('identity_type_id', 'checkIdentityPair', [
+                'rule' => function ($value, $context) {
+                    $data = $context['data'];
+                    $identityType = $data['identity_type_id'] ?? null;
+                    $identityNumber = $data['identity_number'] ?? null;
+
+                    // if one is filled and the other is empty, fail validation
+                    if ((!empty($identityType) && empty($identityNumber)) ||
+                        (empty($identityType) && !empty($identityNumber))) {
+                        return false;
+                    }
+                    return true;
+                },
+                'message' => __('Both Identity Type and Identity Number must be provided together or left empty.')
+            ])
             ->add('institution_class_id', [
                 'ruleCheckValidClassId' => [
                     'rule' => ['checkValidClassId'],
@@ -483,6 +501,7 @@ class StudentAdmissionTable extends ControllerActionTable
     {
         $Students = self::getDynamicTableInstance('Institution.Students');
         $StudentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
+        $Identities = TableRegistry::getTableLocator()->get('User.Identities'); //POCOR-9404
         $statuses = $StudentStatuses->findCodeList();
 
         $incomingStudent = [
@@ -504,12 +523,28 @@ class StudentAdmissionTable extends ControllerActionTable
             Log::error($exception->getMessage()); // POCOR-9323
         }
         if(!$newEntity->hasErrors()){
+            if(!empty($entity->identity_type_id) && !empty($entity->identity_number)){
+                //POCOR-9404 start
+                $incomingStudentIdentities = [
+                    'identity_type_id' =>  $entity->identity_type_id,
+                    'security_user_id' => $entity->student_id,
+                    'number' => $entity->identity_number ?? null,
+                    'nationality_id IS' => null,
+                    'created_user_id' => $entity->created_user_id,
+                    'created' => FrozenTime::now(),  
+                ];
+                $newStduentIdentities = $Identities->newEntity($incomingStudentIdentities);
+                try{
+                    $Identities->save($newStduentIdentities);
+                } catch (\Exception $exception) {
+                    Log::error($exception->getMessage());
+                }  //POCOR-9404 end    
+            }   
             return $newEntity;
         }else{
             return null;
         }
     }
-
     //POCOR-8434 Ends
 
     public function onCancel(EventInterface $event, $id, Entity $workflowTransitionEntity)

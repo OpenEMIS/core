@@ -20,7 +20,7 @@ class ImportUserBehavior extends Behavior {
     {
 		$plugin = $this->config('plugin');
 		if (empty($plugin)) {
-			$exploded = explode('.', $this->_table->registryAlias());
+			$exploded = explode('.', $this->_table->getRegistryAlias());
 			if (count($exploded)==2) {
 				$this->config('plugin', $exploded[0]);
 			}
@@ -36,7 +36,7 @@ class ImportUserBehavior extends Behavior {
 		$prefix = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value($prefix_key);
 		$prefix = explode(",", $prefix);
 		$prefix = (isset($prefix[1]) && $prefix[1]>0) ? $prefix[0] : '';
-		$this->config('prefix', $prefix);
+		$this->setConfig('prefix', $prefix);
 
 	    // register the Users table once
 		$this->Users = TableRegistry::getTableLocator()->get('User.Users');

@@ -231,7 +231,8 @@ class ReportsController extends AppController
                 'Report.AuditSecuritiesGroupUserRoles' => __('Security Group User Roles'), // POCOR-499
                 'Report.AuditDeletedRecords' => __('Deleted Records'), // POCOR-9381
                 'Report.AuditInstitutionStudents' => __('Institution Students'), // POCOR-9382
-                'Report.AuditInstitutionStaff' => __('Institution Staff') // POCOR-9383
+                'Report.AuditInstitutionStaff' => __('Institution Staff'), // POCOR-9383
+                'Report.AuditStudentMarks' => __('Student Marks') // POCOR-9444
             ];
         } elseif ($module == 'Examinations') {
             $options = [

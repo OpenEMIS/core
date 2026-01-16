@@ -44,7 +44,8 @@ class AuditsTable extends AppTable
                                 'Report.AuditSecuritiesGroupUserRoles', // POCOR-499
                                 'Report.AuditDeletedRecords',//POCOR-9381
                                 'Report.AuditInstitutionStudents', // POCOR-9382
-                                'Report.AuditInstitutionStaff' // POCOR-9383
+                                'Report.AuditInstitutionStaff', // POCOR-9383
+                                'Report.AuditStudentMarks' // POCOR-9444
                             ]);         
                         }
                         return true;
@@ -110,6 +111,11 @@ class AuditsTable extends AppTable
                     break; //END POCOR-499
                 case 'Report.AuditDeletedRecords':  //POCOR-9381
                     $fieldsOrder[] = 'reference_table';
+                    $fieldsOrder[] = 'report_start_date';
+                    $fieldsOrder[] = 'report_end_date';
+                    $fieldsOrder[] = 'format';
+                    break;
+                case 'Report.AuditStudentMarks':  //POCOR-9444
                     $fieldsOrder[] = 'report_start_date';
                     $fieldsOrder[] = 'report_end_date';
                     $fieldsOrder[] = 'format';
@@ -252,7 +258,7 @@ class AuditsTable extends AppTable
     }
 
     //POCOR-9381
-    public function onUpdateFieldReferenceTable(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldReferenceTable(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
