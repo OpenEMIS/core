@@ -74,7 +74,21 @@ class InstitutionStudentsTable extends AppTable
         $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $institution_id = $requestData->institution_id;
         $areaLevelId = $requestData->area_level_id; //POCOR-7794
-        $areaId = $requestData->area_education_id;
+        //POCOR-9478 start
+        $selectedArea = $requestData->area_education_id;
+        if ($selectedArea != -1 && $selectedArea != '') {
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }
+
+            $query->where(['Institutions.area_id IN' => $allselectedAreas]);
+        } //POCOR-9478 end
+
         $grades = [];
         if ($academicPeriodId != 0) {
             $query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
@@ -107,22 +121,7 @@ class InstitutionStudentsTable extends AppTable
         if ($institution_id != 0) {
             $query->where([$this->aliasField('institution_id') => $institution_id]);
         }
-        //POCOR-7794 start
-        $areaList = [];
-        if (
-            $areaLevelId > 1 && $areaId > 1
-        ) {
-            $areaList = $this->getAreaList($areaLevelId, $areaId);
-        } elseif ($areaLevelId > 1) {
-
-            $areaList = $this->getAreaList($areaLevelId, 0);
-        } elseif ($areaId > 1) {
-            $areaList = $this->getAreaList(0, $areaId);
-        }
-        if (!empty($areaList)) {
-            $query->where(['Institutions.area_id IN' => $areaList]);
-        }
-        //POCOR-7794 end
+        
         /**POCOR-6919 starts - modified query to fetch result on the basis of selected education level*/
         if ($educationlevelId > 0) {
             $gradesArr = $this->EducationGrades
@@ -1111,5 +1110,20 @@ class InstitutionStudentsTable extends AppTable
         }
         $fields_new = array_merge($fields->getArrayCopy(), $DataField);
         $fields->exchangeArray($fields_new);
+    }
+
+    //POCOR-9478
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                           ->where([
+                               $Areas->aliasField('parent_id') => $id
+                            ])
+                             ->toArray();
+       foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
     }
 }

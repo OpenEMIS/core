@@ -42,6 +42,7 @@ class CalendarsTable extends ControllerActionTable
             ->notEmptyString('name', __('This field cannot be left empty'))
             ->notEmptyString('calendar_type_id', __('This field cannot be left empty'))
             ->notEmptyString('academic_period_id', __('This field cannot be left empty'))
+            ->notEmptyString('institution_shift_id', __('This field cannot be left empty'))
             ->add('start_date', 'dateWithinPeriod', [
                 'rule' => function ($value, $context) {
                     $inputDate = new Date ($value);
@@ -97,8 +98,7 @@ class CalendarsTable extends ControllerActionTable
                         return $this->getMessage('Calendars.endDate.compareWithStartDate');
                     }
                 },
-            ])
-        ;
+            ]);
     }
 
     public function findIndex(Query $query, array $options)

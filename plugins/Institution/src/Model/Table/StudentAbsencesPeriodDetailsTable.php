@@ -160,7 +160,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $requestData): Entity
     {
 
-//        $this->sendStudentAbsenceAlert($entity); // POCOR-9392 commented out alerts for absence
+        $this->sendStudentAbsenceAlert($entity); // POCOR-9392 commented out alerts for absence
         return $entity;
     }
 

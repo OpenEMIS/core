@@ -66,10 +66,12 @@ class PerformanceTable extends AppTable
         $validator = $this->validationDefault($validator);
         $validator = $validator
             ->notEmpty('academic_period_id')
+            ->notEmpty('institution_type_id') //POCOR-9451
             ->notEmpty('institution_id')
             ->notEmpty('education_grade_id')
             ->notEmpty('area_level_id')
-            ->notEmpty('area_education_id');
+            ->notEmpty('area_education_id')
+            ->notEmpty('education_programme_id'); //POCOR-9443
        return $validator;
     }
     public function validationPerformance(Validator $validator)
@@ -80,7 +82,8 @@ class PerformanceTable extends AppTable
             ->notEmpty('institution_id')
             ->notEmpty('education_grade_id')
             ->notEmpty('area_level_id')
-            ->notEmpty('area_education_id');
+            ->notEmpty('area_education_id')
+            ->notEmpty('education_programme_id'); //POCOR-9443
        return $validator;
     }
 
@@ -93,7 +96,8 @@ class PerformanceTable extends AppTable
             ->notEmpty('education_grade_id')
             ->notEmpty('area_level_id')
             ->notEmpty('area_education_id')
-            ->notEmpty('outcome_period');
+            ->notEmpty('outcome_period')
+            ->notEmpty('education_programme_id'); //POCOR-9443
        return $validator;
     }
     public function beforeAction(EventInterface $event)
@@ -103,7 +107,9 @@ class PerformanceTable extends AppTable
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
+        $this->ControllerAction->field('institution_type_id', ['type' => 'hidden', 'attr' => ['required' => true]]);//POCOR-9451
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
+        $this->ControllerAction->field('education_programme_id', ['type' => 'hidden', 'attr' => ['required' => true]]); //POCOR-9443
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('assessment_period_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('academic_term', ['type' => 'hidden', 'attr' => ['required' => true]]);
@@ -131,7 +137,9 @@ class PerformanceTable extends AppTable
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['label'=>'Area Name','required' => true]]); //POCOR-7415
+        $this->ControllerAction->field('institution_type_id', ['type' => 'hidden', 'attr' => ['required' => true]]);//POCOR-9451
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
+         $this->ControllerAction->field('education_programme_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('assessment_period_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('format');
@@ -151,6 +159,7 @@ class PerformanceTable extends AppTable
         $this->ControllerAction->field('count_marked_students', ['type' => 'hidden']);
         $this->ControllerAction->field('missing_marks', ['type' => 'hidden']);
         $this->ControllerAction->field('academic_term', ['type' => 'hidden', 'attr' => ['required' => true]]);
+       
     }
 
     /**
@@ -235,7 +244,35 @@ class PerformanceTable extends AppTable
         }
         return $attr;
     }
-
+    //POCOR-9451 start
+    /**
+     * Fetching Institution Type's options list.
+     *
+     * @param  \Cake\Network\Request  $request
+     * @return attr
+     */
+    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if (isset($this->request->getData($this->getAlias())['feature']) && $this->request->getData($this->getAlias())['feature'] == 'Report.Assessments') {
+            $InstitutionTypes = TableRegistry::getTableLocator()->get('Institution.Types');
+            
+            $institutionTypeOptions = $InstitutionTypes
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'name'
+                ])
+                ->order([$InstitutionTypes->aliasField('name') => 'ASC'])
+                ->toArray();
+            
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['options'] = ['' => '-- ' . __('Select') . ' --', 0 => __('All Institution Types')] + $institutionTypeOptions;
+            $attr['onChangeReload'] = true;
+        }
+        
+        return $attr;
+    }
+    //POCOR-9451 end
     /**
      * Fetching Institution's options list based on area id.
      *
@@ -249,6 +286,12 @@ class PerformanceTable extends AppTable
             if ($areaId > 0) {
                 $condition[$this->Institutions->aliasField('area_id')] = $areaId;
             }
+            //POCOR-9451 start
+            $institutionTypeId = $request->getData($this->getAlias())['institution_type_id'];
+            if ($institutionTypeId > 0) {
+                $condition[$this->Institutions->aliasField('institution_type_id')] = $institutionTypeId;
+            }
+            //POCOR-9451 end
             $institutionQuery = $this->Institutions
                             ->find('list', [
                                 'keyField' => 'id',
@@ -285,10 +328,32 @@ class PerformanceTable extends AppTable
         return $attr;
     }
 
+    //POCOR-9404
+    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        $request = $this->request;
+            $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+            $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
+                $programmeOptions = $EducationProgrammes
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
+                    ->find('visible')
+                    ->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                    ->order(['EducationCycles.order' => 'ASC', $EducationProgrammes->aliasField('order') => 'ASC'])
+                    ->where(['EducationSystems.academic_period_id' => $academicPeriodId])
+                    ->toArray();
+                $programmeOptionList = [0 => __('Select')] + $programmeOptions;
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = $programmeOptionList;
+                $attr['onChangeReload'] = 'true';
+        return $attr;
+    }
+
     /**
-     * Fetching education grade's options list based on institution id.
+     * Fetching education grade's options list based on education programme id.
      *
-     * @param  \Cake\Network\Request  $request
+     * @param  $request
      * @return attr
      */
     public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
@@ -300,6 +365,9 @@ class PerformanceTable extends AppTable
         }else{
             $academicPeriodId = '';
         }
+        $selectedProgramme = isset($this->request->getData()[$this->getAlias()]['education_programme_id']) 
+            ? $this->request->getData()[$this->getAlias()]['education_programme_id'] 
+            : null; //POCOR-9404
         
         $gradeTable = $this->Institutions->InstitutionGrades;
         $institutionIds = [];
@@ -318,6 +386,7 @@ class PerformanceTable extends AppTable
                 $conditions[$gradeTable->aliasField('institution_id IN')] = $institutionIds;
             }
         }
+        //The grade displayed here, how many grades are assigned in the institution_grade table
         $gradeOptions = $this->EducationGrades
                         ->find('list', [
                             'keyField' => 'id',
@@ -334,7 +403,7 @@ class PerformanceTable extends AppTable
                         ->group([$this->EducationGrades->aliasField('name')])
                         ->order([
                             $this->EducationGrades->aliasField('name') => 'ASC'
-                        ])
+                        ]) ->where([$this->EducationGrades->aliasField('education_programme_id IS') => $selectedProgramme])
                         ->toArray();
 
         $attr['type'] = 'select';
@@ -353,7 +422,7 @@ class PerformanceTable extends AppTable
     /**
      * Fetching Assessment Period's options list based on grade id.
      *
-     * @param  \Cake\Network\Request  $request
+     * @param  \Cake\ServerRequest\Request  $request
      * @return attr
      */
     public function onUpdateFieldAssessmentPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
@@ -395,7 +464,7 @@ class PerformanceTable extends AppTable
     /**
      * Fetching Academic Term's options list based on grade id.
      * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
-     * @param  \Cake\Network\Request  $request
+     * @param  \Cake\ServerRequest\Request  $request
      * @return attr
      */
     public function onUpdateFieldAcademicTerm(EventInterface $event, array $attr, $action, ServerRequest $request)

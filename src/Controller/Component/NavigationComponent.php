@@ -15,20 +15,10 @@ class NavigationComponent extends Component
     public $action;
     public $breadcrumbs = [];
 
-    // Components are defined in the parent class as protected $components = []
-    // We set them in initialize() method instead to avoid type declaration conflicts
+    public $components = ['AccessControl'];
 
     public function initialize(array $config): void
     {
-        // Set components to avoid redeclaring the property (which causes type conflicts in CakePHP 5)
-        $this->components = ['AccessControl'];
-        
-        // Manually populate _componentMap since we set components after constructor
-        // This is needed for __get() to work properly in CakePHP 5
-        if ($this->components) {
-            $this->_componentMap = $this->_registry->normalizeArray($this->components);
-        }
-        
         $this->controller = $this->_registry->getController();
         $this->action = $this->getController()->getRequest()->getParam('action');
     }
@@ -143,7 +133,17 @@ class NavigationComponent extends Component
         $this->request = $request;
         $session = $request->getSession();
         $authUserId = $session->read('Auth.User.id');
-        if (isset($authUserId)) {
+        //POCOR-9429 start
+        $userRoleIdArray = $this->getUserRoleIdArray($authUserId);
+        
+        if(!$this->AccessControl->isAdmin() && (empty($userRoleIdArray)||$userRoleIdArray[0]==0)) { //POCOR-9429 
+           $navigations = [];
+           $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigationForUsersWithoutSecurityRoles());
+           $navigations = $this->appendNavigation('Profiles.Personal', $navigations, $this->getProfileNavigationForUsersWithoutSecurityRoles());
+           return $navigations;
+        }
+        elseif (isset($authUserId)) {
+        //POCOR-9429 start
             // POCOR-8989 end
             //$navigations = $this->getNavigation();
             $navigations = $this->getMainNavigation();
@@ -265,7 +265,7 @@ class NavigationComponent extends Component
         ]);
 
         if (isset($user_id)) {
-            $userInfo = TableRegistry::getTableLocator()->get('User.Users')->get($user_id);
+            $userInfo = TableRegistry::get('User.Users')->get($user_id);
             if (!empty($userInfo) && $userInfo->is_guardian == 1) {
                 $newNavigation = [
                     'GuardianNavs.GuardianNavs.index' => [
@@ -335,7 +335,7 @@ class NavigationComponent extends Component
      */
     private function getReportAdminstrationNavigation($user_id)
     {
-        $users = TableRegistry::getTableLocator()->get('User.Users');
+        $users = TableRegistry::get('User.Users');
         $userinfo = $users->find()->where([
             $users->aliasField('super_admin') => 1,
             $users->aliasField('id') => $user_id
@@ -1306,7 +1306,7 @@ class NavigationComponent extends Component
         $institutionStudentId = $this->controller->getQueryString('institution_student_id');
         //POCOR-8551
         if (empty($institutionStudentId)) {
-            $InstitutionStudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
+            $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
             $query = $InstitutionStudentsTable->find()
                 ->select(['id']) // Specify the field you want to extract
                 ->where([
@@ -2333,7 +2333,64 @@ class NavigationComponent extends Component
         }
         return $navigation;
     }
+     //POCOR-9429 start
+    public function getProfileNavigationForUsersWithoutSecurityRoles()
+    {
 
+        
+        $session = $this->getController()->getRequest()->getSession();
+        $userID = $session->read('Auth.User.id');
+        $params = [
+            'id' => $userID,
+            'user_id' => $userID
+        ];
+        $profileUserId = $this->controller->paramsEncode($params);
+
+        $PersonalNavigation = [
+            'Profiles.Personal' => [
+                'title' => 'Personal',
+                'icon' => '<span><i class="fa kd-role"></i></span>',
+                'params' => [
+                    'plugin' => 'Profile',
+                    'action' => 'Personal',
+                    0 => 'view',
+                    $profileUserId
+                ]
+            ]
+        ];
+        $navigation = [
+            'Profiles.PersonalDashboard.view' => [
+                'title' => 'Dashboard',
+                'parent' => 'Profiles.Personal',
+                'params' => [
+                    'plugin' =>
+                    'Profile',
+                    'action' => 'PersonalDashboard',
+                    'selected' => ['Profiles.PersonalDashboard.view']
+                ],
+            ],
+            'Profiles.Profiles.view' => [
+                'title' => 'General',
+                'parent' => 'Profiles.Personal',
+                'params' => [
+                    'plugin' => 'Profile',
+                    'action' => 'Personal'
+                ],
+                'selected' => [
+                    'Profiles.Personal.view',
+                    'Profiles.Personal.pull',
+                ] 
+            ],
+        ];
+        foreach ($navigation as &$n) {
+            if (isset($n['params'])) {
+                $n['params'][] = $profileUserId;
+            }
+        }
+        $navigation = array_merge($PersonalNavigation, $navigation);
+        return $navigation;
+    }
+    //POCOR-9429 end
     public function getProfileStaffNavigation()
     {
         $navigation = [
@@ -2862,6 +2919,7 @@ class NavigationComponent extends Component
                 'Configurations.index' => [
                     'title' => 'System Configurations',
                     'parent' => 'SystemSetup',
+                    'params' => ['plugin' => 'Configuration'],
                     'selected' => [
                         'Configurations.Themes',
                         'Configurations.Webhooks',
@@ -2871,6 +2929,8 @@ class NavigationComponent extends Component
                         'Configurations.Authentication',
                         'Configurations.AuthSystemAuthentications',
                         'Configurations.CustomValidation',
+                        'Configurations.StaffReleases',//POCOR-9455
+                        'Configurations.StaffTransfers',//POCOR-9455
                         'Configurations.AdministrativeBoundaries',
                         'Configurations.Theme' => [
                             'title' => 'Themes',
@@ -4320,6 +4380,8 @@ class NavigationComponent extends Component
                             'Scholarships.Applications.index',
                             'UsersDirectory.index',
                             'UsersDirectory.view',
+                            'Scholarships.UsersDirectory.index',//POCOR-9435
+                            'Scholarships.UsersDirectory.view',//POCOR-9435
                             'Scholarships.Identities.index',
                             'Scholarships.Identities.view',
                             'Scholarships.Nationalities.index',
@@ -4388,15 +4450,17 @@ class NavigationComponent extends Component
                     'title' => 'Applications',
                     'parent' => 'Administration.Scholarships',
                     'params' => ['plugin' => 'Scholarship'],
-                    'selected' => [
-                        'Scholarships.Applications.index',
-                        'UsersDirectory.index',
-                        'UsersDirectory.view',
-                        'Scholarships.Identities.index',
-                        'Scholarships.Identities.view',
-                        'Scholarships.Nationalities.index',
-                        'Scholarships.Nationalities.view',
-                        'Scholarships.Contacts.index',
+                        'selected' => [
+                            'Scholarships.Applications.index',
+                            'UsersDirectory.index',
+                            'UsersDirectory.view',
+                            'Scholarships.UsersDirectory.index', //POCOR-9435
+                            'Scholarships.UsersDirectory.view', //POCOR-9435
+                            'Scholarships.Identities.index',
+                            'Scholarships.Identities.view',
+                            'Scholarships.Nationalities.index',
+                            'Scholarships.Nationalities.view',
+                            'Scholarships.Contacts.index',
                         'Scholarships.Contacts.view',
                         'Scholarships.Guardians.index',
                         'Scholarships.Guardians.view',
@@ -4760,7 +4824,7 @@ class NavigationComponent extends Component
         $roles = [];
         $restrictedTo = [];
         $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
-        //    dd($event->getResult());
+      //  dd($event->getResult());
         // POCOR-8527 start fix roles for navs
         if ($event->getResult()) {
             $result = $event->getResult();
@@ -4792,6 +4856,10 @@ class NavigationComponent extends Component
                 if (isset($value['link']) && $value['link']) {
                     $params = ['plugin' => 'Systems'];
                     $url = $this->getLink($key, $params);
+                }
+                //POCOR-9429
+                if($url['controller'] == 'Profiles' || $url['action'] == 'Personal'){
+                   continue;
                 }
                 // POCOR-8128 end
                 // Ensure $url is an array and has necessary keys

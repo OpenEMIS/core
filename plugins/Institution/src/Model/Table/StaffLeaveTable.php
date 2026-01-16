@@ -783,7 +783,7 @@ class StaffLeaveTable extends ControllerActionTable
         $entityEndTime = $entity->end_time;
 
         $existingConditions = [
-            $this->aliasField('staff_id') => $staffId,
+            $this->aliasField('staff_id IS') => $staffId,
 //            $this->aliasField('academic_period_id') => $academicPeriodId, // POCOR-8128
         ];
 

@@ -50,6 +50,10 @@ class NoticesTable extends AppTable
                 ->where(['security_user_id' => $userId])
                 ->enableHydration(false);
             $userRoleIds = array_column($userRoleIdsQuery->toArray(), 'security_role_id');
+            //POCOR-9429: This check is added to restrict users which don't have any roles assigned.
+            if (empty($userRoleIds)) {
+               return $query->where(['1 = 0']);
+            }
             $havePermissionToView = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
                     ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                         [

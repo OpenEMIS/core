@@ -47,6 +47,7 @@ class ApplicationsTable extends ControllerActionTable
     public function initialize(array $config): void
     {
         $this->setTable('scholarship_applications');
+        $this->setPrimaryKey(['applicant_id', 'scholarship_id']);  //POCOR-9435
         parent::initialize($config);
 
         $this->belongsTo('Applicants', ['className' => 'User.Users', 'foreignKey' => 'applicant_id']);
@@ -146,6 +147,11 @@ class ApplicationsTable extends ControllerActionTable
 
         return $validator
             ->requirePresence('financial_assistance_type_id', 'create')
+            ->notEmptyString('financial_assistance_type_id', __('This field cannot be left empty'))//POCOR-9435
+            ->requirePresence('scholarship_id', 'create')//POCOR-9435
+            ->notEmptyString('scholarship_id', __('This field cannot be left empty'))//POCOR-9435
+            ->requirePresence('applicant_id', 'create')//POCOR-9435
+            ->notEmptyString('applicant_id', __('This field cannot be left empty'))//POCOR-9435
             ->add('requested_amount', [
                 'validateDecimal' => [
                     'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
@@ -158,6 +164,18 @@ class ApplicationsTable extends ControllerActionTable
                         //trigger validation only when the application is of type 'LOAN'
                         return ($context['data']['financial_assistance_type_id'] == self::LOAN);
                     }
+                ],//POCOR-9435
+                'notEmptyWhenLoan' => [
+                    'rule' => function ($value, $context) {
+                        if (isset($context['data']['financial_assistance_type_id']) && $context['data']['financial_assistance_type_id'] == self::LOAN) {
+                            return strlen(trim((string)$value)) > 0;
+                        }
+                        return true;
+                    },
+                    'message' => __('This field cannot be left empty'),
+                    'on' => function ($context) {
+                        return (isset($context['data']['financial_assistance_type_id']) && $context['data']['financial_assistance_type_id'] == self::LOAN);
+                    }//POCOR-9435
                 ]
             ]);
     }
@@ -215,11 +233,11 @@ class ApplicationsTable extends ControllerActionTable
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         if (isset($extra['toolbarButtons']['add']['url'])) {
-            $extra['toolbarButtons']['add']['url']['controller'] = 'UsersDirectory';
-            $extra['toolbarButtons']['add']['url']['action'] = 'index';
+            $extra['toolbarButtons']['add']['url']['action'] = 'UsersDirectory';
             $extra['toolbarButtons']['add']['attr']['title'] = __('Apply');
-            unset($extra['toolbarButtons']['add']['url'][0]);
+            $extra['toolbarButtons']['add']['url'][0]='index';
         }
+
 
         // setup fields
         $this->field('scholarship_id', ['type' => 'integer']);
@@ -385,10 +403,12 @@ class ApplicationsTable extends ControllerActionTable
         }
 
         if (isset($extra['toolbarButtons']['back']['url'])) {
+            // Return to Users Directory within Scholarships controller context
             $extra['toolbarButtons']['back']['url'] = [
                 'plugin' => 'Scholarship',
-                'controller' => 'UsersDirectory',
-                'action' => 'index'
+                'controller' => 'Scholarships',
+                'action' => 'UsersDirectory',
+                'index'
             ];
         }
     }

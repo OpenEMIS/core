@@ -5,7 +5,7 @@ namespace Archive\Model\Table;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
-use Cake\Event\EventInterface;
+use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
@@ -60,7 +60,7 @@ class DataManagementCopyTable extends ControllerActionTable
         return $validator;
     }
 
-    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('from_academic_period', ['sort' => false]);
         $this->field('to_academic_period', ['sort' => false]);
@@ -73,7 +73,7 @@ class DataManagementCopyTable extends ControllerActionTable
         $this->setFieldOrder(['from_academic_period', 'to_academic_period', 'features', 'created_user_id', 'created']);
     }
 
-    public function addBeforeAction(EventInterface $event, ArrayObject $extram)
+    public function addBeforeAction(Event $event, ArrayObject $extram)
     {
         $condition = [];
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
@@ -83,7 +83,7 @@ class DataManagementCopyTable extends ControllerActionTable
         $this->setFieldOrder(['from_academic_period', 'to_academic_period', 'features']);
     }
 
-    public function onUpdateFieldFromAcademicPeriod(EventInterface $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFromAcademicPeriod(Event $event, array $attr, $action, ServerRequest $request)
     {
         $condition = [];
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
@@ -95,7 +95,7 @@ class DataManagementCopyTable extends ControllerActionTable
     /*───────────────────────────────────────────────────────────────────────────
      | POCOR-9354: beforeSave → delegate to feature-specific validation (unchanged logic)
      ───────────────────────────────────────────────────────────────────────────*/
-    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
         ini_set('memory_limit', '2G'); //POCOR-6893
 
@@ -110,7 +110,7 @@ class DataManagementCopyTable extends ControllerActionTable
     /*───────────────────────────────────────────────────────────────────────────
      | POCOR-9354: afterSave → delegate to feature-specific triggers (Shell → Command where ready)
      ───────────────────────────────────────────────────────────────────────────*/
-    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $data)
+    public function afterSave(Event $event, Entity $entity, ArrayObject $data)
     {
         ini_set('memory_limit', '2G');
         return $this->triggerForFeature($entity);
@@ -123,7 +123,7 @@ class DataManagementCopyTable extends ControllerActionTable
     private function validateForFeature(Entity $entity)
     {
         // All TableRegistry pulls remain local to keep original behavior
-        $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
+        $EducationSystems = TableRegistry::get('Education.EducationSystems');
 
         // Common guard: Target period must have system (unless creating structure)
         if ($entity->to_academic_period) {
@@ -184,12 +184,12 @@ class DataManagementCopyTable extends ControllerActionTable
 
     private function validateInstitutionProgrammesGradesSubjects(Entity $entity)
     {
-        $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
-        $EducationLevels = TableRegistry::getTableLocator()->get('Education.EducationLevels');
-        $EducationCycles = TableRegistry::getTableLocator()->get('Education.EducationCycles');
-        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
-        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
-        $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+        $EducationSystems = TableRegistry::get('Education.EducationSystems');
+        $EducationLevels = TableRegistry::get('Education.EducationLevels');
+        $EducationCycles = TableRegistry::get('Education.EducationCycles');
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
 
         $EducationSystemsdata = $EducationSystems
             ->find('all')
@@ -257,7 +257,7 @@ class DataManagementCopyTable extends ControllerActionTable
 
     private function validateShifts(Entity $entity)
     {
-        $InstitutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
+        $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
         $shiftsTo = $InstitutionShifts
             ->find('all')
             ->where(['academic_period_id ' => $entity->to_academic_period])
@@ -274,7 +274,7 @@ class DataManagementCopyTable extends ControllerActionTable
 
     private function validateRisks(Entity $entity)
     {
-        $RiskData = TableRegistry::getTableLocator()->get('Institution.Risks');
+        $RiskData = TableRegistry::get('Institution.Risks');
         $RiskRecords = $RiskData->find('all')
             ->where(['academic_period_id ' => $entity->to_academic_period])
             ->toArray();
@@ -292,14 +292,14 @@ class DataManagementCopyTable extends ControllerActionTable
             return false;
         }
 
-        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-        $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $EducationSystems = TableRegistry::get('Education.EducationSystems');
 
         if ($entity->to_academic_period) {
-            $CompetencyCriteriasTable = TableRegistry::getTableLocator()->get('Competency.CompetencyCriterias');
-            $CompetencyTemplatesTable = TableRegistry::getTableLocator()->get('Competency.CompetencyTemplates');
-            $CompetencyItemsTable = TableRegistry::getTableLocator()->get('Competency.CompetencyItems');
-            $CompetencyPeriodsTable = TableRegistry::getTableLocator()->get('Competency.CompetencyPeriods'); //POCOR-8504
+            $CompetencyCriteriasTable = TableRegistry::get('Competency.CompetencyCriterias');
+            $CompetencyTemplatesTable = TableRegistry::get('Competency.CompetencyTemplates');
+            $CompetencyItemsTable = TableRegistry::get('Competency.CompetencyItems');
+            $CompetencyPeriodsTable = TableRegistry::get('Competency.CompetencyPeriods'); //POCOR-8504
 
             $CompetencyCriteriasData = $CompetencyCriteriasTable->find('all')
                 ->where(['academic_period_id' => $entity->to_academic_period])->toArray();
@@ -339,7 +339,7 @@ class DataManagementCopyTable extends ControllerActionTable
 
     private function validatePerformanceAssessments(Entity $entity)
     {
-        $AssessmentData = TableRegistry::getTableLocator()->get('Assessment.Assessments');
+        $AssessmentData = TableRegistry::get('Assessment.Assessments');
         $AssessmentRecords = $AssessmentData->find('all')
             ->where(['academic_period_id ' => $entity->to_academic_period])->count();
         $PreviousAssessmentRecords = $AssessmentData->find('all')
@@ -353,7 +353,7 @@ class DataManagementCopyTable extends ControllerActionTable
 
     private function validateReportCards(Entity $entity)
     {
-        $ReportCard = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
+        $ReportCard = TableRegistry::get('ReportCard.ReportCards');
         $ReportCardData = $ReportCard->find('all')
             ->where(['academic_period_id ' => $entity->to_academic_period])->toArray();
         if (!empty($ReportCardData)) {
@@ -370,8 +370,8 @@ class DataManagementCopyTable extends ControllerActionTable
             return false;
         }
 
-        $outcomeTemplates = TableRegistry::getTableLocator()->get('Outcome.OutcomeTemplates');
-        $outcomeCriterias = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
+        $outcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
+        $outcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
 
         $toTemplates = $outcomeTemplates->find('all')
             ->where(['academic_period_id ' => $entity->to_academic_period])->count();
@@ -420,7 +420,7 @@ class DataManagementCopyTable extends ControllerActionTable
             ->fetchAll('assoc');
         $finalGradeIds = array_column($finalGradeIds, 'education_grade_id');
 
-        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $studentIdsQuery = $InstitutionStudents->find()
             ->select(['student_id'])
             ->where([
@@ -446,10 +446,11 @@ class DataManagementCopyTable extends ControllerActionTable
         switch ($entity->features) {
             case self::INSTITUTION_PROGRAMMES_GRADES_AND_SUBJECTS:
                 // ✅ PORTED TO COMMAND:
-                // bin/cake institution:copy-programs-grades FROM TO
+                // bin/cake copy:institution-programs-grades-subjects FROM TO
                 return $this->triggerInstitutionProgramsGradesCommand(
                     (int)$entity->from_academic_period,
-                    (int)$entity->to_academic_period
+                    (int)$entity->to_academic_period,
+                    $this->Auth->User('id')
                 );
 
             case self::SHIFTS:
@@ -459,16 +460,21 @@ class DataManagementCopyTable extends ControllerActionTable
                 return $this->triggerShell('Risk', $entity->from_academic_period, $entity->to_academic_period);
 
             case self::PERFORMANCE_COMPETENCIES:
-                return $this->triggerPerformanceCompetenciesShell(
-                    'PerformanceCompetencies',
-                    $entity->from_academic_period,
-                    $entity->to_academic_period,
-                    $entity->competency_criterias_value,
-                    $entity->competency_templates_value,
-                    $entity->competency_items_value,
-                    $entity->competency_periods_value
-                );
+//                return $this->triggerPerformanceCompetenciesShell(
+//                    'PerformanceCompetencies',
+//                    $entity->from_academic_period,
+//                    $entity->to_academic_period,
+//                    $entity->competency_criterias_value,
+//                    $entity->competency_templates_value,
+//                    $entity->competency_items_value,
+//                    $entity->competency_periods_value
+//                );
 
+                return $this->triggerPerformanceCompetenciesCommand(
+                    (int)$entity->from_academic_period,
+                    (int)$entity->to_academic_period,
+                    $this->Auth->User('id')
+                );
             case self::EDUCATION_STRUCTURE:
                 // Still shell-based per your note; append user id
             case self::EDUCATION_STRUCTURE: {
@@ -478,9 +484,9 @@ class DataManagementCopyTable extends ControllerActionTable
 
                 // previously: $this->triggerCopyShell('EducationStructureCopy', $from, $to, $user);
                 return $this->runCommand(
-                    'education:copy-structure',
+                    'copy:education-structure',
                     [$from, $to, $user],
-                    'EducationStructureCopy' // log file stem
+                    'CopyEducationStructure' // log file stem
                 );
             }
             case self::PERFORMANCE_ASSESSMENTS:
@@ -503,17 +509,31 @@ class DataManagementCopyTable extends ControllerActionTable
     /*───────────────────────────────────────────────────────────────────────────
      | NEW: Command trigger for Institution Programmes/Grades/Subjects
      ───────────────────────────────────────────────────────────────────────────*/
-    private function triggerInstitutionProgramsGradesCommand(int $from, int $to): bool
+    private function triggerInstitutionProgramsGradesCommand(int $from, int $to, int $userId): bool
     {
         // If you later want parity options, add flags here:
         // e.g. $flags = ['--ensure-egs', '--copy-edges', '--copy-gpa'];
         $flags = [];
-        $args = array_merge([$from, $to], $flags);
+        $args = array_merge([$from, $to, $userId], $flags);
 
         return $this->runCommand(
-            'institution:copy-programs-grades',
+            'copy:institution-programs-grades-subjects',
             $args,
-            'InstitutionCopyProgramsGrades' // log file stem
+            'CopyInstitutionProgramsGradesSubjects' // log file stem
+        );
+    }
+
+    private function triggerPerformanceCompetenciesCommand(int $from, int $to, int $userId): bool
+    {
+        // If you later want parity options, add flags here:
+        // e.g. $flags = ['--ensure-egs', '--copy-edges', '--copy-gpa'];
+        $flags = [];
+        $args = array_merge([$from, $to, $userId], $flags);
+
+        return $this->runCommand(
+            'copy:performance-competencies',
+            $args,
+            'CopyPerformanceCompetencies' // log file stem
         );
     }
 
@@ -584,7 +604,7 @@ class DataManagementCopyTable extends ControllerActionTable
         return $options;
     }
 
-    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'from_academic_period':
@@ -602,9 +622,9 @@ class DataManagementCopyTable extends ControllerActionTable
         }
     }
 
-    public function onGetToAcademicPeriod(EventInterface $event, Entity $entity)
+    public function onGetToAcademicPeriod(Event $event, Entity $entity)
     {
-        $AcademicPeriodsData = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods'); //TableRegistry::getTableLocator()->get('Academic.AcademicPeriods');
+        $AcademicPeriodsData = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods'); //TableRegistry::get('Academic.AcademicPeriods');
         $result = $AcademicPeriodsData
             ->find()
             ->select(['name'])
@@ -614,9 +634,9 @@ class DataManagementCopyTable extends ControllerActionTable
         return $entity->to_academic_period = $result->name;
     }
 
-    public function onGetGeneratedBy(EventInterface $event, Entity $entity)
+    public function onGetGeneratedBy(Event $event, Entity $entity)
     {
-        $Users = TableRegistry::getTableLocator()->get('User.Users');
+        $Users = TableRegistry::get('User.Users');
         $result = $Users
             ->find()
             ->select(['first_name', 'last_name'])
@@ -628,8 +648,8 @@ class DataManagementCopyTable extends ControllerActionTable
 
     private function checkInstitutionCopiedData($copyFrom, $copyTo)
     {
-        $educationGradesTable = TableRegistry::getTableLocator()->get('Education.EducationGrades');
-        $institutionGradesTable = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+        $educationGradesTable = TableRegistry::get('Education.EducationGrades');
+        $institutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
 
 
         $query = $institutionGradesTable
@@ -765,6 +785,7 @@ class DataManagementCopyTable extends ControllerActionTable
 //use Cake\ORM\Table;
 //use Cake\Validation\Validator;
 //use ArrayObject;
+//use Cake\Event\Event;
 //use Cake\ORM\Entity;
 //use Cake\ORM\TableRegistry;
 //use App\Model\Table\ControllerActionTable;
@@ -842,7 +863,7 @@ class DataManagementCopyTable extends ControllerActionTable
 //        return $validator;
 //    }
 //
-//    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
+//    public function indexBeforeAction(Event $event, ArrayObject $extra)
 //    {
 //        $this->field('from_academic_period',['sort' => false]);
 //        $this->field('to_academic_period', ['sort' => false]);
@@ -855,7 +876,7 @@ class DataManagementCopyTable extends ControllerActionTable
 //        $this->setFieldOrder(['from_academic_period', 'to_academic_period', 'features', 'created_user_id', 'created']);
 //    }
 //
-//    public function addBeforeAction(EventInterface $event, ArrayObject $extram)
+//    public function addBeforeAction(Event $event, ArrayObject $extram)
 //    {
 //        $condition = [];
 //        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
@@ -866,7 +887,7 @@ class DataManagementCopyTable extends ControllerActionTable
 //
 //    }
 //
-//    public function onUpdateFieldFromAcademicPeriod(EventInterface $event, array $attr, $action, ServerRequest $request)
+//    public function onUpdateFieldFromAcademicPeriod(Event $event, array $attr, $action, ServerRequest $request)
 //    {
 //        $condition = [];
 //        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
@@ -875,7 +896,7 @@ class DataManagementCopyTable extends ControllerActionTable
 //        return $attr;
 //    }
 //
-//    // public function onUpdateFieldToAcademicPeriod(EventInterface $event, array $attr, $action, Request $request)
+//    // public function onUpdateFieldToAcademicPeriod(Event $event, array $attr, $action, Request $request)
 //    // {
 //    //     $condition = [$this->AcademicPeriods->aliasField('id').' <> ' => $request['data']['DataManagementCopy']['from_academic_period']];
 //    //     $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
@@ -899,28 +920,28 @@ class DataManagementCopyTable extends ControllerActionTable
 //        return compact('periodOptions', 'selectedPeriod');
 //    }
 //
-//    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $data){
+//    public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
 //        ini_set('memory_limit', '2G'); //POCOR-6893
 //        if($entity->from_academic_period == $entity->to_academic_period){
 //            $this->Alert->error('CopyData.genralerror', ['reset' => true]);
 //            return false;
 //        }
 //
-//        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-//        $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
-//        $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
+//        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+//        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+//        $EducationSystems = TableRegistry::get('Education.EducationSystems');
 //
-//        $EducationLevels = TableRegistry::getTableLocator()->get('Education.EducationLevels');
-//        $EducationCycles = TableRegistry::getTableLocator()->get('Education.EducationCycles');
-//        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
-//        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
-//        $InstitutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
+//        $EducationLevels = TableRegistry::get('Education.EducationLevels');
+//        $EducationCycles = TableRegistry::get('Education.EducationCycles');
+//        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+//        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+//        $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
 //
-//        $InstitutionBuildings = TableRegistry::getTableLocator()->get('Institution.InstitutionBuildings');
-//        $InstitutionFloors = TableRegistry::getTableLocator()->get('Institution.InstitutionFloors');
-//        $InstitutionRooms = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
-//        $InstitutionLands = TableRegistry::getTableLocator()->get('Institution.InstitutionLands');
-//        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+//        $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
+//        $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
+//        $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
+//        $InstitutionLands = TableRegistry::get('Institution.InstitutionLands');
+//        $Institutions = TableRegistry::get('Institution.Institutions');
 //
 //        if($entity->to_academic_period){
 //
@@ -1087,7 +1108,7 @@ class DataManagementCopyTable extends ControllerActionTable
 //            }
 //        }
 //        // Start POCOR-5337
-//        $RiskData = TableRegistry::getTableLocator()->get('Institution.Risks');
+//        $RiskData = TableRegistry::get('Institution.Risks');
 //        if($entity->features == self::RISKS){
 //            $RiskRecords = $RiskData
 //                ->find('all')
@@ -1103,8 +1124,8 @@ class DataManagementCopyTable extends ControllerActionTable
 //                $this->Alert->error('CopyData.genralerror', ['reset' => true]);
 //                return false;
 //            }
-//            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-//            $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
+//            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+//            $EducationSystems = TableRegistry::get('Education.EducationSystems');
 //            if($entity->to_academic_period){
 //                $ToAcademicPeriodsData = $AcademicPeriods
 //                ->find()
@@ -1112,10 +1133,10 @@ class DataManagementCopyTable extends ControllerActionTable
 //                ->where(['id' => $entity->to_academic_period])
 //                ->first();
 //
-//                $CompetencyCriteriasTable = TableRegistry::getTableLocator()->get('Competency.CompetencyCriterias');
-//                $CompetencyTemplatesTable = TableRegistry::getTableLocator()->get('Competency.CompetencyTemplates');
-//                $CompetencyItemsTable = TableRegistry::getTableLocator()->get('Competency.CompetencyItems');
-//                $CompetencyPeriodsTable = TableRegistry::getTableLocator()->get('Competency.CompetencyPeriods'); //POCOR-8504
+//                $CompetencyCriteriasTable = TableRegistry::get('Competency.CompetencyCriterias');
+//                $CompetencyTemplatesTable = TableRegistry::get('Competency.CompetencyTemplates');
+//                $CompetencyItemsTable = TableRegistry::get('Competency.CompetencyItems');
+//                $CompetencyPeriodsTable = TableRegistry::get('Competency.CompetencyPeriods'); //POCOR-8504
 //
 //                $CompetencyCriteriasData = $CompetencyCriteriasTable
 //                    ->find('all')
@@ -1181,7 +1202,7 @@ class DataManagementCopyTable extends ControllerActionTable
 //            }
 //        }
 //        // Start POCOR-6423
-//        $AssessmentData = TableRegistry::getTableLocator()->get('Assessment.Assessments');
+//        $AssessmentData = TableRegistry::get('Assessment.Assessments');
 //        if ($entity->features == self::PERFORMANCE_ASSESSMENTS) {
 //            $AssessmentRecords = $AssessmentData
 //                ->find('all')
@@ -1198,7 +1219,7 @@ class DataManagementCopyTable extends ControllerActionTable
 //        }
 //        // End POCOR-6423
 //        // POCOR-7764-start
-//        $ReportCard = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
+//        $ReportCard = TableRegistry::get('ReportCard.ReportCards');
 //        if ($entity->features == self::REPORT_CARDS) {
 //            $ReportCardData = $ReportCard->find('all')
 //                ->where(['academic_period_id ' => $entity->to_academic_period])
@@ -1240,19 +1261,19 @@ class DataManagementCopyTable extends ControllerActionTable
 //    }
 //    /*****************POCOR-7326 End************************** */
 //
-//    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $data){
+//    public function afterSave(Event $event, Entity $entity, ArrayObject $data){
 //
 //        ini_set('memory_limit', '2G');
 //        $connection = ConnectionManager::get('default');
-//        $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
-//        $EducationLevels = TableRegistry::getTableLocator()->get('Education.EducationLevels');
-//        $EducationCycles = TableRegistry::getTableLocator()->get('Education.EducationCycles');
-//        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
-//        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
-//        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
-//        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-//        $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
-//        $institution_program_grade_subjects = TableRegistry::getTableLocator()->get('Institution.InstitutionProgramGradeSubjects');
+//        $EducationSystems = TableRegistry::get('Education.EducationSystems');
+//        $EducationLevels = TableRegistry::get('Education.EducationLevels');
+//        $EducationCycles = TableRegistry::get('Education.EducationCycles');
+//        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+//        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+//        $Institutions = TableRegistry::get('Institution.Institutions');
+//        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+//        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+//        $institution_program_grade_subjects = TableRegistry::get('Institution.InstitutionProgramGradeSubjects');
 //        $currentData = "'".date('Y-m-d H:i:s')."'";
 //
 //        $from_academic_period = $entity->from_academic_period;
@@ -1281,12 +1302,12 @@ class DataManagementCopyTable extends ControllerActionTable
 //
 //            //***********************POCOR-7326 Start******************************* */
 //
-//            $InstitutionBuildings = TableRegistry::getTableLocator()->get('Institution.InstitutionBuildings');
-//            $InstitutionFloors = TableRegistry::getTableLocator()->get('Institution.InstitutionFloors');
-//            $InstitutionRooms = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
-//            $InstitutionLands = TableRegistry::getTableLocator()->get('Institution.InstitutionLands');
-//            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
-//            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+//            $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
+//            $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
+//            $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
+//            $InstitutionLands = TableRegistry::get('Institution.InstitutionLands');
+//            $Institutions = TableRegistry::get('Institution.Institutions');
+//            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 //
 //            $InstitutionLandsData = $InstitutionLands
 //                ->find('all')
@@ -1518,8 +1539,8 @@ class DataManagementCopyTable extends ControllerActionTable
 //            $copyTo = $to_academic_period;
 //            $this->triggerCopyShell('Risk', $copyFrom, $copyTo);
 //        }
-//        $outcomeTemplates = TableRegistry::getTableLocator()->get('Outcome.OutcomeTemplates');
-//        $outcomeCriterias = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
+//        $outcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
+//        $outcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
 //        if($entity->features == self::PERFORMANCE_OUTCOMES){
 //            if($entity->from_academic_period == $entity->to_academic_period){
 //                $this->Alert->error('CopyData.genralerror', ['reset' => true]);
@@ -1616,7 +1637,7 @@ class DataManagementCopyTable extends ControllerActionTable
 //        // Execute the final grade query and fetch the result
 //            $finalGradeIds = $connection->execute($finalGradeIdsQuery, ['copyFrom' => $copyFrom])->fetchAll('assoc');
 //            $finalGradeIds = array_column($finalGradeIds, 'education_grade_id');
-//            $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+//            $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
 //            $studentIdsQuery = $InstitutionStudents->find()
 //                ->select(['student_id'])
 //                ->where([
@@ -1676,7 +1697,7 @@ class DataManagementCopyTable extends ControllerActionTable
 //        return $options;
 //    }
 //
-//    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+//    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
 //    {
 //        switch ($field) {
 //            case 'from_academic_period':
@@ -1694,9 +1715,9 @@ class DataManagementCopyTable extends ControllerActionTable
 //        }
 //    }
 //
-//    public function onGetToAcademicPeriod(EventInterface $event, Entity $entity)
+//    public function onGetToAcademicPeriod(Event $event, Entity $entity)
 //    {
-//        $AcademicPeriodsData = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods'); //TableRegistry::getTableLocator()->get('Academic.AcademicPeriods');
+//        $AcademicPeriodsData = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods'); //TableRegistry::get('Academic.AcademicPeriods');
 //        $result = $AcademicPeriodsData
 //            ->find()
 //            ->select(['name'])
@@ -1706,9 +1727,9 @@ class DataManagementCopyTable extends ControllerActionTable
 //        return $entity->to_academic_period = $result->name;
 //    }
 //
-//    public function onGetGeneratedBy(EventInterface $event, Entity $entity)
+//    public function onGetGeneratedBy(Event $event, Entity $entity)
 //    {
-//        $Users = TableRegistry::getTableLocator()->get('User.Users');
+//        $Users = TableRegistry::get('User.Users');
 //        $result = $Users
 //            ->find()
 //            ->select(['first_name','last_name'])
@@ -1743,7 +1764,7 @@ class DataManagementCopyTable extends ControllerActionTable
 //    //POCOR-7576-shifts start
 //    private function checkshiftCopiedData( $copyFrom,$copyTo)
 //    {
-//        $InstitutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
+//        $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
 //        $copiedRecords = $InstitutionShifts->find()
 //                        ->innerJoin(
 //                                    ['InstitutionShifts1' => 'institution_shifts'],
@@ -1773,8 +1794,8 @@ class DataManagementCopyTable extends ControllerActionTable
 //    //POCOR-7576-shifts end
 //    //POCOR-7576-institution programme start
 //    private function checkInstitutionCopiedData($copyFrom,$copyTo){
-//        $educationGradesTable = TableRegistry::getTableLocator()->get('Education.EducationGrades');
-//        $institutionGradesTable = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+//        $educationGradesTable = TableRegistry::get('Education.EducationGrades');
+//        $institutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
 //
 //
 //        $query = $institutionGradesTable

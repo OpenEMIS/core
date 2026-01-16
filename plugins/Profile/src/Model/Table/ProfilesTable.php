@@ -66,6 +66,13 @@ class ProfilesTable extends ControllerActionTable
 
         // Start POCOR-5188
         $toolbarButtons = $this->addManualButton($toolbarButtons);
+
+        //This check is added to restrict users from editing profile if they don't have any roles assigned.(POCOR-9429)
+        $userRoles = $this->AccessControl->getRolesByUser()->toArray();
+        if (!$this->AccessControl->isAdmin() && empty($userRoles)) {
+            unset($toolbarButtons['edit']);
+        }
+        
         // End POCOR-5188
         $extra['toolbarButtons'] = $toolbarButtons;
     }

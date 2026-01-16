@@ -648,7 +648,7 @@ trait PdfReportTrait
 
     private function savePDF($objSpreadsheet, $filepath, $student_id, $report_card_id)
     {
-        Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
+//        Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
         // Convert spreadsheet object into html
         // POCOR-9336 start
         $reportCard = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
@@ -684,7 +684,7 @@ trait PdfReportTrait
             file_put_contents($outputPath, $pdfContent);
             $outputPath = $filepath;
             file_put_contents($outputPath, $pdfContent);
-            Log::write('debug', "Saved PDF to: $outputPath");
+//            Log::write('debug', "Saved PDF to: $outputPath");
         } else {
             Log::error("PDF content  is empty");
         }
@@ -700,7 +700,7 @@ trait PdfReportTrait
     private function savePDFAssessment($objSpreadsheet, $filepath, $student_id): void
     {
 
-        Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
+//        Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $printer = $ConfigItems->value('pdf_service');
         switch ($printer) {
@@ -719,10 +719,10 @@ trait PdfReportTrait
             $filename = $this->getConfig('filename') . '_' . (!empty($student_id) ? $student_id : date('Ymd\THis')) . '.txt';
             $outputPath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $filename;
             file_put_contents($outputPath, $pdfContent);
-            Log::write('debug', "Saved PDF to: $outputPath");
+//            Log::write('debug', "Saved PDF to: $outputPath");
             $outputPath = $filepath;
             file_put_contents($outputPath, $pdfContent);
-            Log::write('debug', "Saved PDF to: $outputPath");
+//            Log::write('debug', "Saved PDF to: $outputPath");
         } else {
             Log::error("PDF content  is empty");
         }
@@ -741,7 +741,7 @@ trait PdfReportTrait
         if ($filenames) {
 //           echo "<pre>";print_r($mpdf);die; //This is very unusual code need to debug again
             $filesTotal = sizeof($filenames);
-            $mpdf->SetImportUse();
+            //$mpdf->SetImportUse(); //POCOR-9450
 
             for ($i = 0; $i < count($filenames); $i++) {
                 $curFile = $filenames[$i];
@@ -1063,8 +1063,8 @@ trait PdfReportTrait
             $fileName = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His');
         }
 
-        Log::write('debug', '----------------------fileName---------------------: ');
-        Log::write('debug', $fileName);
+//        Log::write('debug', '----------------------fileName---------------------: ');
+//        Log::write('debug', $fileName);
 
         $mergedPDF = $this->mergePDFFiles($filePaths, $fileName, $fileName);
         // // Remove the temp file that is converted from excel object and its successfully converted to pdf
@@ -1090,7 +1090,7 @@ trait PdfReportTrait
      */
     private function printPdfViaApi(Spreadsheet $objSpreadsheet, string $baseFileName, ?int $sheetCount = null): ?string
     {
-        Log::write('debug', 'ExcelReportBehavior >>> base filepath: ' . $baseFileName);
+//        Log::write('debug', 'ExcelReportBehavior >>> base filepath: ' . $baseFileName);
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $printer = $ConfigItems->value('pdf_service');
 
@@ -1194,7 +1194,7 @@ trait PdfReportTrait
             // Cleanup
             if (file_exists($sheetPath)) {
                 @unlink($sheetPath);
-                Log::write('debug', "Deleted temp XLSX file: $sheetPath");
+//                Log::write('debug', "Deleted temp XLSX file: $sheetPath");
             }
         }
 
@@ -1210,9 +1210,10 @@ trait PdfReportTrait
 //        putenv("HOME=$tempDir"); // Ensures LibreOffice has a writable HOME directory
 //        Log::debug($tempDir);
         try {
+            $unique = uniqid('libo_', true);
             // 1. Save XLSX
-            $xlsxPath = $tempDir . $baseFileName . '.xlsx';
-            $pdfExpectedPath = $tempDir . $baseFileName . '.pdf';
+            $xlsxPath       = $tempDir . $unique . '.xlsx';
+            $pdfExpectedPath = $tempDir . $unique . '.pdf';
 
             $ss = $objSpreadsheet;
 
@@ -1316,7 +1317,7 @@ trait PdfReportTrait
 
             // You may parse and apply $apiParams if needed
             // For example, if you want watermark, you may use unoconv with a custom template
-            Log::debug("Running LibreOffice command: $loCmd");
+//            Log::debug("Running LibreOffice command: $loCmd");
 
             exec($loCmd, $output, $returnCode);
 //            Log::debug("LibreOffice output: " . implode("\n", $output));
@@ -1331,15 +1332,15 @@ trait PdfReportTrait
             return null;
         } finally {
             // 3. Cleanup
-//            if (file_exists($xlsxPath)) {
-//                @unlink($xlsxPath);
-//                Log::debug("Deleted XLSX: $xlsxPath");
-//            }
-//
-//            if (file_exists($pdfExpectedPath)) {
-//                @unlink($pdfExpectedPath);
-//                Log::debug("Deleted PDF: $pdfExpectedPath");
-//            }
+            if (file_exists($xlsxPath)) {
+                @unlink($xlsxPath);
+                Log::debug("Deleted XLSX: $xlsxPath");
+            }
+
+            if (file_exists($pdfExpectedPath)) {
+                @unlink($pdfExpectedPath);
+                Log::debug("Deleted PDF: $pdfExpectedPath");
+            }
         }
 
         return null;
@@ -1379,11 +1380,41 @@ trait PdfReportTrait
             // Save the processed html into a temp pdf
             $mpdf->AddPage('L');
 
-            $mpdf->WriteHTML($processedHtml);
-            $filepathname = $namePdf . '.pdf';
-            $mpdf->Output($filepathname, 'D');
-            $filePaths[] = $filepath;
-            unset($mdpf);// POCOR-6908 end
+            //$mpdf->WriteHTML($processedHtml); //POCOR-9450
+
+            //POCOR-9450 -- START
+            // --- SAFE FIX: Write HTML in smaller chunks to prevent pcre.backtrack_limit crash ---
+            // Separate CSS <style> section from HTML body
+                preg_match('/<style.*?>(.*?)<\/style>/is', $processedHtml, $cssMatches);
+
+                $css = $cssMatches[1] ?? '';
+                $htmlWithoutCss = preg_replace('/<style.*?>.*?<\/style>/is', '', $processedHtml);
+
+                // First write CSS properly
+                if (!empty($css)) {
+                    $mpdf->WriteHTML($css, \Mpdf\HTMLParserMode::HEADER_CSS);
+                }
+
+                // Now write remaining HTML in chunks
+                $chunkSize = 100000; // 100 KB
+                $htmlLength = strlen($htmlWithoutCss);
+                $offset = 0;
+
+                while ($offset < $htmlLength) {
+                    $chunk = substr($htmlWithoutCss, $offset, $chunkSize);
+                    $mpdf->WriteHTML($chunk, \Mpdf\HTMLParserMode::HTML_BODY);
+                    $offset += $chunkSize;
+                }
+
+            // --- END FIX ---
+            //POCOR-9450 -- END
+
+             $filepathname = $filepath . '.pdf'; // full path for each sheet
+            // SAVE PDF TO DISK, not browser
+            $mpdf->Output($filepathname, \Mpdf\Output\Destination::FILE);
+            // store correct PDF path for merging
+            $filePaths[] = $filepathname;
+            unset($mpdf);// POCOR-6908 end
         }
         // Merge all the pdf that belongs to one report
         if (!empty($student_id)) {
@@ -1392,8 +1423,8 @@ trait PdfReportTrait
             $fileName = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His');
         }
 
-        Log::write('debug', '----------------------fileName---------------------: ');
-        Log::write('debug', $fileName);
+//        Log::write('debug', '----------------------fileName---------------------: ');
+//        Log::write('debug', $fileName);
 
         // $this->mergePDFFiles($filePaths, $fileName, $fileName); //V4
         $result = $this->mergePDFFilesAssessment($filePaths, $fileName, $fileName);

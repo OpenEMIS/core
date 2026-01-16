@@ -4,7 +4,6 @@ namespace ControllerAction\View\Helper;
 use ArrayObject;
 use Cake\View\UrlHelper;
 use Cake\Event\Event;
-use Cake\Event\EventInterface;
 use Cake\View\Helper;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -540,6 +539,10 @@ class HtmlFieldHelper extends Helper
 					// '.$imageDefault.'
 					// </div>
 					// </div>';
+                if (is_resource($src)) { // POCOR-9488
+                    $src = base64_encode(stream_get_contents($src));
+                }
+                $src = is_string($src) ? $src : ""; // POCOR-9488
                 $value = (base64_decode($src, true)) ? '<div class="table-thumb"
                     data-load-image=true
                     data-image-width=' . $maxImageWidth . '
@@ -558,6 +561,7 @@ class HtmlFieldHelper extends Helper
                     if (is_resource($src)) {
                         $src = base64_encode(stream_get_contents($src));
                     }
+                    $src = is_string($src) ? $src : "";
                     $value = (base64_decode($src, true)) ? '<div class="table-thumb"><img src="data:image/jpeg;base64,'.$src.'" style="max-width:'.$maxImageWidth.'px;" /></div>' : $src;
                 }
             }
@@ -903,7 +907,7 @@ class HtmlFieldHelper extends Helper
     public function binary($action, Entity $entity, $attr, $options = [])
     {
         $value = '';
-        $table = TableRegistry::getTableLocator()->get($attr['className']);
+        $table = TableRegistry::get($attr['className']);
         //this is comment becuase of facing error in Personal > General > Account edit by superrole.POCOR-7485 Starts cakephp-4
         /*$fileUpload = $table->behaviors()->get('FileUpload');
         $name = '&nbsp;';
