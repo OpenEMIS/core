@@ -4289,6 +4289,11 @@ class NavigationComponent extends Component
                 'parent' => 'Administration',
                 'link' => false,
             ],
+            'Systems.StaffSalaries' => [
+                'title' => 'Salary',
+                'parent' => 'Administration.Staff',
+                'link' => true,
+            ],
             'Systems.StaffPolicies' => [
                 'title' => 'Leaves',
                 'parent' => 'Administration.Staff',
