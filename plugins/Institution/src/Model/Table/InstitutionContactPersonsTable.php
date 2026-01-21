@@ -44,7 +44,7 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
                 'provider' => 'table',
                 'last' => true
             ])
-            ->notEmptyString('mobile_number')
+            ->allowEmptyString('mobile_number') //POCOR-9543
             ->add('mobile_number', 'ruleCustomMobile', [
                 'rule' => ['validateCustomPattern', 'institution_contact_person_mobile'],
                 'provider' => 'table'
@@ -58,7 +58,8 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
                 'rule' => ['validateCustomPattern', 'institution_contact_person_fax'],
                 'provider' => 'table'
             ])*/
-            ->notEmptyString('email') //POCOR-9460
+            ->notEmpty('contact_person') //POCOR-9543
+            ->allowEmptyString('email') //POCOR-9543
             ->add('email', [
                 'ruleValidEmail' => [
                     'rule' => 'email',
