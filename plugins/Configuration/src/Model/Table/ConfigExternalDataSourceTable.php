@@ -30,7 +30,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
         $this->toggle('remove', false);
-        $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'webhook_id', 'joinType' => 'INNER']);
+//        $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'webhook_id', 'joinType' => 'INNER']);
     }
 
     public function validationCustom(Validator $validator): Validator

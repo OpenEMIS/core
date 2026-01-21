@@ -25,6 +25,15 @@ class EducationSystemsTable extends ControllerActionTable
             $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
             $controllerActionBehavior->setConfig(['actions' => ['reorder' => false]]);
         }
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'education_system_create',
+                'entity_delete' => 'education_system_delete',
+                'entity_update' => 'education_system_update',
+                'table_alias' => 'Education.EducationSystems',
+                'contain' => ['FieldOfStudies']
+            ]
+        ); // for webhook
     }
     //POCOR-5696 start
     public function setupFields(Entity $entity)
@@ -496,63 +505,7 @@ class EducationSystemsTable extends ControllerActionTable
                 }
             }
         }
-        /*POCOR-6544 ends*/
-		// Webhook Education Structure System create starts
-		//POCOR-6085 starts
-		if($entity->isNew()) {
 
-			$educationStructure = [
-				'education_system_id' =>$entity->id,
-				'education_system_name' =>$entity->name,
-				'academic_period_id' =>$entity->academic_period_id
-			];
-
-			/*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-			if ($this->Auth->user()) {
-				$Webhooks->triggerShell('education_structure_system_create', [], $educationStructure);
-			}*/
-		}
-
-		//POCOR-6085 ends
-		// Webhook Education Structure System create ends
-
-		// POCOR-6086 starts
-		 //webhook education structure system update starts
-		 if(!$entity->isNew()) {
-            $body = array();
-            $educationUpdateArray = [
-				'education_system_id' =>$entity->id,
-				'education_system_name' =>$entity->name,
-				'visible' =>$entity->visible,
-				'academic_period_id' =>$entity->academic_period_id
-            ];
-            /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('education_structure_system_update', [], $educationUpdateArray);
-            }*/
-        }
-		// POCOR-6086 ends
-
-        // webhook education structure system update ends
-    }
-
-    //POCOR-5696 ends
-
-    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
-    {
-        // Webhook Education Structure System Delete -- Starts
-       //POCOR-6087 starts
-        $body = array();
-        $deleteBodyArray = [
-            'education_system_id' => $entity->id
-        ];
-
-        /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-        if($this->Auth->user()){
-            $Webhooks->triggerShell('education_structure_system_delete', [], $deleteBodyArray);
-        }*/
-		//POCOR-6087 ends
-        // Webhook Education Structure System Delete  -- Ends
     }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)

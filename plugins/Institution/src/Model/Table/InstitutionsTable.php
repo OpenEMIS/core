@@ -266,6 +266,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->addBehavior('Institution.InstitutionTab');
         $this->SecurityGroups = TableRegistry::getTableLocator()->get('Security.SystemGroups');
 
+
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -278,6 +279,34 @@ class InstitutionsTable extends ControllerActionTable
         }
         $validator
             ->setProvider('custom', $this)
+            // POCOR-7935:start
+            ->add('logo_content', 'hople',
+                ['rule' => ['imageSize',
+                    ['width' => ['<=', self::logoMaxWidth], 'height' => ['<=', self::logoMaxHeight]]],
+                    'message' => 'The image dimensions should not exceed ' . self::logoMaxWidth . 'x' . self::logoMaxHeight . ' pixels.'
+                ])
+            // POCOR-7935:end
+            ->allowEmptyFile('logo_content')
+            ->requirePresence('name')->notEmptyString('name')
+            ->add('code', 'ruleCustomCode', [
+                'rule' => ['validateCustomPattern', 'institution_code'],
+                'provider' => 'table',
+                'last' => true
+            ])
+            ->add('code', 'ruleUnique', [
+                'rule' => 'validateUnique',
+                'provider' => 'table',
+                // 'message' => 'Code has to be unique'
+            ])
+            ->add('classification', [
+                'validClassification' => [
+                    'rule' => ['range', 1, 2],
+                ]
+            ])
+            ->requirePresence('institution_sector_id')->notEmptyString('institution_sector_id')
+            ->requirePresence('institution_type_id')->notEmptyString('institution_type_id')
+            ->requirePresence('institution_ownership_id')->notEmptyString('institution_ownership_id')
+            ->requirePresence('institution_gender_id')->notEmptyString('institution_gender_id')
             ->add('date_opened', [
                 'ruleCompare' => [
                     // 'rule' => ['comparison', 'notequal', '0000-00-00'],
@@ -286,14 +315,16 @@ class InstitutionsTable extends ControllerActionTable
                             $mydate = strtotime($value);
                             return true;
                         }catch(\Exception $e){
-                            Log::write('debug', 'Validation Context 1: ' . print_r($context, true));
+                            Log::write('debug', 'Validation Context 1: ' . print_r([
+                                    'context' => $context,
+                                    'error' => $e->getMessage()
+                                ], true));
                             return false;
                         }
                     },
                     'message' => __('You have entered an invalid date')
                 ]
             ])
-            ->allowEmpty('date_closed')
             ->add('date_opened', 'ruleLessThanToday', [
                 'rule' => ['lessThanToday', true],
                 'message' => __('Date should not be later than today'),
@@ -302,6 +333,7 @@ class InstitutionsTable extends ControllerActionTable
                     return true;
                 }
             ])
+            ->allowEmptyDate('date_closed')
             ->add('date_closed', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'date_opened', true],
                 'message' => __('Date Closed should not be earlier than Date Opened'),
@@ -314,91 +346,42 @@ class InstitutionsTable extends ControllerActionTable
                 'rule' => 'checkPendingWorkbench',
                 'last' => true
             ])
-            ->add('classification', [
-                'validClassification' => [
-                    'rule' => ['range', 1, 2],
-                ]
-            ])
-            ->notEmpty('address')
-            ->add('address', 'ruleMaximum255', [
-                 'rule' => ['maxLength', 255],
-                 'message' => 'Maximum allowable character is 255',
-                 'last' => true
-             ])
-             /*->add('address', [
-                'custom' => [
-                    'rule' => function ($value, $context) {
-                        // Regular expression to allow letters, numbers, spaces, commas, periods, hyphens, and apostrophes
-                        return (bool)preg_match('/^[a-zA-Z0-9\s,.\'-]+$/', $value);
-                    },
-                    'message' => __('The institution address cannot contain special characters.'),
-                ]
-            ])*/
-            ->add('address', 'rulecheckIfStringGotNoSpecialChar', [
-            'rule' => [$this, 'checkIfStringGotNoSpecialChar'], // POCOR-8597
-            'message' => 'The institution address cannot contain special characters.'
-            ])
-            ->add('code', 'ruleCustomCode', [
-                'rule' => ['validateCustomPattern', 'institution_code'],
-                'provider' => 'table',
-                'last' => true
-            ])
-            ->allowEmpty('postal_code')
+            ->allowEmptyString('postal_code')
             ->add('postal_code', 'ruleCustomPostalCode', [
                 'rule' => ['validateCustomPattern', 'postal_code'],
                 'provider' => 'table',
                 'last' => true
             ])
-            ->add('code', 'ruleUnique', [
-                'rule' => 'validateUnique',
-                'provider' => 'table',
-                // 'message' => 'Code has to be unique'
-            ])
-            ->allowEmpty('email')
-            ->notEmpty('institution_locality_id') //POCOR-9407
-            ->notEmpty('institution_gender_id', 'Institution Gender is required') //POCOR-9469
-            ->notEmpty('institution_type_id', 'Institution Type is required') //POCOR-9469
+            ->allowEmptyString('email')
+            ->notEmptyString('institution_locality_id') //POCOR-9407
             ->add('email', [
                 'ruleValidEmail' => [
                     'rule' => 'checkEmailFormat',
                     'message' => 'Invalid email address'
                 ]
             ])
-            ->allowEmpty('telephone')
+            ->allowEmptyString('telephone')
             ->add('telephone', 'ruleCustomTelephone', [
                 'rule' => ['validateCustomPattern', 'institution_telephone'],
                 'provider' => 'table',
                 'last' => true
             ])
-            /*->allowEmpty('fax')
-            ->add('fax', 'ruleCustomFax', [
-                'rule' => ['validateCustomPattern', 'institution_fax'],
-                'provider' => 'table',
-                'last' => true
-            ])*/
-            // ->add('area_id', 'ruleAuthorisedArea', [
-            //     'rule' => ['checkAuthorisedArea']
-            // ])
-            // ->add('area_id', 'ruleConfiguredArea', [
-            //     'rule' => ['checkConfiguredArea']
-            // ])
-            // ->allowEmpty('area_administrative_id')
-            // ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
-            //     'rule' => ['checkConfiguredArea']
-            // ])
-            ->notEmpty('institution_provider_id', 'Provider is required') //POCOR-9452
+
             ->add('institution_provider_id', 'ruleLinkedSector', [
                 'rule' => 'checkLinkedSector',
                 'provider' => 'table'
             ])
-            // POCOR-7935:start
-            ->add('logo_content', 'hople',
-                ['rule' => ['imageSize',
-                    ['width' => ['<=', self::logoMaxWidth], 'height' => ['<=', self::logoMaxHeight]]],
-                    'message' => 'The image dimensions should not exceed ' . self::logoMaxWidth . 'x' . self::logoMaxHeight . ' pixels.'
-                ])
-            // POCOR-7935:end
-            ->allowEmpty('logo_content');
+
+            ->notEmptyString('address')
+            ->add('address', 'ruleMaximum255', [
+                'rule' => ['maxLength', 255],
+                'message' => 'Maximum allowable character is 255',
+                'last' => true
+            ])
+            ->add('address', 'rulecheckIfStringGotNoSpecialChar', [
+                'rule' => [$this, 'checkIfStringGotNoSpecialChar'], // POCOR-8597
+                'message' => 'The institution address cannot contain special characters.'
+            ]);
         return $validator;
     }
 
@@ -1091,8 +1074,10 @@ class InstitutionsTable extends ControllerActionTable
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if($entity->isNew()){
-            $this->triggerWebhookShell($entity,'institutions_create'); //POCOR-7971
+            $this->triggerWebhookCommand($entity,'institution_create'); //POCOR-7971
             return;
+        } else {
+            $this->triggerWebhookCommand($entity, 'institution_update');
         }
         //Start POCOR-7697
         $hasSecurityGroupInstitution = $this->checkSecurityGroupInstitution($entity);
@@ -1231,152 +1216,6 @@ class InstitutionsTable extends ControllerActionTable
             }
         }
         //End POCOR-7029
-        $SecurityGroup = TableRegistry::getTableLocator()->get('Security.SystemGroups');
-        $SecurityGroupAreas = TableRegistry::getTableLocator()->get('Security.SecurityGroupAreas');
-
-        $dispatchTable = [];
-        $dispatchTable[] = $SecurityGroup;
-        $dispatchTable[] = $this->ExaminationCentres;
-        $dispatchTable[] = $SecurityGroupAreas;
-
-        if (!empty($this->controllerAction) && ($this->controllerAction == 'Institutions')) {
-            // Webhook institution create -- start
-            $bodyData = $this->find('all',
-                ['contain' => [
-                    'Sectors',
-                    'Types',
-                    'Areas',
-                    'AreaAdministratives',
-                    'Localities',
-                    'Genders'
-                ],
-                ])->where([
-                $this->aliasField('id') => $entity->id
-            ]);
-            foreach ($bodyData as $key => $value) {
-                $sectorName = $value->sector->name;
-                $typeName = $value->sector->name;
-                $genderName = $value->gender->name;
-                $localitiesName = $value->locality->name;
-                $areaEducationId = $value->area->id;
-                $areaEducationName = $value->area->name;
-                $areaAdministrativeId = $value->area_administrative->id;
-                $areaAdministrativeName = $value->area_administrative->name;
-            }
-
-            $classificationId = $entity->classification;
-            if ($classificationId == 1) {
-                $clss = 'Academic Institution';
-            } else {
-                $clss = 'Non-academic institution';
-            }
-
-            $bodys = array();
-            $bodys = [
-                "institution_id" => $entity->id,
-                "institution_name" => $entity->name,
-                "institution_alternative_name" => $entity->alternative_name,
-                "institution_code" => $entity->code,
-                "institution_classification" => $clss,
-                "institution_sector" => !empty($sectorName) ? $sectorName : NULL,
-                "institution_type" => !empty($typeName) ? $typeName : NULL,
-                "institution_gender" => !empty($genderName) ? $genderName : NULL,
-                "institution_date_opene" => date("d-m-Y", strtotime($entity->date_opened)),
-                "institution_address" => $entity->address,
-                "institution_postal_code" => $entity->postal_code,
-                "institution_locality" => !empty($localitiesName) ? $localitiesName : NULL,
-                "institution_latitude" => $entity->latitude,
-                "institution_longitude" => $entity->longitude,
-                "institution_area_education_id" => !empty($areaEducationId) ? $areaEducationId : NULL,
-                "institution_area_education" => !empty($areaEducationName) ? $areaEducationName : NULL,
-                "institution_area_administrative_id" => !empty($areaAdministrativeId) ? $areaAdministrativeId : NULL,
-                "institution_area_administrative" => !empty($areaAdministrativeName) ? $areaAdministrativeName : NULL,
-                "institution_contact_person" => $entity->contact_person,
-                "institution_telephone" => $entity->telephone,
-                //"institution_mobile" => $entity->fax,
-                "institution_email" => $entity->email,
-                "institution_website" => $entity->website,
-            ];
-            //POCOR-6805 start
-            $InstitutionCustomFields = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFields');
-            $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldValues');
-            $institutionCustomFieldOptions = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldOptions');
-            $custom_fieldData = $InstitutionCustomFieldValues
-                ->find()
-                ->select([
-                    'id' => $InstitutionCustomFields->aliasField('id'),
-                    'name' => $InstitutionCustomFields->aliasField('name'),
-                    'field_type' => $InstitutionCustomFields->aliasField('field_type'),
-                    'text_value' => $InstitutionCustomFieldValues->aliasField('text_value'),
-                    'number_value' => $InstitutionCustomFieldValues->aliasField('number_value'),
-                    'decimal_value' => $InstitutionCustomFieldValues->aliasField('decimal_value'),
-                    'textarea_value' => $InstitutionCustomFieldValues->aliasField('textarea_value'),
-                    'date_value' => $InstitutionCustomFieldValues->aliasField('date_value'),
-                    'time_value' => $InstitutionCustomFieldValues->aliasField('time_value'),
-                    'checkbox_value_text' => 'institutionCustomFieldOptions.name',
-                ])
-                ->leftJoin(
-                    [$InstitutionCustomFields->getAlias() => $InstitutionCustomFields->getTable()],
-                    [
-                        $InstitutionCustomFields->aliasField('id =') . $InstitutionCustomFieldValues->aliasField('institution_custom_field_id')
-                    ]
-                )
-                ->leftJoin(['institutionCustomFieldOptions' => 'institution_custom_field_options'],
-                    ['institutionCustomFieldOptions.institution_custom_field_id = ' . $InstitutionCustomFieldValues->aliasField('institution_custom_field_id')])
-                ->where([$InstitutionCustomFieldValues->aliasField('institution_id') => $entity->id])
-                ->group([$InstitutionCustomFields->aliasField('id')])
-                ->enableHydration(false)
-                ->toArray();
-            $custom_field = array();
-            $count = 0;
-            foreach ($custom_fieldData as $val) {
-                $custom_field['custom_field'][$count]["id"] = (!empty($val['id']) ? $val['id'] : '');
-                $custom_field['custom_field'][$count]["name"] = (!empty($val['name']) ? $val['name'] : '');
-                $vale[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
-                $fieldType = $vale[$count];
-                if ($fieldType == 'TEXT') {
-                    $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
-                } else if ($fieldType == 'DECIMAL') {
-                    $custom_field['custom_field'][$count]["decimal_value"] = (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
-                } else if ($fieldType == 'TEXTAREA') {
-                    $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
-                } else if ($fieldType == 'DATE') {
-                    $custom_field['custom_field'][$count]["date_value"] = (!empty($val['date_value']) ? $val['date_value'] : '');
-                } else if ($fieldType == 'TIME') {
-                    $custom_field['custom_field'][$count]["time_value"] = date('h:i A', strtotime($val->time_value));
-                } else if ($fieldType == 'CHECKBOX') {
-                    $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['checkbox_value_text']) ? $val['checkbox_value_text'] : '');
-                } else if ($fieldType == 'DROPDOWN') {
-                    $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['checkbox_value_text']) ? $val['checkbox_value_text'] : '');
-                } else if ($fieldType == 'COORDINATES') {
-                    $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
-                }
-                $count++;
-            }
-            $body = array_merge($bodys, $custom_field); //POCOR-6805 end
-            if ($this->webhookAction == 'add' && empty($event->getData()['entity']->security_group_id)) {
-                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-                if ($this->Auth->user()) {
-                    $Webhooks->triggerShell('institutions_create', ['username' => ''], $body);
-                }
-            }
-            // Webhook institution create -- end
-
-            // Webhook institution update --start
-            if ($this->webhookAction == 'edit') {
-                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-                if ($this->Auth->user()) {
-                    $Webhooks->triggerShell('institutions_update', ['username' => ''], $body);
-                }
-            }
-            // webhook institution update --end
-        }
-        //POCOR-7654 start
-        // foreach ($dispatchTable as $model) {
-        //     $model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
-        // }
-        //POCOR-7654 end
-
     }
 
 
@@ -1389,18 +1228,12 @@ class InstitutionsTable extends ControllerActionTable
         if(!empty($groupEntity)) {
             $SecurityGroup->delete($groupEntity);
         }
-        $body = array();
-        $body = [
-            'institution_id' => $entity->id
-        ];
-
-        //webhook event
-        $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-        if ($this->Auth->user()) {
-            $user = $this->Auth->user();
-            $username = $user['username']; // POCOR-8919
-            $Webhooks->triggerShell('institutions_delete', ['username' => $username], $body);
+        // Skip webhook if no authenticated user
+        if (!empty($options['skip_callbacks'])) {
+            return;
         }
+
+        $this->triggerWebhookCommand($entity, 'institution_delete');
     }
 
     public function afterAction(EventInterface $event, ArrayObject $extra)
@@ -1441,6 +1274,7 @@ class InstitutionsTable extends ControllerActionTable
             }
         }
         $extra['formButtons'] = false;
+
     }
 
     public function getNumberOfInstitutionsByModel($params = [])
@@ -2619,130 +2453,108 @@ class InstitutionsTable extends ControllerActionTable
     //POCOR-7191::end
 
     //POCOR-7971 Start
-    public function triggerWebhookShell(Entity $entity, $event_name) {
-        if (!empty($this->controllerAction) && ($this->controllerAction == 'Institutions')) {
-            $bodyData = $this->find('all',
-                ['contain' => [
-                    'Sectors',
-                    'Types',
-                    'Areas',
-                    'AreaAdministratives',
-                    'Localities',
-                    'Genders'
-                ],
-                ])->where([
-                $this->aliasField('id') => $entity->id
-            ]);
-            foreach ($bodyData as $key => $value) {
-                $sectorName = $value->sector->name;
-                $typeName = $value->sector->name;
-                $genderName = $value->gender->name;
-                $localitiesName = $value->locality->name;
-                $areaEducationId = $value->area->id;
-                $areaEducationName = $value->area->name;
-                $areaAdministrativeId = $value->area_administrative->id;
-                $areaAdministrativeName = $value->area_administrative->name;
-            }
-            $classificationId = $entity->classification;
-            if ($classificationId == 1) {
-                $clss = 'Academic Institution';
-            } else {
-                $clss = 'Non-academic institution';
-            }
 
-            $bodys = array();
-            $bodys = [
-                "institution_id" => $entity->id,
-                "institution_name" => $entity->name,
-                "institution_alternative_name" => $entity->alternative_name,
-                "institution_code" => $entity->code,
-                "institution_classification" => $clss,
-                "institution_sector" => !empty($sectorName) ? $sectorName : NULL,
-                "institution_type" => !empty($typeName) ? $typeName : NULL,
-                "institution_gender" => !empty($genderName) ? $genderName : NULL,
-                "institution_date_opene" => date("d-m-Y", strtotime($entity->date_opened)),
-                "institution_address" => $entity->address,
-                "institution_postal_code" => $entity->postal_code,
-                "institution_locality" => !empty($localitiesName) ? $localitiesName : NULL,
-                "institution_latitude" => $entity->latitude,
-                "institution_longitude" => $entity->longitude,
-                "institution_area_education_id" => !empty($areaEducationId) ? $areaEducationId : NULL,
-                "institution_area_education" => !empty($areaEducationName) ? $areaEducationName : NULL,
-                "institution_area_administrative_id" => !empty($areaAdministrativeId) ? $areaAdministrativeId : NULL,
-                "institution_area_administrative" => !empty($areaAdministrativeName) ? $areaAdministrativeName : NULL,
-                "institution_contact_person" => $entity->contact_person,
-                "institution_telephone" => $entity->telephone,
-                //"institution_mobile" => $entity->fax,
-                "institution_email" => $entity->email,
-                "institution_website" => $entity->website,
+    public function triggerWebhookCommand(Entity $entity, string $eventKey): void
+    {
+        // Only run when triggered from Institution controller
+        $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
+
+        $user = $Webhooks->resolveCurrentUser();
+        $contain = ['Sectors', 'Types', 'Areas', 'AreaAdministratives', 'Localities', 'Genders'];
+        $tableAlias = 'Institution.Institutions';
+        $body = $Webhooks->prepareWebhookBody($tableAlias, $entity, $contain);
+        $body['classification_name']       = ($entity->classification == 1)
+            ? __('Academic Institution')
+            : __('Non-academic Institution');
+
+
+        // --- 2. Append custom fields ---
+        $customFieldValues = TableRegistry::getTableLocator()
+            ->get('InstitutionCustomField.InstitutionCustomFieldValues');
+        $customFields      = TableRegistry::getTableLocator()
+            ->get('InstitutionCustomField.InstitutionCustomFields');
+        $optionsTable      = TableRegistry::getTableLocator()
+            ->get('InstitutionCustomField.InstitutionCustomFieldOptions');
+
+        $cfData = $customFieldValues->find()
+            ->select([
+                'id'                => $customFields->aliasField('id'),
+                'name'              => $customFields->aliasField('name'),
+                'field_type'        => $customFields->aliasField('field_type'),
+                'text_value'        => $customFieldValues->aliasField('text_value'),
+                'number_value'      => $customFieldValues->aliasField('number_value'),
+                'decimal_value'     => $customFieldValues->aliasField('decimal_value'),
+                'textarea_value'    => $customFieldValues->aliasField('textarea_value'),
+                'date_value'        => $customFieldValues->aliasField('date_value'),
+                'time_value'        => $customFieldValues->aliasField('time_value'),
+                'checkbox_value_text' => 'institutionCustomFieldOptions.name',
+            ])
+            ->leftJoin(
+                [$customFields->getAlias() => $customFields->getTable()],
+                [$customFields->aliasField('id =') .
+                    $customFieldValues->aliasField('institution_custom_field_id')]
+            )
+            ->leftJoin(
+                ['institutionCustomFieldOptions' => $optionsTable->getTable()],
+                ['institutionCustomFieldOptions.institution_custom_field_id = ' .
+                    $customFieldValues->aliasField('institution_custom_field_id')]
+            )
+            ->where([$customFieldValues->aliasField('institution_id') => $entity->id])
+            ->group([$customFields->aliasField('id')])
+            ->enableHydration(false)
+            ->toArray();
+
+        $customFieldsArr = ['custom_field' => []];
+        foreach ($cfData as $i => $val) {
+            $fieldType = $val['field_type'] ?? '';
+            $entry = [
+                'id'   => $val['id'] ?? '',
+                'name' => $val['name'] ?? '',
             ];
-            //POCOR-6805 start
-            $InstitutionCustomFields = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFields');
-            $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldValues');
-            $institutionCustomFieldOptions = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldOptions');
-            $custom_fieldData = $InstitutionCustomFieldValues
-                ->find()
-                ->select([
-                    'id' => $InstitutionCustomFields->aliasField('id'),
-                    'name' => $InstitutionCustomFields->aliasField('name'),
-                    'field_type' => $InstitutionCustomFields->aliasField('field_type'),
-                    'text_value' => $InstitutionCustomFieldValues->aliasField('text_value'),
-                    'number_value' => $InstitutionCustomFieldValues->aliasField('number_value'),
-                    'decimal_value' => $InstitutionCustomFieldValues->aliasField('decimal_value'),
-                    'textarea_value' => $InstitutionCustomFieldValues->aliasField('textarea_value'),
-                    'date_value' => $InstitutionCustomFieldValues->aliasField('date_value'),
-                    'time_value' => $InstitutionCustomFieldValues->aliasField('time_value'),
-                    'checkbox_value_text' => 'institutionCustomFieldOptions.name',
-                ])
-                ->leftJoin(
-                    [$InstitutionCustomFields->getAlias() => $InstitutionCustomFields->getTable()],
-                    [
-                        $InstitutionCustomFields->aliasField('id =') . $InstitutionCustomFieldValues->aliasField('institution_custom_field_id')
-                    ]
-                )
-                ->leftJoin(['institutionCustomFieldOptions' => 'institution_custom_field_options'],
-                    ['institutionCustomFieldOptions.institution_custom_field_id = ' . $InstitutionCustomFieldValues->aliasField('institution_custom_field_id')])
-                ->where([$InstitutionCustomFieldValues->aliasField('institution_id') => $entity->id])
-                ->group([$InstitutionCustomFields->aliasField('id')])
-                ->enableHydration(false)
-                ->toArray();
-            $custom_field = array();
-            $count = 0;
-            foreach ($custom_fieldData as $val) {
-                $custom_field['custom_field'][$count]["id"] = (!empty($val['id']) ? $val['id'] : '');
-                $custom_field['custom_field'][$count]["name"] = (!empty($val['name']) ? $val['name'] : '');
-                $vale[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
-                $fieldType = $vale[$count];
-                if ($fieldType == 'TEXT') {
-                    $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
-                } else if ($fieldType == 'DECIMAL') {
-                    $custom_field['custom_field'][$count]["decimal_value"] = (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
-                } else if ($fieldType == 'TEXTAREA') {
-                    $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
-                } else if ($fieldType == 'DATE') {
-                    $custom_field['custom_field'][$count]["date_value"] = (!empty($val['date_value']) ? $val['date_value'] : '');
-                } else if ($fieldType == 'TIME') {
-                    $custom_field['custom_field'][$count]["time_value"] = date('h:i A', strtotime($val->time_value));
-                } else if ($fieldType == 'CHECKBOX') {
-                    $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['checkbox_value_text']) ? $val['checkbox_value_text'] : '');
-                } else if ($fieldType == 'DROPDOWN') {
-                    $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['checkbox_value_text']) ? $val['checkbox_value_text'] : '');
-                } else if ($fieldType == 'COORDINATES') {
-                    $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
-                }
-                $count++;
+
+            switch ($fieldType) {
+                case 'TEXT':
+                    $entry['text_value'] = $val['text_value'] ?? '';
+                    break;
+                case 'DECIMAL':
+                    $entry['decimal_value'] = $val['decimal_value'] ?? '';
+                    break;
+                case 'TEXTAREA':
+                    $entry['textarea_value'] = $val['textarea_value'] ?? '';
+                    break;
+                case 'DATE':
+                    $entry['date_value'] = $val['date_value'] ?? '';
+                    break;
+                case 'TIME':
+                    $entry['time_value'] = !empty($val['time_value'])
+                        ? date('h:i A', strtotime($val['time_value']))
+                        : '';
+                    break;
+                case 'CHECKBOX':
+                    $entry['checkbox_value'] = $val['checkbox_value_text'] ?? '';
+                    break;
+                case 'DROPDOWN':
+                    $entry['dropdown_value'] = $val['checkbox_value_text'] ?? '';
+                    break;
+                case 'COORDINATES':
+                    $entry['cordinate_value'] = $val['text_value'] ?? '';
+                    break;
             }
-            $body = array_merge($bodys, $custom_field); //POCOR-6805 end
-            if ($this->webhookAction == 'add') {
-                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-                if ($this->Auth->user()) {
-                    $user = $this->Auth->user();
-                    $username = $user['username']; // POCOR-8919
-                    $Webhooks->triggerShell($event_name, ['username' => $username], $body);
-                }
-            }
+            $customFieldsArr['custom_field'][] = $entry;
         }
+
+        $body = array_merge($body, $customFieldsArr);
+        if ($eventKey === 'institution_delete') {
+            $body['deleted_at'] = date('Y-m-d H:i:s');
+            $body['deleted_by'] = $user['openemis_no']
+                ?? $user['username']
+                ?? 'system';
+        }
+        // --- 3. Trigger webhook ---
+        $Webhooks->triggerCommand($eventKey, $body);
+
     }
+
     //POCOR-7971 ::end
 
     public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)

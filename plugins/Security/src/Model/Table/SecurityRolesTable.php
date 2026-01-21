@@ -73,85 +73,21 @@ class SecurityRolesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Permissions' => ['view', 'edit']
         ]);
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'security_role_create',
+                'entity_delete' => 'security_role_delete',
+                'entity_update' => 'security_role_update',
+                'table_alias' => 'Security.SecurityRoles',
+                'contain' => []
+            ]
+        ); // for webhook
     }
 
-    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $requestData)
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
-        //POCOR-8464 start
-        $securityFunctionData = $entity['security_functions'];
-        $securityRoleId = $entity['id'];
-        $securityRoleFunctionsTable = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
-        $values = [];
-        
-        foreach ($securityFunctionData as $function) {
-            $data = [
-                'security_role_id' => $securityRoleId,
-                'security_function_id' => $function['id'],
-                '_view' => $function['_joinData']['_view'],
-                '_add' => $function['_joinData']['_add'],
-                '_edit' => $function['_joinData']['_edit'],
-                '_delete' =>$function['_joinData']['_delete'],
-                '_execute' => $function['_joinData']['_execute'],
-            ];
-        
-            // Create a new entity and add it to the list
-            $newEntity = $securityRoleFunctionsTable->newEntity($data);
-            $entitiesToSave[] = $newEntity;
-        }
+        $this->saveRelatedSecurityFunctions($entity);
 
-        // Save all new entities at once
-        if (!empty($entitiesToSave)) {
-            $securityRoleFunctionsTable->saveMany($entitiesToSave);
-        }
-        //POCOR-8464 end
-        // webhook create role starts
-         if($entity->isNew()) {
-
-            $body = array();
-            $createRole = [
-                'role_id' =>$entity->id,
-                'role_name' =>$entity->name,
-
-            ];
-
-            /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-            //if ($this->Auth->user()) { // creating issue while adding new permission //POCOR-6878
-                $Webhooks->triggerShell('role_create', [], $createRole);
-            //}*/
-        }
-
-        // webhook create role ends
-
-        // webhook update role starts
-         if(!$entity->isNew()) {
-            $updateRole = [
-                'role_id' =>$entity->id,
-                'role_name' =>$entity->name,
-
-            ];
-
-            //$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-            //$Webhooks->triggerShell('role_update', [], $updateRole);
-            /*if ($this->Auth->user()) {
-                //$Webhooks->triggerShell('role_update', [], $updateRole);
-            }*/
-        }
-
-        // webhook update role ends
-    }
-
-    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
-    {
-        // Webhook role delete -- Start
-
-        $deleteBody = [
-            'role_id' => $entity->id
-        ];
-        $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-        if($this->Auth->user()){
-            $Webhooks->triggerShell('role_delete', [], $deleteBody);
-        }
-        // Webhook role delete -- Ends
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -167,7 +103,9 @@ class SecurityRolesTable extends ControllerActionTable
                 'rule' => 'validateUnique',
                 'provider' => 'table',
                 'message' => __('Code must be unique')
-            ]); //POCOR-7236 code must ne unique
+            ])->requirePresence('security_group_id')
+            ->notEmptyString('security_group_id');
+        ; //POCOR-7236 code must ne unique
 
         return $validator;
     }
@@ -191,7 +129,7 @@ class SecurityRolesTable extends ControllerActionTable
             }
         }
     }
-    
+
 
     public function onInitializeButtons(EventInterface $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra)
     {
@@ -904,6 +842,37 @@ class SecurityRolesTable extends ControllerActionTable
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
+    }
+
+    /**
+     * @param Entity $entity
+     * @return void
+     * @throws \Exception
+     */
+    private function saveRelatedSecurityFunctions(Entity $entity): void
+    {
+// 🔹 Save linked security functions (POCOR-8464)
+        $securityFunctions = $entity['security_functions'] ?? [];
+        $securityRoleId = $entity['id'] ?? null;
+        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+
+        $entitiesToSave = [];
+        foreach ($securityFunctions as $function) {
+            $join = $function['_joinData'] ?? [];
+            $entitiesToSave[] = $SecurityRoleFunctions->newEntity([
+                'security_role_id' => $securityRoleId,
+                'security_function_id' => $function['id'] ?? null,
+                '_view' => $join['_view'] ?? 0,
+                '_add' => $join['_add'] ?? 0,
+                '_edit' => $join['_edit'] ?? 0,
+                '_delete' => $join['_delete'] ?? 0,
+                '_execute' => $join['_execute'] ?? 0,
+            ]);
+        }
+
+        if (!empty($entitiesToSave)) {
+            $SecurityRoleFunctions->saveMany($entitiesToSave);
+        }
     }
 
 }

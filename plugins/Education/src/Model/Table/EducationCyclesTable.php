@@ -27,7 +27,15 @@ class EducationCyclesTable extends ControllerActionTable
             $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
             $controllerActionBehavior->setConfig(['actions' => ['reorder' => false]]);
         }
-
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'education_cycle_create',
+                'entity_delete' => 'education_cycle_delete',
+                'entity_update' => 'education_cycle_update',
+                'table_alias' => 'Education.EducationCycles',
+                'contain' => []
+            ]
+        ); // for webhook
 		$this->setDeleteStrategy('restrict');
 	}
 
@@ -36,7 +44,7 @@ class EducationCyclesTable extends ControllerActionTable
 		$this->fields['education_level_id']['sort'] = ['field' => 'EducationLevels.name'];
 
 		// Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Education Cycles','Education');       
+		$is_manual_exist = $this->getManualUrl('Administration','Education Cycles','Education');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -67,7 +75,7 @@ class EducationCyclesTable extends ControllerActionTable
             $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
             $event->stopPropagation();
             return $this->controller->redirect($this->url('remove'));
-        } 
+        }
     }
 	//POCOR-9365 -- end
 
@@ -121,91 +129,57 @@ class EducationCyclesTable extends ControllerActionTable
 		$this->field('admission_age', ['after' => 'name', 'attr' => ['min' => 0, 'max' => 99]]);
 	}
 
-	public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
-	{
-        // Webhook Education Cycle create -- start
-        if($entity->isNew()){
-            $body = array();
-            $body = [
-				'education_level_id'   => $entity->education_level_id,
-                'education_cycle_id'   => $entity->id,
-                'education_cycle_name' => $entity->name,
-            ];
-            /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('education_cycle_create', ['username' => $username], $body);
-            }*/
-        }
-        // Webhook Education Cycle create -- end
-
-        //webhook Education Cycle update -- start
-        if(!$entity->isNew()){
-            $body = array();
-            $body = [
-                'education_level_id'   => $entity->education_level_id,
-                'education_cycle_id'   => $entity->id,
-                'education_cycle_name' => $entity->name,
-            ];
-            /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('education_cycle_update', ['username' => $username], $body);
-            }*/
-        }
-
-        //webhook Education Cycle update -- start
-
-        // update the admission age in education grade if there is changes on the admission age
-		if (!$entity->isNew()) {
-            $originalEntity = $entity->extractOriginal(['admission_age']);
-            $originalAdmissionAge = $originalEntity['admission_age'];
-			$admissionAge = $entity->admission_age;
-
-			if ($originalAdmissionAge != $admissionAge) {
-                $educationCycleId = $entity->id;
-
-				$educationProgrammeRecords = $this->EducationProgrammes->find()
-					->where([$this->EducationProgrammes->aliasField('education_cycle_id') => $entity->id])
-					->all()
-				;
-
-				if (!$educationProgrammeRecords->isEmpty()) {
-					$EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
-					foreach ($educationProgrammeRecords as $programmeKey => $programmeObj) {
-						$educationProgrammeId = $programmeObj->id;
-
-						$educationGradeRecords = $EducationGrades->find()
-							->where([$EducationGrades->aliasField('education_programme_id') => $educationProgrammeId])
-							->order([$EducationGrades->aliasField('order')])
-							->all()
-						;
-
-						if (!$educationGradeRecords->isEmpty()) {
-							foreach ($educationGradeRecords as $gradeKey => $gradeObj) {
-								$EducationGrades->updateAll(
-									['admission_age' => $admissionAge + $gradeKey],
-									['id' => $gradeObj->id] // condition
-								);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
-        // Webhook Education Cycle Delete -- Start
+        // --- andle admission age cascade update ---
+        if (!$entity->isNew()) {
+            $this->updateAdmissionAgeCascade($entity); // POCOR-9403 cleancoded
+        }
 
-        $body = array();
-        $body = [
-            'education_cycle_id' => $entity->id
-        ];
-        /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-        if($this->Auth->user()){
-            $Webhooks->triggerShell('education_cycle_delete', ['username' => $username], $body);
-        }*/
-        // Webhook Education Cycle Delete -- End
+    }
+
+    /**
+     * Propagate admission age changes to related grades
+     */
+    private function updateAdmissionAgeCascade(Entity $entity): void
+    {
+        $original = $entity->extractOriginal(['admission_age']);
+        $originalAdmissionAge = $original['admission_age'] ?? null;
+        $newAdmissionAge = $entity->admission_age ?? null;
+
+        // Skip if unchanged
+        if ($originalAdmissionAge === $newAdmissionAge) {
+            return;
+        }
+
+        $educationProgrammes = $this->EducationProgrammes->find()
+            ->where([$this->EducationProgrammes->aliasField('education_cycle_id') => $entity->id])
+            ->all();
+
+        if ($educationProgrammes->isEmpty()) {
+            return;
+        }
+
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+
+        foreach ($educationProgrammes as $programme) {
+            $grades = $EducationGrades->find()
+                ->where([$EducationGrades->aliasField('education_programme_id') => $programme->id])
+                ->order([$EducationGrades->aliasField('order')])
+                ->all();
+
+            if ($grades->isEmpty()) {
+                continue;
+            }
+
+            foreach ($grades as $index => $grade) {
+                $newGradeAge = $newAdmissionAge + $index;
+                $EducationGrades->updateAll(
+                    ['admission_age' => $newGradeAge],
+                    ['id' => $grade->id]
+                );
+            }
+        }
     }
 
 	public function onUpdateFieldEducationLevelId(EventInterface $event, array $attr, $action, ServerRequest $request)

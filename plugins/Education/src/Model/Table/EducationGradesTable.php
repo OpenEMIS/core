@@ -68,6 +68,15 @@ class EducationGradesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'OpenEMIS_Classroom' => ['index']
         ]);
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'education_grade_create',
+                'entity_delete' => 'education_grade_delete',
+                'entity_update' => 'education_grade_update',
+                'table_alias' => 'Education.EducationGrades',
+                'contain' => []
+            ]
+        ); // for webhook
         $this->setDeleteStrategy('restrict');
     }
 
@@ -111,38 +120,11 @@ class EducationGradesTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options){
-        $connection = $this->getConnection();
-        $connection->getDriver()->enableAutoQuoting();
-         // Webhook Education Grade create -- start
-         if($entity->isNew()){
-            $body = array();
-            $body = [
-                'education_programme_id' =>$entity->education_programme_id,
-                'grade_name' =>$entity->name,
-                'grade_id' =>$entity->id,
-            ];
-            /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('education_grade_create', ['username' => $username], $body);
-            }*/
-        }
-        // Webhook Education Grade create -- end
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    {
+        // Ensure auto-quoting for DB safety (kept from your original)
+        $this->getConnection()->getDriver()->enableAutoQuoting();
 
-        //webhook Education Grade update -- start
-        if(!$entity->isNew()){
-            $body = array();
-            $body = [
-                'education_programme_id' =>$entity->education_programme_id,
-                'grade_name' =>$entity->name,
-                'grade_id' =>$entity->id,
-            ];
-            /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('education_grade_update', ['username' => $username], $body);
-            }*/
-        }
-        //webhook Education Grade update -- start
     }
     //POCOR 7308 starts
     public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
@@ -240,25 +222,14 @@ class EducationGradesTable extends ControllerActionTable
     }
    //POCOR 7308 ends
 
-    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
     {
-
+        // Preserve existing logic
         $this->updateAdmissionAgeAfterDelete($entity);
 
-        // Webhook Education Grade Delete -- Start
-
-        $body = array();
-        $body = [
-            'grade_id' => $entity->id
-        ];
-        /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-        if($this->Auth->user()){
-            $Webhooks->triggerShell('education_grade_delete', ['username' => $username], $body);
-        }*/
-        // Webhook Education Grade Delete -- End
     }
 
-     /**
+    /**
      * Method to get the education system id for the particular grade given
      *
      * @param integer $gradeId The grade id to check for

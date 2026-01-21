@@ -53,6 +53,15 @@ class EducationSubjectsTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'education_subject_create',
+                'entity_delete' => 'education_subject_delete',
+                'entity_update' => 'education_subject_update',
+                'table_alias' => 'Education.EducationSubjects',
+                'contain' => ['FieldOfStudies']
+            ]
+        ); // for webhook
         $this->setDeleteStrategy('restrict');
     }
 
@@ -118,7 +127,13 @@ class EducationSubjectsTable extends ControllerActionTable
         $options->exchangeArray($arrayOptions);
     }
 
-    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+
+
+
+
+
+
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['FieldOfStudies']);
     }
@@ -133,52 +148,6 @@ class EducationSubjectsTable extends ControllerActionTable
         $this->field('field_of_studies', ['after' => 'visible', 'entity' => $entity, 'type' => 'custom_field_of_studies']);
     }
 
-    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options){
-
-        // Webhook Education Subject create -- start
-        if($entity->isNew()){
-            $body = array();
-            $body = [
-                'subject_id' =>$entity->id,
-                'subject_name' =>$entity->name,
-                'subject_code' =>$entity->code,
-            ];
-            $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-            if (!empty($entity->created_user_id)) {
-                $Webhooks->triggerShell('education_subject_create', ['username' => $username], $body);
-            }
-        }
-        // Webhook Education Subject` create -- end
-
-         // Webhook Education Subject update -- start
-         if(!$entity->isNew()){
-            $body = array();
-            $body = [
-                'subject_id' =>$entity->id,
-                'subject_name' =>$entity->name,
-                'subject_code' =>$entity->code,
-            ];
-            $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-            if (!empty($entity->modified_user_id)) {
-                $Webhooks->triggerShell('education_subject_update', ['username' => $username], $body);
-            }
-        }
-        // Webhook Education Subject` update -- end
-    }
-
-    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options){
-
-        // Webhook Education Subject Delete -- Start
-        $body = array();
-        $body = [
-            'subject_id' => $entity->id
-        ];
-        $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-        if($this->Auth->user()){
-            $Webhooks->triggerShell('education_subject_delete', ['username' => $username], $body);
-        }
-        // Webhook Education Subject Delete -- End
-    }
 
     public function getFieldOfStudiesOptions()
     {
