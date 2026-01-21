@@ -1274,7 +1274,14 @@ class DirectoriesTable extends ControllerActionTable
 
         $this->addBehavior('User.User');
         $this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
-        $this->addBehavior('User.AdvancedIdentitySearch');
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'security_user_create',
+                'entity_delete' => 'security_user_delete',
+                'entity_update' => 'security_user_update',
+                'table_alias' => 'User.Users'
+            ]
+        ); // for webhook        $this->addBehavior('User.AdvancedIdentitySearch');
         $this->addBehavior('User.AdvancedContactNumberSearch');
         $this->addBehavior('User.AdvancedPositionSearch');
         $this->addBehavior('User.AdvancedSpecificNameTypeSearch');

@@ -50,6 +50,16 @@ class AreasTable extends ControllerActionTable
             'StaffRoom' => ['index'],
             'SgTree' => ['index']
         ]);
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'area_education_create',
+                'entity_delete' => 'area_education_delete',
+                'entity_update' => 'area_education_update',
+                'table_alias' => 'Area.Areas',
+                'contain' => ['AreaParents', 'AreaLevels']
+            ]
+        ); // for webhook
+
 
         $this->setDeleteStrategy('restrict');
     }
@@ -218,72 +228,7 @@ class AreasTable extends ControllerActionTable
         $this->setfieldOrder($this->fieldsOrder);
     }
 
-    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options){
-        // Webhook Education Area create -- start
-        if ($this->associations()->has('usergroups') != '1') {
-            if($entity->isNew()){
-                $body = array();
-                $body = [
-                    'area_id' =>$entity->id,
-                    'area_name' =>$entity->name,
-                    'area_code' =>$entity->code,
-                    'area_parent_id' =>$entity->parent_id,
-                    'area_level_id' =>$entity->area_level_id
-                ];
-                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-                //POCOR-8308 start
-                if (isset($options['skip_callbacks']) && $options['skip_callbacks']) {}
-                else{
-                if ($this->Auth->user()) {
-                    $username = $this->Auth->user()['username']; // POCOR-9351
-                    $Webhooks->triggerShell('area_education_create', ['username' => $username], $body);
-                }
-                }
-                //POCOR-8308 end
-            }
-            // Webhook Education Area create -- end
-
-            //webhook Education Area update -- start
-            if(!$entity->isNew()){
-                $body = array();
-                $body = [
-                    'area_id' =>$entity->id,
-                    'area_name' =>$entity->name,
-                    'area_code' =>$entity->code,
-                    'area_parent_id' =>$entity->parent_id,
-                    'area_level_id' =>$entity->area_level_id
-                ];
-                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-                //POCOR-8308 start
-                if (isset($options['skip_callbacks']) && $options['skip_callbacks']) {}
-                else{
-                if ($this->Auth->user()) {
-                    $Webhooks->triggerShell('area_education_update', ['username' => $username], $body);
-                }
-                }
-                //POCOR-8308 end
-            }
-            //webhook Education Area update -- end
-        }
-
-    }
-
-    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options){
-
-        // Webhook Education Grade Subject Delete -- Start
-        $body = array();
-        $body = [
-            'area_id' => $entity->id
-        ];
-        $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-        if($this->Auth->user()){
-            $username = $this->Auth->user()['username']; // POCOR-9351
-            $Webhooks->triggerShell('area_education_delete', ['username' => $username], $body);
-        }
-        // Webhook Education Grade Subject Delete -- End
-    }
-
-    public function onGetConvertOptions(EventInterface $event, Entity $entity, Query $query)
+    public function onGetConvertOptions(Event $event, Entity $entity, Query $query)
     {
         $level = $entity->area_level_id;
         $query->where([

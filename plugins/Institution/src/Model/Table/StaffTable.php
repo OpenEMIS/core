@@ -224,6 +224,15 @@ class StaffTable extends ControllerActionTable
         );
 
         $this->addBehavior('Staff.StaffTab');
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'staff_create',
+                'entity_delete' => 'staff_delete',
+                'entity_update' => 'staff_update',
+                'table_alias' => 'Institution.InstitutionStaff',
+                'contain' => []
+            ]
+        ); // for webhook
     }
 
     public function implementedEvents(): array
@@ -2323,20 +2332,6 @@ class StaffTable extends ControllerActionTable
             Log::write('error', __METHOD__ . ': ' . $this->Institutions->getAlias() . ' primary key not found (' . $institutionId . ')');
         }
 
-        $body = array();
-
-        $body = [
-            'institution_staff_id' => !empty($entity->staff_id) ? $entity->staff_id : NULL,
-            'institution_id' => !empty($entity->institution_id) ? $entity->institution_id : NULL,
-        ];
-
-        if (isset($this->action) && $this->action == 'remove') { //POCOR-7083
-            $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $username = $this->Auth->user()['username'];
-                $Webhooks->triggerShell('staff_delete', ['username' => $username], $body);
-            }
-        }
     }
 
     /*

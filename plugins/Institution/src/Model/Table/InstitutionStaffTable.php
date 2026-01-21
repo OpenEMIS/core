@@ -40,6 +40,16 @@ class InstitutionStaffTable extends AppTable
         ]);
         $this->addBehavior('Report.InstitutionSecurity');
         $this->addBehavior('Report.AreaList');//POCOR-7794
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'staff_create',
+                'entity_delete' => 'staff_delete',
+                'entity_update' => 'staff_update',
+                'table_alias' => 'Institution.InstitutionStaff',
+                'contain' => []
+            ]
+        ); // for webhook
+
     }
 
     public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
@@ -245,7 +255,7 @@ class InstitutionStaffTable extends AppTable
                 if (!empty($entity->user->identities)) {
                     $identities = $entity->user->identities;
                     foreach ($identities as $key => $value) {
-                        if ($value->identity_type->default == 0) {                            
+                        if ($value->identity_type->default == 0) {
                             $return[] = '([' . $value->identity_type->name . ']' . ' - ' . $value->number . ')';
                         }
                     }
@@ -275,7 +285,7 @@ class InstitutionStaffTable extends AppTable
         }
         return $age;
     }
-    
+
 
     public function onExcelGetEducationGrades(EventInterface $event, Entity $entity)
     {
@@ -287,11 +297,11 @@ class InstitutionStaffTable extends AppTable
             $ClassesTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
             $ClassesSecondaryStaffTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassesSecondaryStaff');
             //Start:POCOR-6714
-            $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
-            $subStaffTable = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
-            $InsSubTable = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
-            $AcademicTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-	     
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $subStaffTable = TableRegistry::get('Institution.InstitutionSubjectStaff');
+            $InsSubTable = TableRegistry::get('Institution.InstitutionSubjects');
+            $AcademicTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+
 	        $AcademicData = $AcademicTable->find()->where(['id'=> $entity->academic_period_id])->first();
             $startDateYear = $AcademicData->start_year;
             $endDateYear = $AcademicData->end_year; // POCOR-7544
@@ -302,18 +312,18 @@ class InstitutionStaffTable extends AppTable
                 $startDateYear = $AcademicData->end_year;
                 $subStaffData = $subStaffTable->find()->where(['staff_id'=>$staffId,'institution_id'=>$entity->institution_id,'start_date >' => "$startDateYear-01-01",'end_date <' => "$endDateYear-12-31"])->toArray();
             }
-            foreach ($subStaffData as $key => $value) { 
+            foreach ($subStaffData as $key => $value) {
                 $insSubData = $InsSubTable->find()->where(['id' => $value->institution_subject_id])->first();
                 $EducationGradeData = $EducationGrades->find()->where(['id'=> $insSubData->education_grade_id])->first();
                 $edGrade[$key] = $EducationGradeData->name;
             }
             //END:POCOR-6714
-            
-            //echo "<pre>"; print_r($value->start_date->format('Y')); 
+
+            //echo "<pre>"; print_r($value->start_date->format('Y'));
             //die();
             // $connection = ConnectionManager::get('default');
             // $institutionClassesData = $connection->execute("SELECT academic_period_id,homeroom_or_secondary.institution_class_id,homeroom_or_secondary.staff_id,education_grade_id FROM
-            //     institution_classes 
+            //     institution_classes
             //     INNER JOIN
             //     (SELECT id institution_class_id,staff_id FROM institution_classes
 
@@ -393,7 +403,7 @@ class InstitutionStaffTable extends AppTable
         return implode(', ', $result);
     }
 
-    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields) 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();

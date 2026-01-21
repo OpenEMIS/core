@@ -29,7 +29,15 @@ class EducationLevelsTable extends ControllerActionTable
 			// 	'filter' => 'education_system_id',
 			// ]);
 		}
-
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'education_level_create',
+                'entity_delete' => 'education_level_delete',
+                'entity_update' => 'education_level_update',
+                'table_alias' => 'Education.EducationLevels',
+                'contain' => []
+            ]
+        ); // for webhook
 		$this->setDeleteStrategy('restrict');
 	}
 
@@ -39,7 +47,7 @@ class EducationLevelsTable extends ControllerActionTable
 		$this->fields['education_system_id']['sort'] = ['field' => 'EducationSystems.name'];
 
 		// Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Education Levels','Education');       
+		$is_manual_exist = $this->getManualUrl('Administration','Education Levels','Education');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -59,57 +67,7 @@ class EducationLevelsTable extends ControllerActionTable
 		// End POCOR-5188
 	}
 
-    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options){
-
-        // Webhook Education Level create -- start
-        if($entity->isNew()){
-            $body = array();
-            $body = [
-                'education_system_id' =>$entity->education_system_id,
-                'education_level_id' =>$entity->id,
-                'education_level_name' =>$entity->name,
-                'education_level_isced' =>$entity->education_level_isced_id,
-            ];
-            /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('education_level_create', ['username' => $username], $body);
-            }*/
-        }
-        // Webhook Education Level create -- end
-
-        // Webhook Education Level update -- start
-        if(!$entity->isNew()){
-            $body = array();
-            $body = [
-                    'education_system_id' =>$entity->education_system_id,
-                    'education_level_id' =>$entity->id,
-                    'education_level_name' =>$entity->name,
-                    'education_level_isced' =>$entity->education_level_isced_id,
-            ];
-            /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('education_level_update', ['username' => $username], $body);
-            }*/
-        }
-        // Webhook Education Level update -- end
-    }
-
-    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
-    {
-        // Webhook Education Level Delete -- Start
-
-        $body = array();
-        $body = [
-            'education_level_id' =>$entity->id,
-        ];
-        /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-        if($this->Auth->user()){
-            $Webhooks->triggerShell('education_level_delete', ['username' => $username], $body);
-        }*/
-        // Webhook Education Level Delete -- End
-    }
-
-	public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
 	{
 		$query->where([$this->aliasField('education_system_id') => $entity->education_system_id]);
 	}
@@ -260,9 +218,9 @@ class EducationLevelsTable extends ControllerActionTable
     public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, Request $request)
     {
         list(,,  $systemOptions, $selectedSystem) = array_values($this->getSelectOptions());
-        $attr['options'] = $cycleOptions;
+        $attr['options'] = $systemOptions;
         if ($action == 'add') {
-            $attr['default'] = $selectedCycle;
+            $attr['default'] = $selectedSystem;
         }
 
         return $attr;

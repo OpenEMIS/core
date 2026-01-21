@@ -262,8 +262,15 @@ trait OptionsTrait
                     ]
                 ],
                 //POCOR-8869 end
-            ],
 
+            ],
+            'ExternalDataServiceWebhook' => [
+                'source' => [
+                    1 => __('Custom'),
+                    2 => __('OpenEMIS Exams'),
+                ]
+            ],
+            //POCOR-8869 end
         ];
 
         $index = explode('.', $code);
