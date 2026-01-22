@@ -10,7 +10,7 @@ use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Log\Log;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
@@ -38,12 +38,16 @@ class InfrastructureUtilityTelephonesTable extends ControllerActionTable
     	$modelAlias = 'InfrastructureUtilityTelephones';
         $userType = '';
         $this->controller->changePageHeaderTrips($this, $modelAlias, $userType);
+        //POCOR-9475 
+        $this->field('start_date',['visible' => false]);
+        $this->field('end_date',['visible' => false]);
+        $this->field('is_current',['visible' => false]);
+        $this->field('parent_id',['visible' => false]);
     }
 
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
         return $validator
             ->requirePresence('utility_telephone_condition_id')
             ->requirePresence('utility_telephone_type_id')
@@ -80,7 +84,7 @@ class InfrastructureUtilityTelephonesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
-        ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
+        ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId'], $this->aliasField('is_current') => 1])
         ->orderDesc($this->aliasField('created'));
     }
 
@@ -121,6 +125,133 @@ class InfrastructureUtilityTelephonesTable extends ControllerActionTable
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
+    {
+        $this->updateAll(
+            ['is_current' => 0],
+            [
+                'institution_id' => $entity->institution_id,
+                'academic_period_id' => $entity->academic_period_id,
+                'is_current' => 1
+            ]
+        );
+
+        //Fetch academic period dates
+        $academicPeriods = TableRegistry::getTableLocator()
+            ->get('AcademicPeriod.AcademicPeriods');
+
+        $period = $academicPeriods->find()
+            ->select(['start_date', 'end_date'])
+            ->where(['id' => $entity->academic_period_id])
+            ->first();
+
+        if ($period) {
+            $entity->start_date = $period->start_date;
+            $entity->end_date   = $period->end_date;
+
+            $today = new \DateTimeImmutable('today');
+            $start = new \DateTimeImmutable($period->start_date->format('Y-m-d'));
+            $end   = new \DateTimeImmutable($period->end_date->format('Y-m-d'));
+
+            $entity->is_current = ($today >= $start && $today <= $end) ? 1 : 0;
+        } else {
+            $entity->is_current = 0;
+        }
+        if (empty($entity->parent_id)) {
+            $entity->parent_id = null;
+        }
+    }
+
+    //POCOR-9475
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->isNew()) {
+            return;
+        }
+
+        //Always resolve ROOT id
+        $rootId = $entity->parent_id ?? $entity->id;
+
+        //Expire ALL current records
+        $this->updateAll(
+            ['is_current' => 0],
+            [
+                'OR' => [
+                    ['id' => $rootId],
+                    ['parent_id' => $rootId]
+                ]
+            ]
+        );
+
+        //Convert edit into INSERT
+        $entity->setNew(true);
+        $entity->unset('id');
+
+        //Maintain ROOT linkage
+        $entity->parent_id = $rootId;
+
+        //Set academic period dates
+        $academicPeriods = TableRegistry::getTableLocator()
+            ->get('AcademicPeriod.AcademicPeriods');
+
+        $period = $academicPeriods->find()
+            ->select(['start_date', 'end_date'])
+            ->where(['id' => $entity->academic_period_id])
+            ->first();
+
+        if ($period) {
+            $entity->start_date = $period->start_date;
+            $entity->end_date   = $period->end_date;
+
+            $today = new \DateTimeImmutable('today');
+            $entity->is_current =
+                ($today >= $period->start_date && $today <= $period->end_date) ? 1 : 0;
+        } else {
+            $entity->is_current = 0;
+        }
+    }
+
+    //POCOR-9475
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->updateAll(
+            ['is_current' => 0],
+            ['id' => $entity->id]
+        );
+
+        // Stop actual DELETE query
+        $event->stopPropagation();
+
+        $this->Alert->success(
+            __('Record has been deactivated successfully.'),
+            ['type' => 'string', 'reset' => true]
+        );
+        return $this->controller->redirect(
+            $this->request->referer()
+        );
+    }
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        if (isset($buttons['view'])) {
+            $queryString = $this->getQueryString();
+            $institutionId  = $queryString['institution_id'];
+            $recordId  = $entity->id;
+            $queryString = $this->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId, 'record_id' => $recordId]);
+            $icon = '<i class="fa fa-history"></i>';
+            $buttons['history'] = $buttons['view'];
+            $buttons['history']['label'] = $icon . __('History');
+            $buttons['history']['url']['plugin'] = 'Institution';
+            $buttons['history']['url']['controller'] = 'Institutions';
+            $buttons['history']['url']['action'] = 'InfrastructureTelephonesHistory';
+            $buttons['history']['url'][0] = 'index';
+            $buttons['history']['url'][1] = $queryString;
+        }
+            
+        return $buttons;
     }
 
     // public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
