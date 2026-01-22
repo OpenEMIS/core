@@ -28,12 +28,17 @@ class ConfigWebhooksTable extends ControllerActionTable
         'PATCH' => 'PATCH',
         'DELETE' => 'DELETE'
     ];
-    const string OPEN_EMIS_EXAMS = 'OpenEMIS Exams';
-    const string OPEN_EMIS_CORE = 'OpenEMIS Core';
-    const array EXCLUDED_FIELDS = ['password',
-//        'security_group_id',
+
+    const OPEN_EMIS_EXAMS = 'OpenEMIS Exams';
+    const OPEN_EMIS_CORE  = 'OpenEMIS Core';
+
+    const EXCLUDED_FIELDS = [
+        'password',
+        // 'security_group_id',
         'super_admin',
-        '_content'];
+        '_content'
+    ];
+
     private $eventKeyOptions = [
         'logout' => 'Logout',
         'institutions_create' => 'Institution Create',
@@ -175,7 +180,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         $this->field('method', ['options' => $supportedMethod]);
     }
 
-    public function onGetTemplatePlaceholdersElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetTemplatePlaceholdersElement(EventInterface  $event, $action, $entity, $attr, $options = [])
     {
         if (!in_array($action, ['edit', 'add'])) {
             return;
@@ -230,7 +235,7 @@ class ConfigWebhooksTable extends ControllerActionTable
     }
 
 
-    public function onGetExternalDataSource(Event $event, Entity $entity)
+    public function onGetExternalDataSource(EventInterface  $event, Entity $entity)
     {
 //        dd($event);
         $external_data_source_id = $entity->external_data_source_id;
@@ -244,7 +249,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         }
         return [];
     }
-    public function onUpdateFieldExternalDataSourceId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldExternalDataSourceId(EventInterface  $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
@@ -349,7 +354,7 @@ class ConfigWebhooksTable extends ControllerActionTable
 //        ];
 //    }
 
-    public function onUpdateFieldEventKey(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEventKey(EventInterface  $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit'])) {
             $attr['type'] = 'select';
@@ -360,7 +365,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onGetEventKey(Event $event, Entity $entity)
+    public function onGetEventKey(EventInterface  $event, Entity $entity)
     {
         $eventKey = $entity->event_key ?? null;
         if ($eventKey) {
@@ -406,9 +411,6 @@ class ConfigWebhooksTable extends ControllerActionTable
             'method']);
     }
 
-<<<<<<< HEAD
-    public function onGetTriggeredEvent(EventInterface $event, Entity $entity)
-=======
 //    public function onGetTriggeredEvent(Event $event, Entity $entity)
 //    {
 //        $returnString = '';
@@ -447,8 +449,7 @@ class ConfigWebhooksTable extends ControllerActionTable
 //            ]);
 //    }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
->>>>>>> origin/POCOR-9403
+    public function onGetFieldLabel(EventInterface  $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'external_data_source_id') {
             return __('External Server');
@@ -458,7 +459,7 @@ class ConfigWebhooksTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface  $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
@@ -975,33 +976,12 @@ class ConfigWebhooksTable extends ControllerActionTable
     }
 
     /**
-<<<<<<< HEAD
-     * POCOR-8994
-     *  
-     * It retrieves the associated WebhookEvents for the current webhook record 
-     using the `id` from the query string
-     * The event keys are then used to pre-select options in the triggered_event chosenSelect dropdown
-     * */
-    public function editBeforeAction(EventInterface $event, ArrayObject $extra)
-    {
-        $queryString = $this->getQueryString();
-        $recordId = $queryString['id'];
-        $webhookEvents = TableRegistry::getTableLocator()->get('Configuration.WebhookEvents');
-        $record = $webhookEvents->find()
-            ->where([$webhookEvents->aliasField('webhook_id') => $recordId])
-            ->all(); 
-
-        $storeEvent = [];
-        foreach ($record as $val) {
-            $storeEvent[] = $val['event_key'];
-=======
      * Helper to fill placeholders and build URL
      */
     protected function buildWebhookUrl(string $baseUrl, ?string $queryTemplate, array $body): string
     {
         if (empty($queryTemplate)) {
             return $baseUrl;
->>>>>>> origin/POCOR-9403
         }
 
         foreach ($body as $key => $value) {

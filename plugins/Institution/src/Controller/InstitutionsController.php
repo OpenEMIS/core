@@ -7851,8 +7851,7 @@ class InstitutionsController extends AppController
      * @param $student_role_id
      * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private
-    static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id): true
+    private static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id)
     {
         $securityGroupUsersTbl = self::getDynamicTableInstance('security_group_users');
         $securityGroupUsersTbl->updateAll(

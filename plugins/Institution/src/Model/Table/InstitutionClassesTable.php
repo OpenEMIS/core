@@ -713,20 +713,6 @@ class InstitutionClassesTable extends ControllerActionTable
             $this->Alert->warning($errorMessage, ['reset' => true]);
         }
 
-<<<<<<< HEAD
-            $body = [
-                'institutions_class_id' => $entity->id,
-            ];
-            if ($this->action == 'remove') {
-                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-                if ($this->Auth->user()) {
-                    $username = $this->Auth->user()['username'];
-                    $Webhooks->triggerShell('class_delete', ['username' => $username], $body);
-                }
-            }
-        }
-=======
->>>>>>> origin/POCOR-9403
     }
 
     public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
