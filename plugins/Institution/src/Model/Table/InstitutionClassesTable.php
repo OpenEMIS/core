@@ -21,7 +21,7 @@ use Cake\Routing\Router;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Datasource\ConnectionManager; 
+use Cake\Datasource\ConnectionManager;
 
 
 class InstitutionClassesTable extends ControllerActionTable
@@ -153,9 +153,9 @@ class InstitutionClassesTable extends ControllerActionTable
         $validator
             // ->allowEmpty('staff_id')
             ->requirePresence('name')
-            ->requirePresence('academic_period_id') //POCOR-8904 
-            ->requirePresence('institution_shift_id')//POCOR-8904 
-            ->add('capacity', 'positive', [//POCOR-8904 
+            ->requirePresence('academic_period_id') //POCOR-8904
+            ->requirePresence('institution_shift_id')//POCOR-8904
+            ->add('capacity', 'positive', [//POCOR-8904
                 'rule' => ['comparison', '>', 0],
                 'message' => 'Please provide valid capacity'
             ])
@@ -307,7 +307,7 @@ class InstitutionClassesTable extends ControllerActionTable
     /**
      * common function to get institution id
      * @return string|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public
     function getInstitutionID($debugString = "")

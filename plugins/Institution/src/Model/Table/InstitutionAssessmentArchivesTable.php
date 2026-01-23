@@ -53,7 +53,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private static function getRelatedRecord($tableName, $relatedField)
     {
@@ -248,7 +248,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
      * @param array $where
      * @return array
      * @throws \Exception
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public static function getArchiveStudentsPresent(string $table_name, array $where)
     {

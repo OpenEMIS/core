@@ -36,7 +36,7 @@ class DirectoriesTable extends ControllerActionTable
      *
      * @param array $requestDataParams The parameters for the internal search.
      * @return array The search results.
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public static function getUserInternalSearch(array $requestDataParams): array
     {
@@ -199,7 +199,7 @@ class DirectoriesTable extends ControllerActionTable
      * @param int $limit The limit for the search results.
      * @param int $page The page number for the search results.
      * @return array The search results.
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public static function getUsersSearchArr(Table $securityUsers,
                                              Table $genders,
@@ -299,7 +299,7 @@ class DirectoriesTable extends ControllerActionTable
      * @param int|null $nationalityId The nationality ID.
      * @param \Cake\ORM\Table $userIdentities The user identities table instance.
      * @return array The identity search conditions.
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public static function getUserSearchIdentityCondition(?int $identityTypeId, ?string $identityNumber, ?int $nationalityId, Table $userIdentities): array
     {
@@ -333,7 +333,7 @@ class DirectoriesTable extends ControllerActionTable
      * @param int $limit The limit for the search results.
      * @param int $page The page number for the search results.
      * @return array The search results.
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public static function getUsersSearchWithIdentityArr(Table $securityUsers, Table $genders, Table $mainIdentityTypes, Table $mainNationalities, Table $areaAdministratives, Table $userIdentities, array $identityCondition, Table $birthAreaAdministratives, int $limit, int $page): array
     {
@@ -515,7 +515,7 @@ class DirectoriesTable extends ControllerActionTable
      *
      * @param int $userId
      * @return array
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private static function getContactData(int $userId): array
     {
@@ -559,7 +559,7 @@ class DirectoriesTable extends ControllerActionTable
      * @param int $securityUserId The security user ID.
      * @param int|null $institutionId The institution ID.
      * @return array The student details.
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private static function getStudentDetails(int $securityUserId, ?int $institutionId): array
     {
@@ -612,7 +612,7 @@ class DirectoriesTable extends ControllerActionTable
      * @param int $securityUserId
      * @return array
      * @throws \Exception If there is an error retrieving the student data
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private static function getStudent(int $securityUserId): array
     {
@@ -664,7 +664,7 @@ class DirectoriesTable extends ControllerActionTable
      * @param string $tableName The name of the table.
      * @return \Cake\ORM\Table The table instance.
      * @throws \Exception If the table instance cannot be retrieved.
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {
@@ -720,7 +720,7 @@ class DirectoriesTable extends ControllerActionTable
      *
      * @param int $securityUserId
      * @return array
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private static function getPendingTransfer(int $securityUserId): array
     {
@@ -776,7 +776,7 @@ class DirectoriesTable extends ControllerActionTable
      *
      * @param int $securityUserId
      * @return array
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private static function getPendingWithdraw(int $securityUserId): array
     {
@@ -824,7 +824,7 @@ class DirectoriesTable extends ControllerActionTable
      *
      * @param int $studentId
      * @return array
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private static function getStudentCustomData(int $studentId): array
     {
@@ -917,7 +917,7 @@ class DirectoriesTable extends ControllerActionTable
      * @param \Cake\ORM\Table $institutionStaffTable The institution staff table instance.
      * @param \Cake\ORM\Table $institutionsTable The institutions table instance.
      * @return array The staff details.
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private static function getStaffDetails(int $securityUserId, ?int $institutionId, $institutionStaffTable, $institutionsTable): array
     {
@@ -1011,7 +1011,7 @@ class DirectoriesTable extends ControllerActionTable
      *
      * @param int $staffId
      * @return array
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private static function getStaffCustomData(int $staffId): array
     {

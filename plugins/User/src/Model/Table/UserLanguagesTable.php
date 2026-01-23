@@ -55,7 +55,7 @@ class UserLanguagesTable extends ControllerActionTable
     /**
      * @param Event $event
      * @param ArrayObject $extra
-     * @author Dr.Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -97,7 +97,7 @@ class UserLanguagesTable extends ControllerActionTable
     /**
      * @param Validator $validator
      * @return Validator
-     * @author Dr.Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function validationDefault(Validator $validator): Validator
     {
