@@ -131,7 +131,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
      * @param Entity $entity
      * @return string
      * common proc to show related field in the index table
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onGetTime(Event $event, Entity $entity)
     {
@@ -150,7 +150,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
      * @param Entity $entity
      * @return string
      * common proc to show related field in the index table
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onGetFullDay(Event $event, Entity $entity)
     {
@@ -167,7 +167,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
      * @param Entity $entity
      * @return string
      * common proc to show related field in the index table
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onGetComments(Event $event, Entity $entity)
     {
@@ -185,7 +185,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
      * @param $tableName
      * @param $relatedField
      * @return string
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function getRelatedName($tableName, $relatedField)
     {
@@ -208,7 +208,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
      * @param $tableName
      * @param $relatedField
      * @return string
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function getRelatedNameWithId($tableName, $relatedField)
     {
@@ -232,7 +232,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
      * @param Entity $entity
      * @return string
      * common proc to show related field in the index table
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onGetStaffId(Event $event, Entity $entity)
     {
@@ -247,7 +247,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
      * @param Entity $entity
      * @return string
      * common proc to show related field in the index table
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onGetAssigneeId(Event $event, Entity $entity)
     {
@@ -262,7 +262,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
      * @param Entity $entity
      * @return string
      * common proc to show related field in the index table
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onGetStatusId(Event $event, Entity $entity)
     {
@@ -277,7 +277,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
      * @param Entity $entity
      * @return string
      * common proc to show related field in the index table
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onGetStaffLeaveTypeId(Event $event, Entity $entity)
     {
@@ -292,7 +292,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
      * @param Entity $entity
      * @return string
      * common proc to show related field in the index table
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onGetAcademicPeriodId(Event $event, Entity $entity)
     {
@@ -318,7 +318,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
     /**
      * common proc to add extra buttons, to call in indexBeforeAction
      * @param ArrayObject $extra
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function addExtraButtons(ArrayObject $extra)
     {
@@ -330,7 +330,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
 
     /**
      * common proc to add a manual button
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      * @param $toolbarButtons
      */
     private function addManualButton($toolbarButtons)
@@ -357,7 +357,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
 
     /**
      * common proc to generate button
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      * @param ArrayObject $toolbarButtons
      * @param $name
      * @param $title
@@ -418,7 +418,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
 
     /**
      * common proc to get/set main variables to use further
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function setInstitutionStaffIDs()
     {

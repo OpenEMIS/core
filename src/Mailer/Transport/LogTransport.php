@@ -33,7 +33,7 @@ class LogTransport extends AbstractTransport
         }
 
         $message->setSubject($message->getSubject() . ' : ' . print_r($message->getTo(), true));
-        $message->setTo('khindol.madraimov@gmail.com');
+        $message->setTo('hello@demomailtrap.co');
         $message->setFrom('hello@demomailtrap.co');
         $message->setReturnPath('hello@demomailtrap.co');
         $message->setReplyTo('hello@demomailtrap.co');

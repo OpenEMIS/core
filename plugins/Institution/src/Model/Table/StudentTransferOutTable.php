@@ -176,7 +176,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
      * POCOR-9457
      * @param $institution_id
      * @return integer
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private static function getInstitutionSecurityGroupId($institution_id)
     {
@@ -885,7 +885,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
      * @param $action
      * @param Request $request
      * @return array
-     * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onUpdateFieldAreaId(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -952,7 +952,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
      * @param $action
      * @param Request $request
      * @return array
-     * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -1328,7 +1328,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     /**
      * @param string $tableName
      * @return Table
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {

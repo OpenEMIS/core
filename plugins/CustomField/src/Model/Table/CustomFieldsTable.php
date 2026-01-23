@@ -101,7 +101,7 @@ class CustomFieldsTable extends ControllerActionTable
      * @param Entity $entity
      * @param ArrayObject $requestData
      * @param ArrayObject $options
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     //public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options, ArrayObject $extra)
