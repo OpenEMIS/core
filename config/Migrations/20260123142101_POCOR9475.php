@@ -45,7 +45,7 @@ class POCOR9475 extends AbstractMigration
             ");
         }
         
-         //Backfill start_date from academic_periods
+         //fill start_date from academic_periods
 
         $this->execute("
             UPDATE infrastructure_utility_electricities e

@@ -298,8 +298,7 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
         //Convert edit into INSERT
         $entity->setNew(true);
         $entity->unset('id');
-
-        //Maintain ROOT linkage
+        
         $entity->parent_id = $rootId;
 
         //Set academic period dates
