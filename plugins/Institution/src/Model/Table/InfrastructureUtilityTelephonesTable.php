@@ -215,21 +215,22 @@ class InfrastructureUtilityTelephonesTable extends ControllerActionTable
     //POCOR-9475
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
+        // Soft delete: mark record inactive
         $this->updateAll(
             ['is_current' => 0],
             ['id' => $entity->id]
         );
 
-        // Stop actual DELETE query
+        // Stop actual DELETE
         $event->stopPropagation();
+        $event->setResult(false);
 
         $this->Alert->success(
             __('Record has been deactivated successfully.'),
             ['type' => 'string', 'reset' => true]
         );
-        return $this->controller->redirect(
-            $this->request->referer()
-        );
+
+        return false;
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
